@@ -39,8 +39,8 @@ namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
 const char START_CHAR = 'a';
-const int32_t ZERO = 0;
-const int32_t ORIGIN_STRING_LENGTH = 32;
+const size_t ZERO = 0;
+const size_t ORIGIN_STRING_LENGTH = 32;
 const std::string DATA_GROUP_DIR_SEPARATOR = "-";
 const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
@@ -679,7 +679,7 @@ std::string BundleUtil::GenerateDataGroupDirName()
     // convert nanosecond timestamps to string
     std::string timestampString = std::to_string(timestampNanoseconds);
     if (timestampString.size() < ORIGIN_STRING_LENGTH) {
-        for (auto i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
+        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
             timestampString += static_cast<char>(START_CHAR + i);
         }
     } else {

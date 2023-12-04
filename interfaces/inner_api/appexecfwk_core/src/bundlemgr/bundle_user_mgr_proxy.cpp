@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-constexpr int DISALLOWLISTMAXSIZE = 1000;
+constexpr size_t DISALLOWLISTMAXSIZE = 1000;
 
 BundleUserMgrProxy::BundleUserMgrProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IBundleUserMgr>(object)
@@ -49,13 +49,13 @@ ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std:
         APP_LOGE("fail to CreateNewUser due to write uid fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    int32_t disallowListMatchSize =
+    size_t disallowListMatchSize =
         (disallowList.size() > DISALLOWLISTMAXSIZE) ? DISALLOWLISTMAXSIZE : disallowList.size();
     if (!data.WriteInt32(disallowListMatchSize)) {
         APP_LOGE("Write BundleNameListVector failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    for (int32_t index = 0; index < disallowListMatchSize; ++index) {
+    for (size_t index = 0; index < disallowListMatchSize; ++index) {
         if (!data.WriteString(disallowList.at(index))) {
             APP_LOGE("Write BundleNameListVector failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
