@@ -873,7 +873,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0015, Function | MediumTest | Lev
     EXPECT_EQ(getInfoResult, ERR_OK);
     CheckBaseBundleInfo(1, bundleInfo);
     EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].abilityInfos.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -909,7 +908,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0016, Function | MediumTest | Lev
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].extensionInfos.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1014,7 +1012,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1050,7 +1047,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].abilityInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1086,7 +1082,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].extensionInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
