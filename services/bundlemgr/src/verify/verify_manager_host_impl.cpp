@@ -65,7 +65,7 @@ ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths,
 ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPaths,
     const std::vector<std::string> &abcNames, bool flag)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_RUN_DYN_CODE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
@@ -224,7 +224,7 @@ void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
 
 ErrCode VerifyManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_RUN_DYN_CODE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
