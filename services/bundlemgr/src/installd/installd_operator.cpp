@@ -729,7 +729,11 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         }
         if (ptr->d_type == DT_REG) {
             std::string currentFile = filePath + std::string(ptr->d_name);
-            std::string relativePath = currentFile.substr(originPath.size() + 1);
+            std::string prefixPath = originPath;
+            if (prefixPath.back() != Constants::FILE_SEPARATOR_CHAR) {
+                prefixPath.push_back(Constants::FILE_SEPARATOR_CHAR);
+            }
+            std::string relativePath = currentFile.substr(prefixPath.size());
             paths.emplace_back(relativePath);
             std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
             if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
