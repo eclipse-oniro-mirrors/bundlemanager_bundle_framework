@@ -316,6 +316,12 @@ bool BundlePermissionMgr::GetDefaultPermission(const std::string &bundleName, De
 }
 
 bool BundlePermissionMgr::MatchSignature(const DefaultPermission &permission,
+    const std::string &signature)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::MatchSignature(const DefaultPermission &permission,
     const std::vector<std::string> &signatures)
 {
     return true;

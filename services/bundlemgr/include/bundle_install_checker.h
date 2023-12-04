@@ -230,7 +230,7 @@ private:
         InnerBundleInfo &newInfo);
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
-    bool MatchOldFingerprints(const std::string &bundleName, const std::vector<std::string> &configInfo);
+    bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

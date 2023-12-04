@@ -2301,4 +2301,37 @@ HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermission_0004, Fun
     ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: MatchSignature_0101
+ * @tc.name: test the start function of MatchSignature
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, MatchSignature_0101, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::vector<std::string> appSignatures;
+    bool res = installChecker.MatchSignature(appSignatures, "");
+    EXPECT_FALSE(res);
+    appSignatures.push_back("exist");
+    res = installChecker.MatchSignature(appSignatures, "");
+    EXPECT_FALSE(res);
+    res = installChecker.MatchSignature(appSignatures, "not_exist");
+    EXPECT_FALSE(res);
+    res = installChecker.MatchSignature(appSignatures, "exist");
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: MatchSignature_0102
+ * @tc.name: test the start function of MatchOldSignatures
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, MatchSignature_0102, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::vector<std::string> appSignatures;
+    bool res = installChecker.MatchOldSignatures("", appSignatures);
+    EXPECT_FALSE(res);
+}
 } // OHOS

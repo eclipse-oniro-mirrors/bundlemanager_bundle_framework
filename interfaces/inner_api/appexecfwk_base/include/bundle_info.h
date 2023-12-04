@@ -112,6 +112,7 @@ struct BundleInfo : public Parcelable {
     std::string entryModuleName; // moduleName
     bool entryInstallationFree = false; // application : false; atomic service : true
     std::string appId;
+    std::vector<std::string> oldAppIds; // used for appId changed
 
     // user related fields, assign when calling the get interface
     int uid = -1;

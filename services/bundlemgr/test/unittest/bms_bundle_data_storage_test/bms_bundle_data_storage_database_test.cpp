@@ -1036,7 +1036,6 @@ protected:
                     "moduleName": ""
                 },
                 "fingerprint":"",
-                "fingerprints":[],
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
                 "isSystemApp": true,
@@ -1174,7 +1173,8 @@ protected:
                 "appIndex": 0,
                 "vendor": "ohos",
                 "versionCode": 1000000,
-                "versionName": "1.0.0"
+                "versionName": "1.0.0",
+                "oldAppIds":[]
             },
             "baseExtensionInfos_": {
             },

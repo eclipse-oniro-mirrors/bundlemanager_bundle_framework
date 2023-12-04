@@ -4129,11 +4129,6 @@ std::string InnerBundleInfo::GetEntryModuleName() const
     return Constants::EMPTY_STRING;
 }
 
-std::vector<std::string> InnerBundleInfo::GetFingerprints() const
-{
-    return baseApplicationInfo_->fingerprints;
-}
-
 void InnerBundleInfo::SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted)
 {
     auto it = innerModuleInfos_.find(packageName);
@@ -4162,14 +4157,6 @@ bool InnerBundleInfo::IsContainEncryptedModule() const
     return false;
 }
 
-void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
-{
-    auto fingerprints = baseApplicationInfo_->fingerprints;
-    if (std::find(fingerprints.begin(), fingerprints.end(), fingerprint) == fingerprints.end()) {
-        baseApplicationInfo_->fingerprints.emplace_back(fingerprint);
-    }
-}
-
 std::string InnerBundleInfo::GetAppIdentifier() const
 {
     return baseBundleInfo_->signatureInfo.appIdentifier;
@@ -4187,6 +4174,19 @@ void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
     } else if (!HasEntry() && debug) {
         baseApplicationInfo_->debug = debug;
     }
+}
+
+void InnerBundleInfo::AddOldAppId(const std::string &appId)
+{
+    auto appIds = baseBundleInfo_->oldAppIds;
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        baseBundleInfo_->oldAppIds.emplace_back(appId);
+    }
+}
+
+std::vector<std::string> InnerBundleInfo::GetOldAppIds() const
+{
+    return baseBundleInfo_->oldAppIds;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

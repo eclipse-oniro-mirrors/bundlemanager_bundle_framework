@@ -381,6 +381,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         // form install_list_capability.json, higher priority than provision file
         FetchPrivilegeCapabilityFromPreConfig(
             newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
+        // modify fingerprint to appId
+        newInfo.SetProvisionId(provisionInfo.appId);
+        FetchPrivilegeCapabilityFromPreConfig(
+            newInfo.GetBundleName(), newInfo.GetAppId(), appPrivilegeCapability);
+        // allow appIdentifier
+        FetchPrivilegeCapabilityFromPreConfig(
+            newInfo.GetBundleName(), provisionInfo.bundleInfo.appIdentifier, appPrivilegeCapability);
         // process bundleInfo by appPrivilegeCapability
         result = ProcessBundleInfoByPrivilegeCapability(appPrivilegeCapability, newInfo);
         if (result != ERR_OK) {
@@ -658,7 +665,7 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
-    newInfo.AddFingerprint(provisionInfo.fingerprint);
+    newInfo.AddOldAppId(newInfo.GetAppId());
     newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
 }
 
@@ -688,32 +695,16 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetRemovable(checkParam.removable);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
-    BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
-    bool ret = false;
-    if (!preBundleConfigInfo.appSignature.empty()) {
-        if (std::find(preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(),
-            newInfo.GetCertificateFingerprint()) != preBundleConfigInfo.appSignature.end()) {
-            ret = true;
-        }
-        if (!ret) {
-            std::vector<std::string> fingerprints;
-            std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (!dataMgr->GetFingerprints(newInfo.GetBundleName(), fingerprints)) {
-                APP_LOGE("Get fingerprints failed.");
-                return;
-            }
-            for (auto &fingerprint : fingerprints) {
-                if (std::find(
-                    preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(), fingerprint) !=
-                    preBundleConfigInfo.appSignature.end()) {
-                    ret = true;
-                    break;
-                }
-            }
-        }
+    if (!BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo)) {
+        APP_LOGD("bundleName: %{public}s not exist in pre install capability list", newInfo.GetBundleName().c_str());
+        return;
     }
-    if (!ret) {
-        APP_LOGE("appSignature is incompatible");
+
+    if (!MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppId()) &&
+        !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppIdentifier()) &&
+        !MatchOldSignatures(newInfo.GetBundleName(), preBundleConfigInfo.appSignature)) {
+        APP_LOGE("bundleName:%{public}s signature not match the capability list", newInfo.GetBundleName().c_str());
         return;
     }
 
@@ -1181,8 +1172,8 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        if (!MatchOldFingerprints(bundleName, configInfo.appSignature)) {
-            APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
+        if (!MatchOldSignatures(bundleName, configInfo.appSignature)) {
+            APP_LOGE("bundleName: %{public}s signature verify failed in capability list", bundleName.c_str());
             return;
         }
     }
@@ -1228,31 +1219,29 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
 #endif
 }
 
-bool BundleInstallChecker::MatchOldFingerprints(const std::string &bundleName,
+bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     const std::vector<std::string> &appSignatures)
 {
-    std::vector<std::string> fingerprints;
+    std::vector<std::string> oldAppIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
-        APP_LOGE("Get fingerprints failed.");
+    if (!dataMgr->GetOldAppIds(bundleName, oldAppIds)) {
+        APP_LOGE("Get OldAppIds failed.");
         return false;
     }
-    bool isExistSignature = false;
     for (const auto &signature : appSignatures) {
-        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
-            isExistSignature = true;
-            break;
+        if (std::find(oldAppIds.begin(), oldAppIds.end(), signature) != oldAppIds.end()) {
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
 }
 
 bool BundleInstallChecker::MatchSignature(
     const std::vector<std::string> &appSignatures, const std::string &signature)
 {
-    if (appSignatures.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (appSignatures.empty() || signature.empty()) {
+        APP_LOGW("appSignature of signature is empty");
         return false;
     }
 

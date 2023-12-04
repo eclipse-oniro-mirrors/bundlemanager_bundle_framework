@@ -77,6 +77,7 @@ const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
 const std::string APP_IDENTIFIER = "appIdentifier";
+const std::string BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
 const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
@@ -342,6 +343,12 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         }
         overlayBundleInfos.emplace_back(*overlayBundleInfo);
     }
+    int32_t oldAppIdsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, oldAppIdsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, oldAppIdsSize, &oldAppIds);
+    for (auto i = 0; i < oldAppIdsSize; i++) {
+        oldAppIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -451,6 +458,10 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayBundleInfos.size());
     for (auto &overlayBundleInfo : overlayBundleInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &overlayBundleInfo);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, oldAppIds.size());
+    for (auto &oldAppId : oldAppIds) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(oldAppId));
     }
     return true;
 }
@@ -655,7 +666,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_APP_INDEX, bundleInfo.appIndex},
         {BUNDLE_INFO_SIGNATURE_INFO, bundleInfo.signatureInfo},
         {OVERLAY_TYPE, bundleInfo.overlayType},
-        {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos}
+        {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos},
+        {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds}
     };
 }
 
@@ -1015,6 +1027,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_OLD_APPIDS,
+        bundleInfo.oldAppIds,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
     }

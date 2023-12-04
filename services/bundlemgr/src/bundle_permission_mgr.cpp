@@ -441,7 +441,10 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
             }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-            if (!MatchSignature(permission, innerBundleInfo.GetFingerprints())) {
+            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+                !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
                 continue;
             }
 #endif
@@ -692,15 +695,24 @@ bool BundlePermissionMgr::MatchSignature(
         APP_LOGW("appSignature is empty");
         return false;
     }
-    bool isExistSignature = false;
     for (const auto &signature : permission.appSignature) {
         if (std::find(signatures.begin(), signatures.end(), signature) != signatures.end()) {
-            isExistSignature = true;
-            break;
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
+}
+
+bool BundlePermissionMgr::MatchSignature(
+    const DefaultPermission &permission, const std::string &signature)
+{
+    if (permission.appSignature.empty() || signature.empty()) {
+        APP_LOGW("appSignature or signature is empty");
+        return false;
+    }
+    return std::find(permission.appSignature.begin(), permission.appSignature.end(),
+        signature) != permission.appSignature.end();
 }
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
