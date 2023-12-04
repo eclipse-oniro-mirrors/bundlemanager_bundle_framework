@@ -30,6 +30,7 @@
 #include <filesystem>
 #include <fstream>
 #include <map>
+#include <regex>
 #include <sstream>
 #include <string.h>
 #include <sys/mman.h>
@@ -51,6 +52,7 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
+static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -81,7 +83,14 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     if (sourceString.length() < targetSuffix.length()) {
         return false;
     }
-    return sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length());
+    if (sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length())) {
+        return true;
+    }
+    if (targetSuffix == Constants::SO_SUFFIX) {
+        std::regex soRegex(SO_SUFFIX_REGEX);
+        return std::regex_search(sourceString, soRegex);
+    }
+    return false;
 }
 } // namespace
 
