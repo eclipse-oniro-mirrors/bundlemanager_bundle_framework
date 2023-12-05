@@ -197,20 +197,18 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         APP_LOGE("check hap sign info failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
+
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
+#ifndef X86_EMULATOR_MODE
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
         if (verifyRes != ERR_OK) {
-#ifndef X86_EMULATOR_MODE
             APP_LOGE("hap file verify failed");
             return verifyRes;
-#else
-            if (verifyRes != ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE) {
-                APP_LOGE("hap file verify failed");
-                return verifyRes;
-            }
-#endif
         }
+#else
+        BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult);
+#endif
         hapVerifyRes.emplace_back(hapVerifyResult);
     }
 
@@ -219,6 +217,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
+#ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
     auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
@@ -251,6 +250,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     if (isInvalid) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
+#endif
     APP_LOGD("finish check multiple haps signInfo");
     return ERR_OK;
 }
@@ -355,13 +355,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
-        if (!provisionInfo.appId.empty()) {
-            result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
-            if (result != ERR_OK) {
-                APP_LOGE("check provision bundleName failed");
-                return result;
-            }
+#ifndef X86_EMULATOR_MODE
+        result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
+        if (result != ERR_OK) {
+            APP_LOGE("check provision bundleName failed");
+            return result;
         }
+#endif
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
