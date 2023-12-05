@@ -64,7 +64,6 @@ declare_args() {
   dlp_permission_enable = true
   code_signature_enable = true
   code_encryption_enable = true
-  ecologic_rule_mgr_enabled = true
   verify_abc_enabled = true
   check_eldir_enabled = false
   udmf_enabled = true
@@ -149,12 +148,6 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.security_code_crypto_metadata_process)) {
     code_encryption_enable = false
-  }
-
-  if (defined(global_parts_info) && !defined(
-          global_parts_info.hmosbundlemanager_ecological_rule_manager_override) && !defined(
-          global_parts_info.bundlemanager_ecological_rule_manager)) {
-    ecologic_rule_mgr_enabled = false
   }
 
   if (defined(global_parts_info) &&
