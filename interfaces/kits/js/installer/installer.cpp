@@ -544,12 +544,8 @@ static bool ParsePgoParams(napi_env env, napi_value args, std::map<std::string, 
         std::string key;
         std::string value;
         if (!ParsePgoParam(env, property, key, value)) {
-            APP_LOGE("parse pgo param failed");
-            return false;
-        }
-        if (pgoParams.find(key) != pgoParams.end()) {
-            APP_LOGE("moduleName(%{public}s) is duplicate", key.c_str());
-            return false;
+            APP_LOGW("parse pgo param failed");
+            continue;
         }
         pgoParams.emplace(key, value);
     }
