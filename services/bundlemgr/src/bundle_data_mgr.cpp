@@ -4607,7 +4607,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
     APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}zu", extensionRet, extensionInfos.size());
     // step3 : handle preview, if preview exist, only return preview
-    if (withDefault) {
+    if (want.GetElement().GetBundleName().empty() && withDefault) {
         findDefaultApp = HandlePreview(want, flags, userId, abilityInfos, extensionInfos);
     }
     return abilityRet || extensionRet;
