@@ -448,8 +448,8 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         bool hasPermission = false;
         auto permissions = callingInnerBundleInfo.GetAllRequestPermissions();
         for (const auto &requestPermission : permissions) {
-            if (requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO ||
-                requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) {
+            if ((requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO) ||
+                (requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
                 hasPermission = true;
                 break;
             }
