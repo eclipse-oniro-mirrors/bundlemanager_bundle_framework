@@ -22,10 +22,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+std::shared_ptr<BundleMgrClientImpl> BundleMgrClient::impl_ = std::make_shared<BundleMgrClientImpl>();
+
 BundleMgrClient::BundleMgrClient()
 {
     APP_LOGD("create BundleMgrClient");
-    impl_ = std::make_shared<BundleMgrClientImpl>();
 }
 
 BundleMgrClient::~BundleMgrClient()
