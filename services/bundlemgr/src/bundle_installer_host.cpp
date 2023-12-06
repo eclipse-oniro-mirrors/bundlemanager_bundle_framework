@@ -120,6 +120,7 @@ void BundleInstallerHost::HandleInstallMessage(Parcel &data)
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
 
+    installParam->withCopyHaps = true;
     Install(bundlePath, *installParam, statusReceiver);
     APP_LOGD("handle install message finished");
 }
@@ -172,6 +173,7 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
 
+    installParam->withCopyHaps = true;
     Install(pathVec, *installParam, statusReceiver);
     APP_LOGD("handle install multiple haps finished");
 }

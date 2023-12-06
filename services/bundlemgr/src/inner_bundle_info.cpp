@@ -2870,6 +2870,17 @@ bool InnerBundleInfo::IsBundleRemovable(int32_t userId) const
     return true;
 }
 
+bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
+{
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return true; // compressNativeLibs default true
+    }
+
+    return moduleInfo->compressNativeLibs;
+}
+
 bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t userId) const
 {
     std::string stringUserId = "";

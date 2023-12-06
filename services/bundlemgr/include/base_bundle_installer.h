@@ -459,6 +459,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
+    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
     ErrCode InstallAppControl(
         const std::vector<std::string> &installAppIds, int32_t userId);
 
@@ -539,6 +540,9 @@ private:
         int32_t userId) const;
     ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
+    void CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths);
+    void DeleteTempHapPaths() const;
+    ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -567,6 +571,7 @@ private:
     // used to record system event infos
     EventInfo sysEventInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::vector<std::string> toDeleteTempHapPath_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

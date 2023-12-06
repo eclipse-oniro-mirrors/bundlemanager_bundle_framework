@@ -306,6 +306,24 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
     }
 }
 
+std::string BundleUtil::CreateTempDir(const std::string &tempDir)
+{
+    if (!OHOS::ForceCreateDirectory(tempDir)) {
+        APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
+        return "";
+    }
+    if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
+        APP_LOGE("fail to change %{private}s ownership", tempDir.c_str());
+        return "";
+    }
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (!OHOS::ChangeModeFile(tempDir, mode)) {
+        APP_LOGE("change mode failed, temp install dir : %{private}s", tempDir.c_str());
+        return "";
+    }
+    return tempDir;
+}
+
 std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)
 {
     std::time_t curTime = std::time(0);
@@ -559,6 +577,57 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
         return 0;
     }
     return fileInfo.st_size;
+}
+
+std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
+    std::vector<std::string> &toDeletePaths)
+{
+    APP_LOGD("the original dir is %{public}s", filePath.c_str());
+    std::string destination = "";
+    std::string subStr = "";
+    destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR);
+    if (dirType == DirType::STREAM_INSTALL_DIR) {
+        subStr = Constants::STREAM_INSTALL_PATH;
+        destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
+    }
+    if (dirType == DirType::SIG_FILE_DIR) {
+        subStr = Constants::SIGNATURE_FILE_PATH;
+        destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
+    }
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
+    destination = CreateTempDir(destination);
+    auto pos = filePath.find(subStr);
+    if (pos == std::string::npos) { // this circumstance could not be considered laterly
+        auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
+        if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
+            toDeletePaths.emplace_back(destination);
+            destination.append(filePath.substr(lastPathSeperator));
+        }
+    } else {
+        auto secondLastPathSep = filePath.find(Constants::PATH_SEPARATOR, pos);
+        if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        auto thirdLastPathSep =
+            filePath.find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+        if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        toDeletePaths.emplace_back(destination);
+        std::string innerSubstr =
+            filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
+        destination = CreateTempDir(destination.append(innerSubstr));
+        destination.append(filePath.substr(thirdLastPathSep + 1));
+    }
+    APP_LOGD("the destination dir is %{public}s", destination.c_str());
+    if (destination.empty()) {
+        return "";
+    }
+    if (!CopyFile(filePath, destination)) {
+        APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+        return "";
+    }
+    return destination;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

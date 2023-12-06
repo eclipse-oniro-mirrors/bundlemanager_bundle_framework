@@ -111,6 +111,7 @@ struct InnerModuleInfo {
     bool isLibIsolated = false;
     std::string nativeLibraryPath;
     std::string cpuAbi;
+    bool compressNativeLibs = true;
     AtomicServiceModuleType atomicServiceModuleType;
     std::vector<std::string> preloads;
 };
@@ -1781,6 +1782,7 @@ public:
     bool IsLibIsolated(const std::string &moduleName) const;
     std::vector<std::string> GetDeviceType(const std::string &packageName) const;
     void UpdateAppDetailAbilityAttrs();
+    bool IsCompressNativeLibs(const std::string &moduleName) const;
 
 private:
     void GetBundleWithAbilities(
