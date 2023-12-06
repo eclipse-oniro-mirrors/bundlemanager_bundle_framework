@@ -3034,7 +3034,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (!VerifySystemApi()) {
+    if (!VerifySystemApi() && profileType != ProfileType::NETWORK_PROFILE) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
