@@ -779,6 +779,25 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     return false;
 }
 
+bool BundlePermissionMgr::IsSystemApp()
+{
+    APP_LOGD("verifying systemApp");
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        return true;
+    }
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        APP_LOGD("caller tokenType is native or shell, ignore");
+        return true;
+    }
+    APP_LOGE("system app verification failed");
+    return false;
+}
+
 bool BundlePermissionMgr::IsNativeTokenType()
 {
     APP_LOGD("begin to verify token type");
