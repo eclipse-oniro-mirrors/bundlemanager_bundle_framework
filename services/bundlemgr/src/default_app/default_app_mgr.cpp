@@ -316,7 +316,7 @@ bool DefaultAppMgr::IsBrowserWant(const Want& want) const
         return false;
     }
     std::string uri = want.GetUriString();
-    bool matchUri = uri.rfind(HTTP_SCHEME, 0) == 0 || uri.rfind(HTTPS_SCHEME, 0);
+    bool matchUri = uri.rfind(HTTP_SCHEME, 0) == 0 || uri.rfind(HTTPS_SCHEME, 0) == 0;
     if (!matchUri) {
         APP_LOGD("Uri does not match, not browser want");
         return false;
@@ -365,6 +365,14 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
         APP_LOGE("GetDefaultApplication failed");
         return false;
     }
+
+    std::string bundleName = want.GetElement().GetBundleName();
+    if (!bundleName.empty() && bundleName != bundleInfo.name) {
+        APP_LOGD("request bundleName : %{public}s, default bundleName : %{public}s",
+            bundleName.c_str(), bundleInfo.name.c_str());
+        return false;
+    }
+
     if (bundleInfo.abilityInfos.size() == 1) {
         abilityInfos = bundleInfo.abilityInfos;
         APP_LOGD("find default ability");
