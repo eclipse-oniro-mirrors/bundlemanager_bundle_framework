@@ -1227,7 +1227,6 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         }
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
-        bool isShareMatched = false;
         if (want.GetAction() == SHARE_ACTION) {
             if (!MatchShare(want, skillsPair->second)) {
                 continue;
