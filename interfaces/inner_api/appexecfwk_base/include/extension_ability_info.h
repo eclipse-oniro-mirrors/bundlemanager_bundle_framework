@@ -87,6 +87,13 @@ enum class CompileMode {
     ES_MODULE,
 };
 
+enum class ExtensionProcessMode {
+    UNDEFINED = -1,
+    INSTANCE = 0,
+    TYPE = 1,
+    BUNDLE = 2,
+};
+
 struct SkillUriForAbilityAndExtension {
     std::string scheme;
     std::string host;
@@ -120,6 +127,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool visible = false;
     std::vector<Metadata> metadata;
     ApplicationInfo applicationInfo;
+    ExtensionProcessMode extensionProcessMode = ExtensionProcessMode::UNDEFINED;
     // set when install
     std::string resourcePath;
     std::string hapPath;
@@ -139,6 +147,7 @@ struct ExtensionAbilityInfo : public Parcelable {
 
 ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);
 std::string ConvertToExtensionTypeName(ExtensionAbilityType type);
+ExtensionProcessMode ConvertToExtensionProcessMode(const std::string &extensionProcessMode);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H

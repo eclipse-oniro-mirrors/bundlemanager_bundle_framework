@@ -51,6 +51,7 @@ const std::string PROCESS = "process";
 const std::string COMPILE_MODE = "compileMode";
 const std::string UID = "uid";
 const size_t ABILITY_CAPACITY = 10240; // 10K
+const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -94,6 +95,12 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI }
+};
+
+const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
+    { "instance", ExtensionProcessMode::INSTANCE },
+    { "type", ExtensionProcessMode::TYPE },
+    { "bundle", ExtensionProcessMode::BUNDLE }
 };
 
 bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)
@@ -181,6 +188,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
         APP_LOGE("Read skill info failed");
         return false;
     }
+    extensionProcessMode = static_cast<ExtensionProcessMode>(parcel.ReadInt32());
     return true;
 }
 
@@ -242,6 +250,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.utd));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionProcessMode));
     return true;
 }
 
@@ -273,7 +282,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {ENABLED, extensionInfo.enabled},
         {PROCESS, extensionInfo.process},
         {COMPILE_MODE, extensionInfo.compileMode},
-        {UID, extensionInfo.uid}
+        {UID, extensionInfo.uid},
+        {EXTENSION_PROCESS_MODE, extensionInfo.extensionProcessMode}
     };
 }
 
@@ -482,6 +492,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<ExtensionProcessMode>(jsonObject,
+        jsonObjectEnd,
+        EXTENSION_PROCESS_MODE,
+        extensionInfo.extensionProcessMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
     }
@@ -505,6 +523,15 @@ std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
     }
 
     return "Unspecified";
+}
+
+ExtensionProcessMode ConvertToExtensionProcessMode(const std::string &extensionProcessMode)
+{
+    if (EXTENSION_PROCESS_MODE_MAP.find(extensionProcessMode) != EXTENSION_PROCESS_MODE_MAP.end()) {
+        return EXTENSION_PROCESS_MODE_MAP.at(extensionProcessMode);
+    }
+
+    return ExtensionProcessMode::UNDEFINED;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
