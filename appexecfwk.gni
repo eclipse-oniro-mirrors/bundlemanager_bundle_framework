@@ -65,7 +65,7 @@ declare_args() {
   code_signature_enable = true
   code_encryption_enable = true
   verify_abc_enabled = true
-  check_eldir_enabled = false
+  check_eldir_enabled = true
   udmf_enabled = true
 
   if (defined(global_parts_info) &&

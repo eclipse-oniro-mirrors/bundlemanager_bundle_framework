@@ -252,7 +252,6 @@ private:
     int32_t GetPreloadFlag();
     bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
-    bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
     void LoadDownloadService() const;
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
