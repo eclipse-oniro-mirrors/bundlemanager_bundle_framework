@@ -1075,10 +1075,39 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
     });
     return true;
 }
+
+ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
+    std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap)
+{
+    ErrCode ret = ERR_OK;
+    if (codeSignatureParam.isCompileSdkOpenHarmony &&
+        !Security::CodeSign::CodeSignUtils::isSupportOHCodeSign()) {
+        APP_LOGD("code signature is not supported");
+        return ret;
+    }
+    if (codeSignatureParam.signatureFileDir.empty()) {
+        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
+            codeSignHelper = std::make_shared<CodeSignHelper>();
+        }
+        Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
+            FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
+        if (codeSignatureParam.isEnterpriseBundle) {
+            APP_LOGD("Verify code signature for enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
+        } else {
+            APP_LOGD("Verify code signature for non-enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+        }
+    } else {
+        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
+    }
+    return ret;
+}
 #endif
 
 bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
-    std::shared_ptr<CodeSignHelper>& codeSignHelper)
+    std::shared_ptr<CodeSignHelper> &codeSignHelper)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
@@ -1099,27 +1128,8 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
         return false;
     }
-    
-    ErrCode ret = ERR_OK;
-    if (codeSignatureParam.signatureFileDir.empty()) {
-        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
-            codeSignHelper = std::make_shared<CodeSignHelper>();
-        }
-        Security::CodeSign::FileType fileType = FILE_ENTRY_ADD;
-        if (codeSignatureParam.isPreInstalledBundle) {
-            fileType = FILE_ENTRY_ONLY;
-        }
-        if (codeSignatureParam.isEnterpriseBundle) {
-            APP_LOGD("Verify code signature for enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
-        } else {
-            APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
-        }
-    } else {
-        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
-    }
+
+    ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, codeSignHelper, entryMap);
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
         return true;

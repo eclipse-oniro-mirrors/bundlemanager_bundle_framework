@@ -163,7 +163,7 @@ public:
     ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
     ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle);
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony);
 
     ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

@@ -4068,10 +4068,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     bool isPreInstalledBundle) const
 {
     APP_LOGD("begin to verify code signature for native files");
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -4080,6 +4077,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
+    codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -4092,11 +4090,9 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
         return ERR_OK;
     }
     const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
-    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_, isEnterpriseBundle_);
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_,
+        isEnterpriseBundle_, isCompileSdkOpenHarmony);
 }
 
 ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,

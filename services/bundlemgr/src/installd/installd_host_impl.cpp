@@ -908,7 +908,7 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 }
 
 ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     APP_LOGD("start to enable code signature for hap or hsp");
 #if defined(CODE_SIGNATURE_ENABLE)
@@ -923,6 +923,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPa
 
     Security::CodeSign::EntryMap entryMap;
     ErrCode ret = ERR_OK;
+    if (isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::isSupportOHCodeSign()) {
+        APP_LOGD("code signature is not supported");
+        return ret;
+    }
     if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
         codeSignHelper_ = std::make_shared<CodeSignHelper>();
     }
