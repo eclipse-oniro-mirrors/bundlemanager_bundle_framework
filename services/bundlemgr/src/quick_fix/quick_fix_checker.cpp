@@ -230,6 +230,7 @@ ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
 ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
     const Security::Verify::ProvisionInfo &provisionInfo)
 {
+#ifndef X86_EMULATOR_MODE
     std::string quickFixAppId = bundleInfo.name + Constants::FILE_UNDERLINE + provisionInfo.appId;
     if (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl) {
         APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
@@ -252,6 +253,7 @@ ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
             provisionInfo.bundleInfo.bundleName.c_str(), bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
     }
+#endif
     return ERR_OK;
 }
 
