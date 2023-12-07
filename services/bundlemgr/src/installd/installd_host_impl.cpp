@@ -60,10 +60,15 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/haps"
 };
 const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
+const std::string BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
 const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
+const std::string BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
 const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+enum class DirType {
+    DIR_EL1,
+    DIR_EL2,
+};
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -177,11 +182,30 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid,
-    std::string &bundleBackupDir)
+static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::string &bundleName, const DirType dirType) 
 {
-    // Setup BackupExtensionAbility's home directory in a harmless way
-    bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
+    switch (dirType) {
+        case DirType::DIR_EL1:
+            bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL1 + bundleName;
+            break;
+        case DirType::DIR_EL2:
+            bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2 + bundleName;
+            break;    
+        default:
+            break;
+    }
+}
+
+static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid,
+    std::string &bundleBackupDir, const DirType dirType)
+{
+    GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    APP_LOGW("CreateBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        APP_LOGW("CreateBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        return;
+    }
+    // Setup BackupExtensionAbility's home directory in a harmless way    
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
@@ -293,11 +317,18 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
 
     std::string bundleBackupDir;
-    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir);
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir, DirType::DIR_EL2);
     ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+                            createDirParam.isPreInstallApp, createDirParam.debug);
     if (ret != ERR_OK) {
-        APP_LOGE("CreateBackupExtHomeDir SetDirApl failed, errno is %{public}d", ret);
+        APP_LOGE("CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
+    }
+ 
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir, DirType::DIR_EL1);
+    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
+                            createDirParam.isPreInstallApp, createDirParam.debug);
+    if (ret != ERR_OK) {
+        APP_LOGE("CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
 
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
@@ -305,9 +336,15 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     return ERR_OK;
 }
 
-static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int userid)
+static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int userid, DirType dirType)
 {
-    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
+    std::string bundleBackupDir;
+    GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    APP_LOGW("RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        APP_LOGW("RemoveBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
         APP_LOGE("remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
@@ -393,8 +430,12 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         APP_LOGE("failed to remove cloud dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
-    if (RemoveBackupExtHomeDir(bundleName, userid) != ERR_OK) {
-        APP_LOGE("failed to remove backup ext home dir");
+    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK) {
+        APP_LOGE("failed to remove backup ext el2 home dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
+        APP_LOGE("failed to remove backup ext el1 home dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     if (RemoveDistributedDir(bundleName, userid) != ERR_OK) {
