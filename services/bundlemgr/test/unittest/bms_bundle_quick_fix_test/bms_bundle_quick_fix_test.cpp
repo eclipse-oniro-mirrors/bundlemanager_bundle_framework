@@ -74,6 +74,9 @@ const std::string FILE1_PATH = "/data/test/hello.hqf";
 const std::string FILE2_PATH = "/data/test/world.hqf";
 const std::string FILE3_PATH = "/data/test/world.hap";
 const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
+const std::string INVALID_FILE_PATH_1 = "/data/service/el1/public/bms/bundle_manager_service/hello.hqf";
+const std::string INVALID_FILE_PATH_2 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/../hello.hqf";
+const std::string VALID_FILE_PATH_3 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/hello.hqf";
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -1569,10 +1572,15 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0049, Function | SmallTest
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
-        std::vector<std::string> sourceFiles {FILE1_PATH, FILE2_PATH};
-        CreateFiles(sourceFiles);
+        QuickFixManagerHostImpl quickFixManagerHostImpl;
+        std::string fileName = "test.hqf";
+        int32_t fd = -1;
+        std::string path = "";
+        auto res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+        EXPECT_EQ(res, ERR_OK);
+        const std::vector<std::string> sourceFiles {path};
         std::vector<std::string> realFilePaths;
-        ErrCode ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        auto ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
         EXPECT_EQ(ret, ERR_OK);
         DeleteFiles(sourceFiles);
     }

@@ -3904,7 +3904,7 @@ bool BundleDataMgr::QueryAllDeviceIds(std::vector<std::string> &deviceIds)
 #endif
 }
 
-const std::vector<PreInstallBundleInfo>& BundleDataMgr::GetAllPreInstallBundleInfos()
+const std::vector<PreInstallBundleInfo> BundleDataMgr::GetAllPreInstallBundleInfos()
 {
     std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     return preInstallBundleInfos_;

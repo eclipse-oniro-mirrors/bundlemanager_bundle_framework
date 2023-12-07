@@ -679,6 +679,17 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
 ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> &bundleFilePaths,
     std::vector<std::string> &realFilePaths)
 {
+    for (const auto &path : bundleFilePaths) {
+        if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
+            APP_LOGE("ProcessBundleFilePaths path is illegal.");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+        }
+        if (path.find(Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            Constants::QUICK_FIX_PATH + Constants::PATH_SEPARATOR) != 0) {
+            APP_LOGE("ProcessBundleFilePaths path is illegal.");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+        }
+    }
     ErrCode ret = BundleUtil::CheckFilePath(bundleFilePaths, realFilePaths);
     if (ret != ERR_OK) {
         APP_LOGE("ProcessBundleFilePaths CheckFilePath failed.");
