@@ -216,8 +216,18 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
     return false;
 }
+
+bool BundlePermissionMgr::IsSystemApp()
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsSystemApp()
 {
     return true;
 }
