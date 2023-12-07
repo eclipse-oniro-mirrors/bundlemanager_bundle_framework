@@ -934,22 +934,6 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
     return false;
 }
 
-bool BundleConnectAbilityMgr::CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo)
-{
-    std::vector<std::string> dependentModuleNames;
-    if (!innerBundleInfo.GetDependentModuleNames(moduleName, dependentModuleNames)) {
-        APP_LOGE("GetDependentModuleNames can not find module %{public}s", moduleName.c_str());
-        return false;
-    }
-    for (const std::string &depend : dependentModuleNames) {
-        if (!innerBundleInfo.FindModule(depend)) {
-            APP_LOGD("%{public}s does not exist locally.", depend.c_str());
-            return false;
-        }
-    }
-    return true;
-}
-
 bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack, InnerBundleInfo &innerBundleInfo)
 {
@@ -982,7 +966,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
             moduleName = abilityInfo.moduleName;
         }
     }
-    if (innerBundleInfoResult && abilityInfoResult && CheckDependencies(moduleName, innerBundleInfo)) {
+    if (innerBundleInfoResult && abilityInfoResult) {
         bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
         if (!isModuleNeedUpdate) {
             CallAbilityManager(ServiceCenterResultCode::FREE_INSTALL_OK, want, userId, callBack);
