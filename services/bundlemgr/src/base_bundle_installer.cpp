@@ -2994,8 +2994,7 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
     APP_LOGD("begin to rename all temp dir");
     ErrCode ret = ERR_OK;
     for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser() ||
-            !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
+        if (info.second.IsOnlyCreateBundleUser()) {
             continue;
         }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
@@ -3003,7 +3002,7 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
             break;
         }
     }
-
+    RemoveEmptyDirs(newInfos);
     return ret;
 }
 
