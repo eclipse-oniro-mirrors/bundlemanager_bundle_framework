@@ -20,7 +20,11 @@
 #include <mutex>
 #include <string>
 
+<<<<<<< HEAD
 #include "bms_ecological_rule_mgr_service.h"
+=======
+#include "bms_ecological_rule_mgr_service_client.h"
+>>>>>>> e9eea6bf8bd37abe2823100f8caef1edbe400c07
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
@@ -252,7 +256,6 @@ private:
     int32_t GetPreloadFlag();
     bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
-    bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
     void LoadDownloadService() const;
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
