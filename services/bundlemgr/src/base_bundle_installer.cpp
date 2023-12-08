@@ -311,6 +311,71 @@ bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t 
 #endif
 }
 
+ErrCode BaseBundleInstaller::InstallNormalAppControl(
+    const std::string &installAppId,
+    int32_t userId,
+    bool isPreInstallApp)
+{
+    APP_LOGD("InstallNormalAppControl start ");
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (isPreInstallApp) {
+        APP_LOGD("the preInstalled app does not support app control feature");
+        return ERR_OK;
+    }
+    std::vector<std::string> allowedAppIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_ALLOWED_INSTALL, userId, allowedAppIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule allowedInstall failed code:%{public}d", ret);
+        return ret;
+    }
+
+    std::vector<std::string> disallowedAppIds;
+    ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_INSTALL, userId, disallowedAppIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule disallowedInstall failed code:%{public}d", ret);
+        return ret;
+    }
+
+    // disallowed list and allowed list all empty.
+    if (disallowedAppIds.empty() && allowedAppIds.empty()) {
+        return ERR_OK;
+    }
+
+    // only allowed list empty.
+    if (allowedAppIds.empty()) {
+        if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
+            APP_LOGE("disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+        }
+        return ERR_OK;
+    }
+
+    // only disallowed list empty.
+    if (disallowedAppIds.empty()) {
+        if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
+            APP_LOGE("allowedAppIds:%{public}s is disallow install", installAppId.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+        }
+        return ERR_OK;
+    }
+
+    // disallowed list and allowed list all not empty.
+    if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
+        APP_LOGE("allowedAppIds:%{public}s is disallow install", installAppId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    } else if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
+        APP_LOGE("disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    }
+    return ERR_OK;
+#else
+    APP_LOGW("app control is disable");
+    return ERR_OK;
+#endif
+}
+
 ErrCode BaseBundleInstaller::InstallAppControl(
     const std::vector<std::string> &installAppIds, int32_t userId)
 {
@@ -571,6 +636,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "hap file check failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
+    // copy the haps to the dir which cannot be accessed from caller
+    ScopeGuard securityTempHapPathsGuard([this] { DeleteTempHapPaths(); });
+    if (installParam.withCopyHaps) {
+        CopyHapsToSecurityDir(bundlePaths);
+    }
+
     // check syscap
     result = CheckSysCap(bundlePaths);
     CHECK_RESULT(result, "hap syscap check failed %{public}d");
@@ -598,6 +669,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     for (const auto &info : newInfos) {
         installAppIds.emplace_back(info.second.GetAppId());
     }
+    result = InstallNormalAppControl((newInfos.begin()->second).GetAppId(), userId_, installParam.isPreInstallApp);
+    CHECK_RESULT(result, "install app control failed %{public}d");
     result = InstallAppControl(installAppIds, userId_);
     CHECK_RESULT(result, "install app control failed %{public}d");
 
@@ -624,27 +697,21 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_REMOVE_SANDBOX_APP);              // ---- 50%
 
     // this state should always be set when return
-    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS); });
+    ScopeGuard stateGuard([&] {
+        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
+        dataMgr_->EnableBundle(bundleName_);
+    });
 
-    // this state should always be set when return
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName_); });
     InnerBundleInfo oldInfo;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
     // rename for all temp dirs
-    for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser()) {
-            continue;
-        }
-        if ((result = RenameModuleDir(info.second)) != ERR_OK) {
-            break;
-        }
-    }
+    result = RenameAllTempDir(newInfos);
+    CHECK_RESULT_WITH_ROLLBACK(result, "rename temp dirs failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_RENAMED);                         // ---- 90%
 
-    CHECK_RESULT_WITH_ROLLBACK(result, "rename temp dirs failed with result %{public}d", newInfos, oldInfo);
     if (!uninstallModuleVec_.empty()) {
         UninstallLowerVersionFeature(uninstallModuleVec_);
     }
@@ -1099,7 +1166,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
                 return result;
             }
-
+            result = InstallNormalAppControl(oldInfo.GetAppId(), userId_, installParam.isPreInstallApp);
+            if (result != ERR_OK) {
+                APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
+                return result;
+            }
             bool isSingleton = oldInfo.IsSingleton();
             if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
                 (!isSingleton && (userId_ == Constants::DEFAULT_USERID))) {
@@ -2749,6 +2820,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     singletonState_ = SingletonState::DEFAULT;
     accessTokenId_ = 0;
     sysEventInfo_.Reset();
+    toDeleteTempHapPath_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -2866,6 +2938,80 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
     }
     info.SetAsanLogPath("");
     return errCode;
+}
+
+void BaseBundleInstaller::CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths)
+{
+    for (size_t index = 0; index < bundlePaths.size(); ++index) {
+        APP_LOGD("the original dir is %{public}s", bundlePaths[index].c_str());
+        std::string destination = "";
+        std::string subStr = Constants::STREAM_INSTALL_PATH;
+        destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR)
+            .append(Constants::SECURITY_STREAM_INSTALL_PATH);
+        destination = BundleUtil::CreateTempDir(destination);
+
+        auto pos = bundlePaths[index].find(subStr);
+        if (pos == std::string::npos) { // this circumstance could not be considered laterly
+            auto lastPathSeperator = bundlePaths[index].rfind(Constants::PATH_SEPARATOR);
+            if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != bundlePaths[index].length() - 1)) {
+                destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
+                destination = BundleUtil::CreateTempDir(destination);
+                toDeleteTempHapPath_.emplace_back(destination);
+                destination.append(bundlePaths[index].substr(lastPathSeperator));
+            }
+        } else {
+            auto secondLastPathSep = bundlePaths[index].find(Constants::PATH_SEPARATOR, pos);
+            if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == bundlePaths[index].length() - 1)) {
+                continue;
+            }
+            auto thirdLastPathSep =
+                bundlePaths[index].find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+            if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == bundlePaths[index].length() - 1)) {
+                continue;
+            }
+            std::string innerSubstr =
+                bundlePaths[index].substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
+            destination = BundleUtil::CreateTempDir(destination.append(innerSubstr));
+            toDeleteTempHapPath_.emplace_back(destination);
+            destination.append(bundlePaths[index].substr(thirdLastPathSep + 1));
+        }
+        APP_LOGD("the destination dir is %{public}s", destination.c_str());
+        if (destination.empty()) {
+            continue;
+        }
+        if (!BundleUtil::CopyFile(bundlePaths[index], destination)) {
+            APP_LOGW("copy file from %{public}s to %{public}s failed", bundlePaths[index].c_str(),
+                destination.c_str());
+            continue;
+        }
+        bundlePaths[index] = destination;
+    }
+}
+
+
+ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
+{
+    APP_LOGD("begin to rename all temp dir");
+    ErrCode ret = ERR_OK;
+    for (const auto &info : newInfos) {
+        if (info.second.IsOnlyCreateBundleUser()) {
+            continue;
+        }
+        if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
+            APP_LOGE("rename dir failed");
+            break;
+        }
+    }
+    RemoveEmptyDirs(newInfos);
+    return ret;
+}
+
+void BaseBundleInstaller::DeleteTempHapPaths() const
+{
+    for (const auto &tempDir : toDeleteTempHapPath_) {
+        APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
+        BundleUtil::DeleteDir(tempDir);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

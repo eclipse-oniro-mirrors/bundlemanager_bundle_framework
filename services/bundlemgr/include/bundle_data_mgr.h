@@ -665,7 +665,7 @@ public:
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
      */
-    const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    const std::vector<PreInstallBundleInfo> GetAllPreInstallBundleInfos();
     /**
      * @brief Restore uid and gid .
      * @return Returns true if this function is successfully called; returns false otherwise.
