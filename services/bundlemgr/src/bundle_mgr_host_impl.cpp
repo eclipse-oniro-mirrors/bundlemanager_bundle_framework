@@ -736,8 +736,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
     }
     bool res = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
-        bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
+    if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
         APP_LOGD("query launcher ability infos from bms extension successfully");
         return true;
     }
