@@ -111,7 +111,7 @@ public:
         HapModuleInfo &hapModuleInfo);
 
 private:
-    std::shared_ptr<BundleMgrClientImpl> impl_;
+    static std::shared_ptr<BundleMgrClientImpl> impl_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
