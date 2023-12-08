@@ -166,7 +166,7 @@ public:
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid) override;
 
     virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle) override;
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) override;
 
     virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
         const unsigned char *profileBlock) override;
