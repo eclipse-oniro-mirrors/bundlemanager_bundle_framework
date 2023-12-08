@@ -200,7 +200,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
     std::string &bundleBackupDir, const DirType dirType)
 {
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    APP_LOGW("CreateBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
+    APP_LOGD("CreateBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
         APP_LOGW("CreateBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
         return;
@@ -340,7 +340,7 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
 {
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    APP_LOGW("RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
+    APP_LOGD("RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
         APP_LOGW("RemoveBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
