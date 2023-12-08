@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,8 +32,8 @@ public:
 
     using AbilityInfo = OHOS::AppExecFwk::AbilityInfo;
 
-    virtual int32_t QueryFreeInstallExperience(const Want &want, const CallerInfo &callerInfo,
-        ExperienceRule &rule) = 0;
+    virtual int32_t QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo,
+        BmsExperienceRule &rule) = 0;
 
     enum {
         QUERY_FREE_INSTALL_EXPERIENCE_CMD = 0

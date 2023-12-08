@@ -291,7 +291,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
     if (!CheckIsOnDemandLoad(targetAbilityInfo)) {
         ErmsCallerInfo callerInfo;
         GetEcologicalCallerInfo(want, callerInfo, userId);
-        ExperienceRule rule;
+        BmsExperienceRule rule;
         bool ret = CheckEcologicalRule(want, callerInfo, rule);
         if (!ret) {
             APP_LOGE("check ecological rule failed, skip.");
@@ -1104,7 +1104,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
 }
 
-bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
+bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
     sptr<BmsEcologicalRuleMgrServiceClient> instance_ =
         BmsEcologicalRuleMgrServiceClient::GetInstance();

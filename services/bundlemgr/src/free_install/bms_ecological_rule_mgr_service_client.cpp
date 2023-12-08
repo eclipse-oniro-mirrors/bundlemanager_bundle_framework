@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -98,7 +98,7 @@ void BmsEcologicalRuleMgrServiceClient::OnRemoteSaDied(const wptr<IRemoteObject>
 }
 
 int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS::AAFwk::Want &want,
-    const CallerInfo &callerInfo, ExperienceRule &rule)
+    const BmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
     int64_t start = GetCurrentTimeMicro();
     APP_LOGD("QueryFreeInstallExperience want = %{public}s, callerInfo = %{public}s", want.ToString().c_str(),
@@ -106,11 +106,12 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
     if (callerInfo.packageName.find_first_not_of(' ') == std::string::npos) {
         rule.isAllow = true;
         APP_LOGD("callerInfo packageName is empty, allow = true");
-        return 0;
+        return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_OK;
     }
 
     if (!CheckConnectService()) {
-        return -1;
+        APP_LOGW("check Connect SA Failed");
+        return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED;
     }
     int32_t res = bmsEcologicalRuleMgrServiceProxy_->QueryFreeInstallExperience(want, callerInfo, rule);
     if (rule.replaceWant != nullptr) {
@@ -132,8 +133,8 @@ BmsEcologicalRuleMgrServiceProxy::BmsEcologicalRuleMgrServiceProxy(const sptr<IR
     : IRemoteProxy<IBmsEcologicalRuleMgrService>(object)
 {}
 
-int32_t BmsEcologicalRuleMgrServiceProxy::QueryFreeInstallExperience(const Want &want, const CallerInfo &callerInfo,
-    ExperienceRule &rule)
+int32_t BmsEcologicalRuleMgrServiceProxy::QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo,
+    BmsExperienceRule &rule)
 {
     APP_LOGI("QueryFreeInstallExperience called");
     MessageParcel data;
@@ -168,7 +169,7 @@ int32_t BmsEcologicalRuleMgrServiceProxy::QueryFreeInstallExperience(const Want 
         return ERR_FAILED;
     }
 
-    sptr<ExperienceRule> sptrRule = reply.ReadParcelable<ExperienceRule>();
+    std::unique_ptr<BmsExperienceRule> sptrRule(reply.ReadParcelable<BmsExperienceRule>());
     if (sptrRule == nullptr) {
         APP_LOGE("readParcelable sptrRule error");
         return ERR_FAILED;
@@ -185,7 +186,7 @@ bool BmsEcologicalRuleMgrServiceProxy::ReadParcelableVector(std::vector<T> &parc
     int32_t infoSize = reply.ReadInt32();
     parcelableVector.clear();
     for (int32_t i = 0; i < infoSize; i++) {
-        sptr<T> info = reply.ReadParcelable<T>();
+        std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (info == nullptr) {
             APP_LOGE("read Parcelable infos failed");
             return false;

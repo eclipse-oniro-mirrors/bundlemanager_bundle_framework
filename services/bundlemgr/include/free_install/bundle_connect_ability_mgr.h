@@ -20,11 +20,7 @@
 #include <mutex>
 #include <string>
 
-<<<<<<< HEAD
-#include "bms_ecological_rule_mgr_service.h"
-=======
 #include "bms_ecological_rule_mgr_service_client.h"
->>>>>>> e9eea6bf8bd37abe2823100f8caef1edbe400c07
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
@@ -35,8 +31,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
-using ErmsCallerInfo = OHOS::AppExecFwk::CallerInfo;
-using ExperienceRule = OHOS::AppExecFwk::ExperienceRule;
+using ErmsCallerInfo = OHOS::AppExecFwk::BmsCallerInfo;
+using BmsExperienceRule = OHOS::AppExecFwk::BmsExperienceRule;
 class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
@@ -258,7 +254,7 @@ private:
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
     void LoadDownloadService() const;
 
-    bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
+    bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, BmsExperienceRule &rule);
     bool CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const;
     bool GetModuleName(const InnerBundleInfo &innerBundleInfo, const Want &want, std::string &moduleName) const;
 

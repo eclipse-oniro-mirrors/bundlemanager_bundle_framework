@@ -26,17 +26,17 @@ namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
 
-struct ExperienceRule : public Parcelable {
+struct BmsExperienceRule : public Parcelable {
     bool isAllow = true;
     std::string sceneCode = "";
     sptr<Want> replaceWant = nullptr;
 
     bool Marshalling(Parcel &parcel) const override;
 
-    static ExperienceRule *Unmarshalling(Parcel &parcel);
+    static BmsExperienceRule *Unmarshalling(Parcel &parcel);
 };
 
-struct CallerInfo : public Parcelable {
+struct BmsCallerInfo : public Parcelable {
     enum {
         TYPE_INVALID = 0,
         TYPE_HARMONY_APP = 1,
@@ -46,8 +46,8 @@ struct CallerInfo : public Parcelable {
     };
 
     std::string packageName;
-    int32_t uid = 0L;
-    int32_t pid = 0L;
+    int32_t uid = 0;
+    int32_t pid = 0;
 
     int32_t callerAppType = TYPE_INVALID;
     int32_t targetAppType = TYPE_INVALID;
@@ -56,7 +56,7 @@ struct CallerInfo : public Parcelable {
 
     bool Marshalling(Parcel &parcel) const override;
 
-    static CallerInfo *Unmarshalling(Parcel &parcel);
+    static BmsCallerInfo *Unmarshalling(Parcel &parcel);
 
     std::string ToString() const;
 };

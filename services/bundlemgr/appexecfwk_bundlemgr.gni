@@ -83,7 +83,6 @@ aging = [
 
 free_install = [
   "${services_path}/bundlemgr/src/free_install/bundle_connect_ability_mgr.cpp",
-  "${services_path}/bundlemgr/src/free_install/bms_ecological_rule_mgr_service.cpp",
   "${services_path}/bundlemgr/src/free_install/bms_ecological_rule_mgr_service_client.cpp",
   "${services_path}/bundlemgr/src/free_install/bms_ecological_rule_mgr_service_param.cpp",
   "${services_path}/bundlemgr/src/free_install/service_center_connection.cpp",

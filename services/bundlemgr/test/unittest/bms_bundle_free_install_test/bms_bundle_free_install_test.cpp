@@ -1388,30 +1388,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
 }
 
 /**
-<<<<<<< HEAD
- * @tc.number: BundleConnectAbilityMgr_0025
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    Dependency dependency;
-    dependency.moduleName = MODULE_NAME_TEST;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    innerModuleInfo.dependencies.push_back(dependency);
-    innerBundleInfo.innerModuleInfos_.insert(
-        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, true);
-}
-
-/**
-=======
->>>>>>> e9eea6bf8bd37abe2823100f8caef1edbe400c07
  * @tc.number: BundleConnectAbilityMgr_0026
  * Function: BundleConnectAbilityMgr
  * @tc.name: test CheckDependencies
@@ -1431,29 +1407,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
     EXPECT_EQ(callerInfo.uid, 0);
     ResetDataMgr();
 }
-<<<<<<< HEAD
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0027
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    Dependency dependency;
-    dependency.moduleName = MODULE_NAME_TEST;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    innerModuleInfo.dependencies.push_back(dependency);
-    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, false);
-}
-=======
->>>>>>> e9eea6bf8bd37abe2823100f8caef1edbe400c07
 
 /**
  * @tc.number: OnAbilityConnectDone_0001
@@ -1912,7 +1865,7 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
     name.SetBundleName("bundleName");
     want.SetElement(name);
     ErmsCallerInfo callerInfo;
-    ExperienceRule rule;
+    BmsExperienceRule rule;
     bool ret = connectAbilityMgr->CheckEcologicalRule(want, callerInfo, rule);
     EXPECT_FALSE(ret);
 }

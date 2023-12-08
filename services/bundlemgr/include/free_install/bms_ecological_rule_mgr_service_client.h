@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,7 +41,8 @@ public:
     ~BmsEcologicalRuleMgrServiceProxy() = default;
     DISALLOW_COPY_AND_MOVE(BmsEcologicalRuleMgrServiceProxy);
 
-    int32_t QueryFreeInstallExperience(const Want &want, const CallerInfo &callerInfo, ExperienceRule &rule) override;
+    int32_t QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo,
+        BmsExperienceRule &rule) override;
 
 private:
     template <typename T> bool ReadParcelableVector(vector<T> &parcelableVector, MessageParcel &reply);
@@ -53,7 +54,7 @@ public:
     DISALLOW_COPY_AND_MOVE(BmsEcologicalRuleMgrServiceClient);
     static sptr<BmsEcologicalRuleMgrServiceClient> GetInstance();
     void OnRemoteSaDied(const wptr<IRemoteObject> &object);
-    int32_t QueryFreeInstallExperience(const Want &want, const CallerInfo &callerInfo, ExperienceRule &rule);
+    int32_t QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo, BmsExperienceRule &rule);
 
 private:
     BmsEcologicalRuleMgrServiceClient() {};

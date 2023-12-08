@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,9 +25,9 @@ namespace OHOS {
 namespace AppExecFwk {
 #define TAG "ERMS_PARAM"
 
-ExperienceRule *ExperienceRule::Unmarshalling(Parcel &in)
+BmsExperienceRule *BmsExperienceRule::Unmarshalling(Parcel &in)
 {
-    auto *rule = new (std::nothrow) ExperienceRule();
+    auto *rule = new (std::nothrow) BmsExperienceRule();
     if (rule == nullptr) {
         return nullptr;
     }
@@ -47,7 +47,7 @@ ExperienceRule *ExperienceRule::Unmarshalling(Parcel &in)
     return rule;
 }
 
-bool ExperienceRule::Marshalling(Parcel &parcel) const
+bool BmsExperienceRule::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteBool(isAllow)) {
         APP_LOGE("write isAllow failed");
@@ -66,15 +66,15 @@ bool ExperienceRule::Marshalling(Parcel &parcel) const
     return true;
 }
 
-bool CallerInfo::ReadFromParcel(Parcel &parcel)
+bool BmsCallerInfo::ReadFromParcel(Parcel &parcel)
 {
     APP_LOGI("read from parcel");
     return true;
 }
 
-CallerInfo *CallerInfo::Unmarshalling(Parcel &in)
+BmsCallerInfo *BmsCallerInfo::Unmarshalling(Parcel &in)
 {
-    auto *info = new (std::nothrow) CallerInfo();
+    auto *info = new (std::nothrow) BmsCallerInfo();
     if (info == nullptr) {
         APP_LOGE("new callerInfo failed, return nullptr");
         return nullptr;
@@ -110,7 +110,7 @@ CallerInfo *CallerInfo::Unmarshalling(Parcel &in)
     return info;
 }
 
-bool CallerInfo::Marshalling(Parcel &parcel) const
+bool BmsCallerInfo::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteString(packageName)) {
         APP_LOGE("write packageName failed");
@@ -139,9 +139,9 @@ bool CallerInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-std::string CallerInfo::ToString() const
+std::string BmsCallerInfo::ToString() const
 {
-    std::string str = "CallerInfo{packageName:" + packageName + ",uid:" + std::to_string(uid) +
+    std::string str = "BmsCallerInfo{packageName:" + packageName + ",uid:" + std::to_string(uid) +
         ",pid:" + std::to_string(pid) + ",callerAppType:" + std::to_string(callerAppType) +
         ",targetAppType:" + std::to_string(targetAppType) + "}";
     return str;
