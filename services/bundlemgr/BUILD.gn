@@ -237,7 +237,6 @@ ohos_shared_library("libbms") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${extension_path}:bundlemgr_extension",
-    "etc:bms_etc",
     "//third_party/zlib:shared_libz",
   ]
 
