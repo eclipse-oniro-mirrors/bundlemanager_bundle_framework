@@ -1173,7 +1173,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
 
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
-    Security::CodeSign::EntryMap entryMap;
+    Security::CodeCrypto::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
         const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
@@ -1208,7 +1208,7 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
         "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
         installBundleType, bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
-    Security::CodeSign::EntryMap entryMap;
+    Security::CodeCrypto::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, hapPath);
     ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
         isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),
