@@ -20,6 +20,7 @@
 #include "code_sign_utils.h"
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
+#include <sys/ioctl.h>
 #include "code_crypto_metadata_process.h"
 #include "linux/code_decrypt.h"
 #endif
