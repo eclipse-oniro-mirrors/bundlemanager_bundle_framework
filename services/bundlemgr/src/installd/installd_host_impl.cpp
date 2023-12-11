@@ -182,7 +182,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::string &bundleName, const DirType dirType) 
+static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::string &bundleName, const DirType dirType)
 {
     switch (dirType) {
         case DirType::DIR_EL1:
