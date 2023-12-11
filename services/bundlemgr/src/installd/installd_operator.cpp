@@ -247,27 +247,11 @@ bool InstalldOperator::IsNativeFile(
         return false;
     }
     std::string prefix;
-    std::vector<std::string> suffixs;
-    switch (extractParam.extractFileType) {
-        case ExtractFileType::SO: {
-            prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-            suffixs.emplace_back(Constants::SO_SUFFIX);
-            break;
-        }
-        case ExtractFileType::AN: {
-            prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-            suffixs.emplace_back(Constants::AN_SUFFIX);
-            suffixs.emplace_back(Constants::AI_SUFFIX);
-            break;
-        }
-        case ExtractFileType::AP: {
-            prefix = Constants::AP;
-            suffixs.emplace_back(Constants::AP_SUFFIX);
-            break;
-        }
-        default: {
-            return false;
-        }
+    std::vector<std::string> suffixes;
+    if (!DeterminePrefix(extractParam.extractFileType, extractParam.cpuAbi, prefix) ||
+        !DetermineSuffix(extractParam.extractFileType, suffixes)) {
+        APP_LOGE("determine prefix or suffix failed");
+        return false;
     }
 
     if (!StartsWith(entryName, prefix)) {
@@ -276,14 +260,14 @@ bool InstalldOperator::IsNativeFile(
     }
 
     bool checkSuffix = false;
-    for (const auto &suffix : suffixs) {
+    for (const auto &suffix : suffixes) {
         if (EndsWith(entryName, suffix)) {
             checkSuffix = true;
             break;
         }
     }
 
-    if (!checkSuffix) {
+    if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE) {
         APP_LOGD("file type error.");
         return false;
     }
@@ -393,6 +377,36 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
         }
         case ExtractFileType::AP: {
             prefix = Constants::AP;
+            break;
+        }
+        case ExtractFileType::RES_FILE: {
+            prefix = Constants::RES_FILE_PATH;
+            break;
+        }
+        default: {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, std::vector<std::string> &suffixes)
+{
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            suffixes.emplace_back(Constants::SO_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AN: {
+            suffixes.emplace_back(Constants::AN_SUFFIX);
+            suffixes.emplace_back(Constants::AI_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AP: {
+            suffixes.emplace_back(Constants::AP_SUFFIX);
+            break;
+        }
+        case ExtractFileType::RES_FILE: {
             break;
         }
         default: {

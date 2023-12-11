@@ -113,6 +113,7 @@ constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
+const std::string RES_FILE_PATH = "resources/resfile/";
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;

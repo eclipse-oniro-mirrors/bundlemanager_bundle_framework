@@ -94,6 +94,8 @@ public:
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);
 
+    static bool DetermineSuffix(const ExtractFileType &extractFileType, std::vector<std::string> &suffixes);
+
     static bool IsNativeFile(
         const std::string &entryName, const ExtractParam &extractParam);
 
