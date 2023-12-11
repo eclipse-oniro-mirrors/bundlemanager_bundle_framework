@@ -23,6 +23,7 @@
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
+#include "code_sign_helper.h"
 #include "installd/installd_constants.h"
 #include "ipc/check_encryption_param.h"
 #include "ipc/code_signature_param.h"
@@ -39,6 +40,12 @@ public:
      * @return Returns true if the file exist; returns false otherwise.
      */
     static bool IsExistFile(const std::string &path);
+    /**
+     * @brief Check whether an AP file exists in the current directory of the file.
+     * @param path Indicates the file path to be checked.
+     * @return Returns true if the file exist; returns false otherwise.
+     */
+    static bool IsExistApFile(const std::string &path);
     /**
      * @brief Check whether a directory exist.
      * @param path Indicates the directory path to be checked.
@@ -202,7 +209,15 @@ public:
     static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
-    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
+#if defined(CODE_SIGNATURE_ENABLE)
+    static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+        const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
+    static ErrCode PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
+        std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap);
+#endif
+
+    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
+        std::shared_ptr<CodeSignHelper>& codeSignHelper);
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

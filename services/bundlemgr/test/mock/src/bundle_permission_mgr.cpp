@@ -216,8 +216,18 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
     return false;
 }
+
+bool BundlePermissionMgr::IsSystemApp()
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsSystemApp()
 {
     return true;
 }
@@ -311,6 +321,12 @@ std::vector<std::string> BundlePermissionMgr::GetNeedDeleteRequestPermissionName
 }
 
 bool BundlePermissionMgr::GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::MatchSignature(const DefaultPermission &permission,
+    const std::string &signature)
 {
     return true;
 }

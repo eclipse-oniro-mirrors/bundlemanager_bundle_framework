@@ -431,21 +431,47 @@ bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string>
 ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify query permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetNameForUid(uid, name);
+    InnerBundleInfo callingInnerBundleInfo;
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    auto ret = dataMgr->GetInnerBundleInfoByUid(callingUid, callingInnerBundleInfo);
+    if (ret == ERR_OK) {
+        if (!callingInnerBundleInfo.IsSystemApp() &&
+            (callingInnerBundleInfo.GetBaseApplicationInfo().apiTargetVersion >= Constants::API_VERSION_NINE)) {
+            APP_LOGE("non-system app calling system api");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        }
+        bool hasPermission = false;
+        auto permissions = callingInnerBundleInfo.GetAllRequestPermissions();
+        for (const auto &requestPermission : permissions) {
+            if ((requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO) ||
+                (requestPermission.name == Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+                hasPermission = true;
+                break;
+            }
+        }
+        if (!hasPermission) {
+            APP_LOGE("verify query permission failed, callingUid: %{public}d", callingUid);
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    } else {
+        if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+            !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("verify query permission failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        }
+    }
+
+    ret = dataMgr->GetNameForUid(uid, name);
+    if (ret != ERR_OK && isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ret = bmsExtensionClient->GetBundleNameByUid(uid, name);
+    }
+    return ret;
 }
 
 bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
@@ -710,8 +736,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
     }
     bool res = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
-        bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
+    if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
         APP_LOGD("query launcher ability infos from bms extension successfully");
         return true;
     }
@@ -2961,6 +2986,47 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &typeName,
+    uint32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    if (!VerifySystemApi()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)
+        && !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (typeName.empty()) {
+        APP_LOGE("Input typeName is empty");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode ret = dataMgr->QueryExtensionAbilityInfos(flags, userId, infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("QueryExtensionAbilityInfos is failed");
+        return ret;
+    }
+    for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
+        APP_LOGD("Input typeName is %{public}s, info.type is %{public}s",
+            typeName.c_str(), info.extensionTypeName.c_str());
+        if (typeName == info.extensionTypeName) {
+            extensionInfos.emplace_back(info);
+        }
+    });
+    if (extensionInfos.empty()) {
+        APP_LOGE("No valid extension info can be inquired");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {
@@ -2988,7 +3054,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (!VerifySystemApi()) {
+    if (!VerifySystemApi() && profileType != ProfileType::NETWORK_PROFILE) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }

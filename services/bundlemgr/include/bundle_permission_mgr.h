@@ -96,6 +96,8 @@ public:
 
     static bool VerifySystemApp(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
 
+    static bool IsSystemApp();
+
     static int32_t GetHapApiVersion();
 
     static bool IsNativeTokenType();
@@ -160,6 +162,8 @@ private:
     static bool GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission);
 
     static bool MatchSignature(const DefaultPermission &permission, const std::vector<std::string> &signatures);
+
+    static bool MatchSignature(const DefaultPermission &permission, const std::string &signature);
 
     static bool CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,
         const std::string &permissionName, bool &userCancellable);

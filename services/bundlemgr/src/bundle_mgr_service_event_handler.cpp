@@ -1022,7 +1022,7 @@ bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
         return false;
     }
 
-    result = static_cast<int32_t>(flag) & valInt;
+    result = static_cast<uint32_t>(flag) & static_cast<uint32_t>(valInt);
     return true;
 }
 
@@ -1046,7 +1046,8 @@ bool BMSEventHandler::UpdateOtaFlag(OTAFlag flag)
         return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
     }
 
-    return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(static_cast<int32_t>(flag) | valInt));
+    return bmsPara->SaveBmsParam(
+        OTA_FLAG, std::to_string(static_cast<uint32_t>(flag) | static_cast<uint32_t>(valInt)));
 }
 
 void BMSEventHandler::ProcessCheckAppDataDir()
@@ -1985,12 +1986,13 @@ void BMSEventHandler::UpdatePrivilegeCapability(
         APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
         return;
     }
-
-    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
-        if (!MatchOldFingerprints(bundleName, preBundleConfigInfo.appSignature)) {
-            APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
-            return;
-        }
+    // match both fingerprint and appId
+    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppId()) &&
+        !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppIdentifier()) &&
+        !MatchOldSignatures(preBundleConfigInfo, innerBundleInfo.GetOldAppIds())) {
+        APP_LOGE("bundleName: %{public}s no match pre bundle config info", bundleName.c_str());
+        return;
     }
 
     UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
@@ -1999,8 +2001,8 @@ void BMSEventHandler::UpdatePrivilegeCapability(
 bool BMSEventHandler::MatchSignature(
     const PreBundleConfigInfo &configInfo, const std::string &signature)
 {
-    if (configInfo.appSignature.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (configInfo.appSignature.empty() || signature.empty()) {
+        APP_LOGW("appSignature or signature is empty");
         return false;
     }
 
@@ -2008,24 +2010,21 @@ bool BMSEventHandler::MatchSignature(
         configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
 }
 
-bool BMSEventHandler::MatchOldFingerprints(const std::string &bundleName,
-    const std::vector<std::string> &appSignatures)
+bool BMSEventHandler::MatchOldSignatures(const PreBundleConfigInfo &configInfo,
+    const std::vector<std::string> &oldSignatures)
 {
-    std::vector<std::string> fingerprints;
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
-        APP_LOGE("Get fingerprints failed.");
+    if (configInfo.appSignature.empty() || oldSignatures.empty()) {
+        APP_LOGW("appSignature or oldSignatures is empty");
         return false;
     }
-    bool isExistSignature = false;
-    for (const auto &signature : appSignatures) {
-        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
-            isExistSignature = true;
-            break;
+    for (const auto &signature : oldSignatures) {
+        if (std::find(configInfo.appSignature.begin(), configInfo.appSignature.end(), signature) !=
+            configInfo.appSignature.end()) {
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
 }
 
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(

@@ -369,6 +369,23 @@ ErrCode InstalldProxy::IsExistFile(const std::string &path, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::IsExistApFile(const std::string &path, bool &isExist)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_AP_FILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     MessageParcel data;
@@ -542,13 +559,14 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
 }
 
 ErrCode InstalldProxy::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realHapPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(appIdentifier));
     INSTALLD_PARCEL_WRITE(data, Bool, isEnterpriseBundle);
+    INSTALLD_PARCEL_WRITE(data, Bool, isCompileSdkOpenHarmony);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

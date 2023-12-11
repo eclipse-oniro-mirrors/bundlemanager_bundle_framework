@@ -36,6 +36,17 @@ static napi_value CreateCommonError(napi_env env, int32_t err,
 
 static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
 };
+
+#define CHECK_STRING_EMPTY(env, str, strName)                                              \
+    do {                                                                           \
+        if ((str).empty()) {                                                   \
+            APP_LOGE("Parameter error. %{public}s is empty", (strName).c_str());                        \
+            std::string errMessage = "BusinessError 401: Parameter error. parameter " + (strName) + " is empty";  \
+            auto businessError = BusinessError::CreateError(env, 401, errMessage);                      \
+            napi_throw(env, businessError);                                        \
+            return nullptr;                                                        \
+        }                                                                          \
+    } while (0)
 }
 }
 #endif

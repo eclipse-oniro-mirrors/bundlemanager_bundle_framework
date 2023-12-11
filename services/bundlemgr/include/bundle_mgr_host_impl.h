@@ -817,6 +817,18 @@ public:
      */
     virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &extensionTypeName,
         const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
+    /**
+     * @brief Query extension info only with type name.
+     * @param extensionTypeName Indicates the type of the extension.
+     * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &extensionTypeName,
+        const uint32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
         const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 

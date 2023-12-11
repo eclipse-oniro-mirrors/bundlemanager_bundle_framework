@@ -4068,14 +4068,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     bool isPreInstalledBundle) const
 {
     APP_LOGD("begin to verify code signature for native files");
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
-    if (isPreInstalledBundle) {
-        APP_LOGD("code signature is not supported for pre-installed bundle");
-        return ERR_OK;
-    }
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -4083,6 +4076,8 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
+    codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -4095,11 +4090,9 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
         return ERR_OK;
     }
     const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
-    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_, isEnterpriseBundle_);
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_,
+        isEnterpriseBundle_, isCompileSdkOpenHarmony);
 }
 
 ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,
@@ -4531,14 +4524,14 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
 {
     APP_LOGD("start to delivery sign profile to code signature");
     Security::Verify::ProvisionInfo provisionInfo = verifyRes_.GetProvisionInfo();
+    if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+        APP_LOGD("Emulator does not verify signature");
+        return ERR_OK;
+    }
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
-            APP_LOGE("invalid sign profile");
-            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-        }
         return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }

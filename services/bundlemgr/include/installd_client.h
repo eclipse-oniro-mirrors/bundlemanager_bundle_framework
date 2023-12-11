@@ -145,6 +145,8 @@ public:
 
     ErrCode IsExistFile(const std::string &path, bool &isExist);
 
+    ErrCode IsExistApFile(const std::string &path, bool &isExist);
+
     ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty);
 
     ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec);
@@ -161,7 +163,7 @@ public:
     ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
     ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle);
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony);
 
     ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

@@ -142,6 +142,11 @@ ErrCode InstalldHostImpl::IsExistFile(const std::string &path, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::IsExistApFile(const std::string &path, bool &isExist)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return ERR_OK;
@@ -201,7 +206,7 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 }
 
 ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     return ERR_OK;
 }

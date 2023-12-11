@@ -441,7 +441,10 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
             }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-            if (!MatchSignature(permission, innerBundleInfo.GetFingerprints())) {
+            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+                !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
                 continue;
             }
 #endif
@@ -692,15 +695,24 @@ bool BundlePermissionMgr::MatchSignature(
         APP_LOGW("appSignature is empty");
         return false;
     }
-    bool isExistSignature = false;
     for (const auto &signature : permission.appSignature) {
         if (std::find(signatures.begin(), signatures.end(), signature) != signatures.end()) {
-            isExistSignature = true;
-            break;
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
+}
+
+bool BundlePermissionMgr::MatchSignature(
+    const DefaultPermission &permission, const std::string &signature)
+{
+    if (permission.appSignature.empty() || signature.empty()) {
+        APP_LOGW("appSignature or signature is empty");
+        return false;
+    }
+    return std::find(permission.appSignature.begin(), permission.appSignature.end(),
+        signature) != permission.appSignature.end();
 }
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
@@ -762,6 +774,25 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
             APP_LOGI("previous app calling, verify success");
             return true;
         }
+    }
+    APP_LOGE("system app verification failed");
+    return false;
+}
+
+bool BundlePermissionMgr::IsSystemApp()
+{
+    APP_LOGD("verifying systemApp");
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        return true;
+    }
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        APP_LOGD("caller tokenType is native or shell, ignore");
+        return true;
     }
     APP_LOGE("system app verification failed");
     return false;

@@ -227,7 +227,7 @@ bool BundleMgrClientSystemTest::GetResConfigFile(Args&&...args)
 {
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -244,7 +244,7 @@ bool BundleMgrClientSystemTest::GetProfileFromAbility(const AbilityInfo &info,
 {
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -261,7 +261,7 @@ bool BundleMgrClientSystemTest::GetProfileFromExtension(const ExtensionAbilityIn
 {
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -422,8 +422,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_006, TestSize.Level1)
 
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_006" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -457,7 +456,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_007, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
     std::cout << "END GetResourceConfigFile_007" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -494,8 +492,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_008, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_008" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -525,8 +521,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_009, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_009" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -562,8 +557,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_010, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_010" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -833,8 +826,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_020, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_020" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -870,8 +862,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_021, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_021" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -908,8 +899,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_022, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_022" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -939,8 +928,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_023, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_023" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -976,8 +964,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_024, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_024" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -1247,8 +1233,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_034, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_034" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -1284,8 +1269,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_035, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_035" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -1322,8 +1306,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_036, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_036" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -1352,8 +1334,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_037, TestSize.Level1)
     std::vector<std::string> profileInfo;
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
-    std::cout << profileInfo[0] << std::endl;
-
+    
     std::cout << "END GetResourceConfigFile_037" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
 }
@@ -1389,8 +1370,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetResourceConfigFile_038, TestSize.Level1)
     auto ret = GetResConfigFile(info, metadataName, profileInfo);
     EXPECT_TRUE(ret);
     EXPECT_EQ(profileInfo.size(), 2);
-    std::cout << profileInfo[0] << std::endl;
-    std::cout << profileInfo[1] << std::endl;
 
     std::cout << "END GetResourceConfigFile_038" << std::endl;
     GTEST_LOG_(INFO) << name << " end";
@@ -1771,7 +1750,7 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     std::vector<ExtensionAbilityInfo> infos;
@@ -1804,7 +1783,7 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0001, TestSize.
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     std::vector<ExtensionAbilityInfo> infos;
@@ -1851,7 +1830,7 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfosV9_0003, TestSize.
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     std::vector<ExtensionAbilityInfo> infos;
@@ -1885,7 +1864,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap001, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -1914,7 +1893,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetProfileFromHap002, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -1948,7 +1927,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetHapModuleInfo001, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -1977,7 +1956,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     BundleMgrClient bundleMgrClient;
@@ -2009,7 +1988,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetNameForUid001, TestSize.Level1)
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
     std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    InstallBundle(bundleFilePath, InstallFlag::REPLACE_EXISTING, installMsg);
     EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
 
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();

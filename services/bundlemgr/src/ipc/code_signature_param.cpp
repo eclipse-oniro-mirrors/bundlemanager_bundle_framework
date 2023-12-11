@@ -29,6 +29,8 @@ const std::string CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
 const std::string CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
 const std::string CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
 const std::string CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
+const std::string CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
+const std::string CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
@@ -39,6 +41,8 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     signatureFileDir = Str16ToStr8(parcel.ReadString16());
     isEnterpriseBundle = parcel.ReadBool();
     appIdentifier = Str16ToStr8(parcel.ReadString16());
+    isPreInstalledBundle = parcel.ReadBool();
+    isCompileSdkOpenHarmony = parcel.ReadBool();
     return true;
 }
 
@@ -50,6 +54,8 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(signatureFileDir));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEnterpriseBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
     return true;
 }
 
@@ -72,7 +78,9 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_TARGET_SO_PATH, targetSoPath },
         { CODE_SIGNATURE_SIGNATURE_FILE_PATH, signatureFileDir },
         { CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE, isEnterpriseBundle },
-        { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier }
+        { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
+        { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
+        { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },
     };
     return codeSignatureParamJson.dump(Constants::DUMP_INDENT);
 }

@@ -3337,37 +3337,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0001, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: GetBigParcelableInfo_0001
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0001, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    size_t len = 10;
-    sptr<Ashmem> ashMem = Ashmem::CreateAshmem((__func__ + std::to_string(TEST_UID)).c_str(), len);
-    reply.WriteAshmem(ashMem);
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: GetBigParcelableInfo_0002
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0002, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: RemoveModuleInfo_0100
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1. call RemoveModuleInfo, return false
@@ -3832,41 +3801,41 @@ HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0002, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: GetFingerprints_0100
- * @tc.name: GetFingerprints
- * @tc.desc: GetFingerprints
+ * @tc.number: GetOldAppIds_0100
+ * @tc.name: GetOldAppIds
+ * @tc.desc: GetOldAppIds
  */
-HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, GetOldAppIds_0100, Function | SmallTest | Level0)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<std::string> fingerPrints;
-    auto res = GetBundleDataMgr()->GetFingerprints(BUNDLE_NAME_TEST, fingerPrints);
+    std::vector<std::string> oldAppIds;
+    auto res = GetBundleDataMgr()->GetOldAppIds(BUNDLE_NAME_TEST, oldAppIds);
     EXPECT_TRUE(res);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
- * @tc.number: GetFingerprints_0200
- * @tc.name: GetFingerprints
- * @tc.desc: GetFingerprints
+ * @tc.number: GetOldAppIds_0200
+ * @tc.name: GetOldAppIds
+ * @tc.desc: GetOldAppIds
  */
-HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, GetOldAppIds_0200, Function | SmallTest | Level0)
 {
-    std::vector<std::string> fingerPrints;
-    auto res = GetBundleDataMgr()->GetFingerprints("com.example.baseApplication", fingerPrints);
+    std::vector<std::string> oldAppIds;
+    auto res = GetBundleDataMgr()->GetOldAppIds("com.example.baseApplication", oldAppIds);
     EXPECT_FALSE(res);
 }
 
 /**
- * @tc.number: GetFingerprints_0300
- * @tc.name: GetFingerprints
- * @tc.desc: GetFingerprints
+ * @tc.number: GetOldAppIds_0300
+ * @tc.name: GetOldAppIds
+ * @tc.desc: GetOldAppIds
  */
-HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, GetOldAppIds_0300, Function | SmallTest | Level0)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<std::string> fingerPrints;
-    auto res = GetBundleDataMgr()->GetFingerprints("", fingerPrints);
+    std::vector<std::string> oldAppIds;
+    auto res = GetBundleDataMgr()->GetOldAppIds("", oldAppIds);
     EXPECT_FALSE(res);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }

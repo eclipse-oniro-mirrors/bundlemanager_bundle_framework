@@ -276,22 +276,60 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
     return ERR_OK;
 }
 
-napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
+ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_callback_info info,
+    ExtensionParamInfo& extensionParamInfo)
 {
-    APP_LOGD("NAPI QueryExtensionInfosSync call");
-    ExtensionParamInfo extensionParamInfo;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], extensionParamInfo.extensionTypeName)) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, EXTENSION_TYPE_NAME,
+                    TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.flags)) {
+                APP_LOGE("invalid flags");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FLAGS, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    if (extensionParamInfo.userId == Constants::UNSPECIFIED_USERID) {
+        extensionParamInfo.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return ERR_OK;
+}
+
+ErrCode QueryExtensionInfosSync(napi_env env, napi_callback_info info,
+    ExtensionParamInfo extensionParamInfo, std::vector<ExtensionAbilityInfo>& extensionInfos)
+{
     if (ParamsProcessQueryExtensionInfosSync(env, info, extensionParamInfo) != ERR_OK) {
         APP_LOGE("paramsProcess is invalid");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
-        return nullptr;
+        return ERROR_PARAM_CHECK_ERROR;
     }
-    std::vector<ExtensionAbilityInfo> extensionInfos;
     ErrCode ret;
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
-        return nullptr;
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     if (!extensionParamInfo.isExtensionTypeName) {
         if (extensionParamInfo.extensionAbilityType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
@@ -310,6 +348,53 @@ napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
         ret = CommonFunc::ConvertErrCode(iBundleMgr->QueryExtensionAbilityInfosWithTypeName(extensionParamInfo.want,
             extensionParamInfo.extensionTypeName, extensionParamInfo.flags, extensionParamInfo.userId,
             extensionInfos));
+    }
+    return ret;
+}
+
+ErrCode QueryExtensionInfosSyncOnlyWithTypeName(napi_env env, napi_callback_info info,
+    ExtensionParamInfo extensionParamInfo, std::vector<ExtensionAbilityInfo>& extensionInfos)
+{
+    if (ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(env, info, extensionParamInfo) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    ErrCode ret;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    uint32_t flags = static_cast<uint32_t>(extensionParamInfo.flags);
+    if (extensionParamInfo.flags < 0) {
+        flags = 0;
+    }
+    ret = CommonFunc::ConvertErrCode(iBundleMgr->QueryExtensionAbilityInfosOnlyWithTypeName(
+        extensionParamInfo.extensionTypeName, flags, extensionParamInfo.userId,
+        extensionInfos));
+    return ret;
+}
+
+napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI QueryExtensionInfosSync call");
+    ExtensionParamInfo extensionParamInfo;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    napi_valuetype firstValueType = napi_undefined;
+    napi_typeof(env, args[0], &firstValueType);
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret;
+    if (firstValueType == napi_object) {
+        ret = QueryExtensionInfosSync(env, info, extensionParamInfo, extensionInfos);
+    } else {
+        ret = QueryExtensionInfosSyncOnlyWithTypeName(env, info, extensionParamInfo, extensionInfos);
     }
     if (ret != NO_ERROR) {
         APP_LOGE("QueryExtensionAbilityInfosV9 failed");

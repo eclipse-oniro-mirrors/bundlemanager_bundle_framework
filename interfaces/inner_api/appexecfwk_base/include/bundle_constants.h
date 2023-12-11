@@ -58,7 +58,7 @@ constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
 constexpr const char* DIR_EL4 = "el4";
-const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2};
+const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4};
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -195,6 +195,7 @@ constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
 constexpr uint8_t MAX_MODULE_LABEL = 63;
 constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
 constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
+constexpr uint16_t MAX_JSON_STRING_LENGTH = 1024;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 

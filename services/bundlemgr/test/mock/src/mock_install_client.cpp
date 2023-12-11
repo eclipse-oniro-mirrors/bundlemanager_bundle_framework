@@ -150,6 +150,11 @@ ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
     return 0;
 }
 
+ErrCode InstalldClient::IsExistApFile(const std::string &path, bool &isExist)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return 0;
@@ -204,7 +209,7 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
 }
 
 ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     return ERR_OK;
 }

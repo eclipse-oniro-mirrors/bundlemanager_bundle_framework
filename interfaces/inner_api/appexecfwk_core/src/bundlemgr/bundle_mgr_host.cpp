@@ -314,6 +314,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAppGalleryBundleName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
         &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME),
+        &BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
         &BundleMgrHost::HandleResetAOTCompileStatus);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE),
@@ -492,7 +494,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
     bool ret = GetBundleInfo(name, flag, info, userId);
     if (ret) {
         WRITE_PARCEL(reply.WriteInt32(ERR_OK));
-        return WriteParcelInfo(info, reply);
+        return WriteParcelInfoIntelligent(info, reply);
     }
     WRITE_PARCEL(reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR));
     return ERR_OK;
@@ -546,16 +548,11 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
     BundleInfo info;
     reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flags, info, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
     if (ret) {
-        if (WriteBigParcelable(info, __func__, reply) != ERR_OK) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfoIntelligent(info, reply);
     }
+    WRITE_PARCEL(reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR));
     return ERR_OK;
 }
 
@@ -577,9 +574,8 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        return WriteParcelInfoIntelligent<BundleInfo>(info, reply);
     }
     return ERR_OK;
 }
@@ -1539,7 +1535,7 @@ ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(installer->AsObject())) {
+    if (!reply.WriteRemoteObject(installer->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -2857,6 +2853,26 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string extensionTypeName = data.ReadString();
+    uint32_t flags = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
+    ErrCode ret =
+        QueryExtensionAbilityInfosOnlyWithTypeName(extensionTypeName, flags, userId, extensionAbilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(extensionAbilityInfos, reply)) {
+        APP_LOGE("Write extension infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3052,6 +3068,28 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleMgrHost::WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const
+{
+    Parcel tmpParcel;
+    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    if (!tmpParcel.WriteParcelable(&parcelInfo)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    size_t dataSize = tmpParcel.GetDataSize();
+    if (!reply.WriteUint32(dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tmpParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

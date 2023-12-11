@@ -850,6 +850,17 @@ public:
     virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &extensionTypeName,
         const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
+    /**
+     * @brief Query extension info only with type name.
+     * @param extensionTypeName Indicates the type of the extension.
+     * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &extensionTypeName,
+        const uint32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
     virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode) override;
 
@@ -911,18 +922,14 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
 
-    template <typename T>
-    bool GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo);
-
-    template<typename T>
-    bool GetBigParcelableInfo(
-        BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
-
     template<typename T>
     ErrCode GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     template<typename T>
     ErrCode InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo);
+
+    template<typename T>
+    ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
 

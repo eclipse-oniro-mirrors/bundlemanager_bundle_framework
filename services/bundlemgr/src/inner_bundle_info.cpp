@@ -2594,15 +2594,15 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
             for (const auto &item : info.second.requestPermissions) {
                 appInfo.permissions.push_back(item.name);
             }
         }
         if ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
@@ -2727,10 +2727,10 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
 void InnerBundleInfo::ProcessBundleFlags(
     int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
-        if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-            == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
             GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA), userId,
                 bundleInfo.applicationInfo);
         } else {
@@ -2740,8 +2740,8 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo);
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
     }
@@ -2750,8 +2750,8 @@ void InnerBundleInfo::ProcessBundleFlags(
 void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
         return;
     }
     for (const auto &info : innerModuleInfos_) {
@@ -2799,8 +2799,8 @@ void InnerBundleInfo::GetModuleWithHashValue(
 
 void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
 {
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
         bundleInfo.hapModuleInfos.clear();
         return;
     }
@@ -2817,8 +2817,8 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
             if (hapModuleInfo.hapPath.empty()) {
                 hapModuleInfo.moduleSourceDir = info.second.modulePath;
             }
-            if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-                != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+            if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
+                != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
                 hapModuleInfo.metadata.clear();
             }
 
@@ -2832,8 +2832,8 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
 void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const
 {
     hapModuleInfo.abilityInfos.clear();
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
         return;
     }
     APP_LOGD("Get bundleInfo with abilities.");
@@ -2843,7 +2843,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId);
-        if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
+        if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
             APP_LOGW("%{public}s is disabled,", ability.second.name.c_str());
             continue;
@@ -2851,8 +2851,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
         AbilityInfo abilityInfo = ability.second;
         abilityInfo.enabled = isEnabled;
 
-        if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-            != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
             abilityInfo.metaData.customizeData.clear();
             abilityInfo.metadata.clear();
         }
@@ -2864,8 +2864,8 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModule
 {
     hapModuleInfo.extensionInfos.clear();
     if ((static_cast<uint32_t>(flags) &
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
         return;
     }
     APP_LOGD("Get bundleInfo with extensionAbilities.");
@@ -2875,8 +2875,8 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModule
         }
         ExtensionAbilityInfo info = extensionInfo.second;
 
-        if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
-            != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
             info.metadata.clear();
         }
         hapModuleInfo.extensionInfos.emplace_back(info);
@@ -4129,11 +4129,6 @@ std::string InnerBundleInfo::GetEntryModuleName() const
     return Constants::EMPTY_STRING;
 }
 
-std::vector<std::string> InnerBundleInfo::GetFingerprints() const
-{
-    return baseApplicationInfo_->fingerprints;
-}
-
 void InnerBundleInfo::SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted)
 {
     auto it = innerModuleInfos_.find(packageName);
@@ -4162,14 +4157,6 @@ bool InnerBundleInfo::IsContainEncryptedModule() const
     return false;
 }
 
-void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
-{
-    auto fingerprints = baseApplicationInfo_->fingerprints;
-    if (std::find(fingerprints.begin(), fingerprints.end(), fingerprint) == fingerprints.end()) {
-        baseApplicationInfo_->fingerprints.emplace_back(fingerprint);
-    }
-}
-
 std::string InnerBundleInfo::GetAppIdentifier() const
 {
     return baseBundleInfo_->signatureInfo.appIdentifier;
@@ -4187,6 +4174,19 @@ void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
     } else if (!HasEntry() && debug) {
         baseApplicationInfo_->debug = debug;
     }
+}
+
+void InnerBundleInfo::AddOldAppId(const std::string &appId)
+{
+    auto appIds = baseBundleInfo_->oldAppIds;
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        baseBundleInfo_->oldAppIds.emplace_back(appId);
+    }
+}
+
+std::vector<std::string> InnerBundleInfo::GetOldAppIds() const
+{
+    return baseBundleInfo_->oldAppIds;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

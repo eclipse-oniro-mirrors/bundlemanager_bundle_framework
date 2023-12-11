@@ -114,7 +114,6 @@ const std::string APPLICATION_APP_TYPE = "bundleType";
 const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
-const std::string APPLICATION_FINGERPRINTS = "fingerprints";
 const std::string APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
@@ -414,12 +413,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         resourcesApply.emplace_back(parcel.ReadInt32());
     }
 
-    int32_t fingerprintsSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprintsSize);
-    CONTAINER_SECURITY_VERIFY(parcel, fingerprintsSize, &fingerprints);
-    for (int32_t i = 0; i < fingerprintsSize; i++) {
-        fingerprints.emplace_back(parcel.ReadString());
-    }
     gwpAsanEnabled = parcel.ReadBool();
     applicationReservedFlag = parcel.ReadUint32();
     return true;
@@ -569,10 +562,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, resourcesApply.size());
     for (auto &item : resourcesApply) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item);
-    }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprints.size());
-    for (auto &fingerprint : fingerprints) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fingerprint);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, gwpAsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
@@ -732,7 +721,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_META_DATA_CONFIG_JSON, applicationInfo.metaData},
         {APPLICATION_META_DATA_MODULE_JSON, applicationInfo.metadata},
         {APPLICATION_FINGERPRINT, applicationInfo.fingerprint},
-        {APPLICATION_FINGERPRINTS, applicationInfo.fingerprints},
         {APPLICATION_ICON, applicationInfo.icon},
         {APPLICATION_FLAGS, applicationInfo.flags},
         {APPLICATION_ENTRY_MODULE_NAME, applicationInfo.entryModuleName},
@@ -1179,14 +1167,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_FINGERPRINTS,
-        applicationInfo.fingerprints,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APPLICATION_ICON,

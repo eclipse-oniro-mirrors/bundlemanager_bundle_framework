@@ -27,8 +27,10 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <map>
+#include <regex>
 #include <sstream>
 #include <string.h>
 #include <sys/mman.h>
@@ -50,6 +52,7 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
+static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -80,7 +83,14 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     if (sourceString.length() < targetSuffix.length()) {
         return false;
     }
-    return sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length());
+    if (sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length())) {
+        return true;
+    }
+    if (targetSuffix == Constants::SO_SUFFIX) {
+        std::regex soRegex(SO_SUFFIX_REGEX);
+        return std::regex_search(sourceString, soRegex);
+    }
+    return false;
 }
 } // namespace
 
@@ -95,6 +105,23 @@ bool InstalldOperator::IsExistFile(const std::string &path)
         return false;
     }
     return S_ISREG(buf.st_mode);
+}
+
+bool InstalldOperator::IsExistApFile(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+
+    std::filesystem::path ApFilePath(path);
+    std::string directory = ApFilePath.parent_path().string();
+    
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.path().extension() == Constants::AP_SUFFIX) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool InstalldOperator::IsExistDir(const std::string &path)
@@ -720,7 +747,11 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         }
         if (ptr->d_type == DT_REG) {
             std::string currentFile = filePath + std::string(ptr->d_name);
-            std::string relativePath = currentFile.substr(originPath.size() + 1);
+            std::string prefixPath = originPath;
+            if (prefixPath.back() != Constants::FILE_SEPARATOR_CHAR) {
+                prefixPath.push_back(Constants::FILE_SEPARATOR_CHAR);
+            }
+            std::string relativePath = currentFile.substr(prefixPath.size());
             paths.emplace_back(relativePath);
             std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
             if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
@@ -1024,7 +1055,59 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     return true;
 }
 
-bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
+#if defined(CODE_SIGNATURE_ENABLE)
+bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+    const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap)
+{
+    if (codeSignatureParam.targetSoPath.empty()) {
+        return false;
+    }
+    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    for_each(soEntryFiles.begin(), soEntryFiles.end(),
+        [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
+        std::string fileName = entry.substr(prefix.length());
+        std::string path = codeSignatureParam.targetSoPath;
+        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+            path += Constants::FILE_SEPARATOR_CHAR;
+        }
+        entryMap.emplace(entry, path + fileName);
+        APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
+    });
+    return true;
+}
+
+ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
+    std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap)
+{
+    ErrCode ret = ERR_OK;
+    if (codeSignatureParam.isCompileSdkOpenHarmony &&
+        !Security::CodeSign::CodeSignUtils::isSupportOHCodeSign()) {
+        APP_LOGD("code signature is not supported");
+        return ret;
+    }
+    if (codeSignatureParam.signatureFileDir.empty()) {
+        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
+            codeSignHelper = std::make_shared<CodeSignHelper>();
+        }
+        Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
+            FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
+        if (codeSignatureParam.isEnterpriseBundle) {
+            APP_LOGD("Verify code signature for enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
+        } else {
+            APP_LOGD("Verify code signature for non-enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+        }
+    } else {
+        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
+    }
+    return ret;
+}
+#endif
+
+bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
+    std::shared_ptr<CodeSignHelper> &codeSignHelper)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
@@ -1042,32 +1125,11 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
-    if (!codeSignatureParam.targetSoPath.empty()) {
-        const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
-        for_each(soEntryFiles.begin(), soEntryFiles.end(),
-            [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
-            std::string fileName = entry.substr(prefix.length());
-            std::string path = codeSignatureParam.targetSoPath;
-            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-                path += Constants::FILE_SEPARATOR_CHAR;
-            }
-            entryMap.emplace(entry, path + fileName);
-            APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
-        });
+    if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
+        return false;
     }
-    ErrCode ret = ERR_OK;
-    if (codeSignatureParam.signatureFileDir.empty()) {
-        if (codeSignatureParam.isEnterpriseBundle) {
-            APP_LOGD("Verify code signature for enterprise bundle");
-            ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
-        } else {
-            APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = CodeSignUtils::EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
-        }
-    } else {
-        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
-    }
+
+    ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, codeSignHelper, entryMap);
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
         return true;
@@ -1111,7 +1173,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
 
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
-    Security::CodeSign::EntryMap entryMap;
+    Security::CodeCrypto::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
         const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
@@ -1146,7 +1208,7 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
         "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
         installBundleType, bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
-    Security::CodeSign::EntryMap entryMap;
+    Security::CodeCrypto::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, hapPath);
     ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
         isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),

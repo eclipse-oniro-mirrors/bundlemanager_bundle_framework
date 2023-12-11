@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 
+#include "code_sign_helper.h"
 #include "ipc/installd_host.h"
 #include "installd/installd_operator.h"
 
@@ -141,6 +142,8 @@ public:
 
     virtual ErrCode IsExistFile(const std::string &path, bool &isExist) override;
 
+    virtual ErrCode IsExistApFile(const std::string &path, bool &isExist) override;
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
 
     virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;
@@ -163,7 +166,7 @@ public:
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid) override;
 
     virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle) override;
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony) override;
 
     virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
         const unsigned char *profileBlock) override;
@@ -173,6 +176,7 @@ public:
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
+    std::shared_ptr<CodeSignHelper> codeSignHelper_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

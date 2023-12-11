@@ -912,37 +912,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0032, Function | Sma
     EXPECT_EQ(installResult, true);
 }
 
-
-/**
- * @tc.number: BmsBundleFreeInstallTest_0033
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0033, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    sptr<TargetAbilityInfo> targetAbilityInfo;
-    bool ret = connectAbilityMgr->CheckDependencies("", innerBundleInfo);
-    EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: BmsBundleFreeInstallTest_0034
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0034, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    sptr<TargetAbilityInfo> targetAbilityInfo;
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, false);
-}
-
 /**
  * @tc.number: BmsBundleFreeInstallTest_0035
  * Function: GetPreloadList
@@ -1376,26 +1345,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0022
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    Dependency dependency;
-    dependency.moduleName = MODULE_NAME_TEST;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    innerModuleInfo.dependencies.push_back(dependency);
-    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, false);
-}
-
-/**
  * @tc.number: BundleConnectAbilityMgr_0023
  * @tc.name: CheckIsModuleNeedUpdate
  * @tc.desc: Check Is Module Need Update
@@ -1444,27 +1393,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
     ResetDataMgr();
 }
 
-/**
- * @tc.number: BundleConnectAbilityMgr_0025
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    Dependency dependency;
-    dependency.moduleName = MODULE_NAME_TEST;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    innerModuleInfo.dependencies.push_back(dependency);
-    innerBundleInfo.innerModuleInfos_.insert(
-        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, true);
-}
-
 #ifndef SUPPORT_ERMS
 /**
  * @tc.number: BundleConnectAbilityMgr_0026
@@ -1487,26 +1415,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
     ResetDataMgr();
 }
 #endif
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0027
- * Function: BundleConnectAbilityMgr
- * @tc.name: test CheckDependencies
- * @tc.desc: test CheckDependencies failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    Dependency dependency;
-    dependency.moduleName = MODULE_NAME_TEST;
-    InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAME_TEST;
-    innerModuleInfo.dependencies.push_back(dependency);
-    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
-    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
-    EXPECT_EQ(ret, false);
-}
 
 /**
  * @tc.number: OnAbilityConnectDone_0001

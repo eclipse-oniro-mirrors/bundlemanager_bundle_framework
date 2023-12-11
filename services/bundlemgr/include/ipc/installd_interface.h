@@ -252,6 +252,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode IsExistApFile(const std::string &path, bool &isExist)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty)
     {
         return ERR_OK;
@@ -301,7 +306,7 @@ public:
     }
 
     virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle)
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
     {
         return ERR_OK;
     }
