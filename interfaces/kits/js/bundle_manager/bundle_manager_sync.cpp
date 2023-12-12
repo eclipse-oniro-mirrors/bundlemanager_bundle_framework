@@ -61,6 +61,8 @@ const std::string PERMISSION_NAME = "permissionName";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
+    "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 
 napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
 {
@@ -309,6 +311,11 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return ERROR_PARAM_CHECK_ERROR;
         }
+    }
+    if (extensionParamInfo.extensionTypeName.empty()) {
+        APP_LOGE("The input extensionAbilityType is empty.");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
     }
     if (extensionParamInfo.userId == Constants::UNSPECIFIED_USERID) {
         extensionParamInfo.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
