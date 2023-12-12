@@ -25,7 +25,6 @@
 #include "installd_client.h"
 #include "rdb_data_manager.h"
 #include "status_receiver_host.h"
-#include "parameter.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -72,13 +71,6 @@ public:
     virtual void OnStatusNotify(const int progress) override {}
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
-        if (bundleName_.find("sceneboard") != std::string::npos) {
-            if (resultCode != ERR_OK) {
-                SetParameter("persist.bms.bootdetector", "false");
-            } else {
-                SetParameter("persist.bms.bootdetector", "true");
-            }
-        }
         g_installedHapNum++;
         APP_LOGI("OnFinished, resultCode : %{public}d, resultMsg : %{public}s, count : %{public}u",
             resultCode, resultMsg.c_str(), g_installedHapNum.load());

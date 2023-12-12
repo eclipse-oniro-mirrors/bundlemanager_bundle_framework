@@ -2647,6 +2647,12 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
 
     ExtractResourceFiles(info, modulePath);
 
+    result = ExtractResFileDir(modulePath);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to ExtractResFileDir, error is %{public}d", result);
+        return result;
+    }
+
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -2674,6 +2680,23 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
     extractParam.extractFileType = ExtractFileType::RESOURCE;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
     APP_LOGD("ExtractResourceFiles ret : %{public}d", ret);
+}
+
+ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) const
+{
+    APP_LOGD("ExtractResFileDir begin");
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = modulePath + Constants::PATH_SEPARATOR + Constants::RES_FILE_PATH;
+    APP_LOGD("ExtractResFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
+    extractParam.extractFileType = ExtractFileType::RES_FILE;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    if (ret != ERR_OK) {
+        APP_LOGE("ExtractResFileDir ExtractFiles failed, error is %{public}d", ret);
+        return ret;
+    }
+    APP_LOGD("ExtractResFileDir end");
+    return ret;
 }
 
 ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath)
@@ -4068,10 +4091,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     bool isPreInstalledBundle) const
 {
     APP_LOGD("begin to verify code signature for native files");
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -4080,6 +4100,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
+    codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -4092,11 +4113,9 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
         return ERR_OK;
     }
     const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
-    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
-        APP_LOGD("code signature is not supported");
-        return ERR_OK;
-    }
-    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_, isEnterpriseBundle_);
+    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_,
+        isEnterpriseBundle_, isCompileSdkOpenHarmony);
 }
 
 ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,

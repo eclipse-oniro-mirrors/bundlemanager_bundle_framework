@@ -22,10 +22,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string IMAGE_JSON = "data:image/json";
-}
-
 BundleResourceParser::BundleResourceParser()
 {
 }
@@ -199,18 +195,10 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         return false;
     }
     // density 0
-    auto ret = resourceManager->GetMediaBase64DataById(static_cast<uint32_t>(iconId), icon, 0);
-    if (ret != OHOS::Global::Resource::RState::SUCCESS) {
-        APP_LOGE("GetMediaBase64DataById failed errcode: %{public}d, iconId:%{public}d",
-            static_cast<int32_t>(ret), iconId);
+    BundleResourceDrawable drawable;
+    if (!drawable.GetIconResourceByDrawable(iconId, 0, resourceManager, icon)) {
+        APP_LOGE("parse layered-image failed iconId:%{public}d", iconId);
         return false;
-    }
-    if (icon.substr(0, IMAGE_JSON.size()) == IMAGE_JSON) {
-        BundleResourceDrawable drawable;
-        if (!drawable.GetIconResourceByDrawable(iconId, 0, resourceManager, icon)) {
-            APP_LOGE("parse layered-image failed");
-            return false;
-        }
     }
     return true;
 }

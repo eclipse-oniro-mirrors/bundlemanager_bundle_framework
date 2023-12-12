@@ -94,6 +94,8 @@ public:
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);
 
+    static bool DetermineSuffix(const ExtractFileType &extractFileType, std::vector<std::string> &suffixes);
+
     static bool IsNativeFile(
         const std::string &entryName, const ExtractParam &extractParam);
 
@@ -212,6 +214,8 @@ public:
 #if defined(CODE_SIGNATURE_ENABLE)
     static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
         const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
+    static ErrCode PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
+        std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap);
 #endif
 
     static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,

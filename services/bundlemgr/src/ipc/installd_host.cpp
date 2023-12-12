@@ -534,8 +534,9 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
     std::string realHapPath = Str16ToStr8(data.ReadString16());
     std::string appIdentifier = Str16ToStr8(data.ReadString16());
     bool isEnterpriseBundle = data.ReadBool();
+    bool isCompileSdkOpenHarmony = data.ReadBool();
 
-    ErrCode result = VerifyCodeSignatureForHap(realHapPath, appIdentifier, isEnterpriseBundle);
+    ErrCode result = VerifyCodeSignatureForHap(realHapPath, appIdentifier, isEnterpriseBundle, isCompileSdkOpenHarmony);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

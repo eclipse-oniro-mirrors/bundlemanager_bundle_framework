@@ -29,6 +29,7 @@ const std::string TYPE_AN = "An";
 const std::string TYPE_PATCH = "Patch";
 const std::string TYPE_AP = "Ap";
 const std::string TYPE_RESOURCE = "Resource";
+const std::string TYPE_RES_FILE = "ResFile";
 const std::string TYPE_OTHER = "Other";
 const std::unordered_map<ExtractFileType, std::string> ARGS_MAP = {
     { ExtractFileType::ALL, TYPE_ALL },
@@ -37,6 +38,7 @@ const std::unordered_map<ExtractFileType, std::string> ARGS_MAP = {
     { ExtractFileType::PATCH, TYPE_PATCH },
     { ExtractFileType::AP, TYPE_AP },
     { ExtractFileType::RESOURCE, TYPE_RESOURCE },
+    { ExtractFileType::RES_FILE, TYPE_RES_FILE },
 };
 
 std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)

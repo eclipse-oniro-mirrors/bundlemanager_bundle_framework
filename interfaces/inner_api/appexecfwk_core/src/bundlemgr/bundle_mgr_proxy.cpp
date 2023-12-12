@@ -2094,7 +2094,7 @@ sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return nullptr;

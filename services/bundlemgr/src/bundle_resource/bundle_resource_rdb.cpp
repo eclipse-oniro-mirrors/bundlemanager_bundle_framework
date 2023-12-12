@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string IMAGE_JSON = "data:image/json";
+const std::string IMAGE_PNG = "data:image/png";
 }
 BundleResourceRdb::BundleResourceRdb()
 {
@@ -133,7 +133,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             APP_LOGE("GetString icon failed, ret: %{public}d", ret);
             return false;
         }
-        if (icon.substr(0, IMAGE_JSON.size()) == IMAGE_JSON) {
+        if (icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) {
             APP_LOGW("keyName:%{public}s icon is invalid, need add again", name.c_str());
             continue;
         }

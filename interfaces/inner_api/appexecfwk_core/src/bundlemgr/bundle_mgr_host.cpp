@@ -1535,7 +1535,7 @@ ErrCode BundleMgrHost::HandleGetBundleInstaller(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(installer->AsObject())) {
+    if (!reply.WriteRemoteObject(installer->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

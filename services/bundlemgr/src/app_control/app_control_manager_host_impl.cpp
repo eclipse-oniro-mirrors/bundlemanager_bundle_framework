@@ -284,7 +284,7 @@ int32_t AppControlManagerHostImpl::GetCallingUserId()
 ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want, int32_t userId)
 {
     APP_LOGD("host begin to SetDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -305,7 +305,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
 ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
     APP_LOGD("host begin to DeleteDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -327,14 +327,14 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         userId = GetCallingUserId();
     }
     ret = appControlManager_->DeleteDisposedRule(callerName, appId, userId);
-    
+
     return ret;
 }
 
 ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want, int32_t userId)
 {
     APP_LOGD("host begin to GetDisposedStatus");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -393,7 +393,7 @@ void AppControlManagerHostImpl::GetCallerByUid(const int32_t uid, std::string &c
 ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     APP_LOGD("host begin to GetDisposedRule");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -418,7 +418,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
 ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     APP_LOGD("host begin to SetDisposedRule");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }

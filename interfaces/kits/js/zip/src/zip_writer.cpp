@@ -15,6 +15,7 @@
  */
 #include "zip_writer.h"
 
+#include <cerrno>
 #include <stdio.h>
 
 #include "app_log_wrapper.h"
@@ -49,9 +50,9 @@ bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 
     FILE *fp = fopen(file_path.Value().c_str(), "rb");
     if (fp == nullptr) {
-        APP_LOGI("%{public}s called, filePath to realPath failed! filePath:%{private}s ",
+        APP_LOGI("%{public}s called, filePath to realPath failed! filePath:%{private}s,errno:%{public}s",
             __func__,
-            file_path.Value().c_str());
+            file_path.Value().c_str(), strerror(errno));
         return false;
     }
 

@@ -190,6 +190,7 @@ struct Extension {
     bool visible = false;
     std::vector<Skill> skills;
     std::vector<Metadata> metadata;
+    std::string extensionProcessMode;
 };
 
 struct App {
@@ -743,6 +744,14 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        EXTENSION_PROCESS_MODE,
+        extension.extensionProcessMode,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
@@ -2000,6 +2009,7 @@ bool ToExtensionInfo(
     }
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
+    extensionInfo.extensionProcessMode = ConvertToExtensionProcessMode(extension.extensionProcessMode);
 
     return true;
 }

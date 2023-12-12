@@ -428,6 +428,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0007, Function | SmallTest
 
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/png";
 
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -672,6 +673,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
     BundleResourceRdb resourceRdb;
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/png";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
 

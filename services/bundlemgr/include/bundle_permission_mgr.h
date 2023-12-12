@@ -96,6 +96,8 @@ public:
 
     static bool VerifySystemApp(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
 
+    static bool IsSystemApp();
+
     static int32_t GetHapApiVersion();
 
     static bool IsNativeTokenType();

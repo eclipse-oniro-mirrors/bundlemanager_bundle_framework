@@ -626,6 +626,7 @@ private:
     const std::string &srcHapPath, const std::string &realHapPath) const;
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
+    ErrCode ExtractResFileDir(const std::string &modulePath) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
