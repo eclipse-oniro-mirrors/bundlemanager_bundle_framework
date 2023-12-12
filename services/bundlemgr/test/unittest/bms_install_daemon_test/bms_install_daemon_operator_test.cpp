@@ -44,6 +44,7 @@ const std::string TEST_PATH = "/test/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_LIB_AP = "ap/test.ap";
+const std::string TEST_RES_FILE = "resources/resfile/test.txt";
 const std::string TEST_FILE_PATH = "/system/etc";
 const std::string TEST_ERROR_PATH = "/system/abc";
 const std::string TEST_ZIP_PATH = "/system/etc/graphic/bootpic.zip";
@@ -486,6 +487,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
 
     extractParam.extractFileType = ExtractFileType::AP;
     ret = InstalldOperator::IsNativeFile(TEST_LIB_AP, extractParam);
+    EXPECT_TRUE(ret);
+
+    extractParam.extractFileType = ExtractFileType::RES_FILE;
+    ret = InstalldOperator::IsNativeFile(TEST_RES_FILE, extractParam);
     EXPECT_TRUE(ret);
 }
 
