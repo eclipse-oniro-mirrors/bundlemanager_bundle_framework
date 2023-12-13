@@ -67,6 +67,11 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 {
     return false;
 }
+
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
 {
@@ -112,6 +117,11 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
 }
 
 bool BundlePermissionMgr::VerifyUninstallPermission()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
     return true;
 }
@@ -221,6 +231,12 @@ bool BundlePermissionMgr::IsSystemApp()
 {
     return false;
 }
+
+// for old api
+bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
@@ -228,6 +244,12 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 }
 
 bool BundlePermissionMgr::IsSystemApp()
+{
+    return true;
+}
+
+// for old api
+bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     return true;
 }
