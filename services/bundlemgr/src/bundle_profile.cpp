@@ -2051,8 +2051,12 @@ bool ParserNativeSo(
                 soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
                 return true;
+            } else if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::RISCV64)) {
+                cpuAbi = Constants::RISCV64;
+                soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::RISCV64);
+                UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
+                return true;
             }
-
             return false;
         }
 
