@@ -788,14 +788,12 @@ bool BundlePermissionMgr::IsSystemApp()
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("tokenType is %{private}d", tokenType);
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        APP_LOGD("caller tokenType is native or shell, ignore");
-        return true;
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        APP_LOGE("system app verification failed");
+        return false;
     }
-    APP_LOGE("system app verification failed");
-    return false;
+    APP_LOGD("caller tokenType is not hap, ignore");
+    return true;
 }
 
 bool BundlePermissionMgr::IsNativeTokenType()
