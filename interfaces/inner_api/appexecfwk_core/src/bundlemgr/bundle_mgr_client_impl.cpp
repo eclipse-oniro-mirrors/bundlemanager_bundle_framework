@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -503,6 +503,17 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     }
 
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
+}
+
+ErrCode BundleMgrClientImpl::CleanBundleTempFiles()
+{
+    APP_LOGD("Called.");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("Connect failed.");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
+    }
+    return bundleMgr_->CleanBundleTempFiles();
 }
 
 ErrCode BundleMgrClientImpl::Connect()

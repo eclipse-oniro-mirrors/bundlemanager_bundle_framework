@@ -191,5 +191,14 @@ ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo,
     }
     return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
+ErrCode BundleMgrClient::CleanBundleTempFiles()
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr.");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
+    return impl_->CleanBundleTempFiles();
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

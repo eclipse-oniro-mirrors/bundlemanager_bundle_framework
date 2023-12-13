@@ -224,5 +224,10 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::GetBundleTempPath(const std::string &dir, std::vector<std::string> &tempPath)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

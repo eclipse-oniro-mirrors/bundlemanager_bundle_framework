@@ -1538,6 +1538,25 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CleanBundleTempFiles()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Begin to clean bundle temp files.");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interface token fail.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_TEMP_FILES, data, reply)) {
+        APP_LOGE("Fail to clean bundle temp files from server.");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const int userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

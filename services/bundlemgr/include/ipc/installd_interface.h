@@ -165,6 +165,16 @@ public:
         return ERR_OK;
     }
     /**
+     * @brief Get all temp file path.
+     * @param dir Indicates the data dir.
+     * @param tempPath Indicates the cache file path.
+     * @return Returns ERR_OK if get cache file path successfully; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleTempPath(const std::string &dir, std::vector<std::string> &tempPath)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Scan dir by scanMode and resultMode. this interface has higher permissions to scan.
      * @param dir Indicates the directory to be scanned.
      * @param scanMode Indicates the scan mode.

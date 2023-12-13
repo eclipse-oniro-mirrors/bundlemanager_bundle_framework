@@ -3892,4 +3892,19 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Le
     ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: CleanBundleTempFiles_0100
+ * @tc.name: CleanBundleTempFiles
+ * @tc.desc: CleanBundleTempFiles when callingbundlename is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleTempFiles_0100, Function | SmallTest | Level0)
+{
+    std::string callingBundleName = "";
+    auto dataMgr = bundleMgrHostImpl_->GetDataMgrFromService();
+    int32_t userId = 100;
+    bundleMgrHostImpl_->CleanBundleTempTask(callingBundleName, dataMgr, userId);
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleTempFiles();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
 }

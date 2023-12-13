@@ -1230,6 +1230,86 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     return true;
 }
 
+ErrCode BundleMgrHostImpl::CleanBundleTempFiles()
+{
+    std::string callingBundleName = "";
+    auto uid = IPCSkeleton::GetCallingUid();
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    GetBundleNameForUid(uid, callingBundleName);
+    APP_LOGD("Start CleanBundleTempFiles, callingBundleName : %{public}s, userId : %{public}d",
+        callingBundleName.c_str(), userId);
+    if (userId < 0) {
+        APP_LOGE("UserId is invalid.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (callingBundleName.empty()) {
+        APP_LOGE("The calling bundle name is empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("Permission denied.");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Datamgr is nullptr.");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    CleanBundleTempTask(callingBundleName, dataMgr, userId);
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::CleanBundleTempTask(const std::string &bundleName,
+    const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId)
+{
+    std::vector<std::string> rootDir;
+    for (const auto &el : Constants::BUNDLE_EL) {
+        std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
+            Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
+        rootDir.emplace_back(dataDir);
+    }
+
+    auto cleanTemp = [bundleName, userId, rootDir, dataMgr, this]() {
+        std::vector<std::string> temps;
+        for (const auto &st : rootDir) {
+            std::vector<std::string> temp;
+            if (InstalldClient::GetInstance()->GetBundleTempPath(st, temp) != ERR_OK) {
+                APP_LOGW("GetBundleTempPath failed, path: %{public}s", st.c_str());
+            }
+            std::copy(temp.begin(), temp.end(), std::back_inserter(temps));
+        }
+
+        bool succeed = true;
+        if (!temps.empty()) {
+            for (const auto& temp : temps) {
+                ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(temp);
+                if (ret != ERR_OK) {
+                    APP_LOGE("CleanBundleDataDir failed, path: %{private}s", temp.c_str());
+                    succeed = false;
+                }
+            }
+        }
+        APP_LOGD("CleanBundleCacheFiles with succeed %{public}d", succeed);
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+            APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
+            return;
+        }
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = ERR_OK,
+            .type = NotifyType::BUNDLE_TEMP_CLEARED,
+            .uid = innerBundleUserInfo.uid,
+            .accessTokenId = innerBundleUserInfo.accessTokenId
+        };
+        NotifyBundleStatus(installRes);
+    };
+    ffrt::submit(cleanTemp);
+}
+
 bool BundleMgrHostImpl::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("start RegisterBundleStatusCallback");
