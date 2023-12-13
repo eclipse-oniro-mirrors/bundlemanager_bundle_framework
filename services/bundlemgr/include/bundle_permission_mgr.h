@@ -116,6 +116,11 @@ public:
 
     static void AddPermissionUsedRecord(const std::string &permission, int32_t successCount, int32_t failCount);
 
+    static bool IsBundleSelfCalling(const std::string &bundleName);
+
+    // for old api
+    static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
