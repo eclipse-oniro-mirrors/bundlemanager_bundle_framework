@@ -1538,7 +1538,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     return reply.ReadInt32();
 }
 
-ErrCode BundleMgrProxy::CleanBundleTempFiles()
+ErrCode BundleMgrProxy::CleanObsoleteBundleTempFiles()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("Begin to clean bundle temp files.");
@@ -1550,7 +1550,7 @@ ErrCode BundleMgrProxy::CleanBundleTempFiles()
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_TEMP_FILES, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_OBSOLETE_BUNDLE_TEMP_FILES, data, reply)) {
         APP_LOGE("Fail to clean bundle temp files from server.");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }

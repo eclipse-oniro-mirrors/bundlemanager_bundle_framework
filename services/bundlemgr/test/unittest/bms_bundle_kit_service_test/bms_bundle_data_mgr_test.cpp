@@ -3894,17 +3894,16 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: CleanBundleTempFiles_0100
- * @tc.name: CleanBundleTempFiles
- * @tc.desc: CleanBundleTempFiles when callingbundlename is empty.
+ * @tc.number: CleanObsoleteBundleTempFiles_0100
+ * @tc.name: CleanObsoleteBundleTempFiles
+ * @tc.desc: CleanObsoleteBundleTempFiles when callingbundlename is empty.
  */
-HWTEST_F(BmsBundleDataMgrTest, CleanBundleTempFiles_0100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleDataMgrTest, CleanObsoleteBundleTempFiles_0100, Function | SmallTest | Level1)
 {
     std::string callingBundleName = "";
-    auto dataMgr = bundleMgrHostImpl_->GetDataMgrFromService();
     int32_t userId = 100;
-    bundleMgrHostImpl_->CleanBundleTempTask(callingBundleName, dataMgr, userId);
-    ErrCode ret = bundleMgrHostImpl_->CleanBundleTempFiles();
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    bundleMgrHostImpl_->CleanObsoleteBundleTempTask(callingBundleName, userId);
+    ErrCode ret = bundleMgrHostImpl_->CleanObsoleteBundleTempFiles();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 }

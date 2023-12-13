@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t WAIT_TIME = 3000;
+constexpr uint32_t SEND_MAX_SIZE = 1000;
 }
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
@@ -210,6 +211,32 @@ ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<st
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH, data, reply, option);
     if (ret == ERR_OK) {
         if (reply.ReadStringVector(&cachePath)) {
+            return ERR_OK;
+        } else {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
+}
+
+ErrCode InstalldProxy::GetObsoleteBundleTempPath(
+    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (dirs.size() > SEND_MAX_SIZE || dirs.empty()) {
+        APP_LOGE("Dirs size is invalid size.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    INSTALLD_PARCEL_WRITE(data, Uint32, dirs.size());
+    for (const auto &dir : dirs) {
+        INSTALLD_PARCEL_WRITE(data, String, dir);
+    }
+    MessageParcel reply;
+    MessageOption option;
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_OBSOLETE_BUNDLE_TEMP_PATH, data, reply, option);
+    if (ret == ERR_OK) {
+        if (reply.ReadStringVector(&tempPaths)) {
             return ERR_OK;
         } else {
             return ERR_APPEXECFWK_PARCEL_ERROR;

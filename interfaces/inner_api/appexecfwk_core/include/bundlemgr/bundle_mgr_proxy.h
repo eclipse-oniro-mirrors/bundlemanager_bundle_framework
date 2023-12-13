@@ -471,10 +471,10 @@ public:
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
-     * @brief Clears temp data of a specified application through the proxy object.
+     * @brief Clears obsolete temp data of a specified application through the proxy object.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual ErrCode CleanBundleTempFiles() override;
+    virtual ErrCode CleanObsoleteBundleTempFiles() override;
     /**
      * @brief Clears application running data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.

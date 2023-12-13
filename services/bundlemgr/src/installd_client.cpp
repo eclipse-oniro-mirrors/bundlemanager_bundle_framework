@@ -151,22 +151,22 @@ ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bun
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
 {
     if (dir.empty()) {
-        APP_LOGE("Params are invalid.");
+        APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     return CallService(&IInstalld::GetBundleCachePath, dir, cachePath);
 }
 
-
-ErrCode InstalldClient::GetBundleTempPath(const std::string &dir, std::vector<std::string> &tempPath)
+ErrCode InstalldClient::GetObsoleteBundleTempPath(
+    const std::vector<std::string> &dirs, std::vector<std::string> &tempPath)
 {
-    if (dir.empty()) {
+    if (dirs.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetBundleTempPath, dir, tempPath);
+    return CallService(&IInstalld::GetObsoleteBundleTempPath, dirs, tempPath);
 }
 
 void InstalldClient::ResetInstalldProxy()

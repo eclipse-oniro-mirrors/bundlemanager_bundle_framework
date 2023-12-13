@@ -365,14 +365,15 @@ bool InstalldClient::StartInstalldService()
     return GetInstalldProxy();
 }
 
-ErrCode InstalldClient::GetBundleTempPath(const std::string &dir, std::vector<std::string> &tempPath)
+ErrCode InstalldClient::GetObsoleteBundleTempPath(
+    const std::vector<std::string> &dirs, std::vector<std::string> &tempPath)
 {
-    if (dir.empty()) {
-        APP_LOGE("Params are invalid.");
+    if (dirs.empty()) {
+        APP_LOGE("Params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetBundleTempPath, dir, tempPath);
+    return CallService(&IInstalld::GetObsoleteBundleTempPath, dirs, tempPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

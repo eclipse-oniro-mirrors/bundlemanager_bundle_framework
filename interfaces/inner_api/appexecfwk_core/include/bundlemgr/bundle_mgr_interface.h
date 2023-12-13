@@ -637,10 +637,10 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
-     * @brief Clears temp data of a specified application.
+     * @brief Clears obsolete temp data of a specified application.
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
-    virtual ErrCode CleanBundleTempFiles()
+    virtual ErrCode CleanObsoleteBundleTempFiles()
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
