@@ -833,9 +833,6 @@ bool BundlePermissionMgr::VerifyCallingUid()
 
 bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 {
-    if (VerifyCallingUid()) {
-        return true;
-    }
     std::string callingBundleName;
     auto uid = IPCSkeleton::GetCallingUid();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -845,8 +842,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
     if (!ret) {
-        APP_LOGE("getBundleName failed, uid : %{public}d", uid);
-        return false;
+        return BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     std::string bundleName = want.GetElement().GetBundleName();
     return bundleName == callingBundleName || callingBundleName == SCENEBOARD_BUNDLE_NAME;
