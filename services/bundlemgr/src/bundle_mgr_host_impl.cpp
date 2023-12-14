@@ -992,10 +992,6 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
 {
     APP_LOGD("start GetHapModuleInfo with bundleName %{public}s and userId: %{public}d",
         abilityInfo.bundleName.c_str(), userId);
-    std::string callingBundleName = "";
-    GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(abilityInfo.bundleName)) {
@@ -2425,7 +2421,8 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::EMPTY_STRING;
     }
@@ -2441,7 +2438,8 @@ std::string BundleMgrHostImpl::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::EMPTY_STRING;
     }
