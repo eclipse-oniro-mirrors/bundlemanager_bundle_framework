@@ -1232,6 +1232,61 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     return true;
 }
 
+ErrCode BundleMgrHostImpl::CleanObsoleteBundleTempFiles()
+{
+    std::string callingBundleName = "";
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (!GetBundleNameForUid(uid, callingBundleName)) {
+        APP_LOGE("Get bundle name for uid failed, uid is %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    if (callingBundleName.empty()) {
+        APP_LOGE("The calling bundle name is empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    APP_LOGD("Calling bundle name : %{public}s, userId : %{public}d", callingBundleName.c_str(), userId);
+    CleanObsoleteBundleTempTask(callingBundleName, userId);
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::CleanObsoleteBundleTempTask(const std::string &bundleName, int32_t userId)
+{
+    APP_LOGD("Called.");
+    std::vector<std::string> rootDir;
+    for (const auto &el : Constants::BUNDLE_EL) {
+        std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
+            Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
+        rootDir.emplace_back(dataDir);
+    }
+
+    auto cleanTemp = [rootDir]() {
+        std::vector<std::string> temps;
+        auto installd = InstalldClient::GetInstance();
+        if (installd != nullptr && installd->GetObsoleteBundleTempPath(rootDir, temps) != ERR_OK) {
+            APP_LOGE("Get bundle temp file list is false.");
+            return;
+        }
+
+        if (temps.empty()) {
+            APP_LOGD("Clean bundle temp file list is empty.");
+            return;
+        }
+        bool succeed = true;
+        for (const auto& temp : temps) {
+            auto ret = InstalldClient::GetInstance()->RemoveDir(temp);
+            if (ret != ERR_OK) {
+                APP_LOGE("Clean bundle data dir failed, path: %{private}s", temp.c_str());
+                succeed = false;
+            }
+        }
+        APP_LOGD("Clean bundle temp files with succeed %{public}d", succeed);
+    };
+    ffrt::submit(cleanTemp);
+}
+
 bool BundleMgrHostImpl::RegisterBundleStatusCallback(const sptr<IBundleStatusCallback> &bundleStatusCallback)
 {
     APP_LOGD("start RegisterBundleStatusCallback");
