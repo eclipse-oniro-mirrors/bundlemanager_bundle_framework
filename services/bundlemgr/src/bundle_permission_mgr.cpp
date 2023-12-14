@@ -788,14 +788,12 @@ bool BundlePermissionMgr::IsSystemApp()
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("tokenType is %{private}d", tokenType);
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        APP_LOGD("caller tokenType is native or shell, ignore");
-        return true;
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        APP_LOGE("system app verification failed");
+        return false;
     }
-    APP_LOGE("system app verification failed");
-    return false;
+    APP_LOGD("caller tokenType is not hap, ignore");
+    return true;
 }
 
 bool BundlePermissionMgr::IsNativeTokenType()
@@ -986,6 +984,63 @@ bool BundlePermissionMgr::InnerFilterRequestPermissions(
         }
     }
     return true;
+}
+
+bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGD("start, callingUid: %{public}d", callingUid);
+    std::string callingBundleName;
+    if (dataMgr->GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
+        return false;
+    }
+    APP_LOGD("bundleName :%{public}s, callingBundleName : %{public}s",
+        bundleName.c_str(), callingBundleName.c_str());
+    if (bundleName != callingBundleName) {
+        APP_LOGW("failed, callingUid: %{public}d", callingUid);
+        return false;
+    }
+    APP_LOGD("end, verify success");
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGD("start, callingUid: %{public}d", callingUid);
+    std::string callingBundleName;
+    if (dataMgr->GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
+        return false;
+    }
+    auto userId = callingUid / Constants::BASE_USER_RANGE;
+    ApplicationInfo applicationInfo;
+    auto res = dataMgr->GetApplicationInfoV9(callingBundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("getApplicationInfo failed, callingBundleName:%{public}s", callingBundleName.c_str());
+        return false;
+    }
+    auto systemApiVersion = GetSdkApiVersion();
+    auto appApiVersion = applicationInfo.apiTargetVersion;
+    // api version is the minimum value of {appApiVersion, systemApiVersion}
+    appApiVersion = systemApiVersion < appApiVersion ? systemApiVersion : appApiVersion;
+    APP_LOGD("appApiVersion: %{public}d", appApiVersion);
+
+    if (appApiVersion < beginApiVersion) {
+        APP_LOGI("previous app calling, verify success");
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

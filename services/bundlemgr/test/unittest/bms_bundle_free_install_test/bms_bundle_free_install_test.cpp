@@ -28,9 +28,6 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_pack_info.h"
-#ifndef SUPPORT_ERMS
-#include "mock_ecological_rule_manager.h"
-#endif
 #include "inner_bundle_info.h"
 #include "install_result.h"
 #include "installd/installd_service.h"
@@ -698,9 +695,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | Sma
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-#ifndef SUPPORT_ERMS
-    connectAbilityMgr->iErMgr_ = nullptr;
-#endif
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
@@ -1393,7 +1387,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
     ResetDataMgr();
 }
 
-#ifndef SUPPORT_ERMS
 /**
  * @tc.number: BundleConnectAbilityMgr_0026
  * Function: BundleConnectAbilityMgr
@@ -1414,7 +1407,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
     EXPECT_EQ(callerInfo.uid, 0);
     ResetDataMgr();
 }
-#endif
 
 /**
  * @tc.number: OnAbilityConnectDone_0001
@@ -1858,7 +1850,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | Smal
     EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
 }
 
-#ifndef SUPPORT_ERMS
 /**
  * @tc.number: CheckEcologicalRule_0001
  * Function: CheckEcologicalRule
@@ -1874,9 +1865,9 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
     name.SetBundleName("bundleName");
     want.SetElement(name);
     ErmsCallerInfo callerInfo;
-    ExperienceRule rule;
+    BmsExperienceRule rule;
     bool ret = connectAbilityMgr->CheckEcologicalRule(want, callerInfo, rule);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -1917,5 +1908,4 @@ HWTEST_F(BmsBundleFreeInstallTest, GetEcologicalCallerInfo_0002, Function | Smal
     ASSERT_NE(bundleDataMgr_, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = bundleDataMgr_;
 }
-#endif
 } // OHOS

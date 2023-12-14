@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "code_sign_utils.h"
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
+#include <sys/ioctl.h>
 #include "code_crypto_metadata_process.h"
 #include "linux/code_decrypt.h"
 #endif
@@ -53,6 +54,8 @@ static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
 static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
+static const char MARK_TEMP_DIR[] = "temp_useless";
+static constexpr size_t MARK_TEMP_LEN = 12;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -109,14 +112,21 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
 bool InstalldOperator::IsExistApFile(const std::string &path)
 {
-    if (path.empty()) {
+    std::string realPath;
+    std::filesystem::path apFilePath(path);
+    std::string apDir = apFilePath.parent_path().string();
+    if (path.empty() || !PathToRealPath(apDir, realPath)) {
         return false;
     }
 
-    std::filesystem::path ApFilePath(path);
-    std::string directory = ApFilePath.parent_path().string();
+    std::error_code errorCode;
+    std::filesystem::directory_iterator iter(realPath, errorCode);
     
-    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+    if (errorCode) {
+        APP_LOGE("Error occurred while opening apDir: %{public}s", errorCode.message().c_str());
+        return false;
+    }
+    for (const auto& entry : iter) {
         if (entry.path().extension() == Constants::AP_SUFFIX) {
             return true;
         }
@@ -247,27 +257,11 @@ bool InstalldOperator::IsNativeFile(
         return false;
     }
     std::string prefix;
-    std::vector<std::string> suffixs;
-    switch (extractParam.extractFileType) {
-        case ExtractFileType::SO: {
-            prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-            suffixs.emplace_back(Constants::SO_SUFFIX);
-            break;
-        }
-        case ExtractFileType::AN: {
-            prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-            suffixs.emplace_back(Constants::AN_SUFFIX);
-            suffixs.emplace_back(Constants::AI_SUFFIX);
-            break;
-        }
-        case ExtractFileType::AP: {
-            prefix = Constants::AP;
-            suffixs.emplace_back(Constants::AP_SUFFIX);
-            break;
-        }
-        default: {
-            return false;
-        }
+    std::vector<std::string> suffixes;
+    if (!DeterminePrefix(extractParam.extractFileType, extractParam.cpuAbi, prefix) ||
+        !DetermineSuffix(extractParam.extractFileType, suffixes)) {
+        APP_LOGE("determine prefix or suffix failed");
+        return false;
     }
 
     if (!StartsWith(entryName, prefix)) {
@@ -276,14 +270,14 @@ bool InstalldOperator::IsNativeFile(
     }
 
     bool checkSuffix = false;
-    for (const auto &suffix : suffixs) {
+    for (const auto &suffix : suffixes) {
         if (EndsWith(entryName, suffix)) {
             checkSuffix = true;
             break;
         }
     }
 
-    if (!checkSuffix) {
+    if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE) {
         APP_LOGD("file type error.");
         return false;
     }
@@ -393,6 +387,36 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
         }
         case ExtractFileType::AP: {
             prefix = Constants::AP;
+            break;
+        }
+        case ExtractFileType::RES_FILE: {
+            prefix = Constants::RES_FILE_PATH;
+            break;
+        }
+        default: {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, std::vector<std::string> &suffixes)
+{
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            suffixes.emplace_back(Constants::SO_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AN: {
+            suffixes.emplace_back(Constants::AN_SUFFIX);
+            suffixes.emplace_back(Constants::AI_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AP: {
+            suffixes.emplace_back(Constants::AP_SUFFIX);
+            break;
+        }
+        case ExtractFileType::RES_FILE: {
             break;
         }
         default: {
@@ -616,6 +640,43 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir)
     }
     closedir(dirPtr);
     return size;
+}
+
+void InstalldOperator::TraverseObsoleteTempDirectory(
+    const std::string &currentPath, std::vector<std::string> &tempDirs)
+{
+    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
+        APP_LOGE("Traverse temp directory current path invaild");
+        return;
+    }
+    std::string filePath = "";
+    if (!PathToRealPath(currentPath, filePath)) {
+        APP_LOGE("File is not real path, file path: %{private}s", currentPath.c_str());
+        return;
+    }
+    DIR* dir = opendir(filePath.c_str());
+    if (dir == nullptr) {
+        return;
+    }
+    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        if (ptr->d_type == DT_DIR && strncmp(ptr->d_name, MARK_TEMP_DIR, MARK_TEMP_LEN) == 0) {
+            std::string tempDir = filePath + std::string(ptr->d_name);
+            tempDirs.emplace_back(tempDir);
+            continue;
+        }
+        if (ptr->d_type == DT_DIR) {
+            std::string currentDir = filePath + std::string(ptr->d_name);
+            TraverseObsoleteTempDirectory(currentDir, tempDirs);
+        }
+    }
+    closedir(dir);
 }
 
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)

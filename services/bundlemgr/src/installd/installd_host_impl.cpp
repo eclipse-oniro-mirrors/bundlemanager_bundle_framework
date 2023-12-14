@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -182,7 +182,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::string &bundleName, const DirType dirType) 
+static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::string &bundleName, const DirType dirType)
 {
     switch (dirType) {
         case DirType::DIR_EL1:
@@ -190,7 +190,7 @@ static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::strin
             break;
         case DirType::DIR_EL2:
             bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2 + bundleName;
-            break;    
+            break;
         default:
             break;
     }
@@ -205,7 +205,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
         APP_LOGW("CreateBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
         return;
     }
-    // Setup BackupExtensionAbility's home directory in a harmless way    
+    // Setup BackupExtensionAbility's home directory in a harmless way
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
@@ -317,16 +317,18 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
 
     std::string bundleBackupDir;
-    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir, DirType::DIR_EL2);
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
+        DirType::DIR_EL2);
     ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-                            createDirParam.isPreInstallApp, createDirParam.debug);
+        createDirParam.isPreInstallApp, createDirParam.debug);
     if (ret != ERR_OK) {
         APP_LOGE("CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
  
-    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir, DirType::DIR_EL1);
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
+        DirType::DIR_EL1);
     ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-                            createDirParam.isPreInstallApp, createDirParam.debug);
+        createDirParam.isPreInstallApp, createDirParam.debug);
     if (ret != ERR_OK) {
         APP_LOGE("CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -430,12 +432,9 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         APP_LOGE("failed to remove cloud dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
-    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK) {
-        APP_LOGE("failed to remove backup ext el2 home dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
-        APP_LOGE("failed to remove backup ext el1 home dir");
+    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK ||
+        RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
+        APP_LOGE("failed to remove backup ext home dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     if (RemoveDistributedDir(bundleName, userid) != ERR_OK) {
@@ -619,6 +618,32 @@ ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::TraverseCacheDirectory(dir, cachePath);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetObsoleteBundleTempPath(
+    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
+{
+    APP_LOGD("Called.");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("Installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (dirs.empty()) {
+        APP_LOGE("Input param is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    for (const auto &dir : dirs) {
+        if (dir.empty()) {
+            APP_LOGE("Input param is invalid");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        std::vector<std::string> temp;
+        InstalldOperator::TraverseObsoleteTempDirectory(dir, temp);
+        std::copy(temp.begin(), temp.end(), std::back_inserter(tempPaths));
+    }
     return ERR_OK;
 }
 

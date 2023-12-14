@@ -1227,6 +1227,10 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         }
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+        if (isPrivateType) {
+            EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
+            continue;
+        }
         if (want.GetAction() == SHARE_ACTION) {
             if (!MatchShare(want, skillsPair->second)) {
                 continue;
@@ -1235,11 +1239,12 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
             continue;
         }
         for (const Skill &skill : skillsPair->second) {
-            if (isPrivateType || skill.Match(want)) {
+            if (skill.Match(want)) {
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
                 }
                 EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
+                break;
             }
         }
     }

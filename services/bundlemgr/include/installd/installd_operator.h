@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -94,6 +94,8 @@ public:
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);
 
+    static bool DetermineSuffix(const ExtractFileType &extractFileType, std::vector<std::string> &suffixes);
+
     static bool IsNativeFile(
         const std::string &entryName, const ExtractParam &extractParam);
 
@@ -176,6 +178,15 @@ public:
      * @return Returns true if successfully; returns false otherwise.
      */
     static void TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs);
+
+    /**
+     * @brief Traverse all obsolete temp directories.
+     * @param currentPath Indicates the current path.
+     * @param tempDirs Indicates the temp directories.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    static void TraverseObsoleteTempDirectory(const std::string &currentPath, std::vector<std::string> &tempDirs);
+
     /**
      * @brief Get disk usage from path.
      * @param path Indicates the current path.

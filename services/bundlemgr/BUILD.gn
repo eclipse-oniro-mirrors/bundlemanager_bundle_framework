@@ -45,11 +45,6 @@ config("bundlemgr_common_config") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-
-  if (ecologic_rule_mgr_enabled) {
-    defines += [ "SUPPORT_ERMS" ]
-    include_dirs += [ "${ecological_rule_mgr_path}" ]
-  }
 }
 
 config("rdb_config") {
@@ -78,6 +73,7 @@ bundlemgr_parser_common_config = [
 ]
 
 ohos_source_set("parser_common") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "src/base_extractor.cpp",
     "src/zip_file.cpp",
@@ -101,6 +97,7 @@ ohos_source_set("parser_common") {
 }
 
 ohos_source_set("rpcid_decode") {
+  branch_protector_ret = "pac_ret"
   include_dirs = [ "include/rpcid_decode" ]
 
   sources = [ "src/rpcid_decode/syscap_tool.c" ]
@@ -114,6 +111,7 @@ ohos_source_set("rpcid_decode") {
 }
 
 ohos_source_set("bundle_parser") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "include/bundle_extractor.h",
     "include/bundle_parser.h",
@@ -315,10 +313,6 @@ ohos_shared_library("libbms") {
       "power_manager:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
-  }
-
-  if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_manager:erms_client" ]
   }
 
   if (bundle_framework_power_mgr_enable) {

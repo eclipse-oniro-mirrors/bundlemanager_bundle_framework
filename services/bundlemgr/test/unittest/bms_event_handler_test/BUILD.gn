@@ -77,11 +77,6 @@ ohos_unittest("BmsEventHandlerTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-  if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_manager:erms_client" ]
-    defines += [ "SUPPORT_ERMS" ]
-    include_dirs += [ "${ecological_rule_mgr_path}" ]
-  }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
@@ -182,11 +177,6 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
-  }
-  if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_manager:erms_client" ]
-    defines += [ "SUPPORT_ERMS" ]
-    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
