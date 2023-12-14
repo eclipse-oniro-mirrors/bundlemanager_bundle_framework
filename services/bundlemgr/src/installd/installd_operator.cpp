@@ -110,14 +110,21 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
 bool InstalldOperator::IsExistApFile(const std::string &path)
 {
-    if (path.empty()) {
+    std::string realPath;
+    std::filesystem::path apFilePath(path);
+    std::string apDir = apFilePath.parent_path().string();
+    if (path.empty() || !PathToRealPath(apDir, realPath)) {
         return false;
     }
 
-    std::filesystem::path ApFilePath(path);
-    std::string directory = ApFilePath.parent_path().string();
+    std::error_code errorCode;
+    std::filesystem::directory_iterator iter(realPath, errorCode);
     
-    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+    if (errorCode) {
+        APP_LOGE("Error occurred while opening apDir: %{public}s", errorCode.message().c_str());
+        return false;
+    }
+    for (const auto& entry : iter) {
         if (entry.path().extension() == Constants::AP_SUFFIX) {
             return true;
         }
