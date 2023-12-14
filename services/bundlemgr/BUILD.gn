@@ -73,6 +73,7 @@ bundlemgr_parser_common_config = [
 ]
 
 ohos_source_set("parser_common") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "src/base_extractor.cpp",
     "src/zip_file.cpp",
@@ -96,6 +97,7 @@ ohos_source_set("parser_common") {
 }
 
 ohos_source_set("rpcid_decode") {
+  branch_protector_ret = "pac_ret"
   include_dirs = [ "include/rpcid_decode" ]
 
   sources = [ "src/rpcid_decode/syscap_tool.c" ]
@@ -109,6 +111,7 @@ ohos_source_set("rpcid_decode") {
 }
 
 ohos_source_set("bundle_parser") {
+  branch_protector_ret = "pac_ret"
   sources = [
     "include/bundle_extractor.h",
     "include/bundle_parser.h",

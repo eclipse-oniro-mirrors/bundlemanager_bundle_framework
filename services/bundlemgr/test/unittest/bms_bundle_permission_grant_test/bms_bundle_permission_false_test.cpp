@@ -196,7 +196,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0600, Functi
 {
     std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
     bool ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**
