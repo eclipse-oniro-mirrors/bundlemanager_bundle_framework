@@ -876,14 +876,12 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool isStage = (infos.begin()->second).GetIsNewVersion();
     const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
-    bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
     bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
     bool hasEntry = (infos.begin()->second).HasEntry();
     bool isSameDebugType = true;
     bool entryDebug = hasEntry ? debug : false;
-    bool gwpAsanEnabled = (infos.begin()->second).GetGwpAsanEnabled();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -933,11 +931,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (targetPriority != info.second.GetTargetPriority()) {
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
         }
-        // check asanEnabled
-        if (asanEnabled != info.second.GetAsanEnabled()) {
-            APP_LOGE("asanEnabled is not same");
-            return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
-        }
         if (bundleType != info.second.GetApplicationBundleType()) {
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
@@ -951,9 +944,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (!hasEntry) {
             hasEntry = info.second.HasEntry();
             entryDebug = info.second.GetBaseApplicationInfo().debug;
-        }
-        if (gwpAsanEnabled != info.second.GetGwpAsanEnabled()) {
-            return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
         }
     }
 

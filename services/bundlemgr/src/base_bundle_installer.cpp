@@ -3560,15 +3560,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
     }
 #endif
-    if (oldInfo.GetAsanEnabled() != newInfo.GetAsanEnabled()) {
-        APP_LOGE("asanEnabled is not same");
-        return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
-    }
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
-    }
-    if (oldInfo.GetGwpAsanEnabled() != newInfo.GetGwpAsanEnabled()) {
-        return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
     }
 
     ErrCode ret = CheckDebugType(oldInfo, newInfo);
