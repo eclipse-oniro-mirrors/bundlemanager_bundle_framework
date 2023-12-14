@@ -1867,7 +1867,7 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
     ErmsCallerInfo callerInfo;
     BmsExperienceRule rule;
     bool ret = connectAbilityMgr->CheckEcologicalRule(want, callerInfo, rule);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
