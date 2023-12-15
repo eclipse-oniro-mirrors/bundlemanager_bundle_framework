@@ -952,7 +952,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Functi
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 /**
@@ -1306,7 +1306,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8700, Functi
     AbilityInfo abilityInfo;
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 /**
@@ -1684,6 +1684,54 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_21000, Funct
 {
     std::string additionalInfo = "abc";
     ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_22000
+ * @tc.name: test BmsBundlePermissionTokenTest of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. BmsBundlePermissionTokenTest false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_22000, Function | SmallTest | Level0)
+{
+    std::vector<ProxyData> proxyDatas;
+    auto ret = bundleMgrHostImpl_->GetProxyDataInfos("", "", proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_23000
+ * @tc.name: test GetAllProxyDataInfos of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAllProxyDataInfos false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_23000, Function | SmallTest | Level0)
+{
+    std::vector<ProxyData> proxyDatas;
+    auto ret = bundleMgrHostImpl_->GetAllProxyDataInfos(proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_24000
+ * @tc.name: test SetExtNameOrMIMEToApp
+ * @tc.desc: 1.SetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_24000, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_25000
+ * @tc.name: test DelExtNameOrMIMEToApp
+ * @tc.desc: 1.DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_25000, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

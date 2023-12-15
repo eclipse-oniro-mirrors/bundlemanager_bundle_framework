@@ -64,11 +64,14 @@ bool BundleMgrHostImpl::GetApplicationInfo(
 {
     APP_LOGD("start GetApplicationInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         appName.c_str(), flags, userId);
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!VerifyQueryPermission(appName)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(appName)) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -86,11 +89,13 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
 {
     APP_LOGD("start GetApplicationInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         appName.c_str(), flags, userId);
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyQueryPermission(appName)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(appName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -113,11 +118,12 @@ bool BundleMgrHostImpl::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
     APP_LOGD("start GetApplicationInfos, flags : %{public}d, userId : %{public}d", flags, userId);
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -139,11 +145,11 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
     APP_LOGD("start GetApplicationInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -458,7 +464,9 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     APP_LOGD("start GetBundleGids, bundleName : %{public}s", bundleName.c_str());
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return false;
     }
@@ -473,6 +481,12 @@ bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector
 bool BundleMgrHostImpl::GetBundleGidsByUid(const std::string &bundleName, const int &uid, std::vector<int> &gids)
 {
     APP_LOGD("start GetBundleGidsByUid, bundleName : %{public}s, uid : %{public}d", bundleName.c_str(), uid);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -495,7 +509,7 @@ bool BundleMgrHostImpl::CheckIsSystemAppByUid(const int uid)
 bool BundleMgrHostImpl::GetBundleInfosByMetaData(const std::string &metaData, std::vector<BundleInfo> &bundleInfos)
 {
     APP_LOGD("start GetBundleInfosByMetaData, metaData : %{public}s", metaData.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -981,16 +995,9 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
 {
     APP_LOGD("start GetHapModuleInfo with bundleName %{public}s and userId: %{public}d",
         abilityInfo.bundleName.c_str(), userId);
-    std::string callingBundleName = "";
-    GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-
-    if (!BundlePermissionMgr::IsNativeTokenType() && (callingBundleName != abilityInfo.bundleName)) {
-        APP_LOGE("invalid token or get module info of other bundle");
-        return false;
-    }
-
-    if (!VerifyQueryPermission(abilityInfo.bundleName)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
     }
@@ -2233,7 +2240,9 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::INVALID_UID;
     }
@@ -2482,7 +2491,9 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::EMPTY_STRING;
     }
@@ -2497,7 +2508,9 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
 std::string BundleMgrHostImpl::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::EMPTY_STRING;
     }
@@ -2550,11 +2563,9 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("invalid token is not allowed to call this function");
-        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -2581,13 +2592,11 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("invalid token is not allowed to call this function");
-        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2612,13 +2621,11 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("invalid token is not allowed to call this function");
-        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(abilityInfo.bundleName)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
-        return false;
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2848,9 +2855,9 @@ bool BundleMgrHostImpl::IsPreInstallApp(const std::string &bundleName)
 ErrCode BundleMgrHostImpl::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
     std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify token type failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2862,9 +2869,9 @@ ErrCode BundleMgrHostImpl::GetProxyDataInfos(const std::string &bundleName, cons
 
 ErrCode BundleMgrHostImpl::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify token type failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2923,9 +2930,9 @@ ErrCode BundleMgrHostImpl::SetExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("SetExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -2941,9 +2948,9 @@ ErrCode BundleMgrHostImpl::DelExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("DelExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {

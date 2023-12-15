@@ -265,54 +265,6 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1200, Functi
     AbilityInfo abilityInfo;
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
-}
-
-/**
- * @tc.number: BmsBundlePermissionTokenTest_1300
- * @tc.name: test GetProxyDataInfos of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetProxyDataInfos false by no permission
- */
-HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1300, Function | SmallTest | Level0)
-{
-    std::vector<ProxyData> proxyDatas;
-    auto ret = bundleMgrHostImpl_->GetProxyDataInfos("", "", proxyDatas);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
- * @tc.number: BmsBundlePermissionTokenTest_1400
- * @tc.name: test GetAllProxyDataInfos of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetAllProxyDataInfos false by no permission
- */
-HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1400, Function | SmallTest | Level0)
-{
-    std::vector<ProxyData> proxyDatas;
-    auto ret = bundleMgrHostImpl_->GetAllProxyDataInfos(proxyDatas);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
- * @tc.number: BmsBundlePermissionTokenTest_1500
- * @tc.name: test SetExtNameOrMIMEToApp
- * @tc.desc: 1.SetExtNameOrMIMEToApp
- */
-HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1500, Function | MediumTest | Level1)
-{
-    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
-
-/**
- * @tc.number: BmsBundlePermissionTokenTest_1600
- * @tc.name: test DelExtNameOrMIMEToApp
- * @tc.desc: 1.DelExtNameOrMIMEToApp
- */
-HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1600, Function | MediumTest | Level1)
-{
-    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
 }
 } // OHOS
