@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "errors.h"
 #define private public
 
 #include <fstream>
@@ -195,7 +196,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0500, Functi
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0600, Function | SmallTest | Level0)
 {
     std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
-    bool ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
+    ErrCode ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
