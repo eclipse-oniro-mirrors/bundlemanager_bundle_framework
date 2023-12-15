@@ -304,6 +304,17 @@ bool DefaultAppMgr::IsBrowserWant(const Want& want) const
         APP_LOGD("Action does not match, not browser want");
         return false;
     }
+    bool matchEntity = false;
+    for (const auto& entity : want.GetEntities()) {
+        if (entity == ENTITY_BROWSER) {
+            matchEntity = true;
+            break;
+        }
+    }
+    if (!matchEntity) {
+        APP_LOGD("Entity does not match, not browser want");
+        return false;
+    }
     std::string uri = want.GetUriString();
     bool matchUri = uri.rfind(HTTP_SCHEME, 0) == 0 || uri.rfind(HTTPS_SCHEME, 0) == 0;
     if (!matchUri) {
