@@ -332,6 +332,12 @@ private:
      */
     void InnerProcessRebootSharedBundleInstall(const std::list<std::string> &bundleList, Constants::AppType appType);
     /**
+     * @brief Process reboot install system hsp by bundleList.
+     * @param scanPathList Indicates store bundle list.
+     * @return
+     */
+    void InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList);
+    /**
      * @brief Reboot uninstall system and system vendor bundles.
      * @return
      */
@@ -400,6 +406,19 @@ private:
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
         bool removable);
+    /**
+     * @brief OTA Install system hsp.
+     * @param filePaths Indicates the filePaths.
+     * @return Returns ERR_OK if this function called successfully; returns false otherwise.
+     */
+    ErrCode OTAInstallSystemHsp(const std::vector<std::string> &filePaths);
+    /**
+     * @brief version is the same, determine whether to update based on the buildHash
+     * @param oldInfo Indicates the old innerBundleInfo.
+     * @param newInfo Indicates the new innerBundleInfo.
+     * @return Returns true if need to update.
+     */
+    bool IsNeedToUpdateSharedHspByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     /**
      * @brief Used to determine whether the module has been installed. If the installation has
      *        been uninstalled, OTA install and upgrade will not be allowed.

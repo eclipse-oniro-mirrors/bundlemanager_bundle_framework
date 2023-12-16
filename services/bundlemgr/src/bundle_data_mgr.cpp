@@ -5943,7 +5943,8 @@ bool BundleDataMgr::GetOldAppIds(const std::string &bundleName, std::vector<std:
 bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo,
     const InnerBundleInfo &newInfo) const
 {
-    return !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
+    return newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+        !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
 }
 
 std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
