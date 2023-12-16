@@ -161,8 +161,53 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
 
         ResetInstallProperties();
     }
+    CheckUninstallSystemHsp(bundleName);
 
     return true;
+}
+
+void SystemBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+    InnerBundleInfo info;
+    if (!(dataMgr->FetchInnerBundleInfo(bundleName, info))) {
+        APP_LOGD("bundleName %{public}s not existed local", bundleName.c_str());
+        return;
+    }
+    if (info.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+        APP_LOGD("bundleName %{public}s is not a system hsp", bundleName.c_str());
+        return;
+    }
+    bool isExistHsp = false;
+    for (const auto &item : info.GetInnerModuleInfos()) {
+        if (item.second.distro.moduleType == "shared") {
+            isExistHsp = true;
+            return;
+        }
+    }
+    if (!isExistHsp) {
+        InstallParam installParam;
+        installParam.userId = Constants::DEFAULT_USERID;
+        installParam.needSavePreInstallInfo = true;
+        installParam.isPreInstallApp = true;
+        installParam.noSkipsKill = false;
+        installParam.needSendEvent = false;
+        installParam.isKeepData = true;
+        MarkPreBundleSyeEventBootTag(false);
+        ErrCode result = UninstallBundle(bundleName, installParam);
+        if (result != ERR_OK) {
+            APP_LOGW("uninstall system bundle fail, error: %{public}d", result);
+            return;
+        }
+        PreInstallBundleInfo preInstallBundleInfo;
+        if ((dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
+            dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
