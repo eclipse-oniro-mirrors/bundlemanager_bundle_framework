@@ -433,12 +433,13 @@ bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string>
 ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
