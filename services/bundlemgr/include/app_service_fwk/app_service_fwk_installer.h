@@ -56,6 +56,7 @@ private:
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath);
+    ErrCode ExtractModule(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &bundlePath);
     ErrCode MkdirIfNotExist(const std::string &dir);
     ErrCode ProcessNativeLibrary(
         const std::string &bundlePath,
@@ -76,14 +77,40 @@ private:
     void RollBack();
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     void RemoveInfo(const std::string &bundleName);
+    void SavePreInstallBundleInfo(
+        ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode UpdateAppService(InnerBundleInfo &oldInfo,
+        std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        InstallParam &installParam);
+    ErrCode UninstallLowerVersion(const std::vector<std::string> &moduleNameList);
+    bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
+    bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo);
+    bool CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
+    void GetUninstallModuleNames(
+        const std::vector<std::string> oldModuleNames, std::vector<std::string> &uninstallModuleNames) const;
+    ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &hspPath);
+    ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
+    ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::string bundleName_;
     std::string bundleMsg_;
+    std::vector<std::string> uninstallModuleVec_;
+    bool versionUpgrade_ = false;
+    bool moduleUpdate_ = false;
+    std::vector<std::string> deleteBundlePath_;
     uint32_t versionCode_ = 0;
     InnerBundleInfo newInnerBundleInfo_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
+
+#define CHECK_RESULT(errcode, errmsg)                                              \
+    do {                                                                           \
+        if (errcode != ERR_OK) {                                                   \
+            APP_LOGE(errmsg, errcode);                                             \
+            return errcode;                                                        \
+        }                                                                          \
+    } while (0)
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

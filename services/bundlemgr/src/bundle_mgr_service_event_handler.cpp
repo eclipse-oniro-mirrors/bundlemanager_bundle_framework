@@ -1170,6 +1170,12 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
         }
     }
 
+    std::list<std::string> systemHspDirs;
+    for (const auto &systemHspScanInfo : systemHspList_) {
+        systemHspDirs.emplace_back(systemHspScanInfo.bundleDir);
+    }
+
+    InnerProcessRebootSystemHspInstall(systemHspDirs);
     InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessStockBundleProvisionInfo();
@@ -1400,6 +1406,85 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
+}
+
+void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
+{
+    APP_LOGD("InnerProcessRebootSystemHspInstall");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    for (const auto &scanPath : scanPathList) {
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
+            APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            continue;
+        }
+        auto bundleName = infos.begin()->second.GetBundleName();
+        auto versionCode = infos.begin()->second.GetVersionCode();
+        AddParseInfosToMap(bundleName, infos);
+        auto mapIter = loadExistData_.find(bundleName);
+        if (mapIter == loadExistData_.end()) {
+            APP_LOGI("OTA Install new system hsp(%{public}s) by path(%{private}s).",
+                bundleName.c_str(), scanPath.c_str());
+            if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
+                APP_LOGE("OTA Install new system hsp(%{public}s) error.", bundleName.c_str());
+            }
+            continue;
+        }
+        InnerBundleInfo oldBundleInfo;
+        bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
+        if (!hasInstalled) {
+            APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
+            continue;
+        }
+        if (oldBundleInfo.GetVersionCode() > versionCode) {
+            APP_LOGD("the installed version is up-to-date");
+            continue;
+        }
+        if (oldBundleInfo.GetVersionCode() == versionCode) {
+            for (const auto &item : infos) {
+                if (!IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
+                    APP_LOGD("the installed version is up-to-date");
+                    continue;
+                }
+            }
+        }
+        if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
+            APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
+        }
+    }
+}
+
+ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &filePaths)
+{
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.removable = false;
+    AppServiceFwkInstaller installer;
+
+    return installer.Install(filePaths, installParam);
+}
+
+bool BMSEventHandler::IsNeedToUpdateSharedHspByHash(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    std::string moduleName = newInfo.GetCurrentModulePackage();
+    std::string newModuleBuildHash;
+    if (!newInfo.GetModuleBuildHash(moduleName, newModuleBuildHash)) {
+        APP_LOGE("internal error, can not find module %{public}s", moduleName.c_str());
+        return false;
+    }
+
+    std::string oldModuleBuildHash;
+    if (!oldInfo.GetModuleBuildHash(moduleName, oldModuleBuildHash) ||
+        newModuleBuildHash != oldModuleBuildHash) {
+        APP_LOGD("module %{public}s need to be updated", moduleName.c_str());
+        return true;
+    }
+    return false;
 }
 
 bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
