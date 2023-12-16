@@ -555,8 +555,13 @@ bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sp
 
 void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 {
-    if (!BundlePermissionMgr::VerifyCallingUid()) {
-        APP_LOGE("UpgradeAtomicService verify failed.");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("check is system app failed");
+        return;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
         return;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
@@ -570,8 +575,13 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 bool BundleMgrHostImpl::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("check is system app failed");
+        return false;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
         return false;
     }
     auto elementName = want.GetElement();
@@ -2927,11 +2937,11 @@ ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
     std::string &additionalInfo)
 {
     APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyPrivilegedPermission(bundleName)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -2984,8 +2994,8 @@ bool BundleMgrHostImpl::QueryDataGroupInfos(const std::string &bundleName, int32
     std::vector<DataGroupInfo> &infos)
 {
     APP_LOGD("QueryDataGroupInfos bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
