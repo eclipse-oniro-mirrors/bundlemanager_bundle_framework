@@ -48,7 +48,7 @@ void BundleSandboxDataMgr::SaveSandboxAppInfo(const InnerBundleInfo &info, const
         APP_LOGE("SaveSandboxAppInfo bundleName is empty");
         return;
     }
-    std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    std::string key = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
     sandboxAppInfos_[key] = info;
     APP_LOGD("save sandbox app %{public}s info successfully", key.c_str());
@@ -61,7 +61,7 @@ void BundleSandboxDataMgr::DeleteSandboxAppInfo(const std::string &bundleName, c
         APP_LOGE("DeleteSandboxAppInfo bundleName is empty");
         return;
     }
-    auto key = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto key = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     std::unique_lock<std::shared_mutex> lock(sandboxAppMutex_);
     auto ret = sandboxAppInfos_.erase(key);
     if (ret == 0) {
@@ -88,7 +88,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
 
-    auto key = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto key = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
 
     {
         std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
@@ -221,7 +221,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }
     std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
-    auto key = abilityInfo.bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto key = std::to_string(appIndex) + Constants::FILE_UNDERLINE + abilityInfo.bundleName;
     auto infoItem = sandboxAppInfos_.find(key);
     if (infoItem == sandboxAppInfos_.end()) {
         APP_LOGE("no sandbox app can be found %{public}s", abilityInfo.bundleName.c_str());
@@ -308,8 +308,8 @@ bool BundleSandboxDataMgr::RestoreSandboxPersistentInnerBundleInfo()
             APP_LOGW("invalid bundleName_appIndex");
             continue;
         }
-        std::string bundleName = sandboxInfo.first.substr(0, fileUnderlinePos);
-        std::string appIndexStr = sandboxInfo.first.substr(fileUnderlinePos + 1);
+        std::string appIndexStr = sandboxInfo.first.substr(0, fileUnderlinePos);
+        std::string bundleName = sandboxInfo.first.substr(fileUnderlinePos + 1);
         int32_t appIndex = 0;
         if (!OHOS::StrToInt(appIndexStr, appIndex)) {
             APP_LOGW("invalid appIndex %{public}s", appIndexStr.c_str());

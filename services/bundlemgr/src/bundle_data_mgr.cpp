@@ -1051,7 +1051,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                 APP_LOGD("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGD("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -1095,7 +1095,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGD("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -4125,7 +4125,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGD("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -4168,7 +4168,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGD("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -4211,7 +4211,7 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGD("obtain innerBundleInfo of sandbox app failed");
                 continue;

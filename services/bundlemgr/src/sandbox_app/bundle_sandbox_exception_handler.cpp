@@ -126,7 +126,7 @@ void BundleSandboxExceptionHandler::RemoveTokenIdAndKeepSandboxDir(const std::st
 void BundleSandboxExceptionHandler::KeepSandboxDirs(const std::string &bundleName, int32_t appIndex, int32_t userId)
 {
     APP_LOGD("start to keep sandbox dir");
-    std::string innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    std::string innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     for (const auto &el : Constants::BUNDLE_EL) {
         std::string baseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
             std::to_string(userId) + Constants::BASE + innerBundleName;

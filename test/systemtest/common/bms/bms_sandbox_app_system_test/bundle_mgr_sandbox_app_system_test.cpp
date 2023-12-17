@@ -250,7 +250,7 @@ void BundleMgrSandboxAppSystemTest::UninstallBundle(
 
 void BundleMgrSandboxAppSystemTest::CheckPathAreExisted(const std::string &bundleName, int32_t appIndex)
 {
-    auto innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     auto dataPath = BUNDLE_DATA_DIR1 + innerBundleName;
     int32_t ret = access(dataPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
@@ -286,7 +286,7 @@ void BundleMgrSandboxAppSystemTest::CheckPathAreExisted(const std::string &bundl
 
 void BundleMgrSandboxAppSystemTest::CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex)
 {
-    auto innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     auto dataPath = BUNDLE_DATA_DIR1 + innerBundleName;
     int32_t ret = access(dataPath.c_str(), F_OK);
     EXPECT_NE(ret, 0);
