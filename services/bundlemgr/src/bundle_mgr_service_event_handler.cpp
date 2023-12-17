@@ -1309,6 +1309,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     parserModuleNames[0].c_str(), item.first.c_str());
                 filePaths.emplace_back(item.first);
             }
+
+            if (hasInstalledInfo.versionCode > hapVersionCode) {
+                APP_LOGE("bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
+                    "installed bundle(%{public}d)", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
+                SendBundleUpdateFailedEvent(hasInstalledInfo);
+                break;
+            }
         }
 
         if (updateBundle) {
@@ -2416,6 +2423,18 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         }
     }
     APP_LOGI("end");
+}
+
+void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
+{
+    APP_LOGI("start, bundleName:%{public}s", bundleInfo.name.c_str());
+    EventInfo eventInfo;
+    eventInfo.userId = Constants::ANY_USERID;
+    eventInfo.bundleName = bundleInfo.name;
+    eventInfo.versionCode = bundleInfo.versionCode;
+    eventInfo.errCode = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+    eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
+    EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

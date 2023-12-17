@@ -512,6 +512,8 @@ private:
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void ProcessBundleResourceInfo();
+    // Used to send update failed event
+    void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
