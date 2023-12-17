@@ -74,6 +74,7 @@ public:
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage);
+    void CheckUninstallSystemHsp(const std::string &bundleName);
 
 private:
 

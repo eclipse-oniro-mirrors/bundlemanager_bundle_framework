@@ -659,6 +659,17 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("InnerProcessBundleInstall with bundleName %{public}s, userId is %{public}d", bundleName_.c_str(),
         userId_);
+    // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
+    if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    APP_LOGI("flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
+        installParam.installFlag, userId_, isAppExist_);
+
+    ErrCode result = ERR_OK;
+    result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
+    CHECK_RESULT(result, "Check appService failed %{public}d");
+
     if (installParam.needSavePreInstallInfo) {
         PreInstallBundleInfo preInstallBundleInfo;
         preInstallBundleInfo.SetBundleName(bundleName_);
@@ -670,23 +681,12 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             preInstallBundleInfo.AddBundlePath(item.first);
         }
 #ifdef USE_PRE_BUNDLE_PROFILE
-    preInstallBundleInfo.SetRemovable(installParam.removable);
+        preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
-    preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
+        preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
 #endif
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
-
-    // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
-    if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-    APP_LOGI("flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
-        installParam.installFlag, userId_, isAppExist_);
-
-    ErrCode result = ERR_OK;
-    result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
-    CHECK_RESULT(result, "Check appService failed %{public}d");
 
     result = CheckSingleton(newInfos.begin()->second, userId_);
     CHECK_RESULT(result, "Check singleton failed %{public}d");
@@ -3240,6 +3240,11 @@ ErrCode BaseBundleInstaller::CheckVersionCompatibilityForApplication(const Inner
     }
 
     if (versionCode_ > oldInfo.GetVersionCode()) {
+        if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            APP_LOGE("Not alloweded instal appService hap(%{public}s) due to the hsp does not exist.",
+                oldInfo.GetBundleName().c_str());
+            return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
+        }
         APP_LOGD("need to uninstall lower version feature hap");
         isFeatureNeedUninstall_ = true;
     }
