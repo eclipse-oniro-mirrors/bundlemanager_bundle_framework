@@ -17,7 +17,9 @@
 
 #include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "installd_client.h"
 #include "scope_guard.h"
@@ -27,6 +29,7 @@ namespace AppExecFwk {
 namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string HSP_PATH = ", path: ";
+const std::string SHARED_MODULE_TYPE = "shared";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -118,16 +121,53 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     ErrCode result = CheckAndParseFiles(hspPaths, installParam, newInfos);
     CHECK_RESULT(result, "CheckAndParseFiles failed %{public}d");
 
+    InnerBundleInfo oldInfo;
+    if (!CheckNeedInstall(newInfos, oldInfo)) {
+        APP_LOGD("need not to install");
+        return ERR_OK;
+    }
     ScopeGuard stateGuard([&] {
         dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
         dataMgr_->EnableBundle(bundleName_);
     });
-    result = InnerProcessInstall(newInfos, installParam);
-    if (result != ERR_OK) {
-        APP_LOGE("InnerProcessInstall failed %{public}d", result);
-        RollBack();
+
+    if (versionUpgrade_ || moduleUpdate_) {
+        result = UpdateAppService(oldInfo, newInfos, installParam);
+        CHECK_RESULT(result, "UpdateAppService failed %{public}d");
+    } else {
+        result = InnerProcessInstall(newInfos, installParam);
+        if (result != ERR_OK) {
+            APP_LOGE("InnerProcessInstall failed %{public}d", result);
+            RollBack();
+        }
     }
+    SavePreInstallBundleInfo(result, newInfos);
     return result;
+}
+
+void AppServiceFwkInstaller::SavePreInstallBundleInfo(
+    ErrCode installResult, const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    if (installResult != ERR_OK) {
+        APP_LOGW("install bundle %{public}s failed for %{public}d", bundleName_.c_str(), installResult);
+        return;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName_);
+    dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
+    preInstallBundleInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    preInstallBundleInfo.SetVersionCode(versionCode_);
+    preInstallBundleInfo.SetIsUninstalled(false);
+    for (const std::string &bundlePath : deleteBundlePath_) {
+        preInstallBundleInfo.DeleteBundlePath(bundlePath);
+    }
+    for (const auto &item : newInfos) {
+        preInstallBundleInfo.AddBundlePath(item.first);
+    }
+    preInstallBundleInfo.SetRemovable(false);
+    if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
+        APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
+    }
 }
 
 ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
@@ -307,6 +347,37 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     return ERR_OK;
 }
 
+ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
+    InnerBundleInfo &newInfo, const std::string &bundlePath)
+{
+    ErrCode result = ERR_OK;
+    std::string bundleDir =
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
+    result = MkdirIfNotExist(bundleDir);
+    CHECK_RESULT(result, "Check bundle dir failed %{public}d");
+
+    oldInfo.SetAppCodePath(bundleDir);
+    uint32_t versionCode = newInfo.GetVersionCode();
+    std::string versionDir = bundleDir
+        + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+    result = MkdirIfNotExist(versionDir);
+    CHECK_RESULT(result, "Check version dir failed %{public}d");
+
+    auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
+    std::string moduleDir = versionDir + AppExecFwk::Constants::PATH_SEPARATOR + moduleName;
+    result = MkdirIfNotExist(moduleDir);
+    CHECK_RESULT(result, "Check module dir failed %{public}d");
+
+    result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
+    CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
+
+    // preInstallHsp does not need to copy
+    oldInfo.SetModuleHapPath(bundlePath);
+    oldInfo.AddModuleSrcDir(moduleDir);
+    oldInfo.AddModuleResPath(moduleDir);
+    return ERR_OK;
+}
+
 ErrCode AppServiceFwkInstaller::MkdirIfNotExist(const std::string &dir)
 {
     bool isDirExist = false;
@@ -432,6 +503,187 @@ void AppServiceFwkInstaller::RollBack()
     RemoveInfo(bundleName_);
 }
 
+ErrCode AppServiceFwkInstaller::UpdateAppService(
+    InnerBundleInfo &oldInfo,
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    InstallParam &installParam)
+{
+    std::vector<std::string> oldModuleNameList;
+    oldInfo.GetModuleNames(oldModuleNameList);
+    std::vector<std::string> uninstallModuleNames;
+
+    // update
+    ErrCode result = ERR_OK;
+    for (auto &item : newInfos) {
+        if ((result = ProcessBundleUpdateStatus(oldInfo, item.second, item.first)) != ERR_OK) {
+            APP_LOGE("ProcessBundleUpdateStatus failed %{public}d", result);
+            return result;
+        }
+    }
+    if (!uninstallModuleVec_.empty()) {
+        result = UninstallLowerVersion(uninstallModuleVec_);
+    }
+
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo,
+    InnerBundleInfo &newInfo, const std::string &hspPath)
+{
+    std::string moduleName = newInfo.GetCurrentModulePackage();
+    if (moduleName.empty()) {
+        APP_LOGE("get current package failed");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    if (versionUpgrade_) {
+        std::vector<std::string>oldModuleNames;
+        oldInfo.GetModuleNames(oldModuleNames);
+        for (const std::string &oldModuleName : oldModuleNames) {
+            std::string modulePath = oldInfo.GetModuleHapPath(oldModuleName);
+            deleteBundlePath_.emplace_back(modulePath);
+        }
+        uninstallModuleVec_.emplace_back(moduleName);
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
+        APP_LOGE("update already start");
+        return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+    }
+    // 1. bundle exist, module exist, update module
+    // 2. bundle exist, install new hsp
+    bool isModuleExist = oldInfo.FindModule(moduleName);
+
+    auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
+        hspPath) : ProcessNewModuleInstall(newInfo, oldInfo, hspPath);
+    if (result != ERR_OK) {
+        APP_LOGE("install module failed %{public}d", result);
+        return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
+    InnerBundleInfo &oldInfo, const std::string &hspPath)
+{
+    std::string moduleName = newInfo.GetCurrentModulePackage();
+    APP_LOGD("ProcessModuleUpdate, bundleName : %{public}s, moduleName : %{public}s",
+        newInfo.GetBundleName().c_str(), moduleName.c_str());
+    if (oldInfo.GetModuleTypeByPackage(moduleName) != SHARED_MODULE_TYPE) {
+        APP_LOGE("moduleName is inconsistent in the updating hap");
+        return ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME;
+    }
+    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_EXISTED_START);
+    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
+        APP_LOGE("save install mark failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    std::string oldHspPath = oldInfo.GetModuleHapPath(moduleName);
+    if (!oldHspPath.empty()) {
+        deleteBundlePath_.emplace_back(oldHspPath);
+    }
+
+    auto result = ExtractModule(newInfo, hspPath);
+    CHECK_RESULT(result, "ExtractModule failed %{public}d");
+
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
+        APP_LOGE("old module update state failed");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_FINISH);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
+    if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
+        APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo,
+    InnerBundleInfo &oldInfo, const std::string &hspPath)
+{
+    std::string moduleName = newInfo.GetCurrentModulePackage();
+    APP_LOGD("ProcessNewModuleInstall, bundleName : %{public}s, moduleName : %{public}s",
+        newInfo.GetBundleName().c_str(), moduleName.c_str());
+    if (bundleInstallChecker_->IsContainModuleName(newInfo, oldInfo)) {
+        APP_LOGE("moduleName is already existed");
+        return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
+    }
+
+    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_NEW_START);
+    if (!dataMgr_->SaveInnerBundleInfo(oldInfo)) {
+        APP_LOGE("save install mark failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    auto result = ExtractModule(newInfo, hspPath);
+    if (result != ERR_OK) {
+        APP_LOGE("extract module and rename failed");
+        return result;
+    }
+
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
+        APP_LOGE("new moduleupdate state failed");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::INSTALL_FINISH);
+    oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
+    if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
+        APP_LOGE(
+            "add module %{public}s to innerBundleInfo %{public}s failed", moduleName.c_str(), bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::string> &moduleNameList)
+{
+    APP_LOGD("start to uninstall lower version module");
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START)) {
+        APP_LOGE("uninstall already start");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    std::vector<std::string> moduleVec = info.GetModuleNameVec();
+    InnerBundleInfo oldInfo = info;
+    for (const auto &package : moduleVec) {
+        if (find(moduleNameList.begin(), moduleNameList.end(), package) == moduleNameList.end()) {
+            APP_LOGD("uninstall package %{public}s", package.c_str());
+
+            if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info)) {
+                APP_LOGE("RemoveModuleInfo failed");
+                return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+            }
+        }
+    }
+
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS)) {
+        APP_LOGE("uninstall already start");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    return ERR_OK;
+}
+
+bool AppServiceFwkInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
+{
+    if (dataMgr_ == nullptr) {
+        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr_ == nullptr) {
+            APP_LOGE("Get dataMgr shared_ptr nullptr");
+            return false;
+        }
+    }
+    isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
+    return true;
+}
+
 ErrCode AppServiceFwkInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) const
 {
     auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath());
@@ -473,6 +725,66 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
+}
+
+bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    InnerBundleInfo &oldInfo)
+{
+    if (infos.empty()) {
+        APP_LOGW("innerbundleinfos is empty");
+        return false;
+    }
+    if (!(dataMgr_->FetchInnerBundleInfo(bundleName_, oldInfo))) {
+        APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
+        return true;
+    }
+    if (oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+        APP_LOGW("bundle %{public}s type is not same, existing bundle type is %{public}d",
+            bundleName_.c_str(), oldInfo.GetApplicationBundleType());
+        return false;
+    }
+    if (oldInfo.GetVersionCode() > versionCode_) {
+        APP_LOGW("version code is lower than current app service.");
+        return false;
+    }
+
+    for (const auto &item : infos) {
+        if (CheckNeedUpdate(item.second, oldInfo)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo)
+{
+    auto oldVersionCode = oldInfo.GetVersionCode();
+    if (oldVersionCode > versionCode_) {
+        APP_LOGW("version code is lower than current app service.");
+        return false;
+    } else if (oldVersionCode < versionCode_) {
+        APP_LOGW("upgrade, old version is %{public}d, new version is %{public}d", oldVersionCode, versionCode_);
+        versionUpgrade_ = true;
+        return true;
+    }
+    std::string moduleName { newInfo.GetCurModuleName() };
+    std::string buildHashOld;
+    if (!oldInfo.GetModuleBuildHash(moduleName, buildHashOld)) {
+        APP_LOGD("module %{public}s is a new module", moduleName.c_str());
+        moduleUpdate_ = true;
+        return true;
+    }
+    std::string buildHashNew;
+    if (!newInfo.GetModuleBuildHash(moduleName, buildHashNew)) {
+        APP_LOGD("GetModuleBuildHash from module %{public}s failed", moduleName.c_str());
+        return false;
+    }
+    if (buildHashOld != buildHashNew) {
+        APP_LOGD("module %{public}s buildHash has changed", moduleName.c_str());
+        moduleUpdate_ = true;
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

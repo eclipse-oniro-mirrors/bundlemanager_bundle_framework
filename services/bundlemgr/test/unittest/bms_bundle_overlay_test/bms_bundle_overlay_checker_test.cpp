@@ -2074,38 +2074,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0500, Function | Smal
 }
 
 /**
- * @tc.number: GetOverlayModuleInfo_0600
- * @tc.name: test OverlayManagerHostImpl.
- * @tc.desc: 1.OverlayManagerHostImpl of VerifySystemApi.
- *           2.system run normally.
-  * @tc.require: issueI6F3H9
- */
-HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0600, Function | SmallTest | Level0)
-{
-    OverlayManagerHostImpl overlayManagerHostImpl;
-    ErrCode res = overlayManagerHostImpl.VerifySystemApi();
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: GetOverlayModuleInfo_0700
- * @tc.name: test OverlayManagerHostImpl.
- * @tc.desc: 1.OverlayManagerHostImpl of VerifyQueryPermission.
- *           2.system run normally.
-  * @tc.require: issueI6F3H9
- */
-HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0700, Function | SmallTest | Level0)
-{
-    OverlayManagerHostImpl overlayManagerHostImpl;
-    std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
-    bool res = overlayManagerHostImpl.VerifyQueryPermission(callingBundleName, "");
-    EXPECT_EQ(res, true);
-
-    res = overlayManagerHostImpl.VerifyQueryPermission("", "");
-    EXPECT_EQ(res, true);
-}
-
-/**
  * @tc.number: GetOverlayModuleInfo_0800
  * @tc.name: test overlayManagerHostImpl.
  * @tc.desc: 1.OverlayManagerHostImpl with GetOverlayBundleInfoForTarget.

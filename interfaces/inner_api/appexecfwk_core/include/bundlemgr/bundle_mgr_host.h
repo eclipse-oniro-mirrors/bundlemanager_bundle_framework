@@ -369,6 +369,13 @@ private:
      */
     ErrCode HandleCleanBundleCacheFiles(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the CleanObsoleteBundleTempFiles function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleCleanObsoleteBundleTempFiles(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the CleanBundleDataFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

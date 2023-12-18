@@ -626,11 +626,12 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{private}u",
+    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
         permissionName.c_str(), callerToken);
     if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
         AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s denied", permissionName.c_str());
+        APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
+            callerToken);
         return false;
     }
     return true;
@@ -788,14 +789,12 @@ bool BundlePermissionMgr::IsSystemApp()
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("tokenType is %{private}d", tokenType);
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
-        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        APP_LOGD("caller tokenType is native or shell, ignore");
-        return true;
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        APP_LOGE("system app verification failed");
+        return false;
     }
-    APP_LOGE("system app verification failed");
-    return false;
+    APP_LOGD("caller tokenType is not hap, ignore");
+    return true;
 }
 
 bool BundlePermissionMgr::IsNativeTokenType()
@@ -835,9 +834,6 @@ bool BundlePermissionMgr::VerifyCallingUid()
 
 bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 {
-    if (VerifyCallingUid()) {
-        return true;
-    }
     std::string callingBundleName;
     auto uid = IPCSkeleton::GetCallingUid();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -847,8 +843,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
     if (!ret) {
-        APP_LOGE("getBundleName failed, uid : %{public}d", uid);
-        return false;
+        return BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     std::string bundleName = want.GetElement().GetBundleName();
     return bundleName == callingBundleName || callingBundleName == SCENEBOARD_BUNDLE_NAME;

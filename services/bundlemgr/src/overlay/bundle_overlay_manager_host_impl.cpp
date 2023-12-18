@@ -48,11 +48,7 @@ ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundl
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (IsNativeTokenType() != ERR_OK) {
-        APP_LOGE("non-native token is not allowed to call this function");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(bundleName, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
@@ -73,11 +69,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (IsNativeTokenType() != ERR_OK) {
-        APP_LOGE("non-native token is not allowed to call this function");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(bundleName, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
@@ -145,11 +137,13 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::stri
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (VerifySystemApi() != ERR_OK) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyQueryPermission(bundleName, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("no permission to query overlay info of bundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
@@ -181,11 +175,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (IsNativeTokenType() != ERR_OK) {
-        APP_LOGE("non-native token is not allowed to call this function");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
-    }
-    if (!VerifyQueryPermission(targetBundleName, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
@@ -207,11 +197,13 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (VerifySystemApi() != ERR_OK) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyQueryPermission(targetBundleName, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(targetBundleName)) {
         APP_LOGE("no permission to query overlay info of targetBundleName %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
@@ -253,49 +245,16 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName,
     }
     APP_LOGD("calling userId is %{public}d", userId);
 
-    if (VerifySystemApi() != ERR_OK) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed to call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyQueryPermission(bundleName, Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("no permission to query overlay info of bundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED;
     }
     return BundleOverlayManager::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
-}
-
-ErrCode OverlayManagerHostImpl::VerifySystemApi()
-{
-    APP_LOGD("start");
-    if (BundlePermissionMgr::VerifySystemApp()) {
-        return ERR_OK;
-    }
-    return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-}
-
-ErrCode OverlayManagerHostImpl::IsNativeTokenType()
-{
-    APP_LOGD("start");
-    if (BundlePermissionMgr::IsNativeTokenType()) {
-        return ERR_OK;
-    }
-    return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
-}
-
-bool OverlayManagerHostImpl::VerifyQueryPermission(const std::string &queryBundleName,
-    const std::string &permission) const
-{
-    std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
-    if (queryBundleName == callingBundleName) {
-        APP_LOGD("query own info, verify success");
-        return true;
-    }
-    if (!BundlePermissionMgr::VerifyCallingPermission(permission)) {
-        APP_LOGE("verify query permission failed");
-        return false;
-    }
-    APP_LOGD("verify query permission successfully");
-    return true;
 }
 } // AppExecFwk
 } // OHOS

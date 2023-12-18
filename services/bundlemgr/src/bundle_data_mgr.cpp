@@ -334,7 +334,6 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
@@ -539,7 +538,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         // clear apply quick fix frequency
@@ -5612,7 +5610,8 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
         userId = AccountHelper::GetCurrentActiveUserId();
     }
     std::string uuid;
-    if (BundlePermissionMgr::VerifyCallingUid()) {
+    if (BundlePermissionMgr::IsSystemApp() &&
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             const auto &dataGroupInfos = item.second.GetDataGroupInfos();
@@ -5943,7 +5942,8 @@ bool BundleDataMgr::GetOldAppIds(const std::string &bundleName, std::vector<std:
 bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo,
     const InnerBundleInfo &newInfo) const
 {
-    return !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
+    return newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
+        !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
 }
 
 std::string BundleDataMgr::GetModuleNameByBundleAndAbility(

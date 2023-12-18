@@ -2143,6 +2143,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
 #endif
     UpdateDebug(applicationInfo.debug, isEntry);
     baseApplicationInfo_->gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
+    baseApplicationInfo_->asanEnabled = applicationInfo.asanEnabled;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()

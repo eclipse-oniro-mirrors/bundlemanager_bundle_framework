@@ -158,6 +158,17 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
     return CallService(&IInstalld::GetBundleCachePath, dir, cachePath);
 }
 
+ErrCode InstalldClient::GetObsoleteBundleTempPath(
+    const std::vector<std::string> &dirs, std::vector<std::string> &tempPath)
+{
+    if (dirs.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::GetObsoleteBundleTempPath, dirs, tempPath);
+}
+
 void InstalldClient::ResetInstalldProxy()
 {
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {

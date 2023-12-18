@@ -452,8 +452,8 @@ HWTEST_F(BmsBundleDataGroupTest, GetGroupDir_0020, Function | SmallTest | Level0
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     std::string dir;
     bool res = dataMgr->GetGroupDir(DATA_GROUP_ID_TEST_ONE, dir, Constants::UNSPECIFIED_USERID);
-    EXPECT_FALSE(res);
-    EXPECT_TRUE(dir.empty());
+    EXPECT_TRUE(res);
+    EXPECT_FALSE(dir.empty());
 }
 
 /**

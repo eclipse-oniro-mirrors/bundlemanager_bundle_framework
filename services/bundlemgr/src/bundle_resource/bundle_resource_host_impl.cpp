@@ -26,7 +26,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
     BundleResourceInfo &bundleResourceInfo)
 {
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -50,7 +50,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
 {
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -74,7 +74,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
     APP_LOGD("start");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -105,7 +105,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
     APP_LOGD("start");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
