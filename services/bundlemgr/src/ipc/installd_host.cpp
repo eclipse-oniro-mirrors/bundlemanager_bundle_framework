@@ -62,6 +62,8 @@ void InstalldHost::Init()
         &InstalldHost::HandleRemoveModuleDataDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR),
         &InstalldHost::HandleCleanBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME),
+        &InstalldHost::HandleCleanBundleDataDirByName);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL), &InstalldHost::HandleSetDirApl);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR), &InstalldHost::HandleRemoveDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS),
@@ -245,6 +247,15 @@ bool InstalldHost::HandleCleanBundleDataDir(MessageParcel &data, MessageParcel &
 {
     std::string bundleDir = Str16ToStr8(data.ReadString16());
     ErrCode result = CleanBundleDataDir(bundleDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCleanBundleDataDirByName(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int userid = data.ReadInt32();
+    ErrCode result = CleanBundleDataDirByName(bundleName, userid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

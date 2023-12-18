@@ -91,6 +91,13 @@ public:
      */
     virtual ErrCode CleanBundleDataDir(const std::string &bundleDir) override;
     /**
+     * @brief Clean a bundle data directory.
+     * @param bundleName Indicates the bundleName data directory path that to be cleaned.
+     * @param userid Indicates userid to be set to the directory.
+     * @return Returns ERR_OK if the bundle data directory cleaned successfully; returns error code otherwise.
+     */
+    virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid) override;
+    /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
      * @param userId Indicates the user Id.

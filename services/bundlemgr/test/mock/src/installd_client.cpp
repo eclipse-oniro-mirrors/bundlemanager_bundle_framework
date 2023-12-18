@@ -119,6 +119,17 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir);
 }
 
+ErrCode InstalldClient::CleanBundleDataDirByName(
+    const std::string &bundleName, const int userid)
+{
+    if (bundleName.empty() || userid < 0) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid);
+}
+
 ErrCode InstalldClient::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
