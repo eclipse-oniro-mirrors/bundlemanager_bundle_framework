@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace ExtensionFormProfileReader {
 const std::string FORMS = "forms";
 const std::string NAME = "name";
+const std::string DISPLAY_NAME = "displayName";
 const std::string DESCRIPTION = "description";
 const std::string SRC = "src";
 const std::string WINDOW = "window";

@@ -32,6 +32,7 @@ struct FormInfo : public Parcelable {
     std::string moduleName;  // the "module.distro.moduleName" in config.json
     std::string abilityName;
     std::string name;
+    std::string displayName;
     std::string description;
     std::string jsComponentName;
     std::string deepLink;
