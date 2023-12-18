@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct ExtensionFormInfo {
     std::string name;
+    std::string displayName;
     std::string description;
     std::string src;
     FormWindow window;

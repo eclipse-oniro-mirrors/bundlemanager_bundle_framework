@@ -63,6 +63,7 @@ struct Metadata {
 
 struct ExtensionFormProfileInfo {
     std::string name;
+    std::string displayName;
     std::string description;
     std::string src;
     Window window;
@@ -139,6 +140,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.name,
         JsonType::STRING,
         true,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DISPLAY_NAME,
+        extensionFormProfileInfo.displayName,
+        JsonType::STRING,
+        false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -360,6 +369,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     }
     info.name = form.name;
     info.description = form.description;
+    info.displayName = form.displayName;
     info.src = form.src;
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;

@@ -44,6 +44,7 @@ const std::string JSON_KEY_VALUE = "value";
 const std::string JSON_KEY_NAME = "name";
 const std::string JSON_KEY_ORIGINAL_BUNDLE_NAME = "originalBundleName";
 const std::string JSON_KEY_CUSTOMIZE_DATA = "customizeData";
+const std::string JSON_KEY_DISPLAY_NAME = "displayName";
 const std::string JSON_KEY_DESCRIPTION = "description";
 const std::string JSON_KEY_DESCRIPTION_ID = "descriptionId";
 const std::string JSON_KEY_TYPE = "type";
@@ -74,6 +75,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     moduleName = abilityInfo.moduleName;
     abilityName = abilityInfo.name;
     name = formInfo.name;
+    displayName = formInfo.displayName;
     description = formInfo.description;
     jsComponentName = "";
     deepLink = "";
@@ -128,6 +130,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     abilityName = Str16ToStr8(parcel.ReadString16());
+    displayName = Str16ToStr8(parcel.ReadString16());
     description = Str16ToStr8(parcel.ReadString16());
     formConfigAbility = Str16ToStr8(parcel.ReadString16());
     scheduledUpdateTime = Str16ToStr8(parcel.ReadString16());
@@ -207,6 +210,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(displayName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(formConfigAbility));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(scheduledUpdateTime));
@@ -291,6 +295,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {Constants::BUNDLE_NAME, formInfo.bundleName},
         {Constants::MODULE_NAME, formInfo.moduleName},
         {Constants::ABILITY_NAME, formInfo.abilityName},
+        {JSON_KEY_DISPLAY_NAME, formInfo.displayName},
         {JSON_KEY_DESCRIPTION, formInfo.description},
         {JSON_KEY_RELATED_BUNDLE_NAME, formInfo.relatedBundleName},
         {JSON_KEY_JS_COMPONENT_NAME, formInfo.jsComponentName},
@@ -411,6 +416,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_NAME,
         formInfo.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DISPLAY_NAME,
+        formInfo.displayName,
         JsonType::STRING,
         false,
         parseResult,
