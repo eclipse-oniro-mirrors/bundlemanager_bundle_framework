@@ -115,7 +115,7 @@ void BundleInstallerHost::HandleInstallMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -135,7 +135,7 @@ void BundleInstallerHost::HandleRecoverMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -167,7 +167,7 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -187,7 +187,7 @@ void BundleInstallerHost::HandleUninstallMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -208,7 +208,7 @@ void BundleInstallerHost::HandleUninstallModuleMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -225,7 +225,7 @@ void BundleInstallerHost::HandleUninstallByUninstallParam(Parcel &data)
         APP_LOGE("ReadParcelable<UninstallParam failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -272,7 +272,7 @@ void BundleInstallerHost::HandleCreateStreamInstaller(Parcel &data, Parcel &repl
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         reply.WriteBool(false);
         APP_LOGE("read receiver failed");

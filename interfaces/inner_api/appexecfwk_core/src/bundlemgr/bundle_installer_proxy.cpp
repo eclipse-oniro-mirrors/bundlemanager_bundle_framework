@@ -60,7 +60,7 @@ bool BundleInstallerProxy::Install(
         APP_LOGE("fail to install, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -88,7 +88,7 @@ bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePat
         APP_LOGE("fail to install, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -112,7 +112,7 @@ bool BundleInstallerProxy::Recover(const std::string &bundleName,
         APP_LOGE("fail to install, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -136,7 +136,7 @@ bool BundleInstallerProxy::Uninstall(
         APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -160,7 +160,7 @@ bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::s
         APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -180,7 +180,7 @@ bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
         APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         return false;
     }
@@ -285,7 +285,7 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
         APP_LOGE("write parcel failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;

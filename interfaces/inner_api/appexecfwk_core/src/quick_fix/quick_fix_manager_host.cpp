@@ -74,7 +74,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool isDebug = data.ReadBool();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -95,7 +95,7 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     bool enable = data.ReadBool();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -115,7 +115,7 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
     APP_LOGI("begin to HandleDeleteQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read statusCallback failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
