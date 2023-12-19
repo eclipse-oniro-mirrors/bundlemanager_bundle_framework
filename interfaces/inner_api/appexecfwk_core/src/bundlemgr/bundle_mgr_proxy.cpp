@@ -946,7 +946,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
         return false;
     }
 
-    if (!data.WriteObject(callBack)) {
+    if (!data.WriteRemoteObject(callBack)) {
         APP_LOGE("fail to callBack, for write parcel");
         return false;
     }
@@ -979,7 +979,7 @@ bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<
         return false;
     }
 
-    if (!data.WriteObject(callBack)) {
+    if (!data.WriteRemoteObject(callBack)) {
         APP_LOGE("fail to SilentInstall due to write callBack");
         return false;
     }
@@ -1521,7 +1521,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
         APP_LOGE("fail to CleanBundleCacheFiles due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteObject<IRemoteObject>(cleanCacheCallback->AsObject())) {
+    if (!data.WriteRemoteObject(cleanCacheCallback->AsObject())) {
         APP_LOGE("fail to CleanBundleCacheFiles, for write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -1606,7 +1606,7 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
         APP_LOGE("fail to RegisterBundleStatusCallback due to write bundleName fail");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(bundleStatusCallback->AsObject())) {
+    if (!data.WriteRemoteObject(bundleStatusCallback->AsObject())) {
         APP_LOGE("fail to RegisterBundleStatusCallback, for write parcel failed");
         return false;
     }
@@ -1633,7 +1633,7 @@ bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback
         APP_LOGE("fail to RegisterBundleEventCallback due to write InterfaceToken fail");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+    if (!data.WriteRemoteObject(bundleEventCallback->AsObject())) {
         APP_LOGE("write BundleEventCallback failed");
         return false;
     }
@@ -1660,7 +1660,7 @@ bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallba
         APP_LOGE("fail to UnregisterBundleEventCallback due to write InterfaceToken fail");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(bundleEventCallback->AsObject())) {
+    if (!data.WriteRemoteObject(bundleEventCallback->AsObject())) {
         APP_LOGE("fail to UnregisterBundleEventCallback, for write parcel failed");
         return false;
     }
@@ -1687,7 +1687,7 @@ bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback>
         APP_LOGE("fail to ClearBundleStatusCallback due to write InterfaceToken fail");
         return false;
     }
-    if (!data.WriteObject<IRemoteObject>(bundleStatusCallback->AsObject())) {
+    if (!data.WriteRemoteObject(bundleStatusCallback->AsObject())) {
         APP_LOGE("fail to ClearBundleStatusCallback, for write parcel failed");
         return false;
     }
@@ -2140,7 +2140,7 @@ sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return nullptr;
@@ -2166,7 +2166,7 @@ sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return nullptr;
@@ -2955,7 +2955,7 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("reply failed.");
         return nullptr;
@@ -2983,7 +2983,7 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("reply failed.");
         return nullptr;
@@ -3187,7 +3187,7 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("reply failed.");
         return nullptr;
@@ -3283,7 +3283,7 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("reply failed.");
         return nullptr;
@@ -3841,7 +3841,7 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
         return nullptr;
     }
 
-    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("reply failed.");
         return nullptr;

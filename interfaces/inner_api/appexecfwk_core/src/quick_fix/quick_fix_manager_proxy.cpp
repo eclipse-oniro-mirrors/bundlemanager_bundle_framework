@@ -66,7 +66,7 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
         APP_LOGE("write isDebug failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
+    if (!data.WriteRemoteObject(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -104,7 +104,7 @@ ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool
         APP_LOGE("write enable failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
+    if (!data.WriteRemoteObject(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -138,7 +138,7 @@ ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {
+    if (!data.WriteRemoteObject(statusCallback->AsObject())) {
         APP_LOGE("write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

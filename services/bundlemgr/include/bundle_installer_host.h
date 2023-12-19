@@ -133,54 +133,54 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return
      */
-    void HandleInstallMessage(Parcel &data);
+    void HandleInstallMessage(MessageParcel &data);
     /**
      * @brief Handles the Install by bundleName function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @return
      */
-    void HandleRecoverMessage(Parcel &data);
+    void HandleRecoverMessage(MessageParcel &data);
     /**
      * @brief Handles the Install multiple haps function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return
      */
-    void HandleInstallMultipleHapsMessage(Parcel &data);
+    void HandleInstallMultipleHapsMessage(MessageParcel &data);
     /**
      * @brief Handles the Uninstall bundle function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return
      */
-    void HandleUninstallMessage(Parcel &data);
+    void HandleUninstallMessage(MessageParcel &data);
     /**
      * @brief Handles the Uninstall module function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return
      */
-    void HandleUninstallModuleMessage(Parcel &data);
+    void HandleUninstallModuleMessage(MessageParcel &data);
     /**
      * @brief Handles the uninstall by input uninstall param.
      * @param data Indicates the data to be read.
      * @return Returns true if the application is uninstall successfully; returns false otherwise.
      */
-    void HandleUninstallByUninstallParam(Parcel &data);
+    void HandleUninstallByUninstallParam(MessageParcel &data);
     /**
      * @brief Handles the InstallSandboxApp function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent.
      * @return Returns true if the sandbox application is installed successfully; returns false otherwise.
      */
-    void HandleInstallSandboxApp(Parcel &data, Parcel &reply);
+    void HandleInstallSandboxApp(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the UninstallSandboxApp function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent.
      * @return Returns true if the sandbox application is installed successfully; returns false otherwise.
      */
-    void HandleUninstallSandboxApp(Parcel &data, Parcel &reply);
+    void HandleUninstallSandboxApp(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Check whether the statusReceiver object is valid.
      * @param statusReceiver Indicates the IStatusReceiver object.
@@ -188,8 +188,8 @@ private:
      */
     bool CheckBundleInstallerManager(const sptr<IStatusReceiver> &statusReceiver) const;
 
-    void HandleCreateStreamInstaller(Parcel &data, Parcel &reply);
-    void HandleDestoryBundleStreamInstaller(Parcel &data, Parcel &reply);
+    void HandleCreateStreamInstaller(MessageParcel &data, MessageParcel &reply);
+    void HandleDestoryBundleStreamInstaller(MessageParcel &data, MessageParcel &reply);
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);

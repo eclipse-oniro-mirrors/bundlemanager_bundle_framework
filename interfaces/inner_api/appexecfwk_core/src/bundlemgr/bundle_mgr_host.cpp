@@ -1268,7 +1268,7 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1313,7 +1313,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1337,7 +1337,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleStatusCallback(MessageParcel &data, M
 ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1358,7 +1358,7 @@ ErrCode BundleMgrHost::HandleRegisterBundleEventCallback(MessageParcel &data, Me
 ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read IRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1376,7 +1376,7 @@ ErrCode BundleMgrHost::HandleUnregisterBundleEventCallback(MessageParcel &data, 
 ErrCode BundleMgrHost::HandleClearBundleStatusCallback(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1564,7 +1564,7 @@ ErrCode BundleMgrHost::HandleGetBundleUserMgr(MessageParcel &data, MessageParcel
         return ERR_APPEXECFWK_INSTALL_HOST_INSTALLER_FAILED;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(bundleUserMgr->AsObject())) {
+    if (!reply.WriteRemoteObject(bundleUserMgr->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -1580,7 +1580,7 @@ ErrCode BundleMgrHost::HandleGetVerifyManager(MessageParcel &data, MessageParcel
         return ERR_BUNDLE_MANAGER_VERIFY_GET_VERIFY_MGR_FAILED;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(verifyManager->AsObject())) {
+    if (!reply.WriteRemoteObject(verifyManager->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -2127,7 +2127,7 @@ ErrCode BundleMgrHost::HandleCheckAbilityEnableInstall(MessageParcel &data, Mess
     }
     int32_t missionId = data.ReadInt32();
     int32_t userId = data.ReadInt32();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
 
     auto ret = CheckAbilityEnableInstall(*want, missionId, userId, object);
     if (!reply.WriteBool(ret)) {
@@ -2192,8 +2192,8 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(defaultAppProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
+    if (!reply.WriteRemoteObject(defaultAppProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2210,8 +2210,8 @@ ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(appControlProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
+    if (!reply.WriteRemoteObject(appControlProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2300,8 +2300,8 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(quickFixManagerProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
+    if (!reply.WriteRemoteObject(quickFixManagerProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2384,7 +2384,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoWithCallback(MessageParcel &data, M
     }
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     AbilityInfo info;
     bool ret = QueryAbilityInfo(*want, flags, userId, info, object);
     if (!reply.WriteBool(ret)) {
@@ -2409,7 +2409,7 @@ ErrCode BundleMgrHost::HandleSilentInstall(MessageParcel &data, MessageParcel &r
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t userId = data.ReadInt32();
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     bool ret = SilentInstall(*want, userId, object);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write ret failed");
@@ -2523,8 +2523,8 @@ ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, Message
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(overlayManagerProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
+    if (!reply.WriteRemoteObject(overlayManagerProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2932,8 +2932,8 @@ ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, Message
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteObject<IRemoteObject>(bundleResourceProxy->AsObject())) {
-        APP_LOGE("WriteObject failed.");
+    if (!reply.WriteRemoteObject(bundleResourceProxy->AsObject())) {
+        APP_LOGE("WriteRemoteObject failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

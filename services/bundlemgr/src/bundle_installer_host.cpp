@@ -106,7 +106,7 @@ int BundleInstallerHost::OnRemoteRequest(
     return NO_ERROR;
 }
 
-void BundleInstallerHost::HandleInstallMessage(Parcel &data)
+void BundleInstallerHost::HandleInstallMessage(MessageParcel &data)
 {
     APP_LOGD("handle install message");
     std::string bundlePath = Str16ToStr8(data.ReadString16());
@@ -115,7 +115,7 @@ void BundleInstallerHost::HandleInstallMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -126,7 +126,7 @@ void BundleInstallerHost::HandleInstallMessage(Parcel &data)
     APP_LOGD("handle install message finished");
 }
 
-void BundleInstallerHost::HandleRecoverMessage(Parcel &data)
+void BundleInstallerHost::HandleRecoverMessage(MessageParcel &data)
 {
     APP_LOGD("handle install message by bundleName");
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -135,7 +135,7 @@ void BundleInstallerHost::HandleRecoverMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -146,7 +146,7 @@ void BundleInstallerHost::HandleRecoverMessage(Parcel &data)
     APP_LOGD("handle install message by bundleName finished");
 }
 
-void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
+void BundleInstallerHost::HandleInstallMultipleHapsMessage(MessageParcel &data)
 {
     APP_LOGD("handle install multiple haps message");
     int32_t size = data.ReadInt32();
@@ -167,7 +167,7 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -178,7 +178,7 @@ void BundleInstallerHost::HandleInstallMultipleHapsMessage(Parcel &data)
     APP_LOGD("handle install multiple haps finished");
 }
 
-void BundleInstallerHost::HandleUninstallMessage(Parcel &data)
+void BundleInstallerHost::HandleUninstallMessage(MessageParcel &data)
 {
     APP_LOGD("handle uninstall message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -187,7 +187,7 @@ void BundleInstallerHost::HandleUninstallMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -198,7 +198,7 @@ void BundleInstallerHost::HandleUninstallMessage(Parcel &data)
     APP_LOGD("handle uninstall message finished");
 }
 
-void BundleInstallerHost::HandleUninstallModuleMessage(Parcel &data)
+void BundleInstallerHost::HandleUninstallModuleMessage(MessageParcel &data)
 {
     APP_LOGD("handle uninstall module message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -208,7 +208,7 @@ void BundleInstallerHost::HandleUninstallModuleMessage(Parcel &data)
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -218,14 +218,14 @@ void BundleInstallerHost::HandleUninstallModuleMessage(Parcel &data)
     APP_LOGD("handle uninstall message finished");
 }
 
-void BundleInstallerHost::HandleUninstallByUninstallParam(Parcel &data)
+void BundleInstallerHost::HandleUninstallByUninstallParam(MessageParcel &data)
 {
     std::unique_ptr<UninstallParam> uninstallParam(data.ReadParcelable<UninstallParam>());
     if (uninstallParam == nullptr) {
         APP_LOGE("ReadParcelable<UninstallParam failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         APP_LOGE("read failed");
         return;
@@ -234,7 +234,7 @@ void BundleInstallerHost::HandleUninstallByUninstallParam(Parcel &data)
     Uninstall(*uninstallParam, statusReceiver);
 }
 
-void BundleInstallerHost::HandleInstallSandboxApp(Parcel &data, Parcel &reply)
+void BundleInstallerHost::HandleInstallSandboxApp(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("handle install sandbox app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -251,7 +251,7 @@ void BundleInstallerHost::HandleInstallSandboxApp(Parcel &data, Parcel &reply)
     APP_LOGD("handle install sandbox app message finished");
 }
 
-void BundleInstallerHost::HandleUninstallSandboxApp(Parcel &data, Parcel &reply)
+void BundleInstallerHost::HandleUninstallSandboxApp(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("handle install sandbox app message");
     std::string bundleName = Str16ToStr8(data.ReadString16());
@@ -264,7 +264,7 @@ void BundleInstallerHost::HandleUninstallSandboxApp(Parcel &data, Parcel &reply)
     APP_LOGD("handle install sandbox app message finished");
 }
 
-void BundleInstallerHost::HandleCreateStreamInstaller(Parcel &data, Parcel &reply)
+void BundleInstallerHost::HandleCreateStreamInstaller(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("handle create stream installer message begin");
     std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
@@ -272,7 +272,7 @@ void BundleInstallerHost::HandleCreateStreamInstaller(Parcel &data, Parcel &repl
         APP_LOGE("ReadParcelable<InstallParam> failed");
         return;
     }
-    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         reply.WriteBool(false);
         APP_LOGE("read receiver failed");
@@ -310,7 +310,7 @@ void BundleInstallerHost::HandleCreateStreamInstaller(Parcel &data, Parcel &repl
     APP_LOGD("handle create stream installer message finish");
 }
 
-void BundleInstallerHost::HandleDestoryBundleStreamInstaller(Parcel &data, Parcel &reply)
+void BundleInstallerHost::HandleDestoryBundleStreamInstaller(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("handle destory stream installer message begin");
     uint32_t installeId = data.ReadUint32();
