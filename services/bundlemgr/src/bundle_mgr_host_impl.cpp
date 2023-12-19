@@ -311,7 +311,7 @@ ErrCode BundleMgrHostImpl::GetBundlePackInfo(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("SetModuleUpgradeFlag failed due to lack of permission");
+        APP_LOGE("GetBundlePackInfo failed due to lack of permission");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
