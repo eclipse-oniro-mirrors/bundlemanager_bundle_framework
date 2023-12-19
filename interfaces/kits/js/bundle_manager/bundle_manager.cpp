@@ -811,6 +811,7 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
             if (!CommonFunc::ParseInt(env, args[i], abilityFlags)) {
                 APP_LOGE("abilityFlags %{public}d invalid!", abilityFlags);
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_FLAGS, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {

@@ -141,11 +141,12 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -171,11 +172,12 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -217,11 +219,12 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
