@@ -355,6 +355,21 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
     return ERR_OK;
 }
 
+static void CleanBackupExtHomeDir(const std::string &bundleName, const int userid, DirType dirType)
+{
+    std::string bundleBackupDir;
+    GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    APP_LOGD("CleanBackupExtHomeDir begin, type %{public}d, path %{public}s.", dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        APP_LOGW("CleanBackupExtHomeDir backup dir empty, type %{public}d.", dirType);
+        return;
+    }
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(bundleBackupDir)) {
+        APP_LOGW("clean dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
+    }
+}
+
 static ErrCode RemoveDistributedDir(const std::string &bundleName, const int userid)
 {
     std::string distributedFile = DISTRIBUTED_FILE + bundleName;
@@ -372,6 +387,20 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
     return ERR_OK;
 }
 
+static void CleanDistributedDir(const std::string &bundleName, const int userid)
+{
+    std::string distributedFile = DISTRIBUTED_FILE + bundleName;
+    distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(distributedFile)) {
+        APP_LOGW("clean dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
+    }
+    std::string fileNonAccount = DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
+    fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(fileNonAccount)) {
+        APP_LOGW("clean dir %{public}s failed, errno is %{public}d", fileNonAccount.c_str(), errno);
+    }
+}
+
 static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
 {
     std::string shareFileDir = SHARE_FILE_PATH + bundleName;
@@ -383,6 +412,15 @@ static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
     return ERR_OK;
 }
 
+static void CleanShareDir(const std::string &bundleName, const int userid)
+{
+    std::string shareFileDir = SHARE_FILE_PATH + bundleName;
+    shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(shareFileDir)) {
+        APP_LOGW("clean dir %{public}s failed", shareFileDir.c_str());
+    }
+}
+
 static ErrCode RemoveCloudDir(const std::string &bundleName, const int userid)
 {
     std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
@@ -392,6 +430,39 @@ static ErrCode RemoveCloudDir(const std::string &bundleName, const int userid)
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
+}
+
+static void CleanCloudDir(const std::string &bundleName, const int userid)
+{
+    std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
+    cloudFileDir = cloudFileDir.replace(cloudFileDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(cloudFileDir)) {
+        APP_LOGW("clean dir %{public}s failed", cloudFileDir.c_str());
+    }
+}
+
+static void CleanBundleDataForEl2(const std::string &bundleName, const int userid)
+{
+    std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+        Constants::PATH_SEPARATOR + std::to_string(userid);
+    std::string databaseDir = dataDir + Constants::DATABASE + bundleName;
+    if (!InstalldOperator::DeleteFiles(databaseDir)) {
+        APP_LOGW("clean dir %{public}s failed", databaseDir.c_str());
+    }
+    std::string logDir = dataDir + Constants::LOG + bundleName;
+    if (!InstalldOperator::DeleteFiles(logDir)) {
+        APP_LOGW("clean dir %{public}s failed", logDir.c_str());
+    }
+    std::string bundleDataDir = dataDir + Constants::BASE + bundleName;
+    for (const auto &dir : BUNDLE_DATA_DIR) {
+        std::string subDir = bundleDataDir + dir;
+        if (!InstalldOperator::DeleteFiles(subDir)) {
+            APP_LOGW("clean dir %{public}s failed", subDir.c_str());
+        }
+    }
+    if (!InstalldOperator::DeleteFilesExceptDirs(bundleDataDir, BUNDLE_DATA_DIR)) {
+        APP_LOGW("clean dir %{public}s failed", bundleDataDir.c_str());
+    }
 }
 
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
@@ -499,6 +570,39 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
         APP_LOGE("CleanBundleDataDir delete files failed");
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+{
+    APP_LOGD("InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s", bundleName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleName.empty() || userid < 0) {
+        APP_LOGE("Calling the function CleanBundleDataDirByName with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    for (const auto &el : Constants::BUNDLE_EL) {
+        if (el == Constants::BUNDLE_EL[1]) {
+            CleanBundleDataForEl2(bundleName, userid);
+            continue;
+        }
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
+        if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
+            APP_LOGW("clean dir %{public}s failed", bundleDataDir.c_str());
+        }
+        std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
+        if (!InstalldOperator::DeleteFiles(databaseDir)) {
+            APP_LOGW("clean dir %{public}s failed", databaseDir.c_str());
+        }
+    }
+    CleanShareDir(bundleName, userid);
+    CleanCloudDir(bundleName, userid);
+    CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2);
+    CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1);
+    CleanDistributedDir(bundleName, userid);
     return ERR_OK;
 }
 

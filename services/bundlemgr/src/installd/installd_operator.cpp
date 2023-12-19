@@ -577,6 +577,40 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
     return ret;
 }
 
+bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const std::vector<std::string> &dirsToKeep)
+{
+    APP_LOGD("InstalldOperator::DeleteFilesExceptBundleDataDirs start");
+    std::string filePath;
+    DIR *dir = opendir(dataPath.c_str());
+    if (dir == nullptr) {
+        return false;
+    }
+    bool ret = true;
+    while (true) {
+        struct dirent *ptr = readdir(dir);
+        if (ptr == nullptr) {
+            break;
+        }
+        std::string dirName = Constants::PATH_SEPARATOR + std::string(ptr->d_name);
+        if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end()) {
+            continue;
+        }
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        filePath = OHOS::IncludeTrailingPathDelimiter(dataPath) + std::string(ptr->d_name);
+        if (ptr->d_type == DT_DIR) {
+            ret = OHOS::ForceRemoveDirectory(filePath);
+        } else {
+            if (access(filePath.c_str(), F_OK) == 0) {
+                ret = OHOS::RemoveFile(filePath);
+            }
+        }
+    }
+    closedir(dir);
+    return ret;
+}
+
 bool InstalldOperator::MkOwnerDir(const std::string &path, bool isReadByOthers, const int uid, const int gid)
 {
     if (!MkRecursiveDir(path, isReadByOthers)) {

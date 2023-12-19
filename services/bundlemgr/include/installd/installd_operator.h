@@ -147,6 +147,13 @@ public:
      */
     static bool DeleteFiles(const std::string &dataPath);
     /**
+     * @brief Delete files in a directory except the directories to be kept.
+     * @param dataPath Indicates the directory path of the files to be deleted.
+     * @param dirsToKeep Indicates the directories to be kept.
+     * @return Returns true if the files deleted successfully; returns false otherwise
+     */
+    static bool DeleteFilesExceptDirs(const std::string &dataPath, const std::vector<std::string> &dirsToKeep);
+    /**
      * @brief Make a directory and change the owner and group ID of it.
      * @param path Indicates the directory path to be made.
      * @param isReadByOthers Indicates the directory whether read by other users.

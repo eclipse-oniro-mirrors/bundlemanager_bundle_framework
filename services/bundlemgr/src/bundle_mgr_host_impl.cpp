@@ -1262,21 +1262,8 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         return false;
     }
 
-    if (InstalldClient::GetInstance()->RemoveBundleDataDir(bundleName, userId) != ERR_OK) {
-        APP_LOGE("%{public}s, RemoveBundleDataDir failed", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
-        return false;
-    }
-    CreateDirParam createDirParam;
-    createDirParam.bundleName = bundleName;
-    createDirParam.userId = userId;
-    createDirParam.uid = innerBundleUserInfo.uid;
-    createDirParam.gid = innerBundleUserInfo.uid;
-    createDirParam.apl = GetAppPrivilegeLevel(bundleName, userId);
-    createDirParam.isPreInstallApp = IsPreInstallApp(bundleName);
-    createDirParam.debug = applicationInfo.debug;
-    if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam)) {
-        APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
+    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId) != ERR_OK) {
+        APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
     }

@@ -74,6 +74,14 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return 0;
 }
 
+ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+{
+    if (bundleName.empty()) {
+        return -1;
+    }
+    return 0;
+}
+
 ErrCode InstalldClient::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {

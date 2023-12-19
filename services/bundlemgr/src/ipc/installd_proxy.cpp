@@ -165,6 +165,17 @@ ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userid);
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME, data, reply, option);
+}
+
 ErrCode InstalldProxy::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
 {
