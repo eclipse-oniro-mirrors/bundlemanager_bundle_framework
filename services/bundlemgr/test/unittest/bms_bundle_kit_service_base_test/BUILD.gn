@@ -67,7 +67,6 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -97,6 +96,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     external_deps += [
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
+      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
