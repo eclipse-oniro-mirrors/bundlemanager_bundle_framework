@@ -49,6 +49,7 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
         std::thread systemLanguageChangedThread(OnSystemLanguageChange, language);
         systemLanguageChangedThread.detach();
     }
+    APP_LOGI("end");
 }
 
 void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMode)
