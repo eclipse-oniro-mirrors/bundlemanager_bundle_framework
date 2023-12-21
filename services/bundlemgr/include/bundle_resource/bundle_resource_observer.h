@@ -32,6 +32,11 @@ public:
     virtual ~BundleResourceObserver() override;
 
     void OnConfigurationUpdated(const AppExecFwk::Configuration& configuration) override;
+
+private:
+    static void OnSystemColorModeChanged(const std::string &colorMode);
+
+    static void OnSystemLanguageChange(const std::string &language);
 };
 #endif
 } // AppExecFwk

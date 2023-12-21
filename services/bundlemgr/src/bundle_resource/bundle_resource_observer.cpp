@@ -15,6 +15,8 @@
 
 #include "bundle_resource_observer.h"
 
+#include <thread>
+
 #include "app_log_wrapper.h"
 #include "bundle_resource_callback.h"
 #include "bundle_system_state.h"
@@ -35,17 +37,30 @@ BundleResourceObserver::~BundleResourceObserver()
 void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configuration& configuration)
 {
     APP_LOGI("called");
-    BundleResourceCallback callback;
     std::string colorMode = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE);
     if (!colorMode.empty() && (colorMode != BundleSystemState::GetInstance().GetSystemColorMode())) {
         APP_LOGD("OnSystemColorModeChanged colorMode:%{public}s", colorMode.c_str());
-        callback.OnSystemColorModeChanged(colorMode);
+        std::thread colorModeChangedThread(OnSystemColorModeChanged, colorMode);
+        colorModeChangedThread.detach();
     }
     std::string language = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE);
     if (!language.empty() && (language != BundleSystemState::GetInstance().GetSystemLanguage())) {
         APP_LOGD("OnSystemLanguageChange language:%{public}s", language.c_str());
-        callback.OnSystemLanguageChange(language);
+        std::thread systemLanguageChangedThread(OnSystemLanguageChange, language);
+        systemLanguageChangedThread.detach();
     }
+}
+
+void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMode)
+{
+    BundleResourceCallback callback;
+    callback.OnSystemColorModeChanged(colorMode);
+}
+
+void BundleResourceObserver::OnSystemLanguageChange(const std::string &language)
+{
+    BundleResourceCallback callback;
+    callback.OnSystemLanguageChange(language);
 }
 #endif
 } // AppExecFwk
