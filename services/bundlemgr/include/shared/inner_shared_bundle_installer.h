@@ -103,7 +103,7 @@ private:
         const std::string &moduleDir, const std::string &moduleName, const std::string &versionDir,
         InnerBundleInfo &newInfo);
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir) const;
+        const std::string &targetSoPath, const std::string &signatureFileDir, bool isPreInstalledBundle) const;
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
