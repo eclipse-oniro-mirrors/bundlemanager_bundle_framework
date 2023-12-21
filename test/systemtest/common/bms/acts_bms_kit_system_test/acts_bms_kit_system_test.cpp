@@ -18,6 +18,7 @@
 #include <future>
 #include <gtest/gtest.h>
 
+#include "accesstoken_kit.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_event_callback_host.h"
@@ -34,10 +35,12 @@
 #include "permission_define.h"
 #include "iservice_registry.h"
 #include "launcher_ability_resource_info.h"
+#include "nativetoken_kit.h"
 #include "nlohmann/json.hpp"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
 #include "testConfigParser.h"
+#include "token_setproc.h"
 
 using OHOS::AAFwk::Want;
 using namespace testing::ext;
@@ -69,6 +72,8 @@ const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
 const int32_t ZERO_SIZE = 0;
+const int32_t PERMS_INDEX_ONE = 0;
+const int32_t PERMS_INDEX_TWO = 1;
 }  // namespace
 
 namespace OHOS {
@@ -227,6 +232,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    void StartProcess();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
     static void Install(
@@ -265,6 +271,28 @@ void ActsBmsKitSystemTest::SetUp()
 
 void ActsBmsKitSystemTest::TearDown()
 {}
+
+void ActsBmsKitSystemTest::StartProcess()
+{
+    const int32_t permsNum = 2;
+    uint64_t tokenId;
+    const char *perms[permsNum];
+    perms[PERMS_INDEX_ONE] = "ohos.permission.GET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_TWO] = "ohos.permission.SET_DEFAULT_APPLICATION";
+    NativeTokenInfoParams infoInstance = {
+        .dcapsNum = 0,
+        .permsNum = permsNum,
+        .aclsNum = 0,
+        .dcaps = NULL,
+        .perms = perms,
+        .acls = NULL,
+        .processName = "kit_system_test",
+        .aplStr = "system_core",
+    };
+    tokenId = GetAccessTokenId(&infoInstance);
+    SetSelfTokenID(tokenId);
+    OHOS::Security::AccessToken::AccessTokenKit::ReloadNativeTokenInfo();
+}
 
 void ActsBmsKitSystemTest::Install(
     const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec)
@@ -5899,29 +5927,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0100, Function | SmallTest | L
 }
 
 /**
- * @tc.number: GetDefaultAppProxy_0200
- * @tc.name: test GetDefaultAppProxy proxy
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
-    AAFwk::Want want;
-    ElementName elementName(
-        "", DEFAULT_APP_BUNDLE_NAME, DEFAULT_APP_MODULE_NAME, DEFAULT_APP_VIDEO);
-    want.SetElement(elementName);
-    ErrCode res = getDefaultAppProxy->SetDefaultApplication(USERID, DEFAULT_APP_VIDEO, want);
-    EXPECT_NE(res, ERR_OK);
-    BundleInfo bundleInfo;
-    res = getDefaultAppProxy->GetDefaultApplication(USERID, DEFAULT_APP_VIDEO, bundleInfo);
-    EXPECT_NE(res, ERR_OK);
-    res = getDefaultAppProxy->ResetDefaultApplication(USERID, DEFAULT_APP_VIDEO);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
  * @tc.number: GetDefaultAppProxy_0400
  * @tc.name: test GetDefaultAppProxy proxy
  * @tc.desc: 1.system run normally
@@ -8013,6 +8018,30 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllLauncherAbilityResourceInfo_0001, Function 
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
         }
     }
+}
+
+/**
+ * @tc.number: GetDefaultAppProxy_0200
+ * @tc.name: test GetDefaultAppProxy proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | Level1)
+{
+    StartProcess();
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IDefaultApp> getDefaultAppProxy = bundleMgrProxy->GetDefaultAppProxy();
+    AAFwk::Want want;
+    ElementName elementName(
+        "", DEFAULT_APP_BUNDLE_NAME, DEFAULT_APP_MODULE_NAME, DEFAULT_APP_VIDEO);
+    want.SetElement(elementName);
+    ErrCode res = getDefaultAppProxy->SetDefaultApplication(USERID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(res, ERR_OK);
+    BundleInfo bundleInfo;
+    res = getDefaultAppProxy->GetDefaultApplication(USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_NE(res, ERR_OK);
+    res = getDefaultAppProxy->ResetDefaultApplication(USERID, DEFAULT_APP_VIDEO);
+    EXPECT_EQ(res, ERR_OK);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
