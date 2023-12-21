@@ -3515,6 +3515,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
+    CHECK_STRING_EMPTY(env, bundleName, std::string{ BUNDLE_NAME });
 
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
