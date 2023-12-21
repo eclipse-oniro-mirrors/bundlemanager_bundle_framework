@@ -308,6 +308,9 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
     }
+    // move so to real path
+    result = MoveSoToRealPath(moduleName, versionDir);
+    CHECK_RESULT(result, "move so to real path failed %{public}d");
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
     newInfo.UpdateSharedModuleInfo();
@@ -614,14 +617,10 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "extract module files failed %{public}d");
-        if (!newInfo.IsPreInstallApp()) {
-            // verify hap or hsp code signature for compressed so files
-            result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath, signatureFileDir_);
-            CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
-        }
-        // move so to real path
-        result = MoveSoToRealPath(moduleName, versionDir);
-        CHECK_RESULT(result, "move so to real path failed %{public}d");
+        // verify hap or hsp code signature for compressed so files
+        result = VerifyCodeSignatureForNativeFiles(
+            bundlePath, cpuAbi, tempSoPath, signatureFileDir_, newInfo.IsPreInstallApp());
+        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
     } else {
         std::vector<std::string> fileNames;
         auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);
@@ -632,7 +631,8 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
 }
 
 ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bundlePath,
-    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir) const
+    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir,
+    bool isPreInstalledBundle) const
 {
     APP_LOGD("begin to verify code signature for hsp native files");
     bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
@@ -644,6 +644,7 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
+    codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
