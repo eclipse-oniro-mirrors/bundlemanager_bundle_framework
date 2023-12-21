@@ -79,7 +79,7 @@ bool BundleResourceImageInfo::ConvertToString(
         APP_LOGE("EncodeBase64 failed");
         return false;
     }
-    APP_LOGE("end");
+    APP_LOGD("end");
     return true;
 }
 
