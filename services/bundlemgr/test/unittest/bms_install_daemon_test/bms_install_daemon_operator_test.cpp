@@ -42,6 +42,9 @@ const std::string TEST_CPU_ABI = "arm64";
 const std::string TEST_CPU_ARM = "arm";
 const std::string TEST_PATH = "/test/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
+const std::string TEST_LIB_SO_X = "libs/arm64/test.so.9";
+const std::string TEST_LIB_SO_XX = "libs/arm64/test.so.11";
+const std::string TEST_LIB_SO_ERROR = "libs/arm64/test.so.a";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_LIB_AP = "ap/test.ap";
 const std::string TEST_FILE_PATH = "/system/etc";
@@ -467,6 +470,12 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
     extractParam.extractFileType = ExtractFileType::SO;
     ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
     EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_X, extractParam);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_XX, extractParam);
+    EXPECT_TRUE(ret);
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_ERROR, extractParam);
+    EXPECT_FALSE(ret);
 
     extractParam.extractFileType = ExtractFileType::PATCH;
     ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
