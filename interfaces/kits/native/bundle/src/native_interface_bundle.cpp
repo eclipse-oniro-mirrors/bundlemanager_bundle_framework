@@ -26,7 +26,6 @@
 #include "securec.h"
 namespace {
 const size_t CHAR_MAX_LENGTH = 10240;
-const int16_t API_ELEVEN = 11;
 }
 
 // Helper function to release char* memory
@@ -90,51 +89,67 @@ OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
         ReleaseStrings(nativeApplicationInfo.bundleName, nativeApplicationInfo.fingerprint);
         return nativeApplicationInfo;
     }
+    APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success");
+    return nativeApplicationInfo;
+}
 
-    if (bundleInfo.applicationInfo.apiTargetVersion < API_ELEVEN) {
-        APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success with api less than 11");
-        return nativeApplicationInfo;
-    }
+char* OH_NativeBundle_GetAppId()
+{
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    OHOS::AppExecFwk::BundleInfo bundleInfo;
+    auto bundleInfoFlag =
+        static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
+        APP_LOGE("can not get bundleInfo for self");
+        return nullptr;
+    };
 
     size_t appIdLen = bundleInfo.signatureInfo.appId.size();
     if ((appIdLen == 0) || (appIdLen + 1) > CHAR_MAX_LENGTH) {
         APP_LOGE("failed due to the length of appId is empty or too long");
-        ReleaseStrings(nativeApplicationInfo.bundleName, nativeApplicationInfo.fingerprint);
-        return nativeApplicationInfo;
+        return nullptr;
     }
-    nativeApplicationInfo.appId = static_cast<char*>(malloc(appIdLen + 1));
-    if (nativeApplicationInfo.appId == nullptr) {
+    char *appId = static_cast<char*>(malloc(appIdLen + 1));
+    if (appId == nullptr) {
         APP_LOGE("failed due to malloc error");
-        ReleaseStrings(nativeApplicationInfo.bundleName, nativeApplicationInfo.fingerprint);
-        return nativeApplicationInfo;
+        return nullptr;
     }
-    if (strcpy_s(nativeApplicationInfo.appId, appIdLen + 1, bundleInfo.signatureInfo.appId.c_str()) != EOK) {
+    if (strcpy_s(appId, appIdLen + 1, bundleInfo.signatureInfo.appId.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
-        ReleaseStrings(nativeApplicationInfo.bundleName,
-            nativeApplicationInfo.fingerprint, nativeApplicationInfo.appId);
-        return nativeApplicationInfo;
+        return nullptr;
     }
+    APP_LOGI("OH_NativeBundle_GetAppId success");
+    return appId;
+}
+
+char* OH_NativeBundle_GetAppIdentifier()
+{
+    OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
+    OHOS::AppExecFwk::BundleInfo bundleInfo;
+    auto bundleInfoFlag =
+        static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO);
+
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
+        APP_LOGE("can not get bundleInfo for self");
+        return nullptr;
+    };
+
     size_t appIdentifierLen = bundleInfo.signatureInfo.appIdentifier.size();
     if (appIdentifierLen + 1 > CHAR_MAX_LENGTH) {
         APP_LOGE("failed due to the length of appIdentifier is too long");
-        ReleaseStrings(nativeApplicationInfo.bundleName,
-            nativeApplicationInfo.fingerprint, nativeApplicationInfo.appId);
-        return nativeApplicationInfo;
+        return nullptr;
     }
-    nativeApplicationInfo.appIdentifier = static_cast<char*>(malloc(appIdentifierLen + 1));
-    if (nativeApplicationInfo.appIdentifier == nullptr) {
+    char* appIdentifier = static_cast<char*>(malloc(appIdentifierLen + 1));
+    if (appIdentifier == nullptr) {
         APP_LOGE("failed due to malloc error");
-        ReleaseStrings(nativeApplicationInfo.bundleName,
-            nativeApplicationInfo.fingerprint, nativeApplicationInfo.appId);
-        return nativeApplicationInfo;
+        return nullptr;
     }
-    if (strcpy_s(nativeApplicationInfo.appIdentifier, appIdentifierLen + 1,
+    if (strcpy_s(appIdentifier, appIdentifierLen + 1,
         bundleInfo.signatureInfo.appIdentifier.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
-        ReleaseStrings(nativeApplicationInfo.bundleName, nativeApplicationInfo.fingerprint,
-            nativeApplicationInfo.appId, nativeApplicationInfo.appIdentifier);
-        return nativeApplicationInfo;
+        return nullptr;
     }
-    APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success");
-    return nativeApplicationInfo;
+    APP_LOGI("OH_NativeBundle_GetAppIdentifier success");
+    return appIdentifier;
 }

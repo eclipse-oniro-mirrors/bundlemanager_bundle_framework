@@ -2,5 +2,13 @@
     {
       "first_introduced": "9",
       "name": "OH_NativeBundle_GetCurrentApplicationInfo"
+    },
+    {
+      "first_introduced": "11",
+      "name": "OH_NativeBundle_GetAppId"
+    },
+    {
+      "first_introduced": "11",
+      "name": "OH_NativeBundle_GetAppIdentifier"
     }
 ]
