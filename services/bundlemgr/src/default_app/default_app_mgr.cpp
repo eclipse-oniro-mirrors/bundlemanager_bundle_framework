@@ -130,8 +130,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
     return ERR_OK;
 }
 
-ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetDefaultApplication(
+    int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
+    APP_LOGD("begin, backup(bool) : %{public}d", backup);
     std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
@@ -151,9 +153,9 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
     }
 
     if (IsAppType(mimeType)) {
-        return GetBundleInfoByAppType(userId, mimeType, bundleInfo);
+        return GetBundleInfoByAppType(userId, mimeType, bundleInfo, backup);
     } else if (IsFileType(mimeType)) {
-        return GetBundleInfoByFileType(userId, mimeType, bundleInfo);
+        return GetBundleInfoByFileType(userId, mimeType, bundleInfo, backup);
     } else {
         APP_LOGW("invalid type, not app type or file type.");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
@@ -339,9 +341,9 @@ std::string DefaultAppMgr::GetType(const Want& want) const
 }
 
 bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId,
-    std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos) const
+    std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos, bool backup) const
 {
-    APP_LOGD("begin");
+    APP_LOGD("begin, backup(bool) : %{public}d", backup);
     std::string type = GetType(want);
     APP_LOGD("type : %{public}s", type.c_str());
     if (type.empty()) {
@@ -349,7 +351,7 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
         return false;
     }
     BundleInfo bundleInfo;
-    ErrCode ret = GetDefaultApplication(userId, type, bundleInfo);
+    ErrCode ret = GetDefaultApplication(userId, type, bundleInfo, backup);
     if (ret != ERR_OK) {
         APP_LOGE("GetDefaultApplication failed");
         return false;
@@ -376,10 +378,12 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
     }
 }
 
-ErrCode DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetBundleInfoByAppType(
+    int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
+    int32_t key = backup ? Constants::BACKUP_DEFAULT_APP_KEY : userId;
     Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(key, type, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
         return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
@@ -393,10 +397,12 @@ ErrCode DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string&
     return ERR_OK;
 }
 
-ErrCode DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
+ErrCode DefaultAppMgr::GetBundleInfoByFileType(
+    int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
+    int32_t key = backup ? Constants::BACKUP_DEFAULT_APP_KEY : userId;
     std::map<std::string, Element> infos;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(key, infos);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfos failed.");
         return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;

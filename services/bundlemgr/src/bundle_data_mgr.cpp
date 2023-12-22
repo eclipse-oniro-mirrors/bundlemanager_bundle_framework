@@ -4602,8 +4602,15 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         findDefaultApp = true;
         return true;
     }
+    // step2 : find backup default infos
+    if (withDefault &&
+        DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos, true)) {
+        APP_LOGD("find target backup default application");
+        findDefaultApp = true;
+        return true;
+    }
 #endif
-    // step2 : implicit query infos
+    // step3 : implicit query infos
     bool abilityRet =
         ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos) && (abilityInfos.size() > 0);
     APP_LOGD("abilityRet: %{public}d, abilityInfos size: %{public}zu", abilityRet, abilityInfos.size());
@@ -4611,7 +4618,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     bool extensionRet =
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
     APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}zu", extensionRet, extensionInfos.size());
-    // step3 : handle preview, if preview exist, only return preview
+    // step4 : handle preview, if preview exist, only return preview
     if (want.GetElement().GetBundleName().empty() && withDefault) {
         findDefaultApp = HandlePreview(want, flags, userId, abilityInfos, extensionInfos);
     }
