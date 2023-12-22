@@ -72,8 +72,11 @@ const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
 const int32_t ZERO_SIZE = 0;
-const int32_t PERMS_INDEX_ONE = 0;
-const int32_t PERMS_INDEX_TWO = 1;
+const int32_t PERMS_INDEX_ZERO = 0;
+const int32_t PERMS_INDEX_ONE = 1;
+const int32_t PERMS_INDEX_TWO = 2;
+const int32_t PERMS_INDEX_THREE = 3;
+const int32_t PERMS_INDEX_FORE = 4;
 }  // namespace
 
 namespace OHOS {
@@ -274,11 +277,14 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 2;
+    const int32_t permsNum = 5;
     uint64_t tokenId;
     const char *perms[permsNum];
-    perms[PERMS_INDEX_ONE] = "ohos.permission.GET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_ONE] = "ohos.permission.INSTALL_BUNDLE";
     perms[PERMS_INDEX_TWO] = "ohos.permission.SET_DEFAULT_APPLICATION";
+    perms[PERMS_INDEX_THREE] = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
+    perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -8042,6 +8048,103 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | L
     EXPECT_NE(res, ERR_OK);
     res = getDefaultAppProxy->ResetDefaultApplication(USERID, DEFAULT_APP_VIDEO);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0200
+ * @tc.name: test query applicationinfos
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles
+ *           2.install these bundles
+ *           3.query all appinfos
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START GetApplicationInfosV9_0200" << std::endl;
+    StartProcess();
+    CommonTool commonTool;
+    std::string installResult;
+    for (int i = 6; i < 9; i++) {
+        std::vector<std::string> resvec;
+        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+        installResult = commonTool.VectorToStr(resvec);
+        EXPECT_EQ(installResult, "Success") << "install fail!";
+    }
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::vector<ApplicationInfo> appInfos;
+    auto getInfoResult = bundleMgrProxy->GetApplicationInfosV9(
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), USERID, appInfos);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    bool isSubStrExist = false;
+    for (int i = 1; i <= 3; i++) {
+        std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
+        for (auto iter = appInfos.begin(); iter != appInfos.end(); iter++) {
+            if (IsSubStr(iter->name, appName)) {
+                isSubStrExist = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(isSubStrExist);
+        std::vector<std::string> resvec2;
+        Uninstall(appName, resvec2);
+        std::string uninstallResult = commonTool.VectorToStr(resvec2);
+        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    }
+    std::cout << "END GetApplicationInfosV9_0200" << std::endl;
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0300
+ * @tc.name: test query applicationinfos
+ * @tc.desc: 1.under '/data/test/bms_bundle',there exist three bundles
+ *           2.install these bundles
+ *           3.query all disabled appinfos
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START GetApplicationInfosV9_0300" << std::endl;
+    StartProcess();
+    CommonTool commonTool;
+    std::string installResult;
+    for (int i = 6; i < 9; i++) {
+        std::vector<std::string> resvec;
+        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+        installResult = commonTool.VectorToStr(resvec);
+        EXPECT_EQ(installResult, "Success") << "install fail!";
+    }
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    for (int i = 1; i <= 3; i++) {
+        std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
+        auto setAppResult = bundleMgrProxy->SetApplicationEnabled(appName, false, USERID);
+        EXPECT_EQ(setAppResult, ERR_OK);
+    }
+    std::vector<ApplicationInfo> appInfos;
+    auto getInfoResult = bundleMgrProxy->GetApplicationInfosV9(
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), USERID, appInfos);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+
+    bool isSubStrExist = false;
+    for (int i = 1; i <= 3; i++) {
+        std::string appName = BASE_BUNDLE_NAME + std::to_string(i);
+        for (auto iter = appInfos.begin(); iter != appInfos.end(); iter++) {
+            if (IsSubStr(iter->name, appName)) {
+                isSubStrExist = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(isSubStrExist);
+        std::vector<std::string> resvec2;
+        Uninstall(appName, resvec2);
+        std::string uninstallResult = commonTool.VectorToStr(resvec2);
+        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    }
+    std::cout << "END GetApplicationInfosV9_0300" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
