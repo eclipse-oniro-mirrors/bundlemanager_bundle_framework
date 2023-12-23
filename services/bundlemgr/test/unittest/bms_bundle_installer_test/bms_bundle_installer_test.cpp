@@ -5227,11 +5227,11 @@ HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0010, TestSize.Level
 
     newVersionCode = 1001;
     installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
-    auto exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
 
     nativeLibraryPath = "libs/arm";
-    installer.ProcessOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
+    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
     exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
     EXPECT_NE(exist, 0);
 }
