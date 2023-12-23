@@ -24,7 +24,7 @@ namespace AppExecFwk {
 using namespace std::chrono;
 
 static inline const std::u16string ERMS_INTERFACE_TOKEN =
-    u"ohos.cloud.ecologicalrulemgrservice.IBmsEcologicalRuleMgrService";
+    u"ohos.cloud.ecologicalrulemgrservice.IEcologicalRuleMgrService";
 
 std::mutex BmsEcologicalRuleMgrServiceClient::instanceLock_;
 sptr<BmsEcologicalRuleMgrServiceClient> BmsEcologicalRuleMgrServiceClient::instance_;

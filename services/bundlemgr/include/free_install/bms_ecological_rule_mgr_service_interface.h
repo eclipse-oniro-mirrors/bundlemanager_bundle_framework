@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class IBmsEcologicalRuleMgrService : public OHOS::IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.cloud.ecologicalrulemgrservice.IEcologicalRuleMgrService");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.cloud.ecologicalrulemgrservice.IBmsEcologicalRuleMgrService");
 
     using Want = OHOS::AAFwk::Want;
 
