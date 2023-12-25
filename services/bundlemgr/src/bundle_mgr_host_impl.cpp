@@ -472,6 +472,9 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
     if (ret != ERR_OK && isBrokerServiceExisted_) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ret = bmsExtensionClient->GetBundleNameByUid(uid, name);
+        if (ret != ERR_OK) {
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
+        }
     }
     return ret;
 }
