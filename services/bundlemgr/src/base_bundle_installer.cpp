@@ -1001,6 +1001,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         result = SaveHapToInstallPath(newInfos);
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     }
+    // delete old native library path
+    DeleteOldNativeLibraryPath(versionCode_, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
 
     // move so file to real installation dir
     result = MoveSoFileToRealInstallationDir(newInfos);
@@ -4563,6 +4565,22 @@ ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundle
 {
     APP_LOGD("start to remove sign profile of bundle %{public}s from code signature", bundleName.c_str());
     return InstalldClient::GetInstance()->RemoveSignProfile(bundleName);
+}
+
+void BaseBundleInstaller::DeleteOldNativeLibraryPath(const int32_t newVersionCode, const int32_t oldVersionCode,
+    const std::string &oldLibraryPath) const
+{
+    APP_LOGD("start");
+    if ((newVersionCode <= oldVersionCode) || oldLibraryPath.empty()) {
+        APP_LOGD("no need to delete library");
+        return;
+    }
+    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+        Constants::PATH_SEPARATOR + Constants::LIBS;
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
+        APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
+    }
+    APP_LOGD("end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -5205,4 +5205,34 @@ HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8300, Function | SmallTest
     auto ret = hostImpl.CheckPathValid(path, prefix);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: DeleteOldNativeLibraryPath_0010
+ * @tc.name: DeleteOldNativeLibraryPath
+ * @tc.desc: test DeleteOldNativeLibraryPath
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0010, TestSize.Level1)
+{
+    bool ret = OHOS::ForceCreateDirectory(BUNDLE_LIBRARY_PATH_DIR);
+    EXPECT_TRUE(ret);
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    int32_t newVersionCode = 999;
+    int32_t oldVersionCode = 1000;
+    std::string nativeLibraryPath = "";
+    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
+    auto exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    newVersionCode = 1001;
+    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    nativeLibraryPath = "libs/arm";
+    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
+}
 } // OHOS
