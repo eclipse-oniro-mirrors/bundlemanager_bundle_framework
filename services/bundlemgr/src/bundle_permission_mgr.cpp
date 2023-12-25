@@ -29,6 +29,7 @@ namespace {
 // pre bundle profile
 constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_permissions.json";
 constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
+const int32_t BASE_API_VERSION = 1000;
 }
 
 using namespace OHOS::Security;
@@ -1033,7 +1034,7 @@ bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
     appApiVersion = systemApiVersion < appApiVersion ? systemApiVersion : appApiVersion;
     APP_LOGD("appApiVersion: %{public}d", appApiVersion);
 
-    if (appApiVersion < beginApiVersion) {
+    if ((appApiVersion % BASE_API_VERSION) < beginApiVersion) {
         APP_LOGI("previous app calling, verify success");
         return true;
     }
