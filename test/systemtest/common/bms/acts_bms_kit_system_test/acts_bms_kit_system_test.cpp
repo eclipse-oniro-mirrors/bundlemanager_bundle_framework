@@ -8060,7 +8060,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetDefaultAppProxy_0200, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0200, Function | MediumTest | Level1)
 {
     std::cout << "START GetApplicationInfosV9_0200" << std::endl;
-    StartProcess();
     CommonTool commonTool;
     std::string installResult;
     for (int i = 6; i < 9; i++) {
@@ -8106,7 +8105,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0200, Function | MediumTest
 HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0300, Function | MediumTest | Level1)
 {
     std::cout << "START GetApplicationInfosV9_0300" << std::endl;
-    StartProcess();
     CommonTool commonTool;
     std::string installResult;
     for (int i = 6; i < 9; i++) {
