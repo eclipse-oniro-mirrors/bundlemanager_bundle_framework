@@ -308,9 +308,11 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
     }
-    // move so to real path
-    result = MoveSoToRealPath(moduleName, versionDir);
-    CHECK_RESULT(result, "move so to real path failed %{public}d");
+    if (newInfo.IsCompressNativeLibs(moduleName)) {
+        // move so to real path
+        result = MoveSoToRealPath(moduleName, versionDir);
+        CHECK_RESULT(result, "move so to real path failed %{public}d");
+    }
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
     newInfo.UpdateSharedModuleInfo();
