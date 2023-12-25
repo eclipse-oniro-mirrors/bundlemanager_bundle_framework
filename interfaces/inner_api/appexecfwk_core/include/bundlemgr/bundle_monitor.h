@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,8 @@
 
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MONITOR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MONITOR_H
+
+#include <mutex>
 
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -53,6 +55,7 @@ public:
 
 private:
     sptr<IBundleStatusCallback> callback_ = nullptr;
+    std::mutex mutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
