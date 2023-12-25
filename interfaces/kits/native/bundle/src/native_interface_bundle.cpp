@@ -117,6 +117,7 @@ char* OH_NativeBundle_GetAppId()
     }
     if (strcpy_s(appId, appIdLen + 1, bundleInfo.signatureInfo.appId.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
+        free(appId);
         return nullptr;
     }
     APP_LOGI("OH_NativeBundle_GetAppId success");
@@ -148,6 +149,7 @@ char* OH_NativeBundle_GetAppIdentifier()
     if (strcpy_s(appIdentifier, appIdentifierLen + 1,
         bundleInfo.signatureInfo.appIdentifier.c_str()) != EOK) {
         APP_LOGE("failed due to strcpy_s error");
+        free(appIdentifier);
         return nullptr;
     }
     APP_LOGI("OH_NativeBundle_GetAppIdentifier success");
