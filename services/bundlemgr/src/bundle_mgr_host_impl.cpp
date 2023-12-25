@@ -513,6 +513,14 @@ bool BundleMgrHostImpl::GetBundleGidsByUid(const std::string &bundleName, const 
 bool BundleMgrHostImpl::CheckIsSystemAppByUid(const int uid)
 {
     APP_LOGD("start CheckIsSystemAppByUid, uid : %{public}d", uid);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
