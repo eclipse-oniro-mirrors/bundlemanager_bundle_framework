@@ -57,23 +57,6 @@ struct OH_NativeBundle_ApplicationInfo {
      * @since 9
      */
     char* fingerprint;
-
-    /**
-     * Indicates the ID of the application to which this bundle belongs
-     * The application ID uniquely identifies an application. It is determined by the bundle name and signature
-     * @syscap SystemCapability.BundleManager.BundleFramework.Core
-     * @since 11
-     */
-    char* appId;
-
-    /**
-     * Globally unique identifier of an application.
-     * AppIdentifier does not change along the application lifecycle, including version updates, certificate changes,
-     * public and private key changes, and application transfer.
-     * @syscap SystemCapability.BundleManager.BundleFramework.Core
-     * @since 11
-     */
-    char* appIdentifier;
 };
 
 /**
@@ -85,6 +68,29 @@ struct OH_NativeBundle_ApplicationInfo {
  */
 OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo();
 
+/**
+ * @brief Obtains the appId of application. AppId indicates the ID of the application to which this bundle belongs
+ * The application ID uniquely identifies an application. It is determined by the bundle name and signature.
+ * After utilizing this interface, to prevent memory leaks,
+ * it is necessary to manually release the pointer returned by the interface.
+ *
+ * @return Returns the appId info.
+ * @since 11
+ * @version 1.0
+ */
+char* OH_NativeBundle_GetAppId();
+
+/**
+ * @brief Obtains the appIdentifier of application. AppIdentifier does not change along the application lifecycle,
+ * including version updates, certificate changes, public and private key changes, and application transfer.
+ * After utilizing this interface, to prevent memory leaks,
+ * it is necessary to manually release the pointer returned by the interface.
+ *
+ * @return Returns the appIdentifier info.
+ * @since 11
+ * @version 1.0
+ */
+char* OH_NativeBundle_GetAppIdentifier();
 #ifdef __cplusplus
 };
 #endif
