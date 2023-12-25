@@ -79,7 +79,8 @@ enum class ExtensionAbilityType {
     SYSPICKER_MEETIMECONTACT = 402,
     SYSPICKER_MEETIMECALLLOG = 403,
     SYS_COMMON_UI = 500,
-    AUTO_FILL_PASSWORD = 501
+    AUTO_FILL_PASSWORD = 501,
+    VPN = 502
 };
 
 enum class CompileMode {

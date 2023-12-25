@@ -94,7 +94,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/meetimeMessage", ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE },
     { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
-    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI }
+    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
+    { "vpn", ExtensionAbilityType::VPN }
 };
 
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
