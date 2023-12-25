@@ -81,6 +81,7 @@ constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
 constexpr int32_t DEFAULT_INSTALLERID = -1;
+constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";

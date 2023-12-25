@@ -29,22 +29,25 @@ public:
     static DefaultAppMgr& GetInstance();
     static bool VerifyElementFormat(const Element& element);
     ErrCode IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const;
-    ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    ErrCode GetDefaultApplication(
+        int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup = false) const;
     ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const;
     ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) const;
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
     void HandleCreateUser(int32_t userId) const;
     void HandleRemoveUser(int32_t userId) const;
 
-    bool GetDefaultApplication(const AAFwk::Want& want, const int32_t userId,
-        std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos) const;
+    bool GetDefaultApplication(const AAFwk::Want& want, const int32_t userId, std::vector<AbilityInfo>& abilityInfos,
+        std::vector<ExtensionAbilityInfo>& extensionInfos, bool backup = false) const;
 private:
     DefaultAppMgr();
     ~DefaultAppMgr();
     DISALLOW_COPY_AND_MOVE(DefaultAppMgr);
     void Init();
-    ErrCode GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
-    ErrCode GetBundleInfoByFileType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const;
+    ErrCode GetBundleInfoByAppType(
+        int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup = false) const;
+    ErrCode GetBundleInfoByFileType(
+        int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup = false) const;
     bool GetBundleInfo(int32_t userId, const std::string& type, const Element& element, BundleInfo& bundleInfo) const;
     bool IsTypeValid(const std::string& type) const;
     bool IsAppType(const std::string& type) const;

@@ -25,6 +25,7 @@ namespace AppExecFwk {
 namespace {
 constexpr int32_t INITIAL_USER_ID = -1;
 const std::string DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
+const std::string BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
 }
 DefaultAppRdb::DefaultAppRdb()
 {
@@ -35,6 +36,7 @@ DefaultAppRdb::DefaultAppRdb()
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
     LoadDefaultApplicationConfig();
+    LoadBackUpDefaultApplicationConfig();
 }
 
 DefaultAppRdb::~DefaultAppRdb()
@@ -151,7 +153,7 @@ bool DefaultAppRdb::DeleteDefaultApplicationInfo(int32_t userId, const std::stri
     return true;
 }
 
-bool DefaultAppRdb::ParseConfig(DefaultAppData &defaultAppData)
+bool DefaultAppRdb::ParseConfig(const std::string& relativePath, DefaultAppData& defaultAppData)
 {
     // load default app config from json file
     std::vector<std::string> rootDirs;
@@ -160,8 +162,8 @@ bool DefaultAppRdb::ParseConfig(DefaultAppData &defaultAppData)
         APP_LOGW("rootDirs empty");
         return false;
     }
-    std::for_each(rootDirs.cbegin(), rootDirs.cend(), [&defaultAppData](const auto &rootDir) {
-        std::string path = rootDir + DEFAULT_APP_JSON_PATH;
+    std::for_each(rootDirs.cbegin(), rootDirs.cend(), [&relativePath, &defaultAppData](const auto& rootDir) {
+        std::string path = rootDir + relativePath;
         APP_LOGD("default app json path : %{public}s", path.c_str());
         nlohmann::json jsonObject;
         if (!BundleParser::ReadFileIntoJson(path, jsonObject)) {
@@ -177,7 +179,7 @@ void DefaultAppRdb::LoadDefaultApplicationConfig()
 {
     APP_LOGD("begin to LoadDefaultApplicationConfig.");
     DefaultAppData defaultAppData;
-    if (!ParseConfig(defaultAppData)) {
+    if (!ParseConfig(DEFAULT_APP_JSON_PATH, defaultAppData)) {
         APP_LOGD("default app config empty");
         return;
     }
@@ -212,6 +214,19 @@ void DefaultAppRdb::LoadDefaultApplicationConfig()
     // save default app config to db
     SetDefaultApplicationInfos(INITIAL_USER_ID, defaultAppData.infos);
     APP_LOGD("LoadDefaultApplicationConfig done.");
+}
+
+void DefaultAppRdb::LoadBackUpDefaultApplicationConfig()
+{
+    APP_LOGD("begin");
+    DefaultAppData defaultAppData;
+    if (!ParseConfig(BACK_UP_DEFAULT_APP_JSON_PATH, defaultAppData)) {
+        APP_LOGD("backup default app config empty");
+        return;
+    }
+    // save default app config to db
+    SetDefaultApplicationInfos(Constants::BACKUP_DEFAULT_APP_KEY, defaultAppData.infos);
+    APP_LOGD("end");
 }
 
 bool DefaultAppRdb::GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos)
