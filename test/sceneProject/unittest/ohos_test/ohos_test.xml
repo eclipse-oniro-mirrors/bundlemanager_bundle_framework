@@ -101,7 +101,6 @@
       <option name="push" value="test_bundle/signatureTest.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/preview.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
-      <option name="push" value="test_bundle/devicetype_error.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
   <target name="BmsBundleOtaUpdateTest">

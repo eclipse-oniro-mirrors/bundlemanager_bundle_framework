@@ -24,7 +24,6 @@ group("test_bundle") {
     "bmsThirdBundle1:bmsThirdBundle1",
     "bmsThirdBundle2:bmsThirdBundle2",
     "defaultAppTest:defaultAppTest",
-    "devicetype_error:devicetype_error",
     "eighth_right:eighth_right",
     "eleventh_right:eleventh_right",
     "fifteenth_right:fifteenth_right",
