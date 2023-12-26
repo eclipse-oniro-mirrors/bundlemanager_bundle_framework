@@ -60,6 +60,14 @@ struct OH_NativeBundle_ApplicationInfo {
 };
 
 /**
+ * @brief Indicates information of application
+ *
+ * @since 11
+ * @version 1.0
+ */
+typedef struct OH_NativeBundle_ApplicationInfo OH_NativeBundle_ApplicationInfo;
+
+/**
  * @brief Obtains the application info based on the The current bundle.
  *
  * @return Returns the application info.
