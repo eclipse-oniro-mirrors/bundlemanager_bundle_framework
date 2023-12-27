@@ -45,6 +45,7 @@ const std::string JSON_KEY_NAME = "name";
 const std::string JSON_KEY_ORIGINAL_BUNDLE_NAME = "originalBundleName";
 const std::string JSON_KEY_CUSTOMIZE_DATA = "customizeData";
 const std::string JSON_KEY_DISPLAY_NAME = "displayName";
+const std::string JSON_KEY_DISPLAY_NAME_ID = "displayNameId";
 const std::string JSON_KEY_DESCRIPTION = "description";
 const std::string JSON_KEY_DESCRIPTION_ID = "descriptionId";
 const std::string JSON_KEY_TYPE = "type";
@@ -84,7 +85,11 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     src = formInfo.src;
     window.designWidth = formInfo.window.designWidth;
     window.autoDesignWidth = formInfo.window.autoDesignWidth;
-    std::size_t pos = formInfo.description.find(":");
+    std::size_t pos = formInfo.displayName.find(":");
+    if (pos != std::string::npos) {
+        displayNameId = atoi(formInfo.displayName.substr(pos + 1, formInfo.displayName.length() - pos - 1).c_str());
+    }
+    pos = formInfo.description.find(":");
     if (pos != std::string::npos) {
         descriptionId = atoi(formInfo.description.substr(pos + 1, formInfo.description.length() - pos - 1).c_str());
     }
@@ -144,6 +149,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     formVisibleNotify = parcel.ReadBool();
     isStatic = parcel.ReadBool();
     defaultDimension = parcel.ReadInt32();
+    displayNameId = parcel.ReadInt32();
     descriptionId = parcel.ReadInt32();
     updateDuration = parcel.ReadInt32();
 
@@ -224,6 +230,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formVisibleNotify);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isStatic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defaultDimension);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, displayNameId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, updateDuration);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
@@ -304,6 +311,7 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_FORMCONFIG_ABILITY, formInfo.formConfigAbility},
         {JSON_KEY_SCHEDULED_UPDATE_TIME, formInfo.scheduledUpdateTime},
         {JSON_KEY_ORIGINAL_BUNDLE_NAME, formInfo.originalBundleName},
+        {JSON_KEY_DISPLAY_NAME_ID, formInfo.displayNameId},
         {JSON_KEY_DESCRIPTION_ID, formInfo.descriptionId},
         {JSON_KEY_UPDATE_DURATION, formInfo.updateDuration},
         {JSON_KEY_DEFAULT_DIMENSION, formInfo.defaultDimension},
@@ -489,6 +497,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         JSON_KEY_ORIGINAL_BUNDLE_NAME,
         formInfo.originalBundleName,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DISPLAY_NAME_ID,
+        formInfo.displayNameId,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
