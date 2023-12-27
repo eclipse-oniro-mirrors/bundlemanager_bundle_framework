@@ -77,6 +77,7 @@ const int32_t PERMS_INDEX_ONE = 1;
 const int32_t PERMS_INDEX_TWO = 2;
 const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
+const int32_t PERMS_INDEX_FIVE = 5;
 }  // namespace
 
 namespace OHOS {
@@ -277,7 +278,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 5;
+    const int32_t permsNum = 6;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -285,6 +286,7 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_TWO] = "ohos.permission.SET_DEFAULT_APPLICATION";
     perms[PERMS_INDEX_THREE] = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
     perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
+    perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
