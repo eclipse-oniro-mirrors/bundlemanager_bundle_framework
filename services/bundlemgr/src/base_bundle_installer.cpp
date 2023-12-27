@@ -170,7 +170,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .accessTokenId = accessTokenId_,
             .isModuleUpdate = isModuleUpdate_
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
+        if (installParam.allUser) {
+            AddBundleStatus(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
     }
@@ -3877,6 +3879,31 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::AddBundleStatus(const NotifyBundleEvents &installRes)
+{
+    bundleEvents_.emplace_back(installRes);
+}
+
+bool BaseBundleInstaller::NotifyAllBundleStatus()
+{
+    if (bundleEvents_.empty()) {
+        APP_LOGE("bundleEvents is empty.");
+        return false;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    for (const auto &bundleEvent : bundleEvents_) {
+        commonEventMgr->NotifyBundleStatus(bundleEvent, dataMgr);
+    }
+    return true;
 }
 
 void BaseBundleInstaller::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)

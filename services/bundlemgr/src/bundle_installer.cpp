@@ -38,6 +38,7 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID) {
         auto userInstallParam = installParam;
+        userInstallParam.allUser = true;
         for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
@@ -45,10 +46,13 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
                 bundleFilePath, userInstallParam, Constants::AppType::THIRD_PARTY_APP);
             ResetInstallProperties();
         }
+
+        NotifyAllBundleStatus();
     } else {
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
+
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
@@ -79,6 +83,7 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     ErrCode resultCode = ERR_OK;
     if (installParam.userId == Constants::ALL_USERID) {
         auto userInstallParam = installParam;
+        userInstallParam.allUser = true;
         for (auto userId : GetExistsCommonUserIds()) {
             userInstallParam.userId = userId;
             userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
@@ -86,6 +91,8 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
                 bundleFilePaths, userInstallParam, Constants::AppType::THIRD_PARTY_APP);
             ResetInstallProperties();
         }
+
+        NotifyAllBundleStatus();
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
