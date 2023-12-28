@@ -326,9 +326,10 @@ bool BundleInstallerHost::Install(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
@@ -352,9 +353,10 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
@@ -378,9 +380,10 @@ bool BundleInstallerHost::Recover(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyRecoverPermission()) {
@@ -399,9 +402,10 @@ bool BundleInstallerHost::Uninstall(
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyUninstallPermission()) {
@@ -420,9 +424,10 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyUninstallPermission()) {
@@ -442,9 +447,9 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::VerifyUninstallPermission()) {
@@ -463,9 +468,10 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        APP_LOGE("non-system app calling system api");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
@@ -489,11 +495,12 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("install sandbox failed due to error parameters");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("vnon-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_SANDBOX_BUNDLE)) {
         APP_LOGE("InstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -520,11 +527,12 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_SANDBOX_BUNDLE)) {
         APP_LOGE("UninstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -552,9 +560,9 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         APP_LOGE("statusReceiver invalid");
         return nullptr;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("Uninstall permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return nullptr;
     }
     InstallParam verifiedInstallParam = installParam;
@@ -584,37 +592,39 @@ bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, In
 {
     verifiedInstallParam.isCallByShell = BundlePermissionMgr::IsNativeTokenType();
     verifiedInstallParam.installBundlePermissionStatus =
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) ?
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installEnterpriseBundlePermissionStatus =
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) ?
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installEtpNormalBundlePermissionStatus =
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) ?
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installEtpMdmBundlePermissionStatus =
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) ?
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installUpdateSelfBundlePermissionStatus =
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_SELF_BUNDLE) ?
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_SELF_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     return (verifiedInstallParam.installBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEnterpriseBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpNormalBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpMdmBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
-        verifiedInstallParam.installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS);
+        verifiedInstallParam.installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE));
 }
 
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("Uninstall permission denied");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         APP_LOGE("install permission denied");
         return false;
     }
@@ -663,9 +673,9 @@ bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bu
         APP_LOGE("statusReceiver invalid");
         return false;
     }
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("install permission denied");
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&

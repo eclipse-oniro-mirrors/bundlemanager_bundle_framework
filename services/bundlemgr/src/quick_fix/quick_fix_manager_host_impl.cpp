@@ -41,9 +41,14 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app is not allowed call this function");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+        APP_LOGE("verify install permission failed.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerMgr is nullptr");
@@ -66,9 +71,14 @@ ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, b
         APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app is not allowed call this function");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+        APP_LOGE("verify install permission failed.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix quickFixerMgr is nullptr");
@@ -86,9 +96,14 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
-        return false;
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app is not allowed call this function");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE)) {
+        APP_LOGE("verify install permission failed.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix quickFixerMgr is nullptr");
@@ -101,11 +116,12 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
 ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
     APP_LOGD("QuickFixManagerHostImpl::CreateFd start.");
-    if (!BundlePermissionMgr::VerifySystemApp()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app is not allowed call this function");
-        return false;
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }

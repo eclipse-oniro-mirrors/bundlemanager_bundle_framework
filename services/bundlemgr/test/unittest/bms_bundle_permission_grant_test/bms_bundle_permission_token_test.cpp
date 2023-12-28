@@ -129,8 +129,8 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_0100, Functi
     int32_t appIndex = 1;
     auto ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
     auto ret2 = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
-    EXPECT_EQ(ret1, false);
-    EXPECT_EQ(ret2, false);
+    EXPECT_EQ(ret1, ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED);
+    EXPECT_EQ(ret2, ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED);
 }
 
 /**
