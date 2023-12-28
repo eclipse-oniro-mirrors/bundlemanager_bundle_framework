@@ -1442,6 +1442,7 @@ public:
     bool IsEncryptedMoudle(const std::string &packageName) const;
     bool IsContainEncryptedModule() const;
     void UpdateDebug(bool debug, bool isEntry);
+    ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;

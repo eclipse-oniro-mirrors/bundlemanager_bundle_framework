@@ -862,6 +862,7 @@ public:
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
+    ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
 
 private:
     /**

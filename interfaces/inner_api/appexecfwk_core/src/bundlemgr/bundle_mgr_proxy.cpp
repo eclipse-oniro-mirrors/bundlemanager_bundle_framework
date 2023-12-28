@@ -418,7 +418,8 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo)
+ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo,
+    GetDependentBundleInfoFlag flag)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get dependent bundle info");
@@ -429,6 +430,10 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetDependentBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(flag))) {
+        APP_LOGE("fail to GetDependentBundleInfo due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(

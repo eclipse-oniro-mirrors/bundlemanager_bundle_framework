@@ -48,6 +48,12 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
 };
 
+enum class GetDependentBundleInfoFlag {
+    GET_APP_CROSS_HSP_BUNDLE_INFO = 0x00000000,
+    GET_APP_SERVICE_HSP_BUNDLE_INFO = 0x00000001,
+    GET_ALL_DEPENDENT_BUNDLE_INFO = 0x00000002,
+};
+
 enum class BundleType {
     APP = 0,
     ATOMIC_SERVICE = 1,

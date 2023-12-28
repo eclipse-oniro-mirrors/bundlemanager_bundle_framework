@@ -137,9 +137,11 @@ public:
      * @brief Obtains the BundleInfo based on a given bundle name, which the calling app depends on.
      * @param sharedBundleName Indicates the bundle name to be queried.
      * @param sharedBundleInfo Indicates the obtained BundleInfo object.
+     * @param flag Indicates the flag, GetDependentBundleInfoFlag.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
-    virtual ErrCode GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo) override;
+    virtual ErrCode GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo,
+        GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) override;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.

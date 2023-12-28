@@ -525,10 +525,11 @@ ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, Message
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string name = data.ReadString();
+    GetDependentBundleInfoFlag flag = static_cast<GetDependentBundleInfoFlag>(data.ReadUint32());
     APP_LOGD("GetDependentBundleInfo, bundle %{public}s", name.c_str());
     BundleInfo info;
     reply.SetDataCapacity(Constants::CAPACITY_SIZE);
-    auto ret = GetDependentBundleInfo(name, info);
+    auto ret = GetDependentBundleInfo(name, info, flag);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

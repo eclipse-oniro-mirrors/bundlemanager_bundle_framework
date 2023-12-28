@@ -278,22 +278,42 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
 }
 
-ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo)
+ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName,
+    BundleInfo &sharedBundleInfo, GetDependentBundleInfoFlag flag)
 {
-    if (!VerifyDependency(sharedBundleName)) {
-        APP_LOGE("verify dependency failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    return dataMgr->GetSharedBundleInfo(sharedBundleName, flags, sharedBundleInfo);
+    int32_t bundleInfoFlags = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    switch (flag) {
+        case GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO: {
+            if (!VerifyDependency(sharedBundleName)) {
+                APP_LOGE("verify dependency failed");
+                return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+            }
+            return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
+        }
+        case GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO: {
+            // no need to check permission for app service hsp
+            return dataMgr->GetAppServiceHspBundleInfo(sharedBundleName, sharedBundleInfo);
+        }
+        case GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO: {
+            if (dataMgr->GetAppServiceHspBundleInfo(sharedBundleName, sharedBundleInfo) == ERR_OK) {
+                return ERR_OK;
+            }
+            if (!VerifyDependency(sharedBundleName)) {
+                APP_LOGE("verify dependency failed");
+                return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+            }
+            return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
+        }
+        default:
+            return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
 }
 
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
