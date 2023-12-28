@@ -216,8 +216,7 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
     return ERR_OK;
 }
 
-ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
+ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     return ERR_OK;
 }

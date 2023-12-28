@@ -31,6 +31,8 @@ const std::string CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
 const std::string CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
 const std::string CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
 const std::string CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
+const std::string CODE_SIGNATURE_MODULE_NAME = "moduleName";
+const std::string CODE_SIGNATURE_IS_LAST_HAP = "isLastHap";
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
@@ -43,6 +45,8 @@ bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     isPreInstalledBundle = parcel.ReadBool();
     isCompileSdkOpenHarmony = parcel.ReadBool();
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    isLastHap = parcel.ReadBool();
     return true;
 }
 
@@ -56,6 +60,8 @@ bool CodeSignatureParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstalledBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isCompileSdkOpenHarmony);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isLastHap);
     return true;
 }
 
@@ -81,6 +87,8 @@ std::string CodeSignatureParam::ToString() const
         { CODE_SIGNATURE_APP_IDENTIFIER, appIdentifier },
         { CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE, isPreInstalledBundle },
         { CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY, isCompileSdkOpenHarmony },
+        { CODE_SIGNATURE_MODULE_NAME, moduleName },
+        { CODE_SIGNATURE_IS_LAST_HAP, isLastHap },
     };
     return codeSignatureParamJson.dump(Constants::DUMP_INDENT);
 }

@@ -1176,7 +1176,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
 {
     ErrCode ret = ERR_OK;
     if (codeSignatureParam.isCompileSdkOpenHarmony &&
-        !Security::CodeSign::CodeSignUtils::isSupportOHCodeSign()) {
+        !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         APP_LOGD("code signature is not supported");
         return ret;
     }
@@ -1188,11 +1188,12 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
             FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap,
+                fileType, codeSignatureParam.moduleName);
         }
     } else {
         ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);

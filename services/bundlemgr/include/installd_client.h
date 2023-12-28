@@ -177,8 +177,7 @@ public:
 
     ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
-    ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony);
+    ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam);
 
     ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

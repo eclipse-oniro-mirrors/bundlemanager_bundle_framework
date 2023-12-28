@@ -1077,8 +1077,7 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 #endif
 }
 
-ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
+ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     APP_LOGD("start to enable code signature for hap or hsp");
 #if defined(CODE_SIGNATURE_ENABLE)
@@ -1086,28 +1085,34 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPa
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (realHapPath.empty()) {
+    if (codeSignatureParam.modulePath.empty()) {
         APP_LOGE("real path of the installed hap is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
     Security::CodeSign::EntryMap entryMap;
     ErrCode ret = ERR_OK;
-    if (isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::isSupportOHCodeSign()) {
+    if (codeSignatureParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         APP_LOGD("code signature is not supported");
         return ret;
     }
-    if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
-        codeSignHelper_ = std::make_shared<CodeSignHelper>();
-    }
-    if (isEnterpriseBundle) {
+    if (codeSignatureParam.isEnterpriseBundle) {
         APP_LOGD("Verify code signature for enterprise bundle");
-        ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(appIdentifier, realHapPath, entryMap, FILE_ALL);
+        ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+            codeSignatureParam.modulePath, entryMap, FILE_ALL, codeSignatureParam.moduleName);
     } else {
         APP_LOGD("Verify code signature for non-enterprise bundle");
-        ret = codeSignHelper_->EnforceCodeSignForApp(realHapPath, entryMap, FILE_ALL);
+        ret = codeSignHelper_->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ALL,
+            codeSignatureParam.moduleName);
     }
     codeSignHelper_->SetHapChecked(true);
+    if (codeSignatureParam.isLastHap) {
+        if (codeSignHelper_->IsCodeSignEnableCompleted()) {
+            APP_LOGI("code signature is enabled for all haps");
+        } else {
+            APP_LOGW("code signature is not enabled for all haps");
+        }
+    }
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
         return ERR_OK;

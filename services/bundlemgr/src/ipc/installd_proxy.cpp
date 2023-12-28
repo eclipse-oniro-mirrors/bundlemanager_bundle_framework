@@ -596,15 +596,14 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
+ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realHapPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(appIdentifier));
-    INSTALLD_PARCEL_WRITE(data, Bool, isEnterpriseBundle);
-    INSTALLD_PARCEL_WRITE(data, Bool, isCompileSdkOpenHarmony);
+    if (!data.WriteParcelable(&codeSignatureParam)) {
+        APP_LOGE("WriteParcelable codeSignatureParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
