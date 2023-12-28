@@ -573,7 +573,7 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
-    ErrCode result = VerifyCodeSignature(*info);
+    ErrCode result = VerifyCodeSignatureForHap(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
