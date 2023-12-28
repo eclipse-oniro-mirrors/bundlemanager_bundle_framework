@@ -620,10 +620,10 @@ private:
     void ProcessQuickFixWhenInstallNewModule(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
-    ErrCode VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir, bool isPreInstalledBundle) const;
+    ErrCode VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const std::string &srcHapPath, const std::string &realHapPath) const;
+        const std::string &srcHapPath, const std::string &realHapPath, bool lastHap) const;
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;

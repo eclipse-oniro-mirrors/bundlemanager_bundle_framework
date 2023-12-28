@@ -392,14 +392,12 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
     return CallService(&IInstalld::ExtractDriverSoFiles, srcPath, dirMap);
 }
 
-ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
+ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
-    if (realHapPath.empty()) {
+    if (codeSignatureParam.modulePath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::VerifyCodeSignatureForHap, realHapPath, appIdentifier, isEnterpriseBundle,
-        isCompileSdkOpenHarmony);
+    return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,

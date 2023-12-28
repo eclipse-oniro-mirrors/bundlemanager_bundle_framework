@@ -531,8 +531,8 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
         result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
         CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
         bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
-        result = InstalldClient::GetInstance()->VerifyCodeSignatureForHap(tempHspPath, appIdentifier_,
-            isEnterpriseBundle_, isCompileSdkOpenHarmony);
+        result = VerifyCodeSignatureForHsp(tempHspPath, appIdentifier_, isEnterpriseBundle_,
+            isCompileSdkOpenHarmony, bundleName_);
     }
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
 
@@ -647,7 +647,23 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
+    codeSignatureParam.moduleName = bundleName_;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string &tempHspPath,
+    const std::string &appIdentifier, bool isEnterpriseBundle, bool isCompileSdkOpenHarmony,
+    const std::string &bundleName) const
+{
+    APP_LOGD("begin to verify code signature for hsp");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = tempHspPath;
+    codeSignatureParam.appIdentifier = appIdentifier;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
+    codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
+    codeSignatureParam.moduleName = bundleName;
+    codeSignatureParam.isLastHap = true;
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
 ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(

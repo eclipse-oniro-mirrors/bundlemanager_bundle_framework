@@ -567,12 +567,13 @@ bool InstalldHost::HandExtractEncryptedSoFiles(MessageParcel &data, MessageParce
 
 bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessageParcel &reply)
 {
-    std::string realHapPath = Str16ToStr8(data.ReadString16());
-    std::string appIdentifier = Str16ToStr8(data.ReadString16());
-    bool isEnterpriseBundle = data.ReadBool();
-    bool isCompileSdkOpenHarmony = data.ReadBool();
+    std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
 
-    ErrCode result = VerifyCodeSignatureForHap(realHapPath, appIdentifier, isEnterpriseBundle, isCompileSdkOpenHarmony);
+    ErrCode result = VerifyCodeSignature(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

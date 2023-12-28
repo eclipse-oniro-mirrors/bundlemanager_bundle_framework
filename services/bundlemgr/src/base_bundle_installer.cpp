@@ -3697,7 +3697,8 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
-    for (const auto &hapPathRecord : hapPathRecords_) {
+    for (auto it = hapPathRecords_.begin(); it != hapPathRecords_.end(); ++it) {
+        const auto &hapPathRecord = *it;
         APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
@@ -3710,7 +3711,8 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 APP_LOGE("Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
             }
-            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+            bool isLastHap = std::next(it) == hapPathRecords_.end();
+            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second, isLastHap) != ERR_OK) {
                 APP_LOGE("enable code signature failed");
                 return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
             }
@@ -4068,9 +4070,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
         CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
-        const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
-        result = VerifyCodeSignatureForNativeFiles(compileSdkType, cpuAbi, targetSoPath, signatureFileDir,
-            info.IsPreInstallApp());
+        result = VerifyCodeSignatureForNativeFiles(info, cpuAbi, targetSoPath, signatureFileDir);
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // check whether the hap or hsp is encrypted
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
@@ -4086,12 +4086,11 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType,
-    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir,
-    bool isPreInstalledBundle) const
+ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir) const
 {
     APP_LOGD("begin to verify code signature for native files");
-    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -4099,13 +4098,14 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
-    codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
-    codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
+    codeSignatureParam.isPreInstalledBundle = info.IsPreInstallApp();
+    codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    codeSignatureParam.moduleName = info.GetCurModuleName();
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const std::string &srcHapPath, const std::string &realHapPath) const
+    const std::string &srcHapPath, const std::string &realHapPath, bool isLastHap) const
 {
     APP_LOGD("begin to verify code signature for hap or internal hsp");
     auto iter = infos.find(srcHapPath);
@@ -4113,9 +4113,14 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
         return ERR_OK;
     }
     const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
-    bool isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_,
-        isEnterpriseBundle_, isCompileSdkOpenHarmony);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = realHapPath;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    codeSignatureParam.moduleName = (iter->second).GetCurModuleName();
+    codeSignatureParam.isLastHap = isLastHap;
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
 ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,
