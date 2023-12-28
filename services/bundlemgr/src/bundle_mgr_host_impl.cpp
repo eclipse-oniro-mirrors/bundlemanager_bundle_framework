@@ -3371,7 +3371,7 @@ ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
     ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
     APP_LOGI("ret : %{public}d", ret);
     if (ret != ERR_OK) {
-        ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        ret = ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
     return ret;
