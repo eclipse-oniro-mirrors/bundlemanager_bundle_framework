@@ -197,17 +197,14 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         APP_LOGE("check hap sign info failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
-#ifndef X86_EMULATOR_MODE
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
+#ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
             APP_LOGE("hap file verify failed");
             return verifyRes;
         }
-#else
-        BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult);
 #endif
         hapVerifyRes.emplace_back(hapVerifyResult);
     }
@@ -217,7 +214,25 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
+    if (!CheckProvisionInfoIsValid(hapVerifyRes)) {
 #ifndef X86_EMULATOR_MODE
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+#else
+        // on emulator if check signature failed clear appid
+        for (auto &verifyRes : hapVerifyRes) {
+            Security::Verify::ProvisionInfo provisionInfo = verifyRes.GetProvisionInfo();
+            provisionInfo.appId = Constants::EMPTY_STRING;
+            verifyRes.SetProvisionInfo(provisionInfo);
+        }
+#endif
+    }
+    APP_LOGD("finish check multiple haps signInfo");
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::CheckProvisionInfoIsValid(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
     auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
@@ -247,12 +262,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
             }
         return false;
     });
-    if (isInvalid) {
-        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-    }
-#endif
-    APP_LOGD("finish check multiple haps signInfo");
-    return ERR_OK;
+    return !isInvalid;
 }
 
 bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
