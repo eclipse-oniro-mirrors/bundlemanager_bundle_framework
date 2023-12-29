@@ -4603,6 +4603,11 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
         return true;
     }
 
+    if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+        APP_LOGD("Appservice not delete library");
+        return false;
+    }
+
     for (const auto &info : newInfos) {
         if (info.second.IsOnlyCreateBundleUser()) {
             APP_LOGD("Some hap no update module.");
@@ -4610,7 +4615,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
         }
     }
 
-    return HasAllOldModuleUpdate(oldInfo, newInfos);
+    return otaInstall_ || HasAllOldModuleUpdate(oldInfo, newInfos);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
