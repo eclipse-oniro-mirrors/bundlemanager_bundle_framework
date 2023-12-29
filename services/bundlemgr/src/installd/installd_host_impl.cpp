@@ -1096,6 +1096,9 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         APP_LOGD("code signature is not supported");
         return ret;
     }
+    if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
+        codeSignHelper_ = std::make_shared<CodeSignHelper>();
+    }
     if (codeSignatureParam.isEnterpriseBundle) {
         APP_LOGD("Verify code signature for enterprise bundle");
         ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
@@ -1105,8 +1108,8 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         ret = codeSignHelper_->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ALL,
             codeSignatureParam.moduleName);
     }
-    codeSignHelper_->SetHapChecked(true);
     if (codeSignatureParam.isLastHap) {
+        codeSignHelper_->SetHapChecked(true);
         if (codeSignHelper_->IsCodeSignEnableCompleted()) {
             APP_LOGI("code signature is enabled for all haps");
         } else {
