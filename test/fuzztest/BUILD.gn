@@ -30,6 +30,7 @@ group("fuzztest") {
     "fuzztest_application/bundleinstallerproxy_fuzzer:BundleInstallerProxyFuzzTest",
     "fuzztest_application/bundlemgrhost_fuzzer:BundleMgrHostFuzzTest",
     "fuzztest_application/bundlemgrproxy_fuzzer:BundleMgrProxyFuzzTest",
+    "fuzztest_application/bundleresourcehost_fuzzer:BundleResourceHostFuzzTest",
     "fuzztest_application/bundlestatuscallbackproxy_fuzzer:BundleStatusCallbackProxyFuzzTest",
     "fuzztest_application/bundlestreaminstallerhost_fuzzer:BundleStreamInstallerHostFuzzTest",
     "fuzztest_application/bundlestreaminstallerproxy_fuzzer:BundleStreamInstallerProxyFuzzTest",
