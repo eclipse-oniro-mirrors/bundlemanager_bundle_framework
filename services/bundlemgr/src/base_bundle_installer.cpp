@@ -1002,7 +1002,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     }
     // delete old native library path
-    DeleteOldNativeLibraryPath(versionCode_, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
+    if (NeedDeleteOldNativeLib(newInfos, oldInfo)) {
+        APP_LOGI("Delete old library");
+        DeleteOldNativeLibraryPath();
+    }
 
     // move so file to real installation dir
     result = MoveSoFileToRealInstallationDir(newInfos);
@@ -4572,20 +4575,52 @@ ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundle
     return InstalldClient::GetInstance()->RemoveSignProfile(bundleName);
 }
 
-void BaseBundleInstaller::DeleteOldNativeLibraryPath(const int32_t newVersionCode, const int32_t oldVersionCode,
-    const std::string &oldLibraryPath) const
+void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
 {
-    APP_LOGD("start");
-    if ((newVersionCode <= oldVersionCode) || oldLibraryPath.empty()) {
-        APP_LOGD("no need to delete library");
-        return;
-    }
     std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
         Constants::PATH_SEPARATOR + Constants::LIBS;
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
     }
-    APP_LOGD("end");
+}
+
+bool BaseBundleInstaller::NeedDeleteOldNativeLib(
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo)
+{
+    if (newInfos.empty()) {
+        APP_LOGD("NewInfos is null");
+        return false;
+    }
+
+    if (!isAppExist_) {
+        APP_LOGD("No old app");
+        return false;
+    }
+
+    if (oldInfo.GetNativeLibraryPath().empty()) {
+        APP_LOGD("Old app no library");
+        return false;
+    }
+
+    if ((versionCode_ > oldInfo.GetVersionCode())) {
+        APP_LOGD("Higher versionCode");
+        return true;
+    }
+
+    if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+        APP_LOGD("Appservice not delete library");
+        return false;
+    }
+
+    for (const auto &info : newInfos) {
+        if (info.second.IsOnlyCreateBundleUser()) {
+            APP_LOGD("Some hap no update module.");
+            return false;
+        }
+    }
+
+    return otaInstall_ || HasAllOldModuleUpdate(oldInfo, newInfos);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

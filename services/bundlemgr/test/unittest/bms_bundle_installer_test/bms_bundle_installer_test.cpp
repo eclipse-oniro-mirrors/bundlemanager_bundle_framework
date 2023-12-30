@@ -5215,24 +5215,169 @@ HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0010, TestSize.Level
 {
     bool ret = OHOS::ForceCreateDirectory(BUNDLE_LIBRARY_PATH_DIR);
     EXPECT_TRUE(ret);
-
     BaseBundleInstaller installer;
     installer.bundleName_ = BUNDLE_NAME;
-    int32_t newVersionCode = 999;
-    int32_t oldVersionCode = 1000;
-    std::string nativeLibraryPath = "";
-    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
+    installer.DeleteOldNativeLibraryPath();
     auto exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
-
-    newVersionCode = 1001;
-    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
-    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
-    EXPECT_EQ(exist, 0);
-
-    nativeLibraryPath = "libs/arm";
-    installer.DeleteOldNativeLibraryPath(newVersionCode, oldVersionCode, nativeLibraryPath);
-    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
     EXPECT_NE(exist, 0);
+}
+
+/**
+ * @tc.number: DeleteOldNativeLibraryPath_0020
+ * @tc.name: NeedDeleteOldNativeLib
+ * @tc.desc: test NeedDeleteOldNativeLib
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    oldInfo.InsertInnerModuleInfo("module1", innerModuleInfo);
+    newInfo.InsertInnerModuleInfo("module2", innerModuleInfo);
+    // 1. NewInfos is null, return false
+    std::unordered_map<std::string, InnerBundleInfo> newInfo1;
+    bool ret = installer.NeedDeleteOldNativeLib(newInfo1, oldInfo);
+    EXPECT_FALSE(ret);
+
+    // 2. No old app, return false
+    newInfo1.insert(std::pair<std::string, InnerBundleInfo>(BUNDLE_NAME_TEST, newInfo));
+    ret = installer.NeedDeleteOldNativeLib(newInfo1, oldInfo);
+    EXPECT_FALSE(ret);
+
+    // 3. Old app no library, return false
+    installer.isAppExist_ = true;
+    ret = installer.NeedDeleteOldNativeLib(newInfo1, oldInfo);
+    EXPECT_FALSE(ret);
+
+    // 4. Not all module update, return false
+    oldInfo.SetNativeLibraryPath("libs/arm");
+    ret = installer.NeedDeleteOldNativeLib(newInfo1, oldInfo);
+    EXPECT_FALSE(ret);
+
+    // 5. Higher versionCode, return true
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 900;
+    oldInfo.UpdateBaseBundleInfo(oldBundleInfo, true);
+    BundleInfo newBundleInfo;
+    newBundleInfo.versionCode = 1000;
+    newInfo.UpdateBaseBundleInfo(newBundleInfo, true);
+    std::unordered_map<std::string, InnerBundleInfo> newInfo2;
+    newInfo2.insert(std::pair<std::string, InnerBundleInfo>(BUNDLE_NAME_TEST, newInfo));
+    ret = installer.NeedDeleteOldNativeLib(newInfo2, oldInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteOldNativeLibraryPath_0030
+ * @tc.name: NeedDeleteOldNativeLib
+ * @tc.desc: test NeedDeleteOldNativeLib multihap
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0030, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true;
+
+    InnerModuleInfo innerModuleInfo;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.SetNativeLibraryPath("libs/arm");
+    oldInfo.InsertInnerModuleInfo("module1", innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo("module2", innerModuleInfo);
+
+    InnerBundleInfo newInfo1;
+    newInfo1.InsertInnerModuleInfo("module1", innerModuleInfo);
+    InnerBundleInfo newInfo2;
+    newInfo2.InsertInnerModuleInfo("module2", innerModuleInfo);
+    InnerBundleInfo newInfo3;
+    newInfo2.InsertInnerModuleInfo("module3", innerModuleInfo);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap1", newInfo1));
+    bool ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap3", newInfo3));
+    ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap2", newInfo2));
+    ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeleteOldNativeLibraryPath_0040
+ * @tc.name: NeedDeleteOldNativeLib
+ * @tc.desc: test NeedDeleteOldNativeLib multihap IsOnlyCreateBundleUser
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0040, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true;
+
+    InnerModuleInfo innerModuleInfo;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetNativeLibraryPath("arm");
+    oldInfo.InsertInnerModuleInfo("module1", innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo("module2", innerModuleInfo);
+
+    InnerBundleInfo newInfo1;
+    newInfo1.InsertInnerModuleInfo("module1", innerModuleInfo);
+    InnerBundleInfo newInfo2;
+    newInfo2.InsertInnerModuleInfo("module2", innerModuleInfo);
+    InnerBundleInfo newInfo3;
+    newInfo3.SetOnlyCreateBundleUser(true);
+    newInfo2.InsertInnerModuleInfo("module3", innerModuleInfo);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap1", newInfo1));
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap2", newInfo2));
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap3", newInfo3));
+    bool ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteOldNativeLibraryPath_0050
+ * @tc.name: NeedDeleteOldNativeLib
+ * @tc.desc: test NeedDeleteOldNativeLib multihap otaInstall
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0050, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.isAppExist_ = true;
+
+    InnerModuleInfo innerModuleInfo;
+
+    InnerBundleInfo oldInfo;
+    oldInfo.SetNativeLibraryPath("libs/arm");
+    oldInfo.InsertInnerModuleInfo("module1", innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo("module2", innerModuleInfo);
+
+    InnerBundleInfo newInfo1;
+    newInfo1.InsertInnerModuleInfo("module1", innerModuleInfo);
+    InnerBundleInfo newInfo2;
+    newInfo2.InsertInnerModuleInfo("module2", innerModuleInfo);
+    InnerBundleInfo newInfo3;
+    newInfo2.InsertInnerModuleInfo("module3", innerModuleInfo);
+
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap1", newInfo1));
+    bool ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>("hap3", newInfo3));
+    ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_FALSE(ret);
+
+    installer.otaInstall_ = true;
+    ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

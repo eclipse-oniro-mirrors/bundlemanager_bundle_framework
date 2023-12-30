@@ -1307,7 +1307,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
                 APP_LOGI("OTA install module(%{public}s) by path(%{private}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                filePaths.emplace_back(item.first);
+                updateBundle = true;
+                break;
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
