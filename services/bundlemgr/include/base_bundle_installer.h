@@ -166,6 +166,8 @@ protected:
             isBootScene ? InstallScene::BOOT : InstallScene::REBOOT;
     }
 
+    bool NotifyAllBundleStatus();
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.
@@ -469,7 +471,7 @@ private:
      * @return Returns ERR_OK if result is ok; returns error code otherwise.
      */
     ErrCode CreateBundleUserData(InnerBundleInfo &innerBundleInfo);
-
+    void AddBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
@@ -665,6 +667,7 @@ private:
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams_;
     std::vector<std::string> toDeleteTempHapPath_;
+    std::vector<NotifyBundleEvents> bundleEvents_;
     // key is the temp path of hap or hsp
     // value is the signature file path
     std::map<std::string, std::string> signatureFileMap_;
