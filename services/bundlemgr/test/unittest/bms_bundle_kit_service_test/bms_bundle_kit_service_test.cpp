@@ -10581,4 +10581,36 @@ HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfo_0002, Function | SmallTest |
     auto ret = bundleMgrProxy->SetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
 }
+
+/**
+ * @tc.number: GetAppServiceHspInfo_0001
+ * @tc.name: test GetAppServiceHspInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppServiceHspInfo_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo info;
+    auto ret = innerBundleInfo.GetAppServiceHspInfo(info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::APP_SERVICE_FWK;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ret = innerBundleInfo.GetAppServiceHspInfo(info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    ret = innerBundleInfo.GetAppServiceHspInfo(info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    InnerModuleInfo innerModuleInfo_2;
+    innerModuleInfo_2.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    innerModuleInfo_2.modulePackage = MODULE_NAME_TEST;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo_2);
+    ret = innerBundleInfo.GetAppServiceHspInfo(info);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }

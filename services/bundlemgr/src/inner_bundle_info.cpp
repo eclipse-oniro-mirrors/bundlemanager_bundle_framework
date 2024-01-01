@@ -2741,6 +2741,32 @@ ErrCode InnerBundleInfo::DelMimeType(
     return ERR_OK;
 }
 
+ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
+{
+    if (baseApplicationInfo_->bundleType != BundleType::APP_SERVICE_FWK) {
+        APP_LOGD("bundle is not app service hsp.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    bundleInfo = *baseBundleInfo_;
+    bundleInfo.applicationInfo = *baseApplicationInfo_;
+    for (const auto &info : innerModuleInfos_) {
+        if (info.second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
+            auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, Constants::ALL_USERID);
+            if (hapmoduleinfo) {
+                HapModuleInfo hapModuleInfo = *hapmoduleinfo;
+                hapModuleInfo.moduleSourceDir = hapModuleInfo.hapPath.empty() ?
+                    info.second.modulePath : hapModuleInfo.moduleSourceDir;
+                bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+            }
+        }
+    }
+    if (bundleInfo.hapModuleInfos.empty()) {
+        APP_LOGE("bundleName:%{public}s has no hsp module info", baseApplicationInfo_->bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 void InnerBundleInfo::UpdateIsCompressNativeLibs()
 {
     if (innerModuleInfos_.empty()) {

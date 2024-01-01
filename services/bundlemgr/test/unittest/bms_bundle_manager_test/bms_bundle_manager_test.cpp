@@ -5664,4 +5664,26 @@ HWTEST_F(BmsBundleManagerTest, SetAdditionalInfo_0100, Function | SmallTest | Le
     ErrCode ret = hostImpl->SetAdditionalInfo(BUNDLE_NAME, additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
 }
+
+/**
+ * @tc.number: GetDependentBundleInfo_0001
+ * @tc.name: test GetDependentBundleInfo proxy
+ * @tc.desc: 1.query bundle infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0001, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+        GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+        GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+        GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

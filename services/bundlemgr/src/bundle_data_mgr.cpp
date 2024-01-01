@@ -6014,5 +6014,27 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const st
     NotifyBundleEventCallback(commonData);
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGD("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (innerBundleInfo.GetAppServiceHspInfo(bundleInfo) != ERR_OK) {
+        APP_LOGD("failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
