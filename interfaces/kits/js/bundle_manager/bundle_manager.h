@@ -276,7 +276,6 @@ void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
 void CreateCompatiblePolicyObject(napi_env env, napi_value value);
 void CreateProfileTypeObject(napi_env env, napi_value value);
-void CreateApplicationReservedFlagObject(napi_env env, napi_value value);
 void RegisterClearCacheListener();
 }  // namespace AppExecFwk
 }  // namespace OHOS
