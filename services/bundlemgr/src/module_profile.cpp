@@ -2147,7 +2147,7 @@ bool ToInnerBundleInfo(
     }
 
     TransformParam transformParam;
-    transformParam.isPreInstallApp = innerBundleInfo.IsPreInstallApp();
+    transformParam.isPreInstallApp = innerBundleInfo.GetIsPreInstallApp();
 
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;

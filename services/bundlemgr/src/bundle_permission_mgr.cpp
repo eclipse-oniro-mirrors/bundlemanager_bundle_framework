@@ -433,7 +433,7 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
             return false;
         }
     }
-    if (innerBundleInfo.IsPreInstallApp()) {
+    if (innerBundleInfo.GetIsPreInstallApp()) {
         for (const auto &perm: userGrantPermList) {
             bool userCancellable = false;
             DefaultPermission permission;

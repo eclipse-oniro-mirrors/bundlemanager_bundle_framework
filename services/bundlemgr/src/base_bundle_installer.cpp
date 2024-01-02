@@ -338,7 +338,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (info.GetBaseApplicationInfo().isSystemApp && !info.IsRemovable()) {
+    if (info.GetBaseApplicationInfo().isSystemApp && !info.GetRemovable()) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -685,7 +685,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #ifdef USE_PRE_BUNDLE_PROFILE
         preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
-        preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
+        preInstallBundleInfo.SetRemovable(newInfos.begin()->second.GetRemovable());
 #endif
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
@@ -1249,7 +1249,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp &&
-        !oldInfo.IsRemovable() && installParam.noSkipsKill) {
+        !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -1335,7 +1335,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
-    if (oldInfo.IsPreInstallApp()) {
+    if (oldInfo.GetIsPreInstallApp()) {
         MarkPreInstallState(bundleName, true);
     }
     BundleResourceHelper::DeleteResourceInfo(bundleName);
@@ -1393,7 +1393,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp
-        && !oldInfo.IsRemovable() && installParam.noSkipsKill) {
+        && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -1464,7 +1464,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 return result;
             }
 
-            if (oldInfo.IsPreInstallApp()) {
+            if (oldInfo.GetIsPreInstallApp()) {
                 MarkPreInstallState(bundleName, true);
             }
 
@@ -1639,7 +1639,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         pathVec = preInstallBundleInfo.GetBundlePaths();
     }
     innerInstallParam.isPreInstallApp = true;
-    innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
+    innerInstallParam.removable = preInstallBundleInfo.GetRemovable();
     innerInstallParam.copyHapToInstallPath = false;
     return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
 }
@@ -1741,7 +1741,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
-        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
+        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
             && AllowSingletonChange(newInfo.GetBundleName())) {
             APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
             singletonState_ = SingletonState::SINGLETON_TO_NON;
@@ -2319,7 +2319,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
+            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
             info.GetBaseApplicationInfo().debug);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
@@ -2327,7 +2327,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         }
         std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
+            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
             info.GetBaseApplicationInfo().debug);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
@@ -2440,7 +2440,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.uid = newInnerBundleUserInfo.uid;
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
-    createDirParam.isPreInstallApp = info.IsPreInstallApp();
+    createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().debug;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
@@ -2660,7 +2660,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         return result;
     }
 
-    if (info.IsPreInstallApp()) {
+    if (info.GetIsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
         info.SetModuleHapPath(GetHapPath(info));
@@ -2676,7 +2676,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
 {
     APP_LOGD("ExtractResourceFiles begin");
     int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
-    if (info.IsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
+    if (info.GetIsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
         APP_LOGD("no need to extract resource files");
         return;
     }
@@ -4128,7 +4128,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
-    codeSignatureParam.isPreInstalledBundle = info.IsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = info.GetIsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.moduleName = info.GetCurModuleName();
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
@@ -4245,7 +4245,7 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
     APP_LOGD("begin to rename all temp dir");
     ErrCode ret = ERR_OK;
     for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser()) {
+        if (info.second.GetOnlyCreateBundleUser()) {
             continue;
         }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
@@ -4641,7 +4641,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     }
 
     for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser()) {
+        if (info.second.GetOnlyCreateBundleUser()) {
             APP_LOGD("Some hap no update module.");
             return false;
         }
