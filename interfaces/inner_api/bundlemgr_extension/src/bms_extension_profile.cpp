@@ -96,6 +96,10 @@ ErrCode BmsExtensionProfile::TransformTo(const nlohmann::json &jsonObject,
         APP_LOGE("bms-extension.json file lacks of invalid bms-extensions property");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
+    if (bmsExtensionJson.find(BMS_EXTENSION_PROFILE_BUNDLE_MGR) == jsonObject.end()) {
+        APP_LOGE("bundle-mgr no exist");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
     nlohmann::json bundleMgrJson = bmsExtensionJson.at(BMS_EXTENSION_PROFILE_BUNDLE_MGR);
     if (!bundleMgrJson.is_object()) {
         APP_LOGE("bms-extension.json file lacks of invalid bundle-mgr property");

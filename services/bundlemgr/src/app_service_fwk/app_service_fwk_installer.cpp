@@ -510,7 +510,6 @@ ErrCode AppServiceFwkInstaller::UpdateAppService(
 {
     std::vector<std::string> oldModuleNameList;
     oldInfo.GetModuleNames(oldModuleNameList);
-    std::vector<std::string> uninstallModuleNames;
 
     // update
     ErrCode result = ERR_OK;

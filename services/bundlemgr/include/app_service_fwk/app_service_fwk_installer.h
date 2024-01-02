@@ -106,7 +106,7 @@ private:
 
 #define CHECK_RESULT(errcode, errmsg)                                              \
     do {                                                                           \
-        if (errcode != ERR_OK) {                                                   \
+        if ((errcode) != ERR_OK) {                                                   \
             APP_LOGE(errmsg, errcode);                                             \
             return errcode;                                                        \
         }                                                                          \
