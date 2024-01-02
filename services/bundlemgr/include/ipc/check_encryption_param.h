@@ -32,7 +32,7 @@ struct CheckEncryptionParam : public Parcelable {
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
-    int32_t bundleId;
+    int32_t bundleId = -1;
     InstallBundleType installBundleType = InstallBundleType::HAP;
     bool isCompressNativeLibrary = false;
 
