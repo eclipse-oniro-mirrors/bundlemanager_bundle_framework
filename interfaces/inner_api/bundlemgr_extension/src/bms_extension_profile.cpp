@@ -96,7 +96,7 @@ ErrCode BmsExtensionProfile::TransformTo(const nlohmann::json &jsonObject,
         APP_LOGE("bms-extension.json file lacks of invalid bms-extensions property");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
-    if (bmsExtensionJson.find(BMS_EXTENSION_PROFILE_BUNDLE_MGR) == jsonObject.end()) {
+    if (bmsExtensionJson.find(BMS_EXTENSION_PROFILE_BUNDLE_MGR) == bmsExtensionJson.end()) {
         APP_LOGE("bundle-mgr no exist");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
@@ -107,30 +107,12 @@ ErrCode BmsExtensionProfile::TransformTo(const nlohmann::json &jsonObject,
     }
     const auto &jsonObjectEnd = bundleMgrJson.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(bundleMgrJson,
-        jsonObjectEnd,
-        BUNDLE_MGR_KEY_EXTENSION_NAME,
-        bmsExtension.bmsExtensionBundleMgr.extensionName,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(bundleMgrJson,
-        jsonObjectEnd,
-        BUNDLE_MGR_KEY_LIB_PATH,
-        bmsExtension.bmsExtensionBundleMgr.libPath,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(bundleMgrJson,
-        jsonObjectEnd,
-        BUNDLE_MGR_KEY_LIB64_PATH,
-        bmsExtension.bmsExtensionBundleMgr.lib64Path,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_EXTENSION_NAME,
+        bmsExtension.bmsExtensionBundleMgr.extensionName, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB_PATH,
+        bmsExtension.bmsExtensionBundleMgr.libPath, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(bundleMgrJson, jsonObjectEnd, BUNDLE_MGR_KEY_LIB64_PATH,
+        bmsExtension.bmsExtensionBundleMgr.lib64Path, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
     return parseResult;
 }
 }  // namespace AppExecFwk
