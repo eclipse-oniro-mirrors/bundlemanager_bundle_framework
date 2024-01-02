@@ -1273,7 +1273,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
         const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
+        std::for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
             std::string fileName = entry.substr(prefix.length());
             std::string path = targetSoPath;
             if (path.back() != Constants::FILE_SEPARATOR_CHAR) {

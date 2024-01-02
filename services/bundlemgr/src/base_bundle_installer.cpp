@@ -4361,7 +4361,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         APP_LOGD("application does not contain encrypted module");
         oldInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
-    if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+    if (dataMgr_ == nullptr || !dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
         APP_LOGE("save UpdateInnerBundleInfo failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
