@@ -1469,6 +1469,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(
             env, napi_create_string_utf8(env, hapModuleInfo.fileContextMenu.c_str(), NAPI_AUTO_LENGTH, &nMenu));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenu", nMenu));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenuConfig", nMenu));
     }
 }
 
