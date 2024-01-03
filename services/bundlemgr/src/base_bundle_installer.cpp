@@ -4074,15 +4074,16 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         if (isCompressNativeLibrary) {
             bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-            if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
-                if (isLibIsolated) {
+            // extract so file: if hap so is not isolated, then extract so to tmp path.
+            if (isLibIsolated) {
+                if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
                     nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
-                } else {
-                    nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
-                        Constants::PATH_SEPARATOR + nativeLibraryPath;
                 }
-                APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
+            } else {
+                nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
+                    Constants::PATH_SEPARATOR + nativeLibraryPath;
             }
+            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
             targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
                 .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
                 .append(Constants::PATH_SEPARATOR);
@@ -4405,7 +4406,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
         std::string nativeLibraryPath = "";
         bool isSoExisted = info.second.FetchNativeSoAttrs(info.second.GetCurrentModulePackage(), cpuAbi,
             nativeLibraryPath);
-        if (installedModules_[info.second.GetCurrentModulePackage()] && isSoExisted) {
+        if (isSoExisted) {
             std::string tempSoDir;
             tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
                 .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
@@ -4442,6 +4443,9 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             RemoveTempSoDir(tempSoDir);
+            if (!installedModules_[info.second.GetCurrentModulePackage()]) {
+                RemoveTempPathOnlyUsedForSo(info.second);
+            }
         }
     }
     return ERR_OK;
@@ -4609,6 +4613,24 @@ void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
     }
+}
+
+void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const
+{
+    APP_LOGD("start");
+    std::string tempDir;
+    tempDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetCurrentModulePackage())
+        .append(Constants::TMP_SUFFIX);
+    bool isDirEmpty = false;
+    if (InstalldClient::GetInstance()->IsDirEmpty(tempDir, isDirEmpty) != ERR_OK) {
+        APP_LOGW("IsDirEmpty failed");
+    }
+    if (isDirEmpty && (InstalldClient::GetInstance()->RemoveDir(tempDir) != ERR_OK)) {
+        APP_LOGW("remove tmp so path:%{public}s failed", tempDir.c_str());
+    }
+    APP_LOGD("end");
 }
 
 bool BaseBundleInstaller::NeedDeleteOldNativeLib(
