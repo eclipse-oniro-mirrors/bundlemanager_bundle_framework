@@ -176,8 +176,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
         return *this;
     }
     this->appType_ = info.appType_;
-    this->uid_ = info.uid_;
-    this->gid_ = info.gid_;
     this->userId_ = info.userId_;
     this->bundleStatus_ = info.bundleStatus_;
     this->appFeature_ = info.appFeature_;
@@ -265,22 +263,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         appType_,
         JsonType::NUMBER,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        UID,
-        uid_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        GID,
-        gid_,
-        JsonType::NUMBER,
-        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
@@ -2089,7 +2071,7 @@ const std::string &InnerBundleInfo::GetCurModuleName() const
 
 bool InnerBundleInfo::IsBundleRemovable() const
 {
-    if (IsPreInstallApp()) {
+    if (GetIsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
     }
@@ -2881,6 +2863,220 @@ void InnerBundleInfo::AddOldAppId(const std::string &appId)
 std::vector<std::string> InnerBundleInfo::GetOldAppIds() const
 {
     return baseBundleInfo_->oldAppIds;
+}
+
+void InnerBundleInfo::AddOverlayModuleInfo(const OverlayModuleInfo &overlayModuleInfo)
+{
+    auto iterator = innerModuleInfos_.find(overlayModuleInfo.targetModuleName);
+    if (iterator == innerModuleInfos_.end()) {
+        return;
+    }
+    auto innerModuleInfo = iterator->second;
+    auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
+        innerModuleInfo.overlayModuleInfo.end(), [&overlayModuleInfo](const auto &overlayInfo) {
+        return (overlayInfo.moduleName == overlayModuleInfo.moduleName) &&
+            (overlayInfo.bundleName == overlayModuleInfo.bundleName);
+    });
+    if (overlayModuleInfoIt != innerModuleInfo.overlayModuleInfo.end()) {
+        innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
+    }
+    innerModuleInfo.overlayModuleInfo.emplace_back(overlayModuleInfo);
+    innerModuleInfos_.erase(iterator);
+    innerModuleInfos_.try_emplace(overlayModuleInfo.targetModuleName, innerModuleInfo);
+}
+
+void InnerBundleInfo::RemoveOverlayModuleInfo(const std::string &targetModuleName,
+    const std::string &bundleName, const std::string &moduleName)
+{
+    auto iterator = innerModuleInfos_.find(targetModuleName);
+    if (iterator == innerModuleInfos_.end()) {
+        return;
+    }
+    auto innerModuleInfo = iterator->second;
+    auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
+        innerModuleInfo.overlayModuleInfo.end(), [&moduleName, &bundleName](const auto &overlayInfo) {
+        return (overlayInfo.moduleName == moduleName) && (overlayInfo.bundleName == bundleName);
+    });
+    if (overlayModuleInfoIt == innerModuleInfo.overlayModuleInfo.end()) {
+        return;
+    }
+    innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
+    innerModuleInfos_.erase(iterator);
+    innerModuleInfos_.try_emplace(targetModuleName, innerModuleInfo);
+}
+
+void InnerBundleInfo::RemoveAllOverlayModuleInfo(const std::string &bundleName)
+{
+    for (auto &innerModuleInfo : innerModuleInfos_) {
+        innerModuleInfo.second.overlayModuleInfo.erase(std::remove_if(
+            innerModuleInfo.second.overlayModuleInfo.begin(),
+            innerModuleInfo.second.overlayModuleInfo.end(),
+            [&bundleName](const auto &overlayInfo) {
+                return overlayInfo.bundleName == bundleName;
+            }), innerModuleInfo.second.overlayModuleInfo.end());
+    }
+}
+
+void InnerBundleInfo::CleanAllOverlayModuleInfo()
+{
+    for (auto &innerModuleInfo : innerModuleInfos_) {
+        innerModuleInfo.second.overlayModuleInfo.clear();
+    }
+}
+
+bool InnerBundleInfo::isOverlayModule(const std::string &moduleName) const
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        return true;
+    }
+    return !innerModuleInfos_.at(moduleName).targetModuleName.empty();
+}
+
+bool InnerBundleInfo::isExistedOverlayModule() const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!innerModuleInfo.second.targetModuleName.empty()) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void InnerBundleInfo::KeepOldOverlayConnection(InnerBundleInfo &info)
+{
+    auto &newInnerModuleInfos = info.FetchInnerModuleInfos();
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if ((!innerModuleInfo.second.overlayModuleInfo.empty()) &&
+            (newInnerModuleInfos.find(innerModuleInfo.second.moduleName) != newInnerModuleInfos.end())) {
+            newInnerModuleInfos[innerModuleInfo.second.moduleName].overlayModuleInfo =
+                innerModuleInfo.second.overlayModuleInfo;
+            return;
+        }
+    }
+}
+
+std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoByUri(const std::string &abilityUri) const
+{
+    APP_LOGD("Uri is %{public}s", abilityUri.c_str());
+    for (const auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
+            continue;
+        }
+
+        auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+        APP_LOGD("configUri is %{public}s", configUri.c_str());
+        if (configUri == abilityUri) {
+            return abilityInfo;
+        }
+    }
+    return std::nullopt;
+}
+
+bool InnerBundleInfo::FindExtensionAbilityInfoByUri(
+    const std::string &uri, ExtensionAbilityInfo &extensionAbilityInfo) const
+{
+    for (const auto &item : baseExtensionInfos_) {
+        if (uri == item.second.uri) {
+            extensionAbilityInfo = item.second;
+            APP_LOGD("find target extension, bundle: %{public}s, module: %{public}s, name: %{public}s",
+                extensionAbilityInfo.bundleName.c_str(), extensionAbilityInfo.moduleName.c_str(),
+                extensionAbilityInfo.name.c_str());
+            return true;
+        }
+    }
+    return false;
+}
+
+void InnerBundleInfo::FindAbilityInfosByUri(
+    const std::string &abilityUri, std::vector<AbilityInfo> &abilityInfos,  int32_t userId)
+{
+    APP_LOGI("Uri is %{public}s", abilityUri.c_str());
+    for (auto &ability : baseAbilityInfos_) {
+        auto abilityInfo = ability.second;
+        if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
+            continue;
+        }
+
+        auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+        APP_LOGI("configUri is %{public}s", configUri.c_str());
+        if (configUri == abilityUri) {
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION,
+                userId, abilityInfo.applicationInfo);
+            abilityInfos.emplace_back(abilityInfo);
+        }
+    }
+    return;
+}
+
+void InnerBundleInfo::AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
+{
+    APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
+        dataGroupId.c_str(), info.ToString().c_str());
+    auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
+    if (dataGroupInfosItem == dataGroupInfos_.end()) {
+        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s",
+            dataGroupId.c_str());
+        dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
+        return;
+    }
+
+    int32_t userId = info.userId;
+    auto iter = std::find_if(
+        std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
+        [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
+    if (iter != std::end(dataGroupInfos_[dataGroupId])) {
+        return;
+    }
+
+    APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
+    dataGroupInfos_[dataGroupId].emplace_back(info);
+}
+
+void InnerBundleInfo::RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
+{
+    auto iter = dataGroupInfos_.find(dataGroupId);
+    if (iter == dataGroupInfos_.end()) {
+        return;
+    }
+    for (auto dataGroupIter = iter->second.begin();dataGroupIter != iter->second.end(); dataGroupIter++) {
+        if (dataGroupIter->userId == userId) {
+            iter->second.erase(dataGroupIter);
+            return;
+        }
+    }
+}
+
+void InnerBundleInfo::UpdateDataGroupInfos(
+    const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
+{
+    std::set<int32_t> userIdList;
+    for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+        for (const DataGroupInfo &info : item->second) {
+            userIdList.insert(info.userId);
+        }
+    }
+
+    std::vector<std::string> deletedGroupIds;
+    for (auto &item : dataGroupInfos_) {
+        if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
+            for (int32_t userId : userIdList) {
+                RemoveGroupInfos(userId, item.first);
+            }
+        }
+        if (item.second.empty()) {
+            deletedGroupIds.emplace_back(item.first);
+        }
+    }
+    for (std::string groupId : deletedGroupIds) {
+        dataGroupInfos_.erase(groupId);
+    }
+    for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+        std::string dataGroupId = item->first;
+        for (const DataGroupInfo &info : item->second) {
+            AddDataGroupInfo(dataGroupId, info);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

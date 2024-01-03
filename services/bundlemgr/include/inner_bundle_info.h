@@ -22,6 +22,7 @@
 #include "inner_app_quick_fix.h"
 #include "inner_bundle_user_info.h"
 #include "inner_common_info.h"
+#include "property.h"
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
 #include "shared/base_shared_bundle_info.h"
@@ -119,21 +120,6 @@ public:
         }
     }
 
-    std::string GetApplicationName() const
-    {
-        return baseApplicationInfo_->name;
-    }
-
-    void SetBundleStatus(const BundleStatus &status)
-    {
-        bundleStatus_ = status;
-    }
-
-    BundleStatus GetBundleStatus() const
-    {
-        return bundleStatus_;
-    }
-
     void SetBundleInstallTime(
         const int64_t time, int32_t userId = Constants::UNSPECIFIED_USERID);
 
@@ -157,11 +143,6 @@ public:
             return -1;
         }
         return innerBundleUserInfo.updateTime;
-    }
-
-    const std::string GetBundleName() const
-    {
-        return baseApplicationInfo_->bundleName;
     }
 
     BundleInfo GetBaseBundleInfo() const
@@ -212,16 +193,6 @@ public:
 
     ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
 
-    const std::string GetAppCodePath() const
-    {
-        return baseApplicationInfo_->codePath;
-    }
-
-    void SetAppCodePath(const std::string codePath)
-    {
-        baseApplicationInfo_->codePath = codePath;
-    }
-
     void InsertInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
     {
         innerModuleInfos_.try_emplace(modulePackage, innerModuleInfo);
@@ -247,58 +218,11 @@ public:
         extensionSkillInfos_.emplace(key, skills);
     }
 
-    std::optional<AbilityInfo> FindAbilityInfoByUri(const std::string &abilityUri) const
-    {
-        APP_LOGD("Uri is %{public}s", abilityUri.c_str());
-        for (const auto &ability : baseAbilityInfos_) {
-            auto abilityInfo = ability.second;
-            if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
-                continue;
-            }
-
-            auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-            APP_LOGD("configUri is %{public}s", configUri.c_str());
-            if (configUri == abilityUri) {
-                return abilityInfo;
-            }
-        }
-        return std::nullopt;
-    }
-
-    bool FindExtensionAbilityInfoByUri(const std::string &uri, ExtensionAbilityInfo &extensionAbilityInfo) const
-    {
-        for (const auto &item : baseExtensionInfos_) {
-            if (uri == item.second.uri) {
-                extensionAbilityInfo = item.second;
-                APP_LOGD("find target extension, bundleName : %{public}s, moduleName : %{public}s, name : %{public}s",
-                    extensionAbilityInfo.bundleName.c_str(), extensionAbilityInfo.moduleName.c_str(),
-                    extensionAbilityInfo.name.c_str());
-                return true;
-            }
-        }
-        return false;
-    }
-
+    std::optional<AbilityInfo> FindAbilityInfoByUri(const std::string &abilityUri) const;
+    bool FindExtensionAbilityInfoByUri(
+        const std::string &uri, ExtensionAbilityInfo &extensionAbilityInfo) const;
     void FindAbilityInfosByUri(const std::string &abilityUri,
-        std::vector<AbilityInfo> &abilityInfos,  int32_t userId = Constants::UNSPECIFIED_USERID)
-    {
-        APP_LOGI("Uri is %{public}s", abilityUri.c_str());
-        for (auto &ability : baseAbilityInfos_) {
-            auto abilityInfo = ability.second;
-            if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
-                continue;
-            }
-
-            auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-            APP_LOGI("configUri is %{public}s", configUri.c_str());
-            if (configUri == abilityUri) {
-                GetApplicationInfo(
-                    ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION, userId, abilityInfo.applicationInfo);
-                abilityInfos.emplace_back(abilityInfo);
-            }
-        }
-        return;
-    }
+        std::vector<AbilityInfo> &abilityInfos,  int32_t userId = Constants::UNSPECIFIED_USERID);
 
     auto GetAbilityNames() const
     {
@@ -309,40 +233,64 @@ public:
         return abilityNames;
     }
 
-    uint32_t GetVersionCode() const
-    {
-        return baseBundleInfo_->versionCode;
-    }
-
-    std::string GetVersionName() const
-    {
-        return baseBundleInfo_->versionName;
-    }
-
-    std::string GetVendor() const
-    {
-        return baseBundleInfo_->vendor;
-    }
-
-    uint32_t GetCompatibleVersion() const
-    {
-        return baseBundleInfo_->compatibleVersion;
-    }
-
-    uint32_t GetTargetVersion() const
-    {
-        return baseBundleInfo_->targetVersion;
-    }
-
-    std::string GetReleaseType() const
-    {
-        return baseBundleInfo_->releaseType;
-    }
-
-    uint32_t GetMinCompatibleVersionCode() const
-    {
-        return baseBundleInfo_->minCompatibleVersionCode;
-    }
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(ApplicationName, baseApplicationInfo_, name, std::string);
+    BMS_DEFINE_PROPERTY(BundleStatus, bundleStatus_, BundleStatus);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(BundleName, baseApplicationInfo_, bundleName, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(AppCodePath, baseApplicationInfo_, codePath, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(VersionCode, baseBundleInfo_, versionCode, uint32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(VersionName, baseBundleInfo_, versionName, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(Vendor, baseBundleInfo_, vendor, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(CompatibleVersion, baseBundleInfo_, compatibleVersion, uint32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(TargetVersion, baseBundleInfo_, targetVersion, uint32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(ReleaseType, baseBundleInfo_, releaseType, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(
+        MinCompatibleVersionCode, baseBundleInfo_, minCompatibleVersionCode, uint32_t);
+    BMS_DEFINE_PROPERTY_GET(InstallMark, mark_, InstallMark);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(AppDataDir, baseApplicationInfo_, dataDir, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(AppDataBaseDir, baseApplicationInfo_, dataBaseDir, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(AppCacheDir, baseApplicationInfo_, cacheDir, std::string);
+    BMS_DEFINE_PROPERTY_GET(AppType, appType_, Constants::AppType);
+    BMS_DEFINE_PROPERTY(UserId, userId_, int);
+    BMS_DEFINE_PROPERTY(CurrentModulePackage, currentPackage_, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(IsKeepAlive, baseBundleInfo_, isKeepAlive, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(IsFreeInstallApp, baseApplicationInfo_, isFreeInstallApp, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(AppId, baseBundleInfo_, appId, std::string);
+    BMS_DEFINE_PROPERTY(AppFeature, appFeature_, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_GET(
+        AppPrivilegeLevel, baseApplicationInfo_, appPrivilegeLevel, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(IsPreInstallApp, baseBundleInfo_, isPreInstallApp, bool);
+    BMS_DEFINE_PROPERTY(OnlyCreateBundleUser, onlyCreateBundleUser_, bool);
+    BMS_DEFINE_PROPERTY(IsNewVersion, isNewVersion_, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(AsanEnabled, baseApplicationInfo_, asanEnabled, bool);
+    BMS_DEFINE_PROPERTY_GET(AllowedAcls, allowedAcls_, std::vector<std::string>);
+    BMS_DEFINE_PROPERTY(AppIndex, appIndex_, int32_t);
+    BMS_DEFINE_PROPERTY(IsSandbox, isSandboxApp_, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        CertificateFingerprint, baseApplicationInfo_, fingerprint, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        NativeLibraryPath, baseApplicationInfo_, nativeLibraryPath, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        ArkNativeFileAbi, baseApplicationInfo_, arkNativeFileAbi, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        ArkNativeFilePath, baseApplicationInfo_, arkNativeFilePath, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(CpuAbi, baseApplicationInfo_, cpuAbi, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(Removable, baseApplicationInfo_, removable, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(
+        RunningResourcesApply, baseApplicationInfo_, runningResourcesApply, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(AssociatedWakeUp, baseApplicationInfo_, associatedWakeUp, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(UserDataClearable, baseApplicationInfo_, userDataClearable, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED_SET(FormVisibleNotify, baseApplicationInfo_, formVisibleNotify, bool);
+    BMS_DEFINE_PROPERTY_GET(OverlayBundleInfo, overlayBundleInfo_, std::vector<OverlayBundleInfo>);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(TargetBundleName, baseApplicationInfo_, targetBundleName, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(TargetPriority, baseApplicationInfo_, targetPriority, int32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(OverlayState, baseApplicationInfo_, overlayState, int32_t);
+    BMS_DEFINE_PROPERTY(OverlayType, overlayType_, int32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(AsanLogPath, baseApplicationInfo_, asanLogPath, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(ApplicationBundleType, baseApplicationInfo_, bundleType, BundleType);
+    BMS_DEFINE_PROPERTY(AppProvisionMetadata, provisionMetadatas_, std::vector<Metadata>);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(GwpAsanEnabled, baseApplicationInfo_, gwpAsanEnabled, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        ApplicationReservedFlag, baseApplicationInfo_, applicationReservedFlag, uint32_t);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)
@@ -351,33 +299,6 @@ public:
         mark_.packageName = packageName;
         mark_.status = status;
     }
-
-    InstallMark GetInstallMark() const
-    {
-        return mark_;
-    }
-
-    std::string GetAppDataDir() const
-    {
-        return baseApplicationInfo_->dataDir;
-    }
-
-    void SetAppDataDir(std::string dataDir)
-    {
-        baseApplicationInfo_->dataDir = dataDir;
-    }
-
-    void SetAppDataBaseDir(std::string dataBaseDir)
-    {
-        baseApplicationInfo_->dataBaseDir = dataBaseDir;
-    }
-
-    void SetAppCacheDir(std::string cacheDir)
-    {
-        baseApplicationInfo_->cacheDir = cacheDir;
-    }
-
-    void SetUid(int uid) {}
 
     int GetUid(int32_t userId = Constants::UNSPECIFIED_USERID) const
     {
@@ -403,13 +324,6 @@ public:
         return innerBundleUserInfo.gids[0];
     }
 
-    void SetGid(int gid) {}
-
-    Constants::AppType GetAppType() const
-    {
-        return appType_;
-    }
-
     void SetAppType(Constants::AppType appType)
     {
         appType_ = appType;
@@ -420,25 +334,6 @@ public:
         }
     }
 
-    int GetUserId() const
-    {
-        return userId_;
-    }
-
-    void SetUserId(int userId)
-    {
-        userId_ = userId;
-    }
-
-    // only used in install progress with newInfo
-    std::string GetCurrentModulePackage() const
-    {
-        return currentPackage_;
-    }
-    void SetCurrentModulePackage(const std::string &modulePackage)
-    {
-        currentPackage_ = modulePackage;
-    }
     void AddModuleSrcDir(const std::string &moduleSrcDir)
     {
         if (innerModuleInfos_.count(currentPackage_) == 1) {
@@ -475,7 +370,6 @@ public:
     }
 
     void SetModuleHapPath(const std::string &hapPath);
-
     const std::string &GetModuleHapPath(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
@@ -533,21 +427,6 @@ public:
 
     std::string GetEntryModuleName() const;
 
-    bool GetIsKeepAlive() const
-    {
-        return baseBundleInfo_->isKeepAlive;
-    }
-
-    void SetIsFreeInstallApp(bool isFreeInstall)
-    {
-        baseApplicationInfo_->isFreeInstallApp = isFreeInstall;
-    }
-
-    bool GetIsFreeInstallApp() const
-    {
-        return baseApplicationInfo_->isFreeInstallApp;
-    }
-
     std::string GetMainAbility() const;
 
     void GetMainAbilityInfo(AbilityInfo &abilityInfo) const;
@@ -599,32 +478,12 @@ public:
         return "";
     }
 
-    std::string GetAppId() const
-    {
-        return baseBundleInfo_->appId;
-    }
-
-    void SetAppFeature(const std::string &appFeature)
-    {
-        appFeature_ = appFeature;
-    }
-
-    std::string GetAppFeature() const
-    {
-        return appFeature_;
-    }
-
     void SetAppPrivilegeLevel(const std::string &appPrivilegeLevel)
     {
         if (appPrivilegeLevel.empty()) {
             return;
         }
         baseApplicationInfo_->appPrivilegeLevel = appPrivilegeLevel;
-    }
-
-    std::string GetAppPrivilegeLevel() const
-    {
-        return baseApplicationInfo_->appPrivilegeLevel;
     }
 
     bool HasEntry() const;
@@ -647,8 +506,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetUid(oldInfo.GetUid());
-        SetGid(oldInfo.GetGid());
     }
     void RestoreModuleInfo(const InnerBundleInfo &oldInfo)
     {
@@ -737,19 +594,6 @@ public:
         return  extensionSkillInfos_;
     }
 
-    bool IsRemovable() const
-    {
-        return baseApplicationInfo_->removable;
-    }
-    void SetIsPreInstallApp(bool isPreInstallApp)
-    {
-        baseBundleInfo_->isPreInstallApp = isPreInstallApp;
-    }
-    bool IsPreInstallApp() const
-    {
-        return baseBundleInfo_->isPreInstallApp;
-    }
-
     bool IsSystemApp() const
     {
         return baseApplicationInfo_->isSystemApp;
@@ -765,22 +609,11 @@ public:
     void AddInnerBundleUserInfo(const InnerBundleUserInfo& userInfo);
     bool GetInnerBundleUserInfo(int32_t userId, InnerBundleUserInfo& userInfo) const;
     bool HasInnerBundleUserInfo(int32_t userId) const;
-    bool IsOnlyCreateBundleUser() const
-    {
-        return onlyCreateBundleUser_;
-    }
-
-    void SetOnlyCreateBundleUser(bool onlyCreateBundleUser)
-    {
-        onlyCreateBundleUser_ = onlyCreateBundleUser;
-    }
-
+    int32_t GetResponseUserId(int32_t requestUserId) const;
     bool IsSingleton() const
     {
         return baseApplicationInfo_->singleton;
     }
-
-    int32_t GetResponseUserId(int32_t requestUserId) const;
 
     std::vector<std::string> GetModuleNameVec() const
     {
@@ -801,7 +634,6 @@ public:
     }
 
     void SetAccessTokenId(uint32_t accessToken, const int32_t userId);
-
     uint64_t GetAccessTokenIdEx(const int32_t userId) const
     {
         InnerBundleUserInfo userInfo;
@@ -811,27 +643,8 @@ public:
         return 0;
     }
 
-    void SetAccessTokenIdEx(const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
-
-    void SetIsNewVersion(bool flag)
-    {
-        isNewVersion_ = flag;
-    }
-
-    bool GetIsNewVersion() const
-    {
-        return isNewVersion_;
-    }
-
-    bool GetAsanEnabled() const
-    {
-        return baseApplicationInfo_->asanEnabled;
-    }
-
-    void SetAsanEnabled(bool asanEnabled)
-    {
-        baseApplicationInfo_->asanEnabled = asanEnabled;
-    }
+    void SetAccessTokenIdEx(
+        const Security::AccessToken::AccessTokenIDEx accessTokenIdEx, const int32_t userId);
 
     void SetAllowedAcls(const std::vector<std::string> &allowedAcls)
     {
@@ -843,17 +656,8 @@ public:
         }
     }
 
-    std::vector<std::string> GetAllowedAcls() const
-    {
-        return allowedAcls_;
-    }
-
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
     ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
-    bool IsAccessible() const
-    {
-        return baseApplicationInfo_->accessible;
-    }
 
     bool GetDependentModuleNames(const std::string &moduleName, std::vector<std::string> &dependentModuleNames) const;
     bool GetAllDependentModuleNames(const std::string &moduleName,
@@ -891,84 +695,9 @@ public:
         return *bundlePackInfo_;
     }
 
-    void SetAppIndex(int32_t appIndex)
-    {
-        appIndex_ = appIndex;
-    }
-
-    int32_t GetAppIndex() const
-    {
-        return appIndex_;
-    }
-
-    void SetIsSandbox(bool isSandbox)
-    {
-        isSandboxApp_ = isSandbox;
-    }
-
-    bool GetIsSandbox() const
-    {
-        return isSandboxApp_;
-    }
-
     void CleanInnerBundleUserInfos()
     {
         innerBundleUserInfos_.clear();
-    }
-
-    std::string GetCertificateFingerprint() const
-    {
-        return baseApplicationInfo_->fingerprint;
-    }
-
-    void SetCertificateFingerprint(const std::string &fingerprint)
-    {
-        baseApplicationInfo_->fingerprint = fingerprint;
-    }
-
-    const std::string &GetNativeLibraryPath() const
-    {
-        return baseApplicationInfo_->nativeLibraryPath;
-    }
-
-    void SetNativeLibraryPath(const std::string &nativeLibraryPath)
-    {
-        baseApplicationInfo_->nativeLibraryPath = nativeLibraryPath;
-    }
-
-    const std::string &GetArkNativeFileAbi() const
-    {
-        return baseApplicationInfo_->arkNativeFileAbi;
-    }
-
-    void SetArkNativeFileAbi(const std::string &arkNativeFileAbi)
-    {
-        baseApplicationInfo_->arkNativeFileAbi = arkNativeFileAbi;
-    }
-
-    const std::string &GetArkNativeFilePath() const
-    {
-        return baseApplicationInfo_->arkNativeFilePath;
-    }
-
-    void SetArkNativeFilePath(const std::string &arkNativeFilePath)
-    {
-        baseApplicationInfo_->arkNativeFilePath = arkNativeFilePath;
-    }
-
-    const std::string &GetCpuAbi() const
-    {
-        return baseApplicationInfo_->cpuAbi;
-    }
-
-    void SetCpuAbi(const std::string &cpuAbi)
-    {
-        baseApplicationInfo_->cpuAbi = cpuAbi;
-    }
-
-    void SetRemovable(bool removable)
-    {
-        baseApplicationInfo_->removable = removable;
     }
 
     void SetKeepAlive(bool keepAlive)
@@ -983,21 +712,6 @@ public:
         baseBundleInfo_->singleton = singleton;
     }
 
-    void SetRunningResourcesApply(bool runningResourcesApply)
-    {
-        baseApplicationInfo_->runningResourcesApply = runningResourcesApply;
-    }
-
-    void SetAssociatedWakeUp(bool associatedWakeUp)
-    {
-        baseApplicationInfo_->associatedWakeUp = associatedWakeUp;
-    }
-
-    void SetUserDataClearable(bool userDataClearable)
-    {
-        baseApplicationInfo_->userDataClearable = userDataClearable;
-    }
-
     void SetHideDesktopIcon(bool hideDesktopIcon)
     {
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
@@ -1007,22 +721,12 @@ public:
         }
     }
 
-    void SetFormVisibleNotify(bool formVisibleNotify)
-    {
-        baseApplicationInfo_->formVisibleNotify = formVisibleNotify;
-    }
-
     void SetAllowCommonEvent(const std::vector<std::string> &allowCommonEvent)
     {
         baseApplicationInfo_->allowCommonEvent.clear();
         for (const auto &event : allowCommonEvent) {
             baseApplicationInfo_->allowCommonEvent.emplace_back(event);
         }
-    }
-
-    std::vector<OverlayBundleInfo> GetOverlayBundleInfo() const
-    {
-        return overlayBundleInfo_;
     }
 
     void AddOverlayBundleInfo(const OverlayBundleInfo &overlayBundleInfo)
@@ -1053,154 +757,14 @@ public:
         overlayBundleInfo_.clear();
     }
 
-    std::string GetTargetBundleName() const
-    {
-        return baseApplicationInfo_->targetBundleName;
-    }
-
-    void SetTargetBundleName(const std::string &targetBundleName)
-    {
-        baseApplicationInfo_->targetBundleName = targetBundleName;
-    }
-
-    int32_t GetTargetPriority() const
-    {
-        return baseApplicationInfo_->targetPriority;
-    }
-
-    void SetTargetPriority(int32_t priority)
-    {
-        baseApplicationInfo_->targetPriority = priority;
-    }
-
-    int32_t GetOverlayState() const
-    {
-        return baseApplicationInfo_->overlayState;
-    }
-
-    void SetOverlayState(int32_t state)
-    {
-        baseApplicationInfo_->overlayState = state;
-    }
-
-    int32_t GetOverlayType() const
-    {
-        return overlayType_;
-    }
-
-    void SetOverlayType(int32_t type)
-    {
-        overlayType_ = type;
-    }
-
-    void AddOverlayModuleInfo(const OverlayModuleInfo &overlayModuleInfo)
-    {
-        auto iterator = innerModuleInfos_.find(overlayModuleInfo.targetModuleName);
-        if (iterator == innerModuleInfos_.end()) {
-            return;
-        }
-        auto innerModuleInfo = iterator->second;
-        auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
-            innerModuleInfo.overlayModuleInfo.end(), [&overlayModuleInfo](const auto &overlayInfo) {
-            return (overlayInfo.moduleName == overlayModuleInfo.moduleName) &&
-                (overlayInfo.bundleName == overlayModuleInfo.bundleName);
-        });
-        if (overlayModuleInfoIt != innerModuleInfo.overlayModuleInfo.end()) {
-            innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
-        }
-        innerModuleInfo.overlayModuleInfo.emplace_back(overlayModuleInfo);
-        innerModuleInfos_.erase(iterator);
-        innerModuleInfos_.try_emplace(overlayModuleInfo.targetModuleName, innerModuleInfo);
-    }
-
-    void RemoveOverlayModuleInfo(const std::string &targetModuleName, const std::string &bundleName,
-        const std::string &moduleName)
-    {
-        auto iterator = innerModuleInfos_.find(targetModuleName);
-        if (iterator == innerModuleInfos_.end()) {
-            return;
-        }
-        auto innerModuleInfo = iterator->second;
-        auto overlayModuleInfoIt = std::find_if(innerModuleInfo.overlayModuleInfo.begin(),
-            innerModuleInfo.overlayModuleInfo.end(), [&moduleName, &bundleName](const auto &overlayInfo) {
-            return (overlayInfo.moduleName == moduleName) && (overlayInfo.bundleName == bundleName);
-        });
-        if (overlayModuleInfoIt == innerModuleInfo.overlayModuleInfo.end()) {
-            return;
-        }
-        innerModuleInfo.overlayModuleInfo.erase(overlayModuleInfoIt);
-        innerModuleInfos_.erase(iterator);
-        innerModuleInfos_.try_emplace(targetModuleName, innerModuleInfo);
-    }
-
-    void RemoveAllOverlayModuleInfo(const std::string &bundleName)
-    {
-        for (auto &innerModuleInfo : innerModuleInfos_) {
-            innerModuleInfo.second.overlayModuleInfo.erase(std::remove_if(
-                innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
-                [&bundleName](const auto &overlayInfo) {
-                    return overlayInfo.bundleName == bundleName;
-                }), innerModuleInfo.second.overlayModuleInfo.end());
-        }
-    }
-
-    void CleanAllOverlayModuleInfo()
-    {
-        for (auto &innerModuleInfo : innerModuleInfos_) {
-            innerModuleInfo.second.overlayModuleInfo.clear();
-        }
-    }
-
-    bool isOverlayModule(const std::string &moduleName) const
-    {
-        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-            return true;
-        }
-        return !innerModuleInfos_.at(moduleName).targetModuleName.empty();
-    }
-
-    bool isExistedOverlayModule() const
-    {
-        for (const auto &innerModuleInfo : innerModuleInfos_) {
-            if (!innerModuleInfo.second.targetModuleName.empty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void KeepOldOverlayConnection(InnerBundleInfo &info)
-    {
-        auto &newInnerModuleInfos = info.FetchInnerModuleInfos();
-        for (const auto &innerModuleInfo : innerModuleInfos_) {
-            if ((!innerModuleInfo.second.overlayModuleInfo.empty()) &&
-                (newInnerModuleInfos.find(innerModuleInfo.second.moduleName) != newInnerModuleInfos.end())) {
-                newInnerModuleInfos[innerModuleInfo.second.moduleName].overlayModuleInfo =
-                    innerModuleInfo.second.overlayModuleInfo;
-                return;
-            }
-        }
-    }
-
-    void SetAsanLogPath(const std::string& asanLogPath)
-    {
-        baseApplicationInfo_->asanLogPath = asanLogPath;
-    }
-
-    std::string GetAsanLogPath() const
-    {
-        return baseApplicationInfo_->asanLogPath;
-    }
-
-    void SetApplicationBundleType(BundleType type)
-    {
-        baseApplicationInfo_->bundleType = type;
-    }
-
-    BundleType GetApplicationBundleType() const
-    {
-        return baseApplicationInfo_->bundleType;
-    }
+    void AddOverlayModuleInfo(const OverlayModuleInfo &overlayModuleInfo);
+    void RemoveOverlayModuleInfo(const std::string &targetModuleName,
+        const std::string &bundleName, const std::string &moduleName);
+    void RemoveAllOverlayModuleInfo(const std::string &bundleName);
+    void CleanAllOverlayModuleInfo();
+    bool isOverlayModule(const std::string &moduleName) const;
+    bool isExistedOverlayModule() const;
+    void KeepOldOverlayConnection(InnerBundleInfo &info);
 
     bool SetInnerModuleAtomicPreload(const std::string &moduleName, const std::vector<std::string> &preloads)
     {
@@ -1210,16 +774,6 @@ public:
         }
         innerModuleInfos_.at(moduleName).preloads = preloads;
         return true;
-    }
-
-    void SetAppProvisionMetadata(const std::vector<Metadata> &metadatas)
-    {
-        provisionMetadatas_ = metadatas;
-    }
-
-    std::vector<Metadata> GetAppProvisionMetadata() const
-    {
-        return provisionMetadatas_;
     }
 
     const std::map<std::string, std::vector<InnerModuleInfo>> &GetInnerSharedModuleInfos() const
@@ -1266,122 +820,31 @@ public:
         return dataGroupInfos_;
     }
 
-    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
-    {
-        APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
-            dataGroupId.c_str(), info.ToString().c_str());
-        auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
-        if (dataGroupInfosItem == dataGroupInfos_.end()) {
-            APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
-            dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
-            return;
-        }
-
-        int32_t userId = info.userId;
-        auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
-            [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
-        if (iter != std::end(dataGroupInfos_[dataGroupId])) {
-            return;
-        }
-
-        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
-        dataGroupInfos_[dataGroupId].emplace_back(info);
-    }
-
-    void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
-    {
-        auto iter = dataGroupInfos_.find(dataGroupId);
-        if (iter == dataGroupInfos_.end()) {
-            return;
-        }
-        for (auto dataGroupIter = iter->second.begin(); dataGroupIter != iter->second.end(); dataGroupIter++) {
-            if (dataGroupIter->userId == userId) {
-                iter->second.erase(dataGroupIter);
-                return;
-            }
-        }
-    }
-
-    void UpdateDataGroupInfos(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
-    {
-        std::set<int32_t> userIdList;
-        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
-            for (const DataGroupInfo &info : item->second) {
-                userIdList.insert(info.userId);
-            }
-        }
-
-        std::vector<std::string> deletedGroupIds;
-        for (auto &item : dataGroupInfos_) {
-            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
-                for (int32_t userId : userIdList) {
-                    RemoveGroupInfos(userId, item.first);
-                }
-            }
-            if (item.second.empty()) {
-                deletedGroupIds.emplace_back(item.first);
-            }
-        }
-        for (std::string groupId : deletedGroupIds) {
-            dataGroupInfos_.erase(groupId);
-        }
-        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
-            std::string dataGroupId = item->first;
-            for (const DataGroupInfo &info : item->second) {
-                AddDataGroupInfo(dataGroupId, info);
-            }
-        }
-    }
-
-    void SetGwpAsanEnabled(bool gwpAsanEnabled)
-    {
-        baseApplicationInfo_->gwpAsanEnabled = gwpAsanEnabled;
-    }
-
-    bool GetGwpAsanEnabled() const
-    {
-        return baseApplicationInfo_->gwpAsanEnabled;
-    }
-
-    void SetApplicationReservedFlag(uint32_t flag)
-    {
-        baseApplicationInfo_->applicationReservedFlag |= flag;
-    }
+    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info);
+    void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId);
+    void UpdateDataGroupInfos(
+        const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos);
 
     void ClearApplicationReservedFlag(uint32_t flag)
     {
         baseApplicationInfo_->applicationReservedFlag &= ~flag;
     }
 
-    uint32_t GetApplicationReservedFlag() const
-    {
-        return baseApplicationInfo_->applicationReservedFlag;
-    }
-
     void SetAppDistributionType(const std::string &appDistributionType);
-
     std::string GetAppDistributionType() const;
-
     void SetAppProvisionType(const std::string &appProvisionType);
-
     std::string GetAppProvisionType() const;
 
     void SetAppCrowdtestDeadline(int64_t crowdtestDeadline);
-
     int64_t GetAppCrowdtestDeadline() const;
 
     std::vector<std::string> GetDistroModuleName() const;
-
     std::string GetModuleNameByPackage(const std::string &packageName) const;
-
     std::string GetModuleTypeByPackage(const std::string &packageName) const;
 
     AppQuickFix GetAppQuickFix() const;
-
     void SetAppQuickFix(const AppQuickFix &appQuickFix);
-
     std::vector<HqfInfo> GetQuickFixHqfInfos() const;
-
     void SetQuickFixHqfInfos(const std::vector<HqfInfo> &hqfInfos);
 
     void UpdatePrivilegeCapability(const ApplicationInfo &applicationInfo);
@@ -1400,11 +863,8 @@ public:
     void ResetApplyQuickFixFrequency();
 
     bool GetOverlayModuleState(const std::string &moduleName, int32_t userId, int32_t &state) const;
-
     void SetOverlayModuleState(const std::string &moduleName, int32_t state, int32_t userId);
-
     void SetOverlayModuleState(const std::string &moduleName, int32_t state);
-
     void ClearOverlayModuleStates(const std::string &moduleName);
 
     bool GetBaseSharedBundleInfo(const std::string &moduleName, uint32_t versionCode,
@@ -1462,8 +922,6 @@ private:
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
-    int uid_ = Constants::INVALID_UID;
-    int gid_ = Constants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
@@ -1481,16 +939,12 @@ private:
     bool onlyCreateBundleUser_ = false;
 
     std::map<std::string, InnerModuleInfo> innerModuleInfos_;
-
     std::map<std::string, std::vector<FormInfo>> formInfos_;
     std::map<std::string, CommonEventInfo> commonEvents_;
     std::map<std::string, ShortcutInfo> shortcutInfos_;
-
     std::map<std::string, AbilityInfo> baseAbilityInfos_;
     std::map<std::string, std::vector<Skill>> skillInfos_;
-
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
-
     std::shared_ptr<BundlePackInfo> bundlePackInfo_;
     // new version fields
     bool isNewVersion_ = false;

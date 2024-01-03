@@ -39,46 +39,7 @@ public:
      * @return Returns the string object
      */
     std::string ToString() const;
-    /**
-     * @brief Get bundle name.
-     * @return Return bundle name
-     */
-    std::string GetBundleName() const
-    {
-        return bundleName_;
-    }
-    /**
-     * @brief Set bundle name.
-     * @param bundleName bundle name.
-     */
-    void SetBundleName(const std::string &bundleName)
-    {
-        bundleName_ = bundleName;
-    }
-    /**
-     * @brief Get versionCode.
-     * @return Return versionCode.
-     */
-    uint32_t GetVersionCode() const
-    {
-        return versionCode_;
-    }
-    /**
-     * @brief Set versionCode.
-     * @param versionCode versionCode.
-     */
-    void SetVersionCode(const uint32_t &versionCode)
-    {
-        versionCode_ = versionCode;
-    }
-    /**
-     * @brief Get bundle path.
-     * @return Return bundle path
-     */
-    std::vector<std::string> GetBundlePaths() const
-    {
-        return bundlePaths_;
-    }
+
     /**
      * @brief Add bundle path.
      * @param bundlePath bundle path.
@@ -112,54 +73,6 @@ public:
             != bundlePaths_.end();
     }
     /**
-     * @brief Get AppType.
-     * @return Returns the AppType.
-     */
-    Constants::AppType GetAppType() const
-    {
-        return appType_;
-    }
-    /**
-     * @brief Set AppType.
-     * @param appType Indicates the AppType to be set.
-     */
-    void SetAppType(Constants::AppType appType)
-    {
-        appType_ = appType;
-    }
-    /**
-     * @brief Is removable or not.
-     * @return Returns the removable.
-     */
-    bool IsRemovable() const
-    {
-        return removable_;
-    }
-    /**
-     * @brief Set removable.
-     * @param appType Indicates the removable to be set.
-     */
-    void SetRemovable(bool removable)
-    {
-        removable_ = removable;
-    }
-    /**
-     * @brief Is uninstalled or not.
-     * @return Returns the isUninstalled.
-     */
-    bool IsUninstalled() const
-    {
-        return isUninstalled_;
-    }
-    /**
-     * @brief Set isUninstalled.
-     * @param appType Indicates the removable to be set.
-     */
-    void SetIsUninstalled(bool isUninstalled)
-    {
-        isUninstalled_ = isUninstalled;
-    }
-    /**
      * @brief operator.
      * @param PreInstallBundleInfo Indicates the PreInstallBundleInfo.
      */
@@ -167,6 +80,13 @@ public:
     {
         return bundleName_ == info.GetBundleName();
     }
+
+    BMS_DEFINE_PROPERTY(AppType, appType_, Constants::AppType);
+    BMS_DEFINE_PROPERTY(Removable, removable_, bool);
+    BMS_DEFINE_PROPERTY(IsUninstalled, isUninstalled_, bool);
+    BMS_DEFINE_PROPERTY(BundleName, bundleName_, std::string);
+    BMS_DEFINE_PROPERTY(VersionCode, versionCode_, uint32_t);
+    BMS_DEFINE_PROPERTY_GET(BundlePaths, bundlePaths_, std::vector<std::string>);
 private:
     std::string bundleName_;
     uint32_t versionCode_;
