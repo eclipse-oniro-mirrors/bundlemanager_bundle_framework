@@ -1322,6 +1322,9 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         return;
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        return;
+    }
     bool isExist = false;
     bool isStage = info.GetIsNewVersion();
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
