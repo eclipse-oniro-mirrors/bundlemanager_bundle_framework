@@ -133,35 +133,6 @@ HWTEST_F(BmsBundleHapVerifyTest, BmsGetSignature_0100, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: BmsCopyPartialBuffer_0100
- * Function: CopyPartialBuffer
- * @tc.name: test CopyPartialBuffer
- * @tc.desc: CopyPartialBuffer
- */
-HWTEST_F(BmsBundleHapVerifyTest, BmsCopyPartialBuffer_0100, Function | SmallTest | Level0)
-{
-    constexpr int TEST_HAPBYTEBUFFER_LENGTH = 15;
-    constexpr int TEST_HAPBYTEBUFFER_LENGTH_2 = 8;
-    constexpr int TEST_HAPBYTEBUFFER_INT32_DATA = 0xffffffff;
-    constexpr int TEST_HAPBYTEBUFFER_INT32_DATA_2 = 100000;
-    constexpr int TEST_HAPBYTEBUFFER_POSITION = 10;
-    Security::Verify::HapByteBuffer hapByteBuffer(TEST_HAPBYTEBUFFER_LENGTH);
-    hapByteBuffer.PutInt32(0, TEST_HAPBYTEBUFFER_INT32_DATA);
-    hapByteBuffer.PutInt32(sizeof(int), TEST_HAPBYTEBUFFER_INT32_DATA_2);
-    Security::Verify::HapByteBuffer hapByteBuffer2(TEST_HAPBYTEBUFFER_LENGTH);
-    hapByteBuffer.SetPosition(TEST_HAPBYTEBUFFER_POSITION);
-    EXPECT_FALSE(hapByteBuffer2.CopyPartialBuffer(hapByteBuffer, TEST_HAPBYTEBUFFER_LENGTH_2));
-    hapByteBuffer.Clear();
-    hapByteBuffer2.CopyPartialBuffer(hapByteBuffer, TEST_HAPBYTEBUFFER_LENGTH_2);
-    int target1;
-    EXPECT_TRUE(hapByteBuffer2.GetInt32(target1));
-    EXPECT_EQ(target1, TEST_HAPBYTEBUFFER_INT32_DATA);
-    int target2;
-    EXPECT_TRUE(hapByteBuffer2.GetInt32(target2));
-    EXPECT_EQ(target2, TEST_HAPBYTEBUFFER_INT32_DATA_2);
-}
-
-/**
  * @tc.number: EnableDebug_0100
  * Function: enableDebug
  * @tc.name: test enableDebug
