@@ -1155,7 +1155,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
