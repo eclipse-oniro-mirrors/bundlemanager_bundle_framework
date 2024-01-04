@@ -799,7 +799,8 @@ public:
         std::vector<Metadata> &provisionMetadatas) const;
 
     ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
-        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos,
+        GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) const;
 
     bool GetBaseSharedBundleInfo(const Dependency &dependency, BaseSharedBundleInfo &baseSharedBundleInfo) const;
 
@@ -995,6 +996,9 @@ private:
         int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos) const;
     void EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
         int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const;
+    void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
+    void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;
@@ -1031,6 +1035,8 @@ private:
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
     std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
+    mutable std::mutex hspBundleNameMutex_;
+    std::set<std::string> appServiceHspBundleName_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

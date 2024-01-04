@@ -812,7 +812,8 @@ public:
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
     virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
-        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) override;
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos,
+        GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) override;
 
     virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,
         SharedBundleInfo &sharedBundleInfo) override;

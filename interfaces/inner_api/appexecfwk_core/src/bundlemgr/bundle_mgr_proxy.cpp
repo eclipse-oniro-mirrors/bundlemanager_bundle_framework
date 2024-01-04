@@ -3329,7 +3329,7 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
 }
 
 ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
-    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get base shared package infos");
@@ -3344,6 +3344,10 @@ ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("fail to GetBaseSharedBundleInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(static_cast<uint32_t>(flag))) {
+        APP_LOGE("fail to GetBaseSharedBundleInfos due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS,
