@@ -231,6 +231,7 @@ private:
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
+    bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
