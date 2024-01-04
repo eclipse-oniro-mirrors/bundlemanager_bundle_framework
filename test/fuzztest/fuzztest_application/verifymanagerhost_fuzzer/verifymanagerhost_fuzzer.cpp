@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,19 +13,19 @@
  * limitations under the License.
  */
 
-#include "appcontrolhost_fuzzer.h"
+#include "verifymanagerhost_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
 
-#include "app_control_host.h"
+#include "verify_manager_host.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 21;
+constexpr size_t MESSAGE_SIZE = 3;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
@@ -38,14 +38,14 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
-    std::u16string descriptor = AppControlHost::GetDescriptor();
+    std::u16string descriptor = VerifyManagerHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    AppControlHost appControlHost;
-    appControlHost.OnRemoteRequest(code, datas, reply, option);
+    VerifyManagerHost verifyManagerHost;
+    verifyManagerHost.OnRemoteRequest(code, datas, reply, option);
     return true;
 }
 }
