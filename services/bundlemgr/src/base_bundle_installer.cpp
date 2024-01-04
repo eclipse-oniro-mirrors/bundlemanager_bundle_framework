@@ -94,7 +94,8 @@ const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 const std::set<std::string> SINGLETON_WHITE_LIST = {
-    "com.ohos.sceneboard"
+    "com.ohos.sceneboard",
+    "com.ohos.callui"
 };
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
