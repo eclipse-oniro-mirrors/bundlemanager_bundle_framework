@@ -1406,6 +1406,47 @@ HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfosTest, Function | SmallT
 }
 
 /**
+ * @tc.number: GetBaseSharedBundleInfosTest_0010
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the GetBaseSharedBundleInfos with BundleDataMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfosTest_0010, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::vector<BaseSharedBundleInfo> infos;
+    auto ret = dataMgr->GetBaseSharedBundleInfos("", infos, GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBaseSharedBundleInfosTest_0020
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the GetBaseSharedBundleInfos with BundleDataMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfosTest_0020, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::vector<BaseSharedBundleInfo> infos;
+    auto ret = dataMgr->GetBaseSharedBundleInfos(BUNDLE_NAME, infos,
+        GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBaseSharedBundleInfosTest_0030
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the GetBaseSharedBundleInfos with BundleDataMgr
+*/
+HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfosTest_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::vector<BaseSharedBundleInfo> infos;
+    auto ret = dataMgr->GetBaseSharedBundleInfos(BUNDLE_NAME, infos,
+        GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetBaseSharedBundleInfoTest
  * @tc.name: Test use different param with GetBaseSharedBundleInfos
  * @tc.desc: 1.Test the GetBaseSharedBundleInfo with BundleDataMgr
