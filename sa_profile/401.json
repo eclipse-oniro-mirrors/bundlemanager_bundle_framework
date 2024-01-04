@@ -8,7 +8,10 @@
             "depend_time_out": 60000,
             "distributed": false,
             "bootphase": "CoreStartPhase",
-            "dump_level": 1
+            "dump_level": 1,
+            "depend": [
+                3503
+            ]
         }
     ]
 }
