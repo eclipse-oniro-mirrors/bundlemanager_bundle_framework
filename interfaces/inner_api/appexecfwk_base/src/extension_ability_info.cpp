@@ -95,6 +95,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/print", ExtensionAbilityType::SYSDIALOG_PRINT },
     { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
+    { "sysPicker/photoPicker", ExtensionAbilityType::SYSPICKER_PHOTOPICKER },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
     { "vpn", ExtensionAbilityType::VPN }
 };
