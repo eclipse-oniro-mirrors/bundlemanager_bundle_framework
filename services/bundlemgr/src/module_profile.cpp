@@ -1381,8 +1381,12 @@ bool ParserNativeSo(
                 soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
                 return true;
+            } else if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::RISCV64)) {
+                cpuAbi = Constants::RISCV64;
+                soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::RISCV64);
+                UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
+                return true;
             }
-
             return false;
         }
 
@@ -1503,7 +1507,10 @@ bool ParserArkNativeFilePath(
     APP_LOGD("an exist");
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(Constants::AN + Constants::RISCV64)) {
+                innerBundleInfo.SetArkNativeFileAbi(Constants::RISCV64);
+                return true;
+            } else if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM64_V8A)) {
                 innerBundleInfo.SetArkNativeFileAbi(Constants::ARM64_V8A);
                 return true;
             }

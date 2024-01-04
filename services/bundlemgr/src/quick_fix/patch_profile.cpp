@@ -226,7 +226,17 @@ bool PatchProfile::DefaultNativeSo(
             }
             APP_LOGE("Can't find ARM64_V8A in ABI_MAP");
             return false;
+        } else if (patchExtractor.IsDirExist(Constants::LIBS + Constants::RISCV64)) {
+            appqfInfo.cpuAbi = Constants::RISCV64;
+            auto iter = Constants::ABI_MAP.find(Constants::RISCV64);
+            if (iter != Constants::ABI_MAP.end()) {
+                appqfInfo.nativeLibraryPath = Constants::LIBS + iter->second;
+                return true;
+            }
+            APP_LOGE("Can't find RISCV64 in ABI_MAP");
+            return false;
         }
+
         APP_LOGE(" ARM64_V8A's directory doesn't exist");
         return false;
     }

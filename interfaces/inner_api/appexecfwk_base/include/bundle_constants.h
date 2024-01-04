@@ -117,6 +117,7 @@ constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";
 constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
+constexpr const char* RISCV64 = "riscv64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
 const std::string AP = "ap/";
@@ -128,6 +129,7 @@ const std::map<std::string, std::string> ABI_MAP = {
     {ARM64_V8A, "arm64"},
     {X86, "x86"},
     {X86_64, "x86_64"},
+    {RISCV64, "riscv64"},
 };
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
