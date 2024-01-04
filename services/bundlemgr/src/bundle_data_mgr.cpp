@@ -3815,6 +3815,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfos(uint32_t flags, int32_t userId
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     ErrCode ret = ImplicitQueryAllExtensionInfos(flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
         APP_LOGD("QueryExtensionAbilityInfos error");
