@@ -28,9 +28,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    static const std::string AVAILABLELEVEL_NORMAL = "normal";
-    static const std::string DEFAULT_ENTITY_TYPE = "unspecified";
-    static const std::string DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
+    constexpr const char* AVAILABLELEVEL_NORMAL = "normal";
+    constexpr const char* DEFAULT_ENTITY_TYPE = "unspecified";
+    constexpr const char* DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
