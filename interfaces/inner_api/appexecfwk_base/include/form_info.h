@@ -40,7 +40,7 @@ struct FormInfo : public Parcelable {
     std::string scheduledUpdateTime = "";
     std::string src;
     FormWindow window;
-    int32_t displayNameId;
+    int32_t displayNameId = 0;
     int32_t descriptionId = 0;
     int32_t updateDuration = 0;
     int32_t defaultDimension = 0;
