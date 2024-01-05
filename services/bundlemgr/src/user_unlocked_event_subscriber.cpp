@@ -70,6 +70,17 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         APP_LOGE("path: %{private}s IsExistDir failed", baseBundleDataDir.c_str());
         return false;
     }
+    if (isExist) {
+        FileStat fileStat;
+        if (InstalldClient::GetInstance()->GetFileStat(baseBundleDataDir, fileStat) != ERR_OK) {
+            APP_LOGE("GetFileStat path(%{private}s) failed", baseBundleDataDir.c_str());
+            return false;
+        }
+        if (fileStat.uid != bundleInfo.uid || fileStat.gid != bundleInfo.gid) {
+            APP_LOGD("path: %{private}s uid or gid is not same", baseBundleDataDir.c_str());
+            isExist = false;
+        }
+    }
     if (!isExist) {
         APP_LOGD("path: %{private}s is not exist, need to create it", baseBundleDataDir.c_str());
         CreateDirParam createDirParam;
