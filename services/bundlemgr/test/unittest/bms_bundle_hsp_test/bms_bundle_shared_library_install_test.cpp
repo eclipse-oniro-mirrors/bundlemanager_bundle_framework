@@ -663,8 +663,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, ProcessBundleUninstall_0200, Functio
     installParam.userId = USERID;
     installParam.installFlag = InstallFlag::NORMAL;
     int32_t uid = USERID;
-    bool recoverMode = false;
-    auto res = installer.InnerProcessInstallByPreInstallInfo(SHARED_BUNDLE_NAME_A, installParam, uid, recoverMode);
+    auto res = installer.InnerProcessInstallByPreInstallInfo(SHARED_BUNDLE_NAME_A, installParam, uid);
     EXPECT_EQ(res, ERR_OK);
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);

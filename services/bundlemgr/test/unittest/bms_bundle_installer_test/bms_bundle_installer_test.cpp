@@ -1594,12 +1594,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.dataMgr_ = GetBundleDataMgr();
     InnerBundleInfo innerBundleInfo;
-    bool recoverMode = true;
     int32_t uid = 0;
     InstallParam installParam;
     installParam.userId = Constants::INVALID_USERID;
     ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
-        BUNDLE_NAME_TEST1, installParam, uid, recoverMode);
+        BUNDLE_NAME_TEST1, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
@@ -1861,7 +1860,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
         "bundleName", "modulePackage", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     ret = installer.InnerProcessInstallByPreInstallInfo(
-        "bundleName", installParam, uid, recoverMode);
+        "bundleName", installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
     InnerBundleInfo info;
     bool res = installer.GetInnerBundleInfo(info, recoverMode);
@@ -3627,8 +3626,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest 
     installParam.userId = 100;
     installer.userId_ = 100;
     int32_t uid = 100;
-    bool recoverMode = true;
-    auto ret = installer.InnerProcessInstallByPreInstallInfo(BUNDLE_MODULEJSON_TEST, installParam, uid, recoverMode);
+    auto ret = installer.InnerProcessInstallByPreInstallInfo(BUNDLE_MODULEJSON_TEST, installParam, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
     ClearBundleInfo();
 }
