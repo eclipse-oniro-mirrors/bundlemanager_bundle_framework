@@ -2596,9 +2596,10 @@ ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, Messa
     APP_LOGD("start to process HandleGetBaseSharedBundleInfos message");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
+    GetDependentBundleInfoFlag flag = static_cast<GetDependentBundleInfoFlag>(data.ReadUint32());
 
     std::vector<BaseSharedBundleInfo> infos;
-    ErrCode ret = GetBaseSharedBundleInfos(bundleName, infos);
+    ErrCode ret = GetBaseSharedBundleInfos(bundleName, infos, flag);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

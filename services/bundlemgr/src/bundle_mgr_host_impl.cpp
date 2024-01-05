@@ -210,7 +210,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
 }
 
 ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleName,
-    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {
     APP_LOGD("start GetBaseSharedBundleInfos, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
@@ -224,7 +224,7 @@ ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleNam
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetBaseSharedBundleInfos(bundleName, baseSharedBundleInfos);
+    return dataMgr->GetBaseSharedBundleInfos(bundleName, baseSharedBundleInfos, flag);
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfoV9(

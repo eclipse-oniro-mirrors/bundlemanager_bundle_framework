@@ -1151,7 +1151,8 @@ public:
     }
 
     virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
-        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos,
+        GetDependentBundleInfoFlag flag = GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

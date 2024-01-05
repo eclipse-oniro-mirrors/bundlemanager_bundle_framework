@@ -137,6 +137,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     for (const auto &item : bundleInfos_) {
         std::lock_guard<std::mutex> stateLock(stateMutex_);
         installStates_.emplace(item.first, InstallState::INSTALL_SUCCESS);
+        AddAppHspBundleName(item.second.GetApplicationBundleType(), item.first);
     }
 
     RestoreUidAndGid();
@@ -293,6 +294,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         if (dataStorage_->SaveStorageBundleInfo(info)) {
             APP_LOGD("write storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.emplace(bundleName, info);
+            AddAppHspBundleName(info.GetApplicationBundleType(), bundleName);
             return true;
         }
     }
@@ -1876,20 +1878,40 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
-    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag) const
 {
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("GetBaseSharedBundleInfos get bundleInfo failed, bundleName:%{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    if ((flag == GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO) ||
+        (flag == GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO)) {
+        // for app service hsp
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+        for (const std::string &hspName : appServiceHspBundleName_) {
+            APP_LOGD("get hspBundleName: %{public}s", hspName.c_str());
+            auto infoItem = bundleInfos_.find(hspName);
+            if (infoItem == bundleInfos_.end()) {
+                APP_LOGW("get hsp bundleInfo failed, hspName:%{public}s", hspName.c_str());
+                continue;
+            }
+            ConvertServiceHspToSharedBundleInfo(infoItem->second, baseSharedBundleInfos);
+        }
     }
-    const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
-    for (const auto &item : dependencies) {
-        BaseSharedBundleInfo baseSharedBundleInfo;
-        if (GetBaseSharedBundleInfo(item, baseSharedBundleInfo)) {
-            baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
+    if (flag == GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO ||
+        flag == GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO) {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            APP_LOGW("GetBaseSharedBundleInfos get bundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+            return (flag == GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO) ?
+                ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
+        }
+        const InnerBundleInfo &innerBundleInfo = infoItem->second;
+        std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
+        for (const auto &item : dependencies) {
+            BaseSharedBundleInfo baseSharedBundleInfo;
+            if (GetBaseSharedBundleInfo(item, baseSharedBundleInfo)) {
+                baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
+            }
         }
     }
     APP_LOGD("GetBaseSharedBundleInfos(%{public}s) successfully", bundleName.c_str());
@@ -2692,6 +2714,10 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
     bundleInfos_.erase(bundleName);
+    std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+    if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
+        appServiceHspBundleName_.erase(bundleName);
+    }
 }
 
 bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
@@ -6039,6 +6065,38 @@ ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName,
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return ERR_OK;
+}
+
+void BundleDataMgr::ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const
+{
+    APP_LOGD("start");
+    BundleInfo bundleInfo;
+    if (innerBundleInfo.GetAppServiceHspInfo(bundleInfo) == ERR_OK) {
+        APP_LOGD("get app service hsp bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+        for (const auto &hapModule : bundleInfo.hapModuleInfos) {
+            BaseSharedBundleInfo baseSharedBundleInfo;
+            baseSharedBundleInfo.bundleName = bundleInfo.name;
+            baseSharedBundleInfo.moduleName = hapModule.moduleName;
+            baseSharedBundleInfo.versionCode = bundleInfo.versionCode;
+            baseSharedBundleInfo.nativeLibraryPath = hapModule.nativeLibraryPath;
+            baseSharedBundleInfo.hapPath = hapModule.hapPath;
+            baseSharedBundleInfo.compressNativeLibs = hapModule.compressNativeLibs;
+            baseSharedBundleInfo.nativeLibraryFileNames = hapModule.nativeLibraryFileNames;
+            baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
+        }
+        return;
+    }
+    APP_LOGW("GetAppServiceHspInfo failed, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+}
+
+void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string &bundleName)
+{
+    if (type == BundleType::APP_SERVICE_FWK) {
+        APP_LOGD("add app hsp bundleName:%{pubcli}s", bundleName.c_str());
+        std::lock_guard<std::mutex> hspLock(hspBundleNameMutex_);
+        appServiceHspBundleName_.insert(bundleName);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
