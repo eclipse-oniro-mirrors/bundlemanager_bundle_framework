@@ -95,7 +95,8 @@ const int32_t SINGLE_HSP_VERSION = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.sceneboard",
-    "com.ohos.callui"
+    "com.ohos.callui",
+    "com.ohos.mms"
 };
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
