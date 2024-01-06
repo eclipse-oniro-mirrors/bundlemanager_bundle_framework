@@ -231,11 +231,10 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
         }
     }
 
-    ErrCode result = bundleInstallChecker_->CheckAppLabelInfo(parsedBundles_);
     if (isBundleExist_) {
         parsedBundles_.erase(bundleName_);
     }
-    return result;
+    return ERR_OK;
 }
 
 ErrCode InnerSharedBundleInstaller::CheckBundleTypeWithInstalledVersion()
