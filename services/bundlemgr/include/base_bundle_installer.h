@@ -315,11 +315,10 @@ private:
      * @param bundleName Indicates the bundleName the application to install.
      * @param installParam Indicates the install parameters.
      * @param uid Indicates the uid of the application.
-     * @param recoverMode Indicates the recoverMode or not.
      * @return Returns ERR_OK if the bundle install successfully; returns error code otherwise.
      */
     ErrCode InnerProcessInstallByPreInstallInfo(
-        const std::string &bundleName, const InstallParam &installParam, int32_t &uid, bool recoverMode);
+        const std::string &bundleName, const InstallParam &installParam, int32_t &uid);
     /**
      * @brief Check syscap.
      * @param bundlePaths Indicates the file paths of all HAP packages.
