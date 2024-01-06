@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,8 +54,6 @@ static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
 static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
-static const char MARK_TEMP_DIR[] = "temp_useless";
-static constexpr size_t MARK_TEMP_LEN = 12;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -674,43 +672,6 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir)
     }
     closedir(dirPtr);
     return size;
-}
-
-void InstalldOperator::TraverseObsoleteTempDirectory(
-    const std::string &currentPath, std::vector<std::string> &tempDirs)
-{
-    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
-        APP_LOGE("Traverse temp directory current path invaild");
-        return;
-    }
-    std::string filePath = "";
-    if (!PathToRealPath(currentPath, filePath)) {
-        APP_LOGE("File is not real path, file path: %{private}s", currentPath.c_str());
-        return;
-    }
-    DIR* dir = opendir(filePath.c_str());
-    if (dir == nullptr) {
-        return;
-    }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
-    }
-    struct dirent *ptr = nullptr;
-    while ((ptr = readdir(dir)) != nullptr) {
-        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
-            continue;
-        }
-        if (ptr->d_type == DT_DIR && strncmp(ptr->d_name, MARK_TEMP_DIR, MARK_TEMP_LEN) == 0) {
-            std::string tempDir = filePath + std::string(ptr->d_name);
-            tempDirs.emplace_back(tempDir);
-            continue;
-        }
-        if (ptr->d_type == DT_DIR) {
-            std::string currentDir = filePath + std::string(ptr->d_name);
-            TraverseObsoleteTempDirectory(currentDir, tempDirs);
-        }
-    }
-    closedir(dir);
 }
 
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)

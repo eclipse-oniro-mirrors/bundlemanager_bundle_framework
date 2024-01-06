@@ -61,8 +61,6 @@ enum class InstalldInterfaceCode : uint32_t {
     VERIFY_CODE_SIGNATURE_FOR_HAP,
     DELIVERY_SIGN_PROFILE,
     REMOVE_SIGN_PROFILE,
-    // ipc code for get obsolete bundle temp path
-    GET_OBSOLETE_BUNDLE_TEMP_PATH,
     CLEAN_BUNDLE_DATA_DIR_BY_NAME,
 };
 

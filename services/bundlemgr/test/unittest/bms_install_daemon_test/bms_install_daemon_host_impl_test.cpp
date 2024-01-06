@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -890,20 +890,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
     std::unordered_multimap<std::string, std::string> dirMap;
     auto ret = hostImpl->ExtractDriverSoFiles("", dirMap);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_5100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetObsoleteBundleTempPath of hostImpl
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5100, Function | SmallTest | Level1)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
-    std::vector<std::string> vec;
-    auto ret = hostImpl->GetObsoleteBundleTempPath({TEST_STRING}, vec);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

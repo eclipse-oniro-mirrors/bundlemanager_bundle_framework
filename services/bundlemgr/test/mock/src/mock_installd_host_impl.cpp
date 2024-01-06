@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,12 +71,6 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 }
 
 ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
-{
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::GetObsoleteBundleTempPath(
-    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
 {
     return ERR_OK;
 }

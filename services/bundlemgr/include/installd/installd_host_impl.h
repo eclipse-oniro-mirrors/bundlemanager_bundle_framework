@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,15 +125,6 @@ public:
      * @return Returns ERR_OK if get cache file path successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) override;
-
-    /**
-     * @brief Get all obsolete temp file path.
-     * @param dirs Indicates the data dir list.
-     * @param tempPaths Indicates the temp file path to clear.
-     * @return Returns ERR_OK if get temp file path successfully; returns error code otherwise.
-     */
-    virtual ErrCode GetObsoleteBundleTempPath(
-        const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths) override;
 
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;

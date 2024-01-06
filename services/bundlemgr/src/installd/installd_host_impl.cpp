@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -722,32 +722,6 @@ ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::TraverseCacheDirectory(dir, cachePath);
-    return ERR_OK;
-}
-
-ErrCode InstalldHostImpl::GetObsoleteBundleTempPath(
-    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
-{
-    APP_LOGD("Called.");
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        APP_LOGE("Installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
-    if (dirs.empty()) {
-        APP_LOGE("Input param is invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    for (const auto &dir : dirs) {
-        if (dir.empty()) {
-            APP_LOGE("Input param is invalid");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        std::vector<std::string> temp;
-        InstalldOperator::TraverseObsoleteTempDirectory(dir, temp);
-        std::copy(temp.begin(), temp.end(), std::back_inserter(tempPaths));
-    }
     return ERR_OK;
 }
 

@@ -1014,35 +1014,5 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFiles_0100, TestSize.L
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFiles, sourceDir, destinationDir));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFiles_0100 end";
 }
-
-/**
- * @tc.number: BmsInstalldClientTest_GetObsoleteBundleTempPath_0100
- * @tc.name: GetObsoleteBundleTempPath
- * @tc.desc: Test whether GetObsoleteBundleTempPath is called normally.(dir is empty)
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetObsoleteBundleTempPath_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetObsoleteBundleTempPath_0100 start";
-    const std::vector<std::string> dirs;
-    std::vector<std::string> cachePath;
-    ErrCode result = installClient_->GetObsoleteBundleTempPath(dirs, cachePath);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetObsoleteBundleTempPath_0100 end";
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_GetObsoleteBundleTempPath_0200
- * @tc.name: GetObsoleteBundleTempPath
- * @tc.desc: Test whether GetObsoleteBundleTempPath is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetObsoleteBundleTempPath_0200, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetObsoleteBundleTempPath_0200 start";
-    std::vector dirs = {DIR};
-    std::vector<std::string> cachePath;
-    ErrCode result = installClient_->GetObsoleteBundleTempPath(dirs, cachePath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::GetObsoleteBundleTempPath, dirs, cachePath));
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetObsoleteBundleTempPath_0200 end";
-}
 } // namespace AppExecFwk
 } // namespace OHOS
