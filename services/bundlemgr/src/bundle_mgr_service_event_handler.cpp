@@ -1365,7 +1365,7 @@ bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const 
 void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     const std::list<std::string> &scanPathList, Constants::AppType appType)
 {
-    APP_LOGD("InnerProcessRebootSharedBundleInstall");
+    APP_LOGI("InnerProcessRebootSharedBundleInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");

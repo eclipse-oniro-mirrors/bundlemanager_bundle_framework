@@ -130,11 +130,15 @@ ErrCode SharedBundleInstaller::Install(const EventInfo &eventTemplate)
     for (auto installer : innerInstallers_) {
         result = installer.second->Install(installParam_);
         processedBundles.emplace_back(installer.first);
-        CHECK_RESULT(result, "install shared bundle failed %{public}d");
+        if (result != ERR_OK) {
+            APP_LOGE("install shared bundle failed %{public}d", result);
+            SendBundleSystemEvent(eventTemplate, result);
+            return result;
+        }
     }
 
     installGuard.Dismiss();
-    SendBundleSystemEvent(eventTemplate);
+    SendBundleSystemEvent(eventTemplate, result);
     APP_LOGD("install shared bundles success");
     return result;
 }
@@ -164,11 +168,11 @@ bool SharedBundleInstaller::FindDependencyInInstalledBundles(const Dependency &d
     return false;
 }
 
-void SharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTemplate)
+void SharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTemplate, ErrCode errCode)
 {
     EventInfo commonEventInfo = eventTemplate;
     commonEventInfo.isPreInstallApp = installParam_.isPreInstallApp;
-    commonEventInfo.errCode = ERR_OK;
+    commonEventInfo.errCode = errCode;
     commonEventInfo.isFreeInstallMode = (installParam_.installFlag == InstallFlag::FREE_INSTALL);
     GetCallingEventInfo(commonEventInfo);
 

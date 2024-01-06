@@ -69,7 +69,7 @@ public:
 
 private:
     bool FindDependencyInInstalledBundles(const Dependency &dependency) const;
-    void SendBundleSystemEvent(const EventInfo &eventTemplate);
+    void SendBundleSystemEvent(const EventInfo &eventTemplate, ErrCode errCode);
     void GetCallingEventInfo(EventInfo &eventInfo);
 
     InstallParam installParam_;
