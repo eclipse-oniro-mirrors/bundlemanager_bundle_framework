@@ -28,7 +28,7 @@ const std::string EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-const std::string PATH_SEPARATOR = "/";
+extern const std::string PATH_SEPARATOR;
 constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
@@ -58,7 +58,7 @@ constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
 constexpr const char* DIR_EL4 = "el4";
-const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4};
+extern const std::vector<std::string> BUNDLE_EL;
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -93,18 +93,12 @@ constexpr const char* ARM64_V8A = "arm64-v8a";
 constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
 constexpr const char* ARM64 = "arm64";
-const std::string LIBS = "libs/";
-const std::string AN = "an/";
-const std::string AP = "ap/";
+extern const std::string LIBS;
+extern const std::string AN;
+extern const std::string AP;
 constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
 constexpr const char* ARM = "arm";
-const std::map<std::string, std::string> ABI_MAP = {
-    {ARM_EABI, "arm"},
-    {ARM_EABI_V7A, "arm"},
-    {ARM64_V8A, "arm64"},
-    {X86, "x86"},
-    {X86_64, "x86_64"},
-};
+extern const std::map<std::string, std::string> ABI_MAP;
 constexpr const char* DOT = ".";
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
@@ -114,7 +108,7 @@ constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
-const std::string RES_FILE_PATH = "resources/resfile/";
+extern const std::string RES_FILE_PATH;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -311,7 +305,7 @@ constexpr const char* ABC_FILE_SUFFIX = ".abc";
 constexpr const char* ABC_FILE_PATH = "abc_files";
 
 // system param
-const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
+extern const std::string ALLOW_ENTERPRISE_BUNDLE;
 
 // sa id
 constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;

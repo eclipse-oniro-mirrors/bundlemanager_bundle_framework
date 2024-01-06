@@ -20,21 +20,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::string COMMON_EVENT_SANDBOX_PACKAGE_ADDED = "usual.event.SANDBOX_PACKAGE_ADDED";
-
-const std::string COMMON_EVENT_SANDBOX_PACKAGE_REMOVED = "usual.event.SANDBOX_PACKAGE_REMOVED";
-
-const std::string COMMON_EVENT_BUNDLE_SCAN_FINISHED = "usual.event.BUNDLE_SCAN_FINISHED";
-
-const std::string OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
-
-const std::string OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
-
-const std::string OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
-
-const std::string DISPOSED_RULE_ADDED = "usual.event.DISPOSED_RULE_ADDED";
-
-const std::string DISPOSED_RULE_DELETED = "usual.event.DISPOSED_RULE_DELETED";
+constexpr const char* COMMON_EVENT_SANDBOX_PACKAGE_ADDED = "usual.event.SANDBOX_PACKAGE_ADDED";
+constexpr const char* COMMON_EVENT_SANDBOX_PACKAGE_REMOVED = "usual.event.SANDBOX_PACKAGE_REMOVED";
+constexpr const char* COMMON_EVENT_BUNDLE_SCAN_FINISHED = "usual.event.BUNDLE_SCAN_FINISHED";
+constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
+constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
+constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
+constexpr const char* DISPOSED_RULE_ADDED = "usual.event.DISPOSED_RULE_ADDED";
+constexpr const char* DISPOSED_RULE_DELETED = "usual.event.DISPOSED_RULE_DELETED";
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_COMMON_EVENT_H
