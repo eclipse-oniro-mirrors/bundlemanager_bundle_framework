@@ -3246,7 +3246,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
 ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
 {
     APP_LOGD("Called. BundleName: %{public}s.", bundleName.c_str());
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -3311,7 +3311,7 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     std::vector<RecoverableApplicationInfo> &recoverableApplicaitons)
 {
     APP_LOGD("begin to GetRecoverableApplicationInfo");
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -3345,7 +3345,7 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
 ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
 {
     APP_LOGD("begin to GetUninstalledBundleInfo");
-    if (!VerifySystemApi()) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
