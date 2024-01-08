@@ -412,4 +412,13 @@
         src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleAppServiceFwkInstallerTest">
+    <preparer>
+      <option name="push" value="install_daemon/right.hap -> /data/test/resource/bms/app_service_test/" src="res" />
+      <option name="push" value="bundle_app_service/appService_v1_library1.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
+      <option name="push" value="bundle_app_service/appService_v1_library2.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
+      <option name="push" value="bundle_app_service/appService_v2_library1.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
+      <option name="push" value="bundle_app_service/appService_v2_library2.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
+      </preparer>
+  </target>
 </configuration>

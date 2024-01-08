@@ -11,18 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-group("unittest_hap") {
+group("bundle_app_service") {
   testonly = true
   deps = []
 
   deps += [
     # deps file
-    "bundle_app_service:bundle_app_service",
-    "bundle_dependencies:bundle_dependencies",
-    "bundle_kit:bundle_kit",
-    "install_daemon:install_daemon",
-    "parse_bundle:parse_bundle",
-    "permission_bundle:permission_bundle",
-    "test_bundle:test_bundle",
+    "app_service_version1_library1:appService_v1_library1",
+    "app_service_version1_library2:appService_v1_library2",
+    "app_service_version2_library1:appService_v2_library1",
+    "app_service_version2_library2:appService_v2_library2",
   ]
 }
