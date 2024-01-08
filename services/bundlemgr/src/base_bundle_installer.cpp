@@ -128,10 +128,7 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
 } // namespace
 
 BaseBundleInstaller::BaseBundleInstaller()
-    : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
-{
-    APP_LOGI("base bundle installer instance is created");
-}
+    : bundleInstallChecker_(std::make_unique<BundleInstallChecker>()) {}
 
 BaseBundleInstaller::~BaseBundleInstaller()
 {
@@ -139,7 +136,6 @@ BaseBundleInstaller::~BaseBundleInstaller()
     BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     toDeleteTempHapPath_.clear();
     signatureFileTmpMap_.clear();
-    APP_LOGI("base bundle installer instance is destroyed");
 }
 
 ErrCode BaseBundleInstaller::InstallBundle(
@@ -864,11 +860,15 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 
 Security::AccessToken::AccessTokenIDEx BaseBundleInstaller::CreateAccessTokenIdEx(const InnerBundleInfo &info)
 {
+    APP_LOGI("CreateAccessTokenIdEx bundleName: %{public}s, userId: %{public}d",
+        info.GetBundleName().c_str(), userId_);
     return BundlePermissionMgr::CreateAccessTokenIdEx(info, info.GetBundleName(), userId_);
 }
 
 ErrCode BaseBundleInstaller::GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId)
 {
+    APP_LOGI("GrantRequestPermissions bundleName: %{public}s, userId: %{public}d",
+        info.GetBundleName().c_str(), userId_);
     if (!BundlePermissionMgr::GrantRequestPermissions(info, tokenId)) {
         APP_LOGE("GrantRequestPermissions failed, bundleName: %{public}s", info.GetBundleName().c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
@@ -2752,7 +2752,7 @@ ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &old
         return ERR_OK;
     }
     std::string bundleName = oldInfo.GetBundleName();
-    APP_LOGD("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
+    APP_LOGI("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
     const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
     for (auto iter = innerModuleInfos.cbegin(); iter != innerModuleInfos.cend(); ++iter) {
         if (checkRepeat && installedModules_.find(iter->first) != installedModules_.end()) {
@@ -3369,7 +3369,7 @@ int32_t BaseBundleInstaller::GetUserId(const int32_t &userId) const
 
 ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGD("CreateNewUserData %{public}s userId: %{public}d.",
+    APP_LOGI("CreateNewUserData %{public}s userId: %{public}d.",
         innerBundleInfo.GetBundleName().c_str(), userId_);
     if (!innerBundleInfo.HasInnerBundleUserInfo(userId_)) {
         return ERR_APPEXECFWK_USER_NOT_EXIST;
