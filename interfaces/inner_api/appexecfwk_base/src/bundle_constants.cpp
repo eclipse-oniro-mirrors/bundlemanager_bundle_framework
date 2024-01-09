@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#import "bundle_constants.h"
+#include "bundle_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
