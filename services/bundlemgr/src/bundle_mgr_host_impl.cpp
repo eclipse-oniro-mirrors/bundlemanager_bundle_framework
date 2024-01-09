@@ -2370,6 +2370,12 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
 int BundleMgrHostImpl::GetUidByDebugBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify token type failed");
+        return Constants::INVALID_UID;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
