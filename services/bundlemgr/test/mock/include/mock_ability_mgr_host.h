@@ -93,7 +93,7 @@ public:
     {
         return 0;
     }
-    virtual int DisconnectAbility(const sptr<AAFwk::IAbilityConnection> &connect) override
+    virtual int DisconnectAbility(sptr<AAFwk::IAbilityConnection> connect) override
     {
         return 0;
     }
