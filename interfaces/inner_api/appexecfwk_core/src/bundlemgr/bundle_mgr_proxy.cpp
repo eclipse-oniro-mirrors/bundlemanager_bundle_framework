@@ -4161,6 +4161,8 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
+    APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+        remote->GetSptrRefCount(), remote->GetWptrRefCount());
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
