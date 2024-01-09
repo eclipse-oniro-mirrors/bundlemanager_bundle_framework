@@ -53,6 +53,10 @@ private:
     void HandleSceneBoard(int32_t userId) const;
     void HandleNotifyBundleEventsAsync();
     void HandleNotifyBundleEvents();
+    void ClearBundleEvents();
+    bool GetAllPreInstallBundleInfos(
+        const std::vector<std::string> &disallowList,
+        std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
 
     std::mutex bundleUserMgrMutex_;
 
