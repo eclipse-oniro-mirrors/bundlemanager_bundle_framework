@@ -156,6 +156,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
+        installParam.concentrateSendEvent = true;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
@@ -168,6 +169,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         APP_LOGI("OnCreateNewUser wait complete");
     }
     IPCSkeleton::SetCallingIdentity(identity);
+    HandleNotifyBundleEventsAsync();
 }
 
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
@@ -217,8 +219,8 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     }
 
     {
-        std::lock_guard<std::mutex> uninstallEventLock(uninstallEventMgrMutex_);
-        uninstallEvents_.clear();
+        std::lock_guard<std::mutex> uninstallEventLock(bundleEventMutex_);
+        bundleEvents_.clear();
     }
 
     InnerUninstallBundle(userId, bundleInfos);
@@ -297,7 +299,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         InstallParam installParam;
         installParam.userId = userId;
         installParam.forceExecuted = true;
-        installParam.isRemoveUser = true;
+        installParam.concentrateSendEvent = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
@@ -315,8 +317,8 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
 
 void BundleUserMgrHostImpl::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)
 {
-    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
-    uninstallEvents_.emplace_back(notifyBundleEvents);
+    std::lock_guard<std::mutex> lock(bundleEventMutex_);
+    bundleEvents_.emplace_back(notifyBundleEvents);
 }
 
 void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
@@ -331,7 +333,7 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
 void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
 {
     APP_LOGI("HandleNotifyBundleEvents");
-    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+    std::lock_guard<std::mutex> lock(bundleEventMutex_);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -339,14 +341,14 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
     }
 
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    for (size_t i = 0; i < uninstallEvents_.size(); ++i) {
-        commonEventMgr->NotifyBundleStatus(uninstallEvents_[i], dataMgr);
+    for (size_t i = 0; i < bundleEvents_.size(); ++i) {
+        commonEventMgr->NotifyBundleStatus(bundleEvents_[i], dataMgr);
         if ((i != 0) && (i % FACTOR == 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
         }
     }
 
-    uninstallEvents_.clear();
+    bundleEvents_.clear();
 }
 
 void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const

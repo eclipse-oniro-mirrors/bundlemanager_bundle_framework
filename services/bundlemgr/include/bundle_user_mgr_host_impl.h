@@ -56,8 +56,8 @@ private:
 
     std::mutex bundleUserMgrMutex_;
 
-    std::mutex uninstallEventMgrMutex_;
-    std::vector<NotifyBundleEvents> uninstallEvents_;
+    std::mutex bundleEventMutex_;
+    std::vector<NotifyBundleEvents> bundleEvents_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
