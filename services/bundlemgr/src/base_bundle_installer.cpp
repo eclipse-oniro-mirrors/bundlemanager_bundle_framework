@@ -208,7 +208,9 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .uid = uid,
             .accessTokenId = accessTokenId_
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
+        if (installParam.concentrateSendEvent) {
+            AddNotifyBundleEvents(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
     }
@@ -289,7 +291,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .appId = uninstallBundleAppId_
         };
 
-        if (installParam.isRemoveUser) {
+        if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
         } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
