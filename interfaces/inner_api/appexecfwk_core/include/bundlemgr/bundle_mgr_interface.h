@@ -732,6 +732,28 @@ public:
         return false;
     }
     /**
+     * @brief Compile the bundle informations with specific flags.
+     * @param bundleName Indicates the bundle name if needed.
+     * @param compileMode Indicates the mode name.
+     * @param isAllBundle Does it represent all bundlenames.
+     * @return Returns true if the compile result is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode CompileProcessAOT(
+        const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Reset the bundle informations with specific flags.
+     * @param bundleName Indicates the bundle name if needed.
+     * @param isAllBundle Does it represent all bundlenames.
+     * @return Returns true if the reset result is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode CompileReset(const std::string &bundleName, bool isAllBundle)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Checks whether a specified application is enabled.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Indicates the application status is enabled.

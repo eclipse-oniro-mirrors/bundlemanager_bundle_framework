@@ -516,6 +516,22 @@ public:
     virtual bool DumpInfos(
         const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result) override;
     /**
+     * @brief Compile the bundle informations with specific flags through the proxy object.
+     * @param bundleName Indicates the bundle name if needed.
+     * @param compileMode Indicates the mode name.
+     * @param isAllBundle Does it represent all bundlenames.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode CompileProcessAOT(
+        const std::string &bundleName, const std::string &compileMode, bool isAllBundle) override;
+    /**
+     * @brief Reset the bundle informations with specific flags through the proxy object.
+     * @param bundleName Indicates the bundle name if needed.
+     * @param isAllBundle Does it represent all bundlenames.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode CompileReset(const std::string &bundleName, bool isAllBundle) override;
+    /**
      * @brief Checks whether a specified application is enabled through the proxy object.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Indicates the application status is enabled.

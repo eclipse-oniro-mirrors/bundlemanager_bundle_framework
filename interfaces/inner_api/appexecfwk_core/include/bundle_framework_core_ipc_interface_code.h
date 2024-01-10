@@ -155,6 +155,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SET_ADDITIONAL_INFO,
     QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME,
     CLEAN_OBSOLETE_BUNDLE_TEMP_FILES,
+    COMPILE_PROCESSAOT,
+    COMPILE_RESET,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
