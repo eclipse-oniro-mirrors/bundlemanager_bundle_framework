@@ -28,6 +28,8 @@
  *
  * @brief Declares the <b>Bundle</b>-specific function, including function for obtaining application info.
  *
+ * @library libbundle.z.so
+ * @syscap SystemCapability.BundleManager.BundleFramework.Core
  * @since 9
  * @version 1.0
  */
@@ -102,4 +104,5 @@ char* OH_NativeBundle_GetAppIdentifier();
 #ifdef __cplusplus
 };
 #endif
+/** @} */
 #endif // FOUNDATION_APPEXECFWK_STANDARD_KITS_APPKIT_NATIVE_BUNDLE_INCLUDE_NATIVE_INTERFACE_BUNDLE_H
