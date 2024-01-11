@@ -90,6 +90,9 @@ public:
      * @return
      */
     void BmsStartEvent();
+
+    static void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
+
 private:
     /**
      * @brief Before Bms start.
@@ -354,7 +357,7 @@ private:
      * @param bundleDirs Indicates the return bundleDirs.
      * @return
      */
-    void ProcessScanDir(const std::string &dir, std::list<std::string> &bundleDirs);
+    static void ProcessScanDir(const std::string &dir, std::list<std::string> &bundleDirs);
     /**
      * @brief Process parse pre bundle profile.
      * @param dir Indicates the dir.
@@ -381,7 +384,7 @@ private:
      * @param infos Indicates the obtained BundleInfo object.
      * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
-    bool ParseHapFiles(
+    static bool ParseHapFiles(
         const std::string &hapFilePath,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
@@ -465,7 +468,6 @@ private:
      */
     bool IsHotPatchApp(const std::string &bundleName);
 
-    void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
     bool CheckOtaFlag(OTAFlag flag, bool &result);
     bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();

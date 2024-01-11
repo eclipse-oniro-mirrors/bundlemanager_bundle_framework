@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_promise.h"
 #include "bundle_util.h"
@@ -39,6 +40,7 @@ std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
+constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -165,6 +167,8 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGI("OnCreateNewUser wait complete");
     }
+    // process keep alive bundle
+    BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     IPCSkeleton::SetCallingIdentity(identity);
     HandleNotifyBundleEventsAsync();
 }
