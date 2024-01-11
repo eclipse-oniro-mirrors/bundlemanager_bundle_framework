@@ -137,8 +137,8 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     }
 
     dataMgr->AddUserId(userId);
-    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
-    if (!GetAllPreInstallBundleInfos(disallowList, preInstallBundleInfos)) {
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    if (!GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos)) {
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d.", userId);
         return;
     }
@@ -171,7 +171,8 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
 
 bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     const std::vector<std::string> &disallowList,
-    std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
+    int32_t userId,
+    std::set<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -179,22 +180,25 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
         return false;
     }
 
-    preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    bool isStartUser = userId == Constants::START_USERID;
+    std::vector<PreInstallBundleInfo> allPreInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     // Scan preset applications and parse package information.
-    for (auto iter = preInstallBundleInfos.begin(); iter != preInstallBundleInfos.end();) {
+    for (auto &preInfo : allPreInstallBundleInfos) {
         InnerBundleInfo innerBundleInfo;
-        if (dataMgr->FetchInnerBundleInfo(iter->GetBundleName(), innerBundleInfo)
+        if (dataMgr->FetchInnerBundleInfo(preInfo.GetBundleName(), innerBundleInfo)
             && innerBundleInfo.IsSingleton()) {
-            APP_LOGI("BundleName is IsSingleton %{public}s", iter->GetBundleName().c_str());
-            iter = preInstallBundleInfos.erase(iter);
+            APP_LOGI("BundleName is IsSingleton %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
-        if (std::find(disallowList.begin(), disallowList.end(), iter->GetBundleName()) != disallowList.end()) {
-            APP_LOGI("BundleName is same as black list %{public}s", iter->GetBundleName().c_str());
-            iter = preInstallBundleInfos.erase(iter);
+        if (std::find(disallowList.begin(), disallowList.end(),
+            preInfo.GetBundleName()) != disallowList.end()) {
+            APP_LOGI("BundleName is same as black list %{public}s", preInfo.GetBundleName().c_str());
             continue;
         }
-        iter++;
+        if (isStartUser) {
+            preInfo.CalculateHapTotalSize();
+        }
+        preInstallBundleInfos.insert(preInfo);
     }
 
     return !preInstallBundleInfos.empty();
