@@ -68,6 +68,7 @@ public:
 private:
     bool LoadAllBundleStateDataFromJson(
         nlohmann::json &jParse, std::map<std::string, std::map<int32_t, BundleUserInfo>> &infos);
+    bool GetBundleStateJson(nlohmann::json &jParse);
 
     mutable std::mutex bundleStateMutex_;
 };
