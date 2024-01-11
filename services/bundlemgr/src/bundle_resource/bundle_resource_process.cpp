@@ -152,6 +152,11 @@ bool BundleResourceProcess::GetAllResourceInfo(
                 item.second.GetBundleName().c_str(), userId);
             continue;
         }
+        if (!item.second.GetApplicationEnabled(item.second.GetResponseUserId(userId))) {
+            APP_LOGD("bundle %{public}s is disabled in userId: %{public}d",
+                item.second.GetBundleName().c_str(), userId);
+            continue;
+        }
         if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
             APP_LOGW("bundle %{public}s resourceInfo is empty", item.second.GetBundleName().c_str());
         }
@@ -178,6 +183,12 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
 
     if (!IsBundleExist(item->second, userId)) {
         APP_LOGW("bundle %{public}s is not exist in userId: %{public}d",
+            item->second.GetBundleName().c_str(), userId);
+        return false;
+    }
+
+    if (!item->second.GetApplicationEnabled(item->second.GetResponseUserId(userId))) {
+        APP_LOGW("bundle %{public}s is disabled in userId:%{public}d",
             item->second.GetBundleName().c_str(), userId);
         return false;
     }

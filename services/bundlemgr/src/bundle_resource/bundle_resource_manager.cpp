@@ -15,6 +15,7 @@
 
 #include "bundle_resource_manager.h"
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_resource_parser.h"
@@ -173,6 +174,19 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo)) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
+    APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        // invalid userId
+        currentUserId = Constants::START_USERID;
+    }
+    if (!AddResourceInfoByBundleName(bundleName, currentUserId)) {
+        APP_LOGW("bundleName:%{public}s add failed", bundleName.c_str());
+    }
     return bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo);
 }
 
