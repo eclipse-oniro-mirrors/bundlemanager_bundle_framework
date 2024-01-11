@@ -3831,7 +3831,7 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
