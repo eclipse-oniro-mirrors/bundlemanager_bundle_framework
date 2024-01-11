@@ -99,23 +99,11 @@ bool BundleStateStorage::LoadAllBundleStateData(
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
     std::fstream i(BUNDLE_USER_INFO_PATH);
     nlohmann::json jParse;
-    if (!i.is_open()) {
-        APP_LOGE("failed to open bundle database file");
+    if (!GetBundleStateJson(jParse) || jParse.is_discarded()) {
+        APP_LOGE("GetBundleStateJson failed or jParse is discarded");
         return false;
     }
 
-    APP_LOGD("Open bundle state db file success");
-    i.seekg(0, std::ios::end);
-    int len = static_cast<int>(i.tellg());
-    if (len <= 0) {
-        APP_LOGD("Tellg failed.");
-        i.close();
-        return false;
-    }
-
-    i.seekg(0, std::ios::beg);
-    jParse = nlohmann::json::parse(i, nullptr, false);
-    i.close();
     return LoadAllBundleStateDataFromJson(jParse, infos);
 }
 
@@ -173,28 +161,25 @@ bool BundleStateStorage::SaveBundleStateStorage(
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::fstream f(BUNDLE_USER_INFO_PATH);
-    if (!f.is_open()) {
-        APP_LOGE("failed to open bundle database file");
+    nlohmann::json rootJson;
+    nlohmann::json jParse;
+    if (GetBundleStateJson(jParse) && !jParse.is_discarded()) {
+        rootJson = jParse;
+    } else {
+        APP_LOGW("GetBundleStateJson failed or jParse is discarded, overwrite old data");
+    }
+
+    rootJson[appName] = bundleUserInfo;
+    bool isEmpty = (rootJson.size() == 0) ? true : false;
+    std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
+    if (!o.is_open()) {
+        APP_LOGE("failed to open bundle state file");
         return false;
     }
-
-    f.seekg(0, std::ios::end);
-    int len = static_cast<int>(f.tellg());
-    if (len == 0) {
-        nlohmann::json appRoot;
-        appRoot[appName] = bundleUserInfo;
-        f << std::setw(Constants::DUMP_INDENT) << appRoot << std::endl;
-    } else {
-        f.seekg(0, std::ios::beg);
-        nlohmann::json jsonFile;
-        f >> jsonFile;
-        jsonFile[appName] = bundleUserInfo;
-        f.seekp(0, std::ios::beg);
-        f << std::setw(Constants::DUMP_INDENT) << jsonFile << std::endl;
+    if (!isEmpty) {
+        o << std::setw(Constants::DUMP_INDENT) << rootJson;
     }
-
-    f.close();
+    o.close();
     return true;
 }
 
@@ -209,31 +194,18 @@ bool BundleStateStorage::GetBundleStateStorage(
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::fstream f(BUNDLE_USER_INFO_PATH);
-    if (!f.is_open()) {
-        APP_LOGE("failed to open bundle database file");
+    nlohmann::json jParse;
+    if (!GetBundleStateJson(jParse) || jParse.is_discarded()) {
+        APP_LOGE("GetBundleStateJson failed or jParse is discarded");
         return false;
     }
 
-    f.seekg(0, std::ios::end);
-    int len = static_cast<int>(f.tellg());
-    if (len == 0) {
-        f.close();
-        APP_LOGE("failed to open bundle database file due to tellg invalid");
+    if (jParse.find(appName) == jParse.end()) {
+        APP_LOGE("not find appName = %{public}s", appName.c_str());
         return false;
     }
 
-    f.seekg(0, std::ios::beg);
-    nlohmann::json jsonFile;
-    f >> jsonFile;
-    if (jsonFile.is_discarded()) {
-        f.close();
-        APP_LOGE("Get failed due to data is discarded");
-        return false;
-    }
-
-    bundleUserInfo = jsonFile.get<BundleUserInfo>();
-    f.close();
+    bundleUserInfo = jParse.at(appName).get<BundleUserInfo>();
     return true;
 }
 
@@ -245,48 +217,55 @@ bool BundleStateStorage::DeleteBundleState(
         APP_LOGE("Delete bundle state data failed due to param invalid.");
         return false;
     }
-
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
-    bool isEmpty = false;
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::ifstream i(BUNDLE_USER_INFO_PATH);
     nlohmann::json jParse;
-    if (!i.is_open()) {
-        APP_LOGE("failed to open bundle database file");
+    if (!GetBundleStateJson(jParse) || jParse.is_discarded()) {
+        APP_LOGE("GetBundleStateJson failed or jParse is discarded");
         return false;
     }
 
+    if (jParse.find(appName) == jParse.end()) {
+        APP_LOGD("not find appName = %{public}s", appName.c_str());
+        return true;
+    }
+    jParse.erase(appName);
+    bool isEmpty = (jParse.size() == 0) ? true : false;
+    std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
+    if (!o.is_open()) {
+        APP_LOGE("failed to open bundle state file");
+        return false;
+    }
+    if (!isEmpty) {
+        o << std::setw(Constants::DUMP_INDENT) << jParse;
+    }
+    o.close();
+    return true;
+}
+
+bool BundleStateStorage::GetBundleStateJson(nlohmann::json &jParse)
+{
+    std::ifstream i(BUNDLE_USER_INFO_PATH);
+    if (!i.is_open()) {
+        APP_LOGE("failed to open bundle state file");
+        return false;
+    }
     i.seekg(0, std::ios::end);
     int len = static_cast<int>(i.tellg());
     if (len == 0) {
         i.close();
-        APP_LOGE("file is empty appName = %{private}s", appName.c_str());
+        APP_LOGE("bundle state file is empty");
         return true;
     }
-
     i.seekg(0, std::ios::beg);
-    i >> jParse;
-    if (jParse.find(appName) == jParse.end()) {
+    jParse = nlohmann::json::parse(i, nullptr, false);
+    if (jParse.is_discarded()) {
         i.close();
-        APP_LOGD("not find appName = %{public}s", appName.c_str());
-        return true;
-    }
-
-    jParse.erase(appName);
-    isEmpty = (jParse.size() == 0) ? true : false;
-    i.close();
-    std::ofstream o(BUNDLE_USER_INFO_PATH);
-    if (!o.is_open()) {
-        APP_LOGE("failed to open bundle database file");
+        APP_LOGE("Get failed due to data is discarded");
         return false;
     }
-
-    if (!isEmpty) {
-        o << std::setw(Constants::DUMP_INDENT) << jParse;
-    }
-
-    o.close();
+    i.close();
     return true;
 }
 }  // namespace AppExecFwk
