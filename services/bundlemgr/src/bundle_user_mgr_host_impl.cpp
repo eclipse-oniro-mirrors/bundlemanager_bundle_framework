@@ -168,7 +168,9 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         APP_LOGI("OnCreateNewUser wait complete");
     }
     // process keep alive bundle
-    BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
+    if (userId == Constants::START_USERID) {
+        BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
+    }
     IPCSkeleton::SetCallingIdentity(identity);
     HandleNotifyBundleEventsAsync();
 }
