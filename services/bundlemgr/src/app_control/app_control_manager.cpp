@@ -360,6 +360,12 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const std::string &appI
         APP_LOGE("DeleteAllDisposedRuleByBundle to rdb failed");
         return ret;
     }
+    std::string key = appId + std::string("_") + std::to_string(userId);
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    auto iter = appRunningControlRuleResult_.find(key);
+    if (iter != appRunningControlRuleResult_.end()) {
+        appRunningControlRuleResult_.erase(iter);
+    }
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
     return ERR_OK;
 }
