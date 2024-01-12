@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_promise.h"
 #include "bundle_util.h"
@@ -39,6 +40,7 @@ std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
+constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -114,6 +116,7 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
     }
+    ClearBundleEvents();
 }
 
 void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
@@ -136,16 +139,12 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     }
 
     dataMgr->AddUserId(userId);
-    // Scan preset applications and parse package information.
-    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
-    for (auto iter = preInstallBundleInfos.begin(); iter != preInstallBundleInfos.end();) {
-        if (std::find(disallowList.begin(), disallowList.end(), iter->GetBundleName()) != disallowList.end()) {
-            APP_LOGD("BundleName is same as black list %{public}s", iter->GetBundleName().c_str());
-            iter = preInstallBundleInfos.erase(iter);
-            continue;
-        }
-        iter++;
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    if (!GetAllPreInstallBundleInfos(disallowList, preInstallBundleInfos)) {
+        APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d.", userId);
+        return;
     }
+
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
@@ -156,6 +155,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
+        installParam.concentrateSendEvent = true;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
@@ -167,7 +167,43 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGI("OnCreateNewUser wait complete");
     }
+    // process keep alive bundle
+    if (userId == Constants::START_USERID) {
+        BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
+    }
     IPCSkeleton::SetCallingIdentity(identity);
+    HandleNotifyBundleEventsAsync();
+}
+
+bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
+    const std::vector<std::string> &disallowList,
+    std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    // Scan preset applications and parse package information.
+    for (auto iter = preInstallBundleInfos.begin(); iter != preInstallBundleInfos.end();) {
+        InnerBundleInfo innerBundleInfo;
+        if (dataMgr->FetchInnerBundleInfo(iter->GetBundleName(), innerBundleInfo)
+            && innerBundleInfo.IsSingleton()) {
+            APP_LOGI("BundleName is IsSingleton %{public}s", iter->GetBundleName().c_str());
+            iter = preInstallBundleInfos.erase(iter);
+            continue;
+        }
+        if (std::find(disallowList.begin(), disallowList.end(), iter->GetBundleName()) != disallowList.end()) {
+            APP_LOGI("BundleName is same as black list %{public}s", iter->GetBundleName().c_str());
+            iter = preInstallBundleInfos.erase(iter);
+            continue;
+        }
+        iter++;
+    }
+
+    return !preInstallBundleInfos.empty();
 }
 
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
@@ -216,13 +252,8 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         return ERR_OK;
     }
 
-    {
-        std::lock_guard<std::mutex> uninstallEventLock(uninstallEventMgrMutex_);
-        uninstallEvents_.clear();
-    }
-
+    ClearBundleEvents();
     InnerUninstallBundle(userId, bundleInfos);
-
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
     dataMgr->RemoveUserId(userId);
@@ -297,7 +328,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         InstallParam installParam;
         installParam.userId = userId;
         installParam.forceExecuted = true;
-        installParam.isRemoveUser = true;
+        installParam.concentrateSendEvent = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
@@ -313,10 +344,16 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
 }
 
+void BundleUserMgrHostImpl::ClearBundleEvents()
+{
+    std::lock_guard<std::mutex> uninstallEventLock(bundleEventMutex_);
+    bundleEvents_.clear();
+}
+
 void BundleUserMgrHostImpl::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)
 {
-    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
-    uninstallEvents_.emplace_back(notifyBundleEvents);
+    std::lock_guard<std::mutex> lock(bundleEventMutex_);
+    bundleEvents_.emplace_back(notifyBundleEvents);
 }
 
 void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
@@ -331,7 +368,7 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
 void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
 {
     APP_LOGI("HandleNotifyBundleEvents");
-    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+    std::lock_guard<std::mutex> lock(bundleEventMutex_);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -339,14 +376,14 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
     }
 
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    for (size_t i = 0; i < uninstallEvents_.size(); ++i) {
-        commonEventMgr->NotifyBundleStatus(uninstallEvents_[i], dataMgr);
+    for (size_t i = 0; i < bundleEvents_.size(); ++i) {
+        commonEventMgr->NotifyBundleStatus(bundleEvents_[i], dataMgr);
         if ((i != 0) && (i % FACTOR == 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
         }
     }
 
-    uninstallEvents_.clear();
+    bundleEvents_.clear();
 }
 
 void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const

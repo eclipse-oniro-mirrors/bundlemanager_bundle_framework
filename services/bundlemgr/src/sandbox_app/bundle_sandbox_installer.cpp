@@ -116,7 +116,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 
     // 5. create data dir and generate uid and gid
     info.CleanInnerBundleUserInfos();
-    userInfo.bundleName = bundleName_ + Constants::FILE_UNDERLINE + std::to_string(newAppIndex);
+    userInfo.bundleName = std::to_string(newAppIndex) + Constants::FILE_UNDERLINE + bundleName_;
     userInfo.gids.clear();
     dataMgr_->GenerateUidAndGid(userInfo);
     userInfo.bundleName = bundleName_;
@@ -135,8 +135,8 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     sandboxDataMgr_->SaveSandboxAppInfo(info, newAppIndex);
 
     // 7. SaveSandboxPersistentInfo
-    bool saveBundleInfoRes = sandboxDataMgr_->SaveSandboxPersistentInfo(bundleName_ + Constants::FILE_UNDERLINE +
-        std::to_string(newAppIndex), info);
+    bool saveBundleInfoRes = sandboxDataMgr_->SaveSandboxPersistentInfo(std::to_string(newAppIndex) +
+        Constants::FILE_UNDERLINE + bundleName_, info);
     if (!saveBundleInfoRes) {
         APP_LOGE("InstallSandboxApp SaveSandboxPersistentInfo failed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_DATABASE_OPERATION_FAILED;
@@ -218,7 +218,7 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     }
 
     // 6. remove data dir and uid, gid
-    std::string innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    std::string innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     result = InstalldClient::GetInstance()->RemoveBundleDataDir(innerBundleName, userId_);
     if (result != ERR_OK) {
         APP_LOGE("fail to remove data dir: %{public}s, error is %{public}d", innerBundleName.c_str(), result);
@@ -255,7 +255,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     InnerBundleInfo &info, const int32_t &uid, const int32_t &appIndex) const
 {
     APP_LOGD("CreateSandboxDataDir %{public}s _ %{public}d begin", info.GetBundleName().c_str(), appIndex);
-    std::string innerDataDir = info.GetBundleName() + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    std::string innerDataDir = std::to_string(appIndex) + Constants::FILE_UNDERLINE + info.GetBundleName();
     CreateDirParam createDirParam;
     createDirParam.bundleName = innerDataDir;
     createDirParam.userId = userId_;
@@ -289,7 +289,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
         return;
     }
     sandboxDataMgr_->DeleteSandboxAppIndex(bundleName, appIndex);
-    auto key = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto key = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGW("SandboxAppRollBack cannot obtain the userInfo");
@@ -325,8 +325,8 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
     for_each(sandboxAppInfoMap.begin(), sandboxAppInfoMap.end(), [&bundleName, &userId, this](
         std::unordered_map<std::string, InnerBundleInfo>::reference info)->void {
         auto pos = info.first.find(bundleName);
-        if (pos != std::string::npos) {
-            std::string appIndexStr = info.first.substr(bundleName.length() + 1);
+        if (pos != std::string::npos && pos > 1) {
+            std::string appIndexStr = info.first.substr(0, pos - 1);
             int32_t appIndex = Constants::INITIAL_APP_INDEX;
             if (!StrToInt(appIndexStr, appIndex)) {
                 APP_LOGE("UninstallAllSandboxApps obtain appIndex failed");

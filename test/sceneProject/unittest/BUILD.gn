@@ -17,6 +17,7 @@ group("unittest_hap") {
 
   deps += [
     # deps file
+    "bundle_app_service:bundle_app_service",
     "bundle_dependencies:bundle_dependencies",
     "bundle_kit:bundle_kit",
     "install_daemon:install_daemon",

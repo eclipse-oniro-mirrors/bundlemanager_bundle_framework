@@ -818,6 +818,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
         APP_LOGI("Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
         InnerProcessBootSystemHspInstall();
         InnerProcessBootPreBundleProFileInstall(userId);
+        ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
         return;
     }
 #else

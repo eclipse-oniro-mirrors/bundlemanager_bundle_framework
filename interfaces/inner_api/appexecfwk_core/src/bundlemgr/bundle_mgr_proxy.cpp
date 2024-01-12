@@ -3812,7 +3812,7 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
@@ -4142,6 +4142,8 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
+    APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+        remote->GetSptrRefCount(), remote->GetWptrRefCount());
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
@@ -4240,6 +4242,63 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
     }
     result = data;
     APP_LOGD("InnerGetBigString success");
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::CompileProcessAOT(
+    const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to compile");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to compile due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to compile due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(compileMode)) {
+        APP_LOGE("fail to compile due to write compileMode fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isAllBundle)) {
+        APP_LOGE("fail to compile due to write isAllBundle fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::COMPILE_PROCESSAOT, data, reply)) {
+        APP_LOGE("fail to compile from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBundle)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to reset");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to reset due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to reset due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isAllBundle)) {
+        APP_LOGE("fail to reset due to write isAllBundle fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::COMPILE_RESET, data, reply)) {
+        APP_LOGE("fail to reset from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -330,6 +330,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetUninstalledBundleInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO),
         &BundleMgrHost::HandleSetAdditionalInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_PROCESSAOT),
+        &BundleMgrHost::HandleCompileProcessAOT);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_RESET),
+        &BundleMgrHost::HandleCompileReset);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1385,6 +1389,37 @@ ErrCode BundleMgrHost::HandleUnregisterBundleStatusCallback(MessageParcel &data,
     bool ret = UnregisterBundleStatusCallback();
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string compileMode = data.ReadString();
+    bool isAllBundle = data.ReadBool();
+
+    APP_LOGI("compile info name %{public}s", bundleName.c_str());
+    ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle);
+    APP_LOGI("ret is %{public}d", ret);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    bool isAllBundle = data.ReadBool();
+
+    APP_LOGI("reset info name %{public}s", bundleName.c_str());
+    ErrCode ret = CompileReset(bundleName, isAllBundle);
+    APP_LOGI("ret is %{public}d", ret);
+    if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

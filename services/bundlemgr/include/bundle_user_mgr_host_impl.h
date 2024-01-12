@@ -53,11 +53,15 @@ private:
     void HandleSceneBoard(int32_t userId) const;
     void HandleNotifyBundleEventsAsync();
     void HandleNotifyBundleEvents();
+    void ClearBundleEvents();
+    bool GetAllPreInstallBundleInfos(
+        const std::vector<std::string> &disallowList,
+        std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
 
     std::mutex bundleUserMgrMutex_;
 
-    std::mutex uninstallEventMgrMutex_;
-    std::vector<NotifyBundleEvents> uninstallEvents_;
+    std::mutex bundleEventMutex_;
+    std::vector<NotifyBundleEvents> bundleEvents_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

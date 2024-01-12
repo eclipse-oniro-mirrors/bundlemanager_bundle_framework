@@ -1,0 +1,17 @@
+{
+    "app": {
+        "apiReleaseType": "Release",
+        "bundleName": "com.example.appservice",
+        "debug": true,
+        "icon": "$media:app_icon",
+        "iconId": 16777217,
+        "label": "$string:app_name",
+        "labelId": 16777216,
+        "minAPIVersion": 11,
+        "targetAPIVersion": 11,
+        "vendor": "example",
+        "versionCode": 1000002,
+        "versionName": "1.0.02",
+        "bundleType": "appService"
+    }
+}

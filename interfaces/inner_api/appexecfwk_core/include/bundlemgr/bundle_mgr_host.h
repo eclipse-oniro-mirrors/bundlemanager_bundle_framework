@@ -408,6 +408,20 @@ private:
      */
     ErrCode HandleDumpInfos(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the CompileProcessAOT function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleCompileProcessAOT(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the CompileReset function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleCompileReset(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleInstaller function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

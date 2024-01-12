@@ -33,6 +33,8 @@ public:
     void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void HandleOTA() const;
     void HandleIdle() const;
+    void HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const;
+    void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
 private:
     AOTHandler() = default;
     ~AOTHandler() = default;
@@ -43,6 +45,8 @@ private:
     std::optional<AOTArgs> BuildAOTArgs(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
+    void HandleCompileWithSingleHap(
+    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
@@ -52,6 +56,7 @@ private:
 private:
     mutable std::mutex executeMutex_;
     mutable std::mutex idleMutex_;
+    mutable std::mutex compileMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

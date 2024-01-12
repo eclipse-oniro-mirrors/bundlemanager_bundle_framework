@@ -1,0 +1,15 @@
+{
+  "module": {
+    "name": "library_two",
+    "type": "shared",
+    "description": "$string:module_desc",
+    "deviceTypes": [
+      "2in1",
+      "default",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages"
+  }
+}
