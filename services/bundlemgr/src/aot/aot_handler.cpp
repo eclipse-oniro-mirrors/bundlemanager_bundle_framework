@@ -198,6 +198,27 @@ void AOTHandler::ClearArkCacheDir() const
     });
 }
 
+void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle) const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    std::vector<std::string> bundleNames;
+    if (isAllBundle) {
+        bundleNames = dataMgr->GetAllBundleName();
+    } else {
+        bundleNames = {bundleName};
+    }
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
+        std::string removeDir = Constants::ARK_CACHE_PATH + bundleToReset;
+        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
+        APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
+        dataMgr->ResetAOTFlagsCommand(bundleToReset);
+    });
+}
+
 void AOTHandler::ResetAOTFlags() const
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -224,6 +245,14 @@ void AOTHandler::HandleIdleWithSingleHap(
         APP_LOGD("AOT history success, no need to AOT");
         return;
     }
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
+    AOTInternal(aotArgs, info.GetVersionCode());
+}
+
+void AOTHandler::HandleCompileWithSingleHap(
+    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
+{
+    APP_LOGD("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
     AOTInternal(aotArgs, info.GetVersionCode());
 }
@@ -290,6 +319,54 @@ void AOTHandler::HandleIdle() const
         });
     });
     APP_LOGI("HandleIdle end");
+}
+
+void AOTHandler::HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const
+{
+    APP_LOGI("HandleCompile begin");
+    std::unique_lock<std::mutex> lock(compileMutex_, std::defer_lock);
+    if (!lock.try_lock()) {
+        APP_LOGI("compile task is running, skip %{public}s", bundleName.c_str());
+        return;
+    }
+    if (!IsSupportARM64()) {
+        APP_LOGI("current device doesn't support arm64, no need to AOT");
+        return;
+    }
+    if (compileMode == Constants::COMPILE_NONE) {
+        APP_LOGI("%{public}s = none, no need to AOT", COMPILE_IDLE_PARA_KEY);
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    std::vector<std::string> bundleNames;
+    if (isAllBundle) {
+        bundleNames = dataMgr->GetAllBundleName();
+    } else {
+        bundleNames = {bundleName};
+    }
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [this, dataMgr, &compileMode](const auto &bundleToCompile) {
+        APP_LOGD("HandleCompile bundleToCompile : %{public}s", bundleToCompile.c_str());
+        InnerBundleInfo info;
+        if (!dataMgr->QueryInnerBundleInfo(bundleToCompile, info)) {
+            APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile: %{public}s", bundleToCompile.c_str());
+            return;
+        }
+        if (!info.GetIsNewVersion()) {
+            APP_LOGD("not stage model, no need to AOT");
+            return;
+        }
+        std::vector<std::string> moduleNames;
+        info.GetModuleNames(moduleNames);
+        std::for_each(moduleNames.cbegin(), moduleNames.cend(),
+            [this, &info, &compileMode](const auto &moduleName) {
+            HandleCompileWithSingleHap(info, moduleName, compileMode);
+        });
+    });
+    APP_LOGI("HandleCompile end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

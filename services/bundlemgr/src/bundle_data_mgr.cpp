@@ -5305,6 +5305,23 @@ void BundleDataMgr::ResetAOTFlags()
     APP_LOGI("ResetAOTFlags end");
 }
 
+void BundleDataMgr::ResetAOTFlagsCommand(const std::string &bundleName)
+{
+    APP_LOGI("ResetAOTFlagsCommand begin");
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return;
+    }
+    item->second.ResetAOTFlags();
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item->second.GetBundleName().c_str());
+        return;
+    }
+    APP_LOGI("ResetAOTFlagsCommand end");
+}
+
 ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {

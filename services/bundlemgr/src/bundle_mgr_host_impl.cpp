@@ -24,6 +24,7 @@
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_privilege_capability.h"
+#include "aot/aot_handler.h"
 #include "bms_extension_client.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
@@ -1463,6 +1464,27 @@ bool BundleMgrHostImpl::UnregisterBundleStatusCallback()
         return false;
     }
     return dataMgr->UnregisterBundleStatusCallback();
+}
+
+ErrCode BundleMgrHostImpl::CompileProcessAOT(
+    const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAllBundle)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    AOTHandler::GetInstance().HandleResetAOT(bundleName, isAllBundle);
+    return ERR_OK;
 }
 
 bool BundleMgrHostImpl::DumpInfos(

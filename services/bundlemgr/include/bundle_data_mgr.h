@@ -834,6 +834,7 @@ public:
     void SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         AOTCompileStatus aotCompileStatus, uint32_t versionCode);
     void ResetAOTFlags();
+    void ResetAOTFlagsCommand(const std::string &bundleName);
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
