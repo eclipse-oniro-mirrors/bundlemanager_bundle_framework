@@ -63,6 +63,15 @@ ErrCode BundleMgrClient::GetBundlePackInfo(
     return impl_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
+ErrCode BundleMgrClient::CreateBundleDataDir(int32_t userId)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->CreateBundleDataDir(userId);
+}
+
 bool BundleMgrClient::GetHapModuleInfo(const std::string &bundleName, const std::string &hapName,
     HapModuleInfo &hapModuleInfo)
 {

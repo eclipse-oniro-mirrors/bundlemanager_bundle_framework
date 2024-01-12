@@ -119,6 +119,27 @@ ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
     return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR, data, reply, option);
 }
 
+ErrCode InstalldProxy::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (createDirParams.empty()) {
+        APP_LOGE("createDirParams size is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    INSTALLD_PARCEL_WRITE(data, Uint32, createDirParams.size());
+    for (const auto &createDirParam : createDirParams) {
+        if (!data.WriteParcelable(&createDirParam)) {
+            APP_LOGE("WriteParcelable createDirParam failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR, data, reply, option);
+}
+
 ErrCode InstalldProxy::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     MessageParcel data;

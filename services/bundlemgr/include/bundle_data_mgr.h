@@ -865,6 +865,7 @@ public:
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
+    ErrCode CreateBundleDataDir(int32_t userId) const;
 
 private:
     /**

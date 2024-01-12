@@ -62,6 +62,7 @@ public:
         std::vector<ExtensionAbilityInfo> &extensionInfos);
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
+    ErrCode CreateBundleDataDir(int32_t userId);
 
 private:
     ErrCode Connect();

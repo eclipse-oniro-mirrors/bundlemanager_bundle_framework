@@ -121,7 +121,7 @@ bool InstalldOperator::IsExistApFile(const std::string &path)
 
     std::error_code errorCode;
     std::filesystem::directory_iterator iter(realPath, errorCode);
-    
+
     if (errorCode) {
         APP_LOGE("Error occurred while opening apDir: %{public}s", errorCode.message().c_str());
         return false;

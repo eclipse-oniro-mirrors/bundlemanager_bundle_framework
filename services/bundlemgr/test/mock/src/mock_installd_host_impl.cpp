@@ -50,6 +50,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     return ERR_OK;

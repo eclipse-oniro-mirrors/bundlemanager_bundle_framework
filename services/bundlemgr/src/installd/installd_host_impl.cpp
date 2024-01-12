@@ -238,6 +238,23 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
         });
     }
 }
+ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode res = ERR_OK;
+    for (const auto &item : createDirParams) {
+        auto result = CreateBundleDataDir(item);
+        if (result != ERR_OK) {
+            APP_LOGE("CreateBundleDataDir failed in %{public}s, errCode is %{public}d",
+                item.bundleName.c_str(), result);
+            res = result;
+        }
+    }
+    return res;
+}
 
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
@@ -324,7 +341,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (ret != ERR_OK) {
         APP_LOGE("CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
- 
+
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL1);
     ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,

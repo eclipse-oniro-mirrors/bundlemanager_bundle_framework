@@ -157,6 +157,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CLEAN_OBSOLETE_BUNDLE_TEMP_FILES,
     COMPILE_PROCESSAOT,
     COMPILE_RESET,
+    CREATE_BUNDLE_DATA_DIR,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

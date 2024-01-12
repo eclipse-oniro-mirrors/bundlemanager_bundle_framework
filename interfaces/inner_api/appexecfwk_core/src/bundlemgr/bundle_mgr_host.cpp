@@ -150,6 +150,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCleanBundleCacheFiles);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_OBSOLETE_BUNDLE_TEMP_FILES),
         &BundleMgrHost::HandleCleanObsoleteBundleTempFiles);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR),
+        &BundleMgrHost::HandleCreateBundleDataDir);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES),
         &BundleMgrHost::HandleCleanBundleDataFiles);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_STATUS_CALLBACK),
@@ -3020,6 +3022,19 @@ ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParce
     std::string bundleName = data.ReadString();
     std::string additionalInfo = data.ReadString();
     ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("CreateBundleDataDir called");
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = CreateBundleDataDir(userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
