@@ -6137,6 +6137,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.apl = info.GetAppPrivilegeLevel();
         createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
         createDirParam.debug = info.GetBaseApplicationInfo().debug;
+        createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         createDirParams.emplace_back(createDirParam);
     }
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
