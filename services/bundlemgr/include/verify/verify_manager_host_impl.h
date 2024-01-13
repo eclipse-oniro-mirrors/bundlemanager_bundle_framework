@@ -29,6 +29,7 @@ public:
         const std::vector<std::string> &abcNames, bool flag) override;
 
     ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
+    ErrCode DeleteAbc(const std::string &path) override;
 
 private:
     ErrCode InnerVerify(const std::vector<std::string> &abcPaths,

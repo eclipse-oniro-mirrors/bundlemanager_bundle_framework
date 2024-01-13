@@ -119,6 +119,7 @@ struct VerifyCallbackInfo : public BaseCallbackInfo {
     explicit VerifyCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::vector<std::string> abcPaths;
     bool flag = false;
+    std::string deletePath;
 };
 
 enum AbilityProfileType : uint32_t {
@@ -259,6 +260,7 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
 napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
 napi_value VerifyAbc(napi_env env, napi_callback_info info);
+napi_value DeleteAbc(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);

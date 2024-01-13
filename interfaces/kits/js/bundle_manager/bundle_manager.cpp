@@ -51,6 +51,7 @@ constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
+constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
@@ -1727,6 +1728,84 @@ napi_value VerifyAbc(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "VerifyAbc", VerifyExec, VerifyComplete);
     callbackPtr.release();
     APP_LOGD("napi call VerifyAbc done");
+    return promise;
+}
+
+ErrCode InnerDeleteAbc(const std::string &path)
+{
+    auto verifyManager = CommonFunc::GetVerifyManager();
+    if (verifyManager == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = verifyManager->DeleteAbc(path);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteAbc failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void DeleteAbcExec(napi_env env, void *data)
+{
+    VerifyCallbackInfo* asyncCallbackInfo = reinterpret_cast<VerifyCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error VerifyCallbackInfo is nullptr");
+        return;
+    }
+
+    asyncCallbackInfo->err = InnerDeleteAbc(asyncCallbackInfo->deletePath);
+}
+
+void DeleteAbcComplete(napi_env env, napi_status status, void *data)
+{
+    VerifyCallbackInfo *asyncCallbackInfo = reinterpret_cast<VerifyCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<VerifyCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, DELETE_ABC, Constants::PERMISSION_RUN_DYN_CODE);
+    }
+
+    CommonFunc::NapiReturnDeferred<VerifyCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value DeleteAbc(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi call DeleteAbc called");
+    NapiArg args(env, info);
+    VerifyCallbackInfo *asyncCallbackInfo = new (std::nothrow) VerifyCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null.");
+        return nullptr;
+    }
+
+    std::unique_ptr<VerifyCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("VerifyCallbackInfo napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->deletePath)) {
+        APP_LOGE("CleanBundleCacheFiles deletePath is not a string!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DELETE_ABC, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<VerifyCallbackInfo>(
+        env, asyncCallbackInfo, "DeleteAbc", DeleteAbcExec, DeleteAbcComplete);
+    callbackPtr.release();
+    APP_LOGD("napi call DeleteAbc done");
     return promise;
 }
 
