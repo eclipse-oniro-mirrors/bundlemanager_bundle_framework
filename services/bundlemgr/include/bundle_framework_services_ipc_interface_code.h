@@ -64,6 +64,7 @@ enum class InstalldInterfaceCode : uint32_t {
     // ipc code for get obsolete bundle temp path
     GET_OBSOLETE_BUNDLE_TEMP_PATH,
     CLEAN_BUNDLE_DATA_DIR_BY_NAME,
+    CREATE_BUNDLE_DATA_DIR_WITH_VECTOR
 };
 
 } // namespace AppExecFwk

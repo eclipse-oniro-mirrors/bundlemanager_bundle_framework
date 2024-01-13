@@ -6115,5 +6115,33 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
         appServiceHspBundleName_.insert(bundleName);
     }
 }
+
+ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
+{
+    APP_LOGI("CreateBundleDataDir with userId %{public}d begin", userId);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<CreateDirParam> createDirParams;
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &info = item.second;
+        int32_t responseUserId = info.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGW("bundle %{public}s is not installed in user %{public}d or 0",
+                info.GetBundleName().c_str(), userId);
+            continue;
+        }
+        CreateDirParam createDirParam;
+        createDirParam.bundleName = info.GetBundleName();
+        createDirParam.userId = responseUserId;
+        createDirParam.uid = info.GetUid(responseUserId);
+        createDirParam.gid = info.GetGid(responseUserId);
+        createDirParam.apl = info.GetAppPrivilegeLevel();
+        createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+        createDirParam.debug = info.GetBaseApplicationInfo().debug;
+        createDirParams.emplace_back(createDirParam);
+    }
+    auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
+    APP_LOGI("CreateBundleDataDir result: %{public}d", res);
+    return res;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

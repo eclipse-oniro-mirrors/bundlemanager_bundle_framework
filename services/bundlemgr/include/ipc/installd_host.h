@@ -72,6 +72,8 @@ private:
      * @return Returns true if called successfully; returns false otherwise.
      */
     bool HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RemoveBundleDataDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.

@@ -875,6 +875,16 @@ bool BundlePermissionMgr::InnerUpdateDefinePermission(
     return true;
 }
 
+bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid == uid) {
+        return true;
+    }
+    APP_LOGE("IsCallingUidValid failed, uid = %{public}d, calling uid = %{public}d", uid, callingUid);
+    return false;
+}
+
 bool BundlePermissionMgr::InnerUpdateRequestPermission(
     const Security::AccessToken::AccessTokenID tokenId,
     const InnerBundleInfo &oldInfo,

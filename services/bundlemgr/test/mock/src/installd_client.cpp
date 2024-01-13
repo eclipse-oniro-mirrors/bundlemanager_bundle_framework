@@ -78,6 +78,11 @@ ErrCode InstalldClient::CreateBundleDataDir(const CreateDirParam &createDirParam
     return CallService(&IInstalld::CreateBundleDataDir, createDirParam);
 }
 
+ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::RemoveBundleDataDir(
     const std::string &bundleName, const int userid)
 {

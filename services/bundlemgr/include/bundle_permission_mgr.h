@@ -121,6 +121,8 @@ public:
     // for old api
     static bool VerifyCallingBundleSdkVersion(int32_t beginApiVersion = Constants::INVALID_API_VERSION);
 
+    static bool IsCallingUidValid(int32_t uid);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

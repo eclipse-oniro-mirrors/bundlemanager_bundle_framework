@@ -860,10 +860,12 @@ public:
 
     virtual ErrCode GetRecoverableApplicationInfo(
         std::vector<RecoverableApplicationInfo> &recoverableApplicaitons) override;
-    
+
     virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
 
     virtual ErrCode SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo) override;
+
+    virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

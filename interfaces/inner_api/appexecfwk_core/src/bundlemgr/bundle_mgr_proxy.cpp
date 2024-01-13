@@ -3936,6 +3936,28 @@ ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const s
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("CreateBundleDataDir Called. userId: %{public}d", userId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to CreateBundleDataDir due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
