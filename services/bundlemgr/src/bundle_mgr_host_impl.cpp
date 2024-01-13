@@ -3310,7 +3310,7 @@ ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, cons
 
 ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
 {
-    if (!BundlePermissionMgr::IsCallingUidValid(Constants::STORAGE_SERVICE_UID)) {
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ROOT_UID)) {
         APP_LOGE("IsCallingUidValid failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
