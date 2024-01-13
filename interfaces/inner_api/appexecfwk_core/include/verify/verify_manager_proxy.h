@@ -31,6 +31,7 @@ public:
         const std::vector<std::string> &abcNames, bool flag) override;
 
     virtual ErrCode RemoveFiles(const std::vector<std::string> &abcPaths) override;
+    virtual ErrCode DeleteAbc(const std::string &path) override;
 
 private:
     virtual ErrCode CopyFiles(

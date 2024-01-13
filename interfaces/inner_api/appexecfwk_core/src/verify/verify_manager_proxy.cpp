@@ -32,7 +32,8 @@ const std::string SEPARATOR = "/";
 const int32_t DEFAULT_BUFFER_SIZE = 65536;
 }
 
-VerifyManagerProxy::VerifyManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IVerifyManager>(object)
+VerifyManagerProxy::VerifyManagerProxy(const sptr<IRemoteObject> &object)
+    : IRemoteProxy<IVerifyManager>(object)
 {
     APP_LOGI("create VerifyManagerProxy.");
 }
@@ -190,7 +191,36 @@ ErrCode VerifyManagerProxy::CopyFiles(
     return ERR_OK;
 }
 
-bool VerifyManagerProxy::SendRequest(VerifyManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+ErrCode VerifyManagerProxy::DeleteAbc(const std::string &path)
+{
+    APP_LOGI("begin to call DeleteAbc.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (path.empty()) {
+        APP_LOGE("DeleteAbc failed due to params error.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
+    if (!data.WriteString(path)) {
+        APP_LOGE("write path failed.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendRequest(VerifyManagerInterfaceCode::DELETE_ABC, data, reply)) {
+        APP_LOGE("SendRequest failed.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_SEND_REQUEST_FAILED;
+    }
+
+    return reply.ReadInt32();
+}
+
+bool VerifyManagerProxy::SendRequest(
+    VerifyManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
