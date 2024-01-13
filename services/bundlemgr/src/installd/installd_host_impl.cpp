@@ -1094,44 +1094,73 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 #endif
 }
 
+#if defined(CODE_SIGNATURE_ENABLE)
+ErrCode InstalldHostImpl::PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+    Security::CodeSign::EntryMap &entryMap)
+{
+    APP_LOGD("PrepareEntryMap target so path is %{public}s", codeSignatureParam.targetSoPath.c_str());
+    if (codeSignatureParam.modulePath.empty()) {
+        APP_LOGE("real path of the installed hap is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (codeSignatureParam.targetSoPath.empty()) {
+        APP_LOGW("target so path is empty");
+        return ERR_OK;
+    }
+    std::vector<std::string> fileNames;
+    if (!InstalldOperator::GetNativeLibraryFileNames(
+        codeSignatureParam.modulePath, codeSignatureParam.cpuAbi, fileNames)) {
+        APP_LOGE("get native library file names failed");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    for (const auto &fileName : fileNames) {
+        std::string entryName = prefix + fileName;
+        std::string path = codeSignatureParam.targetSoPath;
+        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+            path += Constants::FILE_SEPARATOR_CHAR;
+        }
+        entryMap.emplace(entryName, path + fileName);
+        APP_LOGD("entryMap add soEntry %{public}s: %{public}s", entryName.c_str(), (path + fileName).c_str());
+    }
+    return ERR_OK;
+}
+#endif
+
 ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
-    APP_LOGD("start to enable code signature for hap or hsp");
+    APP_LOGD("code sign param is %{public}s", codeSignatureParam.ToString().c_str());
 #if defined(CODE_SIGNATURE_ENABLE)
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (codeSignatureParam.modulePath.empty()) {
-        APP_LOGE("real path of the installed hap is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    Security::CodeSign::EntryMap entryMap;
     ErrCode ret = ERR_OK;
     if (codeSignatureParam.isCompileSdkOpenHarmony && !Security::CodeSign::CodeSignUtils::IsSupportOHCodeSign()) {
         APP_LOGD("code signature is not supported");
         return ret;
     }
-    if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
-        codeSignHelper_ = std::make_shared<CodeSignHelper>();
+    Security::CodeSign::EntryMap entryMap;
+    if ((ret = PrepareEntryMap(codeSignatureParam, entryMap)) != ERR_OK) {
+        APP_LOGE("prepare entry map failed");
+        return ret;
     }
-    if (codeSignatureParam.isEnterpriseBundle) {
-        APP_LOGD("Verify code signature for enterprise bundle");
-        ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-            codeSignatureParam.modulePath, entryMap, FILE_ALL, codeSignatureParam.moduleName);
-    } else {
-        APP_LOGD("Verify code signature for non-enterprise bundle");
-        ret = codeSignHelper_->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ALL,
-            codeSignatureParam.moduleName);
-    }
-    if (codeSignatureParam.isLastHap) {
-        codeSignHelper_->SetHapChecked(true);
-        if (codeSignHelper_->IsCodeSignEnableCompleted()) {
-            APP_LOGI("code signature is enabled for all haps");
+    if (codeSignatureParam.signatureFileDir.empty()) {
+        std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
+        Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
+            FILE_ENTRY_ONLY : FILE_ALL;
+        if (codeSignatureParam.isEnterpriseBundle) {
+            APP_LOGD("Verify code signature for enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+                codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
         } else {
-            APP_LOGW("code signature is not enabled for all haps");
+            APP_LOGD("Verify code signature for non-enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType,
+                codeSignatureParam.moduleName);
         }
+    } else {
+        APP_LOGD("Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
+        ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
