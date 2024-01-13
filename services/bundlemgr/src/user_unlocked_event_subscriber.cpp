@@ -155,7 +155,7 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
             continue;
         }
         if (!CreateBundleLogDir(bundleInfo, userId)) {
-            APP_LOGW("ProcessUpdateAppLogDir failed");
+            APP_LOGD("log dir create failed or already exists");
         }
     }
 }
