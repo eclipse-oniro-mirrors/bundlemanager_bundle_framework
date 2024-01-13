@@ -542,6 +542,9 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
             deleteBundlePath_.emplace_back(modulePath);
         }
         uninstallModuleVec_.emplace_back(moduleName);
+        if (RemoveLowerVersionSoDir(oldInfo) != ERR_OK) {
+            APP_LOGW("RemoveLowerVersionSoDir on version %{public}d failed", oldInfo.GetVersionCode());
+        }
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
         APP_LOGE("update already start");
@@ -784,6 +787,21 @@ bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, con
         return true;
     }
     return false;
+}
+
+ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo)
+{
+    if (!versionUpgrade_) {
+        APP_LOGW("versionCode is not upgraded, so there is no need to delete the so dir");
+        return ERR_OK;
+    }
+    std::string bundleDir =
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
+    uint32_t versionCode = oldInfo.GetVersionCode();
+    std::string versionDir = bundleDir
+        + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+
+    return InstalldClient::GetInstance()->RemoveDir(versionDir);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
