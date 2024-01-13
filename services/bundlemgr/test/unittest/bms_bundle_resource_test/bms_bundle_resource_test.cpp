@@ -1672,7 +1672,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest
 
     ans = callback.OnSystemLanguageChange(oldLanguage);
     EXPECT_TRUE(ans);
-    BundleSystemState::GetInstance().SetSystemColorMode(oldLanguage);
+    BundleSystemState::GetInstance().SetSystemLanguage(oldLanguage);
 }
 
 /**
@@ -2304,11 +2304,19 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0104, Function | SmallTest | Level0)
 {
+    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
+    std::string colorMode = "dark";
+    BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
+
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     EXPECT_NE(manager, nullptr);
     bool ans = manager->AddResourceInfoByColorModeChanged(200);
     EXPECT_FALSE(ans);
 
+    ans = manager->AddResourceInfoByColorModeChanged(USERID);
+    EXPECT_TRUE(ans);
+
+    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
     ans = manager->AddResourceInfoByColorModeChanged(USERID);
     EXPECT_TRUE(ans);
 }

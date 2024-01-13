@@ -78,6 +78,10 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo
         if (!info.applicationInfo.enabled) {
             continue;
         }
+        if (!innerBundleInfo.IsAbilityEnabled(info, innerBundleInfo.GetResponseUserId(userId))) {
+            APP_LOGW("abilityName: %{public}s is disabled", info.name.c_str());
+            continue;
+        }
         resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
     }
     return true;
@@ -169,6 +173,7 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfo)
 {
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
@@ -203,6 +208,8 @@ bool BundleResourceProcess::GetResourceInfoByAbilityName(
     const int32_t userId,
     ResourceInfo &resourceInfo)
 {
+    APP_LOGD("start, bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
@@ -255,7 +262,7 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
     }
     if (needAddResourceBundles.empty()) {
         APP_LOGW("needAddResourceBundles is empty");
-        return false;
+        return true;
     }
 
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
@@ -275,6 +282,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
+    APP_LOGD("start, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     ResourceInfo bundleResourceInfo;
     if (GetBundleResourceInfo(innerBundleInfo, userId, bundleResourceInfo)) {
         resourceInfos.push_back(bundleResourceInfo);
@@ -286,6 +294,8 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             resourceInfos.push_back(info);
         }
     }
+    APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", innerBundleInfo.GetBundleName().c_str(),
+        static_cast<int32_t>(resourceInfos.size()));
     return !resourceInfos.empty();
 }
 

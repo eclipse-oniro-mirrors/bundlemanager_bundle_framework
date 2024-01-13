@@ -52,6 +52,7 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
         APP_LOGE("failed, bundleName is empty");
         return false;
     }
+    APP_LOGD("insert resource key:%{public}s", resourceInfo.GetKey().c_str());
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
     valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, resourceInfo.updateTime_);
