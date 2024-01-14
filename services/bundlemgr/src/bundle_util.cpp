@@ -22,6 +22,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <set>
+#include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <thread>
@@ -523,6 +524,61 @@ bool BundleUtil::CopyFile(
     return true;
 }
 
+bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
+{
+    APP_LOGI("sourcePath : %{public}s, destPath : %{public}s", sourcePath.c_str(), destPath.c_str());
+    if (sourcePath.empty() || destPath.empty()) {
+        APP_LOGE("invalid path");
+        return false;
+    }
+
+    int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
+    if (sourceFd == -1) {
+        APP_LOGE("sourcePath open failed, errno : %{public}d", errno);
+        return CopyFile(sourcePath, destPath);
+    }
+
+    struct stat sourceStat;
+    if (fstat(sourceFd, &sourceStat) == -1) {
+        APP_LOGE("fstat failed, errno : %{public}d", errno);
+        close(sourceFd);
+        return CopyFile(sourcePath, destPath);
+    }
+    if (sourceStat.st_size < 0) {
+        APP_LOGE("invalid st_size");
+        close(sourceFd);
+        return CopyFile(sourcePath, destPath);
+    }
+
+    int32_t destFd = open(
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+    if (destFd == -1) {
+        APP_LOGE("destPath open failed, errno : %{public}d", errno);
+        close(sourceFd);
+        return CopyFile(sourcePath, destPath);
+    }
+
+    size_t buffer = 524288; // 0.5M
+    size_t transferCount = 0;
+    ssize_t singleTransfer = 0;
+    while ((singleTransfer = sendfile(destFd, sourceFd, nullptr, buffer)) > 0) {
+        transferCount += static_cast<size_t>(singleTransfer);
+    }
+
+    if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
+        APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
+            errno, transferCount, static_cast<size_t>(sourceStat.st_size));
+        close(sourceFd);
+        close(destFd);
+        return CopyFile(sourcePath, destPath);
+    }
+
+    close(sourceFd);
+    close(destFd);
+    APP_LOGI("sendfile success");
+    return true;
+}
+
 Resource BundleUtil::GetResource(const std::string &bundleName, const std::string &moduleName, int32_t resId)
 {
     Resource resource;
@@ -655,7 +711,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (destination.empty()) {
         return "";
     }
-    if (!CopyFile(filePath, destination)) {
+    if (!CopyFileFast(filePath, destination)) {
         APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
         return "";
     }

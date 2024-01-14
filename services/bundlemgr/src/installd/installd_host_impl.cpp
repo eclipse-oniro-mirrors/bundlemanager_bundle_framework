@@ -789,7 +789,7 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::CopyFile(oldPath, newPath)) {
+    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
         APP_LOGE("Copy file %{public}s to %{public}s failed",
             oldPath.c_str(), newPath.c_str());
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;

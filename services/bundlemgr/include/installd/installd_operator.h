@@ -209,6 +209,8 @@ public:
 
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
 
+    static bool CopyFileFast(const std::string &sourcePath, const std::string &destPath);
+
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
 
     static bool IsDiffFiles(const std::string &entryName,
