@@ -3097,6 +3097,30 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0200, Function | MediumTest
 }
 
 /**
+ * @tc.number: DelExtNameOrMIMEToApp_0300
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: DelExtNameOrMIMEToApp when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0300, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode ret = bundleMgrProxy->DelExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0300
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: SetExtNameOrMIMEToApp when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0300, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode ret = bundleMgrProxy->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
  * @tc.number: CleanBundleCacheFiles_0001
  * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFiles
  * @tc.desc: 1. system run normally
@@ -3905,5 +3929,82 @@ HWTEST_F(BmsBundleDataMgrTest, CleanObsoleteBundleTempFiles_0100, Function | Sma
     bundleMgrHostImpl_->CleanObsoleteBundleTempTask(callingBundleName, userId);
     ErrCode ret = bundleMgrHostImpl_->CleanObsoleteBundleTempFiles();
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CleanObsoleteBundleTempFiles_0200
+ * @tc.name: CleanObsoleteBundleTempFiles
+ * @tc.desc: CleanObsoleteBundleTempFiles when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanObsoleteBundleTempFiles_0200, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode ret = bundleMgrProxy->CleanObsoleteBundleTempFiles();
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetVerifyManager_0100
+ * @tc.name: GetVerifyManager
+ * @tc.desc: GetVerifyManager when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetVerifyManager_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto ret = bundleMgrProxy->GetVerifyManager();
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosOnlyWithTypeName_0100
+ * @tc.name: QueryExtensionAbilityInfosOnlyWithTypeName
+ * @tc.desc: QueryExtensionAbilityInfosOnlyWithTypeName when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfosOnlyWithTypeName_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosOnlyWithTypeName(
+        "", GET_ABILITY_INFO_DEFAULT, USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0100
+ * @tc.name: GetRecoverableApplicationInfo
+ * @tc.desc: GetRecoverableApplicationInfo when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetRecoverableApplicationInfo_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode ret = bundleMgrProxy->GetRecoverableApplicationInfo(recoverableApplications);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetUninstalledBundleInfo_0100
+ * @tc.name: GetUninstalledBundleInfo
+ * @tc.desc: GetUninstalledBundleInfo when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetUninstalledBundleInfo_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    BundleInfo bundleInfo;
+    ErrCode ret = bundleMgrProxy->GetUninstalledBundleInfo("", bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleNameForUid_0100
+ * @tc.name: GetBundleNameForUid
+ * @tc.desc: GetBundleNameForUid when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string bundleName = "";
+    ErrCode ret = bundleMgrProxy->GetBundleNameForUid(TEST_UID, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }

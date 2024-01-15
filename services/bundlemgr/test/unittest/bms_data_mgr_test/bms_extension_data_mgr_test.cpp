@@ -38,6 +38,8 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
+const int32_t USERID = 100;
+const int32_t TEST_UID = 20065535;
 const uint32_t SDK_VERSION = 10;
 const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
@@ -298,6 +300,70 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0010, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsExtensionDataMgr_0011
+ * @tc.name: GetBundleStats
+ * @tc.desc: GetBundleStats
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0011, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::vector<int64_t> bundleStats;
+    ErrCode res = bmsExtensionDataMgr.GetBundleStats("", USERID, bundleStats);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0012
+ * @tc.name: ClearData
+ * @tc.desc: ClearData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0012, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.ClearData("", USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0013
+ * @tc.name: ClearCache
+ * @tc.desc: ClearCache
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0013, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.ClearCache("", nullptr, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0014
+ * @tc.name: GetUidByBundleName
+ * @tc.desc: GetUidByBundleName
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0014, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t userId = 100;
+    int32_t uid = -1;
+    ErrCode res = bmsExtensionDataMgr.GetUidByBundleName("", userId, uid);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0015
+ * @tc.name: GetBundleNameByUid
+ * @tc.desc: GetBundleNameByUid
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0015, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName = "";
+    ErrCode res = bmsExtensionDataMgr.GetBundleNameByUid(TEST_UID, bundleName);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
  * @tc.number: BmsExtensionProfile_0001
  * @tc.name: TransformTo
  * @tc.desc: TransformTo
@@ -464,5 +530,69 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0005, Function | SmallTest | Leve
     std::vector<BundleInfo> bundleInfos;
     ErrCode res = bundleMgrExtTest.GetBundleInfos(flags, bundleInfos, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0006
+ * @tc.name: GetBundleStats
+ * @tc.desc: GetBundleStats
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0006, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::vector<int64_t> bundleStats;
+    ErrCode res = bundleMgrExtTest.GetBundleStats("", USERID, bundleStats);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0007
+ * @tc.name: ClearData
+ * @tc.desc: ClearData
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0007, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    ErrCode res = bundleMgrExtTest.ClearData("", USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0008
+ * @tc.name: ClearCache
+ * @tc.desc: ClearCache
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0008, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    ErrCode res = bundleMgrExtTest.ClearCache("", nullptr, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0009
+ * @tc.name: GetUidByBundleName
+ * @tc.desc: GetUidByBundleName
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0009, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int32_t userId = 100;
+    int32_t uid = -1;
+    ErrCode res = bundleMgrExtTest.GetUidByBundleName("", userId, uid);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0010
+ * @tc.name: GetBundleNameByUid
+ * @tc.desc: GetBundleNameByUid
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0010, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName = "";
+    ErrCode res = bundleMgrExtTest.GetBundleNameByUid(TEST_UID, bundleName);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
 } // OHOS
