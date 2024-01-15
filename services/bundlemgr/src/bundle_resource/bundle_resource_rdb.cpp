@@ -52,6 +52,7 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
         APP_LOGE("failed, bundleName is empty");
         return false;
     }
+    APP_LOGD("insert resource key:%{public}s", resourceInfo.GetKey().c_str());
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
     valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, resourceInfo.updateTime_);
@@ -194,7 +195,8 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        APP_LOGE("bundleName:%{public}s GoToFirstRow failed, ret: %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
     return ConvertToBundleResourceInfo(absSharedResultSet, flags, bundleResourceInfo);
@@ -224,7 +226,8 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        APP_LOGE("bundleName:%{public}s GoToFirstRow failed, ret: %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
 

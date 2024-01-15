@@ -275,7 +275,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
         std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + Constants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
-            APP_LOGW("Base directory %{public}s does not existed.", bundleDataDir.c_str());
+            APP_LOGW("Base directory %{public}s does not existed, bundleName:%{public}s",
+                bundleDataDir.c_str(), createDirParam.bundleName.c_str());
             return ERR_OK;
         }
         bundleDataDir += createDirParam.bundleName;
@@ -846,6 +847,7 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     fileStat.gid = static_cast<int32_t>(s.st_gid);
     fileStat.lastModifyTime = static_cast<int64_t>(s.st_mtime);
     fileStat.isDir = s.st_mode & S_IFDIR;
+    fileStat.mode = static_cast<int32_t>(s.st_mode);
     return ERR_OK;
 }
 

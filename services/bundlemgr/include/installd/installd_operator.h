@@ -271,6 +271,8 @@ private:
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
+    static bool CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
+        bool &isPathExist);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

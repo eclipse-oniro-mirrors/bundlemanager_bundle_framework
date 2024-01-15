@@ -30,6 +30,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+static constexpr int32_t MODE_BASE = 07777;
+}
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
@@ -64,25 +67,26 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleInfo.name;
+        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::DATABASE + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
-        APP_LOGE("path: %{private}s IsExistDir failed", baseBundleDataDir.c_str());
+        APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
         return false;
     }
     if (isExist) {
         FileStat fileStat;
         if (InstalldClient::GetInstance()->GetFileStat(baseBundleDataDir, fileStat) != ERR_OK) {
-            APP_LOGE("GetFileStat path(%{private}s) failed", baseBundleDataDir.c_str());
+            APP_LOGE("GetFileStat path(%{public}s) failed", baseBundleDataDir.c_str());
             return false;
         }
-        if (fileStat.uid != bundleInfo.uid || fileStat.gid != bundleInfo.gid) {
-            APP_LOGD("path: %{private}s uid or gid is not same", baseBundleDataDir.c_str());
+        if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != Constants::DATABASE_DIR_GID) ||
+            ((fileStat.mode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID))) {
+            APP_LOGW("path: %{public}s uid or gid or mode not same", baseBundleDataDir.c_str());
             isExist = false;
         }
     }
     if (!isExist) {
-        APP_LOGD("path: %{private}s is not exist, need to create it", baseBundleDataDir.c_str());
+        APP_LOGI("path: %{public}s is not exist, need to create it", baseBundleDataDir.c_str());
         CreateDirParam createDirParam;
         createDirParam.userId = userId;
         createDirParam.bundleName = bundleInfo.name;
@@ -102,7 +106,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
 
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
-    APP_LOGD("UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d start", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel DataMgr is nullptr");
@@ -120,6 +124,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL4);
 #endif
     ProcessUpdateAppLogDir(bundleInfos, userId);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
 void UpdateAppDataMgr::ProcessUpdateAppDataDir(
