@@ -91,6 +91,7 @@ private:
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &hspPath);
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
+    ErrCode RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo);
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
