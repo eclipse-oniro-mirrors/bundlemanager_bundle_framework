@@ -3994,4 +3994,17 @@ HWTEST_F(BmsBundleDataMgrTest, GetUninstalledBundleInfo_0100, Function | SmallTe
     ErrCode ret = bundleMgrProxy->GetUninstalledBundleInfo("", bundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
+
+/**
+ * @tc.number: GetBundleNameForUid_0100
+ * @tc.name: GetBundleNameForUid
+ * @tc.desc: GetBundleNameForUid when param is empty.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string bundleName = "";
+    ErrCode ret = bundleMgrProxy->GetBundleNameForUid(TEST_UID, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }
