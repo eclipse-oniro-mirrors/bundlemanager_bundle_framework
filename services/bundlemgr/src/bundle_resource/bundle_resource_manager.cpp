@@ -15,6 +15,7 @@
 
 #include "bundle_resource_manager.h"
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_resource_parser.h"
@@ -53,17 +54,24 @@ bool BundleResourceManager::AddResourceInfo(const InnerBundleInfo &innerBundleIn
 
 bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     std::vector<ResourceInfo> resourceInfos;
     if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
         APP_LOGE("bundleName: %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         return false;
     }
-    return AddResourceInfos(resourceInfos);
+    if (!AddResourceInfos(resourceInfos)) {
+        APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+    return true;
 }
 
 bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, const int32_t userId)
 {
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     ResourceInfo resourceInfo;
     if (!BundleResourceProcess::GetResourceInfoByAbilityName(bundleName, moduleName, abilityName,
         userId, resourceInfo)) {
@@ -71,7 +79,14 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
-    return AddResourceInfo(resourceInfo);
+    if (!AddResourceInfo(resourceInfo)) {
+        APP_LOGE("error, bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        return false;
+    }
+    APP_LOGD("success, bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    return true;
 }
 
 bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
@@ -173,6 +188,19 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo)) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
+    APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        // invalid userId
+        currentUserId = Constants::START_USERID;
+    }
+    if (!AddResourceInfoByBundleName(bundleName, currentUserId)) {
+        APP_LOGW("bundleName:%{public}s add failed", bundleName.c_str());
+    }
     return bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo);
 }
 
@@ -181,6 +209,19 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
+    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo)) {
+        APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+        return true;
+    }
+    APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        // invalid userId
+        currentUserId = Constants::START_USERID;
+    }
+    if (!AddResourceInfoByBundleName(bundleName, currentUserId)) {
+        APP_LOGW("bundleName:%{public}s add failed", bundleName.c_str());
+    }
     return bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo);
 }
 
@@ -217,6 +258,7 @@ uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
 
 void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo)
 {
+    APP_LOGI("start, bundleName:%{public}s", resourceInfo.bundleName_.c_str());
     if (resourceInfo.label_.empty()) {
         resourceInfo.label_ = resourceInfo.bundleName_;
     }

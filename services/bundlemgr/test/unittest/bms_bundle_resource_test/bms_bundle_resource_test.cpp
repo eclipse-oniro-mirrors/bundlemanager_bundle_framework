@@ -1672,7 +1672,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest
 
     ans = callback.OnSystemLanguageChange(oldLanguage);
     EXPECT_TRUE(ans);
-    BundleSystemState::GetInstance().SetSystemColorMode(oldLanguage);
+    BundleSystemState::GetInstance().SetSystemLanguage(oldLanguage);
 }
 
 /**
@@ -2240,11 +2240,15 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
 
     // disable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, false, USERID);
+    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, false, USERID);
+    EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
+    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
+    EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_OK);
 
@@ -2269,13 +2273,21 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_TRUE(info.size() == 1);
 
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
     // disable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
+    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, USERID);
+    EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
+    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
+    EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_OK);
 
@@ -2292,11 +2304,19 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0104, Function | SmallTest | Level0)
 {
+    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
+    std::string colorMode = "dark";
+    BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
+
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     EXPECT_NE(manager, nullptr);
     bool ans = manager->AddResourceInfoByColorModeChanged(200);
     EXPECT_FALSE(ans);
 
+    ans = manager->AddResourceInfoByColorModeChanged(USERID);
+    EXPECT_TRUE(ans);
+
+    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
     ans = manager->AddResourceInfoByColorModeChanged(USERID);
     EXPECT_TRUE(ans);
 }
