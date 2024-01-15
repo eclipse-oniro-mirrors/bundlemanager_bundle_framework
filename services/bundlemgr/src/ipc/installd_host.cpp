@@ -105,6 +105,8 @@ void InstalldHost::Init()
         &InstalldHost::HandDeliverySignProfile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE),
         &InstalldHost::HandRemoveSignProfile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR),
+        &InstalldHost::HandleCreateBundleDataDirWithVector);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -210,6 +212,28 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     ErrCode result = CreateBundleDataDir(*info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, MessageParcel &reply)
+{
+    auto createDirParamSize = data.ReadInt32();
+    if (createDirParamSize == 0 || createDirParamSize > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<CreateDirParam> createDirParams;
+    for (uint32_t index = 0; index < createDirParamSize; ++index) {
+        std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+        if (info == nullptr) {
+            APP_LOGE("readParcelableInfo failed");
+            return false;
+        }
+        createDirParams.emplace_back(*info);
+    }
+
+    ErrCode result = CreateBundleDataDirWithVector(createDirParams);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

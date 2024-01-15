@@ -43,6 +43,17 @@ bool IsFileNameValid(const std::string &fileName)
     }
     return true;
 }
+
+bool IsValidPath(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+    if (path.find("..") != std::string::npos) {
+        return false;
+    }
+    return true;
+}
 }
 VerifyManagerHostImpl::VerifyManagerHostImpl()
 {
@@ -250,6 +261,55 @@ ErrCode VerifyManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd
         APP_LOGE("create file descriptor failed.");
         BundleUtil::DeleteDir(tmpDir);
         return ERR_BUNDLE_MANAGER_VERIFY_CREATE_FD_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
+        APP_LOGE("DeleteAbc failed due to permission denied.");
+        return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
+    }
+    if (!IsValidPath(path)) {
+        APP_LOGE("DeleteAbc failed due to invalid path");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
+    if (!BundleUtil::CheckFileType(path, Constants::ABC_FILE_SUFFIX)) {
+        APP_LOGE("DeleteAbc failed due to not abc file.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DeleteAbc failed due to dataMgr is null");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    InnerBundleInfo innerBundleInfo;
+    if (dataMgr->GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
+        APP_LOGE("DeleteAbc failed due to get callingUid failed");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+    }
+    std::string realPath;
+    realPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
+        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR).append(path);
+    bool isExist = false;
+    auto result = InstalldClient::GetInstance()->IsExistFile(realPath, isExist);
+    if (result != ERR_OK) {
+        APP_LOGE("DeleteAbc %{public}s failed due to call IsExistFile failed %{public}d",
+            realPath.c_str(), result);
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+    }
+    if (!isExist) {
+        APP_LOGE("DeleteAbc failed due to path %{public}s is not exist", realPath.c_str());
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
+    }
+    result = InstalldClient::GetInstance()->RemoveDir(realPath);
+    if (result != ERR_OK) {
+        APP_LOGE("DeleteAbc failed due to remove path %{public}s failed %{public}d",
+            realPath.c_str(), result);
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
     }
     return ERR_OK;
 }

@@ -704,6 +704,8 @@ private:
 
     ErrCode HandleGetUninstalledBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

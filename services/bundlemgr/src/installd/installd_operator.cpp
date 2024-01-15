@@ -119,7 +119,7 @@ bool InstalldOperator::IsExistApFile(const std::string &path)
 
     std::error_code errorCode;
     std::filesystem::directory_iterator iter(realPath, errorCode);
-    
+
     if (errorCode) {
         APP_LOGE("Error occurred while opening apDir: %{public}s", errorCode.message().c_str());
         return false;
@@ -1142,18 +1142,16 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         return ret;
     }
     if (codeSignatureParam.signatureFileDir.empty()) {
-        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
-            codeSignHelper = std::make_shared<CodeSignHelper>();
-        }
+        std::shared_ptr<CodeSignHelper> codeSign = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
             FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+            ret = codeSign->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
                 codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap,
+            ret = codeSign->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap,
                 fileType, codeSignatureParam.moduleName);
         }
     } else {

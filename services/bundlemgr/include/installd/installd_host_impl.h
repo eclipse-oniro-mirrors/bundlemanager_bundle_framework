@@ -63,6 +63,8 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirParam) override;
+    
+    virtual ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams) override;
     /**
      * @brief Remove a bundle data directory.
      * @param bundleName Indicates the bundleName data directory path that to be created.
@@ -171,6 +173,10 @@ public:
 
     virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid) override;
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    ErrCode PrepareEntryMap(const CodeSignatureParam &codeSignatureParam, Security::CodeSign::EntryMap &entryMap);
+#endif
 
     virtual ErrCode VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam) override;
 

@@ -895,6 +895,8 @@ public:
 
     virtual ErrCode SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo) override;
 
+    virtual ErrCode CreateBundleDataDir(int32_t userId) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

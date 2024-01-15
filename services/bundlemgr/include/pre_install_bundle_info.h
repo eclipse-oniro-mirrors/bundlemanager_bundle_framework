@@ -39,7 +39,18 @@ public:
      * @return Returns the string object
      */
     std::string ToString() const;
-
+    /**
+     * @brief Calculate Hap Total Size.
+     */
+    void CalculateHapTotalSize();
+    /**
+     * @brief Get HapTotalSize.
+     * @return Returns the HapTotalSize.
+     */
+    int64_t GetHapTotalSize() const
+    {
+        return hapTotalSize_;
+    }
     /**
      * @brief Add bundle path.
      * @param bundlePath bundle path.
@@ -81,6 +92,15 @@ public:
         return bundleName_ == info.GetBundleName();
     }
 
+    bool operator < (const PreInstallBundleInfo &preInstallBundleInfo) const
+    {
+        if (bundlePaths_.size() == preInstallBundleInfo.GetBundlePaths().size()) {
+            return hapTotalSize_ >= preInstallBundleInfo.GetHapTotalSize();
+        }
+
+        return bundlePaths_.size() > preInstallBundleInfo.GetBundlePaths().size();
+    }
+
     BMS_DEFINE_PROPERTY(AppType, appType_, Constants::AppType);
     BMS_DEFINE_PROPERTY(Removable, removable_, bool);
     BMS_DEFINE_PROPERTY(IsUninstalled, isUninstalled_, bool);
@@ -89,6 +109,7 @@ public:
     BMS_DEFINE_PROPERTY_GET(BundlePaths, bundlePaths_, std::vector<std::string>);
 private:
     std::string bundleName_;
+    int64_t hapTotalSize_ = 0;
     uint32_t versionCode_;
     std::vector<std::string> bundlePaths_;
     bool removable_ = true;

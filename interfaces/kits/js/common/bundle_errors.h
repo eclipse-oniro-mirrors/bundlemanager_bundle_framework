@@ -78,6 +78,7 @@ constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
 
 // verify abc
 constexpr ErrCode ERROR_VERIFY_ABC = 17700201;
+constexpr ErrCode ERROR_DELETE_ABC = 17700202;
 
 // zlib errCode
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;

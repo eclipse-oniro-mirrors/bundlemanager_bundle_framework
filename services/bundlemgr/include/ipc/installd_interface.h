@@ -90,6 +90,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Remove a bundle data directory.
      * @param bundleDir Indicates the bundle data directory path that to be created.

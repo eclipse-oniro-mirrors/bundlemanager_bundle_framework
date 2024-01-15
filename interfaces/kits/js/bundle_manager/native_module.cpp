@@ -140,6 +140,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundleInfoForSelfSync", GetBundleInfoForSelfSync),
         DECLARE_NAPI_FUNCTION("getJsonProfile", GetJsonProfile),
         DECLARE_NAPI_FUNCTION("verifyAbc", VerifyAbc),
+        DECLARE_NAPI_FUNCTION("deleteAbc", DeleteAbc),
         DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
         DECLARE_NAPI_FUNCTION("getRecoverableApplicationInfo", GetRecoverableApplicationInfo),
         DECLARE_NAPI_FUNCTION("setAdditionalInfo", SetAdditionalInfo),

@@ -166,6 +166,7 @@ public:
     static bool StartWith(const std::string &source, const std::string &suffix);
     static bool EndWith(const std::string &source, const std::string &suffix);
     static int64_t GetFileSize(const std::string &filePath);
+    static int64_t CalculateFileSize(const std::string &bundlePath);
     static std::string CreateTempDir(const std::string &tempDir);
     static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
         std::vector<std::string> &toDeletePaths);

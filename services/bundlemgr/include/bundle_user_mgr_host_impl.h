@@ -56,7 +56,8 @@ private:
     void ClearBundleEvents();
     bool GetAllPreInstallBundleInfos(
         const std::vector<std::string> &disallowList,
-        std::vector<PreInstallBundleInfo> &preInstallBundleInfos);
+        int32_t userId,
+        std::set<PreInstallBundleInfo> &preInstallBundleInfos);
 
     std::mutex bundleUserMgrMutex_;
 

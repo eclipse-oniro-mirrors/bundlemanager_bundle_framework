@@ -622,6 +622,9 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         result = VerifyCodeSignatureForNativeFiles(
             bundlePath, cpuAbi, tempSoPath, signatureFileDir_, newInfo.GetIsPreInstallApp());
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        cpuAbi_ = cpuAbi;
+        tempSoPath_ = tempSoPath;
+        isPreInstalledBundle_ = newInfo.GetIsPreInstallApp();
     } else {
         std::vector<std::string> fileNames;
         auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);
@@ -635,6 +638,10 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir,
     bool isPreInstalledBundle) const
 {
+    if (!isPreInstalledBundle) {
+        APP_LOGD("not pre-install app, skip verify code signature for native files");
+        return ERR_OK;
+    }
     APP_LOGD("begin to verify code signature for hsp native files");
     bool isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     CodeSignatureParam codeSignatureParam;
@@ -657,11 +664,14 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
     APP_LOGD("begin to verify code signature for hsp");
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = tempHspPath;
+    codeSignatureParam.cpuAbi = cpuAbi_;
+    codeSignatureParam.targetSoPath = tempSoPath_;
     codeSignatureParam.appIdentifier = appIdentifier;
+    codeSignatureParam.signatureFileDir = signatureFileDir_;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.moduleName = bundleName;
-    codeSignatureParam.isLastHap = true;
+    codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle_;
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 

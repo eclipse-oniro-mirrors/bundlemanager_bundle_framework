@@ -3253,6 +3253,21 @@ ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, cons
     return dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
 }
 
+ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
+{
+    if (!BundlePermissionMgr::IsCallingUidValid(Constants::ROOT_UID)) {
+        APP_LOGE("IsCallingUidValid failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CreateBundleDataDir(userId);
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

@@ -62,6 +62,7 @@ enum class InstalldInterfaceCode : uint32_t {
     DELIVERY_SIGN_PROFILE,
     REMOVE_SIGN_PROFILE,
     CLEAN_BUNDLE_DATA_DIR_BY_NAME,
+    CREATE_BUNDLE_DATA_DIR_WITH_VECTOR
 };
 
 } // namespace AppExecFwk

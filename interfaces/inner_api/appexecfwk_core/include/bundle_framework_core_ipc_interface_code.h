@@ -156,6 +156,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME,
     COMPILE_PROCESSAOT,
     COMPILE_RESET,
+    CREATE_BUNDLE_DATA_DIR,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -281,6 +282,7 @@ enum class BundleResourceInterfaceCode : uint32_t {
 enum class VerifyManagerInterfaceCode : uint32_t {
     VERIFY = 0,
     CREATE_FD = 1,
+    DELETE_ABC = 2,
 };
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -124,6 +124,9 @@ private:
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_;
     std::string compileSdkType_;
+    std::string cpuAbi_;
+    std::string tempSoPath_;
+    bool isPreInstalledBundle_ = false;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 

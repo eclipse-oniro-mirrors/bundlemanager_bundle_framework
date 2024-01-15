@@ -87,6 +87,17 @@ ErrCode BundleMgrClientImpl::GetBundlePackInfo(
     return bundleMgr_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
+ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
+{
+    APP_LOGD("enter");
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return bundleMgr_->CreateBundleDataDir(userId);
+}
+
 bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const std::string &hapName,
     HapModuleInfo &hapModuleInfo)
 {

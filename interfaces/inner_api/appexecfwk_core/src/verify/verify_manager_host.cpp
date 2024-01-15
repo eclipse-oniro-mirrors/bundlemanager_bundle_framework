@@ -54,6 +54,8 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
             return HandleVerify(data, reply);
         case static_cast<uint32_t>(VerifyManagerInterfaceCode::CREATE_FD):
             return HandleCreateFd(data, reply);
+        case static_cast<uint32_t>(VerifyManagerInterfaceCode::DELETE_ABC):
+            return HandleDeleteAbc(data, reply);
         default:
             APP_LOGW("VerifyManagerHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -111,6 +113,19 @@ ErrCode VerifyManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& re
         }
     }
     close(fd);
+    return ERR_OK;
+}
+
+ErrCode VerifyManagerHost::HandleDeleteAbc(MessageParcel& data, MessageParcel& reply)
+{
+    APP_LOGD("begin to HandleDeleteAbc.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string path = data.ReadString();
+    auto ret = DeleteAbc(path);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed.");
+        return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
+    }
     return ERR_OK;
 }
 } // AppExecFwk

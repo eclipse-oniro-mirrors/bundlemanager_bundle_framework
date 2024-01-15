@@ -48,6 +48,11 @@ public:
     {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+
+    virtual ErrCode DeleteAbc(const std::string &path)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // AppExecFwk
 } // OHOS

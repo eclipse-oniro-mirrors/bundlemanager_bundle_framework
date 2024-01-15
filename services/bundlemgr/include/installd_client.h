@@ -61,6 +61,9 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     ErrCode CreateBundleDataDir(const CreateDirParam &createDirParam);
+
+    ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams);
+
     /**
      * @brief Remove a bundle data directory.
      * @param bundleName Indicates the bundleName data directory path that to be created.

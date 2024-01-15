@@ -15,6 +15,8 @@
 
 #include "pre_install_bundle_info.h"
 
+#include "bundle_util.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -101,6 +103,14 @@ std::string PreInstallBundleInfo::ToString() const
     j[REMOVABLE] = removable_;
     j[IS_UNINSTALLED] = isUninstalled_;
     return j.dump();
+}
+
+void PreInstallBundleInfo::CalculateHapTotalSize()
+{
+    hapTotalSize_ = 0;
+    for (const auto &bundlePath : bundlePaths_) {
+        hapTotalSize_ += BundleUtil::CalculateFileSize(bundlePath);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

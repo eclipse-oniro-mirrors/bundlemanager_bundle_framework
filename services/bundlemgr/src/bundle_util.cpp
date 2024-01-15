@@ -463,6 +463,17 @@ bool BundleUtil::IsExistDir(const std::string &path)
     return S_ISDIR(buf.st_mode);
 }
 
+int64_t BundleUtil::CalculateFileSize(const std::string &bundlePath)
+{
+    struct stat fileInfo = { 0 };
+    if (stat(bundlePath.c_str(), &fileInfo) != 0) {
+        APP_LOGE("call stat error");
+        return 0;
+    }
+
+    return static_cast<int64_t>(fileInfo.st_size);
+}
+
 bool BundleUtil::RenameFile(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {
