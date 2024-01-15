@@ -6140,6 +6140,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         createDirParams.emplace_back(createDirParam);
     }
+    lock.unlock();
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
     APP_LOGI("CreateBundleDataDir result: %{public}d", res);
     return res;
