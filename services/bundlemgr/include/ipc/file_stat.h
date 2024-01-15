@@ -25,6 +25,7 @@ struct FileStat : public Parcelable {
     int32_t gid = -1;
     int64_t lastModifyTime = -1;
     bool isDir = false;
+    int32_t mode = -1;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -24,6 +24,7 @@
 #include "code_crypto_metadata_process.h"
 #include "linux/code_decrypt.h"
 #endif
+#include <cerrno>
 #include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
@@ -56,6 +57,8 @@ static std::string PREFIX_TARGET_PATH = "/print_service/";
 static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
 static const char MARK_TEMP_DIR[] = "temp_useless";
 static constexpr size_t MARK_TEMP_LEN = 12;
+static constexpr int32_t INSTALLS_UID = 3060;
+static constexpr int32_t MODE_BASE = 07777;
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -619,13 +622,42 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, bool isReadByOthers, 
     return ChangeFileAttr(path, uid, gid);
 }
 
-bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int uid, const int gid)
+bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
+    bool &isPathExist)
 {
-    if (!OHOS::ForceCreateDirectory(path)) {
-        APP_LOGE("mkdir failed");
+    struct stat s;
+    if (stat(path.c_str(), &s) != 0) {
+        APP_LOGD("path :%{public}s is not exist, need create", path.c_str());
+        isPathExist = false;
         return false;
     }
-    if (!OHOS::ChangeModeDirectory(path, mode)) {
+    isPathExist = true;
+    if (((s.st_mode & MODE_BASE) == mode) && (s.st_uid == uid) && (s.st_gid == gid)) {
+        APP_LOGD("path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
+        return true;
+    }
+    APP_LOGW("path:%{public}s exist, but mode uid or gid are not same, need to create again", path.c_str());
+    return false;
+}
+
+bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int uid, const int gid)
+{
+    bool isPathExist = false;
+    if (CheckPathIsSame(path, mode, uid, gid, isPathExist)) {
+        return true;
+    }
+    if (isPathExist) {
+        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
+            APP_LOGW("fail to change %{public}s ownership, errno:%{public}d", path.c_str(), errno);
+        }
+    }
+    if (!OHOS::ForceCreateDirectory(path)) {
+        APP_LOGE("mkdir failed, errno: %{public}d", errno);
+        return false;
+    }
+    // only modify parent dir mode
+    if (chmod(path.c_str(), mode) != 0) {
+        APP_LOGE("chmod path:%{public}s mode:%{public}d failed, errno:%{public}d", path.c_str(), mode, errno);
         return false;
     }
     return ChangeDirOwnerRecursively(path, uid, gid);

@@ -30,6 +30,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+static constexpr int32_t MODE_BASE = 07777;
+}
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
@@ -64,7 +67,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleInfo.name;
+        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::DATABASE + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
@@ -76,8 +79,9 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             APP_LOGE("GetFileStat path(%{public}s) failed", baseBundleDataDir.c_str());
             return false;
         }
-        if (fileStat.uid != bundleInfo.uid || fileStat.gid != bundleInfo.gid) {
-            APP_LOGW("path: %{public}s uid or gid is not same", baseBundleDataDir.c_str());
+        if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != Constants::DATABASE_DIR_GID) ||
+            ((fileStat.mode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID))) {
+            APP_LOGW("path: %{public}s uid or gid or mode not same", baseBundleDataDir.c_str());
             isExist = false;
         }
     }

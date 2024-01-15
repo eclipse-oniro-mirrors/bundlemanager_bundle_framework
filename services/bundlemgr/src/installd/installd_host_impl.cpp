@@ -873,6 +873,7 @@ ErrCode InstalldHostImpl::GetFileStat(const std::string &file, FileStat &fileSta
     fileStat.gid = static_cast<int32_t>(s.st_gid);
     fileStat.lastModifyTime = static_cast<int64_t>(s.st_mtime);
     fileStat.isDir = s.st_mode & S_IFDIR;
+    fileStat.mode = static_cast<int32_t>(s.st_mode);
     return ERR_OK;
 }
 
