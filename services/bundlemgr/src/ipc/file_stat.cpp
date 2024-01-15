@@ -26,6 +26,7 @@ bool FileStat::ReadFromParcel(Parcel &parcel)
     gid = parcel.ReadInt32();
     lastModifyTime = parcel.ReadInt64();
     isDir = parcel.ReadBool();
+    mode = parcel.ReadInt32();
     return true;
 }
 
@@ -35,6 +36,7 @@ bool FileStat::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, gid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, lastModifyTime);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, mode);
     return true;
 }
 

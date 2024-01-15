@@ -622,7 +622,7 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, bool isReadByOthers, 
     return ChangeFileAttr(path, uid, gid);
 }
 
-bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid, 
+bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, const int32_t uid, const int32_t gid,
     bool &isPathExist)
 {
     struct stat s;
