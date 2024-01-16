@@ -20,6 +20,7 @@
         "package":"com.third.hiworld.example.h1",
         "name":"bmsThirdBundle4",
         "deviceType": [
+            "2in1",
             "tablet",
             "default"
         ],

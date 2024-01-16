@@ -19,6 +19,7 @@
         "package":"com.third.hiworld.example.h1",
         "name":"bmsThirdBundle1",
         "deviceType": [
+            "2in1",
             "tablet",
             "default",
             "tv",
