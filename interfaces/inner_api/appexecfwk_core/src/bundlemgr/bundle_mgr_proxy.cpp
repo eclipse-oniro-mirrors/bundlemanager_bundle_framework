@@ -753,7 +753,7 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
+    if (!SendTransactCmdWithLog(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetNameForUid from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -4156,6 +4156,23 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
 }
 
 bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        return false;
+    }
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
+}
+
+bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
