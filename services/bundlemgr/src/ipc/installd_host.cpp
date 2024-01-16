@@ -224,7 +224,7 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
         return false;
     }
     std::vector<CreateDirParam> createDirParams;
-    for (uint32_t index = 0; index < createDirParamSize; ++index) {
+    for (int32_t index = 0; index < createDirParamSize; ++index) {
         std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
         if (info == nullptr) {
             APP_LOGE("readParcelableInfo failed");

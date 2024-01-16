@@ -630,7 +630,8 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
         return false;
     }
     isPathExist = true;
-    if (((s.st_mode & MODE_BASE) == mode) && (s.st_uid == uid) && (s.st_gid == gid)) {
+    if (((s.st_mode & MODE_BASE) == mode) && (static_cast<int32_t>(s.st_uid) == uid)
+        && (static_cast<int32_t>(s.st_gid) == gid)) {
         APP_LOGD("path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
         return true;
     }
