@@ -285,8 +285,9 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
+    int32_t uid = data.ReadInt32();
     std::vector<int64_t> bundleStats;
-    ErrCode result = GetBundleStats(bundleName, userId, bundleStats);
+    ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         APP_LOGE("HandleGetBundleStats write failed");

@@ -2344,7 +2344,8 @@ bool BundleDataMgr::GetBundleStats(
         return false;
     }
     int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats) != ERR_OK) {
+    int32_t uid = infoItem->second.GetUid(responseUserId);
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid) != ERR_OK) {
         APP_LOGW("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
         return false;
     }

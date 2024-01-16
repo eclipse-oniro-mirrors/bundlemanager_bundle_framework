@@ -71,7 +71,8 @@ public:
     int RenameModuleDir(const std::string &oldPath, const std::string &newPath) const;
     bool CheckBundleDirExist() const;
     bool CheckBundleDataDirExist() const;
-    bool GetBundleStats(const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool GetBundleStats(const std::string &bundleName, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const int32_t uid) const;
     int32_t GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames) const;
 private:
@@ -200,12 +201,12 @@ bool BmsInstallDaemonTest::CheckBundleDataDirExist() const
 }
 
 bool BmsInstallDaemonTest::GetBundleStats(const std::string &bundleName, const int32_t userId,
-    std::vector<int64_t> &bundleStats) const
+    std::vector<int64_t> &bundleStats, const int32_t uid) const
 {
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK) {
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats, uid) == ERR_OK) {
         return true;
     }
     return false;
@@ -808,7 +809,7 @@ HWTEST_F(BmsInstallDaemonTest, ExtractBundleFile_0500, Function | SmallTest | Le
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0100, Function | SmallTest | Level0)
 {
     std::vector<int64_t> stats;
-    bool result = GetBundleStats("", 0, stats);
+    bool result = GetBundleStats("", 0, stats, 0);
     EXPECT_EQ(result, false);
 }
 
@@ -820,11 +821,13 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0100, Function | SmallTest | Level
 HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0200, Function | SmallTest | Level0)
 {
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats, 0);
     EXPECT_EQ(result, true);
-    for (const auto &t : stats) {
-        EXPECT_EQ(t, 0);
-    }
+    EXPECT_EQ(stats[0], 0);
+    EXPECT_NE(stats[1], 0);
+    EXPECT_EQ(stats[2], 0);
+    EXPECT_EQ(stats[3], 0);
+    EXPECT_EQ(stats[4], 0);
 }
 
 /**
@@ -836,9 +839,9 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0300, Function | SmallTest | Level
 {
     OHOS::ForceCreateDirectory(BUNDLE_CODE_DIR_CODE);
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, 0, stats, 0);
     EXPECT_EQ(result, true);
-    EXPECT_EQ(stats[1], 0);
+    EXPECT_NE(stats[1], 0);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR_CODE);
 }
 
@@ -855,12 +858,12 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
     OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_DATA_BASE);
     OHOS::ForceCreateDirectory(BUNDLE_DATA_DIR_DATA_BASE_TEMP);
     std::vector<int64_t> stats;
-    bool result = GetBundleStats(BUNDLE_NAME13, USERID, stats);
+    bool result = GetBundleStats(BUNDLE_NAME13, USERID, stats, 0);
     EXPECT_EQ(result, true);
     EXPECT_NE(stats[0], 0);
     EXPECT_NE(stats[1], 0);
     EXPECT_EQ(stats[2], 0); // distributed file does not exist
-    EXPECT_NE(stats[3], 0);
+    EXPECT_EQ(stats[3], 0);
     EXPECT_NE(stats[4], 0);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_CACHE);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_TEMP);

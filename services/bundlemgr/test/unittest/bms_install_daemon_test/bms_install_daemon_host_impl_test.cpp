@@ -216,7 +216,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec);
+    auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -660,7 +660,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | Sma
     ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = hostImpl->GetBundleStats("", 0, vec);
+    auto ret = hostImpl->GetBundleStats("", 0, vec, 0);
     EXPECT_NE(ret, ERR_OK);
 }
 
