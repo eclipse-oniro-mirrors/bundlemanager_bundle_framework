@@ -148,8 +148,6 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetPermissionDef);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES),
         &BundleMgrHost::HandleCleanBundleCacheFiles);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_OBSOLETE_BUNDLE_TEMP_FILES),
-        &BundleMgrHost::HandleCleanObsoleteBundleTempFiles);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR),
         &BundleMgrHost::HandleCreateBundleDataDir);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES),
@@ -1286,17 +1284,6 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageP
     ErrCode ret = CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleCleanObsoleteBundleTempFiles(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    ErrCode ret = CleanObsoleteBundleTempFiles();
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("Write failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

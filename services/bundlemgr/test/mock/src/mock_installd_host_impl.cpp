@@ -80,12 +80,6 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetObsoleteBundleTempPath(
-    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
-{
-    return ERR_OK;
-}
-
 std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int userid) const
 {
     return "";

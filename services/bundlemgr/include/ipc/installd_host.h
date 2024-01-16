@@ -137,14 +137,6 @@ private:
      */
     bool HandleGetBundleCachePath(MessageParcel &data, MessageParcel &reply);
 
-    /**
-     * @brief Handles the all GetObsoleteBundleTempPath function.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns true if called successfully; returns false otherwise.
-     */
-    bool HandleGetObsoleteBundleTempPath(MessageParcel &data, MessageParcel &reply);
-
     bool HandleScanDir(MessageParcel &data, MessageParcel &reply);
 
     bool HandleMoveFile(MessageParcel &data, MessageParcel &reply);

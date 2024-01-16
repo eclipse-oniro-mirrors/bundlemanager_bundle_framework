@@ -128,15 +128,6 @@ public:
      */
     virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) override;
 
-    /**
-     * @brief Get all obsolete temp file path.
-     * @param dirs Indicates the data dir list.
-     * @param tempPaths Indicates the temp file path to clear.
-     * @return Returns ERR_OK if get temp file path successfully; returns error code otherwise.
-     */
-    virtual ErrCode GetObsoleteBundleTempPath(
-        const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths) override;
-
     virtual ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) override;
 

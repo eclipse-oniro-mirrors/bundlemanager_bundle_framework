@@ -1227,18 +1227,4 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | Sma
     res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
     EXPECT_EQ(res, false);
 }
-
-/**
- * @tc.number: InstalldOperatorTest_7600
- * @tc.name: test function of InstalldOperator
- * @tc.desc: 1. calling TraverseObsoleteTempDirectory of InstalldOperator
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7600, Function | SmallTest | Level1)
-{
-    std::vector<std::string> cacheDirs;
-    InstalldOperator::TraverseObsoleteTempDirectory("", cacheDirs);
-    EXPECT_EQ(cacheDirs.size(), 0);
-    InstalldOperator::TraverseObsoleteTempDirectory(OVER_MAX_PATH_SIZE, cacheDirs);
-    EXPECT_EQ(cacheDirs.size(), 0);
-}
 } // OHOS

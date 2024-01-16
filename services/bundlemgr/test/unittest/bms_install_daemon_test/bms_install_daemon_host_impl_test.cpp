@@ -892,18 +892,4 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | Sma
     auto ret = hostImpl->ExtractDriverSoFiles("", dirMap);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
-
-/**
- * @tc.number: InstalldHostImplTest_5100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling GetObsoleteBundleTempPath of hostImpl
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5100, Function | SmallTest | Level1)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
-    std::vector<std::string> vec;
-    auto ret = hostImpl->GetObsoleteBundleTempPath({TEST_STRING}, vec);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
 } // OHOS

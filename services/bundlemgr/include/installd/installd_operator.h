@@ -185,15 +185,6 @@ public:
      * @return Returns true if successfully; returns false otherwise.
      */
     static void TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs);
-
-    /**
-     * @brief Traverse all obsolete temp directories.
-     * @param currentPath Indicates the current path.
-     * @param tempDirs Indicates the temp directories.
-     * @return Returns true if successfully; returns false otherwise.
-     */
-    static void TraverseObsoleteTempDirectory(const std::string &currentPath, std::vector<std::string> &tempDirs);
-
     /**
      * @brief Get disk usage from path.
      * @param path Indicates the current path.

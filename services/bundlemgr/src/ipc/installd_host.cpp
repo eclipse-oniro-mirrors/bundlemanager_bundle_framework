@@ -31,7 +31,6 @@ namespace {
 const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
 const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
 const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
-constexpr uint32_t SEND_MAX_SIZE = 1000;
 }
 
 InstalldHost::InstalldHost()
@@ -70,8 +69,6 @@ void InstalldHost::Init()
         &InstalldHost::HandleGetBundleStats);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH),
         &InstalldHost::HandleGetBundleCachePath);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_OBSOLETE_BUNDLE_TEMP_PATH),
-        &InstalldHost::HandleGetObsoleteBundleTempPath);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR), &InstalldHost::HandleScanDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE), &InstalldHost::HandleMoveFile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE), &InstalldHost::HandleCopyFile);
@@ -318,28 +315,6 @@ bool InstalldHost::HandleGetBundleCachePath(MessageParcel &data, MessageParcel &
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(cachePath)) {
         APP_LOGE("fail to GetBundleCachePath from reply");
-        return false;
-    }
-    return true;
-}
-
-bool InstalldHost::HandleGetObsoleteBundleTempPath(MessageParcel &data, MessageParcel &reply)
-{
-    auto dirsSize = data.ReadUint32();
-    if (dirsSize > SEND_MAX_SIZE) {
-        APP_LOGE("Dirs size exceeds the maximum value.");
-        return false;
-    }
-    std::vector<std::string> dirs;
-    for (uint32_t index = 0; index < dirsSize; ++index) {
-        auto dir = data.ReadString();
-        dirs.push_back(dir);
-    }
-    std::vector<std::string> tempPaths;
-    ErrCode result = GetObsoleteBundleTempPath(dirs, tempPaths);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    if (!reply.WriteStringVector(tempPaths)) {
-        APP_LOGE("Fail to get obsolete bundle temp path from reply");
         return false;
     }
     return true;

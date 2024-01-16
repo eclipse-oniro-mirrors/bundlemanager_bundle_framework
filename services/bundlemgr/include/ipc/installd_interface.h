@@ -180,17 +180,6 @@ public:
         return ERR_OK;
     }
     /**
-     * @brief Get all obsolete temp file path.
-     * @param dirs Indicates the data dir list.
-     * @param tempPaths Indicates the temp file path to clear.
-     * @return Returns ERR_OK if get temp file path successfully; returns error code otherwise.
-     */
-    virtual ErrCode GetObsoleteBundleTempPath(
-        const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
-    {
-        return ERR_OK;
-    }
-    /**
      * @brief Scan dir by scanMode and resultMode. this interface has higher permissions to scan.
      * @param dir Indicates the directory to be scanned.
      * @param scanMode Indicates the scan mode.

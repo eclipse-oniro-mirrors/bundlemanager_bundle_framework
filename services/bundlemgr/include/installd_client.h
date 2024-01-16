@@ -132,14 +132,6 @@ public:
      */
     ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath);
 
-    /**
-     * @brief Get all obsolete temp file path.
-     * @param dirs Indicates the data dir list.
-     * @param tempPath Indicates the cache file path.
-     * @return Returns ERR_OK if get cache file path successfully; returns error code otherwise.
-     */
-    ErrCode GetObsoleteBundleTempPath(const std::vector<std::string> &dirs, std::vector<std::string> &tempPath);
-
     ErrCode ScanDir(
         const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 

@@ -3918,32 +3918,6 @@ HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: CleanObsoleteBundleTempFiles_0100
- * @tc.name: CleanObsoleteBundleTempFiles
- * @tc.desc: CleanObsoleteBundleTempFiles when callingbundlename is empty.
- */
-HWTEST_F(BmsBundleDataMgrTest, CleanObsoleteBundleTempFiles_0100, Function | SmallTest | Level1)
-{
-    std::string callingBundleName = "";
-    int32_t userId = 100;
-    bundleMgrHostImpl_->CleanObsoleteBundleTempTask(callingBundleName, userId);
-    ErrCode ret = bundleMgrHostImpl_->CleanObsoleteBundleTempFiles();
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-}
-
-/**
- * @tc.number: CleanObsoleteBundleTempFiles_0200
- * @tc.name: CleanObsoleteBundleTempFiles
- * @tc.desc: CleanObsoleteBundleTempFiles when param is empty.
- */
-HWTEST_F(BmsBundleDataMgrTest, CleanObsoleteBundleTempFiles_0200, Function | SmallTest | Level1)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    ErrCode ret = bundleMgrProxy->CleanObsoleteBundleTempFiles();
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-}
-
-/**
  * @tc.number: GetVerifyManager_0100
  * @tc.name: GetVerifyManager
  * @tc.desc: GetVerifyManager when param is empty.

@@ -743,32 +743,6 @@ ErrCode InstalldHostImpl::GetBundleCachePath(const std::string &dir, std::vector
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::GetObsoleteBundleTempPath(
-    const std::vector<std::string> &dirs, std::vector<std::string> &tempPaths)
-{
-    APP_LOGD("Called.");
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        APP_LOGE("Installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
-    if (dirs.empty()) {
-        APP_LOGE("Input param is invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    for (const auto &dir : dirs) {
-        if (dir.empty()) {
-            APP_LOGE("Input param is invalid");
-            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-        }
-        std::vector<std::string> temp;
-        InstalldOperator::TraverseObsoleteTempDirectory(dir, temp);
-        std::copy(temp.begin(), temp.end(), std::back_inserter(tempPaths));
-    }
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::ScanDir(
     const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {

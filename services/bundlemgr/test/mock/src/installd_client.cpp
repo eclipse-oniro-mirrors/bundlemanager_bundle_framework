@@ -378,16 +378,5 @@ bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
 }
-
-ErrCode InstalldClient::GetObsoleteBundleTempPath(
-    const std::vector<std::string> &dirs, std::vector<std::string> &tempPath)
-{
-    if (dirs.empty()) {
-        APP_LOGE("Params are invalid");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-
-    return CallService(&IInstalld::GetObsoleteBundleTempPath, dirs, tempPath);
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

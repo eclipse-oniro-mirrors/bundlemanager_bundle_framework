@@ -469,11 +469,6 @@ public:
         const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
-     * @brief Clears obsolete temp data of a specified application.
-     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
-     */
-    virtual ErrCode CleanObsoleteBundleTempFiles() override;
-    /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
@@ -891,7 +886,6 @@ private:
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
-    void CleanObsoleteBundleTempTask(const std::string &bundleName, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
