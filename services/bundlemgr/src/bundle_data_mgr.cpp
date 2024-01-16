@@ -1941,6 +1941,7 @@ bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
 
 bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
 {
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
@@ -2339,6 +2340,7 @@ bool BundleDataMgr::HasUserInstallInBundle(
 bool BundleDataMgr::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return false;
