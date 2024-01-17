@@ -677,7 +677,7 @@ static bool InnerJSGetAllLauncherAbilityInfos(uint32_t userId,
 
     auto result = launcher->GetAllLauncherAbilityInfos(userId, launcherAbilityInfos);
     if (!result) {
-        APP_LOGE("GetAllLauncherAbilityInfos call error");
+        APP_LOGE("GetAllLauncherAbilityInfos call error, userId is %{public}d", userId);
         return false;
     }
     return true;
@@ -775,7 +775,7 @@ static bool InnerJSGetLauncherAbilityInfos(napi_env env, std::string& bundleName
 
     auto result = launcher->GetAbilityList(bundleName, userId, launcherAbilityInfos);
     if (!result) {
-        APP_LOGE("GetAbilityList call error, bundlename is %{public}s, userId is %{public}d",
+        APP_LOGE("GetAbilityList call error, bundleName is %{public}s, userId is %{public}d",
             bundleName.c_str(), userId);
         return false;
     }
@@ -883,7 +883,7 @@ static bool InnerJSGetShortcutInfos(napi_env env, const std::string& bundleName,
     }
     auto result = launcher->GetShortcutInfos(bundleName, shortcutInfos);
     if (!result) {
-        APP_LOGE("GetShortcutInfos call error");
+        APP_LOGE("GetShortcutInfos call error, bundleName is %{public}s", bundleName.c_str());
         return false;
     }
     return true;
