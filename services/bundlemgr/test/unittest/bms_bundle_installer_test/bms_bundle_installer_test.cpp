@@ -1115,11 +1115,12 @@ HWTEST_F(BmsBundleInstallerTest, GetBundleStats_001, Function | SmallTest | Leve
     EXPECT_EQ(installResult, ERR_OK);
 
     std::vector<int64_t> bundleStats;
-    auto ret = InstalldClient::GetInstance()->GetBundleStats(BUNDLE_BACKUP_NAME, USERID, bundleStats);
+    auto ret = InstalldClient::GetInstance()->GetBundleStats(BUNDLE_BACKUP_NAME, USERID, bundleStats, 0);
     EXPECT_EQ(ret, ERR_OK);
     if (!bundleStats.empty()) {
         EXPECT_NE(bundleStats[0], 0);
-        for (size_t index = NUMBER_ONE; index < bundleStats.size(); index++) {
+        EXPECT_NE(bundleStats[1], 0);
+        for (size_t index = 2; index < bundleStats.size(); index++) {
             EXPECT_EQ(bundleStats[index], 0);
         }
     }
@@ -2540,7 +2541,7 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1500, Function | SmallTest | L
 {
     InstalldHostImpl impl;
     std::vector<int64_t> bundleStats;
-    ErrCode ret = impl.GetBundleStats("", USERID, bundleStats);
+    ErrCode ret = impl.GetBundleStats("", USERID, bundleStats, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

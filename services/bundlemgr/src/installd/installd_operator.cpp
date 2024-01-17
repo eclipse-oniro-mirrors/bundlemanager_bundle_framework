@@ -36,6 +36,7 @@
 #include <sstream>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/quota.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -57,6 +58,8 @@ static std::string PREFIX_TARGET_PATH = "/print_service/";
 static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
+static const std::string PROC_MOUNTS_PATH = "/proc/mounts";
+static const std::string QUOTA_DEVICE_DATA_PATH = "/data";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -65,6 +68,8 @@ static std::string CODE_DECRYPT = "/dev/code_decrypt";
 static int32_t INVALID_RETURN_VALUE = -1;
 static int32_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
+std::recursive_mutex mMountsLock;
+static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
@@ -750,6 +755,66 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
         fileSize += GetDiskUsage(st);
     }
     return fileSize;
+}
+
+bool InstalldOperator::InitialiseQuotaMounts()
+{
+    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
+    mQuotaReverseMounts.clear();
+    std::ifstream mountsFile(PROC_MOUNTS_PATH);
+
+    if (!mountsFile.is_open()) {
+        APP_LOGE("Failed to open mounts file");
+        return false;
+    }
+    std::string line;
+
+    while (std::getline(mountsFile, line)) {
+        std::string device;
+        std::string mountPoint;
+        std::string fsType;
+        std::istringstream lineStream(line);
+
+        if (!(lineStream >> device >> mountPoint >> fsType)) {
+            APP_LOGW("Failed to parse mounts file line: %{public}s", line.c_str());
+            continue;
+        }
+
+        if (mountPoint == QUOTA_DEVICE_DATA_PATH) {
+            struct dqblk dq;
+            if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), 0, reinterpret_cast<char*>(&dq)) == 0) {
+                mQuotaReverseMounts[mountPoint] = device;
+                APP_LOGD("InitialiseQuotaMounts, mountPoint: %{public}s, device: %{public}s", mountPoint.c_str(),
+                    device.c_str());
+            } else {
+                APP_LOGW("InitialiseQuotaMounts, Failed to get quotactl, errno: %{public}d", errno);
+            }
+        }
+    }
+    return true;
+}
+
+int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
+{
+    std::string device = "";
+    if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
+        if (!InitialiseQuotaMounts()) {
+            APP_LOGE("Failed to initialise quota mounts");
+            return 0;
+        }
+    }
+    device = mQuotaReverseMounts[QUOTA_DEVICE_DATA_PATH];
+    if (device.empty()) {
+        APP_LOGW("skip when device no quotas present");
+        return 0;
+    }
+    struct dqblk dq;
+    if (quotactl(QCMD(Q_GETQUOTA, USRQUOTA), device.c_str(), uid, reinterpret_cast<char*>(&dq)) != 0) {
+        APP_LOGE("Failed to get quotactl, errno: %{public}d", errno);
+        return 0;
+    }
+    APP_LOGD("get disk usage from quota, uid: %{public}d, usage: %{public}llu", uid, dq.dqb_curspace);
+    return dq.dqb_curspace;
 }
 
 bool InstalldOperator::ScanDir(

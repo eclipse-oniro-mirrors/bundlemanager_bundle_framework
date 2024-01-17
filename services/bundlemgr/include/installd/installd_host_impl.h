@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 
+#include "bundle_constants.h"
 #include "code_sign_helper.h"
 #include "ipc/installd_host.h"
 #include "installd/installd_operator.h"
@@ -106,8 +107,8 @@ public:
      * @param bundleStats Indicates the bundle Stats.
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
-    virtual ErrCode GetBundleStats(
-        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) override;
+    virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

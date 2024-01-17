@@ -634,7 +634,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
@@ -669,28 +669,12 @@ ErrCode InstalldHostImpl::GetBundleStats(
     int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
     // index 0 : bundle data size
     bundleStats.push_back(fileSize + systemFolderSize);
-    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
-    bundleLocalSize -= cacheSize;
+    int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
     // index 1 : local bundle data size
-    bundleStats.push_back(bundleLocalSize);
-
-    // index 2 : distributed data size
-    std::string distributedfilePath = DISTRIBUTED_FILE;
-    distributedfilePath = distributedfilePath.replace(distributedfilePath.find("%"), 1, std::to_string(userId)) +
-        bundleName;
-    int64_t distributedFileSize = InstalldOperator::GetDiskUsage(distributedfilePath);
-    bundleStats.push_back(distributedFileSize);
-
-    // index 3 : database size
-    std::vector<std::string> dataBasePath;
-    for (const auto &el : Constants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
-            std::to_string(userId) + Constants::DATABASE + bundleName;
-        dataBasePath.push_back(filePath);
-    }
-    int64_t databaseFileSize = InstalldOperator::GetDiskUsageFromPath(dataBasePath);
-    bundleStats.push_back(databaseFileSize);
-
+    bundleStats.push_back(bundleDataSize);
+    bundleStats.push_back(0);
+    bundleStats.push_back(0);
+    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
     // index 4 : cache size
     bundleStats.push_back(cacheSize);
     return ERR_OK;

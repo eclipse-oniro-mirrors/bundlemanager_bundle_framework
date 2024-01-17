@@ -192,6 +192,10 @@ public:
      */
     static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
 
+    static bool InitialiseQuotaMounts();
+
+    static int64_t GetDiskUsageFromQuota(const int32_t uid);
+
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
