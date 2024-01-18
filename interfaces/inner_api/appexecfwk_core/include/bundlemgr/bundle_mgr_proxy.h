@@ -906,6 +906,16 @@ private:
      * @return Returns true if message send successfully; returns false otherwise.
      */
     bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Send a command message from the proxy object and  printf log.
+     * @param code Indicates the message code to be sent.
+     * @param data Indicates the objects to be sent.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if message send successfully; returns false otherwise.
+     */
+    bool SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Send a command message and then get a parcelable information object from the reply.
      * @param code Indicates the message code to be sent.
