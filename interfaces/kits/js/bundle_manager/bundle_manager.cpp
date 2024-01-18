@@ -93,6 +93,14 @@ namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
 
+void HandleCleanEnv(void *data)
+{
+    APP_LOGI("env change clear bms cache");
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    APP_LOGI("env change clear bms cache locked");
+    cache.clear();
+}
+
 ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
@@ -2812,6 +2820,7 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
 
 void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
 {
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     BundleInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<BundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
