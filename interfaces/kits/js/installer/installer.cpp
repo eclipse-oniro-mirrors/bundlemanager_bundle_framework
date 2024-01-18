@@ -563,7 +563,7 @@ static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleNa
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
     if (!res) {
-        APP_LOGE("parse bundleName failed");
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
         return res;
     }
     if (property != nullptr) {

@@ -2624,7 +2624,8 @@ static bool InnerSetApplicationEnabled(const std::string &bundleName, bool isEna
     }
     ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
     if (result != ERR_OK) {
-        APP_LOGE("InnerSetApplicationEnabled failed, error is %{public}d", result);
+        APP_LOGE("InnerSetApplicationEnabled failed, bundleName is %{public}s, error is %{public}d",
+            bundleName.c_str(), result);
         return false;
     }
     return true;
@@ -2660,7 +2661,8 @@ static bool InnerCleanBundleCacheCallback(
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (result != ERR_OK) {
-        APP_LOGE("CleanBundleDataFiles call error");
+        APP_LOGE("CleanBundleDataFiles call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         return false;
     }
 
@@ -2730,7 +2732,7 @@ static bool InnerGetNameForUid(int32_t uid, std::string &bundleName)
         return false;
     }
     if (iBundleMgr->GetNameForUid(uid, bundleName) != ERR_OK) {
-        APP_LOGE("GetNameForUid failed");
+        APP_LOGE("GetNameForUid failed, uid is %{public}d, bundleName is %{public}s", uid, bundleName.c_str());
         return false;
     }
     return true;
@@ -3340,7 +3342,8 @@ static bool InnerGetBundleInfo(
     }
     bool ret = iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, bundleOptions.userId);
     if (!ret) {
-        APP_LOGE("bundleInfo is not find");
+        APP_LOGE("bundleInfo is not find, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, bundleOptions.userId);
     }
     return ret;
 }
@@ -4433,7 +4436,7 @@ static std::string InnerGetAbilityLabel(napi_env env, std::string &bundleName, s
     std::string label;
     ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
     if (ret != ERR_OK) {
-        APP_LOGE("can not GetAbilityLabel.");
+        APP_LOGE("can not GetAbilityLabel, bundleName is %{public}s.", bundleName.c_str());
         return Constants::EMPTY_STRING;
     }
     return label;
@@ -5356,7 +5359,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Recover installParam error.");
+        APP_LOGE("Recover installParam error, bundleName is %{public}s.", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 
@@ -5529,7 +5532,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Uninstall installParam error.");
+        APP_LOGE("Uninstall installParam error, bundleName is %{public}s.", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 

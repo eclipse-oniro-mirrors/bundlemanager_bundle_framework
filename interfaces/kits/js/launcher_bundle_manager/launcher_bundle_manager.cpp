@@ -159,7 +159,8 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
         GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos));
     if (ret != SUCCESS) {
-        APP_LOGE("GetLauncherAbilityByBundleName failed");
+        APP_LOGE("GetLauncherAbilityByBundleName failed, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -360,7 +361,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos));
     if (ret != SUCCESS) {
-        APP_LOGE("GetShortcutInfoV9 failed");
+        APP_LOGE("GetShortcutInfoV9 failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

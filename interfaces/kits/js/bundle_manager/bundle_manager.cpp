@@ -634,7 +634,7 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
     size_t len = 0;
     ErrCode ret = bundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
     if (ret != ERR_OK) {
-        APP_LOGE("get media data failed");
+        APP_LOGE("get media data failed, bundleName is %{public}s", bundleName.c_str());
         return CommonFunc::ConvertErrCode(ret);
     }
     if (mediaDataPtr == nullptr || len == 0) {
@@ -1550,7 +1550,8 @@ static ErrCode InnerCleanBundleCacheCallback(
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (result != ERR_OK) {
-        APP_LOGE("CleanBundleDataFiles call error");
+        APP_LOGE("CleanBundleDataFiles call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
     }
     return CommonFunc::ConvertErrCode(result);
 }
@@ -1820,7 +1821,8 @@ static ErrCode InnerGetLaunchWantForBundleExec(
 
     ErrCode result = iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId);
     if (result != ERR_OK) {
-        APP_LOGE("GetLaunchWantForBundle call error");
+        APP_LOGE("GetLaunchWantForBundle call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
     }
 
     return CommonFunc::ConvertErrCode(result);
@@ -2581,7 +2583,8 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetApplicationInfo failed");
+        APP_LOGE("GetApplicationInfo failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -2661,7 +2664,8 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfo failed");
+        APP_LOGE("GetBundleInfoV9 failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -3557,6 +3561,7 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
     if (ret != SUCCESS) {
+        APP_LOGE("GetSpecifiedDistributionType failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
@@ -3602,6 +3607,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
     if (ret != SUCCESS) {
+        APP_LOGE("GetAdditionalInfo call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -3652,7 +3658,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(flags, bundleInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfoForSelfSync failed");
+        APP_LOGE("GetBundleInfoForSelfSync failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -3729,6 +3735,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile));
     if (ret != SUCCESS) {
+        APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -3849,7 +3856,7 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     }
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("Call failed");
+        APP_LOGE("Call failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
