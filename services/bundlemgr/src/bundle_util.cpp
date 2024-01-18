@@ -30,8 +30,9 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#include "hitrace_meter.h"
 #include "directory_ex.h"
+#include "hitrace_meter.h"
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "string_ex.h"
 
@@ -688,6 +689,11 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (dirType == DirType::STREAM_INSTALL_DIR) {
         subStr = Constants::STREAM_INSTALL_PATH;
         destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
+        mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+        if (InstalldClient::GetInstance()->Mkdir(
+            destination, mode, Constants::FOUNDATION_UID, Constants::BMS_GID) != ERR_OK) {
+            APP_LOGW("installd mkdir %{private}s failed", destination.c_str());
+        }
     }
     if (dirType == DirType::SIG_FILE_DIR) {
         subStr = Constants::SIGNATURE_FILE_PATH;
