@@ -1572,7 +1572,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         return true;
     }
 
-    APP_LOGW("query abilityUri(%{private}s) failed.", abilityUri.c_str());
+    APP_LOGW("query abilityUri(%{public}s) failed.", abilityUri.c_str());
     return false;
 }
 
@@ -3790,7 +3790,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         return false;
     }
     if (extensionInfos.size() == 0) {
-        APP_LOGW("no matching abilityInfo, action:%{public}s, uri:%{private}s, type:%{public}s",
+        APP_LOGW("no matching abilityInfo, action:%{public}s, uri:%{public}s, type:%{public}s",
             want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
         return false;
     }
@@ -4553,7 +4553,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
             moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
         }
         if (!moduleResPath.empty()) {
-            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{private}s", moduleResPath.c_str());
+            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
             if (!resourceManager->AddResource(moduleResPath.c_str())) {
                 APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
             }

@@ -960,7 +960,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("GetBundleArchiveInfo file path %{private}s invalid", hapFilePath.c_str());
+            APP_LOGE("GetBundleArchiveInfo file path %{public}s invalid", hapFilePath.c_str());
             return false;
         }
 
@@ -998,7 +998,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     std::string realPath;
     ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleArchiveInfoV9 file path %{private}s invalid", hapFilePath.c_str());
+        APP_LOGE("GetBundleArchiveInfoV9 file path %{public}s invalid", hapFilePath.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     InnerBundleInfo info;
@@ -1224,7 +1224,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             for (const auto& cache : caches) {
                 ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
                 if (ret != ERR_OK) {
-                    APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+                    APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
                     succeed = false;
                 }
             }
