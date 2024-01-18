@@ -946,6 +946,12 @@ bool InstalldOperator::CopyFile(
     return true;
 }
 
+bool InstalldOperator::CopyFileFast(const std::string &sourcePath, const std::string &destPath)
+{
+    APP_LOGD("begin");
+    return BundleUtil::CopyFileFast(sourcePath, destPath);
+}
+
 bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
     const std::string &cpuAbi)
 {
