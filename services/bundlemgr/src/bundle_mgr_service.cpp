@@ -433,7 +433,7 @@ void BundleMgrService::CheckAllUser()
         return;
     }
 
-    APP_LOGI("Check all user start.");
+    APP_LOGD("Check all user start.");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     for (auto userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
@@ -447,11 +447,10 @@ void BundleMgrService::CheckAllUser()
         }
 
         if (!isExists) {
-            APP_LOGI("Query user(%{public}d) success but not complete and remove it", userId);
             userMgrHost_->RemoveUser(userId);
         }
     }
-    APP_LOGI("Check all user end");
+    APP_LOGD("Check all user end");
 }
 
 void BundleMgrService::RegisterService()
@@ -471,7 +470,7 @@ void BundleMgrService::RegisterService()
 
 void BundleMgrService::NotifyBundleScanStatus()
 {
-    APP_LOGI("PublishCommonEvent for bundle scan finished");
+    APP_LOGD("PublishCommonEvent for bundle scan finished");
     AAFwk::Want want;
     want.SetAction(COMMON_EVENT_BUNDLE_SCAN_FINISHED);
     EventFwk::CommonEventData commonEventData { want };
@@ -479,7 +478,7 @@ void BundleMgrService::NotifyBundleScanStatus()
         notifyBundleScanStatus = true;
         APP_LOGE("PublishCommonEvent for bundle scan finished failed.");
     } else {
-        APP_LOGI("PublishCommonEvent for bundle scan finished succeed.");
+        APP_LOGD("PublishCommonEvent for bundle scan finished succeed.");
     }
 }
 

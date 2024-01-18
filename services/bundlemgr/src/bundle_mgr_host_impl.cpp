@@ -946,7 +946,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
     const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGD("start GetBundleArchiveInfo, hapFilePath : %{public}s, flags : %{public}d", hapFilePath.c_str(), flags);
+    APP_LOGD("start GetBundleArchiveInfo, hapFilePath : %{private}s, flags : %{public}d",
+        hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
@@ -960,7 +961,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("GetBundleArchiveInfo file path %{public}s invalid", hapFilePath.c_str());
+            APP_LOGE("GetBundleArchiveInfo file path %{private}s invalid", hapFilePath.c_str());
             return false;
         }
 
@@ -982,7 +983,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{public}s, flags : %{public}d", hapFilePath.c_str(), flags);
+    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{private}s, flags : %{public}d",
+        hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -998,7 +1000,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     std::string realPath;
     ErrCode ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleArchiveInfoV9 file path %{public}s invalid", hapFilePath.c_str());
+        APP_LOGE("GetBundleArchiveInfoV9 file path %{private}s invalid", hapFilePath.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
     InnerBundleInfo info;
@@ -1224,7 +1226,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             for (const auto& cache : caches) {
                 ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
                 if (ret != ERR_OK) {
-                    APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
+                    APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
                     succeed = false;
                 }
             }
