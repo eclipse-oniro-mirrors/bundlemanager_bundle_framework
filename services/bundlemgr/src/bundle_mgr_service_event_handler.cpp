@@ -295,6 +295,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
 #endif
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1001,6 +1002,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppDataDir();
 #endif
     ProcessCheckAppLogDir();
+    ProcessCheckAppFileManagerDir();
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -1114,6 +1116,34 @@ void BMSEventHandler::InnerProcessCheckAppLogDir()
         return;
     }
     UpdateAppDataMgr::ProcessUpdateAppLogDir(bundleInfos, Constants::DEFAULT_USERID);
+}
+
+void BMSEventHandler::ProcessCheckAppFileManagerDir()
+{
+    bool checkDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR, checkDir);
+    if (checkDir) {
+        APP_LOGI("Not need to check file manager dir due to has checked.");
+        return;
+    }
+    APP_LOGI("Need to check file manager dir.");
+    InnerProcessCheckAppFileManagerDir();
+    UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
+        APP_LOGE("GetAllBundleInfos failed");
+        return;
+    }
+    UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::DEFAULT_USERID);
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
