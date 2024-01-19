@@ -37,7 +37,8 @@
                 "launchType":"standard"
             }
         ],
-        "deviceType":[
+        "deviceType": [
+            "2in1",
             "tablet",
             "default"
         ],

@@ -20,6 +20,7 @@
     "module": {
         "name": ".MyApplication",
         "deviceType": [
+            "2in1",
             "tablet",
             "default",
             "phone"
