@@ -759,7 +759,6 @@ int64_t InstalldOperator::GetDiskUsageFromPath(const std::vector<std::string> &p
 
 bool InstalldOperator::InitialiseQuotaMounts()
 {
-    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
     mQuotaReverseMounts.clear();
     std::ifstream mountsFile(PROC_MOUNTS_PATH);
 
@@ -796,6 +795,7 @@ bool InstalldOperator::InitialiseQuotaMounts()
 
 int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
 {
+    std::lock_guard<std::recursive_mutex> lock(mMountsLock);
     std::string device = "";
     if (mQuotaReverseMounts.find(QUOTA_DEVICE_DATA_PATH) == mQuotaReverseMounts.end()) {
         if (!InitialiseQuotaMounts()) {
