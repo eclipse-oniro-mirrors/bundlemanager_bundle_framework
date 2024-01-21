@@ -71,7 +71,7 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the bundle file path: %{private}s", realPath.c_str());
+        APP_LOGE("can not access the bundle file path: %{public}s", realPath.c_str());
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
     if (!CheckFileSize(realPath, Constants::MAX_HAP_SIZE)) {
@@ -102,7 +102,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             std::string realPath = "";
             // it is a direction
             if ((s.st_mode & S_IFDIR) && !GetHapFilesFromBundlePath(bundlePath, realPaths)) {
-                APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{private}s", bundlePaths.front().c_str());
+                APP_LOGE("GetHapFilesFromBundlePath failed with bundlePath:%{public}s", bundlePaths.front().c_str());
                 return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
             }
             // it is a file
@@ -111,7 +111,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             }
             return ret;
         } else {
-            APP_LOGE("bundlePath is not existed with :%{private}s", bundlePaths.front().c_str());
+            APP_LOGE("bundlePath is not existed with :%{public}s", bundlePaths.front().c_str());
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     } else {
@@ -130,7 +130,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
 
 bool BundleUtil::CheckFileType(const std::string &fileName, const std::string &extensionName)
 {
-    APP_LOGD("path is %{private}s, support suffix is %{public}s", fileName.c_str(), extensionName.c_str());
+    APP_LOGD("path is %{public}s, support suffix is %{public}s", fileName.c_str(), extensionName.c_str());
     if (!CheckFileName(fileName)) {
         return false;
     }
@@ -188,7 +188,7 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
 {
-    APP_LOGD("GetHapFilesFromBundlePath with path is %{private}s", currentBundlePath.c_str());
+    APP_LOGD("GetHapFilesFromBundlePath with path is %{public}s", currentBundlePath.c_str());
     if (currentBundlePath.empty()) {
         return false;
     }
@@ -196,7 +196,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{private}s is failure due to %{public}s",
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s",
             currentBundlePath.c_str(), errMsg);
         return false;
     }
@@ -212,12 +212,12 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         const std::string hapFilePath = bundlePath + entry->d_name;
         std::string realPath = "";
         if (CheckFilePath(hapFilePath, realPath) != ERR_OK) {
-            APP_LOGE("find invalid hap path %{private}s", hapFilePath.c_str());
+            APP_LOGE("find invalid hap path %{public}s", hapFilePath.c_str());
             closedir(dir);
             return false;
         }
         hapFileList.emplace_back(realPath);
-        APP_LOGD("find hap path %{private}s", realPath.c_str());
+        APP_LOGD("find hap path %{public}s", realPath.c_str());
 
         if (!hapFileList.empty() && (hapFileList.size() > Constants::MAX_HAP_NUMBER)) {
             APP_LOGE("reach the max hap number 128, stop to add more.");
@@ -334,16 +334,16 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
 std::string BundleUtil::CreateTempDir(const std::string &tempDir)
 {
     if (!OHOS::ForceCreateDirectory(tempDir)) {
-        APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
+        APP_LOGE("mkdir %{public}s failed", tempDir.c_str());
         return "";
     }
     if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
-        APP_LOGE("fail to change %{private}s ownership", tempDir.c_str());
+        APP_LOGE("fail to change %{public}s ownership", tempDir.c_str());
         return "";
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
     if (!OHOS::ChangeModeFile(tempDir, mode)) {
-        APP_LOGE("change mode failed, temp install dir : %{private}s", tempDir.c_str());
+        APP_LOGE("change mode failed, temp install dir : %{public}s", tempDir.c_str());
         return "";
     }
     return tempDir;

@@ -148,7 +148,7 @@ bool InstalldOperator::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGW("the path is not existed %{private}s", path.c_str());
+        APP_LOGW("the path is not existed %{public}s", path.c_str());
         return false;
     }
     return S_ISDIR(buf.st_mode);
@@ -336,7 +336,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     // create dir if not exist
     if (!IsExistDir(targetPath)) {
         if (!MkRecursiveDir(targetPath, true)) {
-            APP_LOGE("create targetPath %{private}s failed", targetPath.c_str());
+            APP_LOGE("create targetPath %{public}s failed", targetPath.c_str());
             return;
         }
     }
@@ -355,7 +355,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (targetName.find(Constants::PATH_SEPARATOR) != std::string::npos) {
         std::string dir = GetPathDir(path);
         if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
-            APP_LOGE("create dir %{private}s failed", dir.c_str());
+            APP_LOGE("create dir %{public}s failed", dir.c_str());
             return;
         }
     }
@@ -376,7 +376,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (!OHOS::ChangeModeFile(path, mode)) {
         return;
     }
-    APP_LOGD("extract file success, path : %{private}s", path.c_str());
+    APP_LOGD("extract file success, path : %{public}s", path.c_str());
 }
 
 bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
@@ -445,7 +445,7 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        APP_LOGE("realOldPath %{private}s", realOldPath.c_str());
+        APP_LOGE("realOldPath %{public}s", realOldPath.c_str());
         return false;
     }
 
@@ -513,12 +513,12 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
 
 bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid, const int gid)
 {
-    APP_LOGD("begin to change %{private}s file attribute", filePath.c_str());
+    APP_LOGD("begin to change %{public}s file attribute", filePath.c_str());
     if (chown(filePath.c_str(), uid, gid) != 0) {
-        APP_LOGE("fail to change %{private}s ownership, uid=%{public}d", filePath.c_str(), uid);
+        APP_LOGE("fail to change %{public}s ownership, uid=%{public}d", filePath.c_str(), uid);
         return false;
     }
-    APP_LOGD("change %{private}s file attribute successfully", filePath.c_str());
+    APP_LOGD("change %{public}s file attribute successfully", filePath.c_str());
     return true;
 }
 
@@ -675,12 +675,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir)
     }
     std::string filePath = "";
     if (!PathToRealPath(dir, filePath)) {
-        APP_LOGE("file is not real path, file path: %{private}s", dir.c_str());
+        APP_LOGE("file is not real path, file path: %{public}s", dir.c_str());
         return 0;
     }
     DIR *dirPtr = opendir(filePath.c_str());
     if (dirPtr == nullptr) {
-        APP_LOGE("GetDiskUsage open file dir:%{private}s is failure", filePath.c_str());
+        APP_LOGE("GetDiskUsage open file dir:%{public}s is failure", filePath.c_str());
         return 0;
     }
     if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
@@ -695,12 +695,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir)
         std::string path = filePath + entry->d_name;
         std::string realPath = "";
         if (!PathToRealPath(path, realPath)) {
-            APP_LOGE("file is not real path %{private}s", path.c_str());
+            APP_LOGE("file is not real path %{public}s", path.c_str());
             continue;
         }
         struct stat fileInfo = {0};
         if (stat(realPath.c_str(), &fileInfo) != 0) {
-            APP_LOGE("call stat error %{private}s", realPath.c_str());
+            APP_LOGE("call stat error %{public}s", realPath.c_str());
             fileInfo.st_size = 0;
         }
         size += fileInfo.st_size;
@@ -720,7 +720,7 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
     }
     std::string filePath = "";
     if (!PathToRealPath(currentPath, filePath)) {
-        APP_LOGE("file is not real path, file path: %{private}s", currentPath.c_str());
+        APP_LOGE("file is not real path, file path: %{public}s", currentPath.c_str());
         return;
     }
     DIR* dir = opendir(filePath.c_str());
@@ -876,12 +876,12 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
     }
     std::string filePath = "";
     if (!PathToRealPath(currentPath, filePath)) {
-        APP_LOGE("file is not real path, file path: %{private}s", currentPath.c_str());
+        APP_LOGE("file is not real path, file path: %{public}s", currentPath.c_str());
         return false;
     }
     DIR* dir = opendir(filePath.c_str());
     if (dir == nullptr) {
-        APP_LOGE("ScanSoFiles open dir(%{private}s) fail", filePath.c_str());
+        APP_LOGE("ScanSoFiles open dir(%{public}s) fail", filePath.c_str());
         return false;
     }
     if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
@@ -909,7 +909,7 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
             paths.emplace_back(relativePath);
             std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
             if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
-                APP_LOGE("ScanSoFiles create subNewSoPath (%{private}s) failed", filePath.c_str());
+                APP_LOGE("ScanSoFiles create subNewSoPath (%{public}s) failed", filePath.c_str());
                 closedir(dir);
                 return false;
             }
@@ -1014,7 +1014,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
 {
-    APP_LOGI("ProcessApplyDiffPatchPath oldSoPath: %{private}s, diffFilePath: %{private}s, newSoPath: %{public}s",
+    APP_LOGI("ProcessApplyDiffPatchPath oldSoPath: %{public}s, diffFilePath: %{public}s, newSoPath: %{public}s",
         oldSoPath.c_str(), diffFilePath.c_str(), newSoPath.c_str());
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         return false;
@@ -1042,7 +1042,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
     if (!IsExistDir(newSoPath)) {
         APP_LOGD("ProcessApplyDiffPatchPath create newSoPath");
         if (!MkRecursiveDir(newSoPath, true)) {
-            APP_LOGE("ProcessApplyDiffPatchPath create newSo dir (%{private}s) failed", newSoPath.c_str());
+            APP_LOGE("ProcessApplyDiffPatchPath create newSo dir (%{public}s) failed", newSoPath.c_str());
             return false;
         }
     }
@@ -1648,7 +1648,7 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
     /* create innerTmpSoPath */
     if (!IsExistDir(innerTmpSoPath)) {
         if (!MkRecursiveDir(innerTmpSoPath, true)) {
-            APP_LOGE("create innerTmpSoPath %{private}s failed", innerTmpSoPath.c_str());
+            APP_LOGE("create innerTmpSoPath %{public}s failed", innerTmpSoPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
@@ -1657,12 +1657,12 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
         APP_LOGD("entryName is %{public}s", entry.c_str());
         auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;
         }
         std::string soFileName = entry.substr(pos + 1);
         if (soFileName.empty()) {
-            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;
         }
         APP_LOGD("so file is %{public}s", soFileName.c_str());
@@ -1677,7 +1677,7 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
         /* mmap so to ram and write so file to temp path */
         ErrCode res = ERR_OK;
         if ((res = DecryptSoFile(hapPath, innerTmpSoPath + soFileName, uid, length, offset)) != ERR_OK) {
-            APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", hapPath.c_str(),
+            APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", hapPath.c_str(),
                 (innerTmpSoPath + soFileName).c_str());
             return res;
         }
@@ -1713,7 +1713,7 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     // create innerTmpSoPath
     if (!IsExistDir(innerTmpSoPath)) {
         if (!MkRecursiveDir(innerTmpSoPath, true)) {
-            APP_LOGE("create innerTmpSoPath %{private}s failed", innerTmpSoPath.c_str());
+            APP_LOGE("create innerTmpSoPath %{public}s failed", innerTmpSoPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
@@ -1721,12 +1721,12 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     for (const auto &entry : soEntryFiles) {
         auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;
         }
         std::string soFileName = entry.substr(pos + 1);
         if (soFileName.empty()) {
-            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;
         }
 
@@ -1738,12 +1738,12 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
             ErrCode res = ERR_OK;
             APP_LOGD("tmp so path is %{public}s", (innerTmpSoPath + soFileName).c_str());
             if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid, 0, 0)) != ERR_OK) {
-                APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", soPath.c_str(),
+                APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", soPath.c_str(),
                     (innerTmpSoPath + soFileName).c_str());
                 return res;
             }
         } else {
-            APP_LOGW("so file %{private}s is not existed", soPath.c_str());
+            APP_LOGW("so file %{public}s is not existed", soPath.c_str());
         }
     }
     return ERR_OK;
@@ -1767,7 +1767,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     /* mmap hap or so file to ram */
     std::string newfilePath;
     if (!PathToRealPath(filePath, newfilePath)) {
-        APP_LOGE("file is not real path, file path: %{private}s", filePath.c_str());
+        APP_LOGE("file is not real path, file path: %{public}s", filePath.c_str());
         return result;
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY);
@@ -1847,7 +1847,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     /* open CODE_DECRYPT */
     std::string newCodeDecrypt;
     if (!PathToRealPath(CODE_DECRYPT, newCodeDecrypt)) {
-        APP_LOGE("file is not real path, file path: %{private}s", CODE_DECRYPT.c_str());
+        APP_LOGE("file is not real path, file path: %{public}s", CODE_DECRYPT.c_str());
         return INVALID_RETURN_VALUE;
     }
     fd = open(newCodeDecrypt.c_str(), O_RDONLY);

@@ -171,11 +171,11 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::LOG + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
-        APP_LOGE("path: %{private}s IsExistDir failed", bundleLogDir.c_str());
+        APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());
         return false;
     }
     if (isExist) {
-        APP_LOGD("path: %{private}s is exist", bundleLogDir.c_str());
+        APP_LOGD("path: %{public}s is exist", bundleLogDir.c_str());
         return false;
     }
     if (InstalldClient::GetInstance()->Mkdir(

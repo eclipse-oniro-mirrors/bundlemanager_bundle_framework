@@ -946,7 +946,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 bool BundleMgrHostImpl::GetBundleArchiveInfo(
     const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGD("start GetBundleArchiveInfo, hapFilePath : %{public}s, flags : %{public}d", hapFilePath.c_str(), flags);
+    APP_LOGD("start GetBundleArchiveInfo, hapFilePath : %{private}s, flags : %{public}d",
+        hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
@@ -982,7 +983,8 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
 ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
     const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{public}s, flags : %{public}d", hapFilePath.c_str(), flags);
+    APP_LOGD("start GetBundleArchiveInfoV9, hapFilePath : %{private}s, flags : %{public}d",
+        hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
