@@ -310,7 +310,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0011, Function | SmallTest
     std::vector<int64_t> bundleStats;
     ErrCode res = bmsExtensionDataMgr.GetBundleStats("", USERID, bundleStats);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -326,7 +326,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0012, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.ClearData("", USERID);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -342,7 +342,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0013, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.ClearCache("", nullptr, USERID);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
@@ -373,7 +373,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0015, Function | SmallTest
     std::string bundleName = "";
     ErrCode res = bmsExtensionDataMgr.GetBundleNameByUid(TEST_UID, bundleName);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
+    EXPECT_EQ(res, ERR_APPEXECFWK_FAILED_GET_REMOTE_PROXY);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
     #endif
