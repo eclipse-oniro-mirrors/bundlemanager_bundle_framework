@@ -252,7 +252,6 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
 #endif
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
-    BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
     HandleSceneBoard();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();

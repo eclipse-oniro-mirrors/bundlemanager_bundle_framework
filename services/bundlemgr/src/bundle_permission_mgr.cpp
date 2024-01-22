@@ -433,32 +433,31 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
             return false;
         }
     }
-    if (innerBundleInfo.GetIsPreInstallApp()) {
-        for (const auto &perm: userGrantPermList) {
-            bool userCancellable = false;
-            DefaultPermission permission;
-            if (!GetDefaultPermission(bundleName, permission)) {
-                continue;
-            }
+
+    for (const auto &perm: userGrantPermList) {
+        bool userCancellable = false;
+        DefaultPermission permission;
+        if (!GetDefaultPermission(bundleName, permission)) {
+            continue;
+        }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
-                !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
-                !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
-                !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
-                continue;
-            }
+        if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+            !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+            !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+            !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+            continue;
+        }
 #endif
 
-            if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
-                continue;
-            }
-            AccessToken::PermissionFlag flag = userCancellable ?
-                AccessToken::PermissionFlag::PERMISSION_GRANTED_BY_POLICY :
-                AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED;
-            if (!GrantPermission(tokenId, perm, flag, bundleName)) {
-                return false;
-            }
+        if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
+            continue;
+        }
+        AccessToken::PermissionFlag flag = userCancellable ?
+            AccessToken::PermissionFlag::PERMISSION_GRANTED_BY_POLICY :
+            AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED;
+        if (!GrantPermission(tokenId, perm, flag, bundleName)) {
+            return false;
         }
     }
     APP_LOGD("InnerGrantRequestPermissions end, bundleName:%{public}s", bundleName.c_str());
