@@ -124,6 +124,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL4);
 #endif
     ProcessUpdateAppLogDir(bundleInfos, userId);
+    ProcessFileManagerDir(bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
@@ -182,6 +183,43 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         bundleLogDir, S_IRWXU | S_IRWXG, bundleInfo.uid, Constants::LOG_DIR_GID) != ERR_OK) {
         APP_LOGE("CreateBundleLogDir failed");
         return false;
+    }
+    return true;
+}
+
+void UpdateAppDataMgr::ProcessFileManagerDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    for (const auto &bundleInfo : bundleInfos) {
+        if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
+            continue;
+        }
+        if (!CreateBundleCloudDir(bundleInfo, userId)) {
+            APP_LOGW("ProcessFileManageDir failed");
+        }
+    }
+}
+
+bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId)
+{
+    const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
+    std::string bundleCloudDir = CLOUD_FILE_PATH + bundleInfo.name;
+    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, std::to_string(userId));
+    bool isExist = false;
+    if (InstalldClient::GetInstance()->IsExistDir(bundleCloudDir, isExist) != ERR_OK) {
+        APP_LOGE("path: %{private}s IsExistDir failed", bundleCloudDir.c_str());
+        return false;
+    }
+    if (isExist) {
+        APP_LOGD("path: %{private}s is exist", bundleCloudDir.c_str());
+        return false;
+    }
+    if (!InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
+        bundleInfo.uid, Constants::DFS_GID)) {
+        static std::once_flag cloudOnce;
+        std::call_once(cloudOnce, [bundleInfo]() {
+            APP_LOGW("CreateCloudDir failed for bundle %{private}s errno:%{public}d",
+                     bundleInfo.name.c_str(), errno);
+        });
     }
     return true;
 }
