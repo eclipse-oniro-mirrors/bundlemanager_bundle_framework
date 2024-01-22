@@ -486,7 +486,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
 ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
-    std::vector<std::string> controlList = {DISPOSED_RULE, DISPOSED_STATUS};
+    std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL};
     absRdbPredicates.In(APP_CONTROL_LIST, controlList);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
