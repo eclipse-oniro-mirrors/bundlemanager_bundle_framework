@@ -784,6 +784,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
+    baseApplicationInfo_->bundleType = applicationInfo.bundleType;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
