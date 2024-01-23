@@ -830,12 +830,11 @@ ErrCode BaseBundleInstaller::CheckAppService(
     }
 
     if (isAppExist) {
-        if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+        isAppService_ = oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
+        if (isAppService_ && oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
             APP_LOGW("Bundle(%{public}s) type is not same.", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
-
-        isAppService_ = oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
     }
     return ERR_OK;
 }
