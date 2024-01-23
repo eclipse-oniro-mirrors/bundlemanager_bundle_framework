@@ -1888,5 +1888,53 @@ HWTEST_F(BmsInstallSystemTest, BMS_UpdateBundleForSelf_0100, Function | MediumTe
     bool res = UpdateBundleForSelf(bundleFilePaths);
     EXPECT_EQ(res, true);
 }
+
+/**
+ * @tc.number: CompileProcessAOT_0100
+ * @tc.name: CompileProcessAOT
+ * @tc.desc: CompileProcessAOT when param is empty.
+ */
+HWTEST_F(BmsInstallSystemTest, CompileProcessAOT_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "", false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CompileReset_0100
+ * @tc.name: CompileReset
+ * @tc.desc: CompileReset when param is empty.
+ */
+HWTEST_F(BmsInstallSystemTest, CompileReset_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CompileReset("", false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0100
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: CreateBundleDataDir when param is default userId.
+ */
+HWTEST_F(BmsInstallSystemTest, CreateBundleDataDir_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CreateBundleDataDir(USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
