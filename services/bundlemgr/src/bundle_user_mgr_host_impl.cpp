@@ -113,9 +113,6 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
 {
-    if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
-    }
     ClearBundleEvents();
 }
 
@@ -216,7 +213,6 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
 
-    BundlePermissionMgr::UnInit();
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
