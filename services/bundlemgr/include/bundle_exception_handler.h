@@ -53,6 +53,8 @@ public:
      */
     void DeleteBundleInfoFromStorage(const InnerBundleInfo &info);
 
+    bool IsBundleHapPathExist(const InnerBundleInfo &info);
+
 private:
     std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
