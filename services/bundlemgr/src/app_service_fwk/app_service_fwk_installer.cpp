@@ -740,7 +740,9 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
         return true;
     }
-    if (oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+
+    if ((oldInfo.GetVersionCode() == versionCode_) &&
+        oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
         APP_LOGW("bundle %{public}s type is not same, existing bundle type is %{public}d",
             bundleName_.c_str(), oldInfo.GetApplicationBundleType());
         return false;
