@@ -434,22 +434,23 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
         }
     }
 
-    for (const auto &perm: userGrantPermList) {
-        bool userCancellable = false;
-        DefaultPermission permission;
-        if (!GetDefaultPermission(bundleName, permission)) {
-            continue;
-        }
+    DefaultPermission permission;
+    if (!GetDefaultPermission(bundleName, permission)) {
+        return true;
+    }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-        if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
-            !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
-            !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
-            !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
-            continue;
-        }
+    if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+        !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+        APP_LOGW("bundleName:%{public}s MatchSignature failed", bundleName.c_str());
+        return true;
+    }
 #endif
 
+    for (const auto &perm: userGrantPermList) {
+        bool userCancellable = false;
         if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
             continue;
         }
