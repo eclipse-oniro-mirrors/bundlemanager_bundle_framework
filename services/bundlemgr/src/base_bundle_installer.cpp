@@ -151,7 +151,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to process bundle install");
+    APP_LOGI("begin to process bundle install");
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
@@ -195,7 +195,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
 ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process bundle install by bundleName, which is %{public}s.", bundleName.c_str());
+    APP_LOGI("begin to process bundle install by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     int32_t uid = Constants::INVALID_UID;
@@ -229,7 +229,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 ErrCode BaseBundleInstaller::Recover(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
+    APP_LOGI("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
@@ -265,7 +265,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process %{public}s bundle uninstall", bundleName.c_str());
+    APP_LOGI("begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
     // uninstall all sandbox app before
@@ -317,7 +317,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
-    APP_LOGD("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
+    APP_LOGI("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
     std::string bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
@@ -441,7 +441,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
+    APP_LOGI("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
     // uninstall all sandbox app before
