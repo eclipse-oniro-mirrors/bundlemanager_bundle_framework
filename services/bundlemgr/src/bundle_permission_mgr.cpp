@@ -179,7 +179,7 @@ AccessToken::AccessTokenIDEx BundlePermissionMgr::CreateAccessTokenIdEx(
     hapInfo.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
     hapInfo.isSystemApp = innerBundleInfo.IsSystemApp();
     AccessToken::AccessTokenIDEx accessToken = AccessToken::AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
-    APP_LOGD("BundlePermissionMgr::CreateAccessTokenId bundleName: %{public}s, accessTokenId = %{public}u",
+    APP_LOGI("BundlePermissionMgr::CreateAccessTokenId bundleName: %{public}s, accessTokenId = %{public}u",
              bundleName.c_str(), accessToken.tokenIdExStruct.tokenID);
     return accessToken;
 }
@@ -199,7 +199,7 @@ bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(Security::AccessToke
 
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = newInfo.GetAppPrivilegeLevel();
-    APP_LOGD("newDefPermList size:%{public}zu, newPermissionStateList size:%{public}zu, isSystemApp: %{public}d",
+    APP_LOGI("newDefPermList size:%{public}zu, newPermissionStateList size:%{public}zu, isSystemApp: %{public}d",
              newDefPermList.size(), newPermissionStateList.size(), newInfo.IsSystemApp());
     hapPolicy.apl = GetTokenApl(apl);
     hapPolicy.domain = "domain"; // default
@@ -326,7 +326,7 @@ bool BundlePermissionMgr::AddDefineAndRequestPermissions(Security::AccessToken::
 
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
-    APP_LOGD("BundlePermissionMgr::AddDefineAndRequestPermissions apl : %{public}s, newDefPermList size : %{public}zu, \
+    APP_LOGI("BundlePermissionMgr::AddDefineAndRequestPermissions apl : %{public}s, newDefPermList size : %{public}zu, \
              newPermissionStateList size : %{public}zu", apl.c_str(), newDefPermList.size(),
              newPermissionStateList.size());
     hapPolicy.apl = GetTokenApl(apl);
@@ -591,7 +591,7 @@ bool BundlePermissionMgr::CheckGrantPermission(
             break;
     }
     if (permDef.provisionEnable) {
-        APP_LOGD("CheckGrantPermission acls size: %{public}zu", acls.size());
+        APP_LOGI("CheckGrantPermission acls size: %{public}zu", acls.size());
         auto res = std::any_of(acls.begin(), acls.end(), [permDef](const auto &perm) {
             return permDef.permissionName == perm;
         });
@@ -599,8 +599,8 @@ bool BundlePermissionMgr::CheckGrantPermission(
             return res;
         }
     }
-    APP_LOGE("BundlePermissionMgr::CheckGrantPermission failed permission name : %{public}s",
-             permDef.permissionName.c_str());
+    APP_LOGE("CheckGrantPermission failed permission: %{public}s, availableLevel %{public}d, apl:%{public}s",
+        permDef.permissionName.c_str(), availableLevel, apl.c_str());
     return false;
 }
 
