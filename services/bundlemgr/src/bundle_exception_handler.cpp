@@ -88,8 +88,6 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
         if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + Constants::TMP_SUFFIX, moduleDir) == ERR_OK) {
             info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
         }
-    } else {
-        APP_LOGD("bundle %{public}s is under unknown installation status", info.GetBundleName().c_str());
     }
 }
 
