@@ -39,18 +39,18 @@ BundleExceptionHandler::~BundleExceptionHandler()
 
 void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
-    auto mark = info.GetInstallMark();
     std::string appCodePath = Constants::BUNDLE_CODE_DIR + info.GetBundleName();
-    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
-        if (!IsBundleHapPathExist(info)) {
-            RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
-            DeleteBundleInfoFromStorage(info);
-            isBundleValid = false;
-        }
+    if (!IsBundleHapPathExist(info)) {
+        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
+        DeleteBundleInfoFromStorage(info);
+        isBundleValid = false;
         return;
     }
-    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(),
-        static_cast<int32_t>(mark.status));
+    auto mark = info.GetInstallMark();
+    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
+        return;
+    }
+    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
     auto moduleDir = appCodePath + Constants::PATH_SEPARATOR + mark.packageName;
     auto moduleDataDir = info.GetBundleName() + Constants::HAPS + mark.packageName;
 
