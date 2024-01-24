@@ -4624,19 +4624,19 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    APP_LOGD("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
+    APP_LOGI("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
         want.ToString().c_str(), flags, userId, withDefault);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
-        APP_LOGD("find target default application");
+        APP_LOGI("find target default application");
         findDefaultApp = true;
         return true;
     }
     // step2 : find backup default infos
     if (withDefault &&
         DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos, true)) {
-        APP_LOGD("find target backup default application");
+        APP_LOGI("find target backup default application");
         findDefaultApp = true;
         return true;
     }

@@ -33,6 +33,8 @@ constexpr int32_t TYPE_PART_COUNT = 2;
 constexpr int32_t INDEX_ZERO = 0;
 constexpr int32_t INDEX_ONE = 1;
 const std::string SPLIT = "/";
+const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
+const std::string EMAIL_SCHEME = "mailto";
 const std::string ENTITY_BROWSER = "entity.system.browsable";
 const std::string HTTP = "http";
 const std::string HTTPS = "https";
@@ -47,6 +49,7 @@ const std::string PDF = "PDF";
 const std::string WORD = "WORD";
 const std::string EXCEL = "EXCEL";
 const std::string PPT = "PPT";
+const std::string EMAIL = "EMAIL";
 const std::map<std::string, std::set<std::string>> APP_TYPES = {
     {IMAGE, {"image/*"}},
     {AUDIO, {"audio/*"}},
@@ -63,7 +66,7 @@ const std::map<std::string, std::set<std::string>> APP_TYPES = {
         "application/vnd.openxmlformats-officedocument.presentationml.presentation",
         "application/vnd.openxmlformats-officedocument.presentationml.template"}},
 };
-const std::set<std::string> supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT};
+const std::set<std::string> supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT, EMAIL};
 }
 
 DefaultAppMgr& DefaultAppMgr::GetInstance()
@@ -319,10 +322,30 @@ bool DefaultAppMgr::IsBrowserWant(const Want& want) const
     return true;
 }
 
+bool DefaultAppMgr::IsEmailWant(const Want& want) const
+{
+    bool matchAction = want.GetAction() == EMAIL_ACTION;
+    if (!matchAction) {
+        APP_LOGD("Action does not match, not email want");
+        return false;
+    }
+    std::string uri = want.GetUriString();
+    bool matchUri = uri.rfind(EMAIL_SCHEME, 0) == 0;
+    if (!matchUri) {
+        APP_LOGD("Uri does not match, not email want");
+        return false;
+    }
+    APP_LOGD("is email want");
+    return true;
+}
+
 std::string DefaultAppMgr::GetType(const Want& want) const
 {
     if (IsBrowserWant(want)) {
         return BROWSER;
+    }
+    if (IsEmailWant(want)) {
+        return EMAIL;
     }
     if (want.GetAction() == Constants::ACTION_VIEW_DATA) {
         std::string type = want.GetType();
@@ -348,7 +371,7 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
 {
     APP_LOGD("begin, backup(bool) : %{public}d", backup);
     std::string type = GetType(want);
-    APP_LOGD("type : %{public}s", type.c_str());
+    APP_LOGI("type : %{public}s", type.c_str());
     if (type.empty()) {
         APP_LOGE("GetType failed");
         return false;
@@ -526,6 +549,9 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
     if (type == BROWSER) {
         return IsBrowserSkillsValid(skills);
     }
+    if (type == EMAIL) {
+        return IsEmailSkillsValid(skills);
+    }
     auto item = APP_TYPES.find(type);
     if (item == APP_TYPES.end()) {
         APP_LOGE("invalid app type : %{public}s.", type.c_str());
@@ -558,6 +584,23 @@ bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
         }
     }
     APP_LOGW("browser skills is invalid.");
+    return false;
+}
+
+bool DefaultAppMgr::IsEmailSkillsValid(const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin to verify email skills");
+    Want want;
+    want.SetAction(EMAIL_ACTION);
+    want.SetUri(EMAIL_SCHEME);
+
+    for (const Skill& skill : skills) {
+        if (skill.Match(want)) {
+            APP_LOGD("email skills valid");
+            return true;
+        }
+    }
+    APP_LOGW("email skills invalid");
     return false;
 }
 

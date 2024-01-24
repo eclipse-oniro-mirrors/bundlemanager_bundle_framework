@@ -59,7 +59,8 @@ static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
     {"PDF Viewer", "PDF"},
     {"Word Viewer", "WORD"},
     {"Excel Viewer", "EXCEL"},
-    {"PPT Viewer", "PPT"}
+    {"PPT Viewer", "PPT"},
+    {"Email", "EMAIL"}
 };
 
 static bool ParseType(napi_env env, napi_value value, std::string& result)

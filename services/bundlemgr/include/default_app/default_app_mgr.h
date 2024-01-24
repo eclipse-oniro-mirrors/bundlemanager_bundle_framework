@@ -60,8 +60,10 @@ private:
     bool IsUserIdExist(int32_t userId) const;
     ErrCode VerifyUserIdAndType(int32_t userId, const std::string& type) const;
     bool IsBrowserSkillsValid(const std::vector<Skill>& skills) const;
+    bool IsEmailSkillsValid(const std::vector<Skill>& skills) const;
     void ConvertTypeBySuffix(std::string& suffix) const;
     bool IsBrowserWant(const AAFwk::Want& want) const;
+    bool IsEmailWant(const AAFwk::Want& want) const;
     std::string GetType(const AAFwk::Want& want) const;
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
 
