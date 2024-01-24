@@ -277,7 +277,7 @@ void BMSEventHandler::ClearCache()
 
 bool BMSEventHandler::LoadInstallInfosFromDb()
 {
-    APP_LOGD("Load install infos from db");
+    APP_LOGI("Load install infos from db");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -320,7 +320,7 @@ void BMSEventHandler::BundleRebootStartEvent()
 
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
 {
-    APP_LOGD("GuardAgainstInstallInfosLossedStrategy start");
+    APP_LOGI("GuardAgainstInstallInfosLossedStrategy start");
     // Check user path, and parse userData to InnerBundleUserInfo
     std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     ScanResultCode scanResultCode = ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
@@ -871,15 +871,13 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
 void BMSEventHandler::InnerProcessBootSystemHspInstall()
 {
     for (const auto &systemHspPath : systemHspList_) {
-        APP_LOGD("Inner process install systemHsp %{public}s on boot",
-            systemHspPath.ToString().c_str());
         ProcessSystemHspInstall(systemHspPath);
     }
 }
 
 void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
 {
-    APP_LOGD("Install systemHsp by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
+    APP_LOGI("Install systemHsp by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
@@ -901,7 +899,6 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
             continue;
         }
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
-            APP_LOGI("found hsp path: %{public}s", installInfo.bundleDir.c_str());
             hspDirs.emplace_back(installInfo.bundleDir);
         } else {
             normalSystemApps.emplace_back(installInfo);
@@ -940,7 +937,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
 void BMSEventHandler::ProcessSystemBundleInstall(
     const std::string &bundleDir, Constants::AppType appType, int32_t userId)
 {
-    APP_LOGD("Process system bundle install by bundleDir(%{public}s)", bundleDir.c_str());
+    APP_LOGI("Process system bundle install by bundleDir(%{public}s)", bundleDir.c_str());
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
@@ -959,7 +956,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
 
 void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, Constants::AppType appType)
 {
-    APP_LOGD("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
+    APP_LOGI("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
@@ -1448,7 +1445,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
-    APP_LOGD("InnerProcessRebootSystemHspInstall");
+    APP_LOGI("InnerProcessRebootSystemHspInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2295,7 +2292,6 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
 void BMSEventHandler::HandleSceneBoard() const
 {
 #ifdef WINDOW_ENABLE
-    APP_LOGD("begin to HandleSceneBoard");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is null");
@@ -2309,7 +2305,6 @@ void BMSEventHandler::HandleSceneBoard() const
         dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
         dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });
-    APP_LOGD("HandleSceneBoard finish");
 #endif
 }
 

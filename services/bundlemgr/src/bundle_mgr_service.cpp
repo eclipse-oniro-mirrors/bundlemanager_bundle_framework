@@ -433,7 +433,7 @@ void BundleMgrService::CheckAllUser()
         return;
     }
 
-    APP_LOGD("Check all user start.");
+    APP_LOGI("Check all user start.");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     for (auto userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
@@ -442,15 +442,16 @@ void BundleMgrService::CheckAllUser()
 
         bool isExists = false;
         if (AccountHelper::IsOsAccountExists(userId, isExists) != ERR_OK) {
-            APP_LOGE("Failed to query whether the user(%{public}d) exists.", userId);
+            APP_LOGW("Failed to query whether the user(%{public}d) exists.", userId);
             continue;
         }
 
         if (!isExists) {
+            APP_LOGI("Query user(%{public}d) success but not complete and remove it", userId);
             userMgrHost_->RemoveUser(userId);
         }
     }
-    APP_LOGD("Check all user end");
+    APP_LOGI("Check all user end");
 }
 
 void BundleMgrService::RegisterService()
@@ -470,7 +471,7 @@ void BundleMgrService::RegisterService()
 
 void BundleMgrService::NotifyBundleScanStatus()
 {
-    APP_LOGD("PublishCommonEvent for bundle scan finished");
+    APP_LOGI("PublishCommonEvent for bundle scan finished");
     AAFwk::Want want;
     want.SetAction(COMMON_EVENT_BUNDLE_SCAN_FINISHED);
     EventFwk::CommonEventData commonEventData { want };
@@ -478,7 +479,7 @@ void BundleMgrService::NotifyBundleScanStatus()
         notifyBundleScanStatus = true;
         APP_LOGE("PublishCommonEvent for bundle scan finished failed.");
     } else {
-        APP_LOGD("PublishCommonEvent for bundle scan finished succeed.");
+        APP_LOGI("PublishCommonEvent for bundle scan finished succeed.");
     }
 }
 
