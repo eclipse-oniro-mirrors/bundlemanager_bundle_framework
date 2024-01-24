@@ -42,7 +42,7 @@ void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
         true,
         g_permJson,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
+    GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE,
         permissionInfo.userCancellable,
@@ -55,6 +55,7 @@ void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
 ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
     std::set<DefaultPermission> &defaultPermissions) const
 {
+    ErrCode result = ERR_OK;
     if (jsonObject.is_array() && !jsonObject.is_discarded()) {
         std::lock_guard<std::mutex> lock(g_mutex);
         g_permJson = ERR_OK;
@@ -64,36 +65,29 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
             }
             DefaultPermission defaultPermission;
             const auto &objectEnd = object.end();
-            GetValueIfFindKey<std::string>(object,
-                objectEnd,
+            GetValueIfFindKey<std::string>(object, objectEnd,
                 PERMISSIONS_PROFILE_KEY_BUNDLENAME,
                 defaultPermission.bundleName,
                 JsonType::STRING,
-                true,
-                g_permJson,
-                ArrayType::NOT_ARRAY);
-            GetValueIfFindKey<std::vector<std::string>>(object,
-                objectEnd,
+                true, g_permJson, ArrayType::NOT_ARRAY);
+
+            GetValueIfFindKey<std::vector<std::string>>(object, objectEnd,
                 PERMISSIONS_PROFILE_KEY_APP_SIGNATURE,
                 defaultPermission.appSignature,
                 JsonType::ARRAY,
-                false,
-                g_permJson,
-                ArrayType::STRING);
-            GetValueIfFindKey<std::vector<PermissionInfo>>(object,
-                objectEnd,
+                false, g_permJson, ArrayType::STRING);
+
+            GetValueIfFindKey<std::vector<PermissionInfo>>(object, objectEnd,
                 PERMISSIONS_PROFILE_KEY_PERMISSIONS,
                 defaultPermission.grantPermission,
                 JsonType::ARRAY,
-                false,
-                g_permJson,
-                ArrayType::OBJECT);
+                false, g_permJson, ArrayType::OBJECT);
+
             if (g_permJson != ERR_OK) {
-                APP_LOGE("g_permJson is %{public}d", g_permJson);
-                int32_t ret = g_permJson;
+                APP_LOGE("parse install_list_permissions.json failed, g_permJson is %{public}d", g_permJson);
+                result = g_permJson;
                 // need recover parse result to ERR_OK
                 g_permJson = ERR_OK;
-                return ret;
             }
 
             auto iter = defaultPermissions.find(defaultPermission);
@@ -105,7 +99,7 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
             defaultPermissions.insert(defaultPermission);
         }
     }
-    return ERR_OK;
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
