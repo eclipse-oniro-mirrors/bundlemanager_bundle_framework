@@ -84,10 +84,12 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 false, g_permJson, ArrayType::OBJECT);
 
             if (g_permJson != ERR_OK) {
-                APP_LOGE("parse install_list_permissions.json failed, g_permJson is %{public}d", g_permJson);
+                APP_LOGE("parse install_list_permissions.json failed, g_permJson is %{public}d, bundleName:%{public}s",
+                    g_permJson, defaultPermission.bundleName.c_str());
                 result = g_permJson;
                 // need recover parse result to ERR_OK
                 g_permJson = ERR_OK;
+                continue;
             }
 
             auto iter = defaultPermissions.find(defaultPermission);
