@@ -49,6 +49,7 @@ const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const std::string DEFAULT_FILE_TYPE_VIDEO_MP4 = "video/mp4";
 const std::string DEFAULT_APP_IMAGE = "IMAGE";
 const std::string DEFAULT_APP_BROWSER = "BROWSER";
+const std::string DEFAULT_APP_EMAIL = "EMAIL";
 const std::string DEFAULT_APP_AUDIO = "AUDIO";
 const std::string DEFAULT_APP_PDF = "PDF";
 const std::string DEFAULT_APP_WORD = "WORD";
@@ -62,6 +63,8 @@ const std::string ABILITY_IMAGE = "IMAGE";
 const std::string ABILITY_IMAGE_ERROR = "IMAGE-ERROR";
 const std::string ABILITY_BROWSER = "BROWSER";
 const std::string ABILITY_BROWSER_ERROR = "BROWSER-ERROR";
+const std::string ABILITY_EMAIL = "EMAIL";
+const std::string ABILITY_EMAIL_ERROR = "EMAIL-ERROR";
 const std::string ABILITY_AUDIO = "AUDIO";
 const std::string ABILITY_AUDIO_ERROR = "AUDIO-ERROR";
 const std::string ABILITY_PDF = "PDF";
@@ -81,6 +84,8 @@ const std::string INVALID_TYPE3 = "/abc";
 const std::string INVALID_TYPE4 = "*/abc";
 const std::string INVALID_TYPE5 = "abc/*";
 const std::string INVALID_TYPE6 = "*/*";
+const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
+const std::string EMAIL_SCHEME = "mailto";
 const nlohmann::json DEFAULT_CONFIG = R"(
 [{
     "bundleName": "bundleName",
@@ -1373,6 +1378,58 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6400, Function | SmallTest
     defaultAppData.ToJson(jsonObject);
     defaultAppData.ParseDefaultApplicationConfig(jsonObject);
     EXPECT_EQ(0, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6500
+ * @tc.name: test SetDefaultApplication, app type EMAIL
+ * @tc.desc: 1. call SetDefaultApplication, return true
+ *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6500, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EMAIL, ABILITY_EMAIL);
+    EXPECT_EQ(result, ERR_OK);
+
+    BundleInfo bundleInfo;
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_EMAIL, bundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    ASSERT_EQ(bundleInfo.abilityInfos.size(), 1);
+    EXPECT_EQ(bundleInfo.abilityInfos[0].name, ABILITY_EMAIL);
+
+    ASSERT_NE(bundleMgrService_, nullptr);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetAction(EMAIL_ACTION);
+    want.SetUri(EMAIL_SCHEME + ":test@test.com");
+    int32_t flags = 0;
+    int32_t userId = 100;
+    bool withDefault = true;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool findDefaultApp = false;
+    bool ret = dataMgr->ImplicitQueryInfos(
+        want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
+    EXPECT_EQ(ret, true);
+    EXPECT_EQ(findDefaultApp, true);
+    ASSERT_EQ(abilityInfos.size(), 1);
+    EXPECT_EQ(abilityInfos[0].name, ABILITY_EMAIL);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6600
+ * @tc.name: test SetDefaultApplication, error EMAIL
+ * @tc.desc: 1. call SetDefaultApplication, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6600, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EMAIL, ABILITY_EMAIL_ERROR);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
