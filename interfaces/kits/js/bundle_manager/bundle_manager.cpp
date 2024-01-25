@@ -263,7 +263,7 @@ static void ProcessApplicationInfos(
     }
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
@@ -711,6 +711,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
 
 void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
+    APP_LOGI("begin");
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
@@ -740,6 +741,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
+    APP_LOGI("before return");
     CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
@@ -2793,7 +2795,7 @@ static void ProcessBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.name.c_str());
+        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
         CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
