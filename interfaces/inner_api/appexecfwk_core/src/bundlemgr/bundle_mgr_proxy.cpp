@@ -4340,5 +4340,37 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrProxy::CanOpenLink(
+    const std::string &link, int32_t userId, bool &canOpen)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(link)) {
+        APP_LOGE("write link failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+   
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CAN_OPEN_LINK, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", res);
+        return res;
+    }
+    canOpen = reply.ReadBool();
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

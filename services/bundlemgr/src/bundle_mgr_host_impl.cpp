@@ -3397,5 +3397,17 @@ ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
     EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
     return ret;
 }
+
+ErrCode BundleMgrHostImpl::CanOpenLink(
+    const std::string &link, int32_t userId, bool &canOpen)
+{
+    APP_LOGD("start CanOpenLink, link : %{public}s, userId : %{public}d", link.c_str(), userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->CanOpenLink(link, userId, canOpen);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

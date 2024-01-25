@@ -81,6 +81,7 @@ const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
+const std::string CAN_OPEN_LINK = "CanOpenLink";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3874,6 +3875,71 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     napi_value nRet = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     APP_LOGD("Call done");
+    return nRet;
+}
+
+ErrCode ParamsProcessCanOpenLink(napi_env env, napi_callback_info info,
+    std::string& link, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if(!CommonFunc::ParseString(env, args[i], link)){
+                APP_LOGW("Parse link failed!");
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return ERR_OK;
+}
+
+napi_value CanOpenLink(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI CanOpenLink call");
+    napi_value nRet;
+    bool canOpen = false;
+    napi_get_boolean(env, canOpen, &nRet);
+    std::string link;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (ParamsProcessCanOpenLink(env, info, link, userId) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nRet;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nRet;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->CanOpenLink(link, userId, canOpen));
+    if (ret != NO_ERROR) {
+        APP_LOGE("CanOpenLink failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, CAN_OPEN_LINK, "");
+        napi_throw(env, businessError);
+        return nRet;
+    }
+    NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
+    APP_LOGE("CanOpenLink canOpen: %{public}d.", canOpen);
+    APP_LOGE("call CanOpenLink done.");
     return nRet;
 }
 }

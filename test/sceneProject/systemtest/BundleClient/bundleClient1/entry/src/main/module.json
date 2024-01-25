@@ -49,6 +49,28 @@
                         ]
                     }
                 ]
+            },
+            {
+                "startWindowIcon": "$media:icon",
+                "name": "BROWSER",
+                "icon": "$media:icon",
+                "visible": true,
+                "skills": [
+                  {
+                    "actions": [
+                      "ohos.want.action.viewData"
+                    ],
+                    "entities": [
+                      "entity.system.browsable"
+                    ],
+                    "uris": [
+                      {
+                        "scheme": "http"
+                      }      
+                    ]
+                  }
+                ],
+                "srcEntrance": ""
             }
         ],
         "extensionAbilities":[
@@ -85,6 +107,10 @@
                 "reason": "$string:entry_desc",
                 "usedScene": {"abilities": ["MainAbility"]}
             }
+        ],
+        "querySchemes": [
+            "http",
+            "welink"
         ]
     }
 }

@@ -426,7 +426,7 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
     std::vector<std::string> userGrantPermList)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
-    APP_LOGD("bundleName:%{public}s, add system_grant permission: %{public}zu, add user_grant permission: %{public}zu",
+    APP_LOGI("bundleName:%{public}s, add system_grant permission: %{public}zu, add user_grant permission: %{public}zu",
         bundleName.c_str(), systemGrantPermList.size(), userGrantPermList.size());
     for (const auto &perm : systemGrantPermList) {
         if (!GrantPermission(tokenId, perm, AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED, bundleName)) {

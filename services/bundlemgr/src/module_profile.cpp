@@ -255,6 +255,7 @@ struct Module {
     std::string isolationMode;
     bool compressNativeLibs = true;
     std::string fileContextMenu;
+    std::vector<std::string> querySchemes;
 };
 
 struct ModuleJson {
@@ -1416,6 +1417,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_QUERY_SCHEMES,
+        module.querySchemes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2110,6 +2119,11 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+
+    for (const std::string &queryScheme : moduleJson.module.querySchemes) {
+        innerModuleInfo.querySchemes.emplace_back(queryScheme);
+    }
+
     // abilities and fileContextMenu store in InnerBundleInfo
     return true;
 }

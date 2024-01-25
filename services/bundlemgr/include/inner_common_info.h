@@ -120,6 +120,7 @@ struct InnerModuleInfo {
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
     bool isEncrypted = false;
+    std::vector<std::string> querySchemes;
 };
 
 struct SkillUri {
