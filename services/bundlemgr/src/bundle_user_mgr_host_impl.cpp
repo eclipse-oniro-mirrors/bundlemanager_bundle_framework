@@ -224,7 +224,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
-    APP_LOGD("RemoveUser user(%{public}d) start.", userId);
+    APP_LOGI("RemoveUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -262,7 +262,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 #endif
     EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
     HandleNotifyBundleEventsAsync();
-    APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
+    APP_LOGI("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
 
@@ -291,11 +291,11 @@ ErrCode BundleUserMgrHostImpl::CheckInitialUser()
     }
 
     if (!dataMgr->HasInitialUserCreated()) {
-        APP_LOGD("Bms initial user do not created successfully and wait.");
+        APP_LOGI("Bms initial user do not created successfully and wait.");
         std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
         dataMgr->SetBundlePromise(bundlePromise);
         bundlePromise->WaitForAllTasksExecute();
-        APP_LOGD("Bms initial user created successfully.");
+        APP_LOGI("Bms initial user created successfully.");
     }
     return ERR_OK;
 }
@@ -314,7 +314,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     int32_t userId,
     const std::vector<BundleInfo> &bundleInfos)
 {
-    APP_LOGD("InnerUninstallBundle for userId: %{public}d start", userId);
+    APP_LOGI("InnerUninstallBundle for userId: %{public}d start", userId);
     auto installer = GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("InnerUninstallBundle installer is nullptr");
@@ -341,7 +341,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         bundlePromise->WaitForAllTasksExecute();
     }
     IPCSkeleton::SetCallingIdentity(identity);
-    APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
+    APP_LOGI("InnerUninstallBundle for userId: %{public}d end", userId);
 }
 
 void BundleUserMgrHostImpl::ClearBundleEvents()
