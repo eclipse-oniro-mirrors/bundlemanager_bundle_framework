@@ -1411,7 +1411,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6500, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     bool findDefaultApp = false;
-    bool ret = dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
+    bool ret = dataMgr->ImplicitQueryInfos(
+        want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     EXPECT_EQ(ret, true);
     EXPECT_EQ(findDefaultApp, true);
     ASSERT_EQ(abilityInfos.size(), 1);
