@@ -745,7 +745,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("begin to QueryAbilityInfos");
+    APP_LOGI("begin to QueryAbilityInfos");
     NapiArg args(env, info);
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -794,7 +794,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call QueryAbilityInfos done");
+    APP_LOGI("call QueryAbilityInfos done");
     return promise;
 }
 
