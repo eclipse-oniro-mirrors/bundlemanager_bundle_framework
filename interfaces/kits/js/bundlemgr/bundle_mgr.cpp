@@ -5067,6 +5067,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
     AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) AsyncGetBundleInstallerCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -5088,6 +5089,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
                     reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
                     return;
                 }
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -5141,6 +5143,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
                     reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
                     return;
                 }
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
