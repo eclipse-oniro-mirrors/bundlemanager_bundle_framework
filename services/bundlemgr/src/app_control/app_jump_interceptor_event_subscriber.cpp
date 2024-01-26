@@ -40,7 +40,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     int32_t userId = want.GetIntParam(WANT_PARAM_USER_ID, -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
     if (action.empty() || userId < 0 || db == nullptr) {
-        APP_LOGE("%{public}s failed, empty action: %{public}s, userId:%d",
+        APP_LOGE("%{public}s failed, empty action: %{public}s, userId:%{public}d",
             __func__, action.c_str(), userId);
         return;
     }
@@ -61,7 +61,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
             }
             std::shared_ptr<AppJumpInterceptorEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {
-                APP_LOGI("start delete rule bundleName: %{public}s, userId:%d", bundleName.c_str(), userId);
+                APP_LOGI("start delete rule bundleName: %{public}s, userId:%{public}d", bundleName.c_str(), userId);
                 db->DeleteRuleByCallerBundleName(bundleName, userId);
                 db->DeleteRuleByTargetBundleName(bundleName, userId);
             }

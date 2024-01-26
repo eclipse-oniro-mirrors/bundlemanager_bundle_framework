@@ -882,7 +882,7 @@ ErrCode BaseBundleInstaller::GrantRequestPermissions(const InnerBundleInfo &info
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
     const InstallParam &installParam, const Constants::AppType appType, int32_t &uid)
 {
-    APP_LOGD("ProcessBundleInstall bundlePath install paths=%s, hspPaths=%s",
+    APP_LOGD("ProcessBundleInstall bundlePath install paths=%{public}s, hspPaths=%{public}s",
         GetJsonStrFromInfo(inBundlePaths).c_str(), GetJsonStrFromInfo(installParam.sharedBundleDirPaths).c_str());
     if (dataMgr_ == nullptr) {
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
