@@ -1237,7 +1237,7 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
 }
 
 ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
-    std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap)
+    const Security::CodeSign::EntryMap &entryMap)
 {
     ErrCode ret = ERR_OK;
     if (codeSignatureParam.isCompileSdkOpenHarmony &&
@@ -1246,18 +1246,18 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
         return ret;
     }
     if (codeSignatureParam.signatureFileDir.empty()) {
-        std::shared_ptr<CodeSignHelper> codeSign = std::make_shared<CodeSignHelper>();
+        std::shared_ptr<CodeSignHelper> codeSignHelper = std::make_shared<CodeSignHelper>();
         Security::CodeSign::FileType fileType = codeSignatureParam.isPreInstalledBundle ?
             FILE_ENTRY_ONLY : FILE_ENTRY_ADD;
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
-            ret = codeSign->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+                codeSignatureParam.modulePath, entryMap, fileType);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSign->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap,
-                fileType, codeSignatureParam.moduleName);
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
+        APP_LOGI("Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
@@ -1265,8 +1265,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
 }
 #endif
 
-bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
-    std::shared_ptr<CodeSignHelper> &codeSignHelper)
+bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
@@ -1288,7 +1287,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
         return false;
     }
 
-    ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, codeSignHelper, entryMap);
+    ErrCode ret = PerformCodeSignatureCheck(codeSignatureParam, entryMap);
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
         return true;
