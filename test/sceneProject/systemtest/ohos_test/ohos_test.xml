@@ -114,6 +114,7 @@
       <option name="push" value="stThirdBundle/bmsThirdBundle26.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle28.rpk -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="BundleClient/bundleClient1.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="testHapSo/hapIncludeso1.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
   <target name="BundleMgrClientSystemTest">

@@ -573,6 +573,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     hapInfo.fileContextMenu = it->second.fileContextMenu;
+    hapInfo.routerMap = it->second.routerMap;
     return hapInfo;
 }
 

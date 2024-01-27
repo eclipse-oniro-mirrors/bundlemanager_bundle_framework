@@ -35,9 +35,11 @@ constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* MODULE = "module";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* URI = "uri";
+constexpr const char* URL = "url";
 constexpr const char* TYPE = "type";
 constexpr const char* ACTION = "action";
 constexpr const char* ENTITIES = "entities";
@@ -62,6 +64,12 @@ constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
 constexpr const char* DEBUG = "debug";
 constexpr const char* EXTENSION_ABILITY_TYPE_NAME = "extensionAbilityTypeName";
+constexpr const char* ROUTER_ARRAY = "routerArray";
+constexpr const char* PATH = "path";
+constexpr const char* BUILD_FUNCTION = "buildFunction";
+constexpr const char* DATA = "data";
+constexpr const char* KEY = "key";
+constexpr const char* VALUE = "value";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1354,7 +1362,8 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
 }
 
-void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)
+void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo,
+    napi_value objHapModuleInfo, int32_t flags)
 {
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
@@ -1474,6 +1483,69 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenu", nMenu));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenuConfig", nMenu));
     }
+
+    napi_value nRouterArray;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterArray));
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP))
+        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP)) {
+        for (size_t idx = 0; idx < hapModuleInfo.routerArray.size(); idx++) {
+            napi_value nRouterItem;
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
+            ConvertRouterItem(env, hapModuleInfo.routerArray[idx], nRouterItem);
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterArray, idx, nRouterItem));
+        }
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_ARRAY, nRouterArray));
+}
+
+void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
+{
+    napi_value nUrl;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.url.c_str(), NAPI_AUTO_LENGTH, &nUrl));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, URL, nUrl));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE, nModuleName));
+
+    napi_value nPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.path.c_str(), NAPI_AUTO_LENGTH, &nPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PATH, nPath));
+
+    napi_value nBuildFunction;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.buildFunction.c_str(), NAPI_AUTO_LENGTH, &nBuildFunction));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUILD_FUNCTION, nBuildFunction));
+
+    napi_value nDataArray;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDataArray));
+    ConvertRouterDataInfos(env, routerItem.data, nDataArray);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nDataArray));
+}
+
+void CommonFunc::ConvertRouterDataInfos(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : data) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nKey;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, KEY, nKey));
+
+        napi_value nValue;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, VALUE, nValue));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
+    }
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)
@@ -1537,7 +1609,7 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     for (size_t idx = 0; idx < bundleInfo.hapModuleInfos.size(); idx++) {
         napi_value objHapModuleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objHapModuleInfo));
-        ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[idx], objHapModuleInfo);
+        ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[idx], objHapModuleInfo, flags);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nHapModuleInfos, idx, objHapModuleInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "hapModulesInfo", nHapModuleInfos));

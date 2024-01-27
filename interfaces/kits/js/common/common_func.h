@@ -120,7 +120,8 @@ static void ConvertRequestPermissionUsedScene(napi_env env,
 
 static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value);
 
-static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
+static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo,
+    napi_value objHapModuleInfo, int32_t flags = 0);
 
 static void ConvertDependency(napi_env env, const Dependency &dependency, napi_value value);
 
@@ -160,6 +161,10 @@ static void ConvertRecoverableApplicationInfo(
     napi_env env, napi_value value, const RecoverableApplicationInfo &recoverableApplication);
 static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications);
+
+static void ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value);
+
+static void ConvertRouterDataInfos(napi_env env, const std::map<std::string, std::string> &data, napi_value objInfos);
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;

@@ -91,6 +91,15 @@ public:
      */
     ErrCode ParseExtTypeConfig(
         const std::string &configFile, std::set<std::string> &extensionTypeList) const;
+
+    /**
+     * @brief Parse router map json file, then return router map info if necessary.
+     * @param configFile Indicates the path of configFile.
+     * @param routerArray Indicates the obtained router item list.
+     * @return Returns ERR_OK if the router info successfully parsed; returns ErrCode otherwise.
+     */
+    ErrCode ParseRouterArray(
+        const std::string &configFile, std::vector<RouterItem> &routerArray) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
