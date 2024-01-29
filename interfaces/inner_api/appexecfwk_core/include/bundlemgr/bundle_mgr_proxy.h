@@ -900,12 +900,11 @@ public:
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.
-     * @param userId Indicates the user ID.
      * @param canOpen Indicates whether the link can be opened.
      * @return Returns result of the operation.
      */
     virtual ErrCode CanOpenLink(
-        const std::string &link, int32_t userId, bool &canOpen) override;
+        const std::string &link, bool &canOpen) override;
 
 private:
     /**

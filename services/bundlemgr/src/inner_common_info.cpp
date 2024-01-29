@@ -491,7 +491,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
         {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
         {MODULE_IS_ENCRYPTED, info.isEncrypted},
-        {MODULE_QUERY_SCHEMES, info.querySchemes},        
+        {MODULE_QUERY_SCHEMES, info.querySchemes},
     };
 }
 

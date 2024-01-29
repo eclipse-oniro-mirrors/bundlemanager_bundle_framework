@@ -115,7 +115,8 @@ constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "Not app gallery call.";
 constexpr const char* ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR =
     "Failed to install the HAP because the HAP requests wrong permissions.";
 constexpr const char* ERR_MSG_INVALID_LINK = "The specified link is invalid.";
-constexpr const char* ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES = "The scheme of the specified link is not in the querySchemes.";
+constexpr const char* ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES =
+    "The scheme of the specified link is not in the querySchemes.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },

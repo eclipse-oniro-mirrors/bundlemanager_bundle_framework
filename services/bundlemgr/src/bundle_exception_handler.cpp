@@ -39,13 +39,18 @@ BundleExceptionHandler::~BundleExceptionHandler()
 
 void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
-    auto mark = info.GetInstallMark();
-    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
-        APP_LOGD("bundle %{public}s is under correct installation status", info.GetBundleName().c_str());
+    std::string appCodePath = Constants::BUNDLE_CODE_DIR + info.GetBundleName();
+    if (!IsBundleHapPathExist(info)) {
+        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
+        DeleteBundleInfoFromStorage(info);
+        isBundleValid = false;
         return;
     }
-
-    std::string appCodePath = Constants::BUNDLE_CODE_DIR + info.GetBundleName();
+    auto mark = info.GetInstallMark();
+    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
+        return;
+    }
+    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
     auto moduleDir = appCodePath + Constants::PATH_SEPARATOR + mark.packageName;
     auto moduleDataDir = info.GetBundleName() + Constants::HAPS + mark.packageName;
 
@@ -83,8 +88,6 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
         if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + Constants::TMP_SUFFIX, moduleDir) == ERR_OK) {
             info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
         }
-    } else {
-        APP_LOGD("bundle %{public}s is under unknown installation status", info.GetBundleName().c_str());
     }
 }
 
@@ -124,6 +127,30 @@ void BundleExceptionHandler::DeleteBundleInfoFromStorage(const InnerBundleInfo &
     } else {
         APP_LOGE(" fail to remove bundle info of %{public}s from the storage", info.GetBundleName().c_str());
     }
+}
+
+bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
+{
+    if (info.GetIsPreInstallApp() || (info.GetApplicationBundleType() != BundleType::APP)) {
+        APP_LOGD("bundleName:%{public}s no need to check", info.GetBundleName().c_str());
+        return true;
+    }
+    APP_LOGI("start, need to check bundleName:%{public}s hap file", info.GetBundleName().c_str());
+    const auto innerModuleInfos = info.GetInnerModuleInfos();
+    for (const auto &item : innerModuleInfos) {
+        if (!item.second.hapPath.empty()) {
+            bool isExist = false;
+            if (InstalldClient::GetInstance()->IsExistFile(item.second.hapPath, isExist) != ERR_OK) {
+                APP_LOGW("bundleName:%{public}s check hap path failed", info.GetBundleName().c_str());
+                continue;
+            }
+            if (!isExist) {
+                APP_LOGE("bundleName:%{public}s hap Path is not exist", info.GetBundleName().c_str());
+                return false;
+            }
+        }
+    }
+    return true;
 }
 }  // namespace AppExecFwkConstants
 }  // namespace OHOS

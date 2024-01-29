@@ -2461,7 +2461,7 @@ int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
-    int ret = dprintf(fd, "%s\n", result.c_str());
+    int ret = dprintf(fd, "%{public}s\n", result.c_str());
     if (ret < 0) {
         APP_LOGE("dprintf error");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
@@ -3399,15 +3399,15 @@ ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
 }
 
 ErrCode BundleMgrHostImpl::CanOpenLink(
-    const std::string &link, int32_t userId, bool &canOpen)
+    const std::string &link, bool &canOpen)
 {
-    APP_LOGD("start CanOpenLink, link : %{public}s, userId : %{public}d", link.c_str(), userId);
+    APP_LOGD("start CanOpenLink, link : %{public}s", link.c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->CanOpenLink(link, userId, canOpen);
+    return dataMgr->CanOpenLink(link, canOpen);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

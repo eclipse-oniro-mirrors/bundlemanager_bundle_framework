@@ -3172,14 +3172,14 @@ ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &rep
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string link = data.ReadString();
-    int32_t userId = data.ReadInt32();
     bool canOpen = false;
-    ErrCode ret = CanOpenLink(link, userId, canOpen);
+    ErrCode ret = CanOpenLink(link, canOpen);
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write ret failed");
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(canOpen)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -8163,7 +8163,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0001, Function | MediumTest | Level1)
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";   
+    EXPECT_EQ(installResult, "Success") << "install fail!";
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -8175,7 +8175,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0001, Function | MediumTest | Level1)
     std::string link = "http://";
     bool canOpen = false;
     auto queryResult =
-        bundleMgrProxy->CanOpenLink(link, USERID, canOpen);
+        bundleMgrProxy->CanOpenLink(link, canOpen);
 
     setuid(Constants::ROOT_UID);
 
@@ -8206,7 +8206,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0002, Function | MediumTest | Level1)
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";   
+    EXPECT_EQ(installResult, "Success") << "install fail!";
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -8218,7 +8218,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0002, Function | MediumTest | Level1)
     std::string link = "welink://";
     bool canOpen = false;
     auto queryResult =
-        bundleMgrProxy->CanOpenLink(link, USERID, canOpen);
+        bundleMgrProxy->CanOpenLink(link, canOpen);
     
     setuid(Constants::ROOT_UID);
 
@@ -8249,7 +8249,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";   
+    EXPECT_EQ(installResult, "Success") << "install fail!";
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -8261,7 +8261,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     std::string link = "https://";
     bool canOpen = false;
     auto queryResult =
-        bundleMgrProxy->CanOpenLink(link, USERID, canOpen);
+        bundleMgrProxy->CanOpenLink(link, canOpen);
     
     setuid(Constants::ROOT_UID);
 

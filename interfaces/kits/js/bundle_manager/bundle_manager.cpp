@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -54,6 +55,7 @@ constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
+constexpr const char* LINK = "link";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -263,7 +265,7 @@ static void ProcessApplicationInfos(
     }
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
@@ -711,6 +713,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
 
 void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
+    APP_LOGI("begin");
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
@@ -740,12 +743,13 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
+    APP_LOGI("before return");
     CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("begin to QueryAbilityInfos");
+    APP_LOGI("begin to QueryAbilityInfos");
     NapiArg args(env, info);
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -764,7 +768,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -794,7 +798,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call QueryAbilityInfos done");
+    APP_LOGI("call QueryAbilityInfos done");
     return promise;
 }
 
@@ -812,7 +816,7 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], want)) {
+            if (!ParseWantWithParameter(env, args[i], want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
@@ -1014,7 +1018,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -2793,7 +2797,7 @@ static void ProcessBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.name.c_str());
+        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
         CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
@@ -3879,32 +3883,18 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
 }
 
 ErrCode ParamsProcessCanOpenLink(napi_env env, napi_callback_info info,
-    std::string& link, int32_t& userId)
+    std::string& link)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
     }
-    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
-        if (i == ARGS_POS_ZERO) {
-            if(!CommonFunc::ParseString(env, args[i], link)){
-                APP_LOGW("Parse link failed!");
-                return ERROR_PARAM_CHECK_ERROR;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
-            }
-        } else {
-            APP_LOGE("parameter is invalid");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
-            return ERROR_PARAM_CHECK_ERROR;
-        }
-    }
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], link)) {
+        APP_LOGW("Parse link failed!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, LINK, TYPE_STRING);
+        return ERROR_PARAM_CHECK_ERROR;
     }
     return ERR_OK;
 }
@@ -3916,8 +3906,7 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
     bool canOpen = false;
     napi_get_boolean(env, canOpen, &nRet);
     std::string link;
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    if (ParamsProcessCanOpenLink(env, info, link, userId) != ERR_OK) {
+    if (ParamsProcessCanOpenLink(env, info, link) != ERR_OK) {
         APP_LOGE("paramsProcess is invalid");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
         return nRet;
@@ -3929,7 +3918,7 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
         return nRet;
     }
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->CanOpenLink(link, userId, canOpen));
+        iBundleMgr->CanOpenLink(link, canOpen));
     if (ret != NO_ERROR) {
         APP_LOGE("CanOpenLink failed");
         napi_value businessError = BusinessError::CreateCommonError(
@@ -3938,8 +3927,7 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
         return nRet;
     }
     NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
-    APP_LOGE("CanOpenLink canOpen: %{public}d.", canOpen);
-    APP_LOGE("call CanOpenLink done.");
+    APP_LOGD("call CanOpenLink done.");
     return nRet;
 }
 }

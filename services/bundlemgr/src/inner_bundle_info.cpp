@@ -521,6 +521,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.installationFree = it->second.distro.installationFree;
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
+    hapInfo.deviceTypes = it->second.deviceTypes;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
@@ -539,16 +540,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         }
     }
     hapInfo.metadata = it->second.metadata;
-    bool first = false;
     for (auto &ability : baseAbilityInfos_) {
         if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
             continue;
         }
         if (ability.first.find(key) != std::string::npos) {
-            if (!first) {
-                hapInfo.deviceTypes = ability.second.deviceTypes;
-                first = true;
-            }
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -784,6 +780,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
+    baseApplicationInfo_->bundleType = applicationInfo.bundleType;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -3088,8 +3085,8 @@ std::vector<std::string> InnerBundleInfo::GetQuerySchemes() const
     }
     std::vector<std::string> querySchemes = innerModuleInfos_.at(entryModuleName).querySchemes;
     for (int32_t i = 0; i < querySchemes.size(); i++) {
-		transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
-	}
+        transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
+    }
     return querySchemes;
 }
 }  // namespace AppExecFwk

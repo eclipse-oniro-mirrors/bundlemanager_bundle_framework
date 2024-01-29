@@ -94,6 +94,7 @@ const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
     { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH}
 };
+const std::string SCHEME_END = "://";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -4624,19 +4625,19 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    APP_LOGD("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
+    APP_LOGI("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
         want.ToString().c_str(), flags, userId, withDefault);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
-        APP_LOGD("find target default application");
+        APP_LOGI("find target default application");
         findDefaultApp = true;
         return true;
     }
     // step2 : find backup default infos
     if (withDefault &&
         DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos, true)) {
-        APP_LOGD("find target backup default application");
+        APP_LOGI("find target backup default application");
         findDefaultApp = true;
         return true;
     }
@@ -6150,34 +6151,29 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
 }
 
 ErrCode BundleDataMgr::CanOpenLink(
-    const std::string &link, int32_t userId, bool &canOpen) const
+    const std::string &link, bool &canOpen) const
 {
     APP_LOGI("CanOpenLink link: %{public}s", link.c_str());
-    int32_t requestUserId = GetUserId(userId);
-    if (requestUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-
     auto uid = IPCSkeleton::GetCallingUid();
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
         APP_LOGE("get innerBundleInfo by uid :%{public}d failed.", uid);
-        return ERR_BUNDLE_MANAGER_INVALID_UID;
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
     }
-    auto querySchemes= innerBundleInfo.GetQuerySchemes();
-    if(querySchemes.empty()){
-        APP_LOGE("querySchemes is empty.");
+    auto querySchemes = innerBundleInfo.GetQuerySchemes();
+    if (querySchemes.empty()) {
+        APP_LOGI("querySchemes is empty.");
         return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
     }
 
-    int32_t index = link.find("://");
-    if(index == -1){
-        APP_LOGI("parse link : %{public}s failed.", link.c_str());
+    size_t pos = link.find(SCHEME_END);
+    if (pos == std::string::npos) {
+        APP_LOGE("parse link : %{public}s failed.", link.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_SCHEME;
     }
-    std::string scheme = link.substr(0, index);
+    std::string scheme = link.substr(0, pos);
     transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
-    if (std::find(querySchemes.begin(), querySchemes.end(), scheme) == querySchemes.end()){
+    if (std::find(querySchemes.begin(), querySchemes.end(), scheme) == querySchemes.end()) {
         APP_LOGI("scheme :%{public}s is not in the querySchemes.", scheme.c_str());
         return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
     }
@@ -6185,16 +6181,16 @@ ErrCode BundleDataMgr::CanOpenLink(
     Want want;
     want.SetUri(link);
     std::vector<AbilityInfo> abilityInfos;
-
     // implicit query
-    ErrCode ret = ImplicitQueryAbilityInfosV9(want, static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), requestUserId, abilityInfos);
+    ErrCode ret = ImplicitQueryAbilityInfosV9(
+        want, static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), GetUserIdByUid(uid), abilityInfos);
     if (ret != ERR_OK) {
         APP_LOGD("implicit queryAbilityInfosV9 error");
-        return ret;
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
     }
 
     canOpen = !abilityInfos.empty();
-    APP_LOGI("canOpen : %{public}d",canOpen);
+    APP_LOGI("canOpen : %{public}d", canOpen);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

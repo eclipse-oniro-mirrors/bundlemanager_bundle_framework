@@ -4342,7 +4342,7 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
 }
 
 ErrCode BundleMgrProxy::CanOpenLink(
-    const std::string &link, int32_t userId, bool &canOpen)
+    const std::string &link, bool &canOpen)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
@@ -4352,10 +4352,6 @@ ErrCode BundleMgrProxy::CanOpenLink(
     }
     if (!data.WriteString(link)) {
         APP_LOGE("write link failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
    
