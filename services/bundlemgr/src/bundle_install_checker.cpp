@@ -724,6 +724,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
+    newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,

@@ -858,6 +858,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 

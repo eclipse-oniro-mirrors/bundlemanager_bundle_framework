@@ -973,6 +973,7 @@ protected:
                 "accessTokenIdEx": 0,
                 "accessible": false,
                 "allowEnableNotification": false,
+                "allowAppRunWhenDeviceFirstLocked": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
