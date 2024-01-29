@@ -2461,7 +2461,7 @@ int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
-    int ret = dprintf(fd, "%{public}s\n", result.c_str());
+    int ret = dprintf(fd, "%s\n", result.c_str());
     if (ret < 0) {
         APP_LOGE("dprintf error");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
