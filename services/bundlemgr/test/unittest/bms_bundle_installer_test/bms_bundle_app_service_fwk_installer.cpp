@@ -965,4 +965,89 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessBundleUpdateStatus_0010, Fu
     res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
 }
+
+/**
+ * @tc.number: GetInnerBundleInfo_0020
+ * @tc.name: test GetInnerBundleInfo
+ * @tc.desc: 1.Test the GetInnerBundleInfo
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetInnerBundleInfo_0020, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    ClearDataMgr();
+    InnerBundleInfo info;
+    bool isAppExist;
+    auto res = appServiceFwkInstaller.GetInnerBundleInfo(info, isAppExist);
+    EXPECT_TRUE(res);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: CheckNeedInstall_0010
+ * @tc.name: test CheckNeedInstall
+ * @tc.desc: 1.Test the CheckNeedInstall
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo oldInfo;
+    auto res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    EXPECT_FALSE(res);
+
+    InnerBundleInfo info;
+    infos.emplace(TEST_CREATE_FILE_PATH, info);
+    res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckNeedUpdate_0010
+ * @tc.name: test CheckNeedUpdate
+ * @tc.desc: 1.Test the CheckNeedUpdate
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
+    oldInfo.baseBundleInfo_->versionCode = 1;
+    appServiceFwkInstaller.versionCode_ = 0;
+    auto res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+
+    appServiceFwkInstaller.versionCode_ = 2;
+    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+
+    appServiceFwkInstaller.versionCode_ = 1;
+    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: RemoveLowerVersionSoDir_0010
+ * @tc.name: test RemoveLowerVersionSoDir
+ * @tc.desc: 1.Test the RemoveLowerVersionSoDir
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveLowerVersionSoDir_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo oldInfo;
+    auto res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    appServiceFwkInstaller.versionUpgrade_ = true;
+    res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+}
 }
