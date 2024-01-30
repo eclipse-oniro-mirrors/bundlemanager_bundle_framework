@@ -2795,7 +2795,7 @@ static void ProcessBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name: %{public}s ", item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
         CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
