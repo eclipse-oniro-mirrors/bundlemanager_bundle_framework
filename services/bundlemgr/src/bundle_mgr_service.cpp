@@ -311,7 +311,7 @@ bool BundleMgrService::InitBundleResourceMgr()
     return true;
 }
 
-sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
+sptr<BundleInstallerHost> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
 }
