@@ -94,6 +94,11 @@ public:
 
     static void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
 
+    static void ProcessSystemBundleInstall(
+        const PreScanInfo &preScanInfo,
+        Constants::AppType appType,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
+
 private:
     /**
      * @brief Before Bms start.
@@ -270,17 +275,6 @@ private:
      */
     void ProcessSystemBundleInstall(
         const std::string &scanDir,
-        Constants::AppType appType,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
-    /**
-     * @brief Install bundles by preScanInfo.
-     * @param preScanInfo Indicates the preScanInfo.
-     * @param appType Indicates the bundle type.
-     * @param userId Indicates userId.
-     * @return
-     */
-    void ProcessSystemBundleInstall(
-        const PreScanInfo &preScanInfo,
         Constants::AppType appType,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
@@ -469,6 +463,11 @@ private:
      */
     bool IsHotPatchApp(const std::string &bundleName);
 
+    void AddTasks(const std::map<int32_t, std::vector<PreScanInfo>,
+        std::greater<int32_t>> &taskMap, int32_t userId);
+    void AddTaskParallel(
+        int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
+
     bool CheckOtaFlag(OTAFlag flag, bool &result);
     bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
@@ -486,7 +485,7 @@ private:
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
-    void SavePreInstallException(const std::string &bundleDir);
+    static void SavePreInstallException(const std::string &bundleDir);
     void HandlePreInstallException();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);

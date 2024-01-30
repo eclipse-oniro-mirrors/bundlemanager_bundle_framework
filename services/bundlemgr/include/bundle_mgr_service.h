@@ -90,7 +90,7 @@ public:
      * @brief Get a IBundleInstaller object for IPC
      * @return Returns the pointer of IBundleInstaller object.
      */
-    sptr<IBundleInstaller> GetBundleInstaller() const;
+    sptr<BundleInstallerHost> GetBundleInstaller() const;
     /**
      * @brief Get a IBundleUserMgr object for IPC
      * @return Returns the pointer of IBundleUserMgr object.
