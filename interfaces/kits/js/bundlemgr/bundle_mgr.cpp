@@ -650,7 +650,7 @@ static void ProcessAbilityInfos(
         APP_LOGI("-----abilityInfos is not null-----");
         size_t index = 0;
         for (const auto &item : abilityInfos) {
-            APP_LOGI("name{%{public}s} ", item.name.c_str());
+            APP_LOGI("name: %{public}s ", item.name.c_str());
             napi_value objAbilityInfo = nullptr;
             napi_create_object(env, &objAbilityInfo);
             ConvertAbilityInfo(env, objAbilityInfo, item);
@@ -1135,11 +1135,10 @@ static void ProcessApplicationInfos(
         APP_LOGI("-----appInfos is not null-----");
         size_t index = 0;
         for (const auto &item : appInfos) {
-            APP_LOGI("name{%{public}s} ", item.name.c_str());
-            APP_LOGI("bundleName{%{public}s} ", item.bundleName.c_str());
+            APP_LOGI("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
             for (const auto &moduleInfo : item.moduleInfos) {
-                APP_LOGI("moduleName{%{public}s} ", moduleInfo.moduleName.c_str());
-                APP_LOGI("bundleName{%{public}s} ", moduleInfo.moduleSourceDir.c_str());
+                APP_LOGI("moduleName: %{public}s, moduleSourceDir: %{public}s ",
+                    moduleInfo.moduleName.c_str(), moduleInfo.moduleSourceDir.c_str());
             }
             napi_value objAppInfo;
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
@@ -1611,11 +1610,11 @@ static void ProcessBundleInfos(
         APP_LOGI("-----bundleInfos is not null-----");
         size_t index = 0;
         for (const auto &item : bundleInfos) {
-            APP_LOGD("name{%{public}s} ", item.name.c_str());
-            APP_LOGD("bundleName{%{public}s} ", item.applicationInfo.bundleName.c_str());
+            APP_LOGD("name is %{public}s and bundleName is %{public}s ",
+                item.name.c_str(), item.applicationInfo.bundleName.c_str());
             for (const auto &moduleInfo : item.applicationInfo.moduleInfos) {
-                APP_LOGD("moduleName{%{public}s} ", moduleInfo.moduleName.c_str());
-                APP_LOGD("moduleSourceDir{%{public}s} ", moduleInfo.moduleSourceDir.c_str());
+                APP_LOGD("moduleName: %{public}s, moduleSourceDir: %{public}s ",
+                    moduleInfo.moduleName.c_str(), moduleInfo.moduleSourceDir.c_str());
             }
             napi_value objBundleInfo = nullptr;
             napi_create_object(env, &objBundleInfo);
@@ -2065,8 +2064,7 @@ static void ProcessFormsInfo(napi_env env, napi_value result, const std::vector<
         APP_LOGI("-----formInfos is not null-----");
         size_t index = 0;
         for (const auto &item : formInfos) {
-            APP_LOGI("name{%{public}s} ", item.name.c_str());
-            APP_LOGI("bundleName{%{public}s} ", item.bundleName.c_str());
+            APP_LOGI("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
             napi_value objFormInfo;
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objFormInfo));
             ConvertFormInfo(env, objFormInfo, item);
