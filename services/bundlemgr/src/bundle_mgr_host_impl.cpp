@@ -2175,40 +2175,6 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
     return userIds;
 }
 
-bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName)
-{
-    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) ||
-        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGD("verify query permission successfully");
-        return true;
-    }
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    if (ret && (queryBundleName == callingBundleName)) {
-        APP_LOGD("query own info, verify success");
-        return true;
-    }
-    APP_LOGD("verify query permission failed");
-    return false;
-}
-
-bool BundleMgrHostImpl::VerifyPrivilegedPermission(const std::string &queryBundleName)
-{
-    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        return true;
-    }
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    if (ret && (queryBundleName == callingBundleName)) {
-        APP_LOGD("query own info, verify success");
-        return true;
-    }
-    APP_LOGE("verify query permission failed");
-    return false;
-}
-
 std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("start GetAppPrivilegeLevel");
