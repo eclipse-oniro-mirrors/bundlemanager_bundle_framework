@@ -2177,8 +2177,8 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
 
 bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName)
 {
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) ||
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO) ||
+        BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGD("verify query permission successfully");
         return true;
     }
@@ -2195,7 +2195,7 @@ bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName
 
 bool BundleMgrHostImpl::VerifyPrivilegedPermission(const std::string &queryBundleName)
 {
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         return true;
     }
     std::string callingBundleName;
@@ -2229,7 +2229,7 @@ std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleNam
 bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 {
     APP_LOGD("VerifyCallingPermission begin");
-    return BundlePermissionMgr::VerifyCallingPermission(permission);
+    return BundlePermissionMgr::VerifyCallingPermissionForAll(permission);
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
