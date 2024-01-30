@@ -375,6 +375,8 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
     const InnerBundleInfo &innerBundleInfo)
 {
     auto reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    APP_LOGI("bundleName:%{public}s requestPermission size :%{public}zu",
+        innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::vector<AccessToken::PermissionStateFull> permStateFullList;
     if (!reqPermissions.empty()) {
         for (const auto &reqPermission : reqPermissions) {
@@ -964,8 +966,9 @@ bool BundlePermissionMgr::InnerFilterRequestPermissions(
     std::vector<std::string> &systemGrantPermList,
     std::vector<std::string> &userGrantPermList)
 {
-    APP_LOGD("start, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    APP_LOGI("start, bundleName:%{public}s request permission size :%{public}zu",
+        innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
     std::vector<std::string> acls = innerBundleInfo.GetAllowedAcls();
     for (const auto &reqPermission : reqPermissions) {
