@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2333,5 +2333,212 @@ HWTEST_F(BmsBundleInstallCheckerTest, MatchSignature_0102, Function | SmallTest 
     std::vector<std::string> appSignatures;
     bool res = installChecker.MatchOldSignatures("", appSignatures);
     EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: VaildInstallPermissionForShare_0100
+ * @tc.name: test VaildInstallPermissionForShare
+ * @tc.desc: 1.test isCallByShell is false
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, VaildInstallPermissionForShare_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallCheckParam checkParam;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    hapVerifyRes.emplace_back(result);
+    checkParam.isCallByShell = false;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res1 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res1);
+
+    checkParam.installBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res2 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res2);
+
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res3 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res3);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res4 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res4);
+
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res5 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res5);
+
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res6 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res6);
+}
+
+/**
+ * @tc.number: VaildInstallPermissionForShare_0200
+ * @tc.name: test VaildInstallPermissionForShare
+ * @tc.desc: 1.test isCallByShell is true
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, VaildInstallPermissionForShare_0200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallCheckParam checkParam;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    hapVerifyRes.emplace_back(result);
+    checkParam.isCallByShell = true;
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res1 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res1);
+
+    checkParam.installBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res2 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res2);
+
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res3 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res3);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res4 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_FALSE(res4);
+
+    checkParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res5 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res5);
+
+    checkParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res6 = installChecker.VaildInstallPermissionForShare(checkParam, hapVerifyRes);
+    EXPECT_TRUE(res6);
+}
+
+/**
+ * @tc.number: VaildEnterpriseInstallPermissionForShare_0100
+ * @tc.name: test VaildEnterpriseInstallPermissionForShare
+ * @tc.desc: 1.test VaildEnterpriseInstallPermissionForShare of BundleInstallChecker
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermissionForShare_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallCheckParam checkParam;
+    Security::Verify::ProvisionInfo provisionInfo;
+    checkParam.isCallByShell = true;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    bool res1 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_FALSE(res1);
+
+    checkParam.isCallByShell = false;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    bool res2 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res2);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    bool res3 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_FALSE(res3);
+
+    checkParam.installEtpNormalBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res4 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res4);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res5 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res5);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res6 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res6);
+
+    checkParam.installEtpNormalBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res7 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_FALSE(res7);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    bool res8 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res8);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    bool res9 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_TRUE(res9);
+
+    checkParam.installEtpMdmBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res10 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_FALSE(res10);
+
+    checkParam.installEtpNormalBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    bool res11 = installChecker.VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+    EXPECT_FALSE(res11);
+}
+
+/**
+ * @tc.number: UpdateBundleForSelf_0100
+ * @tc.name: test UpdateBundleForSelf
+ * @tc.desc: 1.test UpdateBundleForSelf of BundleInstallerHost
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateBundleForSelf_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    bundleInstallerHost.manager_ = nullptr;
+    bool res = bundleInstallerHost.UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+
+    bundleInstallerHost.manager_ = std::make_shared<BundleInstallerManager>();
+    res = bundleInstallerHost.UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0100
+ * @tc.name: test ResetAOTCompileStatus
+ * @tc.desc: 1.test ResetAOTCompileStatus of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, ResetAOTCompileStatus_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfonfo;
+    auto res = innerBundleInfonfo.ResetAOTCompileStatus(ENTRY);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    InnerModuleInfo innerModuleInfo;
+    innerBundleInfonfo.InsertInnerModuleInfo(ENTRY, innerModuleInfo);
+    res = innerBundleInfonfo.ResetAOTCompileStatus(ENTRY);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLastInstallationTimeTest
+ * @tc.name: test GetLastInstallationTime
+ * @tc.desc: 1.test GetLastInstallationTime of InnerBundleInfo
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetLastInstallationTimeTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfonfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleInfonfo.innerBundleUserInfos_.try_emplace(BUNDLE_NAME, innerBundleUserInfo);
+    int64_t res = innerBundleInfonfo.GetLastInstallationTime();
+    EXPECT_GE(res, 0);
+}
+
+/**
+ * @tc.number: GetEntryModuleNameTest
+ * @tc.name: test GetEntryModuleName
+ * @tc.desc: 1.test GetEntryModuleName of InnerBundleInfo
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetEntryModuleNameTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfonfo;
+    std::string res = innerBundleInfonfo.GetEntryModuleName();
+    EXPECT_EQ(res.empty(), true);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.modulePackage = HAP_TWO;
+    innerBundleInfonfo.InsertInnerModuleInfo(HAP_ONE, innerModuleInfo);
+    res = innerBundleInfonfo.GetEntryModuleName();
+    EXPECT_EQ(res.empty(), false);
 }
 } // OHOS
