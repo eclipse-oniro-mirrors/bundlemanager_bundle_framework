@@ -1361,8 +1361,7 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
 }
 
-void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo,
-    napi_value objHapModuleInfo, int32_t flags)
+void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)
 {
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
@@ -1485,14 +1484,11 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
 
     napi_value nRouterMap;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterMap));
-    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP))
-        == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP)) {
-        for (size_t idx = 0; idx < hapModuleInfo.routerArray.size(); idx++) {
-            napi_value nRouterItem;
-            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
-            ConvertRouterItem(env, hapModuleInfo.routerArray[idx], nRouterItem);
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
-        }
+    for (size_t idx = 0; idx < hapModuleInfo.routerArray.size(); idx++) {
+        napi_value nRouterItem;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
+        ConvertRouterItem(env, hapModuleInfo.routerArray[idx], nRouterItem);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_MAP, nRouterMap));
 }
@@ -1608,7 +1604,7 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     for (size_t idx = 0; idx < bundleInfo.hapModuleInfos.size(); idx++) {
         napi_value objHapModuleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objHapModuleInfo));
-        ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[idx], objHapModuleInfo, flags);
+        ConvertHapModuleInfo(env, bundleInfo.hapModuleInfos[idx], objHapModuleInfo);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nHapModuleInfos, idx, objHapModuleInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "hapModulesInfo", nHapModuleInfos));

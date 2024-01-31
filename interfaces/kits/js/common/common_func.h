@@ -120,8 +120,7 @@ static void ConvertRequestPermissionUsedScene(napi_env env,
 
 static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value);
 
-static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo,
-    napi_value objHapModuleInfo, int32_t flags = 0);
+static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
 
 static void ConvertDependency(napi_env env, const Dependency &dependency, napi_value value);
 

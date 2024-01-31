@@ -356,7 +356,7 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         ROUTER_ITEM_KEY_NAME,
         routerItem.name,
         JsonType::STRING,
-        false,
+        true,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -372,7 +372,7 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         ROUTER_ITEM_KEY_PAGE_SOURCE_FILE,
         routerItem.pageSourceFile,
         JsonType::STRING,
-        false,
+        true,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
@@ -380,7 +380,7 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         ROUTER_ITEM_KEY_BUILD_FUNCTION,
         routerItem.buildFunction,
         JsonType::STRING,
-        false,
+        true,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
