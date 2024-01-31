@@ -114,10 +114,8 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
     return ERR_OK;
 }
 
-void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
+nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
 {
-    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
-
     /* obtain the uid of current process */
     int32_t currentProcessUid = static_cast<int32_t>(getuid());
 
@@ -134,6 +132,13 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
     subject[IS_ENCRYPTED_BUNDLE] = DecToHex(aotArgs.isEncryptedBundle);
     subject[PGO_DIR] = filePath.parent_path().string();
+    return subject;
+}
+
+void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
+{
+    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
+    nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();
     for (const auto &hspInfo : aotArgs.hspVector) {
@@ -153,6 +158,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
         "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
         "--compiler-pkg-info=" + subject.dump(),
         "--compiler-external-pkg-info=" + objectArray.dump(),
+        "--compiler-opt-bc-range=" + aotArgs.optBCRangeList
     };
     tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
 
