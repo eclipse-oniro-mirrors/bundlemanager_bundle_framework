@@ -292,7 +292,6 @@ ErrCode BundleParser::ParseRouterArray(
 {
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
     nlohmann::json jsonBuf = nlohmann::json::parse(jsonString);
-
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file %{private}s is discarded", jsonString.c_str());
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;

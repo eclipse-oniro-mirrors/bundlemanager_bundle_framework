@@ -89,9 +89,9 @@ struct ProxyData : public Parcelable {
 };
 
 struct RouterItem : public Parcelable {
-    std::string url;
-    std::string moduleName;
-    std::string path;
+    std::string name;
+    std::string pageModule;
+    std::string pageSourceFile;
     std::string buildFunction;
     std::map<std::string, std::string> data;
 

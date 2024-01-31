@@ -83,9 +83,9 @@ const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFile
 const std::string HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
 const std::string HAP_MODULE_INFO_ROUTER_MAP = "routerMap";
 const std::string HAP_MODULE_INFO_ROUTER_ARRAY = "routerArray";
-const std::string ROUTER_ITEM_KEY_URL = "url";
-const std::string ROUTER_JSON_KEY_MODULE = "module";
-const std::string ROUTER_ITEM_KEY_PATH = "path";
+const std::string ROUTER_ITEM_KEY_NAME = "name";
+const std::string ROUTER_ITEM_KEY_PAGE_MODULE = "pageModule";
+const std::string ROUTER_ITEM_KEY_PAGE_SOURCE_FILE = "pageSourceFile";
 const std::string ROUTER_ITEM_KEY_BUILD_FUNCTION = "buildFunction";
 const std::string ROUTER_ITEM_KEY_DATA = "data";
 const size_t MODULE_CAPACITY = 10240; // 10K
@@ -294,9 +294,9 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
 
 bool RouterItem::ReadFromParcel(Parcel &parcel)
 {
-    url = Str16ToStr8(parcel.ReadString16());
-    moduleName = Str16ToStr8(parcel.ReadString16());
-    path = Str16ToStr8(parcel.ReadString16());
+    name = Str16ToStr8(parcel.ReadString16());
+    pageModule = Str16ToStr8(parcel.ReadString16());
+    pageSourceFile = Str16ToStr8(parcel.ReadString16());
     buildFunction = Str16ToStr8(parcel.ReadString16());
 
     int32_t dataSize;
@@ -323,9 +323,9 @@ RouterItem *RouterItem::Unmarshalling(Parcel &parcel)
 
 bool RouterItem::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(url));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(path));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageModule));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageSourceFile));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildFunction));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(data.size()));
@@ -339,9 +339,9 @@ bool RouterItem::Marshalling(Parcel &parcel) const
 void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem)
 {
     jsonObject = nlohmann::json {
-        {ROUTER_ITEM_KEY_URL, routerItem.url},
-        {ROUTER_JSON_KEY_MODULE, routerItem.moduleName},
-        {ROUTER_ITEM_KEY_PATH, routerItem.path},
+        {ROUTER_ITEM_KEY_NAME, routerItem.name},
+        {ROUTER_ITEM_KEY_PAGE_MODULE, routerItem.pageModule},
+        {ROUTER_ITEM_KEY_PAGE_SOURCE_FILE, routerItem.pageSourceFile},
         {ROUTER_ITEM_KEY_BUILD_FUNCTION, routerItem.buildFunction},
         {ROUTER_ITEM_KEY_DATA, routerItem.data}
     };
@@ -353,24 +353,24 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ROUTER_ITEM_KEY_URL,
-        routerItem.url,
+        ROUTER_ITEM_KEY_NAME,
+        routerItem.name,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ROUTER_JSON_KEY_MODULE,
-        routerItem.moduleName,
+        ROUTER_ITEM_KEY_PAGE_MODULE,
+        routerItem.pageModule,
         JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
-        ROUTER_ITEM_KEY_PATH,
-        routerItem.path,
+        ROUTER_ITEM_KEY_PAGE_SOURCE_FILE,
+        routerItem.pageSourceFile,
         JsonType::STRING,
         false,
         parseResult,

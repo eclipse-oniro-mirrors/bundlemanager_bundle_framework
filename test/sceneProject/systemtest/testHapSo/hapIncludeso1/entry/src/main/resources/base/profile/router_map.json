@@ -1,15 +1,15 @@
 {
     "routerMap": [
       {
-        "url": "DynamicPage1",
-        "moduleName": "entry",
-        "path": "entry/src/index",
+        "name": "DynamicPage1",
+        "pageModule": "entry",
+        "pageSourceFile": "entry/src/index",
         "buildFunction": "myFunction"
       },
       {
-        "url": "DynamicPage2",
-        "moduleName": "entry",
-        "path": "entry/src/index",
+        "name": "DynamicPage2",
+        "pageModule": "entry",
+        "pageSourceFile": "entry/src/index",
         "buildFunction": "myBuilder",
         "data": {
           "key1": "data1",

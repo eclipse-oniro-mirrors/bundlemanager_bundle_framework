@@ -35,11 +35,9 @@ constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* MODULE = "module";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* URI = "uri";
-constexpr const char* URL = "url";
 constexpr const char* TYPE = "type";
 constexpr const char* ACTION = "action";
 constexpr const char* ENTITIES = "entities";
@@ -64,8 +62,9 @@ constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
 constexpr const char* DEBUG = "debug";
 constexpr const char* EXTENSION_ABILITY_TYPE_NAME = "extensionAbilityTypeName";
-constexpr const char* ROUTER_ARRAY = "routerArray";
-constexpr const char* PATH = "path";
+constexpr const char* ROUTER_MAP = "routerMap";
+constexpr const char* PAGE_MODULE = "pageModule";
+constexpr const char* PAGE_SOURCE_FILE = "pageSourceFile";
 constexpr const char* BUILD_FUNCTION = "buildFunction";
 constexpr const char* DATA = "data";
 constexpr const char* KEY = "key";
@@ -1484,36 +1483,36 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenuConfig", nMenu));
     }
 
-    napi_value nRouterArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterArray));
+    napi_value nRouterMap;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterMap));
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP)) {
         for (size_t idx = 0; idx < hapModuleInfo.routerArray.size(); idx++) {
             napi_value nRouterItem;
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
             ConvertRouterItem(env, hapModuleInfo.routerArray[idx], nRouterItem);
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterArray, idx, nRouterItem));
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
         }
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_ARRAY, nRouterArray));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_MAP, nRouterMap));
 }
 
 void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
 {
-    napi_value nUrl;
+    napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, routerItem.url.c_str(), NAPI_AUTO_LENGTH, &nUrl));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, URL, nUrl));
+        env, routerItem.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
 
-    napi_value nModuleName;
+    napi_value nPageModule;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, routerItem.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE, nModuleName));
+        env, routerItem.pageModule.c_str(), NAPI_AUTO_LENGTH, &nPageModule));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PAGE_MODULE, nPageModule));
 
-    napi_value nPath;
+    napi_value nPageSourceFile;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, routerItem.path.c_str(), NAPI_AUTO_LENGTH, &nPath));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PATH, nPath));
+        env, routerItem.pageSourceFile.c_str(), NAPI_AUTO_LENGTH, &nPageSourceFile));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PAGE_SOURCE_FILE, nPageSourceFile));
 
     napi_value nBuildFunction;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
