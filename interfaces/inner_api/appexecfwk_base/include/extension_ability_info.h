@@ -59,6 +59,7 @@ enum class ExtensionAbilityType {
     DRIVER = 18,
     ACTION = 19,
     ADS_SERVICE = 20,
+    EMBEDDED_UI = 21,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,

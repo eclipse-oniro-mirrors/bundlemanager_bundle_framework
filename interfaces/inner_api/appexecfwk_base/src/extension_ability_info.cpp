@@ -75,6 +75,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "driver", ExtensionAbilityType::DRIVER },
     { "action", ExtensionAbilityType::ACTION },
     { "adsService", ExtensionAbilityType::ADS_SERVICE },
+    { "embeddedUI", ExtensionAbilityType::EMBEDDED_UI },
     { "autoFill/password", ExtensionAbilityType::AUTO_FILL_PASSWORD },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
     { "ui", ExtensionAbilityType::UI },
