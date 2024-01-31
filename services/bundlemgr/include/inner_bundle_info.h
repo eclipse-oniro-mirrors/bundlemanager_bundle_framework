@@ -291,6 +291,8 @@ public:
     BMS_DEFINE_PROPERTY_MEMBER_FILED(GwpAsanEnabled, baseApplicationInfo_, gwpAsanEnabled, bool);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(
         ApplicationReservedFlag, baseApplicationInfo_, applicationReservedFlag, uint32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        AllowAppRunWhenDeviceFirstLocked, baseApplicationInfo_, allowAppRunWhenDeviceFirstLocked, bool);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)

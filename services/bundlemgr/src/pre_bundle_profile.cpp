@@ -51,6 +51,7 @@ const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExten
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+const std::string ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 const std::string RESOURCES_APPLY = "resourcesApply";
 }
 
@@ -333,6 +334,14 @@ ErrCode PreBundleProfile::TransformTo(
             jsonObjectEnd,
             ALLOW_ENABLE_NOTIFICATION,
             preBundleConfigInfo.allowEnableNotification,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
+            preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked,
             JsonType::BOOLEAN,
             false,
             parseResult,
