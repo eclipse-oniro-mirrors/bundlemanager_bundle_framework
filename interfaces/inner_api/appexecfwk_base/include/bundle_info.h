@@ -43,6 +43,8 @@ enum BundleFlag {
     GET_BUNDLE_WITH_HASH_VALUE = 0x00000030,
     // get bundle info inlcude menu, only for dump usage
     GET_BUNDLE_WITH_MENU = 0x00000040,
+    // get bundle info inlcude router map, only for dump usage
+    GET_BUNDLE_WITH_ROUTER_MAP = 0x00000080,
 };
 
 enum class GetBundleInfoFlag {
@@ -56,6 +58,7 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_WITH_DISABLE = 0x00000040,
     GET_BUNDLE_INFO_WITH_SIGNATURE_INFO = 0x00000080,
     GET_BUNDLE_INFO_WITH_MENU = 0x00000100,
+    GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {

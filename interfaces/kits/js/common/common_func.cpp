@@ -62,6 +62,13 @@ constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
 constexpr const char* DEBUG = "debug";
 constexpr const char* EXTENSION_ABILITY_TYPE_NAME = "extensionAbilityTypeName";
+constexpr const char* ROUTER_MAP = "routerMap";
+constexpr const char* PAGE_MODULE = "pageModule";
+constexpr const char* PAGE_SOURCE_FILE = "pageSourceFile";
+constexpr const char* BUILD_FUNCTION = "buildFunction";
+constexpr const char* DATA = "data";
+constexpr const char* KEY = "key";
+constexpr const char* VALUE = "value";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1473,6 +1480,66 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
             env, napi_create_string_utf8(env, hapModuleInfo.fileContextMenu.c_str(), NAPI_AUTO_LENGTH, &nMenu));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenu", nMenu));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenuConfig", nMenu));
+    }
+
+    napi_value nRouterMap;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterMap));
+    for (size_t idx = 0; idx < hapModuleInfo.routerArray.size(); idx++) {
+        napi_value nRouterItem;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
+        ConvertRouterItem(env, hapModuleInfo.routerArray[idx], nRouterItem);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_MAP, nRouterMap));
+}
+
+void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
+{
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
+
+    napi_value nPageModule;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.pageModule.c_str(), NAPI_AUTO_LENGTH, &nPageModule));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PAGE_MODULE, nPageModule));
+
+    napi_value nPageSourceFile;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.pageSourceFile.c_str(), NAPI_AUTO_LENGTH, &nPageSourceFile));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PAGE_SOURCE_FILE, nPageSourceFile));
+
+    napi_value nBuildFunction;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.buildFunction.c_str(), NAPI_AUTO_LENGTH, &nBuildFunction));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUILD_FUNCTION, nBuildFunction));
+
+    napi_value nDataArray;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDataArray));
+    ConvertRouterDataInfos(env, routerItem.data, nDataArray);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nDataArray));
+}
+
+void CommonFunc::ConvertRouterDataInfos(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : data) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nKey;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, KEY, nKey));
+
+        napi_value nValue;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, VALUE, nValue));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
     }
 }
 

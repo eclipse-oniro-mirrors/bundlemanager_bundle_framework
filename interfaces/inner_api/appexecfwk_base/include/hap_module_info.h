@@ -88,6 +88,18 @@ struct ProxyData : public Parcelable {
     static ProxyData *Unmarshalling(Parcel &parcel);
 };
 
+struct RouterItem : public Parcelable {
+    std::string name;
+    std::string pageModule;
+    std::string pageSourceFile;
+    std::string buildFunction;
+    std::map<std::string, std::string> data;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static RouterItem *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -148,6 +160,8 @@ struct HapModuleInfo : public Parcelable {
     IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
+    std::string routerMap;
+    std::vector<RouterItem> routerArray;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

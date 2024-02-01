@@ -255,6 +255,7 @@ struct Module {
     std::string isolationMode;
     bool compressNativeLibs = true;
     std::string fileContextMenu;
+    std::string routerMap;
 };
 
 struct ModuleJson {
@@ -1416,6 +1417,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ROUTER_MAP,
+        module.routerMap,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2110,6 +2119,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+    innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo
     return true;
 }

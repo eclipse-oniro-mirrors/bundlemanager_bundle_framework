@@ -44,6 +44,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle9:stbmsThirdBundle9",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso1:hapIncludeso1",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",

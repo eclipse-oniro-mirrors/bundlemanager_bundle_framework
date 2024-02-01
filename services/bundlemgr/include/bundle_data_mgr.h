@@ -1001,6 +1001,7 @@ private:
     void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
+    void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;
