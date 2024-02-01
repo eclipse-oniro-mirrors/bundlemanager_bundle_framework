@@ -3077,5 +3077,19 @@ void InnerBundleInfo::UpdateDataGroupInfos(
         }
     }
 }
+
+std::vector<std::string> InnerBundleInfo::GetQuerySchemes() const
+{
+    std::string entryModuleName = GetEntryModuleName();
+    auto it = innerModuleInfos_.find(entryModuleName);
+    if (it == innerModuleInfos_.end()) {
+        return std::vector<std::string>();
+    }
+    std::vector<std::string> querySchemes = innerModuleInfos_.at(entryModuleName).querySchemes;
+    for (int32_t i = 0; i < querySchemes.size(); i++) {
+        transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
+    }
+    return querySchemes;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

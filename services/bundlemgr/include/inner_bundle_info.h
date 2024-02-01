@@ -905,6 +905,7 @@ public:
     bool IsContainEncryptedModule() const;
     void UpdateDebug(bool debug, bool isEntry);
     ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
+    std::vector<std::string> GetQuerySchemes() const;
 
 private:
     bool IsExistLauncherAbility() const;

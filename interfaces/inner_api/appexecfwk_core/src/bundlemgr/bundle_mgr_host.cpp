@@ -336,6 +336,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCompileProcessAOT);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_RESET),
         &BundleMgrHost::HandleCompileReset);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CAN_OPEN_LINK),
+        &BundleMgrHost::HandleCanOpenLink);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3163,6 +3165,23 @@ ErrCode BundleMgrHost::WriteBigString(const std::string &str, MessageParcel &rep
 {
     WRITE_PARCEL(reply.WriteUint32(str.size() + 1));
     WRITE_PARCEL(reply.WriteRawData(str.c_str(), str.size() + 1));
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string link = data.ReadString();
+    bool canOpen = false;
+    ErrCode ret = CanOpenLink(link, canOpen);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(canOpen)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

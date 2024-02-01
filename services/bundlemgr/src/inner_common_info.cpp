@@ -95,6 +95,7 @@ const std::string MODULE_IS_ENCRYPTED = "isEncrypted";
 const std::string MODULE_ROUTER_MAP = "routerMap";
 const std::string STR_PHONE = "phone";
 const std::string STR_DEFAULT = "default";
+const std::string MODULE_QUERY_SCHEMES = "querySchemes";
 }  // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -491,6 +492,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
         {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
         {MODULE_IS_ENCRYPTED, info.isEncrypted},
+        {MODULE_QUERY_SCHEMES, info.querySchemes},
         {MODULE_ROUTER_MAP, info.routerMap},
     };
 }
@@ -1013,6 +1015,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_QUERY_SCHEMES,
+        info.querySchemes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_ROUTER_MAP,

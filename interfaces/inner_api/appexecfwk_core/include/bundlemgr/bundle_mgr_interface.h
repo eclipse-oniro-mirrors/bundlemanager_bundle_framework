@@ -1307,6 +1307,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

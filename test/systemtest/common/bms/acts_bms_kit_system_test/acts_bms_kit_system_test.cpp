@@ -8333,5 +8333,134 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0300, Function | MediumTest
     }
     std::cout << "END GetApplicationInfosV9_0300" << std::endl;
 }
+
+/**
+ * @tc.number: CanOpenLink_0001
+ * @tc.name: test CanOpenLink interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call CanOpenLink
+ */
+HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START CanOpenLink_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    setuid(bundleInfo.uid);
+
+    std::string link = "http://";
+    bool canOpen = false;
+    auto queryResult =
+        bundleMgrProxy->CanOpenLink(link, canOpen);
+
+    setuid(Constants::ROOT_UID);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_TRUE(canOpen);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END CanOpenLink_0001" << std::endl;
+}
+
+/**
+ * @tc.number: CanOpenLink_0002
+ * @tc.name: test CanOpenLink interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call CanOpenLink
+ */
+HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START CanOpenLink_0002" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    setuid(bundleInfo.uid);
+
+    std::string link = "welink://";
+    bool canOpen = false;
+    auto queryResult =
+        bundleMgrProxy->CanOpenLink(link, canOpen);
+    
+    setuid(Constants::ROOT_UID);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_FALSE(canOpen);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END CanOpenLink_0002" << std::endl;
+}
+
+/**
+ * @tc.number: CanOpenLink_0003
+ * @tc.name: test CanOpenLink interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call CanOpenLink
+ */
+HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
+{
+    std::cout << "START CanOpenLink_0003" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+    setuid(bundleInfo.uid);
+
+    std::string link = "https://";
+    bool canOpen = false;
+    auto queryResult =
+        bundleMgrProxy->CanOpenLink(link, canOpen);
+    
+    setuid(Constants::ROOT_UID);
+
+    EXPECT_NE(queryResult, ERR_OK);
+    EXPECT_FALSE(canOpen);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END CanOpenLink_0003" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

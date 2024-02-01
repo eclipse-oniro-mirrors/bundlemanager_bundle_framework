@@ -867,6 +867,15 @@ public:
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId) const;
 
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return  Returns result of the operation.
+     */
+    ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen) const;
+
 private:
     /**
      * @brief Init transferStates.

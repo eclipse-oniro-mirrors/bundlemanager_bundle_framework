@@ -95,6 +95,7 @@ const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
     { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH}
 };
+const std::string SCHEME_END = "://";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -6188,6 +6189,50 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
     APP_LOGI("CreateBundleDataDir result: %{public}d", res);
     return res;
+}
+
+ErrCode BundleDataMgr::CanOpenLink(
+    const std::string &link, bool &canOpen) const
+{
+    APP_LOGI("CanOpenLink link: %{public}s", link.c_str());
+    auto uid = IPCSkeleton::GetCallingUid();
+    InnerBundleInfo innerBundleInfo;
+    if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
+        APP_LOGE("get innerBundleInfo by uid :%{public}d failed.", uid);
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
+    }
+    auto querySchemes = innerBundleInfo.GetQuerySchemes();
+    if (querySchemes.empty()) {
+        APP_LOGI("querySchemes is empty.");
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
+    }
+
+    size_t pos = link.find(SCHEME_END);
+    if (pos == std::string::npos) {
+        APP_LOGE("parse link : %{public}s failed.", link.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_SCHEME;
+    }
+    std::string scheme = link.substr(0, pos);
+    transform(scheme.begin(), scheme.end(), scheme.begin(), ::tolower);
+    if (std::find(querySchemes.begin(), querySchemes.end(), scheme) == querySchemes.end()) {
+        APP_LOGI("scheme :%{public}s is not in the querySchemes.", scheme.c_str());
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
+    }
+
+    Want want;
+    want.SetUri(link);
+    std::vector<AbilityInfo> abilityInfos;
+    // implicit query
+    ErrCode ret = ImplicitQueryAbilityInfosV9(
+        want, static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), GetUserIdByUid(uid), abilityInfos);
+    if (ret != ERR_OK) {
+        APP_LOGD("implicit queryAbilityInfosV9 error");
+        return ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES;
+    }
+
+    canOpen = !abilityInfos.empty();
+    APP_LOGI("canOpen : %{public}d", canOpen);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

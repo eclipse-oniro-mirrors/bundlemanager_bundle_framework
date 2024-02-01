@@ -862,6 +862,15 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return  Returns result of the operation.
+     */
+    virtual ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
