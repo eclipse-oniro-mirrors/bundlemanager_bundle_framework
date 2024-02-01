@@ -653,7 +653,6 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
-    codeSignatureParam.moduleName = bundleName_;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
@@ -670,7 +669,6 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForHsp(const std::string 
     codeSignatureParam.signatureFileDir = signatureFileDir_;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle;
     codeSignatureParam.isCompileSdkOpenHarmony = isCompileSdkOpenHarmony;
-    codeSignatureParam.moduleName = bundleName;
     codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle_;
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
