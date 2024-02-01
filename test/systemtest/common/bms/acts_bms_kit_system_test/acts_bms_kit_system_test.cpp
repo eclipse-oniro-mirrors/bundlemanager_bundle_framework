@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <fcntl.h>
 #include <fstream>
@@ -25,6 +26,7 @@
 #include "bundle_installer_proxy.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_resource_info.h"
+#include "bundle_resource_proxy.h"
 #include "bundle_status_callback_host.h"
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
@@ -8196,6 +8198,21 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllLauncherAbilityResourceInfo_0001, Function 
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
         }
     }
+}
+
+/**
+ * @tc.number: SendRequest_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call SendRequest
+ */
+HWTEST_F(ActsBmsKitSystemTest, SendRequest_0001, Function | SmallTest | Level1)
+{
+    sptr<IRemoteObject> object;
+    BundleResourceProxy resourceProxy(object);
+    MessageParcel data;
+    MessageParcel reply;
+    bool ret = resourceProxy.SendRequest(BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO, data, reply);
+    EXPECT_FALSE(ret);
 }
 
 /**

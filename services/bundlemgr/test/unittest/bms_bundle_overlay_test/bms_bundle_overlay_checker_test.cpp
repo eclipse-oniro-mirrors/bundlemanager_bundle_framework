@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -920,6 +920,39 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0900, Function | SmallTest 
     oldInfo.SetIsPreInstallApp(true);
     oldInfo.SetCertificateFingerprint(NO_EXIST);
     EXPECT_EQ(oldInfo.baseApplicationInfo_->fingerprint, NO_EXIST);
+}
+
+/**
+ * @tc.number: OverlayDataMgr_1000
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of UpdateOverlayModule.
+ *           2.system run normally.
+  * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1000, Function | SmallTest | Level0)
+{
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    auto res = overlayDataMgr.UpdateOverlayModule(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    newInfo.isNewVersion_ = true;
+    res = overlayDataMgr.UpdateOverlayModule(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    newInfo.isNewVersion_ = false;
+    oldInfo.isNewVersion_ = true;
+    res = overlayDataMgr.UpdateOverlayModule(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    newInfo.isNewVersion_ = true;
+    res = overlayDataMgr.UpdateOverlayModule(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    newInfo.overlayType_ = OVERLAY_INTERNAL_BUNDLE;
+    res = overlayDataMgr.UpdateOverlayModule(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
 }
 #endif
 
