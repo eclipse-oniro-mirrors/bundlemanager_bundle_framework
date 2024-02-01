@@ -2162,6 +2162,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
     appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
     appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
+    appInfo.allowAppRunWhenDeviceFirstLocked = preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif

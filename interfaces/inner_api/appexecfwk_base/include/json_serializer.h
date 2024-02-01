@@ -144,6 +144,8 @@ void to_json(nlohmann::json &jsonObject, const ProxyData &proxyData);
 void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData);
 void to_json(nlohmann::json &jsonObject, const DataGroupInfo &dataGroupInfo);
 void from_json(const nlohmann::json &jsonObject, DataGroupInfo &dataGroupInfo);
+void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem);
+void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

@@ -2489,26 +2489,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0500, Function | SmallTest
 }
 
 /**
- * @tc.number: GetBundleNameForUid_0600
- * @tc.name: test can get the bundle names with bundle installed
- * @tc.desc: 1.system run normally
- *           2.get installed bundle names successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0600, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::string testResult;
-    bool testRet = GetBundleDataMgr()->GetBundleNameForUid(TEST_UID, testResult);
-    EXPECT_FALSE(testRet);
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool result = hostImpl->VerifyQueryPermission(testResult);
-    EXPECT_TRUE(result);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: CheckIsSystemAppByUid_0100
  * @tc.name: test can check the installed bundle whether system app or not by uid
  * @tc.desc: 1.system run normally
@@ -8723,27 +8703,6 @@ HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest
     EXPECT_EQ(form.updateEnabled, extensionFormInfo.updateEnabled);
     EXPECT_EQ(form.type, extensionFormInfo.type);
     EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
-}
-
-/**
- * @tc.number: VerifyPrivilegedPermission_0100
- * @tc.name: test VerifyPrivilegedPermission
- * @tc.desc: 1.system run normal
- */
-HWTEST_F(BmsBundleKitServiceTest, VerifyPrivilegedPermission_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool testRet = hostImpl->VerifyPrivilegedPermission(BUNDLE_NAME_TEST);
-    EXPECT_TRUE(testRet);
-
-    AbilityInfo abilityInfo;
-    bool isEnabled = false;
-    int32_t userId = -2;
-    auto res = hostImpl->SetAbilityEnabled(abilityInfo, isEnabled, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**

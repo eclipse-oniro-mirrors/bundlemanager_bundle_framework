@@ -65,6 +65,14 @@ const std::string DEFAULT_APP_BUNDLE_NAME = "com.test.defaultApp";
 const std::string DEFAULT_APP_MODULE_NAME = "module01";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const std::string DEVICE_ID = "deviceID";
+const std::string ROUTER_MAP_TEST_HAP = "/data/test/bms_bundle/hapIncludeso1.hap";
+const std::string ROUTER_MAP_TEST_BUNDLE_NAME = "com.example.testhapso1";
+const std::string ROUTER_INDEX_ZERO_URL = "DynamicPage1";
+const std::string ROUTER_INDEX_ZERO_MDOULE_NAME = "entry";
+const std::string ROUTER_INDEX_ZERO_PATH = "entry/src/index";
+const std::string ROUTER_INDEX_ZERO_BUILD_FUNCTION = "myFunction";
+const std::string ROUTER_INDEX_ONE_URL = "DynamicPage2";
+const std::string ROUTER_INDEX_ONE_BUILD_FUNCTION = "myBuilder";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -718,6 +726,86 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0900, Function | MediumTest | Level
 }
 
 /**
+ * @tc.number: GetBundleInfo_1000
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.install the hap that contains router map json profile
+ *           2.query bundleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1000, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfo_1000" << std::endl;
+    std::vector<std::string> resvec;
+    Install(ROUTER_MAP_TEST_HAP, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfo(ROUTER_MAP_TEST_BUNDLE_NAME,
+        static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP), bundleInfo, USERID);
+    EXPECT_TRUE(getInfoResult);
+    ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
+    ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
+        ROUTER_INDEX_ZERO_MDOULE_NAME);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
+        ROUTER_INDEX_ZERO_PATH);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
+        ROUTER_INDEX_ZERO_BUILD_FUNCTION);
+
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
+        ROUTER_INDEX_ZERO_MDOULE_NAME);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
+        ROUTER_INDEX_ZERO_PATH);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
+        ROUTER_INDEX_ONE_BUILD_FUNCTION);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), PERMS_INDEX_TWO);
+    resvec.clear();
+    Uninstall(ROUTER_MAP_TEST_BUNDLE_NAME, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfo_1000" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfo_1100
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.install the hap that does not contain router map json profile
+ *           2.query bundleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfo_1100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfo(appName,
+        static_cast<int32_t>(BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP), bundleInfo, USERID);
+    EXPECT_TRUE(getInfoResult);
+    ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.empty());
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfo_1100" << std::endl;
+}
+
+/**
  * @tc.number: GetBundleInfoV9_0010
  * @tc.name: test query bundle information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -1195,6 +1283,88 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0023, Function | MediumTest | Lev
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     std::cout << "END GetBundleInfoV9_0023" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfoV9_0024
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.install the hap that contains router map json profile
+ *           2.query bundleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0024, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoV9_0024" << std::endl;
+    std::vector<std::string> resvec;
+    Install(ROUTER_MAP_TEST_HAP, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(ROUTER_MAP_TEST_BUNDLE_NAME,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), bundleInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
+    ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
+        ROUTER_INDEX_ZERO_MDOULE_NAME);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
+        ROUTER_INDEX_ZERO_PATH);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
+        ROUTER_INDEX_ZERO_BUILD_FUNCTION);
+
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
+        ROUTER_INDEX_ZERO_MDOULE_NAME);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
+        ROUTER_INDEX_ZERO_PATH);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
+        ROUTER_INDEX_ONE_BUILD_FUNCTION);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), PERMS_INDEX_TWO);
+    resvec.clear();
+    Uninstall(ROUTER_MAP_TEST_BUNDLE_NAME, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfoV9_0024" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleInfoV9_0025
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.install the hap that does not contain router map json profile
+ *           2.query bundleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0025, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleInfoV9_0025" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    auto getInfoResult = bundleMgrProxy->GetBundleInfoV9(appName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), bundleInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_TRUE(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.empty());
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetBundleInfoV9_0025" << std::endl;
 }
 
 /**

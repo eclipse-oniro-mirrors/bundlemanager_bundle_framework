@@ -161,6 +161,10 @@ static void ConvertRecoverableApplicationInfo(
 static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications);
 
+static void ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value);
+
+static void ConvertRouterDataInfos(napi_env env, const std::map<std::string, std::string> &data, napi_value objInfos);
+
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };

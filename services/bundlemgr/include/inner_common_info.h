@@ -121,6 +121,7 @@ struct InnerModuleInfo {
     std::string fileContextMenu;
     bool isEncrypted = false;
     std::vector<std::string> querySchemes;
+    std::string routerMap;
 };
 
 struct SkillUri {

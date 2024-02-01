@@ -265,7 +265,7 @@ static void ProcessApplicationInfos(
     }
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
@@ -2758,11 +2758,18 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO), &nGetBundleInfoWithSignatureInfo));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SIGNATURE_INFO",
         nGetBundleInfoWithSignatureInfo));
+
     napi_value nGetBundleInfoWithMenu;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU), &nGetBundleInfoWithMenu));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_MENU",
         nGetBundleInfoWithMenu));
+
+    napi_value nGetBundleInfoWithRouterMap;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), &nGetBundleInfoWithRouterMap));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ROUTER_MAP",
+        nGetBundleInfoWithRouterMap));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
@@ -2797,7 +2804,7 @@ static void ProcessBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name{%{public}s}, bundleName{%{public}s} ", item.name.c_str(), item.name.c_str());
+        APP_LOGD("name: %{public}s ", item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
         CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);

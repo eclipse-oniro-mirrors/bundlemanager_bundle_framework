@@ -957,7 +957,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper_)) {
+    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -1112,12 +1112,12 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
+                codeSignatureParam.modulePath, entryMap, fileType);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType,
-                codeSignatureParam.moduleName);
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
+        APP_LOGI("Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         APP_LOGD("Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);

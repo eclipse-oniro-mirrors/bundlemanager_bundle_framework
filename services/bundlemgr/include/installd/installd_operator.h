@@ -177,7 +177,7 @@ public:
      * @param size Indicates the disk size.
      * @return Returns true if successfully; returns false otherwise.
      */
-    static int64_t GetDiskUsage(const std::string &dir);
+    static int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false);
     /**
      * @brief Traverse all cache directories.
      * @param currentPath Indicates the current path.
@@ -228,11 +228,10 @@ public:
     static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
         const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
     static ErrCode PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
-        std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap);
+        const Security::CodeSign::EntryMap &entryMap);
 #endif
 
-    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
-        std::shared_ptr<CodeSignHelper>& codeSignHelper);
+    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

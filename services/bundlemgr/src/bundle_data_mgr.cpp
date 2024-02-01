@@ -34,6 +34,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
 #include "bundle_util.h"
@@ -1808,6 +1809,11 @@ bool BundleDataMgr::GetBundleInfo(
     if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_MENU) == BundleFlag::GET_BUNDLE_WITH_MENU) {
         ProcessBundleMenu(bundleInfo, flags, false);
     }
+    if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) ==
+        BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP) {
+        ProcessBundleRouterMap(bundleInfo, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP));
+    }
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
     return true;
 }
@@ -1841,6 +1847,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
 
     ProcessBundleMenu(bundleInfo, flags, true);
+    ProcessBundleRouterMap(bundleInfo, flags);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
     return ERR_OK;
 }
@@ -1876,6 +1883,40 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
         hapModuleInfo.fileContextMenu = menuProfileContent;
     }
     return ERR_OK;
+}
+
+void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const
+{
+    APP_LOGI("ProcessBundleRouterMap with flags: %{public}d", flag);
+    if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+        return;
+    }
+    if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP)) {
+        return;
+    }
+    for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string routerPath = hapModuleInfo.routerMap;
+        auto pos = routerPath.find(PROFILE_PREFIX);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid router profile");
+            continue;
+        }
+        std::string routerJsonName = routerPath.substr(pos + PROFILE_PREFIX_LENGTH);
+        std::string routerJsonPath = PROFILE_PATH + routerJsonName + JSON_SUFFIX;
+
+        std::string routerMapString;
+        if (GetJsonProfileByExtractor(hapModuleInfo.hapPath, routerJsonPath, routerMapString) != ERR_OK) {
+            APP_LOGW("get json string from %{public}s failed", routerJsonPath.c_str());
+        }
+        
+        BundleParser bundleParser;
+        if (bundleParser.ParseRouterArray(routerMapString, hapModuleInfo.routerArray) != ERR_OK) {
+            APP_LOGE("parse router array from json file %{public}s failed", routerJsonPath.c_str());
+        }
+    }
+    return;
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -2194,10 +2235,9 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
-        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
-        if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
-        }
+        ProcessBundleMenu(bundleInfo, flags, true);
+        ProcessBundleRouterMap(bundleInfo, flags);
+        bundleInfos.emplace_back(bundleInfo);
     }
     if (bundleInfos.empty()) {
         APP_LOGW("bundleInfos is empty");
@@ -5621,7 +5661,8 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
 ErrCode __attribute__((no_sanitize("cfi"))) BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath,
     const std::string &profilePath, std::string &profile) const
 {
-    APP_LOGD("GetJsonProfileByExtractor called");
+    APP_LOGD("GetJsonProfileByExtractor with hapPath %{private}s and profilePath %{private}s",
+        hapPath.c_str(), profilePath.c_str());
     BundleExtractor bundleExtractor(hapPath);
     if (!bundleExtractor.Init()) {
         APP_LOGE("bundle extractor init failed");

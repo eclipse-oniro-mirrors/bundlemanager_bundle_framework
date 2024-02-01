@@ -257,6 +257,7 @@ struct Module {
     bool compressNativeLibs = true;
     std::string fileContextMenu;
     std::vector<std::string> querySchemes;
+    std::string routerMap;
 };
 
 struct ModuleJson {
@@ -1426,6 +1427,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ROUTER_MAP,
+        module.routerMap,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2129,6 +2138,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.querySchemes.emplace_back(queryScheme);
     }
 
+    innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo
     return true;
 }

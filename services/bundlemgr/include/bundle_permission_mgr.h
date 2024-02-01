@@ -86,8 +86,6 @@ public:
 
     static int32_t ClearUserGrantedPermissionState(const Security::AccessToken::AccessTokenID tokenId);
 
-    static bool VerifyCallingPermission(const std::string &permissionName);
-
     static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
         const std::vector<Security::AccessToken::PermissionStateFull> &permissions);
 

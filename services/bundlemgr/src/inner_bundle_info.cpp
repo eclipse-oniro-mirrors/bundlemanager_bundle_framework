@@ -573,6 +573,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     hapInfo.fileContextMenu = it->second.fileContextMenu;
+    hapInfo.routerMap = it->second.routerMap;
     return hapInfo;
 }
 
@@ -858,6 +859,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 

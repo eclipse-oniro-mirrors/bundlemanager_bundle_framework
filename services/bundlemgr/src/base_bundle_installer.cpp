@@ -338,7 +338,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (info.GetBaseApplicationInfo().isSystemApp && !info.GetRemovable()) {
+    if (!info.GetRemovable()) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -995,6 +995,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     InnerBundleInfo oldInfo;
     verifyCodeParams_ = installParam.verifyCodeParams;
     pgoParams_ = installParam.pgoParams;
+    copyHapToInstallPath_ = installParam.copyHapToInstallPath;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -1251,7 +1252,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp &&
+    if (!installParam.forceExecuted &&
         !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
@@ -1395,7 +1396,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp
+    if (!installParam.forceExecuted
         && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
@@ -3698,8 +3699,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
-    for (auto it = hapPathRecords_.begin(); it != hapPathRecords_.end(); ++it) {
-        const auto &hapPathRecord = *it;
+    for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
@@ -3712,8 +3712,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 APP_LOGE("Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
             }
-            bool isLastHap = std::next(it) == hapPathRecords_.end();
-            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second, isLastHap) != ERR_OK) {
+            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 APP_LOGE("enable code signature failed");
                 return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
             }
@@ -4118,8 +4117,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir) const
 {
-    if (!info.GetIsPreInstallApp()) {
-        APP_LOGD("not pre-install app, skip verify code signature for native files");
+    if (copyHapToInstallPath_) {
+        APP_LOGI("hap will be copied to install path, and native files will be verified code signature later");
         return ERR_OK;
     }
     APP_LOGD("begin to verify code signature for native files");
@@ -4133,12 +4132,11 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = info.GetIsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.moduleName = info.GetCurModuleName();
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const std::string &srcHapPath, const std::string &realHapPath, bool isLastHap)
+    const std::string &srcHapPath, const std::string &realHapPath)
 {
     APP_LOGD("begin to verify code signature for hap or internal hsp");
     auto iter = infos.find(srcHapPath);
@@ -4166,7 +4164,6 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.moduleName = moduleName;
     codeSignatureParam.isPreInstalledBundle = (iter->second).GetIsPreInstallApp();
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }

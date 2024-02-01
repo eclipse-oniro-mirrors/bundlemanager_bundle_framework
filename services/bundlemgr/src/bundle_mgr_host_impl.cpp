@@ -1530,7 +1530,8 @@ bool BundleMgrHostImpl::DumpBundleInfo(
         BundleFlag::GET_BUNDLE_WITH_REQUESTED_PERMISSION |
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE |
-        BundleFlag::GET_BUNDLE_WITH_MENU, bundleInfo, userId)) {
+        BundleFlag::GET_BUNDLE_WITH_MENU |
+        BundleFlag::GET_BUNDLE_WITH_ROUTER_MAP, bundleInfo, userId)) {
         APP_LOGE("get bundleInfo(%{public}s) failed", bundleName.c_str());
         return false;
     }
@@ -2175,40 +2176,6 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
     return userIds;
 }
 
-bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName)
-{
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) ||
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGD("verify query permission successfully");
-        return true;
-    }
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    if (ret && (queryBundleName == callingBundleName)) {
-        APP_LOGD("query own info, verify success");
-        return true;
-    }
-    APP_LOGD("verify query permission failed");
-    return false;
-}
-
-bool BundleMgrHostImpl::VerifyPrivilegedPermission(const std::string &queryBundleName)
-{
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        return true;
-    }
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-    if (ret && (queryBundleName == callingBundleName)) {
-        APP_LOGD("query own info, verify success");
-        return true;
-    }
-    APP_LOGE("verify query permission failed");
-    return false;
-}
-
 std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("start GetAppPrivilegeLevel");
@@ -2229,7 +2196,7 @@ std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleNam
 bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 {
     APP_LOGD("VerifyCallingPermission begin");
-    return BundlePermissionMgr::VerifyCallingPermission(permission);
+    return BundlePermissionMgr::VerifyCallingPermissionForAll(permission);
 }
 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
@@ -2461,7 +2428,7 @@ int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
-    int ret = dprintf(fd, "%{public}s\n", result.c_str());
+    int ret = dprintf(fd, "%s\n", result.c_str());
     if (ret < 0) {
         APP_LOGE("dprintf error");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
