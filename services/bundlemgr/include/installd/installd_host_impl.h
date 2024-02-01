@@ -189,7 +189,6 @@ public:
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
-    std::shared_ptr<CodeSignHelper> codeSignHelper_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

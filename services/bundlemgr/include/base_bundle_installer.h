@@ -627,7 +627,7 @@ private:
     ErrCode VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-        const std::string &srcHapPath, const std::string &realHapPath, bool lastHap);
+        const std::string &srcHapPath, const std::string &realHapPath);
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
@@ -685,6 +685,7 @@ private:
     std::string appIdentifier_ = "";
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
+    bool copyHapToInstallPath_ = false;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
