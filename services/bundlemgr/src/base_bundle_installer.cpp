@@ -338,7 +338,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (info.GetBaseApplicationInfo().isSystemApp && !info.GetRemovable()) {
+    if (!info.GetRemovable()) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -1251,7 +1251,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp &&
+    if (!installParam.forceExecuted &&
         !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
@@ -1395,7 +1395,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp
+    if (!installParam.forceExecuted
         && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
