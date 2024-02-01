@@ -20,10 +20,6 @@ namespace AppExecFwk {
 using namespace Security::AccessToken;
 
 #ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
-bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
-{
-    return false;
-}
 
 bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
     const AccessTokenID tokenId)
@@ -78,10 +74,6 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
     return false;
 }
 #else
-bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
-{
-    return true;
-}
 
 bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
     const AccessTokenID tokenId)

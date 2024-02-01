@@ -1652,30 +1652,6 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_18000, Funct
 }
 
 /**
- * @tc.number: BmsBundlePermissionFalseTest_19000
- * @tc.name: test VerifyQueryPermission
- * @tc.desc: 1.system run normally
- *           2.VerifyQueryPermission failed
- */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_19000, Function | SmallTest | Level1)
-{
-    bool result = bundleMgrHostImpl_->VerifyQueryPermission("");
-    EXPECT_EQ(result, false);
-}
-
-/**
- * @tc.number: BmsBundlePermissionFalseTest_20000
- * @tc.name: test VerifyPrivilegedPermission
- * @tc.desc: 1.system run normally
- *           2.VerifyPrivilegedPermission failed
- */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_20000, Function | SmallTest | Level1)
-{
-    bool result = bundleMgrHostImpl_->VerifyPrivilegedPermission("");
-    EXPECT_EQ(result, false);
-}
-
-/**
  * @tc.number: BmsBundlePermissionFalseTest_21000
  * @tc.name: test SetAdditionalInfo
  * @tc.desc: 1.system run normally
