@@ -2473,26 +2473,6 @@ HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermissionForShare_0
 }
 
 /**
- * @tc.number: UpdateBundleForSelf_0100
- * @tc.name: test UpdateBundleForSelf
- * @tc.desc: 1.test UpdateBundleForSelf of BundleInstallerHost
- */
-HWTEST_F(BmsBundleInstallCheckerTest, UpdateBundleForSelf_0100, Function | SmallTest | Level0)
-{
-    BundleInstallerHost bundleInstallerHost;
-    std::vector<std::string> bundleFilePaths;
-    InstallParam installParam;
-    sptr<IStatusReceiver> statusReceiver;
-    bundleInstallerHost.manager_ = nullptr;
-    bool res = bundleInstallerHost.UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
-    EXPECT_FALSE(res);
-
-    bundleInstallerHost.manager_ = std::make_shared<BundleInstallerManager>();
-    res = bundleInstallerHost.UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
-    EXPECT_FALSE(res);
-}
-
-/**
  * @tc.number: ResetAOTCompileStatus_0100
  * @tc.name: test ResetAOTCompileStatus
  * @tc.desc: 1.test ResetAOTCompileStatus of InnerBundleInfo
