@@ -1163,17 +1163,15 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
-    if(baseApplicationInfo_ == nullptr){
+    if (baseApplicationInfo_ == nullptr) {
         APP_LOGE("baseApplicationInfo_ is nullptr");
         return;
     }
-
-    APP_LOGI("baseApplicationInfo_ addr %{public}p", baseApplicationInfo_);
     appInfo = *baseApplicationInfo_;
     if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
-    
+
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
