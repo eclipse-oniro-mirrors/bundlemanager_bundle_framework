@@ -1163,6 +1163,10 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
+    if (baseApplicationInfo_ == nullptr) {
+        APP_LOGE("baseApplicationInfo_ is nullptr");
+        return;
+    }
     appInfo = *baseApplicationInfo_;
     if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
