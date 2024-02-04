@@ -2820,6 +2820,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
             innerBundleInfo.GetBundleName().c_str(), requestUserId);
         return false;
     }
+    APP_LOGI("innerBundleInfo addr %{public}p", innerBundleInfo);
     info = innerBundleInfo;
     return true;
 }
