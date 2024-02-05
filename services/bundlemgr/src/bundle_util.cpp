@@ -16,6 +16,7 @@
 #include "bundle_util.h"
 
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
 #include <cinttypes>
 #include <dirent.h>
@@ -71,7 +72,7 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the bundle file path: %{public}s", realPath.c_str());
+        APP_LOGE("can not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
     if (!CheckFileSize(realPath, Constants::MAX_HAP_SIZE)) {
@@ -163,7 +164,7 @@ bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t file
     APP_LOGD("fileSize is %{public}" PRId64, fileSize / Constants::ONE_GB);
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("call stat error");
+        APP_LOGE("call stat error:%{public}d", errno);
         return false;
     }
     if (fileInfo.st_size > fileSize) {
@@ -176,7 +177,7 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
 {
     struct statfs diskInfo = { 0 };
     if (statfs(diskPath.c_str(), &diskInfo) != 0) {
-        APP_LOGE("call statfs error");
+        APP_LOGE("call statfs error:%{public}d", errno);
         return false;
     }
     int64_t freeSize = diskInfo.f_bfree * diskInfo.f_bsize;
@@ -196,8 +197,8 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s",
-            currentBundlePath.c_str(), errMsg);
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s, errno:%{public}d",
+            currentBundlePath.c_str(), errMsg, errno);
         return false;
     }
     std::string bundlePath = currentBundlePath;
@@ -294,8 +295,9 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
 {
     std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
+        APP_LOGE("fail to access error:%{public}d", errno);
         if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
-            APP_LOGE("make bundle dir error");
+            APP_LOGE("make bundle dir error:%{public}d", errno);
             return;
         }
     }
@@ -312,7 +314,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
     if (bundleIdFd > 0) {
         std::string bundleIdStr = std::to_string(bundleId);
         if (write(bundleIdFd, bundleIdStr.c_str(), bundleIdStr.size()) < 0) {
-            APP_LOGE("write bundleId error");
+            APP_LOGE("write bundleId error:%{public}d", errno);
         }
     }
     close(bundleIdFd);
@@ -327,7 +329,7 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
         return;
     }
     if (rmdir(realBundleDir.c_str()) != 0) {
-        APP_LOGE("remove hmdfs bundle dir error");
+        APP_LOGE("remove hmdfs bundle dir error:%{public}d", errno);
     }
 }
 
@@ -338,7 +340,7 @@ std::string BundleUtil::CreateTempDir(const std::string &tempDir)
         return "";
     }
     if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
-        APP_LOGE("fail to change %{public}s ownership", tempDir.c_str());
+        APP_LOGE("fail to change %{public}s ownership errno:%{public}d", tempDir.c_str(), errno);
         return "";
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
@@ -395,7 +397,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         return fd;
     }
     if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
-        APP_LOGE("open bundlePath %{public}s failed", bundlePath.c_str());
+        APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", bundlePath.c_str(), errno);
         return fd;
     }
     if (offset > 0) {
@@ -418,7 +420,7 @@ int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePat
     }
 
     if ((fd = open(realPath.c_str(), O_RDONLY)) < 0) {
-        APP_LOGE("open bundlePath %{public}s failed", realPath.c_str());
+        APP_LOGE("open bundlePath %{public}s failed errno:%{public}d", realPath.c_str(), errno);
         return fd;
     }
     if (offset > 0) {
@@ -445,6 +447,7 @@ bool BundleUtil::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
 
@@ -459,6 +462,7 @@ bool BundleUtil::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
 
@@ -469,7 +473,7 @@ int64_t BundleUtil::CalculateFileSize(const std::string &bundlePath)
 {
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("call stat error");
+        APP_LOGE("call stat error:%{public}d", errno);
         return 0;
     }
 
@@ -519,13 +523,13 @@ bool BundleUtil::CopyFile(
 
     std::ifstream in(sourceFile);
     if (!in.is_open()) {
-        APP_LOGE("Copy file failed due to open sourceFile failed");
+        APP_LOGE("Copy file failed due to open sourceFile failed errno:%{public}d", errno);
         return false;
     }
 
     std::ofstream out(destinationFile);
     if (!out.is_open()) {
-        APP_LOGE("Copy file failed due to open destinationFile failed");
+        APP_LOGE("Copy file failed due to open destinationFile failed errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -617,7 +621,7 @@ bool BundleUtil::CreateDir(const std::string &dir)
     }
 
     if (chown(dir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
-        APP_LOGE("fail to change %{public}s ownership", dir.c_str());
+        APP_LOGE("fail to change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
         return false;
     }
 
@@ -673,7 +677,7 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
 {
     struct stat fileInfo = { 0 };
     if (stat(filePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("call stat error");
+        APP_LOGE("call stat error:%{public}d", errno);
         return 0;
     }
     return fileInfo.st_size;
