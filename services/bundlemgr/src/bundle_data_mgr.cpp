@@ -319,6 +319,16 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
+        if (newInfo.GetAsanEnabled()) {
+            oldInfo.SetAsanEnabled(true);
+        }
+        if (newInfo.GetGwpAsanEnabled()) {
+            oldInfo.SetGwpAsanEnabled(true);
+        }
+        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+            oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
+            oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
+        }
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -512,6 +522,16 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
         oldInfo.UpdateModuleInfo(newInfo);
+        if (newInfo.GetAsanEnabled()) {
+            oldInfo.SetAsanEnabled(true);
+        }
+        if (newInfo.GetGwpAsanEnabled()) {
+            oldInfo.SetGwpAsanEnabled(true);
+        }
+        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+            oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
+            oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
+        }
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {

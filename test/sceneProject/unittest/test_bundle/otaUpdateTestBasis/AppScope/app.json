@@ -12,6 +12,7 @@
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0.0",
-        "asanEnabled": true
+        "asanEnabled": true,
+        "GWPAsanEnabled": true
     }
 }
