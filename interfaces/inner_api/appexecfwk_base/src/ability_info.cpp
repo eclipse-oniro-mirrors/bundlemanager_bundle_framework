@@ -284,6 +284,8 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         skillUri.emplace_back(stctUri);
     }
     isolationProcess = parcel.ReadBool();
+    excludeFromMissions = parcel.ReadBool();
+    unclearableMission = parcel.ReadBool();
     return true;
 }
 
@@ -437,6 +439,8 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromMissions);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, unclearableMission);
     return true;
 }
 
