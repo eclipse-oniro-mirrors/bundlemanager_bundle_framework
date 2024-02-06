@@ -111,6 +111,7 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);
@@ -148,7 +149,7 @@ bool InstalldOperator::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGW("the path is not existed %{public}s", path.c_str());
+        APP_LOGW("the path is not existed %{public}s, errno:%{public}d", path.c_str(), errno);
         return false;
     }
     return S_ISDIR(buf.st_mode);
@@ -368,6 +369,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     if (extractFileType == ExtractFileType::AP) {
         struct stat buf = {};
         if (stat(targetPath.c_str(), &buf) != 0) {
+            APP_LOGE("fail to stat errno:%{public}d", errno);
             return;
         }
         ChangeFileAttr(path, buf.st_uid, buf.st_gid);
@@ -439,13 +441,14 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
         return false;
     }
     if (access(oldPath.c_str(), F_OK) != 0 && access(newPath.c_str(), F_OK) == 0) {
+        APP_LOGE("fail to access file errno:%{public}d", errno);
         return true;
     }
     std::string realOldPath;
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        APP_LOGE("realOldPath %{public}s", realOldPath.c_str());
+        APP_LOGE("realOldPath %{public}s, errno:%{public}d", realOldPath.c_str(), errno);
         return false;
     }
 
@@ -471,12 +474,14 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
     bool ret = true;
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
         return false;
     }
 
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
+            APP_LOGE("fail to readdir errno:%{public}d", errno);
             break;
         }
 
@@ -515,7 +520,8 @@ bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid
 {
     APP_LOGD("begin to change %{public}s file attribute", filePath.c_str());
     if (chown(filePath.c_str(), uid, gid) != 0) {
-        APP_LOGE("fail to change %{public}s ownership, uid=%{public}d", filePath.c_str(), uid);
+        APP_LOGE("fail to change %{public}s ownership, uid=%{public}d, errno:%{public}d",
+            filePath.c_str(), uid, errno);
         return false;
     }
     APP_LOGD("change %{public}s file attribute successfully", filePath.c_str());
@@ -560,11 +566,13 @@ bool InstalldOperator::DeleteFiles(const std::string &dataPath)
     bool ret = true;
     DIR *dir = opendir(dataPath.c_str());
     if (dir == nullptr) {
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
         return false;
     }
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
+            APP_LOGE("fail to readdir errno:%{public}d", errno);
             break;
         }
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
@@ -589,12 +597,14 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
     std::string filePath;
     DIR *dir = opendir(dataPath.c_str());
     if (dir == nullptr) {
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", dataPath.c_str(), errno);
         return false;
     }
     bool ret = true;
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
+            APP_LOGE("fail to readdir errno:%{public}d", errno);
             break;
         }
         std::string dirName = Constants::PATH_SEPARATOR + std::string(ptr->d_name);
@@ -630,7 +640,7 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
 {
     struct stat s;
     if (stat(path.c_str(), &s) != 0) {
-        APP_LOGD("path :%{public}s is not exist, need create", path.c_str());
+        APP_LOGD("path :%{public}s is not exist, need create, errno:%{public}d", path.c_str(), errno);
         isPathExist = false;
         return false;
     }
@@ -680,7 +690,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
     }
     DIR *dirPtr = opendir(filePath.c_str());
     if (dirPtr == nullptr) {
-        APP_LOGE("GetDiskUsage open file dir:%{public}s is failure", filePath.c_str());
+        APP_LOGE("GetDiskUsage open file dir:%{public}s is failure, errno:%{public}d", filePath.c_str(), errno);
         return 0;
     }
     if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
@@ -695,7 +705,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
         std::string path = filePath + entry->d_name;
         struct stat fileInfo = {0};
         if (stat(path.c_str(), &fileInfo) != 0) {
-            APP_LOGE("call stat error %{public}s", path.c_str());
+            APP_LOGE("call stat error %{public}s, errno:%{public}d", path.c_str(), errno);
             fileInfo.st_size = 0;
         }
         size += fileInfo.st_size;
@@ -720,6 +730,7 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
     }
     DIR* dir = opendir(filePath.c_str());
     if (dir == nullptr) {
+        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", filePath.c_str(), errno);
         return;
     }
     if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
@@ -758,7 +769,7 @@ bool InstalldOperator::InitialiseQuotaMounts()
     std::ifstream mountsFile(PROC_MOUNTS_PATH);
 
     if (!mountsFile.is_open()) {
-        APP_LOGE("Failed to open mounts file");
+        APP_LOGE("Failed to open mounts file errno:%{public}d", errno);
         return false;
     }
     std::string line;
@@ -828,7 +839,7 @@ bool InstalldOperator::ScanDir(
 
     DIR* dir = opendir(realPath.c_str());
     if (dir == nullptr) {
-        APP_LOGE("Scan open dir(%{public}s) fail", realPath.c_str());
+        APP_LOGE("Scan open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
         return false;
     }
 
@@ -876,7 +887,7 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
     }
     DIR* dir = opendir(filePath.c_str());
     if (dir == nullptr) {
-        APP_LOGE("ScanSoFiles open dir(%{public}s) fail", filePath.c_str());
+        APP_LOGE("ScanSoFiles open dir(%{public}s) fail, errno:%{public}d", filePath.c_str(), errno);
         return false;
     }
     if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
@@ -924,13 +935,13 @@ bool InstalldOperator::CopyFile(
 
     std::ifstream in(sourceFile);
     if (!in.is_open()) {
-        APP_LOGE("Copy file failed due to open sourceFile failed");
+        APP_LOGE("Copy file failed due to open sourceFile failed errno:%{public}d", errno);
         return false;
     }
 
     std::ofstream out(destinationFile);
     if (!out.is_open()) {
-        APP_LOGE("Copy file failed due to open destinationFile failed");
+        APP_LOGE("Copy file failed due to open destinationFile failed errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -1119,7 +1130,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
 
     DIR* directory = opendir(realPath.c_str());
     if (directory == nullptr) {
-        APP_LOGE("ObtainQuickFixFileDir open dir(%{public}s) fail", realPath.c_str());
+        APP_LOGE("ObtainQuickFixFileDir open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
         return false;
     }
 
@@ -1165,7 +1176,7 @@ bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string
 
     DIR* directory = opendir(realPath.c_str());
     if (directory == nullptr) {
-        APP_LOGE("CopyFiles open dir(%{public}s) fail", realPath.c_str());
+        APP_LOGE("CopyFiles open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
         return false;
     }
 
@@ -1435,7 +1446,7 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
 
     DIR* directory = opendir(realPath.c_str());
     if (directory == nullptr) {
-        APP_LOGE("MoveFiles open dir(%{public}s) fail", realPath.c_str());
+        APP_LOGE("MoveFiles open dir(%{public}s) fail, errno:%{public}d", realPath.c_str(), errno);
         return false;
     }
 
@@ -1450,7 +1461,7 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
         struct stat s;
         if (stat(curPath.c_str(), &s) != 0) {
-            APP_LOGD("MoveFiles stat %{public}s failed", curPath.c_str());
+            APP_LOGD("MoveFiles stat %{public}s failed, errno:%{public}d", curPath.c_str(), errno);
             continue;
         }
         if (!MoveFileOrDir(curPath, innerDesStr, s.st_mode)) {
@@ -1604,7 +1615,8 @@ bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const
 
     struct stat buf = {};
     if (stat(realDesDir.c_str(), &buf) != 0) {
-        APP_LOGE("failed to obtain the stat status of realDesDir %{public}s", realDesDir.c_str());
+        APP_LOGE("failed to obtain the stat status of realDesDir %{public}s, errno:%{public}d",
+            realDesDir.c_str(), errno);
         return false;
     }
     ChangeFileAttr(realDestinedDir, buf.st_uid, buf.st_gid);
@@ -1766,13 +1778,13 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     }
     auto fd = open(newfilePath.c_str(), O_RDONLY);
     if (fd < 0) {
-        APP_LOGE("open hap failed");
+        APP_LOGE("open hap failed errno:%{public}d", errno);
         close(dev_fd);
         return result;
     }
     struct stat st;
     if (fstat(fd, &st) == INVALID_RETURN_VALUE) {
-        APP_LOGE("obtain hap file status faield");
+        APP_LOGE("obtain hap file status faield errno:%{public}d", errno);
         close(dev_fd);
         close(fd);
         return result;
@@ -1783,7 +1795,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     }
     void *addr = mmap(NULL, innerFileSize, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == MAP_FAILED) {
-        APP_LOGE("mmap hap file status faield");
+        APP_LOGE("mmap hap file status faield errno:%{public}d", errno);
         close(dev_fd);
         close(fd);
         return result;
@@ -1846,7 +1858,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     }
     fd = open(newCodeDecrypt.c_str(), O_RDONLY);
     if (fd < 0) {
-        APP_LOGE("call open failed");
+        APP_LOGE("call open failed errno:%{public}d", errno);
         return INVALID_RETURN_VALUE;
     }
 
@@ -1856,7 +1868,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     firstArg.arg1 = reinterpret_cast<void *>(&bundleUid);
     auto ret = ioctl(fd, flag, &firstArg);
     if (ret != 0) {
-        APP_LOGE("call ioctl failed");
+        APP_LOGE("call ioctl failed errno:%{public}d", errno);
         close(fd);
     }
 
@@ -1869,7 +1881,7 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     }
     ret = ioctl(fd, associatedFlag, &secondArg);
     if (ret != 0) {
-        APP_LOGE("call ioctl failed");
+        APP_LOGE("call ioctl failed errno:%{public}d", errno);
         close(fd);
     }
     return ret;
