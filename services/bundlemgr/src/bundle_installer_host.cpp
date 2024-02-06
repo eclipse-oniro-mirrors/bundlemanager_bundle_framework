@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -333,10 +333,10 @@ bool BundleInstallerHost::Install(
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE})) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -360,10 +360,10 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE})) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -475,10 +475,10 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE})) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -499,8 +499,8 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("vnon-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_SANDBOX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_SANDBOX_BUNDLE})) {
         APP_LOGE("InstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -531,8 +531,8 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_SANDBOX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_UNINSTALL_SANDBOX_BUNDLE})) {
         APP_LOGE("UninstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -621,11 +621,11 @@ bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerI
         return false;
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE,
+        Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE,
+        Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE})) {
         APP_LOGE("install permission denied");
         return false;
     }

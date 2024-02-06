@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -45,8 +45,8 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         APP_LOGE("non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE})) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
@@ -75,8 +75,8 @@ ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, b
         APP_LOGE("non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE})) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
@@ -100,8 +100,8 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE})) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
@@ -120,8 +120,8 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         APP_LOGE("non-system app is not allowed call this function");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE})) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
