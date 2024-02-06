@@ -54,6 +54,11 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
     return false;
 }
 
+bool BundlePermissionMgr::VerifyCallingPermissionInVector(const std::vector<std::string> &permissionNames)
+{
+    return false;
+}
+
 bool BundlePermissionMgr::IsSelfCalling()
 {
     return false;
@@ -104,6 +109,11 @@ bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyCallingPermissionInVector(const std::vector<std::string> &permissionNames)
 {
     return true;
 }
