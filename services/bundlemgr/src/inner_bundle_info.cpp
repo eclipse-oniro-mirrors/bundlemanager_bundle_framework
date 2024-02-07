@@ -789,8 +789,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
     UpdateDebug(applicationInfo.debug, isEntry);
-    baseApplicationInfo_->gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
-    baseApplicationInfo_->asanEnabled = applicationInfo.asanEnabled;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
