@@ -97,7 +97,7 @@ public:
         QuickFixType type = QuickFixType::PATCH);
     void UninstallBundleInfo(const std::string bundleName);
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
-    const std::shared_ptr<QuickFixDeployer> GetQuickFixDeployer();
+    const std::shared_ptr<QuickFixDeployer> GetQuickFixDeployer(bool isDebug = false);
     const std::shared_ptr<QuickFixDeleter> GetQuickFixDeleter();
     const std::shared_ptr<QuickFixSwitcher> GetQuickFixSwitcher();
     const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
@@ -319,11 +319,11 @@ const std::shared_ptr<BundleDataMgr> BmsBundleQuickFixTest::GetBundleDataMgr() c
     return bundleMgrService_->GetDataMgr();
 }
 
-const std::shared_ptr<QuickFixDeployer> BmsBundleQuickFixTest::GetQuickFixDeployer()
+const std::shared_ptr<QuickFixDeployer> BmsBundleQuickFixTest::GetQuickFixDeployer(bool isDebug)
 {
     if (deployer_ == nullptr) {
         std::vector<std::string> path;
-        deployer_ = std::make_shared<QuickFixDeployer>(path);
+        deployer_ = std::make_shared<QuickFixDeployer>(path, isDebug);
     }
     return deployer_;
 }
@@ -3151,6 +3151,92 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0280, Function | SmallTest
 
     QuickFixChecker checker;
     auto ret = checker.CheckMultiNativeSo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0500
+ * Function: VerifyCodeSignatureForHqf
+ * @tc.name: test VerifyCodeSignatureForHqf
+ * @tc.require: issueI8ZR55
+ * @tc.desc: VerifyCodeSignatureForHqf not existed bundleInfo
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0500, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer(true);
+    EXPECT_FALSE(deployer == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    std::string patchPath = "data/test";
+    auto ret = deployer->VerifyCodeSignatureForHqf(innerAppQuickFix, patchPath);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0510
+ * Function: VerifyCodeSignatureForHqf
+ * @tc.name: test VerifyCodeSignatureForHqf
+ * @tc.require: issueI8ZR55
+ * @tc.desc: VerifyCodeSignatureForHqf ok
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0510, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
+    auto deployer = GetQuickFixDeployer(true);
+    EXPECT_FALSE(deployer == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    std::string patchPath = "data/test";
+    auto ret = deployer->VerifyCodeSignatureForHqf(innerAppQuickFix, patchPath);
+    UninstallBundleInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0520
+ * Function: VerifyCodeSignatureForHqf
+ * @tc.name: test VerifyCodeSignatureForHqf
+ * @tc.require: issueI8ZR55
+ * @tc.desc: VerifyCodeSignatureForHqf release hap
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0520, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_RELEASE);
+    auto deployer = GetQuickFixDeployer(true);
+    EXPECT_FALSE(deployer == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    std::string patchPath = "data/test";
+    auto ret = deployer->VerifyCodeSignatureForHqf(innerAppQuickFix, patchPath);
+    UninstallBundleInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0530
+ * Function: VerifyCodeSignatureForHqf
+ * @tc.name: test VerifyCodeSignatureForHqf
+ * @tc.require: issueI8ZR55
+ * @tc.desc: VerifyCodeSignatureForHqf not debug hqf
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0530, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
+    auto deployer = GetQuickFixDeployer(false);
+    EXPECT_FALSE(deployer == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    appQuickFix.bundleName = BUNDLE_NAME;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    std::string patchPath = "data/test";
+    auto ret = deployer->VerifyCodeSignatureForHqf(innerAppQuickFix, patchPath);
+    UninstallBundleInfo(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 }
 

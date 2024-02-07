@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_QUICK_FIX_DEPLOYER_H
 
 #include "inner_bundle_info.h"
+#include "ipc/code_signature_param.h"
 #include "quick_fix_checker.h"
 #include "quick_fix_data_mgr.h"
 #include "quick_fix_interface.h"
@@ -110,6 +111,11 @@ private:
 
     bool ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName,
         int32_t uid, std::string &tmpSoPath);
+
+    void PrepareCodeSignatureParam(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
+        const BundleInfo &bundleInfo, const std::string &hqfSoPath, CodeSignatureParam &codeSignatureParam);
+
+    ErrCode VerifyCodeSignatureForHqf(const InnerAppQuickFix &innerAppQuickFix, const std::string &hqfSoPath);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
