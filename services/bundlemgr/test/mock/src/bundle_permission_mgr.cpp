@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,7 +54,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
     return false;
 }
 
-bool BundlePermissionMgr::VerifyCallingPermissionInVector(const std::vector<std::string> &permissionNames)
+bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
     return false;
 }
@@ -113,7 +113,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
     return true;
 }
 
-bool BundlePermissionMgr::VerifyCallingPermissionInVector(const std::vector<std::string> &permissionNames)
+bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
     return true;
 }

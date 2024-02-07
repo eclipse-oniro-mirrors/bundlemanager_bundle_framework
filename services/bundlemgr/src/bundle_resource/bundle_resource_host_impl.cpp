@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,8 +78,11 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_GET_BUNDLE_RESOURCES,
-        Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST})) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -106,8 +109,11 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_GET_BUNDLE_RESOURCES,
-        Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST})) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }

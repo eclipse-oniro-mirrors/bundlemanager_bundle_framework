@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -609,30 +609,32 @@ bool BundlePermissionMgr::CheckGrantPermission(
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
+        permissionName.c_str(), callerToken);
     if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
         AccessToken::PermissionState::PERMISSION_DENIED) {
         APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
             callerToken);
         return false;
     }
-    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
-        permissionName.c_str(), callerToken);
     return true;
 }
 
-bool BundlePermissionMgr::VerifyCallingPermissionInVector(const std::vector<std::string> &permissionNames)
+bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    for(auto permissionName: permissionNames) {
-        if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) !=
-            AccessToken::PermissionState::PERMISSION_DENIED) {
-                APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
-                    permissionName.c_str(), callerToken);
-            return true;
-        }
-        APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
-            callerToken);
+    for (auto permissionName : permissionNames) {
+        if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
+            AccessToken::PermissionState::PERMISSION_GRANTED) {
+                APP_LOGD("verify success");
+                return true;
+            }
     }
+    std::string errorMessage;
+    for (auto deniedPermission : permissionNames) {
+        errorMessage += deniedPermission + " ";
+    }
+    APP_LOGE("permission %{public}s denied, callerToken : %{public}u", errorMessage.c_str(), callerToken);
     return false;
 }
 
@@ -927,7 +929,7 @@ bool BundlePermissionMgr::IsSelfCalling()
 bool BundlePermissionMgr::VerifyUninstallPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
         Constants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("uninstall bundle permission denied");
         return false;
@@ -938,7 +940,7 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 bool BundlePermissionMgr::VerifyRecoverPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionInVector({Constants::PERMISSION_INSTALL_BUNDLE,
+        !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
         Constants::PERMISSION_RECOVER_BUNDLE})) {
         APP_LOGE("recover bundle permission denied");
         return false;
