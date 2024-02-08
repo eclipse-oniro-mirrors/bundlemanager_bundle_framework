@@ -39,7 +39,7 @@ BundleExceptionHandler::~BundleExceptionHandler()
 
 void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
-    std::string appCodePath = Constants::BUNDLE_CODE_DIR + info.GetBundleName();
+    std::string appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + info.GetBundleName();
     if (!IsBundleHapPathExist(info)) {
         RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
         DeleteBundleInfoFromStorage(info);
