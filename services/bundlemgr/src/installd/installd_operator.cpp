@@ -376,6 +376,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
     }
     if (!OHOS::ChangeModeFile(path, mode)) {
+        APP_LOGE("ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
         return;
     }
     APP_LOGD("extract file success, path : %{public}s", path.c_str());
