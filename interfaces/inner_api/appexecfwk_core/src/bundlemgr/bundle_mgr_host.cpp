@@ -242,6 +242,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleObtainCallingBundleName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
         &BundleMgrHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
+        &BundleMgrHost::HandleGetAllBundleStats);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL),
         &BundleMgrHost::HandleCheckAbilityEnableInstall);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID),
@@ -2463,6 +2465,23 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     int32_t userId = data.ReadInt32();
     std::vector<int64_t> bundleStats;
     bool ret = GetBundleStats(bundleName, userId, bundleStats);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret && !reply.WriteInt64Vector(bundleStats)) {
+        APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<int64_t> bundleStats;
+    bool ret = GetAllBundleStats(userId, bundleStats);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
