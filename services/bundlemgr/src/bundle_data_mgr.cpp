@@ -1929,14 +1929,14 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
         std::string routerMapString;
         if (GetJsonProfileByExtractor(hapModuleInfo.hapPath, routerJsonPath, routerMapString) != ERR_OK) {
             APP_LOGW("get json string from %{public}s failed", routerJsonPath.c_str());
+            continue;
         }
-        
+
         BundleParser bundleParser;
         if (bundleParser.ParseRouterArray(routerMapString, hapModuleInfo.routerArray) != ERR_OK) {
             APP_LOGE("parse router array from json file %{public}s failed", routerJsonPath.c_str());
         }
     }
-    return;
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
