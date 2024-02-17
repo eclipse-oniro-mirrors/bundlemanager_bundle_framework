@@ -290,6 +290,10 @@ ErrCode BundleParser::ParseExtTypeConfig(
 ErrCode BundleParser::ParseRouterArray(
     const std::string &jsonString, std::vector<RouterItem> &routerArray) const
 {
+    if (jsonString.empty()) {
+        APP_LOGE("jsonString is empty");
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
     nlohmann::json jsonBuf = nlohmann::json::parse(jsonString);
     if (jsonBuf.is_discarded()) {
