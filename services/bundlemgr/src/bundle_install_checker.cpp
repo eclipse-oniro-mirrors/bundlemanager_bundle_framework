@@ -1381,6 +1381,7 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
     appProvisionInfo.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
+    appProvisionInfo.appServiceCapabilities = provisionInfo.appServiceCapabilities;
     return appProvisionInfo;
 }
 

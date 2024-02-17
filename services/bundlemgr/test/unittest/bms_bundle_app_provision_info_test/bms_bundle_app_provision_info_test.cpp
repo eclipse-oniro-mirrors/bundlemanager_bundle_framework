@@ -443,6 +443,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0010, Functio
     appProvisionInfo.issuer = "OpenHarmony";
     appProvisionInfo.validity.notBefore = 90000000000;
     appProvisionInfo.validity.notAfter = 99000000000;
+    appProvisionInfo.appServiceCapabilities = "{\"com.example.bms\":{\"name\":\"bms\"},\"com.example.bms\":{}}";
 
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME,
         appProvisionInfo);
@@ -463,6 +464,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0010, Functio
     EXPECT_EQ(appProvisionInfo.issuer, newProvisionInfo.issuer);
     EXPECT_EQ(appProvisionInfo.validity.notBefore, newProvisionInfo.validity.notBefore);
     EXPECT_EQ(appProvisionInfo.validity.notAfter, newProvisionInfo.validity.notAfter);
+    EXPECT_EQ(appProvisionInfo.appServiceCapabilities, newProvisionInfo.appServiceCapabilities);
 
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
