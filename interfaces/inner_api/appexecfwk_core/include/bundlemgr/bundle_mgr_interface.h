@@ -1095,6 +1095,11 @@ public:
         return false;
     }
 
+    virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
+    {
+        return false;
+    }
+
     virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
         AbilityInfo &info)
     {

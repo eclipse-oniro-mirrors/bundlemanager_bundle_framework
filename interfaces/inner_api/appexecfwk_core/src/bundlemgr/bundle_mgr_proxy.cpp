@@ -2799,6 +2799,36 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
+{
+    APP_LOGD("begin to GetAllBundleStats");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetAllBundleStats due to write MessageParcel fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllBundleStats due to write userId fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply)) {
+        APP_LOGE("fail to GetAllBundleStats from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    if (!reply.ReadInt64Vector(&bundleStats)) {
+        APP_LOGE("fail to GetAllBundleStats from reply");
+        return false;
+    }
+    return true;
+}
+
 bool BundleMgrProxy::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
