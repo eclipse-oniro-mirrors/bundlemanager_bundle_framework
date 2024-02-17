@@ -780,6 +780,8 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats) override;
 
+    virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
+
     virtual bool CheckAbilityEnableInstall(
         const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 

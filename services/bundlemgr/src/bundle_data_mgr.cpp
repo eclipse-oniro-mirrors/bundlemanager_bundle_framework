@@ -2420,6 +2420,43 @@ bool BundleDataMgr::GetBundleStats(
     return true;
 }
 
+bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const
+{
+    std::vector<std::string> bundleNames;
+    std::vector<int32_t> uids;
+    int32_t responseUserId = userId;
+    GetBundleList(bundleNames, userId);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &bundleName : bundleNames) {
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        responseUserId = infoItem->second.GetResponseUserId(userId);
+        int32_t uid = infoItem->second.GetUid(responseUserId);
+        uids.emplace_back(uid);
+    }
+    if (InstalldClient::GetInstance()->GetAllBundleStats(bundleNames, responseUserId, bundleStats, uids) != ERR_OK) {
+        APP_LOGW("GetAllBundleStats failed, userId: %{public}d", responseUserId);
+        return false;
+    }
+    if (bundleStats.empty()) {
+        return true;
+    }
+    for (const auto &bundleName : bundleNames) {
+        auto infoItem = bundleInfos_.find(bundleName);
+        if (infoItem == bundleInfos_.end()) {
+            return false;
+        }
+        if (infoItem->second.GetIsPreInstallApp()) {
+            for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+                bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+            }
+        }
+    }
+    return true;
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {

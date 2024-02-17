@@ -67,6 +67,8 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR), &InstalldHost::HandleRemoveDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS),
         &InstalldHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS),
+        &InstalldHost::HandleGetAllBundleStats);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH),
         &InstalldHost::HandleGetBundleCachePath);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR), &InstalldHost::HandleScanDir);
@@ -291,6 +293,34 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
         APP_LOGE("HandleGetBundleStats write failed");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)
+{
+    auto bundleNamesSize = data.ReadInt32();
+    if (bundleNamesSize == 0 || bundleNamesSize > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    std::vector<std::string> bundleNames;
+    std::vector<int32_t> uids;
+    for (int32_t index = 0; index < bundleNamesSize; ++index) {
+        std::string bundleName = Str16ToStr8(data.ReadString16());
+        bundleNames.emplace_back(bundleName);
+    }
+    int32_t userId = data.ReadInt32();
+    for (int32_t index = 0; index < bundleNamesSize; ++index) {
+        int32_t uid = data.ReadInt32();
+        uids.emplace_back(uid);
+    }
+    std::vector<int64_t> bundleStats;
+    ErrCode result = GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteInt64Vector(bundleStats)) {
+        APP_LOGE("HandleGetAllBundleStats write failed");
         return false;
     }
     return true;

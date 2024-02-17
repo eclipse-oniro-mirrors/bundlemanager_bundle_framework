@@ -682,6 +682,63 @@ ErrCode InstalldHostImpl::GetBundleStats(
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleNames.empty() || bundleNames.size() != uids.size()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    int64_t totalFileSize = 0;
+    int64_t totalDataSize = 0;
+    int64_t totalCacheSize = 0;
+    for (int32_t index = 0; index < bundleNames.size(); ++index) {
+        const auto &bundleName = bundleNames[index];
+        const auto &uid = uids[index];
+        std::vector<std::string> bundlePath;
+        bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+        bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
+        // ark profile
+        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+        int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+        bundlePath.clear();
+        std::vector<std::string> cachePath;
+        int64_t allBundleLocalSize = 0;
+        for (const auto &el : Constants::BUNDLE_EL) {
+            std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
+                std::to_string(userId) + Constants::BASE + bundleName;
+            allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
+            InstalldOperator::TraverseCacheDirectory(filePath, cachePath);
+            if (el != Constants::BUNDLE_EL[1]) {
+                bundlePath.push_back(filePath);
+                continue;
+            }
+            for (const auto &dataDir : BUNDLE_DATA_DIR) {
+                bundlePath.push_back(filePath + dataDir);
+            }
+        }
+        int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+        int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
+        // index 0 : bundle data size
+        totalFileSize += (fileSize + systemFolderSize);
+        int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+        // index 1 : local bundle data size
+        totalDataSize += bundleDataSize;
+        int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
+        // index 4 : cache size
+        totalCacheSize += cacheSize;
+    }
+    bundleStats.push_back(totalFileSize);
+    bundleStats.push_back(totalDataSize);
+    bundleStats.push_back(0);
+    bundleStats.push_back(0);
+    bundleStats.push_back(totalCacheSize);
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
 {

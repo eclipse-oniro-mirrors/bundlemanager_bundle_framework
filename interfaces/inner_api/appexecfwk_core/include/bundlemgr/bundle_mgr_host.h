@@ -614,6 +614,8 @@ private:
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleCheckAbilityEnableInstall(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply);

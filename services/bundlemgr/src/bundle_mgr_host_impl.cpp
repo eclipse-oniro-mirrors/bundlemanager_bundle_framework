@@ -2532,6 +2532,21 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
 }
 
+bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO})) {
+        APP_LOGE("verify permission failed.");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr.");
+        return false;
+    }
+    return dataMgr->GetAllBundleStats(userId, bundleStats);
+}
+
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {

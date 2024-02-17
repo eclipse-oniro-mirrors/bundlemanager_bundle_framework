@@ -93,6 +93,12 @@ ErrCode InstalldClient::GetBundleStats(
     return 0;
 }
 
+ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
 {

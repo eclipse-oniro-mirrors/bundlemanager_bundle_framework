@@ -217,6 +217,33 @@ ErrCode InstalldProxy::GetBundleStats(
     return ret;
 }
 
+ErrCode InstalldProxy::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+{
+    uint32_t bundleNamesSize = bundleNames.size();
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Uint32, bundleNamesSize);
+    for (const auto &bundleName : bundleNames) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    for (const auto &uid : uids) {
+        INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply, option);
+    if (ret == ERR_OK) {
+        if (reply.ReadInt64Vector(&bundleStats)) {
+            return ERR_OK;
+        } else {
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
+}
+
 ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
 {
