@@ -766,6 +766,8 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats) override;
 
+    virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

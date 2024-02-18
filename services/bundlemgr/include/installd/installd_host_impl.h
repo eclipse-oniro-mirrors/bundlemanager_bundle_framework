@@ -109,6 +109,9 @@ public:
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
         std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID) override;
+
+    virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

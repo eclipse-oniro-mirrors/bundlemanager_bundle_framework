@@ -117,6 +117,8 @@ private:
      */
     bool HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Init private hash map funcMap_.
      */
