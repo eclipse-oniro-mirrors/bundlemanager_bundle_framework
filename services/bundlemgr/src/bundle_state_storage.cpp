@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_state_storage.h"
 
+#include <cerrno>
 #include <fstream>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -80,13 +81,13 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
 
     auto file = fopen(BUNDLE_USER_INFO_PATH, "at++");
     if (file == nullptr) {
-        APP_LOGE("create json db failed");
+        APP_LOGE("create json db failed, errno:%{public}d", errno);
         return false;
     }
 
     auto ret = fclose(file);
     if (ret != 0) {
-        APP_LOGE("ret: %{public}d", ret);
+        APP_LOGE("ret: %{public}d,  errno:%{public}d", ret, errno);
     }
 
     return false;
@@ -173,7 +174,7 @@ bool BundleStateStorage::SaveBundleStateStorage(
     bool isEmpty = (rootJson.size() == 0) ? true : false;
     std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
     if (!o.is_open()) {
-        APP_LOGE("failed to open bundle state file");
+        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
         return false;
     }
     if (!isEmpty) {
@@ -234,7 +235,7 @@ bool BundleStateStorage::DeleteBundleState(
     bool isEmpty = (jParse.size() == 0) ? true : false;
     std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
     if (!o.is_open()) {
-        APP_LOGE("failed to open bundle state file");
+        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
         return false;
     }
     if (!isEmpty) {
@@ -248,7 +249,7 @@ bool BundleStateStorage::GetBundleStateJson(nlohmann::json &jParse)
 {
     std::ifstream i(BUNDLE_USER_INFO_PATH);
     if (!i.is_open()) {
-        APP_LOGE("failed to open bundle state file");
+        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
         return false;
     }
     i.seekg(0, std::ios::end);

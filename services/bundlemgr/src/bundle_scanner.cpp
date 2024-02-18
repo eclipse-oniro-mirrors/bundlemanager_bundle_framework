@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_scanner.h"
 
+#include <cerrno>
 #include <cstddef>
 #include <dirent.h>
 #include <string>
@@ -66,7 +67,7 @@ bool BundleScanner::ScanImpl(const std::string &dirPath)
 {
     DIR *dirp = opendir(dirPath.c_str());
     if (dirp == nullptr) {
-        APP_LOGE("BundleScanner::ScanImpl open dir:%{private}s fail", dirPath.c_str());
+        APP_LOGE("BundleScanner::ScanImpl open dir:%{private}s fail, errno:%{public}d", dirPath.c_str(), errno);
         return false;
     }
 
@@ -74,6 +75,7 @@ bool BundleScanner::ScanImpl(const std::string &dirPath)
     for (;;) {
         dirent = readdir(dirp);
         if (dirent == nullptr) {
+            APP_LOGE("fail to readdir errno:%{public}d", errno);
             break;
         }
 
@@ -86,7 +88,7 @@ bool BundleScanner::ScanImpl(const std::string &dirPath)
     }
 
     if (closedir(dirp) == -1) {
-        APP_LOGW("close dir fail");
+        APP_LOGW("close dir fail, errno:%{public}d", errno);
     }
     return true;
 }

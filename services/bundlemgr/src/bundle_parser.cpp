@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_parser.h"
 
+#include <cerrno>
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
@@ -75,14 +76,14 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("the file cannot be open due to  %{public}s", errBuf);
+        APP_LOGE("the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
         return false;
     }
 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("the file is an empty file");
+        APP_LOGE("the file is an empty file, errno:%{public}d", errno);
         in.close();
         return false;
     }

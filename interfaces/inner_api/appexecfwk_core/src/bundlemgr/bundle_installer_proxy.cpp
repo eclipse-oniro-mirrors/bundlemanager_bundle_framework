@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_installer_proxy.h"
 
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -420,7 +421,7 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     }
     int32_t inputFd = open(realPath.c_str(), O_RDONLY);
     if (inputFd < 0) {
-        APP_LOGE("write file to stream failed due to open the hap file");
+        APP_LOGE("write file to stream failed due to open the hap file, errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     char buffer[DEFAULT_BUFFER_SIZE] = {0};
@@ -428,7 +429,7 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     while ((offset = read(inputFd, buffer, sizeof(buffer))) > 0) {
         if (write(outputFd, buffer, offset) < 0) {
             close(inputFd);
-            APP_LOGE("write file to the temp dir failed");
+            APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
     }

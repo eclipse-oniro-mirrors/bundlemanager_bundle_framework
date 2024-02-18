@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "quick_fix_manager_proxy.h"
 
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -216,7 +217,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
-            APP_LOGE("open file failed.");
+            APP_LOGE("open file failed, errno:%{public}d", errno);
             return ERR_BUNDLEMANAGER_QUICK_FIX_OPEN_SOURCE_FILE_FAILED;
         }
         int32_t destFd = -1;
@@ -231,6 +232,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         int offset = -1;
         while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
             if (write(destFd, buffer, offset) < 0) {
+                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
                 close(sourceFd);
                 close(destFd);
                 return ERR_BUNDLEMANAGER_QUICK_FIX_WRITE_FILE_FAILED;

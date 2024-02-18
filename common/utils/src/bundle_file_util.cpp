@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -65,7 +65,7 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         return false;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the bundle file path: %{public}s", realPath.c_str());
+        APP_LOGE("can not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
         return false;
     }
     if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
@@ -149,7 +149,7 @@ bool BundleFileUtil::CheckFileSize(const std::string &bundlePath, const int64_t 
 {
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("call stat error");
+        APP_LOGE("call stat error:%{public}d", errno);
         return false;
     }
     if (fileInfo.st_size > fileSize) {
@@ -169,8 +169,8 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s",
-            currentBundlePath.c_str(), errMsg);
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s, errno:%{public}d",
+            currentBundlePath.c_str(), errMsg, errno);
         return false;
     }
     std::string bundlePath = currentBundlePath;
@@ -223,6 +223,7 @@ bool BundleFileUtil::IsExistFile(const std::string &filePath)
 
     struct stat result = {};
     if (stat(filePath.c_str(), &result) != 0) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
 
@@ -237,6 +238,7 @@ bool BundleFileUtil::IsExistDir(const std::string &dirPath)
 
     struct stat result = {};
     if (stat(dirPath.c_str(), &result) != 0) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
 
