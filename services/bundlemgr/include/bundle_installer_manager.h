@@ -117,7 +117,7 @@ private:
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 
     std::shared_ptr<ThreadPool> threadPool_ = nullptr;
-    const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
+    const int32_t THREAD_NUMBER = 4;
     std::mutex mutex_;
 };
 }  // namespace AppExecFwk
