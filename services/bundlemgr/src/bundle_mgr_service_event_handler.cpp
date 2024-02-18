@@ -890,6 +890,8 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
 
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
+    // Sort in descending order of install priority
+    std::map<int32_t, std::vector<PreScanInfo>, std::greater<int32_t>> taskMap;
     std::list<std::string> hspDirs;
     std::list<PreScanInfo> normalSystemApps;
     for (const auto &installInfo : installList_) {
@@ -901,7 +903,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
             hspDirs.emplace_back(installInfo.bundleDir);
         } else {
-            normalSystemApps.emplace_back(installInfo);
+            taskMap[installInfo.priority].emplace_back(installInfo);
         }
     }
 
@@ -909,8 +911,70 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
         ProcessSystemSharedBundleInstall(hspDir, Constants::AppType::SYSTEM_APP);
     }
 
-    for (const auto &installInfo : normalSystemApps) {
-        ProcessSystemBundleInstall(installInfo, Constants::AppType::SYSTEM_APP, userId);
+    if (taskMap.size() <= 0) {
+        APP_LOGW("taskMap is empty.");
+        return;
+    }
+    AddTasks(taskMap, userId);
+}
+
+void BMSEventHandler::AddTasks(
+    const std::map<int32_t, std::vector<PreScanInfo>, std::greater<int32_t>> &taskMap, int32_t userId)
+{
+    for (const auto &tasks : taskMap) {
+        AddTaskParallel(tasks.first, tasks.second, userId);
+    }
+}
+
+void BMSEventHandler::AddTaskParallel(
+    int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId)
+{
+    int32_t taskTotalNum = static_cast<int32_t>(tasks.size());
+    if (taskTotalNum <= 0) {
+        APP_LOGE("The number of tasks is empty.");
+        return;
+    }
+
+    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bundleMgrService == nullptr) {
+        APP_LOGE("bundleMgrService is nullptr");
+        return;
+    }
+
+    sptr<BundleInstallerHost> installerHost = bundleMgrService->GetBundleInstaller();
+    if (installerHost == nullptr) {
+        APP_LOGE("installerHost is nullptr");
+        return;
+    }
+
+    size_t threadsNum = installerHost->GetThreadsNum();
+    APP_LOGI("priority: %{public}d, tasks: %{public}zu, userId: %{public}d, threadsNum: %{public}zu.",
+        taskPriority, tasks.size(), userId, threadsNum);
+    std::atomic_uint taskEndNum = 0;
+    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
+    for (const auto &installInfo : tasks) {
+        if (installerHost->GetCurTaskNum() >= threadsNum) {
+            BMSEventHandler::ProcessSystemBundleInstall(installInfo, Constants::AppType::SYSTEM_APP, userId);
+            taskEndNum++;
+            continue;
+        }
+
+        auto task = [installInfo, userId, taskTotalNum, &taskEndNum, &bundlePromise]() {
+            BMSEventHandler::ProcessSystemBundleInstall(installInfo, Constants::AppType::SYSTEM_APP, userId);
+            taskEndNum++;
+            if (bundlePromise && static_cast<int32_t>(taskEndNum) >= taskTotalNum) {
+                bundlePromise->NotifyAllTasksExecuteFinished();
+                APP_LOGI("All tasks has executed and notify promise in priority(%{public}d).",
+                    installInfo.priority);
+            }
+        };
+
+        installerHost->AddTask(task, "BootStartInstall : " + installInfo.bundleDir);
+    }
+
+    if (static_cast<int32_t>(taskEndNum) < taskTotalNum) {
+        bundlePromise->WaitForAllTasksExecute();
+        APP_LOGI("Wait for all tasks execute in priority(%{public}d).", taskPriority);
     }
 }
 

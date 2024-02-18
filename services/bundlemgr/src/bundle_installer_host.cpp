@@ -688,5 +688,20 @@ bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bu
     manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
     return true;
 }
+
+void BundleInstallerHost::AddTask(const ThreadPoolTask &task, const std::string &taskName)
+{
+    manager_->AddTask(task, taskName);
+}
+
+int32_t BundleInstallerHost::GetThreadsNum()
+{
+    return manager_->GetThreadsNum();
+}
+
+size_t BundleInstallerHost::GetCurTaskNum()
+{
+    return manager_->GetCurTaskNum();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
