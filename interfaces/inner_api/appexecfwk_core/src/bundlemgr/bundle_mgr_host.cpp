@@ -242,7 +242,7 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleObtainCallingBundleName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
         &BundleMgrHost::HandleGetBundleStats);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS),
         &BundleMgrHost::HandleGetAllBundleStats);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL),
         &BundleMgrHost::HandleCheckAbilityEnableInstall);
