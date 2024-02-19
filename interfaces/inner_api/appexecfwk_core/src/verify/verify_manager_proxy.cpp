@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "verify_manager_proxy.h"
 
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -91,7 +92,7 @@ ErrCode VerifyManagerProxy::RemoveFiles(const std::vector<std::string> &abcPaths
 
     for (const auto &path : realPaths) {
         if (!BundleFileUtil::DeleteDir(path)) {
-            APP_LOGW("RemoveFile %{private}s failed.", path.c_str());
+            APP_LOGW("RemoveFile %{private}s failed, errno:%{public}d", path.c_str(), errno);
         }
     }
 
@@ -162,7 +163,7 @@ ErrCode VerifyManagerProxy::CopyFiles(
         APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
-            APP_LOGE("open file failed.");
+            APP_LOGE("open file failed, errno:%{public}d", errno);
             return ERR_BUNDLE_MANAGER_VERIFY_OPEN_SOURCE_FILE_FAILED;
         }
         int32_t destFd = -1;
@@ -177,6 +178,7 @@ ErrCode VerifyManagerProxy::CopyFiles(
         int offset = -1;
         while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
             if (write(destFd, buffer, offset) < 0) {
+                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
                 close(sourceFd);
                 close(destFd);
                 return ERR_BUNDLE_MANAGER_VERIFY_WRITE_FILE_FAILED;

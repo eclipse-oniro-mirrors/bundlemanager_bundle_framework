@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <cerrno>
 #include "file_path.h"
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -373,6 +374,7 @@ bool FilePath::GetZipAllDirFiles(const std::string &path, std::vector<std::strin
     }
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
+        APP_LOGE("fail to stat errno:%{public}d", errno);
         return false;
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "base_extractor.h"
 
+#include <cerrno>
 #include <dirent.h>
 #include <fstream>
 #include <limits>
@@ -42,7 +43,7 @@ BaseExtractor::~BaseExtractor()
 bool BaseExtractor::Init()
 {
     if (!zipFile_.Open()) {
-        APP_LOGE("open zip file failed");
+        APP_LOGE("open zip file failed, errno:%{public}d", errno);
         return false;
     }
     ZipEntry zipEntry;
@@ -94,7 +95,7 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
     std::ofstream fileStream;
     fileStream.open(targetPath, std::ios_base::out | std::ios_base::binary);
     if (!fileStream.is_open()) {
-        APP_LOGE("fail to open %{private}s file to write", targetPath.c_str());
+        APP_LOGE("fail to open %{private}s file to write, errno:%{public}d", targetPath.c_str(), errno);
         return false;
     }
     if ((!ExtractByName(fileName, fileStream)) || (!fileStream.good())) {
@@ -102,7 +103,8 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
         fileStream.clear();
         fileStream.close();
         if (remove(targetPath.c_str()) != 0) {
-            APP_LOGE("fail to remove %{private}s file which writes stream error", targetPath.c_str());
+            APP_LOGE("fail to remove %{private}s file which writes stream error, errno:%{public}d",
+                targetPath.c_str(), errno);
         }
         return false;
     }

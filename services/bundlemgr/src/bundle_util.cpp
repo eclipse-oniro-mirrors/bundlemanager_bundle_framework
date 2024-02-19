@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -161,7 +161,7 @@ bool BundleUtil::CheckFileName(const std::string &fileName)
 
 bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
-    APP_LOGD("fileSize is %{public}" PRId64, fileSize / Constants::ONE_GB);
+    APP_LOGD("fileSize is %{public}" PRId64, fileSize);
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
         APP_LOGE("call stat error:%{public}d", errno);
@@ -181,7 +181,7 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
         return false;
     }
     int64_t freeSize = diskInfo.f_bfree * diskInfo.f_bsize;
-    APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize / Constants::ONE_GB);
+    APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize);
 
     // bundleSize + keepSize <= system-freeSize needs to be satisfied
     return CheckFileSize(bundlePath, freeSize - std::min(freeSize * SAVE_SPACE_PERCENT, static_cast<double>(HALF_GB)));
