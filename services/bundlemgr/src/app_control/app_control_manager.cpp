@@ -412,18 +412,12 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
     auto iter = abilityRunningControlRuleCache_.find(key);
     if (iter != abilityRunningControlRuleCache_.end()) {
-        if (iter->second.has_value()) {
-            disposedRules = iter->second.value();
-            return ERR_OK;
-        } else {
-            APP_LOGW("GetAbilityRunningControlRule from cache failed");
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
-        }
+        disposedRules = iter->second;
+        return ERR_OK;
     }
     ret = appControlManagerDb_->GetAbilityRunningControlRule(bundleInfo.appId, userId, disposedRules);
     if (ret != ERR_OK) {
         APP_LOGW("GetAbilityRunningControlRule from rdb failed");
-        abilityRunningControlRuleCache_[key] = std::nullopt;
         return ret;
     }
     abilityRunningControlRuleCache_[key] = disposedRules;
