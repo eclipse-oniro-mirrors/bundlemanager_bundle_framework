@@ -326,6 +326,14 @@ ErrCode AppControlManager::SetDisposedRule(
         APP_LOGE("SetDisposedStatus to rdb failed");
         return ret;
     }
+    std::string key = appId + std::string("_") + std::to_string(userId);
+    {
+        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
+        auto iter = abilityRunningControlRuleCache_.find(key);
+        if (iter != abilityRunningControlRuleCache_.end()) {
+            abilityRunningControlRuleCache_.erase(iter);
+        }
+    }
     commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString());
     return ERR_OK;
 }
@@ -349,6 +357,14 @@ ErrCode AppControlManager::DeleteDisposedRule(
         APP_LOGE("DeleteDisposedRule to rdb failed");
         return ret;
     }
+    std::string key = appId + std::string("_") + std::to_string(userId);
+    {
+        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
+        auto iter = abilityRunningControlRuleCache_.find(key);
+        if (iter != abilityRunningControlRuleCache_.end()) {
+            abilityRunningControlRuleCache_.erase(iter);
+        }
+    }
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
     return ERR_OK;
 }
@@ -365,6 +381,13 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const std::string &appI
     auto iter = appRunningControlRuleResult_.find(key);
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
+    }
+    {
+        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
+        auto iter = abilityRunningControlRuleCache_.find(key);
+        if (iter != abilityRunningControlRuleCache_.end()) {
+            abilityRunningControlRuleCache_.erase(iter);
+        }
     }
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
     return ERR_OK;
@@ -385,11 +408,19 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         APP_LOGW("DataMgr GetBundleInfoV9 failed");
         return ret;
     }
+    std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
+    std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
+    auto iter = abilityRunningControlRuleCache_.find(key);
+    if (iter != abilityRunningControlRuleCache_.end()) {
+        disposedRules = iter->second;
+        return ERR_OK;
+    }
     ret = appControlManagerDb_->GetAbilityRunningControlRule(bundleInfo.appId, userId, disposedRules);
     if (ret != ERR_OK) {
         APP_LOGW("GetAbilityRunningControlRule from rdb failed");
         return ret;
     }
+    abilityRunningControlRuleCache_[key] = disposedRules;
     return ret;
 }
 }
