@@ -38,6 +38,8 @@ BundleResourceRdb::BundleResourceRdb()
         + std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME)
         + "(NAME TEXT NOT NULL, UPDATE_TIME INTEGER, LABEL TEXT, ICON TEXT, "
         + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME, SYSTEM_STATE));");
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + bmsRdbConfig.tableName +
+        " ADD HIDE_DESKTOP_ICON INTEGER DEFAULT 0;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -59,7 +61,7 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
     valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
     valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
     valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
-
+    valuesBucket.PutInt(BundleResourceConstants::HIDE_DESKTOP_ICON, resourceInfo.hideDesktopIcon_ ? 1 : 0);
     return rdbDataManager_->InsertData(valuesBucket);
 }
 
@@ -216,6 +218,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, bundleName + BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    absRdbPredicates.EqualTo(BundleResourceConstants::HIDE_DESKTOP_ICON, 0); // launcher ability show in desktop
 
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
@@ -295,6 +298,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     absRdbPredicates.Contains(BundleResourceConstants::NAME, BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    absRdbPredicates.EqualTo(BundleResourceConstants::HIDE_DESKTOP_ICON, 0); // launcher ability show in desktop
 
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {

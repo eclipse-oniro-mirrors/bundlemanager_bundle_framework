@@ -162,18 +162,18 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-
+    bool ans = true;
     if (!ParseLabelResourceByResourceManager(resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
         APP_LOGE("ParseLabelResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
-        return false;
+        ans = false;
     }
 
     if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo.iconId_, resourceInfo.icon_)) {
         APP_LOGE("ParseIconResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
-        return false;
+        ans = false;
     }
 
-    return true;
+    return ans;
 }
 
 bool BundleResourceParser::ParseLabelResourceByResourceManager(
@@ -185,8 +185,8 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
         return false;
     }
     if (labelId <= 0) {
-        APP_LOGD("ParseLabelResource labelId is 0 or less than 0, label is bundleName");
-        return true;
+        APP_LOGW("ParseLabelResource labelId is 0 or less than 0, label is bundleName");
+        return false;
     }
     auto ret = resourceManager->GetStringById(static_cast<uint32_t>(labelId), label);
     if (ret != OHOS::Global::Resource::RState::SUCCESS) {

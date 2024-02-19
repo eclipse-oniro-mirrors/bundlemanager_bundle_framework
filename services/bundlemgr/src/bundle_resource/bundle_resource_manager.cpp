@@ -117,6 +117,13 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
     BundleResourceParser parser;
     if (!parser.ParseResourceInfo(resourceInfo)) {
         APP_LOGW("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
+        BundleResourceInfo bundleResourceInfo;
+        if (GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo)) {
+            // default ability label and icon
+            resourceInfo.label_ = resourceInfo.label_.empty() ? bundleResourceInfo.label : resourceInfo.label_;
+            resourceInfo.icon_ = resourceInfo.icon_.empty() ? bundleResourceInfo.icon : resourceInfo.icon_;
+        }
         ProcessResourceInfoWhenParseFailed(resourceInfo);
     }
     return bundleResourceRdb_->AddResourceInfo(resourceInfo);

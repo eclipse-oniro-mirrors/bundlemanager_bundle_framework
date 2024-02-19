@@ -1055,7 +1055,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0051, Function | SmallTest
     InnerBundleInfo bundleInfo;
     ResourceInfo resourceInfo;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
@@ -1065,13 +1065,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0051, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_TRUE(ans);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
 }
@@ -1088,7 +1088,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest
     InnerBundleInfo bundleInfo;
     ResourceInfo resourceInfo;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
@@ -1098,13 +1098,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
     EXPECT_TRUE(ans);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
 }
@@ -1378,7 +1378,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0065, Function | SmallTest
 
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     ans = parser.ParseLabelResourceByResourceManager(resourceManager, 0, label);
-    EXPECT_TRUE(ans);
+    EXPECT_FALSE(ans);
 
     ans = parser.ParseLabelResourceByResourceManager(resourceManager, 1, label); // labelId not exist
     EXPECT_FALSE(ans);
