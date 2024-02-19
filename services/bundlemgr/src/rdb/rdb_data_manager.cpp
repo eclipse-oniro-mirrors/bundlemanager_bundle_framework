@@ -29,6 +29,7 @@ const std::string BMS_KEY = "KEY";
 const std::string BMS_VALUE = "VALUE";
 const int32_t BMS_KEY_INDEX = 0;
 const int32_t BMS_VALUE_INDEX = 1;
+const int32_t WRITE_TIMEOUT = 300; // 300s
 const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 }
 
@@ -55,6 +56,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     }
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
+    rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
