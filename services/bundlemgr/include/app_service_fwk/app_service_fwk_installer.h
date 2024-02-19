@@ -92,6 +92,8 @@ private:
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo);
+    ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
+        const std::string &targetSoPath) const;
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
@@ -103,6 +105,9 @@ private:
     std::vector<std::string> deleteBundlePath_;
     uint32_t versionCode_ = 0;
     InnerBundleInfo newInnerBundleInfo_;
+    bool isEnterpriseBundle_ = false;
+    std::string appIdentifier_;
+    std::string compileSdkType_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \

@@ -30,6 +30,8 @@ namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string HSP_PATH = ", path: ";
 const std::string SHARED_MODULE_TYPE = "shared";
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -219,6 +221,12 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "Native so is incompatible in all hsps %{public}d");
+
+    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
+    appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    compileSdkType_ = newInfos.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
+        (newInfos.begin()->second).GetBaseApplicationInfo().compileSdkType;
 
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     APP_LOGI("CheckAndParseFiles End");
@@ -417,6 +425,9 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
+        // verify hap or hsp code signature for compressed so files
+        result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath);
+        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir, nativeLibraryPath);
         CHECK_RESULT(result, "Move so to real path failed %{public}d");
@@ -804,6 +815,22 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(const InnerBundleInfo &o
         + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
 
     return InstalldClient::GetInstance()->RemoveDir(versionDir);
+}
+
+ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bundlePath,
+    const std::string &cpuAbi, const std::string &targetSoPath) const
+{
+    APP_LOGD("begin to verify code signature for hsp native files");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = bundlePath;
+    codeSignatureParam.cpuAbi = cpuAbi;
+    codeSignatureParam.targetSoPath = targetSoPath;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    codeSignatureParam.isPreInstalledBundle = true;
+    return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
