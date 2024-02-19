@@ -827,6 +827,7 @@ protected:
                     "theme": "",
                     "type": 1,
                     "unclearableMission": false,
+                    "excludeFromDock": false,
                     "uri": "",
                     "visible": true,
                     "writePermission": "",

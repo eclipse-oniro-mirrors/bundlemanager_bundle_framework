@@ -49,6 +49,7 @@ constexpr const char* EXPORTED = "exported";
 constexpr const char* PERMISSIONS = "permissions";
 constexpr const char* META_DATA = "metadata";
 constexpr const char* ENABLED = "enabled";
+constexpr const char* EXCLUDE_FROM_DOCK = "excludeFromDock";
 constexpr const char* READ_PERMISSION = "readPermission";
 constexpr const char* WRITE_PERMISSION = "writePermission";
 constexpr const char* LABEL = "label";
@@ -913,6 +914,10 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     napi_value nEnabled;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ENABLED, nEnabled));
+
+    napi_value nExcludeFromDock;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.excludeFromDock, &nExcludeFromDock));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, EXCLUDE_FROM_DOCK, nExcludeFromDock));
 
     napi_value nSupportWindowModes;
     size = abilityInfo.windowModes.size();

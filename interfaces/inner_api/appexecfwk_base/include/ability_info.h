@@ -238,6 +238,7 @@ struct AbilityInfo : public Parcelable {
     // whether to display in the missions list
     bool excludeFromMissions = false;
     bool unclearableMission = false;
+    bool excludeFromDock = false;
     // whether to support recover UI interface
     bool recoverable = false;
     bool isolationProcess = false;
