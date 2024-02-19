@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 
 #include "app_control_manager_db_interface.h"
@@ -96,6 +97,8 @@ private:
     std::unordered_map<std::string, AppRunningControlRuleResult> appRunningControlRuleResult_;
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;
     std::mutex appRunningControlMutex_;
+    std::unordered_map<std::string, std::optional<std::vector<DisposedRule>>> abilityRunningControlRuleCache_;
+    std::mutex abilityRunningControlRuleMutex_;
 };
 } // AppExecFwk
 } // OHOS
