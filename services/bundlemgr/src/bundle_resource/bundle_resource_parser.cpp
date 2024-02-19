@@ -32,26 +32,54 @@ BundleResourceParser::~BundleResourceParser()
 
 bool BundleResourceParser::ParseResourceInfo(ResourceInfo &resourceInfo)
 {
-    if (resourceInfo.defaultIconHapPath_.empty()) {
-        return ParseResourceInfoWithSameHap(resourceInfo);
-    }
-    return ParseResourceInfoWithDifferentHap(resourceInfo);
+    return ParseResourceInfoWithSameHap(resourceInfo);
 }
 
 bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourceInfos)
 {
+    APP_LOGD("start");
     if (resourceInfos.empty()) {
         APP_LOGE("resourceInfos is empty");
         return false;
     }
-    bool result = true;
-    for (auto &info : resourceInfos) {
-        if (!ParseResourceInfo(info)) {
-            APP_LOGW("ParseResource failed, key: %{public}s", info.GetKey().c_str());
-            result = false;
+    // same module need parse together
+    std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
+        if (resourceManager == nullptr) {
+            std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+            if (resConfig == nullptr) {
+                APP_LOGE("resConfig is nullptr");
+                continue;
+            }
+            resourceManager =
+                std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
+                    resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
+                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig));
+            resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
+            if (!BundleResourceConfiguration::InitResourceGlobalConfig(
+                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager)) {
+                APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            }
+        }
+        if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
+            APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            if (index > 0) {
+                resourceInfos[index].label_ = resourceInfos[index].label_.empty() ? resourceInfos[0].label_ :
+                    resourceInfos[index].label_;
+                resourceInfos[index].icon_ = resourceInfos[index].icon_.empty() ? resourceInfos[0].icon_ :
+                    resourceInfos[index].icon_;
+            }
         }
     }
-    return result;
+    if (resourceInfos[0].label_.empty() || resourceInfos[0].icon_.empty()) {
+        APP_LOGE("bundleName:%{public}s moduleName:%{public}s prase resource failed",
+            resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
+        return false;
+    }
+    APP_LOGD("end");
+    return true;
 }
 
 bool BundleResourceParser::ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo)
@@ -71,19 +99,6 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(ResourceInfo &resourceIn
     }
     if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
         APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
-        return false;
-    }
-    return true;
-}
-
-bool BundleResourceParser::ParseResourceInfoWithDifferentHap(ResourceInfo &resourceInfo)
-{
-    if (!ParseLabelResourceByPath(resourceInfo.hapPath_, resourceInfo.labelId_, resourceInfo.label_)) {
-        APP_LOGE("bundleName: %{public}s ParseLabelResource failed", resourceInfo.bundleName_.c_str());
-        return false;
-    }
-    if (!ParseIconResourceByPath(resourceInfo.defaultIconHapPath_, resourceInfo.iconId_, resourceInfo.icon_)) {
-        APP_LOGE("bundleName: %{public}s ParseIconResource failed", resourceInfo.bundleName_.c_str());
         return false;
     }
     return true;

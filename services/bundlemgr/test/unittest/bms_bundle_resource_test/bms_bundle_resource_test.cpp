@@ -997,14 +997,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
  * @tc.desc: 1. system running normally
- *           2. test GetLauncherAbilityResourceInfo
+ *           2. test GetAbilityResourceInfos
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest | Level0)
 {
     InnerBundleInfo bundleInfo;
     std::vector<ResourceInfo> resourceInfos;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    bool ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1013,7 +1013,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1021,7 +1021,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.hideDesktopIcon = true;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // hideDesktopIcon is true
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1031,14 +1031,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     info.entryInstallationFree = true;
     bundleInfo.SetBaseBundleInfo(info);
     // entryInstallationFree is true
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
     info.entryInstallationFree = false;
     bundleInfo.SetBaseBundleInfo(info);
     // abilityInfos is empty
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 }
@@ -1055,7 +1055,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0051, Function | SmallTest
     InnerBundleInfo bundleInfo;
     ResourceInfo resourceInfo;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
@@ -1065,13 +1065,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0051, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_TRUE(ans);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
 }
@@ -1088,7 +1088,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest
     InnerBundleInfo bundleInfo;
     ResourceInfo resourceInfo;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
@@ -1098,13 +1098,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     applicationInfo.bundleType = BundleType::APP;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
-    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, resourceInfo);
     EXPECT_TRUE(ans);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
 }
@@ -1234,7 +1234,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest | Level0)
 {
-    std::vector<ResourceInfo> resourceInfos;
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
     // userId not exist
     bool ans = BundleResourceProcess::GetAllResourceInfo(200, resourceInfos);
     EXPECT_FALSE(ans);
@@ -1305,15 +1305,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest
     resourceInfo.iconId_ = 0;
     BundleResourceParser parser;
     bool ans = parser.ParseResourceInfo(resourceInfo);
-    EXPECT_FALSE(ans);
-
-    resourceInfo.defaultIconHapPath_ = HAP_NOT_EXIST;
-    ans = parser.ParseResourceInfo(resourceInfo);
-    EXPECT_FALSE(ans);
-
-    resourceInfo.hapPath_ = HAP_NOT_EXIST;
-    resourceInfo.defaultIconHapPath_ = "";
-    ans = parser.ParseResourceInfo(resourceInfo);
     EXPECT_FALSE(ans);
 
     resourceInfo.hapPath_ = HAP_FILE_PATH1;

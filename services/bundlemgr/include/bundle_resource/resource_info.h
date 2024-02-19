@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_RESOURCE_INFO_H
 
 #include <string>
+#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,8 +46,10 @@ public:
     int64_t updateTime_ = 0;
     // used for parse label and icon
     std::string hapPath_;
-    // used for parse default icon
-    std::string defaultIconHapPath_;
+    // used for parse overlay label and icon
+    std::vector<std::string> overlayHapPaths_;
+    // hide desktop icon
+    bool hideDesktopIcon_ = false;
 };
 } // AppExecFwk
 } // OHOS

@@ -91,14 +91,16 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
 
 bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
 {
-    std::vector<ResourceInfo> resourceInfos;
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
     if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfos)) {
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
-    if (!AddResourceInfos(resourceInfos)) {
-        APP_LOGE("failed, userId:%{public}d", userId);
-        return false;
+    for (auto &item : resourceInfos) {
+        if (!AddResourceInfos(item.second)) {
+            APP_LOGE("failed, userId:%{public}d", userId);
+            return false;
+        }
     }
     SendBundleResourcesChangedEvent(userId);
     return true;
@@ -149,7 +151,7 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
 
 bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t userId)
 {
-    std::vector<ResourceInfo> resourceInfos;
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
     // to judge whether the current colorMode exists in the database
     bool isExist = bundleResourceRdb_->IsCurrentColorModeExist();
     if (isExist) {
@@ -159,6 +161,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             APP_LOGE("GetAllResourceName failed");
             return false;
         }
+        std::vector<ResourceInfo> resourceInfos;
         if (!BundleResourceProcess::GetResourceInfoByColorModeChanged(names, resourceInfos)) {
             APP_LOGE("GetResourceInfoByColorModeChanged failed");
             return false;
@@ -168,16 +171,21 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             SendBundleResourcesChangedEvent(userId);
             return true;
         }
+        for (const auto &info : resourceInfos) {
+            resourceInfosMap[info.bundleName_].emplace_back(info);
+        }
     } else {
         // not exist then update all resource info
-        if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfos)) {
+        if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfosMap)) {
             APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
             return false;
         }
     }
-    if (!AddResourceInfos(resourceInfos)) {
-        APP_LOGE("failed, userId:%{public}d", userId);
-        return false;
+    for (auto &item : resourceInfosMap) {
+        if (!AddResourceInfos(item.second)) {
+            APP_LOGE("bundleName:%{public}s failed, userId:%{public}d", item.first.c_str(), userId);
+            return false;
+        }
     }
     SendBundleResourcesChangedEvent(userId);
     return true;

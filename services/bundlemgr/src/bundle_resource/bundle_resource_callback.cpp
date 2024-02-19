@@ -50,6 +50,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
     }
+    APP_LOGI("end");
     return true;
 }
 
@@ -75,6 +76,7 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
         APP_LOGE("add colorMode : %{public}s failed, currentUserId :%{public}d", colorMode.c_str(), currentUserId);
         return false;
     }
+    APP_LOGI("end, colorMode: %{public}s", colorMode.c_str());
     return true;
 }
 
@@ -105,6 +107,7 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;
     }
+    APP_LOGI("end, current language is %{public}s", language.c_str());
     return true;
 }
 
@@ -142,6 +145,7 @@ bool BundleResourceCallback::OnBundleStatusChanged(
             return false;
         }
     }
+    APP_LOGI("end, bundleName: %{public}s", bundleName.c_str());
     return true;
 }
 

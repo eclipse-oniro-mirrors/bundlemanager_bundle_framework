@@ -23,68 +23,12 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-std::mutex g_systemResLock;
-constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const std::string INNER_UNDER_LINE = "_";
-}
-std::string BundleResourceProcess::systemResourceHap_ = "";
-int32_t BundleResourceProcess::defaultIconId_ = 0;
-
-bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId,
-    std::vector<ResourceInfo> &resourceInfos)
-{
-    if (innerBundleInfo.GetBundleName().empty()) {
-        APP_LOGE("bundleName is empty");
-        return false;
-    }
-
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    if (innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon) {
-        APP_LOGD("bundleName:%{public}s hide desktop icon", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    if (innerBundleInfo.GetBaseBundleInfo().entryInstallationFree) {
-        APP_LOGD("bundleName:%{public}s is atomic service, hide desktop icon", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        return false;
-    }
-    OHOS::AAFwk::Want want;
-    want.SetAction(Want::ACTION_HOME);
-    want.AddEntity(Want::ENTITY_HOME);
-    std::vector<AbilityInfo> abilityInfos;
-    int64_t time = GetUpdateTime(innerBundleInfo, userId);
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
-
-    if (abilityInfos.empty()) {
-        APP_LOGW("bundleName: %{public}s no launcher ability Info", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    for (const auto &info : abilityInfos) {
-        if (!info.applicationInfo.enabled) {
-            continue;
-        }
-        if (!innerBundleInfo.IsAbilityEnabled(info, innerBundleInfo.GetResponseUserId(userId))) {
-            APP_LOGW("abilityName: %{public}s is disabled", info.name.c_str());
-            continue;
-        }
-        resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
-    }
-    return true;
 }
 
 bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo,
@@ -99,7 +43,7 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
         APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
-    resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo, userId);
+    resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo);
 
     return true;
 }
@@ -128,7 +72,7 @@ bool BundleResourceProcess::GetResourceInfo(
 
 bool BundleResourceProcess::GetAllResourceInfo(
     const int32_t userId,
-    std::vector<ResourceInfo> &resourceInfos)
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -161,8 +105,11 @@ bool BundleResourceProcess::GetAllResourceInfo(
                 item.second.GetBundleName().c_str(), userId);
             continue;
         }
+        std::vector<ResourceInfo> resourceInfos;
         if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
             APP_LOGW("bundle %{public}s resourceInfo is empty", item.second.GetBundleName().c_str());
+        } else {
+            resourceInfosMap[item.second.GetBundleName()] = resourceInfos;
         }
     }
     return true;
@@ -231,7 +178,7 @@ bool BundleResourceProcess::GetResourceInfoByAbilityName(
         return false;
     }
     std::vector<ResourceInfo> resourceInfos;
-    if (GetLauncherAbilityResourceInfo(item->second, userId, resourceInfos)) {
+    if (GetAbilityResourceInfos(item->second, userId, resourceInfos)) {
         for (const auto &info : resourceInfos) {
             if ((info.moduleName_ == moduleName) && (info.abilityName_ == abilityName)) {
                 resourceInfo = info;
@@ -282,19 +229,24 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
-    APP_LOGD("start, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    // get bundle
     ResourceInfo bundleResourceInfo;
-    if (GetBundleResourceInfo(innerBundleInfo, userId, bundleResourceInfo)) {
-        resourceInfos.push_back(bundleResourceInfo);
+    if (!GetBundleResourceInfo(innerBundleInfo, userId, bundleResourceInfo)) {
+        APP_LOGW("bundleName: %{public}s get bundle resource failed", bundleName.c_str());
+        return false;
     }
+    resourceInfos.push_back(bundleResourceInfo);
 
-    std::vector<ResourceInfo> launcherAbilityResourceInfos;
-    if (GetLauncherAbilityResourceInfo(innerBundleInfo, userId, launcherAbilityResourceInfos)) {
-        for (const auto &info : launcherAbilityResourceInfos) {
+    // get ability
+    std::vector<ResourceInfo> abilityResourceInfos;
+    if (GetAbilityResourceInfos(innerBundleInfo, userId, abilityResourceInfos)) {
+        for (const auto &info : abilityResourceInfos) {
             resourceInfos.push_back(info);
         }
     }
-    APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", innerBundleInfo.GetBundleName().c_str(),
+    APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", bundleName.c_str(),
         static_cast<int32_t>(resourceInfos.size()));
     return !resourceInfos.empty();
 }
@@ -305,63 +257,27 @@ bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo
     return responseUserId != Constants::INVALID_USERID;
 }
 
-int64_t BundleResourceProcess::GetUpdateTime(const InnerBundleInfo &innerBundleInfo, const int32_t userId)
-{
-    // get installTime from innerBundleUserInfo
-    std::string userIdKey = innerBundleInfo.GetBundleName() + INNER_UNDER_LINE + std::to_string(userId);
-    std::string userZeroKey = innerBundleInfo.GetBundleName() + INNER_UNDER_LINE + std::to_string(0);
-    auto iter = std::find_if(innerBundleInfo.GetInnerBundleUserInfos().begin(),
-        innerBundleInfo.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
-    });
-    int64_t installTime = 0;
-    if (iter != innerBundleInfo.GetInnerBundleUserInfos().end()) {
-        installTime = iter->second.installTime;
-    }
-    return installTime;
-}
-
-ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const AbilityInfo &info)
+ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const AbilityInfo &info, bool hideDesktopIcon)
 {
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = info.bundleName;
     resourceInfo.moduleName_ = info.moduleName;
     resourceInfo.abilityName_ = info.name;
     resourceInfo.labelId_ = info.labelId;
-    resourceInfo.label_ = info.label;
-    if (resourceInfo.label_.empty()) {
-        resourceInfo.label_ = info.bundleName;
-    }
     resourceInfo.iconId_ = info.iconId;
     resourceInfo.hapPath_ = info.hapPath;
     resourceInfo.updateTime_ = info.installTime;
-    if (resourceInfo.abilityName_ == Constants::APP_DETAIL_ABILITY) {
-        if (!GetDefaultIconResource(resourceInfo.iconId_, resourceInfo.defaultIconHapPath_)) {
-            APP_LOGW("GetDefaultIconResource failed bundleName:%{public}s", resourceInfo.bundleName_.c_str());
-        }
-    }
+    resourceInfo.hideDesktopIcon_ = hideDesktopIcon;
+    resourceInfo.updateTime_ = BundleUtil::GetCurrentTimeMs();
     return resourceInfo;
 }
 
-ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(
-    const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId)
+ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo)
 {
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
     resourceInfo.labelId_ = innerBundleInfo.GetBaseApplicationInfo().labelResource.id;
-    resourceInfo.label_ = innerBundleInfo.GetBaseApplicationInfo().label;
-    if ((resourceInfo.labelId_ == 0) || resourceInfo.label_.empty()) {
-        resourceInfo.label_ = innerBundleInfo.GetBundleName();
-    }
     resourceInfo.iconId_ = innerBundleInfo.GetBaseApplicationInfo().iconResource.id;
-    resourceInfo.updateTime_ = GetUpdateTime(innerBundleInfo, userId);
-    if (resourceInfo.iconId_ == 0) {
-        if (!GetDefaultIconResource(resourceInfo.iconId_, resourceInfo.defaultIconHapPath_)) {
-            APP_LOGW("GetDefaultIconResource failed bundleName:%{public}s", resourceInfo.bundleName_.c_str());
-        }
-    }
     const auto &moduleName = innerBundleInfo.GetBaseApplicationInfo().labelResource.moduleName;
     const auto &moduleInfos = innerBundleInfo.GetInnerModuleInfos();
     for (const auto &iter : moduleInfos) {
@@ -370,38 +286,61 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(
             break;
         }
     }
+    resourceInfo.updateTime_ = BundleUtil::GetCurrentTimeMs();
+    resourceInfo.moduleName_ = moduleName;
+    resourceInfo.abilityName_ = std::string();
     return resourceInfo;
 }
 
-bool BundleResourceProcess::GetDefaultIconResource(int32_t &iconId, std::string &hapPath)
+bool BundleResourceProcess::GetAbilityResourceInfos(
+    const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId,
+    std::vector<ResourceInfo> &resourceInfo)
 {
-    std::lock_guard<std::mutex> lock(g_systemResLock);
-    if (!systemResourceHap_.empty() && defaultIconId_ != 0) {
-        iconId = defaultIconId_;
-        hapPath = systemResourceHap_;
-        return true;
-    }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
+    APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    if (innerBundleInfo.GetBundleName().empty()) {
+        APP_LOGE("bundleName is empty");
         return false;
     }
-    BundleInfo info;
-    if (dataMgr->GetBundleInfoV9(GLOBAL_RESOURCE_BUNDLE_NAME,
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION),
-        info, Constants::START_USERID) != ERR_OK) {
-        APP_LOGE("GetDefaultIconResource failed to get ohos.global.systemres info");
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+        APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
-    if (!info.hapModuleInfos.empty()) {
-        iconId = info.applicationInfo.iconResource.id;
-        hapPath = info.hapModuleInfos[0].hapPath;
-        defaultIconId_ = iconId;
-        systemResourceHap_ = hapPath;
-        return true;
+    bool hideDesktopIcon = true;
+    std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    std::map<std::string, std::vector<Skill>> skillInfos = innerBundleInfo.GetInnerSkillInfos();
+    for (const auto &item : abilityInfos) {
+        if (!innerBundleInfo.IsAbilityEnabled(item.second, innerBundleInfo.GetResponseUserId(userId))) {
+            APP_LOGW("bundleName:%{public}s abilityName:%{public}s is disabled", item.second.bundleName.c_str(),
+                item.second.name.c_str());
+            continue;
+        }
+        bool needHideDeskTopIcon = hideDesktopIcon;
+        auto skillsPair = skillInfos.find(item.first);
+        if (skillsPair != skillInfos.end()) {
+            InnerProcessLauncherAbilityResource(innerBundleInfo, skillsPair->second,
+                item.second.type, needHideDeskTopIcon);
+        }
+        resourceInfo.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second, needHideDeskTopIcon));
     }
-    APP_LOGE("hapModuleInfos is empty");
-    return false;
+    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfo.size(),
+        innerBundleInfo.GetBundleName().c_str());
+    return !resourceInfo.empty();
+}
+
+void BundleResourceProcess::InnerProcessLauncherAbilityResource(const InnerBundleInfo &innerBundleInfo,
+    const std::vector<Skill> &skills, const AbilityType type, bool &needHideDeskTopIcon)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(Want::ACTION_HOME);
+    want.AddEntity(Want::ENTITY_HOME);
+    for (const Skill& skill : skills) {
+        if (skill.MatchLauncher(want) && (type == AbilityType::PAGE)) {
+            needHideDeskTopIcon = innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon ||
+                innerBundleInfo.GetBaseBundleInfo().entryInstallationFree;
+            return;
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS
