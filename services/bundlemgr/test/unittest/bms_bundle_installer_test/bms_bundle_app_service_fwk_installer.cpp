@@ -447,7 +447,11 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0300, Function | 
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
     std::unordered_map<std::string, InnerBundleInfo> infos;
     auto result = InstallSystemBundle(HAP_PATH_TEST, USERID);
+#ifdef ON_64BIT_SYSTEM
+    ASSERT_EQ(result, false);
+#else
     ASSERT_EQ(result, ERR_OK);
+#endif
 
     appServiceFwkInstaller.bundleName_ = BUNDLE_NAME_TEST;
 
