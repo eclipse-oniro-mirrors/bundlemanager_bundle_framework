@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_MANAGER_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_MANAGER_H
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -83,7 +84,11 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
+    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
+
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
+
+    void ProcessResourceInfo(const std::vector<ResourceInfo> &resourceInfos, ResourceInfo &resourceInfo);
 
     std::string GetDefaultIcon();
 

@@ -15,9 +15,13 @@
 
 #include "bundle_resource_manager.h"
 
+#include <thread>
+#include <unistd.h>
+
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
+#include "bundle_promise.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 
@@ -25,7 +29,10 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+constexpr int32_t CHECK_INTERVAL = 100000; // 100ms
+constexpr int32_t MAX_WAIT_TIMES = 100; // 100 * 100ms = 10s
 }
+
 BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
@@ -91,16 +98,15 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
 
 bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
 {
-    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
-    if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfos)) {
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+    if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfosMap)) {
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
-    for (auto &item : resourceInfos) {
-        if (!AddResourceInfos(item.second)) {
-            APP_LOGE("failed, userId:%{public}d", userId);
-            return false;
-        }
+
+    if (!AddResourceInfos(resourceInfosMap)) {
+        APP_LOGE("failed, userId:%{public}d", userId);
+        return false;
     }
     SendBundleResourcesChangedEvent(userId);
     return true;
@@ -146,6 +152,68 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
+bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
+{
+    if (resourceInfosMap.empty()) {
+        APP_LOGE("resourceInfosMap is empty.");
+        return false;
+    }
+    int32_t taskTotalNum = static_cast<int32_t>(resourceInfosMap.size());
+    APP_LOGI("AddResourceInfos taskTotalNum: %{public}d, start", taskTotalNum);
+    std::atomic_uint taskEndNum = 0;
+    for (auto &item : resourceInfosMap) {
+        auto &resourceInfos = item.second;
+        auto task = [&taskEndNum, &resourceInfos]() {
+            // need to parse label and icon
+            BundleResourceParser parser;
+            parser.ParseResourceInfos(resourceInfos);
+            taskEndNum++;
+        };
+        std::thread parseResourceThread(task);
+        parseResourceThread.detach();
+    }
+
+    int32_t tryTime = MAX_WAIT_TIMES;
+    while (tryTime > 0) {
+        if (static_cast<int32_t>(taskEndNum) >= taskTotalNum) {
+            APP_LOGI("All tasks has executed end");
+            break;
+        }
+        APP_LOGI("Wait for all tasks execute, tryTime:%{public}d", tryTime);
+        usleep(CHECK_INTERVAL);
+        --tryTime;
+    }
+    APP_LOGI("all tasks execute end");
+    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
+    std::vector<ResourceInfo> resourceInfos;
+    for (auto &item : resourceInfosMap) {
+        for (auto &resourceInfo : item.second) {
+            if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
+                ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME] :
+                    std::vector<ResourceInfo>(), resourceInfo);
+            }
+            resourceInfos.emplace_back(resourceInfo);
+        }
+    }
+    APP_LOGI("resource info size:%{public}zu", resourceInfos.size());
+    return bundleResourceRdb_->AddResourceInfos(resourceInfos);
+}
+
+void BundleResourceManager::ProcessResourceInfo(
+    const std::vector<ResourceInfo> &resourceInfos, ResourceInfo &resourceInfo)
+{
+    if (resourceInfo.label_.empty()) {
+        resourceInfo.label_ = resourceInfo.bundleName_;
+    }
+    if (resourceInfo.icon_.empty()) {
+        if (!resourceInfos.empty()) {
+            resourceInfo.icon_ = resourceInfos[0].icon_;
+        } else {
+            ProcessResourceInfoWhenParseFailed(resourceInfo);
+        }
+    }
+}
+
 bool BundleResourceManager::DeleteResourceInfo(const std::string &key)
 {
     return bundleResourceRdb_->DeleteResourceInfo(key);
@@ -188,11 +256,9 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             return false;
         }
     }
-    for (auto &item : resourceInfosMap) {
-        if (!AddResourceInfos(item.second)) {
-            APP_LOGE("bundleName:%{public}s failed, userId:%{public}d", item.first.c_str(), userId);
-            return false;
-        }
+    if (!AddResourceInfos(resourceInfosMap)) {
+        APP_LOGE("add resource infos failed, userId:%{public}d", userId);
+        return false;
     }
     SendBundleResourcesChangedEvent(userId);
     return true;

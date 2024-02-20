@@ -33,10 +33,6 @@ static const std::unordered_map<std::string, Global::Resource::ColorMode> BUNDLE
     {RESOURCE_LIGHT, Global::Resource::ColorMode::LIGHT},
     {RESOURCE_DARK, Global::Resource::ColorMode::DARK},
 };
-const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1 = "/system/app/ohos.global.systemres/SystemResources.hap";
-const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2 = "/system/app/SystemResources/SystemResources.hap";
-const std::string GLOBAL_SYSTEM_RESOURCE_OVERLAY_HAP_PATH =
-    "/sys_prod/app/SystemResourcesOverlay/SystemResourcesOverlay.hap";
 
 Global::Resource::ColorMode ConvertColorMode(const std::string &colorMode)
 {
@@ -65,7 +61,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
         APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
         return false;
     }
-    AddSystemResourceHap(resourceManager);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");
@@ -88,45 +83,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
     return true;
 }
 
-void BundleResourceConfiguration::AddSystemResourceHap(
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
-{
-    if (resourceManager == nullptr) {
-        APP_LOGE("resourceManager is nullptr");
-        return;
-    }
-
-    if (BundleUtil::IsExistFile(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1)) {
-        if (BundleUtil::IsExistFile(GLOBAL_SYSTEM_RESOURCE_OVERLAY_HAP_PATH)) {
-            std::vector<std::string> overlayHapPath;
-            overlayHapPath.emplace_back(GLOBAL_SYSTEM_RESOURCE_OVERLAY_HAP_PATH);
-            if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1.c_str(), overlayHapPath)) {
-                APP_LOGW("add system resource failed");
-            }
-        } else {
-            if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1.c_str())) {
-                APP_LOGW("add system resource failed");
-            }
-        }
-        return;
-    };
-    if (BundleUtil::IsExistFile(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2)) {
-        if (BundleUtil::IsExistFile(GLOBAL_SYSTEM_RESOURCE_OVERLAY_HAP_PATH)) {
-            std::vector<std::string> overlayHapPath;
-            overlayHapPath.emplace_back(GLOBAL_SYSTEM_RESOURCE_OVERLAY_HAP_PATH);
-            if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2.c_str(), overlayHapPath)) {
-                APP_LOGW("add system resource failed");
-            }
-        } else {
-            if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2.c_str())) {
-                APP_LOGW("add system resource failed");
-            }
-        }
-        return;
-    }
-    APP_LOGE("add system resource failed, no resource hap exist");
-}
-
 bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &hapPath,
     const std::vector<std::string> &overlayHaps,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
@@ -138,16 +94,13 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     // adapt overlay
     if (overlayHaps.empty()) {
         if (!resourceManager->AddResource(hapPath.c_str())) {
-            APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
-            return false;
+            APP_LOGW("AddResource failed, hapPath: %{public}s", hapPath.c_str());
         }
     } else {
         if (!resourceManager->AddResource(hapPath, overlayHaps)) {
-            APP_LOGE("AddResource overlay failed, hapPath: %{private}s", hapPath.c_str());
-            return false;
+            APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
         }
     }
-    AddSystemResourceHap(resourceManager);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");

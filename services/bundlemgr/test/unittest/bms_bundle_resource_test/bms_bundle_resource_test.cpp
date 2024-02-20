@@ -1518,22 +1518,18 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0070, Function | SmallTest
     std::vector<ResourceInfo> resourceInfos;
     bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
     EXPECT_TRUE(ans);
-    EXPECT_EQ(resourceInfos.size(), 2);
+    EXPECT_FALSE(resourceInfos.empty());
 
     if (!resourceInfos.empty()) {
         ResourceInfo resourceInfo;
         BundleResourceParser parser;
-        ans = parser.ParseResourceInfo(resourceInfos[0]);
-        EXPECT_TRUE(ans);
-        EXPECT_NE(resourceInfos[0].label_, "");
-        EXPECT_NE(resourceInfos[0].icon_, "");
+        ans = parser.ParseResourceInfo(resourceInfos[0]); // labelId and iconId = 0
+        EXPECT_FALSE(ans);
+        EXPECT_EQ(resourceInfos[0].label_, "");
+        EXPECT_EQ(resourceInfos[0].icon_, "");
 
         ans = parser.ParseResourceInfos(resourceInfos);
-        EXPECT_TRUE(ans);
-        for (const auto &info : resourceInfos) {
-            EXPECT_NE(info.label_, "");
-            EXPECT_NE(info.icon_, "");
-        }
+        EXPECT_FALSE(ans);
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);

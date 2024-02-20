@@ -23,7 +23,6 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -266,9 +265,7 @@ ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const A
     resourceInfo.labelId_ = info.labelId;
     resourceInfo.iconId_ = info.iconId;
     resourceInfo.hapPath_ = info.hapPath;
-    resourceInfo.updateTime_ = info.installTime;
     resourceInfo.hideDesktopIcon_ = hideDesktopIcon;
-    resourceInfo.updateTime_ = BundleUtil::GetCurrentTimeMs();
     return resourceInfo;
 }
 
@@ -286,7 +283,6 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundl
             break;
         }
     }
-    resourceInfo.updateTime_ = BundleUtil::GetCurrentTimeMs();
     resourceInfo.moduleName_ = moduleName;
     resourceInfo.abilityName_ = std::string();
     return resourceInfo;

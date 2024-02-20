@@ -42,8 +42,6 @@ public:
     // icon resource
     int32_t iconId_ = 0;
     std::string icon_;
-    // resource info update time
-    int64_t updateTime_ = 0;
     // used for parse label and icon
     std::string hapPath_;
     // used for parse overlay label and icon
