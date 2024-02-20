@@ -3969,6 +3969,28 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::GetOdid(std::string &odid)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("GetOdid Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+    }
+    APP_LOGI("GetOdid ret: %{public}d, odid: %{public}s", ret, odid.c_str());
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -4384,7 +4406,7 @@ ErrCode BundleMgrProxy::CanOpenLink(
         APP_LOGE("write link failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-   
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::CAN_OPEN_LINK, data, reply)) {
         APP_LOGE("SendTransactCmd failed");

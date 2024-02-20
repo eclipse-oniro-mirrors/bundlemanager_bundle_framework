@@ -633,6 +633,8 @@ private:
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
+    void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

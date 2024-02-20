@@ -228,9 +228,32 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     compileSdkType_ = newInfos.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (newInfos.begin()->second).GetBaseApplicationInfo().compileSdkType;
 
+    GenerateOdid(newInfos, hapVerifyResults);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     APP_LOGI("CheckAndParseFiles End");
     return result;
+}
+
+void AppServiceFwkInstaller::GenerateOdid(
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (hapVerifyRes.size() < infos.size() || infos.empty()) {
+        APP_LOGE("hapVerifyRes size less than infos size or infos is empty");
+        return;
+    }
+
+    std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
+    if (developerId.empty()) {
+        developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
+    }
+    std::string odid;
+    dataMgr_->GenerateOdid(developerId, odid);
+    APP_LOGI("GenerateOdid, developerId %{public}s odid %{public}s", developerId.c_str(), odid.c_str());
+
+    for (auto &item : infos) {
+        item.second.UpdateOdid(developerId, odid);
+    }
 }
 
 ErrCode AppServiceFwkInstaller::CheckFileType(const std::vector<std::string> &bundlePaths)

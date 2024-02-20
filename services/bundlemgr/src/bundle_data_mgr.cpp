@@ -351,6 +351,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+        oldInfo.UpdateOdidByBundleInfo(newInfo);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -567,6 +568,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
         oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
+        oldInfo.UpdateOdidByBundleInfo(newInfo);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             if (!UpdateOverlayInfo(newInfo, oldInfo)) {
@@ -5779,7 +5781,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateDataGroupDirName();
+    std::string str = BundleUtil::GenerateUuid();
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }
@@ -6235,6 +6237,47 @@ ErrCode BundleDataMgr::CanOpenLink(
 
     canOpen = !abilityInfos.empty();
     APP_LOGI("canOpen : %{public}d", canOpen);
+    return ERR_OK;
+}
+
+void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &odid) const {
+    APP_LOGD("start, developerId:%{public}s", developerId.c_str());
+    if (developerId.empty()) {
+        APP_LOGE("developerId is empty");
+        return;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        std::string developerIdExist;
+        std::string odidExist;
+        item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
+        if (developerId == developerIdExist) {
+            odid = odidExist;
+            return;
+        }
+    }
+    odid = BundleUtil::GenerateUuid();
+    APP_LOGI("developerId:%{public}s is not existed local, need to generate an odid %{public}s",
+        developerId.c_str(), odid.c_str());
+}
+
+ErrCode BundleDataMgr::GetOdid(std::string &odid) const {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGI("start GetOdid, callingUid %{public}d", callingUid);
+    InnerBundleInfo innerBundleInfo;
+    if (GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGE("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        if (sandboxAppHelper_->GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
+            APP_LOGW("app that corresponds to the callingUid %{public}d could not be found", callingUid);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+    std::string developerId;
+    innerBundleInfo.GetDeveloperidAndOdid(developerId, odid);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

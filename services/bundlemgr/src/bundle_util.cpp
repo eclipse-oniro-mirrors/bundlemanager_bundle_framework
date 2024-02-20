@@ -41,11 +41,10 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const char START_CHAR = 'a';
-const size_t ZERO = 0;
-const size_t ORIGIN_STRING_LENGTH = 32;
-const std::string DATA_GROUP_DIR_SEPARATOR = "-";
-const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
+const size_t UUID_STRING_LENGTH = 36;
+constexpr char UUID_SEPARATOR = '-';
+const std::string HEX_STRING = "0123456789abcdef";
+const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
@@ -747,26 +746,20 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
     }
 }
 
-std::string BundleUtil::GenerateDataGroupDirName()
+std::string BundleUtil::GenerateUuid()
 {
     auto currentTime = std::chrono::system_clock::now();
     auto timestampNanoseconds =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-
-    // convert nanosecond timestamps to string
-    std::string timestampString = std::to_string(timestampNanoseconds);
-    if (timestampString.size() < ORIGIN_STRING_LENGTH) {
-        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
-            timestampString += static_cast<char>(START_CHAR + i);
+            std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+    srand(timestampNanoseconds);
+    std::string str(UUID_STRING_LENGTH, UUID_SEPARATOR);
+    for (uint32_t i = 0; i < UUID_STRING_LENGTH; ++i) {
+        if (SEPARATOR_POSITIONS.find(i) != SEPARATOR_POSITIONS.end()) {
+            continue;
         }
-    } else {
-        timestampString = timestampString.substr(ZERO, ORIGIN_STRING_LENGTH);
+        str[i] = HEX_STRING[rand() % 16];
     }
-
-    for (int32_t index : SEPARATOR_POSITIONS) {
-        timestampString.insert(index, DATA_GROUP_DIR_SEPARATOR);
-    }
-    return timestampString;
+    return str;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

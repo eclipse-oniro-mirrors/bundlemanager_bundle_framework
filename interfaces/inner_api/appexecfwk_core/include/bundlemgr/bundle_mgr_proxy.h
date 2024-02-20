@@ -908,6 +908,8 @@ public:
     virtual ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) override;
 
+    virtual ErrCode GetOdid(std::string &odid) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
