@@ -182,6 +182,7 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
     std::lock_guard<std::mutex> guard(mutex_);
+    APP_LOGI("hold mutex");
     if (threadPool_ == nullptr) {
         APP_LOGI("begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);

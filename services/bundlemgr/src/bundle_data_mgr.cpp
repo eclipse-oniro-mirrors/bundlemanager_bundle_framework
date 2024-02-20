@@ -74,8 +74,6 @@ const std::string WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
 const std::string SUMMARY_TOTAL_COUNT = "totalCount";
 const std::string WANT_PARAM_SUMMARY = "summary";
 constexpr int32_t DEFAULT_SUMMARY_COUNT = 0;
-// preview action
-constexpr const char* PREVIEW_ACTION = "ohos.want.action.hapPreview";
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
@@ -4747,59 +4745,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     bool extensionRet =
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
     APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}zu", extensionRet, extensionInfos.size());
-    // step4 : handle preview, if preview exist, only return preview
-    if (want.GetElement().GetBundleName().empty() && withDefault) {
-        findDefaultApp = HandlePreview(want, flags, userId, abilityInfos, extensionInfos);
-    }
     return abilityRet || extensionRet;
-}
-
-bool BundleDataMgr::HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const
-{
-    APP_LOGD("begin");
-    if (want.GetAction() != Constants::ACTION_VIEW_DATA) {
-        return false;
-    }
-
-    AbilityInfo abilityInfo;
-    ExtensionAbilityInfo extensionInfo;
-    Want previewWant;
-    previewWant.SetAction(PREVIEW_ACTION);
-    if (!ImplicitQueryInfoByPriority(previewWant, flags, userId, abilityInfo, extensionInfo)) {
-        APP_LOGD("preview not exist");
-        return false;
-    }
-
-    if (!abilityInfo.name.empty()) {
-        for (const auto &info : abilityInfos) {
-            if (info.bundleName == abilityInfo.bundleName &&
-                info.moduleName == abilityInfo.moduleName &&
-                info.name == abilityInfo.name) {
-                abilityInfos.clear();
-                extensionInfos.clear();
-                abilityInfos.emplace_back(abilityInfo);
-                APP_LOGD("only return ability preview");
-                return true;
-            }
-        }
-    }
-
-    if (!extensionInfo.name.empty()) {
-        for (const auto &info : extensionInfos) {
-            if (info.bundleName == extensionInfo.bundleName &&
-                info.moduleName == extensionInfo.moduleName &&
-                info.name == extensionInfo.name) {
-                abilityInfos.clear();
-                extensionInfos.clear();
-                extensionInfos.emplace_back(extensionInfo);
-                APP_LOGD("only return extension preview");
-                return true;
-            }
-        }
-    }
-
-    return false;
 }
 
 bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
