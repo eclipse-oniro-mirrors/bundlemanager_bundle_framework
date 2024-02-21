@@ -383,10 +383,10 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const std::string &appI
         appRunningControlRuleResult_.erase(iter);
     }
     {
-        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
-        auto iter = abilityRunningControlRuleCache_.find(key);
-        if (iter != abilityRunningControlRuleCache_.end()) {
-            abilityRunningControlRuleCache_.erase(iter);
+        std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
+        auto cacheIter = abilityRunningControlRuleCache_.find(key);
+        if (cacheIter != abilityRunningControlRuleCache_.end()) {
+            abilityRunningControlRuleCache_.erase(cacheIter);
         }
     }
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
