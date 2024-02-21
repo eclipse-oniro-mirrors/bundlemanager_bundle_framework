@@ -759,7 +759,6 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply errCode : %{public}d", ret);
         return ret;
     }
     name = reply.ReadString();
@@ -4211,8 +4210,12 @@ bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, Message
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
-        remote->GetSptrRefCount(), remote->GetWptrRefCount());
+    int32_t sptrRefCount = remote->GetSptrRefCount();
+    int32_t wptrRefCount = remote->GetWptrRefCount();
+    if (sptrRefCount <= 0 || wptrRefCount <= 0) {
+        APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+            sptrRefCount, wptrRefCount);
+    }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
