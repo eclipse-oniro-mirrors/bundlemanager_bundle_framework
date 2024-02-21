@@ -101,7 +101,6 @@ ohos_unittest("BmsBundleHspTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -146,6 +145,14 @@ ohos_unittest("BmsBundleHspTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -236,7 +243,6 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -281,6 +287,14 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -366,7 +380,6 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -411,6 +424,14 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
