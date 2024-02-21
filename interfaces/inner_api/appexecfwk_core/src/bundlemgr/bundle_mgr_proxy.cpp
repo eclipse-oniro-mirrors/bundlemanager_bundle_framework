@@ -3150,6 +3150,7 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
         return ret;
     }
     return GetMediaDataFromAshMem(reply, mediaDataPtr, len);
@@ -4080,6 +4081,7 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
         return ret;
     }
     size_t dataSize = reply.ReadUint32();
@@ -4251,6 +4253,7 @@ ErrCode BundleMgrProxy::GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
         return ret;
     }
     return InnerGetParcelInfo<T>(reply, parcelInfo);
@@ -4291,6 +4294,7 @@ ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel 
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
         return ret;
     }
     return InnerGetBigString(reply, result);
