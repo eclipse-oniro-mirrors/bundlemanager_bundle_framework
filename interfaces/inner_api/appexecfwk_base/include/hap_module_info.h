@@ -88,6 +88,17 @@ struct ProxyData : public Parcelable {
     static ProxyData *Unmarshalling(Parcel &parcel);
 };
 
+struct AppEnvironment : public Parcelable {
+    std::string name;
+    std::string value;
+
+    AppEnvironment() = default;
+    AppEnvironment(const std::string &paramName, const std::string &paramValue);
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AppEnvironment *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -148,6 +159,7 @@ struct HapModuleInfo : public Parcelable {
     IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
+    std::vector<AppEnvironment> appEnvironments;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

@@ -81,6 +81,9 @@ const std::string HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
+const std::string HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
+const std::string APP_ENVIRONMENTS_NAME = "name";
+const std::string APP_ENVIRONMENTS_VALUE = "value";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -285,6 +288,64 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
     }
 }
 
+bool AppEnvironment::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    value = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool AppEnvironment::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
+    return true;
+}
+
+AppEnvironment *AppEnvironment::Unmarshalling(Parcel &parcel)
+{
+    AppEnvironment *info = new (std::nothrow) AppEnvironment();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const AppEnvironment &appEnvironment)
+{
+    jsonObject = nlohmann::json {
+        {APP_ENVIRONMENTS_NAME, appEnvironment.name},
+        {APP_ENVIRONMENTS_VALUE, appEnvironment.value}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, AppEnvironment &appEnvironment)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_NAME,
+        appEnvironment.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_VALUE,
+        appEnvironment.value,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read AppEnvironment from database error, error code : %{public}d", parseResult);
+    }
+}
+
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
 {
     int32_t abilityInfosSize;
@@ -447,6 +508,17 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     fileContextMenu = Str16ToStr8(parcel.ReadString16());
+    int32_t appEnvironmentsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironmentsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, appEnvironmentsSize, &appEnvironments);
+    for (int32_t i = 0; i < proxyDatasSize; ++i) {
+        std::unique_ptr<AppEnvironment> appEnvironment(parcel.ReadParcelable<AppEnvironment>());
+        if (!appEnvironment) {
+            APP_LOGE("ReadParcelable<AppEnvironment> failed");
+            return false;
+        }
+        proxyDatas.emplace_back(*appEnvironment);
+    }
     return true;
 }
 
@@ -561,6 +633,10 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileContextMenu));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
+    for (auto &item : appEnvironments) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
     return true;
 }
 
@@ -618,7 +694,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_AOT_COMPILE_STATUS, hapModuleInfo.aotCompileStatus},
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
-        {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu}
+        {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
+        {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments}
     };
 }
 
@@ -1042,6 +1119,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_APP_ENVIRONMENTS,
+        hapModuleInfo.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
     }
