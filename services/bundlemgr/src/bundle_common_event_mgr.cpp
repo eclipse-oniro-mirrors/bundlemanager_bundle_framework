@@ -56,6 +56,7 @@ void BundleCommonEventMgr::Init()
         { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
         { NotifyType::DISPOSED_RULE_ADDED, DISPOSED_RULE_ADDED},
         { NotifyType::DISPOSED_RULE_DELETED, DISPOSED_RULE_DELETED},
+        { NotifyType::START_INSTALL, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_INSTALLATION_STARTED },
     };
 }
 
