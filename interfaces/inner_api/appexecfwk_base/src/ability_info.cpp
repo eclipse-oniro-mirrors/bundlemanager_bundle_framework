@@ -283,6 +283,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         stctUri.type = Str16ToStr8(parcel.ReadString16());
         stctUri.utd = Str16ToStr8(parcel.ReadString16());
         stctUri.maxFileSupported = parcel.ReadInt32();
+        stctUri.linkFeature = Str16ToStr8(parcel.ReadString16());
         skillUri.emplace_back(stctUri);
     }
     isolationProcess = parcel.ReadBool();
@@ -441,6 +442,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.utd));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.linkFeature));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromMissions);

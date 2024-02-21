@@ -146,6 +146,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGEX = "pathRegex";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_TYPE = "type";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_UTD = "utd";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED = "maxFileSupported";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_LINK_FEATURE = "linkFeature";
 // sub BUNDLE_MODULE_PROFILE_KEY_META_DATA
 constexpr const char* BUNDLE_MODULE_META_KEY_CUSTOMIZE_DATA = "customizeData";
 constexpr const char* BUNDLE_MODULE_META_KEY_NAME = "name";
