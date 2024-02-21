@@ -322,7 +322,7 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
             APP_LOGI("%{public}s called fail, srcDir isn't Exist.", __func__);
             return ERR_ZLIB_SRC_FILE_DISABLED;
         }
-    } else {
+    } else if (!FilePath::PathIsValid(srcDir)) {
         APP_LOGI("%{public}s called fail, The path where srcDir is located doesn't exist.", __func__);
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
