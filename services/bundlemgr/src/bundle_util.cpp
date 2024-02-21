@@ -563,7 +563,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     }
 
     int32_t destFd = open(
-        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
         close(sourceFd);
