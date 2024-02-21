@@ -43,7 +43,9 @@ namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
 const size_t UUID_STRING_LENGTH = 36;
 constexpr char UUID_SEPARATOR = '-';
+constexpr const char* DEV_RANDOM = "/dev/random";
 const std::string HEX_STRING = "0123456789abcdef";
+const int32_t HEX = 16;
 const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
@@ -748,16 +750,26 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 
 std::string BundleUtil::GenerateUuid()
 {
-    auto currentTime = std::chrono::system_clock::now();
-    auto timestampNanoseconds =
-            std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-    srand(timestampNanoseconds);
     std::string str(UUID_STRING_LENGTH, UUID_SEPARATOR);
     for (uint32_t i = 0; i < UUID_STRING_LENGTH; ++i) {
         if (SEPARATOR_POSITIONS.find(i) != SEPARATOR_POSITIONS.end()) {
             continue;
         }
-        str[i] = HEX_STRING[rand() % 16];
+        std::ifstream rand(DEV_RANDOM);
+        char random_value;
+
+        rand.get(random_value);
+        rand.close();
+
+        // Convert char to int
+        int random_number = static_cast<int>(random_value);
+
+        // Make sure the number is positive
+        if (random_number < 0) {
+            random_number = -random_number;
+        }
+
+        str[i] = HEX_STRING[random_number % HEX];
     }
     return str;
 }

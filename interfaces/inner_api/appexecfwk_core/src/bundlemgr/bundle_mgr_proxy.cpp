@@ -3987,7 +3987,7 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
     if (ret == ERR_OK) {
         odid = reply.ReadString();
     }
-    APP_LOGI("GetOdid ret: %{public}d, odid: %{public}s", ret, odid.c_str());
+    APP_LOGI("GetOdid ret: %{public}d, odid: %{private}s", ret, odid.c_str());
     return ret;
 }
 

@@ -6240,7 +6240,8 @@ ErrCode BundleDataMgr::CanOpenLink(
     return ERR_OK;
 }
 
-void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &odid) const {
+void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &odid) const
+{
     APP_LOGD("start, developerId:%{public}s", developerId.c_str());
     if (developerId.empty()) {
         APP_LOGE("developerId is empty");
@@ -6258,11 +6259,12 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
         }
     }
     odid = BundleUtil::GenerateUuid();
-    APP_LOGI("developerId:%{public}s is not existed local, need to generate an odid %{public}s",
+    APP_LOGI("developerId:%{public}s is not existed local, need to generate an odid %{private}s",
         developerId.c_str(), odid.c_str());
 }
 
-ErrCode BundleDataMgr::GetOdid(std::string &odid) const {
+ErrCode BundleDataMgr::GetOdid(std::string &odid) const
+{
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGI("start GetOdid, callingUid %{public}d", callingUid);
     InnerBundleInfo innerBundleInfo;

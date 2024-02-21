@@ -3219,7 +3219,7 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    APP_LOGD("odid is %{public}s", odid.c_str());
+    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

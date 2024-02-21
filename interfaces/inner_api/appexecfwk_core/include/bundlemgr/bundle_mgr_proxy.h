@@ -908,6 +908,11 @@ public:
     virtual ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) override;
 
+    /**
+     * @brief Get odid of the current application.
+     * @param odid Indicates the odid of application.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
     virtual ErrCode GetOdid(std::string &odid) override;
 
 private:
