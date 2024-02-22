@@ -88,6 +88,7 @@ const int32_t PERMS_INDEX_TWO = 2;
 const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
+const size_t ODID_LENGTH = 36;
 }  // namespace
 
 namespace OHOS {
@@ -8406,7 +8407,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0002, Function | MediumTest | Level1)
     bool canOpen = false;
     auto queryResult =
         bundleMgrProxy->CanOpenLink(link, canOpen);
-    
+
     setuid(Constants::ROOT_UID);
 
     EXPECT_EQ(queryResult, ERR_OK);
@@ -8449,7 +8450,7 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     bool canOpen = false;
     auto queryResult =
         bundleMgrProxy->CanOpenLink(link, canOpen);
-    
+
     setuid(Constants::ROOT_UID);
 
     EXPECT_NE(queryResult, ERR_OK);
@@ -8461,6 +8462,66 @@ HWTEST_F(ActsBmsKitSystemTest, CanOpenLink_0003, Function | MediumTest | Level1)
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     std::cout << "END CanOpenLink_0003" << std::endl;
+}
+
+/**
+ * @tc.number: GetOdid_0001
+ * @tc.name: test GetOdid interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetOdid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetOdid_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetOdid_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+
+    setuid(bundleInfo.uid);
+    std::string odid;
+    auto queryResult = bundleMgrProxy->GetOdid(odid);
+    setuid(Constants::ROOT_UID);
+
+    EXPECT_EQ(queryResult, ERR_OK);
+    EXPECT_EQ(odid.size(), ODID_LENGTH);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetOdid_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetOdid_0002
+ * @tc.name: test GetOdid interface
+ * @tc.desc: GetOdid failed for calling uid is invalid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetOdid_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START GetOdid_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string odid;
+    auto queryResult = bundleMgrProxy->GetOdid(odid);
+
+    EXPECT_NE(queryResult, ERR_OK);
+    EXPECT_TRUE(odid.empty());
+
+    std::cout << "END GetOdid_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

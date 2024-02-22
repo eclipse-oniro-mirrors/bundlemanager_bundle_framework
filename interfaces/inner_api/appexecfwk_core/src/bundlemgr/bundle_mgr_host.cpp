@@ -340,6 +340,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCompileReset);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CAN_OPEN_LINK),
         &BundleMgrHost::HandleCanOpenLink);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
+        &BundleMgrHost::HandleGetOdid);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3201,6 +3203,23 @@ ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &rep
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string odid;
+    auto ret = GetOdid(odid);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -173,7 +173,7 @@ public:
     static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
         std::vector<std::string> &toDeletePaths);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
-    static std::string GenerateDataGroupDirName();
+    static std::string GenerateUuid();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
