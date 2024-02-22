@@ -1112,7 +1112,8 @@ protected:
                 "targetPriority": 0,
                 "overlayState": 0,
                 "resourcesApply":[],
-                "GWPAsanEnabled": false
+                "GWPAsanEnabled": false,
+                "tsanEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [

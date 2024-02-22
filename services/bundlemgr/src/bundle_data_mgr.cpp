@@ -325,9 +325,13 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (newInfo.GetGwpAsanEnabled()) {
             oldInfo.SetGwpAsanEnabled(true);
         }
+        if (newInfo.GetTsanEnabled()) {
+            oldInfo.SetTsanEnabled(true);
+        }
         if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
             oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
             oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
+            oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
         }
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
@@ -528,9 +532,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.GetGwpAsanEnabled()) {
             oldInfo.SetGwpAsanEnabled(true);
         }
+        if (newInfo.GetTsanEnabled()) {
+            oldInfo.SetTsanEnabled(true);
+        }
         if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
             oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
             oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
+            oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
         }
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.

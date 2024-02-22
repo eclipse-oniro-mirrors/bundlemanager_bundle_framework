@@ -13,6 +13,7 @@
         "versionCode": 2000000,
         "versionName": "2.0.0.0",
         "asanEnabled": false,
-        "GWPAsanEnabled": false
+        "GWPAsanEnabled": false,
+        "tsanEnabled": false
     }
 }

@@ -633,6 +633,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.apiCompatibleVersion, 8);
         EXPECT_EQ(info.apiTargetVersion, 8);
         EXPECT_EQ(info.gwpAsanEnabled, false);
+        EXPECT_EQ(info.tsanEnabled, false);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";

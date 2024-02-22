@@ -259,6 +259,7 @@ struct ApplicationInfo : public Parcelable {
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
 
     uint32_t applicationReservedFlag = 0;
+    bool tsanEnabled = false;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
