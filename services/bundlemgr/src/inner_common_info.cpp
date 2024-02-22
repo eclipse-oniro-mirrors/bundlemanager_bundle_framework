@@ -110,12 +110,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
         APP_LOGD("Entities does not match");
         return false;
     }
-    std::vector<std::string> vecTypes;
-    auto deviceType = OHOS::system::GetDeviceType();
-    APP_LOGD("DeviceType %{public}s", deviceType.c_str());
-    if (STR_PHONE == deviceType || STR_DEFAULT == deviceType) {
-        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
-    }
+    std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
             if (MatchUriAndType(want.GetUriString(), strType)) {
