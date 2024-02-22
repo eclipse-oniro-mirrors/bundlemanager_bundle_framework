@@ -1287,6 +1287,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0061, Function | SmallTest
 
     ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, resourceManager);
     EXPECT_TRUE(ans);
+
+    std::vector<std::string> overlayHaps;
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, overlayHaps, resourceManager);
+    EXPECT_TRUE(ans);
+
+    overlayHaps.emplace_back(HAP_FILE_PATH1);
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, overlayHaps, resourceManager);
+    EXPECT_TRUE(ans);
 }
 
 /**
@@ -2339,6 +2347,69 @@ HWTEST_F(BmsBundleResourceTest, ProcessBundleResourceInfo_0001, Function | Small
         EXPECT_FALSE(info2.label.empty());
     }
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessResourceInfo_0001
+ * @tc.name: test the start function of ProcessResourceInfo
+ * @tc.desc: 1. test ProcessResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<ResourceInfo> resourceInfos;
+        ResourceInfo info;
+        info.label_ = "xxx";
+        info.icon_ = "yyy";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+
+        info.label_ = "";
+        info.icon_ = "";
+        info.bundleName_ = "aaa";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+
+        resourceInfos.emplace_back(info);
+        info.icon_ = "";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+    }
+}
+
+/**
+ * @tc.number: AddResourceInfos_0001
+ * @tc.name: test the start function of AddResourceInfos
+ * @tc.desc: 1. test AddResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        bool ret = manager->AddResourceInfos(resourceInfosMap);
+        EXPECT_FALSE(ret);
+        resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
+        ret = manager->AddResourceInfos(resourceInfosMap);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
