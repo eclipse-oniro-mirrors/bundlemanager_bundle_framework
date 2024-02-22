@@ -82,6 +82,7 @@ const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
 const int32_t ZERO_SIZE = 0;
+const int32_t PERMS_INDEX_SIX = 6;
 const int32_t PERMS_INDEX_ZERO = 0;
 const int32_t PERMS_INDEX_ONE = 1;
 const int32_t PERMS_INDEX_TWO = 2;
@@ -289,7 +290,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 6;
+    const int32_t permsNum = 7;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -298,6 +299,8 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_THREE] = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
     perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
     perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    perms[PERMS_INDEX_SIX] = "ohos.permission.GET_BUNDLE_RESOURCES";
+
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -8130,7 +8133,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleResourceInfo_0001, Function | SmallTest 
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
             ret = proxy->GetBundleResourceInfo(BASE_MODULE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
     }
 }
@@ -8154,7 +8157,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetLauncherAbilityResourceInfo_0001, Function | S
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
             ret = proxy->GetLauncherAbilityResourceInfo(BASE_MODULE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
         }
     }
 }
@@ -8199,6 +8202,119 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllLauncherAbilityResourceInfo_0001, Function 
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
         }
     }
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAbilityResourceInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            LauncherAbilityResourceInfo info;
+            ErrCode ret = proxy->GetAbilityResourceInfo(BASE_BUNDLE_NAME, BASE_BUNDLE_NAME, BASE_ABILITY_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0002
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAbilityResourceInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            LauncherAbilityResourceInfo info;
+            ErrCode ret = proxy->GetAbilityResourceInfo(EMPTY_BUNDLE_NAME, BASE_BUNDLE_NAME, BASE_ABILITY_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0003
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAbilityResourceInfo_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            LauncherAbilityResourceInfo info;
+            ErrCode ret = proxy->GetAbilityResourceInfo(BASE_BUNDLE_NAME, EMPTY_BUNDLE_NAME, BASE_ABILITY_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetAbilityResourceInfo_0004
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAbilityResourceInfo_0004, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            BundleResourceInfo info;
+            auto ret = proxy->GetBundleResourceInfo(appName,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_FALSE(info.label.empty());
+            EXPECT_FALSE(info.icon.empty());
+
+            std::vector<LauncherAbilityResourceInfo> abilityInfos;
+            ret = proxy->GetLauncherAbilityResourceInfo(appName,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), abilityInfos);
+            EXPECT_EQ(ret, ERR_OK);
+            EXPECT_FALSE(abilityInfos.empty());
+            if (!abilityInfos.empty()) {
+                LauncherAbilityResourceInfo ability;
+                ret = proxy->GetAbilityResourceInfo(abilityInfos[0].bundleName, abilityInfos[0].moduleName,
+                    abilityInfos[0].abilityName, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), ability);
+                EXPECT_EQ(ret, ERR_OK);
+                EXPECT_FALSE(ability.icon.empty());
+                EXPECT_FALSE(ability.label.empty());
+            }
+        }
+    }
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
 
 /**
