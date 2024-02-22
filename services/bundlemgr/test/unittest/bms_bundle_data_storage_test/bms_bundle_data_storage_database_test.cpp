@@ -828,6 +828,7 @@ protected:
                     "type": 1,
                     "unclearableMission": false,
                     "excludeFromDock": false,
+                    "preferMultiWindowOrientation": "default",
                     "uri": "",
                     "visible": true,
                     "writePermission": "",

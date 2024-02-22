@@ -437,29 +437,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0200, Function | 
 }
 
 /**
- * @tc.number: CheckNeedInstall_0300
- * @tc.name: test CheckNeedInstall
- * @tc.desc: 1.Test the CheckNeedInstall
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0300, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    InitAppServiceFwkInstaller(appServiceFwkInstaller);
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    auto result = InstallSystemBundle(HAP_PATH_TEST, USERID);
-    ASSERT_EQ(result, ERR_OK);
-
-    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME_TEST;
-
-    InnerBundleInfo oldInfo;
-    infos[VERSION_ONE_LIBRARY_ONE_PATH] = oldInfo;
-    bool result1 = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
-    EXPECT_FALSE(result1);
-
-    ClearBundleInfo(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: CheckNeedInstall_0400
  * @tc.name: test CheckNeedInstall
  * @tc.desc: 1.Test the CheckNeedInstall

@@ -41,11 +41,12 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const char START_CHAR = 'a';
-const size_t ZERO = 0;
-const size_t ORIGIN_STRING_LENGTH = 32;
-const std::string DATA_GROUP_DIR_SEPARATOR = "-";
-const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
+const size_t UUID_STRING_LENGTH = 36;
+constexpr char UUID_SEPARATOR = '-';
+constexpr const char* DEV_RANDOM = "/dev/random";
+const std::string HEX_STRING = "0123456789abcdef";
+const int32_t HEX = 16;
+const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
@@ -567,7 +568,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
     }
 
     int32_t destFd = open(
-        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH);
+        destPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (destFd == -1) {
         APP_LOGE("destPath open failed, errno : %{public}d", errno);
         close(sourceFd);
@@ -747,26 +748,30 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
     }
 }
 
-std::string BundleUtil::GenerateDataGroupDirName()
+std::string BundleUtil::GenerateUuid()
 {
-    auto currentTime = std::chrono::system_clock::now();
-    auto timestampNanoseconds =
-        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
-
-    // convert nanosecond timestamps to string
-    std::string timestampString = std::to_string(timestampNanoseconds);
-    if (timestampString.size() < ORIGIN_STRING_LENGTH) {
-        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
-            timestampString += static_cast<char>(START_CHAR + i);
+    std::string str(UUID_STRING_LENGTH, UUID_SEPARATOR);
+    for (uint32_t i = 0; i < UUID_STRING_LENGTH; ++i) {
+        if (SEPARATOR_POSITIONS.find(i) != SEPARATOR_POSITIONS.end()) {
+            continue;
         }
-    } else {
-        timestampString = timestampString.substr(ZERO, ORIGIN_STRING_LENGTH);
-    }
+        std::ifstream rand(DEV_RANDOM);
+        char random_value;
 
-    for (int32_t index : SEPARATOR_POSITIONS) {
-        timestampString.insert(index, DATA_GROUP_DIR_SEPARATOR);
+        rand.get(random_value);
+        rand.close();
+
+        // Convert char to int
+        int random_number = static_cast<int>(random_value);
+
+        // Make sure the number is positive
+        if (random_number < 0) {
+            random_number = -random_number;
+        }
+
+        str[i] = HEX_STRING[random_number % HEX];
     }
-    return timestampString;
+    return str;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

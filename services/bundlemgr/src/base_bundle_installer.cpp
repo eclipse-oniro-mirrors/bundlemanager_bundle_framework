@@ -1945,7 +1945,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     if (noSkipsKill) {
         // kill the bundle process during updating
         if (!AbilityManagerHelper::UninstallApplicationProcesses(
-            oldInfo.GetApplicationName(), oldInfo.GetUid(userId_))) {
+            oldInfo.GetApplicationName(), oldInfo.GetUid(userId_), true)) {
             APP_LOGE("fail to kill running application");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
@@ -3017,6 +3017,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    GenerateOdid(infos, hapVerifyRes);
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
@@ -3024,6 +3025,34 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     return ret;
+}
+
+
+void BaseBundleInstaller::GenerateOdid(
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (hapVerifyRes.size() < infos.size() || infos.empty()) {
+        APP_LOGE("hapVerifyRes size less than infos size or infos is empty");
+        return;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+
+    std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
+    if (developerId.empty()) {
+        developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
+    }
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+
+    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
+    for (auto &item : infos) {
+        item.second.UpdateOdid(developerId, odid);
+    }
 }
 
 void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
@@ -3287,7 +3316,8 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
 
     // kill the bundle process during uninstall.
     if (noSkipsKill) {
-        if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(
+            info.GetApplicationName(), info.GetUid(userId_), true)) {
             APP_LOGW("can not kill process");
         }
     }

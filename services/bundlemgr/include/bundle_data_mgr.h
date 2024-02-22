@@ -867,6 +867,8 @@ public:
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId) const;
+    void GenerateOdid(const std::string &developerId, std::string &odid) const;
+    ErrCode GetOdid(std::string &odid) const;
 
     /**
      * @brief Check whether the link can be opened.
@@ -1010,6 +1012,7 @@ private:
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
+    void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

@@ -276,7 +276,7 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     ret = VerifyCodeSignatureForHqf(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
         APP_LOGE("error VerifyCodeSignatureForHqf failed, bundleName: %{public}s", newQuickFix.bundleName.c_str());
-        // return ret later
+        return ret;
     }
     // save and update status DEPLOY_END
     ret = SaveAppQuickFix(newInnerAppQuickFix);

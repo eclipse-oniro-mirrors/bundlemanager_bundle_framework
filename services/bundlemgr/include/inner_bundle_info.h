@@ -907,6 +907,9 @@ public:
     void UpdateDebug(bool debug, bool isEntry);
     ErrCode GetAppServiceHspInfo(BundleInfo &bundleInfo) const;
     std::vector<std::string> GetQuerySchemes() const;
+    void UpdateOdid(const std::string &developerId, const std::string &odid);
+    void UpdateOdidByBundleInfo(const InnerBundleInfo &info);
+    void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -972,6 +975,10 @@ private:
 
     // data group info
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
+
+    // for odid
+    std::string developerId_;
+    std::string odid_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

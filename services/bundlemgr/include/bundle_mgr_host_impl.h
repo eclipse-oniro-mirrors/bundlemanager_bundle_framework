@@ -873,6 +873,8 @@ public:
     virtual ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) override;
 
+    virtual ErrCode GetOdid(std::string &odid) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

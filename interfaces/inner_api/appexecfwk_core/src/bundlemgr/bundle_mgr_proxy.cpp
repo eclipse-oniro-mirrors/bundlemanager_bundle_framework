@@ -759,7 +759,6 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply errCode : %{public}d", ret);
         return ret;
     }
     name = reply.ReadString();
@@ -2801,7 +2800,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
 
 bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
 {
-    APP_LOGD("begin to GetAllBundleStats");
+    APP_LOGI("GetAllBundleStats start");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2826,6 +2825,7 @@ bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bun
         APP_LOGE("fail to GetAllBundleStats from reply");
         return false;
     }
+    APP_LOGI("GetAllBundleStats end");
     return true;
 }
 
@@ -3969,6 +3969,28 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::GetOdid(std::string &odid)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("GetOdid Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+    }
+    APP_LOGI("GetOdid ret: %{public}d, odid: %{private}s", ret, odid.c_str());
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -4211,8 +4233,12 @@ bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, Message
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
-        remote->GetSptrRefCount(), remote->GetWptrRefCount());
+    int32_t sptrRefCount = remote->GetSptrRefCount();
+    int32_t wptrRefCount = remote->GetWptrRefCount();
+    if (sptrRefCount <= 0 || wptrRefCount <= 0) {
+        APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+            sptrRefCount, wptrRefCount);
+    }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
@@ -4384,7 +4410,7 @@ ErrCode BundleMgrProxy::CanOpenLink(
         APP_LOGE("write link failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-   
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::CAN_OPEN_LINK, data, reply)) {
         APP_LOGE("SendTransactCmd failed");

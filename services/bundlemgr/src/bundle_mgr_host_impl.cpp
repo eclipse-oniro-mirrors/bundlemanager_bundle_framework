@@ -3391,5 +3391,16 @@ ErrCode BundleMgrHostImpl::CanOpenLink(
     }
     return dataMgr->CanOpenLink(link, canOpen);
 }
+
+ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
+{
+    APP_LOGD("start GetOdid");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetOdid(odid);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
