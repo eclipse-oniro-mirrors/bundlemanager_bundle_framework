@@ -267,6 +267,11 @@ bool FilePath::PathIsValid(const FilePath &path)
     return access(const_cast<FilePath &>(path).Value().c_str(), F_OK) == 0;
 }
 
+bool FilePath::PathIsReadable(const FilePath &path)
+{
+    return access(const_cast<FilePath &>(path).Value().c_str(), R_OK) == 0;
+}
+
 // Returns a FilePath by appending a separator and the supplied path
 // component to this object's path.  Append takes care to avoid adding
 // excessive separators if this object's path already ends with a separator.
