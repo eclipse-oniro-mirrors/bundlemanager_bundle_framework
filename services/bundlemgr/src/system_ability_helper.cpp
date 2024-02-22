@@ -28,6 +28,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string KILL_REASON = "Kill Reason: UpgradeApp";
+}
 sptr<IRemoteObject> SystemAbilityHelper::GetSystemAbility(const int32_t systemAbilityId)
 {
     sptr<ISystemAbilityManager> systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -69,6 +72,24 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     auto ret = abilityMgrProxy->UninstallApp(bundleName, uid);
+    IPCSkeleton::SetCallingIdentity(identity);
+    return ret;
+#else
+    return 0;
+#endif
+}
+
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    sptr<AAFwk::IAbilityManager> abilityMgrProxy =
+        iface_cast<AAFwk::IAbilityManager>(SystemAbilityHelper::GetSystemAbility(ABILITY_MGR_SERVICE_ID));
+    if (abilityMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to kill application");
+        return -1;
+    }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    auto ret = abilityMgrProxy->UpgradeApp(bundleName, uid, KILL_REASON);
     IPCSkeleton::SetCallingIdentity(identity);
     return ret;
 #else

@@ -62,6 +62,11 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
     return 0;
 }
 
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+{
+    return 0;
+}
+
 bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
 {
     APP_LOGD("mock system ability helper unload system ability");

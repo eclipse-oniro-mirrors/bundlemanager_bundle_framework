@@ -59,5 +59,10 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
 {
     return 0;
 }
+
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+{
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
