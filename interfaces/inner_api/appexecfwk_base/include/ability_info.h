@@ -239,6 +239,7 @@ struct AbilityInfo : public Parcelable {
     bool excludeFromMissions = false;
     bool unclearableMission = false;
     bool excludeFromDock = false;
+    std::string preferMultiWindowOrientation = "default";
     // whether to support recover UI interface
     bool recoverable = false;
     bool isolationProcess = false;

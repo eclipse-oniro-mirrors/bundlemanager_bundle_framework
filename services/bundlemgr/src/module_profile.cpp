@@ -171,6 +171,7 @@ struct Ability {
     bool recoverable = false;
     bool unclearableMission = false;
     bool excludeFromDock = false;
+    std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
 };
 
@@ -582,6 +583,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ABILITY_EXCLUDEFROMDOCK_MISSION,
         ability.excludeFromDock,
         JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION,
+        ability.preferMultiWindowOrientation,
+        JsonType::STRING,
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
@@ -1953,6 +1962,7 @@ bool ToAbilityInfo(
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
     abilityInfo.unclearableMission = ability.unclearableMission;
     abilityInfo.excludeFromDock = ability.excludeFromDock;
+    abilityInfo.preferMultiWindowOrientation = ability.preferMultiWindowOrientation;
     abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
