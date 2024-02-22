@@ -317,14 +317,14 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
-    if (FilePath::DirectoryExists(srcDir)) {
-        if (!FilePath::PathIsValid(srcDir)) {
-            APP_LOGI("%{public}s called fail, srcDir isn't Exist.", __func__);
+    if (!FilePath::PathIsValid(srcDir)) {
+        APP_LOGI("%{public}s called fail, srcDir isn't Exist.", __func__);
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    } else {
+        if (!FilePath::PathIsReadable(srcDir)) {
+            APP_LOGI("%{public}s called fail, srcDir not readable.", __func__);
             return ERR_ZLIB_SRC_FILE_DISABLED;
         }
-    } else if (!FilePath::PathIsValid(srcDir)) {
-        APP_LOGI("%{public}s called fail, The path where srcDir is located doesn't exist.", __func__);
-        return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
     ZipParams params(srcDir, FilePath(destPath.CheckDestDirTail()));
