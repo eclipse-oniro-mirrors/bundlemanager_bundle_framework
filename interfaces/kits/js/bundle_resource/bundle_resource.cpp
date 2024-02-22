@@ -496,7 +496,7 @@ static ErrCode InnerGetAbilityResourceInfo(
     ErrCode ret = bundleResourceProxy->GetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, resourceInfo);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s errCode: %{public}d",
-            bundleName.c_str(), ret);
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), ret);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -537,7 +537,7 @@ napi_value GetAbilityResourceInfo(napi_env env, napi_callback_info info)
     if (flags <= 0) {
         flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     }
-    LauncherAbilityInfo resourceInfo;
+    LauncherAbilityResourceInfo resourceInfo;
     auto ret = InnerGetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, resourceInfo);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -545,11 +545,11 @@ napi_value GetAbilityResourceInfo(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    napi_value nLauncherAbilityInfo = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityInfo));
-    ConvertLauncherAbilityResourceInfo(env, resourceInfo, nLauncherAbilityInfo);
+    napi_value nLauncherAbilityResourceInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityResourceInfo));
+    ConvertLauncherAbilityResourceInfo(env, resourceInfo, nLauncherAbilityResourceInfo);
     APP_LOGD("NAPI end");
-    return nLauncherAbilityInfo;
+    return nLauncherAbilityResourceInfo;
 }
 } // AppExecFwk
 } // OHOS
