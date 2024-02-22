@@ -29,13 +29,20 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool AbilityManagerHelper::UninstallApplicationProcesses(const std::string &bundleName, const int uid)
+bool AbilityManagerHelper::UninstallApplicationProcesses(
+    const std::string &bundleName, const int uid, bool isUpgradeApp)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
-    APP_LOGI("uninstall kill running processes, app name is %{public}s", bundleName.c_str());
-    if (SystemAbilityHelper::UninstallApp(bundleName, uid) != 0) {
+    APP_LOGI("uninstall kill running processes, app name is %{public}s, isUpgradeApp : %{public}d",
+        bundleName.c_str(), isUpgradeApp);
+    int ret = 0;
+    if (isUpgradeApp) {
+        ret = SystemAbilityHelper::UpgradeApp(bundleName, uid);
+    } else {
+        ret = SystemAbilityHelper::UninstallApp(bundleName, uid);
+    }
+    if (ret != 0) {
         APP_LOGE("kill application process failed uid : %{public}d", uid);
-
         return false;
     }
     return true;
