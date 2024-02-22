@@ -40,6 +40,8 @@ BundleResourceHost::BundleResourceHost()
         &BundleResourceHost::HandleGetAllBundleResourceInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO),
         &BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ABILITY_RESOURCE_INFO),
+        &BundleResourceHost::HandleGetAbilityResourceInfo);
 }
 
 int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -127,6 +129,25 @@ ErrCode BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo(MessageParce
     }
     if (ret == ERR_OK) {
         return WriteVectorToParcel<LauncherAbilityResourceInfo>(launcherAbilityResourceInfos, reply);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceHost::HandleGetAbilityResourceInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    uint32_t flags = data.ReadUint32();
+    LauncherAbilityResourceInfo abilityResourceInfo;
+    ErrCode ret = GetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, abilityResourceInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        return WriteParcelInfo<LauncherAbilityResourceInfo>(abilityResourceInfo, reply);
     }
     return ERR_OK;
 }

@@ -132,5 +132,33 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;
 }
+
+ErrCode BundleResourceHostImpl::GetAbilityResourceInfo(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const uint32_t flags,
+    LauncherAbilityResourceInfo &abilityResourceInfo)
+{
+    APP_LOGD("start, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s, flags: %{public}u",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), flags);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = manager->GetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, abilityResourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s, flags: %{public}u",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), flags);
+    }
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

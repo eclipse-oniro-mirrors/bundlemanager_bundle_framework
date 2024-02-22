@@ -50,6 +50,13 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetAbilityResourceInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const uint32_t flags,
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // AppExecFwk
 } // OHOS

@@ -47,6 +47,7 @@ constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
+constexpr const char* GET_ABILITY_RESOURCE_INFO = "GetAbilityResourceInfo";
 
 static void ConvertBundleResourceInfo(
     napi_env env,
@@ -475,6 +476,80 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
         env, static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), &nGetSortByLabel));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
         GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL, nGetSortByLabel));
+}
+
+static ErrCode InnerGetAbilityResourceInfo(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, uint32_t flags, LauncherAbilityResourceInfo &resourceInfo)
+{
+    APP_LOGD("start");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, resourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s errCode: %{public}d",
+            bundleName.c_str(), ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+napi_value GetAbilityResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI start");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string moduleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName) || moduleName.empty()) {
+        APP_LOGE("parse bundleName failed, moduleName is %{public}s", moduleName.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string abilityName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], abilityName) || abilityName.empty()) {
+        APP_LOGE("parse bundleName failed, abilityName is %{public}s", abilityName.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t flags = 0;
+    if (args.GetMaxArgc() >= ARGS_SIZE_FOUR) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], flags)) {
+            APP_LOGW("parse flags failed");
+        }
+    }
+    if (flags <= 0) {
+        flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    }
+    LauncherAbilityInfo resourceInfo;
+    auto ret = InnerGetAbilityResourceInfo(bundleName, moduleName, abilityName, flags, resourceInfo);
+    if (ret != ERR_OK) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nLauncherAbilityInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityInfo));
+    ConvertLauncherAbilityResourceInfo(env, resourceInfo, nLauncherAbilityInfo);
+    APP_LOGD("NAPI end");
+    return nLauncherAbilityInfo;
 }
 } // AppExecFwk
 } // OHOS

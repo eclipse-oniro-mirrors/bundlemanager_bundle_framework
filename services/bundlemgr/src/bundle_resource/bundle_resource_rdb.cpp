@@ -47,6 +47,7 @@ BundleResourceRdb::BundleResourceRdb()
 
 BundleResourceRdb::~BundleResourceRdb()
 {
+    APP_LOGI("destroy");
 }
 
 bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
@@ -431,6 +432,75 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     launcherAbilityResourceInfo.bundleName = info.bundleName_;
     launcherAbilityResourceInfo.moduleName = info.moduleName_;
     launcherAbilityResourceInfo.abilityName = info.abilityName_;
+}
+
+ErrCode BundleResourceRdb::GetAbilityResourceInfo(
+    const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const uint32_t flags,
+    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    APP_LOGD("start, bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s", bundleName.c_str(),
+        moduleName.c_str(), abilityName.c_str());
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("param is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    std::string key = bundleName + BundleResourceConstants::SEPARATOR + moduleName +
+        BundleResourceConstants::SEPARATOR + abilityName;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, key);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+    absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        // bundleName exist or not
+        if (!IsKeyExist(bundleName + BundleResourceConstants::SEPARATOR)) {
+            APP_LOGE("bundleName:%{public}s is not exist inf resource db", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        // moduleName exist or not
+        if (!IsKeyExist(bundleName + BundleResourceConstants::SEPARATOR +
+            moduleName + BundleResourceConstants::SEPARATOR)) {
+            APP_LOGE("moduleName:%{public}s is not exist inf resource db", moduleName.c_str());
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        }
+        APP_LOGE("abilityName:%{public}s is not exist inf resource db", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (!ConvertToLauncherAbilityResourceInfo(absSharedResultSet, flags, launcherAbilityResourceInfo)) {
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    APP_LOGD("end");
+    return ERR_OK;
+}
+
+bool BundleResourceRdb::IsKeyExist(const std::string &key)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+    absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("key:%{public}s is not exist", key.c_str());
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS
