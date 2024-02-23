@@ -997,14 +997,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
  * @tc.desc: 1. system running normally
- *           2. test GetLauncherAbilityResourceInfo
+ *           2. test GetAbilityResourceInfos
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest | Level0)
 {
     InnerBundleInfo bundleInfo;
     std::vector<ResourceInfo> resourceInfos;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    bool ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1013,7 +1013,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1021,7 +1021,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.hideDesktopIcon = true;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // hideDesktopIcon is true
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1031,14 +1031,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     info.entryInstallationFree = true;
     bundleInfo.SetBaseBundleInfo(info);
     // entryInstallationFree is true
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
     info.entryInstallationFree = false;
     bundleInfo.SetBaseBundleInfo(info);
     // abilityInfos is empty
-    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 }
@@ -1234,7 +1234,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest | Level0)
 {
-    std::vector<ResourceInfo> resourceInfos;
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
     // userId not exist
     bool ans = BundleResourceProcess::GetAllResourceInfo(200, resourceInfos);
     EXPECT_FALSE(ans);
@@ -1287,6 +1287,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0061, Function | SmallTest
 
     ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, resourceManager);
     EXPECT_TRUE(ans);
+
+    std::vector<std::string> overlayHaps;
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, overlayHaps, resourceManager);
+    EXPECT_TRUE(ans);
+
+    overlayHaps.emplace_back(HAP_FILE_PATH1);
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, overlayHaps, resourceManager);
+    EXPECT_TRUE(ans);
 }
 
 /**
@@ -1305,15 +1313,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest
     resourceInfo.iconId_ = 0;
     BundleResourceParser parser;
     bool ans = parser.ParseResourceInfo(resourceInfo);
-    EXPECT_FALSE(ans);
-
-    resourceInfo.defaultIconHapPath_ = HAP_NOT_EXIST;
-    ans = parser.ParseResourceInfo(resourceInfo);
-    EXPECT_FALSE(ans);
-
-    resourceInfo.hapPath_ = HAP_NOT_EXIST;
-    resourceInfo.defaultIconHapPath_ = "";
-    ans = parser.ParseResourceInfo(resourceInfo);
     EXPECT_FALSE(ans);
 
     resourceInfo.hapPath_ = HAP_FILE_PATH1;
@@ -1387,7 +1386,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0065, Function | SmallTest
 
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     ans = parser.ParseLabelResourceByResourceManager(resourceManager, 0, label);
-    EXPECT_TRUE(ans);
+    EXPECT_FALSE(ans);
 
     ans = parser.ParseLabelResourceByResourceManager(resourceManager, 1, label); // labelId not exist
     EXPECT_FALSE(ans);
@@ -1527,22 +1526,18 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0070, Function | SmallTest
     std::vector<ResourceInfo> resourceInfos;
     bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
     EXPECT_TRUE(ans);
-    EXPECT_EQ(resourceInfos.size(), 2);
+    EXPECT_FALSE(resourceInfos.empty());
 
     if (!resourceInfos.empty()) {
         ResourceInfo resourceInfo;
         BundleResourceParser parser;
-        ans = parser.ParseResourceInfo(resourceInfos[0]);
-        EXPECT_TRUE(ans);
-        EXPECT_NE(resourceInfos[0].label_, "");
-        EXPECT_NE(resourceInfos[0].icon_, "");
+        ans = parser.ParseResourceInfo(resourceInfos[0]); // labelId and iconId = 0
+        EXPECT_FALSE(ans);
+        EXPECT_EQ(resourceInfos[0].label_, "");
+        EXPECT_EQ(resourceInfos[0].icon_, "");
 
         ans = parser.ParseResourceInfos(resourceInfos);
-        EXPECT_TRUE(ans);
-        for (const auto &info : resourceInfos) {
-            EXPECT_NE(info.label_, "");
-            EXPECT_NE(info.icon_, "");
-        }
+        EXPECT_FALSE(ans);
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
@@ -2352,6 +2347,69 @@ HWTEST_F(BmsBundleResourceTest, ProcessBundleResourceInfo_0001, Function | Small
         EXPECT_FALSE(info2.label.empty());
     }
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessResourceInfo_0001
+ * @tc.name: test the start function of ProcessResourceInfo
+ * @tc.desc: 1. test ProcessResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessResourceInfo_0001, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<ResourceInfo> resourceInfos;
+        ResourceInfo info;
+        info.label_ = "xxx";
+        info.icon_ = "yyy";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+
+        info.label_ = "";
+        info.icon_ = "";
+        info.bundleName_ = "aaa";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+
+        resourceInfos.emplace_back(info);
+        info.icon_ = "";
+        manager->ProcessResourceInfo(resourceInfos, info);
+        EXPECT_FALSE(info.label_.empty());
+        EXPECT_FALSE(info.icon_.empty());
+    }
+}
+
+/**
+ * @tc.number: AddResourceInfos_0001
+ * @tc.name: test the start function of AddResourceInfos
+ * @tc.desc: 1. test AddResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        bool ret = manager->AddResourceInfos(resourceInfosMap);
+        EXPECT_FALSE(ret);
+        resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
+        ret = manager->AddResourceInfos(resourceInfosMap);
+        EXPECT_TRUE(ret);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
