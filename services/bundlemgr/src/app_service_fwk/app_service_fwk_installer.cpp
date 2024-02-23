@@ -86,7 +86,7 @@ ErrCode AppServiceFwkInstaller::Install(
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
     SendBundleSystemEvent(
-        GenerateEventMsg(),
+        hspPaths,
         BundleEventType::INSTALL,
         installParam,
         InstallScene::BOOT,
@@ -102,7 +102,6 @@ ErrCode AppServiceFwkInstaller::BeforeInstall(
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    bundleMsg_ = hspPaths[0];
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr_ == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -714,29 +713,18 @@ void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
     }
 }
 
-std::string AppServiceFwkInstaller::GenerateEventMsg()
-{
-    std::string msg(bundleName_);
-    if (!bundleMsg_.empty()) {
-        if (!msg.empty()) {
-            msg.append(HSP_PATH);
-        }
-        msg.append(bundleMsg_);
-    }
-    return msg;
-}
-
 void AppServiceFwkInstaller::SendBundleSystemEvent(
-    const std::string &bundleName, BundleEventType bundleEventType,
+    const std::vector<std::string> &hspPaths, BundleEventType bundleEventType,
     const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
 {
     EventInfo sysEventInfo;
-    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.bundleName = bundleName_;
     sysEventInfo.isPreInstallApp = installParam.isPreInstallApp;
     sysEventInfo.errCode = errCode;
     sysEventInfo.userId = Constants::ALL_USERID;
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
+    sysEventInfo.filePath = hspPaths;
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 
