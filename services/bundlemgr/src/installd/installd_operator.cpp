@@ -694,15 +694,16 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
             continue;
         }
         std::string path = filePath + entry->d_name;
+        if (entry->d_type == DT_DIR) {
+            size += GetDiskUsage(path, true);
+            continue;
+        }
         struct stat fileInfo = {0};
         if (stat(path.c_str(), &fileInfo) != 0) {
             APP_LOGE("call stat error %{public}s", path.c_str());
             fileInfo.st_size = 0;
         }
         size += fileInfo.st_size;
-        if (entry->d_type == DT_DIR) {
-            size += GetDiskUsage(path, true);
-        }
     }
     closedir(dirPtr);
     return size;
