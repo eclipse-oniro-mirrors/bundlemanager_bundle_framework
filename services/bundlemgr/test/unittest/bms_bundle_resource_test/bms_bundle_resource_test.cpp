@@ -1017,7 +1017,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_024, Function | SmallTest 
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
     // abilityName not exist
     ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, MODULE_NAME, MODULE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     // exist
     ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, 0, info);
     EXPECT_EQ(ret, ERR_OK);
