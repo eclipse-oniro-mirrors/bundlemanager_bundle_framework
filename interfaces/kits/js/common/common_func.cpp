@@ -70,6 +70,9 @@ constexpr const char* BUILD_FUNCTION = "buildFunction";
 constexpr const char* DATA = "data";
 constexpr const char* KEY = "key";
 constexpr const char* VALUE = "value";
+constexpr const char* CODE_PATH = "codePath";
+const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
+const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1498,6 +1501,22 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, ROUTER_MAP, nRouterMap));
+
+    napi_value nCodePath;
+    size_t result = hapModuleInfo.hapPath.find(PATH_PREFIX);
+    if (result != std::string::npos) {
+        size_t pos = hapModuleInfo.hapPath.find_last_of('/');
+        std::string codePath = CODE_PATH_PREFIX;
+        if (pos != std::string::npos && pos != hapModuleInfo.hapPath.size() - 1) {
+            codePath += hapModuleInfo.hapPath.substr(pos + 1);
+        }
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, codePath.c_str(), NAPI_AUTO_LENGTH,
+            &nCodePath));
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.hapPath.c_str(), NAPI_AUTO_LENGTH,
+            &nCodePath));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, CODE_PATH, nCodePath));
 }
 
 void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
