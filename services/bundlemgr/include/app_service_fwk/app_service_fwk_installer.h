@@ -50,9 +50,8 @@ private:
     ErrCode CheckAppLabelInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
-    std::string GenerateEventMsg();
     void SendBundleSystemEvent(
-        const std::string &bundleName, BundleEventType bundleEventType,
+        const std::vector<std::string> &hspPaths, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath);
