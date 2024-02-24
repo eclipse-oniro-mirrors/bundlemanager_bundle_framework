@@ -1022,8 +1022,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_024, Function | SmallTest 
     ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, 0, info);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(info.bundleName, BUNDLE_NAME);
-    EXPECT_EQ(info.abilityName, MODULE_NAME);
-    EXPECT_EQ(info.moduleName, ABILITY_NAME);
+    EXPECT_EQ(info.moduleName, MODULE_NAME);
+    EXPECT_EQ(info.abilityName, ABILITY_NAME);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
