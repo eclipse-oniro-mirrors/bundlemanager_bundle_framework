@@ -192,6 +192,8 @@ public:
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
+
+    ErrCode ChmodBundleDataDir(const CreateDirParam &createDirParam);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

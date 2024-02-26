@@ -258,6 +258,55 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return res;
 }
 
+ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirParam)
+{
+    APP_LOGI("start bundleName:%{public}s", createDirParam.bundleName.c_str());
+    for (const auto &el : Constants::BUNDLE_EL) {
+        // data/app/el<>/<userId>/database/<bundleName>
+        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + Constants::DATABASE
+            + createDirParam.bundleName;
+        InstalldOperator::ChangeDirProperties(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
+        InstalldOperator::ChangeDirPropertiesRecursively(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
+    }
+    std::string userId = std::to_string(createDirParam.userId);
+
+    // /data/service/el2/%/hmdfs/account/data/
+    std::string distributedfile = DISTRIBUTED_FILE + createDirParam.bundleName;
+    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, Constants::DFS_GID);
+    // /data/service/el2/%/hmdfs/non_account/data/
+    distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT + createDirParam.bundleName;
+    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, Constants::DFS_GID);
+
+    // /data/service/el1/%/backup/bundles/
+    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL1 + createDirParam.bundleName;
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+    // /data/service/el2/%/backup/bundles/
+    bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2 + createDirParam.bundleName;
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+
+    // /data/service/el2/%/share/
+    std::string bundleShareDir = SHARE_FILE_PATH + createDirParam.bundleName;
+    bundleShareDir = bundleShareDir.replace(bundleShareDir.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(bundleShareDir, createDirParam.uid, createDirParam.gid);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleShareDir, createDirParam.uid, createDirParam.gid);
+
+    // /data/service/el2/%/hmdfs/cloud/data/
+    std::string bundleCloudDir = CLOUD_FILE_PATH + createDirParam.bundleName;
+    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, userId);
+    InstalldOperator::ChangeDirProperties(bundleCloudDir, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleCloudDir, createDirParam.uid, Constants::DFS_GID);
+    APP_LOGI("end bundleName:%{public}s", createDirParam.bundleName.c_str());
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -268,6 +317,9 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         createDirParam.uid < 0 || createDirParam.gid < 0) {
         APP_LOGE("Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (createDirParam.createDirFlag == CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES) {
+        return ChmodBundleDataDir(createDirParam);
     }
     for (const auto &el : Constants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
