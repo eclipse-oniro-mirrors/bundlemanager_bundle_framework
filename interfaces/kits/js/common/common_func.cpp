@@ -73,6 +73,7 @@ constexpr const char* VALUE = "value";
 constexpr const char* CODE_PATH = "codePath";
 const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
 const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
+const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1276,6 +1277,15 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value ndataUnclearable;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, !appInfo.userDataClearable, &ndataUnclearable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "dataUnclearable", ndataUnclearable));
+
+    std::string externalNativeLibraryPath = "";
+    if (!appInfo.nativeLibraryPath.empty()) {
+        externalNativeLibraryPath = CONTEXT_DATA_STORAGE_BUNDLE + appInfo.nativeLibraryPath;
+    }
+    napi_value nativeLibraryPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, externalNativeLibraryPath.c_str(), NAPI_AUTO_LENGTH,
+        &nativeLibraryPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "nativeLibraryPath", nativeLibraryPath));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
@@ -1517,6 +1527,15 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
             &nCodePath));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, CODE_PATH, nCodePath));
+
+    std::string externalNativeLibraryPath = "";
+    if (!hapModuleInfo.nativeLibraryPath.empty() && !hapModuleInfo.moduleName.empty()) {
+        externalNativeLibraryPath = CONTEXT_DATA_STORAGE_BUNDLE + hapModuleInfo.nativeLibraryPath;
+    }
+    napi_value nativeLibraryPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, externalNativeLibraryPath.c_str(), NAPI_AUTO_LENGTH,
+        &nativeLibraryPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "nativeLibraryPath", nativeLibraryPath));
 }
 
 void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value)
