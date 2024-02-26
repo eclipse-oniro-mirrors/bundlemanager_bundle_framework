@@ -76,7 +76,12 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
     deathRecipient_ = (new (std::nothrow)   BmsEcologicalRuleMgrServiceDeathRecipient());
     systemAbility->AddDeathRecipient(deathRecipient_);
 
-    return iface_cast<IBmsEcologicalRuleMgrService>(systemAbility);
+    sptr<IBmsEcologicalRuleMgrService> iBmsErms = iface_cast<IBmsEcologicalRuleMgrService>(systemAbility);
+    if (iBmsErms == nullptr) {
+        APP_LOGE("systemAbility cast error");
+        iBmsErms = new BmsEcologicalRuleMgrServiceProxy(systemAbility);
+    }
+    return iBmsErms;
 }
 
 bool BmsEcologicalRuleMgrServiceClient::CheckConnectService()
