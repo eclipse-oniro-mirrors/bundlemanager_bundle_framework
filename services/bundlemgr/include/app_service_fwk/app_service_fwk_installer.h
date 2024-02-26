@@ -93,6 +93,7 @@ private:
     ErrCode RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo);
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
         const std::string &targetSoPath) const;
+    ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
