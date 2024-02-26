@@ -112,6 +112,11 @@ constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
 constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify abc.";
 constexpr const char* ERR_MSG_ERROR_DELETE_ABC = "Failed to delete abc.";
 constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "Not app gallery call.";
+constexpr const char* ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR =
+    "Failed to install the HAP because the HAP requests wrong permissions.";
+constexpr const char* ERR_MSG_INVALID_LINK = "The specified link is invalid.";
+constexpr const char* ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES =
+    "The scheme of the specified link is not in the querySchemes.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -170,6 +175,9 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_VERIFY_ABC, ERR_MSG_ERROR_VERIFY_ABC},
     { ERROR_NOT_APP_GALLERY_CALL, ERROR_MSG_NOT_APP_GALLERY_CALL},
     { ERROR_DELETE_ABC, ERR_MSG_ERROR_DELETE_ABC},
+    { ERROR_INSTALL_PERMISSION_CHECK_ERROR, ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR},
+    { ERROR_INVALID_LINK, ERR_MSG_INVALID_LINK },
+    { ERROR_SCHEME_NOT_IN_QUERYSCHEMES, ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES },
 };
 } // namespace
 

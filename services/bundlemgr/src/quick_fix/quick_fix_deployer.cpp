@@ -28,6 +28,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+}
+
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
     bool isDebug) : patchPaths_(bundleFilePaths), isDebug_(isDebug)
 {}
@@ -266,6 +271,11 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
         APP_LOGE("error MoveHqfFiles failed, bundleName: %{public}s", newQuickFix.bundleName.c_str());
+        return ret;
+    }
+    ret = VerifyCodeSignatureForHqf(newInnerAppQuickFix, newPatchPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("error VerifyCodeSignatureForHqf failed, bundleName: %{public}s", newQuickFix.bundleName.c_str());
         return ret;
     }
     // save and update status DEPLOY_END
@@ -758,8 +768,8 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
             continue;
         }
     }
-    return ERR_OK;
     APP_LOGD("end");
+    return ERR_OK;
 }
 
 bool QuickFixDeployer::ExtractSoFiles(
@@ -861,6 +871,69 @@ bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, con
     APP_LOGD("real so files path is %{public}s, tmpSoPath is %{public}s", realSoFilesPath.c_str(), tmpSoPath.c_str());
     return InstalldClient::GetInstance()->ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid) ==
         ERR_OK;
+}
+
+void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
+    const BundleInfo &bundleInfo, const std::string &hqfSoPath, CodeSignatureParam &codeSignatureParam)
+{
+    std::string libraryPath;
+    std::string cpuAbi;
+    bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
+    if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
+        APP_LOGI("no so file");
+        codeSignatureParam.targetSoPath = "";
+    } else {
+        std::string soPath = hqfSoPath.substr(0, hqfSoPath.rfind(Constants::PATH_SEPARATOR) + 1) + libraryPath;
+        codeSignatureParam.targetSoPath = soPath;
+    }
+    codeSignatureParam.cpuAbi = cpuAbi;
+    codeSignatureParam.modulePath = hqf.hqfFilePath;
+    codeSignatureParam.isEnterpriseBundle =
+        (appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL ||
+        appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM ||
+        appDistributionType_ == Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    codeSignatureParam.appIdentifier = DEBUG_APP_IDENTIFIER;
+    codeSignatureParam.isCompileSdkOpenHarmony =
+        bundleInfo.applicationInfo.compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY;
+}
+
+ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
+    const InnerAppQuickFix &innerAppQuickFix, const std::string &hqfSoPath)
+{
+    AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
+    APP_LOGD("start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    BundleInfo bundleInfo;
+    if (GetBundleInfo(appQuickFix.bundleName, bundleInfo) != ERR_OK) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
+    }
+    if (!isDebug_ || bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        return ERR_OK;
+    }
+    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+    if (appQfInfo.hqfInfos.empty()) {
+        APP_LOGE("hqfInfos is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
+    }
+    for (const auto &hqf : appQfInfo.hqfInfos) {
+        auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
+            [hqf](const HapModuleInfo &info) {
+                return info.moduleName == hqf.moduleName;
+            });
+        if (iter == bundleInfo.hapModuleInfos.end()) {
+            APP_LOGW("moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            continue;
+        }
+
+        CodeSignatureParam codeSignatureParam;
+        PrepareCodeSignatureParam(appQuickFix, hqf, bundleInfo, hqfSoPath, codeSignatureParam);
+        ErrCode ret = InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
+        if (ret != ERR_OK) {
+            APP_LOGE("moduleName: %{public}s verify code signature failed", hqf.moduleName.c_str());
+            return ret;
+        }
+    }
+    APP_LOGD("end");
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

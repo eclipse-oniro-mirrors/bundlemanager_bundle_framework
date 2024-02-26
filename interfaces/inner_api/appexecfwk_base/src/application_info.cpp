@@ -50,6 +50,7 @@ const std::string APPLICATION_KEEP_ALIVE = "keepAlive";
 const std::string APPLICATION_REMOVABLE = "removable";
 const std::string APPLICATION_SINGLETON = "singleton";
 const std::string APPLICATION_USER_DATA_CLEARABLE = "userDataClearable";
+const std::string ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
 const std::string APPLICATION_IS_SYSTEM_APP = "isSystemApp";
 const std::string APPLICATION_IS_LAUNCHER_APP = "isLauncherApp";
 const std::string APPLICATION_IS_FREEINSTALL_APP = "isFreeInstallApp";
@@ -282,6 +283,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     associatedWakeUp = parcel.ReadBool();
     hideDesktopIcon = parcel.ReadBool();
     formVisibleNotify = parcel.ReadBool();
+    allowAppRunWhenDeviceFirstLocked = parcel.ReadBool();
     int32_t allowCommonEventSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, allowCommonEventSize);
     CONTAINER_SECURITY_VERIFY(parcel, allowCommonEventSize, &allowCommonEvent);
@@ -467,6 +469,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, associatedWakeUp);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hideDesktopIcon);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, formVisibleNotify);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowAppRunWhenDeviceFirstLocked);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, allowCommonEvent.size());
     for (auto &event : allowCommonEvent) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(event));
@@ -687,6 +690,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_REMOVABLE, applicationInfo.removable},
         {APPLICATION_SINGLETON, applicationInfo.singleton},
         {APPLICATION_USER_DATA_CLEARABLE, applicationInfo.userDataClearable},
+        {ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED, applicationInfo.allowAppRunWhenDeviceFirstLocked},
         {APPLICATION_ACCESSIBLE, applicationInfo.accessible},
         {APPLICATION_IS_SYSTEM_APP, applicationInfo.isSystemApp},
         {APPLICATION_IS_LAUNCHER_APP, applicationInfo.isLauncherApp},
@@ -891,6 +895,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_USER_DATA_CLEARABLE,
         applicationInfo.userDataClearable,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
+        applicationInfo.allowAppRunWhenDeviceFirstLocked,
         JsonType::BOOLEAN,
         false,
         parseResult,

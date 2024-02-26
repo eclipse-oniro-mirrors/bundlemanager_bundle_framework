@@ -157,6 +157,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     COMPILE_PROCESSAOT,
     COMPILE_RESET,
     CREATE_BUNDLE_DATA_DIR,
+    CAN_OPEN_LINK,
+    GET_ALL_BUNDLE_STATS,
+    GET_ODID,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

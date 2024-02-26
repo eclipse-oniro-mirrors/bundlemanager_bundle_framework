@@ -70,6 +70,8 @@ const std::string OVERLAY_TYPE = "overlayType";
 const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string DATA_GROUP_INFOS = "dataGroupInfos";
+const std::string DEVELOPER_ID = "developerId";
+const std::string ODID = "odid";
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
@@ -214,6 +216,8 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
     this->dataGroupInfos_ = info.dataGroupInfos_;
+    this->developerId_ = info.developerId_;
+    this->odid_ = info.odid_;
     return *this;
 }
 
@@ -251,6 +255,8 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[OVERLAY_TYPE] = overlayType_;
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
     jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
+    jsonObject[DEVELOPER_ID] = developerId_;
+    jsonObject[ODID] = odid_;
 }
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -474,6 +480,22 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        DEVELOPER_ID,
+        developerId_,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ODID,
+        odid_,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -521,6 +543,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.installationFree = it->second.distro.installationFree;
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
+    hapInfo.deviceTypes = it->second.deviceTypes;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
@@ -539,16 +562,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         }
     }
     hapInfo.metadata = it->second.metadata;
-    bool first = false;
     for (auto &ability : baseAbilityInfos_) {
         if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
             continue;
         }
         if (ability.first.find(key) != std::string::npos) {
-            if (!first) {
-                hapInfo.deviceTypes = ability.second.deviceTypes;
-                first = true;
-            }
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
@@ -577,6 +595,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     hapInfo.fileContextMenu = it->second.fileContextMenu;
+    hapInfo.routerMap = it->second.routerMap;
+    hapInfo.appEnvironments = it->second.appEnvironments;
     return hapInfo;
 }
 
@@ -784,6 +804,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->formVisibleNotify = applicationInfo.formVisibleNotify;
     baseApplicationInfo_->needAppDetail = applicationInfo.needAppDetail;
     baseApplicationInfo_->appDetailAbilityLibraryPath = applicationInfo.appDetailAbilityLibraryPath;
+    baseApplicationInfo_->bundleType = applicationInfo.bundleType;
     UpdatePrivilegeCapability(applicationInfo);
     SetHideDesktopIcon(applicationInfo.hideDesktopIcon);
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -791,8 +812,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
     UpdateDebug(applicationInfo.debug, isEntry);
-    baseApplicationInfo_->gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
-    baseApplicationInfo_->asanEnabled = applicationInfo.asanEnabled;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
@@ -861,6 +880,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 
@@ -1164,6 +1184,10 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         return;
     }
 
+    if (baseApplicationInfo_ == nullptr) {
+        APP_LOGE("baseApplicationInfo_ is nullptr");
+        return;
+    }
     appInfo = *baseApplicationInfo_;
     if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
@@ -3077,6 +3101,41 @@ void InnerBundleInfo::UpdateDataGroupInfos(
             AddDataGroupInfo(dataGroupId, info);
         }
     }
+}
+
+std::vector<std::string> InnerBundleInfo::GetQuerySchemes() const
+{
+    std::string entryModuleName = GetEntryModuleName();
+    auto it = innerModuleInfos_.find(entryModuleName);
+    if (it == innerModuleInfos_.end()) {
+        return std::vector<std::string>();
+    }
+    std::vector<std::string> querySchemes = innerModuleInfos_.at(entryModuleName).querySchemes;
+    for (int32_t i = 0; i < querySchemes.size(); i++) {
+        transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
+    }
+    return querySchemes;
+}
+
+void InnerBundleInfo::UpdateOdid(const std::string &developerId, const std::string &odid)
+{
+    developerId_ = developerId;
+    odid_ = odid;
+}
+
+void InnerBundleInfo::UpdateOdidByBundleInfo(const InnerBundleInfo &info)
+{
+    std::string developerId;
+    std::string odid;
+    info.GetDeveloperidAndOdid(developerId, odid);
+    developerId_ = developerId;
+    odid_ = odid;
+}
+
+void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const
+{
+    developerId = developerId_;
+    odid = odid_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

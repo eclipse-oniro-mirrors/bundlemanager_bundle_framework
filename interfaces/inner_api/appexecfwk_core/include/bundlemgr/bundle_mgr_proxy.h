@@ -780,6 +780,8 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats) override;
 
+    virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
+
     virtual bool CheckAbilityEnableInstall(
         const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 
@@ -897,6 +899,22 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen) override;
+
+    /**
+     * @brief Get odid of the current application.
+     * @param odid Indicates the odid of application.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetOdid(std::string &odid) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -906,6 +924,16 @@ private:
      * @return Returns true if message send successfully; returns false otherwise.
      */
     bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Send a command message from the proxy object and  printf log.
+     * @param code Indicates the message code to be sent.
+     * @param data Indicates the objects to be sent.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if message send successfully; returns false otherwise.
+     */
+    bool SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+
     /**
      * @brief Send a command message and then get a parcelable information object from the reply.
      * @param code Indicates the message code to be sent.

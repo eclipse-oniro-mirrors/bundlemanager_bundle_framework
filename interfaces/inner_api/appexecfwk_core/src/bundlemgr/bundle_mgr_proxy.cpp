@@ -753,13 +753,12 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
+    if (!SendTransactCmdWithLog(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetNameForUid from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply errCode : %{public}d", ret);
         return ret;
     }
     name = reply.ReadString();
@@ -2799,6 +2798,37 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     return true;
 }
 
+bool BundleMgrProxy::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
+{
+    APP_LOGI("GetAllBundleStats start");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetAllBundleStats due to write MessageParcel fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllBundleStats due to write userId fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply)) {
+        APP_LOGE("fail to GetAllBundleStats from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    if (!reply.ReadInt64Vector(&bundleStats)) {
+        APP_LOGE("fail to GetAllBundleStats from reply");
+        return false;
+    }
+    APP_LOGI("GetAllBundleStats end");
+    return true;
+}
+
 bool BundleMgrProxy::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
@@ -3939,6 +3969,28 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::GetOdid(std::string &odid)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("GetOdid Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+    }
+    APP_LOGI("GetOdid ret: %{public}d, odid: %{private}s", ret, odid.c_str());
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -4164,8 +4216,29 @@ bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel 
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
-        remote->GetSptrRefCount(), remote->GetWptrRefCount());
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        return false;
+    }
+    return true;
+}
+
+bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+{
+    MessageOption option(MessageOption::TF_SYNC);
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        return false;
+    }
+    int32_t sptrRefCount = remote->GetSptrRefCount();
+    int32_t wptrRefCount = remote->GetWptrRefCount();
+    if (sptrRefCount <= 0 || wptrRefCount <= 0) {
+        APP_LOGI("SendTransactCmd SendRequest before sptrRefCount: %{public}d wptrRefCount: %{public}d",
+            sptrRefCount, wptrRefCount);
+    }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
@@ -4321,6 +4394,34 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
         APP_LOGE("fail to reset from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::CanOpenLink(
+    const std::string &link, bool &canOpen)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(link)) {
+        APP_LOGE("write link failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CAN_OPEN_LINK, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", res);
+        return res;
+    }
+    canOpen = reply.ReadBool();
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -29,10 +29,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using ThreadPoolTask = std::function<void()>;
 class BundleInstallerManager : public std::enable_shared_from_this<BundleInstallerManager> {
 public:
-    using ThreadPoolTask = std::function<void()>;
-
     BundleInstallerManager();
     ~BundleInstallerManager();
     /**
@@ -98,6 +97,13 @@ public:
      */
     void CreateUninstallTask(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceive);
 
+    void AddTask(const ThreadPoolTask &task, const std::string &taskName);
+    size_t GetCurTaskNum();
+    int32_t GetThreadsNum()
+    {
+        return THREAD_NUMBER;
+    }
+
 private:
     /**
      * @brief Create a bundle installer object internal.
@@ -106,14 +112,12 @@ private:
      */
     std::shared_ptr<BundleInstaller> CreateInstaller(const sptr<IStatusReceiver> &statusReceiver);
 
-    void AddTask(const ThreadPoolTask &task, const std::string &taskName);
-
     void DelayStopThreadPool();
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 
     std::shared_ptr<ThreadPool> threadPool_ = nullptr;
-    const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
+    const int32_t THREAD_NUMBER = 4;
     std::mutex mutex_;
 };
 }  // namespace AppExecFwk

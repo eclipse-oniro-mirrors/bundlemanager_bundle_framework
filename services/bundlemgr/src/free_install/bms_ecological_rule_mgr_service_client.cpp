@@ -103,11 +103,6 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
     int64_t start = GetCurrentTimeMicro();
     APP_LOGD("QueryFreeInstallExperience want = %{public}s, callerInfo = %{public}s", want.ToString().c_str(),
         callerInfo.ToString().c_str());
-    if (callerInfo.packageName.find_first_not_of(' ') == std::string::npos) {
-        rule.isAllow = true;
-        APP_LOGD("callerInfo packageName is empty, allow = true");
-        return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_OK;
-    }
 
     if (!CheckConnectService()) {
         APP_LOGW("check Connect SA Failed");

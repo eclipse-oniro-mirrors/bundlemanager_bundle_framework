@@ -181,8 +181,8 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
-    APP_LOGI("AddTask begin");
     std::lock_guard<std::mutex> guard(mutex_);
+    APP_LOGI("hold mutex");
     if (threadPool_ == nullptr) {
         APP_LOGI("begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
@@ -215,6 +215,16 @@ void BundleInstallerManager::DelayStopThreadPool()
     threadPool_->Stop();
     threadPool_ = nullptr;
     APP_LOGI("DelayStopThreadPool end");
+}
+
+size_t BundleInstallerManager::GetCurTaskNum()
+{
+    std::lock_guard<std::mutex> guard(mutex_);
+    if (threadPool_ == nullptr) {
+        return 0;
+    }
+
+    return threadPool_->GetCurTaskNum();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

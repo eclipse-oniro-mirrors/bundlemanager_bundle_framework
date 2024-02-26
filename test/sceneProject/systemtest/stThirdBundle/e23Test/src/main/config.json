@@ -38,6 +38,7 @@
         "name": "bmsThirdBundle1",
         "description": "$string:description_application",
         "deviceType": [
+            "2in1",
             "tablet",
             "default",
             "tv",

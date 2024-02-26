@@ -88,7 +88,13 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
 }
 
 ErrCode InstalldClient::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
 {
     return 0;
 }

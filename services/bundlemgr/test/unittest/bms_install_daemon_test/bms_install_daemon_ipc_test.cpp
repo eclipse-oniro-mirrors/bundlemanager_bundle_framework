@@ -296,7 +296,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0900, Function | SmallTest |
     EXPECT_NE(proxy, nullptr);
 
     std::vector<int64_t> vec;
-    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec);
+    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, 0);
     EXPECT_EQ(ret, ERR_OK);
 }
 

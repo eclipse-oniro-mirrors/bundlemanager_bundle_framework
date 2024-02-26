@@ -129,6 +129,7 @@
         "type": "entry",
         "virtualMachine": "ark",
         "compressNativeLibs": true,
-        "libIsolation": true
+        "libIsolation": true,
+        "routerMap": "$profile:router_map"
     }
 }

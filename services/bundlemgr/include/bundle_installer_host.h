@@ -125,6 +125,9 @@ public:
         const sptr<IStatusReceiver> &statusReceiver) override;
     bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) override;
+    void AddTask(const ThreadPoolTask &task, const std::string &taskName);
+    size_t GetCurTaskNum();
+    int32_t GetThreadsNum();
 
 private:
     /**

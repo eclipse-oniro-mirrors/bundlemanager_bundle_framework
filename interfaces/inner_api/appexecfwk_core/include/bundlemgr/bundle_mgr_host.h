@@ -614,6 +614,8 @@ private:
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleCheckAbilityEnableInstall(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSandboxAbilityInfo(MessageParcel &data, MessageParcel &reply);
@@ -705,6 +707,16 @@ private:
     ErrCode HandleGetUninstalledBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the CanOpenLink function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleCanOpenLink(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetOdid(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

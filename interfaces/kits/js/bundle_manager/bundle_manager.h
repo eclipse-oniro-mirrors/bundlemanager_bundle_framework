@@ -264,6 +264,7 @@ napi_value DeleteAbc(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
+napi_value CanOpenLink(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

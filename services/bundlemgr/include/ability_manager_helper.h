@@ -28,7 +28,8 @@ public:
         RUNNING = 1,
     };
 
-    static bool UninstallApplicationProcesses(const std::string &bundleName, const int uid);
+    static bool UninstallApplicationProcesses(
+        const std::string &bundleName, const int uid, bool isUpgradeApp = false);
     static int IsRunning(const std::string bundleName, const int bundleUid);
     static int IsRunning(const std::string bundleName);
 };

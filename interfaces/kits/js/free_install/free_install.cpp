@@ -61,7 +61,7 @@ static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,
     }
     auto result = iBundleMgr->IsModuleRemovable(bundleName, moduleName, isRemovable);
     if (result != ERR_OK) {
-        APP_LOGE("InnerIsHapModuleRemovable::IsModuleRemovable failed");
+        APP_LOGE("InnerIsHapModuleRemovable::IsModuleRemovable failed, bundleName is %{public}s", bundleName.c_str());
     }
     return CommonFunc::ConvertErrCode(result);
 }
@@ -151,7 +151,8 @@ static ErrCode InnerSetHapModuleUpgradeFlag(const std::string &bundleName,
     }
     auto result = iBundleMgr->SetModuleUpgradeFlag(bundleName, moduleName, upgradeFlag);
     if (result != ERR_OK) {
-        APP_LOGE("InnerSetHapModuleUpgradeFlag::SetModuleUpgradeFlag failed");
+        APP_LOGE("InnerSetHapModuleUpgradeFlag::SetModuleUpgradeFlag failed, bundleName is %{public}s",
+            bundleName.c_str());
     }
     return CommonFunc::ConvertErrCode(result);
 }
@@ -554,7 +555,7 @@ static ErrCode InnerGetBundlePackInfo(const std::string &bundleName, int32_t fla
     }
     auto ret = iBundleMgr->GetBundlePackInfo(bundleName, flags, bundlePackInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("InnerGetBundlePackInfo failed");
+        APP_LOGE("InnerGetBundlePackInfo failed, bundleName is %{public}s", bundleName.c_str());
     }
     return CommonFunc::ConvertErrCode(ret);
 }

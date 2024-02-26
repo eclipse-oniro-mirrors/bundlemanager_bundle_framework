@@ -50,9 +50,8 @@ private:
     ErrCode CheckAppLabelInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
-    std::string GenerateEventMsg();
     void SendBundleSystemEvent(
-        const std::string &bundleName, BundleEventType bundleEventType,
+        const std::vector<std::string> &hspPaths, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath);
@@ -92,6 +91,11 @@ private:
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo);
+    ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
+        const std::string &targetSoPath) const;
+    ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
+    void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
@@ -103,6 +107,9 @@ private:
     std::vector<std::string> deleteBundlePath_;
     uint32_t versionCode_ = 0;
     InnerBundleInfo newInnerBundleInfo_;
+    bool isEnterpriseBundle_ = false;
+    std::string appIdentifier_;
+    std::string compileSdkType_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 
 #define CHECK_RESULT(errcode, errmsg)                                              \

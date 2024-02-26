@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -383,6 +383,28 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAppLabelInfo_0100, Function |
 }
 
 /**
+ * @tc.number: CheckAppLabelInfo_0100
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test the CheckAppLabelInfo
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckAppLabelInfo_0200, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.bundleType = BundleType::APP;
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+    infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
+
+    auto res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED);
+}
+
+/**
  * @tc.number: CheckNeedInstall_0100
  * @tc.name: test CheckNeedInstall
  * @tc.desc: 1.Test the CheckNeedInstall
@@ -412,29 +434,6 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0200, Function | 
     infos[VERSION_ONE_LIBRARY_ONE_PATH] = oldInfo;
     bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
     EXPECT_TRUE(result);
-}
-
-/**
- * @tc.number: CheckNeedInstall_0300
- * @tc.name: test CheckNeedInstall
- * @tc.desc: 1.Test the CheckNeedInstall
-*/
-HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0300, Function | SmallTest | Level0)
-{
-    AppServiceFwkInstaller appServiceFwkInstaller;
-    InitAppServiceFwkInstaller(appServiceFwkInstaller);
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    auto result = InstallSystemBundle(HAP_PATH_TEST, USERID);
-    ASSERT_EQ(result, ERR_OK);
-
-    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME_TEST;
-
-    InnerBundleInfo oldInfo;
-    infos[VERSION_ONE_LIBRARY_ONE_PATH] = oldInfo;
-    bool result1 = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
-    EXPECT_FALSE(result1);
-
-    ClearBundleInfo(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -792,5 +791,240 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNewModuleInstall_0010, Func
     DeleteBundleInfo(BUNDLE_NAME);
     DeletePreBundleInfo(BUNDLE_NAME);
     dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ProcessInstall_0010
+ * @tc.name: test ProcessInstall
+ * @tc.desc: 1.Test the ProcessInstall
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessInstall_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::vector<std::string> hspPaths;
+    hspPaths.push_back(VERSION_ONE_LIBRARY_ONE_PATH);
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+    installParam.specifiedDistributionType = BUNDLE_NAME;
+    installParam.additionalInfo = BUNDLE_NAME;
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    appServiceFwkInstaller.SavePreInstallBundleInfo(ERR_APPEXECFWK_INSTALL_PARAM_ERROR, infos);
+
+    auto res = appServiceFwkInstaller.ProcessInstall(hspPaths, installParam);
+    appServiceFwkInstaller.SavePreInstallBundleInfo(res, infos);
+    EXPECT_EQ(res, ERR_OK);
+
+    Security::Verify::ProvisionInfo provisionInfo;
+    appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
+}
+
+/**
+ * @tc.number: ProcessInstall_0010
+ * @tc.name: test ProcessInstall
+ * @tc.desc: 1.Test the ProcessInstall
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MkdirIfNotExist_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    Security::Verify::ProvisionInfo provisionInfo;
+    InstallParam installParam;
+    appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
+    installParam.specifiedDistributionType = BUNDLE_NAME;
+    installParam.additionalInfo = BUNDLE_NAME;
+    appServiceFwkInstaller.AddAppProvisionInfo(BUNDLE_NAME, provisionInfo, installParam);
+
+    auto res = appServiceFwkInstaller.MkdirIfNotExist(VERSION_ONE_LIBRARY_ONE_PATH);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+}
+
+/**
+ * @tc.number: InnerProcessInstall_0010
+ * @tc.name: test InnerProcessInstall
+ * @tc.desc: 1.Test the InnerProcessInstall
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, InnerProcessInstall_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InstallParam installParam;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
+
+    auto res = appServiceFwkInstaller.InnerProcessInstall(infos, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: ProcessNativeLibrary_0010
+ * @tc.name: test ProcessNativeLibrary
+ * @tc.desc: 1.Test the ProcessNativeLibrary
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessNativeLibrary_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    appServiceFwkInstaller.MergeBundleInfos(innerBundleInfo);
+    appServiceFwkInstaller.newInnerBundleInfo_.baseBundleInfo_->name = BUNDLE_NAME;
+    appServiceFwkInstaller.MergeBundleInfos(innerBundleInfo);
+
+    auto res = appServiceFwkInstaller.ProcessNativeLibrary(
+        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.nativeLibraryPath = BUNDLE_DATA_DIR;
+    innerModuleInfo.compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+
+    res = appServiceFwkInstaller.ProcessNativeLibrary(
+        VERSION_ONE_LIBRARY_ONE_PATH, BUNDLE_DATA_DIR, MODULE_NAME_TEST, BUNDLE_DATA_DIR, innerBundleInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = appServiceFwkInstaller.SaveBundleInfoToStorage();
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: MoveSoToRealPath_0010
+ * @tc.name: test MoveSoToRealPath
+ * @tc.desc: 1.Test the MoveSoToRealPath
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    auto res = appServiceFwkInstaller.MoveSoToRealPath(MODULE_NAME_LIBRARY_ONE, "data/test", MODULE_NAME_LIBRARY_ONE);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+
+    InstallParam installParam;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
+    res = appServiceFwkInstaller.UpdateAppService(innerBundleInfo, infos, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: ProcessBundleUpdateStatus_0010
+ * @tc.name: test ProcessBundleUpdateStatus
+ * @tc.desc: 1.Test the ProcessBundleUpdateStatus
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessBundleUpdateStatus_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    auto res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
+    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+
+    appServiceFwkInstaller.versionUpgrade_ = true;
+    res = appServiceFwkInstaller.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: GetInnerBundleInfo_0020
+ * @tc.name: test GetInnerBundleInfo
+ * @tc.desc: 1.Test the GetInnerBundleInfo
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetInnerBundleInfo_0020, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    ClearDataMgr();
+    InnerBundleInfo info;
+    bool isAppExist;
+    auto res = appServiceFwkInstaller.GetInnerBundleInfo(info, isAppExist);
+    EXPECT_TRUE(res);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: CheckNeedInstall_0010
+ * @tc.name: test CheckNeedInstall
+ * @tc.desc: 1.Test the CheckNeedInstall
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo oldInfo;
+    auto res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    EXPECT_FALSE(res);
+
+    InnerBundleInfo info;
+    infos.emplace(TEST_CREATE_FILE_PATH, info);
+    res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckNeedUpdate_0010
+ * @tc.name: test CheckNeedUpdate
+ * @tc.desc: 1.Test the CheckNeedUpdate
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedUpdate_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
+    oldInfo.baseBundleInfo_->versionCode = 1;
+    appServiceFwkInstaller.versionCode_ = 0;
+    auto res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+
+    appServiceFwkInstaller.versionCode_ = 2;
+    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+
+    appServiceFwkInstaller.versionCode_ = 1;
+    res = appServiceFwkInstaller.CheckNeedUpdate(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: RemoveLowerVersionSoDir_0010
+ * @tc.name: test RemoveLowerVersionSoDir
+ * @tc.desc: 1.Test the RemoveLowerVersionSoDir
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveLowerVersionSoDir_0010, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+
+    InnerBundleInfo oldInfo;
+    auto res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    appServiceFwkInstaller.versionUpgrade_ = true;
+    res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    EXPECT_EQ(res, ERR_OK);
 }
 }

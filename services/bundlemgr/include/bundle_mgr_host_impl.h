@@ -766,6 +766,8 @@ public:
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
         std::vector<int64_t> &bundleStats) override;
 
+    virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif
@@ -862,6 +864,17 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return  Returns result of the operation.
+     */
+    virtual ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen) override;
+
+    virtual ErrCode GetOdid(std::string &odid) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -881,8 +894,6 @@ private:
     bool DumpBundleInfo(const std::string &bundleName, int32_t userId, std::string &result);
     bool DumpShortcutInfo(const std::string &bundleName, int32_t userId, std::string &result);
     std::set<int32_t> GetExistsCommonUserIs();
-    bool VerifyQueryPermission(const std::string &queryBundleName);
-    bool VerifyPrivilegedPermission(const std::string &queryBundleName);
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);

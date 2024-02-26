@@ -167,34 +167,4 @@ HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_05
     res = BundlePermissionMgr::GetRequestPermissionStates(bundleInfo, tokenId, ERR_DEVICE_ID);
     EXPECT_EQ(res, true);
 }
-
-/**
- * @tc.number: BmsBundlePermissionGetRequestTest
- * Function: VerifyCallingPermission
- * @tc.name: test VerifyCallingPermission success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_0600, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    res = BundlePermissionMgr::VerifyCallingPermission(PERMISSION_NAME);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionGetRequestTest
- * Function: VerifyCallingPermission
- * @tc.name: test VerifyCallingPermission success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_0700, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    res = BundlePermissionMgr::VerifyCallingPermission(ERR_PERMISSION_NAME);
-    EXPECT_EQ(res, true);
-}
 } // OHOS

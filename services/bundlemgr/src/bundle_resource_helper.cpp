@@ -23,6 +23,7 @@
 #include "bundle_resource_param.h"
 #include "bundle_resource_register.h"
 #include "bundle_system_state.h"
+#include "resource_manager.h"
 #endif
 
 
@@ -35,6 +36,10 @@ void BundleResourceHelper::BundleSystemStateInit()
     // init language and colorMode
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
+    // init resource manager
+    if (Global::Resource::GetSystemResourceManagerNoSandBox() == nullptr) {
+        APP_LOGE("init no sand box resource manager failed");
+    }
 #endif
 }
 

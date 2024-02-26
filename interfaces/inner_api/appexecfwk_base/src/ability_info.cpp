@@ -99,6 +99,8 @@ const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 const std::string JOSN_KEY_UNCLEARABLE_MISSION = "unclearableMission";
+const std::string JSON_KEY_EXCLUDE_FROM_DOCK_MISSION = "excludeFromDock";
+const std::string JSON_KEY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION = "preferMultiWindowOrientation";
 const std::string JSON_KEY_RECOVERABLE = "recoverable";
 const std::string JSON_KEY_SUPPORT_EXT_NAMES = "supportExtNames";
 const std::string JSON_KEY_SUPPORT_MIME_TYPES = "supportMimeTypes";
@@ -284,6 +286,10 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         skillUri.emplace_back(stctUri);
     }
     isolationProcess = parcel.ReadBool();
+    excludeFromMissions = parcel.ReadBool();
+    unclearableMission = parcel.ReadBool();
+    excludeFromDock = parcel.ReadBool();
+    preferMultiWindowOrientation = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -437,6 +443,10 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromMissions);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, unclearableMission);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromDock);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(preferMultiWindowOrientation));
     return true;
 }
 
@@ -560,6 +570,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_UID, abilityInfo.uid},
         {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions},
         {JOSN_KEY_UNCLEARABLE_MISSION, abilityInfo.unclearableMission},
+        {JSON_KEY_EXCLUDE_FROM_DOCK_MISSION, abilityInfo.excludeFromDock},
+        {JSON_KEY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION, abilityInfo.preferMultiWindowOrientation},
         {JSON_KEY_RECOVERABLE, abilityInfo.recoverable},
         {JSON_KEY_SUPPORT_EXT_NAMES, abilityInfo.supportExtNames},
         {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
@@ -1186,6 +1198,22 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JOSN_KEY_UNCLEARABLE_MISSION,
         abilityInfo.unclearableMission,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_EXCLUDE_FROM_DOCK_MISSION,
+        abilityInfo.excludeFromDock,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION,
+        abilityInfo.preferMultiWindowOrientation,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

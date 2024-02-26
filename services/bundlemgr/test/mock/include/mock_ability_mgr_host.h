@@ -338,12 +338,12 @@ public:
         return 0;
     }
 
-    virtual int StartUser(int userId) override
+    virtual int StartUser(int userId, sptr<IUserCallback> callback) override
     {
         return 0;
     }
 
-    virtual int StopUser(int userId, const sptr<IStopUserCallback> &callback) override
+    virtual int StopUser(int userId, const sptr<IUserCallback> &callback) override
     {
         return 0;
     }

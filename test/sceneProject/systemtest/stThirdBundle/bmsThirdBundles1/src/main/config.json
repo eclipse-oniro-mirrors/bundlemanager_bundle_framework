@@ -20,7 +20,8 @@
     "module":{
         "package":"com.system.hiworld.example.h1",
         "name":"bmsThirdBundle1",
-        "deviceType":[
+        "deviceType": [
+            "2in1",
             "tablet",
             "default"
         ],

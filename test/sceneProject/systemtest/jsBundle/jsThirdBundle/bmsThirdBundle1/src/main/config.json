@@ -107,6 +107,7 @@
         ],
         "colorMode": "light",
         "deviceType": [
+            "2in1",
             "tablet",
             "default"
         ],

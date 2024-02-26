@@ -373,6 +373,7 @@ constexpr const char* MODULE_PROXY_DATA = "proxyData";
 constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
@@ -413,6 +414,8 @@ constexpr const char* ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 constexpr const char* ABILITY_UNCLEARABLE_MISSION = "unclearableMission";
+constexpr const char* ABILITY_EXCLUDEFROMDOCK_MISSION = "excludeFromDock";
+constexpr const char* ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION = "preferMultiWindowOrientation";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
 // extension ability
@@ -485,6 +488,12 @@ constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 
 // moduleMenu
 constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
+
+// module router
+constexpr const char* MODULE_ROUTER_MAP = "routerMap";
+
+//module appEnvironment
+constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

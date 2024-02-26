@@ -19,6 +19,7 @@
 #include "bms_rdb_config.h"
 #include "bundle_resource_constants.h"
 #include "bundle_system_state.h"
+#include "bundle_util.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -38,6 +39,8 @@ BundleResourceRdb::BundleResourceRdb()
         + std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME)
         + "(NAME TEXT NOT NULL, UPDATE_TIME INTEGER, LABEL TEXT, ICON TEXT, "
         + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME, SYSTEM_STATE));");
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + bmsRdbConfig.tableName +
+        " ADD HIDE_DESKTOP_ICON INTEGER DEFAULT 0;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -53,13 +56,14 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
         return false;
     }
     APP_LOGD("insert resource key:%{public}s", resourceInfo.GetKey().c_str());
+    int64_t timeStamp = BundleUtil::GetCurrentTimeMs();
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
-    valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, resourceInfo.updateTime_);
+    valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
     valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
     valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
     valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
-
+    valuesBucket.PutInt(BundleResourceConstants::HIDE_DESKTOP_ICON, resourceInfo.hideDesktopIcon_ ? 1 : 0);
     return rdbDataManager_->InsertData(valuesBucket);
 }
 
@@ -69,12 +73,33 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         APP_LOGE("failed, resourceInfos is empty");
         return false;
     }
+    int64_t timeStamp = BundleUtil::GetCurrentTimeMs();
     bool ret = true;
+    std::vector<NativeRdb::ValuesBucket> valuesBuckets;
     for (const auto &info : resourceInfos) {
-        if (!AddResourceInfo(info)) {
-            APP_LOGE("failed, key:%{public}s", info.GetKey().c_str());
+        if (info.bundleName_.empty()) {
+            APP_LOGE("failed, bundleName is empty");
             ret = false;
+            continue;
         }
+        NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BundleResourceConstants::NAME, info.GetKey());
+        valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
+        valuesBucket.PutString(BundleResourceConstants::LABEL, info.label_);
+        valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
+        valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
+        valuesBucket.PutInt(BundleResourceConstants::HIDE_DESKTOP_ICON, info.hideDesktopIcon_ ? 1 : 0);
+        valuesBuckets.emplace_back(valuesBucket);
+    }
+    int64_t insertNum = 0;
+    bool insertRet = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
+    if (!insertRet) {
+        APP_LOGE("BatchInsert failed");
+        return false;
+    }
+    if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
+        APP_LOGE("BatchInsert size not expected");
+        return false;
     }
     return ret;
 }
@@ -216,6 +241,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, bundleName + BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    absRdbPredicates.EqualTo(BundleResourceConstants::HIDE_DESKTOP_ICON, 0); // launcher ability show in desktop
 
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
@@ -295,6 +321,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     absRdbPredicates.Contains(BundleResourceConstants::NAME, BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    absRdbPredicates.EqualTo(BundleResourceConstants::HIDE_DESKTOP_ICON, 0); // launcher ability show in desktop
 
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {

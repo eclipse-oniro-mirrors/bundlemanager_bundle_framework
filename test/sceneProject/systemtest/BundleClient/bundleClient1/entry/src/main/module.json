@@ -49,6 +49,28 @@
                         ]
                     }
                 ]
+            },
+            {
+                "startWindowIcon": "$media:icon",
+                "name": "BROWSER",
+                "icon": "$media:icon",
+                "visible": true,
+                "skills": [
+                  {
+                    "actions": [
+                      "ohos.want.action.viewData"
+                    ],
+                    "entities": [
+                      "entity.system.browsable"
+                    ],
+                    "uris": [
+                      {
+                        "scheme": "http"
+                      }      
+                    ]
+                  }
+                ],
+                "srcEntrance": ""
             }
         ],
         "extensionAbilities":[
@@ -84,6 +106,16 @@
                 "name": "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED",
                 "reason": "$string:entry_desc",
                 "usedScene": {"abilities": ["MainAbility"]}
+            }
+        ],
+        "querySchemes": [
+            "http",
+            "welink"
+        ],
+        "appEnvironments": [
+            {
+                "name": "name",
+                "value": "value"
             }
         ]
     }

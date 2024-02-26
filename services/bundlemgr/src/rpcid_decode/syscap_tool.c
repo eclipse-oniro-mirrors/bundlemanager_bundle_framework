@@ -87,7 +87,7 @@ int32_t RPCIDStreamDecodeToBuffer(
     syscapBufLen = sysCapLength / SINGLE_FEAT_LENGTH * SINGLE_SYSCAP_LENGTH;
     syscapBuf = (char *)malloc(syscapBufLen);
     if (syscapBuf == NULL) {
-        HILOG_ERROR(LOG_CORE, "malloc syscapBuf failed, size = %u, errno = %d\n", syscapBufLen, errno);
+        HILOG_ERROR(LOG_CORE, "malloc syscapBuf failed, size = %u, errno = %{public}d\n", syscapBufLen, errno);
         return ERROR;
     }
 
@@ -95,7 +95,7 @@ int32_t RPCIDStreamDecodeToBuffer(
     char *bufferPtr = syscapBuf;
     for (int32_t i = 0; i < ((int32_t)sysCapLength / SINGLE_FEAT_LENGTH); i++) {
         if (*(sysCapArrayPtr + (i + 1) * SINGLE_FEAT_LENGTH - 1) != '\0') {
-            HILOG_ERROR(LOG_CORE, "prase failed, format is invaild, in line %d\n", __LINE__);
+            HILOG_ERROR(LOG_CORE, "prase failed, format is invaild, in line %{public}d\n", __LINE__);
             (void)free(syscapBuf);
             return ERROR;
         }
@@ -109,8 +109,8 @@ int32_t RPCIDStreamDecodeToBuffer(
 
         ret = strncat_s(bufferPtr, SINGLE_SYSCAP_LENGTH, sysCapArrayPtr + i * SINGLE_FEAT_LENGTH, SINGLE_FEAT_LENGTH);
         if (ret != EOK) {
-            HILOG_ERROR(LOG_CORE, "strncat_s failed, (%s, %d, %s, %d)\n", bufferPtr, SINGLE_SYSCAP_LENGTH,
-                        sysCapArrayPtr + i * SINGLE_FEAT_LENGTH, SINGLE_FEAT_LENGTH);
+            HILOG_ERROR(LOG_CORE, "strncat_s failed, (%{public}s, %{public}d, %{public}s, %{public}d)\n",
+                bufferPtr, SINGLE_SYSCAP_LENGTH, sysCapArrayPtr + i * SINGLE_FEAT_LENGTH, SINGLE_FEAT_LENGTH);
             (void)free(syscapBuf);
             return ERROR;
         }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 
 #include "bundle_parser.h"
 
+#include <cerrno>
 #include <fstream>
 #include <sstream>
 #include <unistd.h>
@@ -36,6 +37,7 @@ namespace {
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
+static const std::string ROUTER_MAP = "routerMap";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -64,7 +66,7 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
 bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
-        APP_LOGD("%{public}s, not existed", filePath.c_str());
+        APP_LOGD("access file %{public}s failed, error: %{public}s", filePath.c_str(), strerror(errno));
         return false;
     }
 
@@ -74,14 +76,14 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("the file cannot be open due to  %{public}s", errBuf);
+        APP_LOGE("the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
         return false;
     }
 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("the file is an empty file");
+        APP_LOGE("the file is an empty file, errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -284,6 +286,40 @@ ErrCode BundleParser::ParseExtTypeConfig(
 
     PreBundleProfile preBundleProfile;
     return preBundleProfile.TransformJsonToExtensionTypeList(jsonBuf, extensionTypeList);
+}
+
+ErrCode BundleParser::ParseRouterArray(
+    const std::string &jsonString, std::vector<RouterItem> &routerArray) const
+{
+    if (jsonString.empty()) {
+        APP_LOGE("jsonString is empty");
+        return ERR_APPEXECFWK_PARSE_NO_PROFILE;
+    }
+    APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
+    nlohmann::json jsonBuf = nlohmann::json::parse(jsonString);
+    if (jsonBuf.is_discarded()) {
+        APP_LOGE("json file %{private}s is discarded", jsonString.c_str());
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    if (jsonBuf.find(ROUTER_MAP) == jsonBuf.end()) {
+        APP_LOGE("routerMap no exist");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    nlohmann::json routerJson = jsonBuf.at(ROUTER_MAP);
+    if (!routerJson.is_array()) {
+        APP_LOGE("json under routerMap is not a json array");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+
+    for (const auto &object : routerJson) {
+        if (!object.is_object()) {
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        }
+        RouterItem routerItem;
+        from_json(object, routerItem);
+        routerArray.emplace_back(routerItem);
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

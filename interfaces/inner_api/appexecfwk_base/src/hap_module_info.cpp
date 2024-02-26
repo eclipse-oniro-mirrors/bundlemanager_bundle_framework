@@ -81,6 +81,13 @@ const std::string HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
+const std::string HAP_MODULE_INFO_ROUTER_MAP = "routerMap";
+const std::string HAP_MODULE_INFO_ROUTER_ARRAY = "routerArray";
+const std::string ROUTER_ITEM_KEY_NAME = "name";
+const std::string ROUTER_ITEM_KEY_PAGE_MODULE = "pageModule";
+const std::string ROUTER_ITEM_KEY_PAGE_SOURCE_FILE = "pageSourceFile";
+const std::string ROUTER_ITEM_KEY_BUILD_FUNCTION = "buildFunction";
+const std::string ROUTER_ITEM_KEY_DATA = "data";
 const std::string HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
@@ -285,6 +292,110 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read ProxyData from database error, error code : %{public}d", parseResult);
+    }
+}
+
+bool RouterItem::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    pageModule = Str16ToStr8(parcel.ReadString16());
+    pageSourceFile = Str16ToStr8(parcel.ReadString16());
+    buildFunction = Str16ToStr8(parcel.ReadString16());
+
+    int32_t dataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, dataSize, &data);
+    for (int32_t i = 0; i < dataSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        std::string value = Str16ToStr8(parcel.ReadString16());
+        data.emplace(key, value);
+    }
+    return true;
+}
+
+RouterItem *RouterItem::Unmarshalling(Parcel &parcel)
+{
+    RouterItem *info = new (std::nothrow) RouterItem();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+bool RouterItem::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageModule));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageSourceFile));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildFunction));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(data.size()));
+    for (const auto &dataItem : data) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
+    }
+    return true;
+}
+
+void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem)
+{
+    jsonObject = nlohmann::json {
+        {ROUTER_ITEM_KEY_NAME, routerItem.name},
+        {ROUTER_ITEM_KEY_PAGE_MODULE, routerItem.pageModule},
+        {ROUTER_ITEM_KEY_PAGE_SOURCE_FILE, routerItem.pageSourceFile},
+        {ROUTER_ITEM_KEY_BUILD_FUNCTION, routerItem.buildFunction},
+        {ROUTER_ITEM_KEY_DATA, routerItem.data}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_NAME,
+        routerItem.name,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_PAGE_MODULE,
+        routerItem.pageModule,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_PAGE_SOURCE_FILE,
+        routerItem.pageSourceFile,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_BUILD_FUNCTION,
+        routerItem.buildFunction,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_DATA,
+        routerItem.data,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module RouterItem from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -508,16 +619,29 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     fileContextMenu = Str16ToStr8(parcel.ReadString16());
+    routerMap = Str16ToStr8(parcel.ReadString16());
+
+    int32_t routerArraySize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArraySize);
+    CONTAINER_SECURITY_VERIFY(parcel, routerArraySize, &routerArray);
+    for (int32_t i = 0; i < routerArraySize; ++i) {
+        std::unique_ptr<RouterItem> routerItem(parcel.ReadParcelable<RouterItem>());
+        if (!routerItem) {
+            APP_LOGE("ReadParcelable<RouterItem> failed");
+            return false;
+        }
+        routerArray.emplace_back(*routerItem);
+    }
     int32_t appEnvironmentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironmentsSize);
     CONTAINER_SECURITY_VERIFY(parcel, appEnvironmentsSize, &appEnvironments);
-    for (int32_t i = 0; i < proxyDatasSize; ++i) {
+    for (int32_t i = 0; i < appEnvironmentsSize; ++i) {
         std::unique_ptr<AppEnvironment> appEnvironment(parcel.ReadParcelable<AppEnvironment>());
         if (!appEnvironment) {
             APP_LOGE("ReadParcelable<AppEnvironment> failed");
             return false;
         }
-        proxyDatas.emplace_back(*appEnvironment);
+        appEnvironments.emplace_back(*appEnvironment);
     }
     return true;
 }
@@ -633,6 +757,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileContextMenu));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(routerMap));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArray.size());
+    for (auto &router : routerArray) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &router);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
@@ -695,6 +824,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
         {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
+        {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
+        {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments}
     };
 }
@@ -1119,6 +1250,22 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_ROUTER_MAP,
+        hapModuleInfo.routerMap,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<RouterItem>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_ROUTER_ARRAY,
+        hapModuleInfo.routerArray,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_APP_ENVIRONMENTS,

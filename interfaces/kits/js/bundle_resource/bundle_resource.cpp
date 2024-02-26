@@ -159,7 +159,7 @@ static ErrCode InnerGetBundleResourceInfo(
     }
     ErrCode ret = bundleResourceProxy->GetBundleResourceInfo(bundleName, flags, resourceInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("failed, errCode: %{public}d", ret);
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -175,7 +175,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
     }
     std::string bundleName;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
-        APP_LOGE("parse bundleName failed");
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
@@ -221,7 +221,7 @@ static ErrCode InnerGetLauncherAbilityResourceInfo(
     ErrCode ret = bundleResourceProxy->GetLauncherAbilityResourceInfo(bundleName,
         flags, launcherAbilityResourceInfo);
     if (ret != ERR_OK) {
-        APP_LOGE("failed, errCode: %{public}d", ret);
+        APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -237,7 +237,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     }
     std::string bundleName;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
-        APP_LOGE("parse bundleName failed");
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }

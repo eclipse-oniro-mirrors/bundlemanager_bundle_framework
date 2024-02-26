@@ -118,6 +118,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"shared", BundleType::SHARED},
     {"appService", BundleType::APP_SERVICE_FWK}
 };
+const size_t MAX_QUERYSCHEMES_LENGTH = 50;
 
 struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
@@ -169,6 +170,8 @@ struct Ability {
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
+    bool excludeFromDock = false;
+    std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
 };
 
@@ -255,6 +258,9 @@ struct Module {
     std::string isolationMode;
     bool compressNativeLibs = true;
     std::string fileContextMenu;
+    std::vector<std::string> querySchemes;
+    std::string routerMap;
+    std::vector<AppEnvironment> appEnvironments;
 };
 
 struct ModuleJson {
@@ -570,6 +576,22 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ABILITY_UNCLEARABLE_MISSION,
         ability.unclearableMission,
         JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_EXCLUDEFROMDOCK_MISSION,
+        ability.excludeFromDock,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION,
+        ability.preferMultiWindowOrientation,
+        JsonType::STRING,
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
@@ -1416,6 +1438,30 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_QUERY_SCHEMES,
+        module.querySchemes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ROUTER_MAP,
+        module.routerMap,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_ENVIRONMENTS,
+        module.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1924,6 +1970,8 @@ bool ToAbilityInfo(
     abilityInfo.priority = ability.priority;
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
     abilityInfo.unclearableMission = ability.unclearableMission;
+    abilityInfo.excludeFromDock = ability.excludeFromDock;
+    abilityInfo.preferMultiWindowOrientation = ability.preferMultiWindowOrientation;
     abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
@@ -2110,7 +2158,18 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+
+    if (moduleJson.module.querySchemes.size() > Profile::MAX_QUERYSCHEMES_LENGTH) {
+        APP_LOGE("The length of the querySchemes exceeds the limit");
+        return false;
+    }
+    for (const std::string &queryScheme : moduleJson.module.querySchemes) {
+        innerModuleInfo.querySchemes.emplace_back(queryScheme);
+    }
+
+    innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo
+    innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
     return true;
 }
 

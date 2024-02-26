@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <chrono>
 #include <cstdio>
@@ -81,6 +82,7 @@ const std::string MODULE_NAME_FEATURE18 = "feature18";
 const std::string PATH_UNDERLIND = "_";
 const std::string DEVICE_TYPE_OF_DEFAULT = "default";
 const std::string TEMP_PREFIX = "temp_";
+const std::string EMPTY_STRING = "";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
@@ -1746,20 +1748,31 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6600, Function | SmallTest | 
     Metadata meta;
     std::unordered_multimap<std::string, std::string> dirMap;
 
-    meta.name = "cupsFilter";
-    meta.resource = "../";
-    meta.value = "../";
+    meta.name = "file";
     ErrCode res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
-    EXPECT_TRUE(dirMap.empty());
+    EXPECT_EQ(res, ERR_OK);
 
-    meta.resource = "./";
+    meta.name = "cupsFilter";
+    meta.resource = "../test";
+    meta.value = "./test";
     res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
     EXPECT_TRUE(dirMap.empty());
 
-    meta.resource = "../";
-    meta.value = "./";
+    meta.resource = "./test";
+    meta.value = "../test";
+    res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(dirMap.empty());
+
+    meta.resource = "../test";
+    meta.value = "../test";
+    res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(dirMap.empty());
+
+    meta.resource = "/";
+    meta.value = "/data";
     res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
     EXPECT_TRUE(dirMap.empty());
@@ -1775,6 +1788,19 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6700, Function | SmallTest | 
 {
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     InnerBundleInfo info;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
+    info.baseExtensionInfos_.emplace("1", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
+
+    info.baseExtensionInfos_.emplace("2", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+
+    extensionAbilityInfo.moduleName = EMPTY_STRING;
+    info.baseExtensionInfos_.emplace("3", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+
     Metadata meta;
     std::unordered_multimap<std::string, std::string> dirMap;
     bool isModuleExisted = false;
@@ -1785,5 +1811,127 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6700, Function | SmallTest | 
     ErrCode res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, isModuleExisted);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_FALSE(dirMap.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_6800
+ * @tc.name: test the CreateDriverSoDestinedDir of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6800, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    InnerBundleInfo info;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
+    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
+    info.baseExtensionInfos_.emplace("1", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
+    driverInstaller->RenameDriverFile(info);
+
+    Metadata metadata;
+    metadata.name = "file";
+    extensionAbilityInfo.metadata.push_back(metadata);
+    info.baseExtensionInfos_.emplace("2", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
+    driverInstaller->RenameDriverFile(info);
+
+    metadata.name = "cupsFilter";
+    metadata.resource = "/";
+    extensionAbilityInfo.metadata.push_back(metadata);
+    info.baseExtensionInfos_.emplace("3", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+    driverInstaller->RenameDriverFile(info);
+
+    metadata.name = "cupsFilter";
+    metadata.resource = "../test";
+    extensionAbilityInfo.metadata.push_back(metadata);
+    extensionAbilityInfo.moduleName = EMPTY_STRING;
+    info.baseExtensionInfos_.emplace("4", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+    driverInstaller->RenameDriverFile(info);
+
+    auto res1 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, DRIVER_FEATURE_BUNDLE, BUNDLE_DATA_DIR, false);
+    EXPECT_FALSE(res1.empty());
+
+    auto res2 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, RESOURCE_ROOT_PATH, BUNDLE_DATA_DIR, false);
+    EXPECT_FALSE(res2.empty());
+
+    auto res3 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, RESOURCE_ROOT_PATH, BUNDLE_DATA_DIR, true);
+    EXPECT_FALSE(res3.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_6900
+ * @tc.name: test the CreateDriverSoDestinedDir of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6900, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    auto res1 = driverInstaller->CreateDriverSoDestinedDir(EMPTY_STRING,
+        EMPTY_STRING, EMPTY_STRING, EMPTY_STRING, false);
+    EXPECT_TRUE(res1.empty());
+
+    auto res2 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        EMPTY_STRING, EMPTY_STRING, EMPTY_STRING, false);
+    EXPECT_TRUE(res2.empty());
+
+    auto res3 = driverInstaller->CreateDriverSoDestinedDir(EMPTY_STRING,
+        MODULE_NAME_FEATURE6, EMPTY_STRING, EMPTY_STRING, false);
+    EXPECT_TRUE(res3.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_7000
+ * @tc.name: test the CreateDriverSoDestinedDir of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7000, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    auto res1 = driverInstaller->CreateDriverSoDestinedDir(EMPTY_STRING,
+        EMPTY_STRING, DRIVER_FEATURE_BUNDLE, EMPTY_STRING, false);
+    EXPECT_TRUE(res1.empty());
+
+    auto res2 = driverInstaller->CreateDriverSoDestinedDir(EMPTY_STRING,
+        EMPTY_STRING, EMPTY_STRING, BUNDLE_DATA_DIR, false);
+    EXPECT_TRUE(res2.empty());
+
+    auto res3 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, EMPTY_STRING, EMPTY_STRING, false);
+    EXPECT_TRUE(res3.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_7100
+ * @tc.name: test the CreateDriverSoDestinedDir of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7100, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    auto res1 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        EMPTY_STRING, DRIVER_FEATURE_BUNDLE, EMPTY_STRING, false);
+    EXPECT_TRUE(res1.empty());
+
+    auto res2 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        EMPTY_STRING, EMPTY_STRING, BUNDLE_DATA_DIR, false);
+    EXPECT_TRUE(res2.empty());
+
+    auto res3 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, DRIVER_FEATURE_BUNDLE, EMPTY_STRING, false);
+    EXPECT_TRUE(res3.empty());
+
+    auto res4 = driverInstaller->CreateDriverSoDestinedDir(BUNDLE_NAME,
+        MODULE_NAME_FEATURE6, EMPTY_STRING, BUNDLE_DATA_DIR, false);
+    EXPECT_TRUE(res4.empty());
 }
 } // OHOS

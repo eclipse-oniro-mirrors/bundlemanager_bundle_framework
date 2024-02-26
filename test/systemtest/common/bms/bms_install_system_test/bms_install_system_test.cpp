@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <cerrno>
 #include <fstream>
 #include <future>
 #include <gtest/gtest.h>
@@ -373,7 +374,7 @@ void BmsInstallSystemTest::ClearJsonFile() const
     std::string fileName = BUNDLE_DATA_BASE_FILE;
     std::ofstream o(fileName);
     if (!o.is_open()) {
-        std::cout << "failed to open as out" << fileName << std::endl;
+        std::cout << "failed to open as out" << fileName << "errno:" << errno << std::endl;
     } else {
         std::cout << "clear" << fileName << std::endl;
     }
@@ -1887,6 +1888,54 @@ HWTEST_F(BmsInstallSystemTest, BMS_UpdateBundleForSelf_0100, Function | MediumTe
     std::vector<std::string> bundleFilePaths;
     bool res = UpdateBundleForSelf(bundleFilePaths);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CompileProcessAOT_0100
+ * @tc.name: CompileProcessAOT
+ * @tc.desc: CompileProcessAOT when param is empty.
+ */
+HWTEST_F(BmsInstallSystemTest, CompileProcessAOT_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "", false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CompileReset_0100
+ * @tc.name: CompileReset
+ * @tc.desc: CompileReset when param is empty.
+ */
+HWTEST_F(BmsInstallSystemTest, CompileReset_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CompileReset("", false);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0100
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: CreateBundleDataDir when param is default userId.
+ */
+HWTEST_F(BmsInstallSystemTest, CreateBundleDataDir_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    ErrCode ret = bundleMgrProxy->CreateBundleDataDir(USERID);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -2427,5 +2427,18 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0400, TestSize.Level1)
     ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: CreateBundleDataDir_0100
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: Test whether CreateBundleDataDir is called normally.
+ */
+HWTEST_F(BundleMgrClientSystemTest, CreateBundleDataDir_0100, TestSize.Level1)
+{
+    BundleMgrClient bundleMgrClient;
+    int32_t userId = -100;
+    auto result = bundleMgrClient.CreateBundleDataDir(userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

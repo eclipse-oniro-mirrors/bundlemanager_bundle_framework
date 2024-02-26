@@ -146,6 +146,8 @@ public:
      */
     static bool CopyFile(
         const std::string &oldPath, const std::string &newPath);
+
+    static bool CopyFileFast(const std::string &sourcePath, const std::string &destPath);
     /**
      * @brief Delete all dir or file.
      * @param path Indicates sourceStr.
@@ -171,7 +173,7 @@ public:
     static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
         std::vector<std::string> &toDeletePaths);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
-    static std::string GenerateDataGroupDirName();
+    static std::string GenerateUuid();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

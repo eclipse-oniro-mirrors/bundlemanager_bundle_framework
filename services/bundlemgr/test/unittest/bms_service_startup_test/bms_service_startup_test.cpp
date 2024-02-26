@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -38,6 +38,7 @@ const std::string AVAILABLE_TYPE_NORMAL = "normal";
 const std::string AVAILABLE_TYPE_MDM = "MDM";
 const std::string AVAILABLE_TYPE_EMPTY = "";
 const std::string BUNDLE_PATH = "test.hap";
+const std::string STRING_TYPE = "string";
 } // namespace
 
 class BmsServiceStartupTest : public testing::Test {
@@ -661,6 +662,90 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0900, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_1000
+ * @tc.name: test MatchSignature
+ * @tc.desc: 1.test MatchSignature of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1000, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    DefaultPermission defaultPermission;
+    std::vector<std::string> signatures = { STRING_TYPE };
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, signatures);
+    EXPECT_EQ(ret, false);
+
+    defaultPermission.appSignature = { STRING_TYPE };
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, signatures);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1100
+ * @tc.name: test MatchSignature
+ * @tc.desc: 1.test MatchSignature of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1100, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    DefaultPermission defaultPermission;
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, STRING_TYPE);
+    EXPECT_EQ(ret, false);
+
+    defaultPermission.appSignature = { STRING_TYPE };
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, "");
+    EXPECT_EQ(ret, false);
+
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, STRING_TYPE);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1200
+ * @tc.name: test IsCallingUidValid
+ * @tc.desc: 1.test IsCallingUidValid of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1200, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    ret = BundlePermissionMgr::IsCallingUidValid(callingUid);
+    EXPECT_EQ(ret, true);
+
+    callingUid = -100;
+    ret = BundlePermissionMgr::IsCallingUidValid(callingUid);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1300
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1300, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::IsBundleSelfCalling("");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1400
+ * @tc.name: test VerifyCallingBundleSdkVersion
+ * @tc.desc: 1.test VerifyCallingBundleSdkVersion of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1400, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    ret = BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::INVALID_API_VERSION);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
  * @tc.desc: 1.test IsRunning of AbilityManagerHelper
@@ -790,6 +875,26 @@ HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: GetNewPermissionDefList_0200
+ * @tc.name: GetNewPermissionDefList
+ * @tc.desc: GetNewPermissionDefList when permissionDef if empty.
+ */
+HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0200, Function | SmallTest | Level1)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::AccessTokenID tokenId = -100;
+    std::vector<AccessToken::PermissionDef> permissionDef;
+    std::vector<AccessToken::PermissionDef> newPermissionDef;
+    AccessToken::PermissionDef permission;
+    permission.permissionName = STRING_TYPE;
+    permissionDef.emplace_back(permission);
+    newPermissionDef.emplace_back(permission);
+    res = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDef, newPermissionDef);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.number: CheckPermissionAvailableType_0100
  * @tc.name: test CheckPermissionAvailableType
  * @tc.desc: 1.test CheckPermissionAvailableType of BundlePermissionMgr
@@ -802,6 +907,26 @@ HWTEST_F(BmsServiceStartupTest, CheckPermissionAvailableType_0100, Function | Sm
     std::string appDistributionType = AppExecFwk::Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
     bool result = BundlePermissionMgr::CheckPermissionAvailableType(appDistributionType, permissionDef);
     EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: CheckPermissionAvailableType_0200
+ * @tc.name: test CheckPermissionAvailableType
+ * @tc.desc: 1.test CheckPermissionAvailableType of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, CheckPermissionAvailableType_0200, Function | SmallTest | Level1)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    AccessToken::PermissionDef permissionDef;
+    permissionDef.availableType = Security::AccessToken::ATokenAvailableTypeEnum::MDM;
+    res = BundlePermissionMgr::CheckPermissionAvailableType("", permissionDef);
+    EXPECT_EQ(res, false);
+
+    res = BundlePermissionMgr::CheckPermissionAvailableType(
+        Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM, permissionDef);
+    EXPECT_EQ(res, true);
 }
 
 /**
@@ -855,5 +980,77 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTes
             preInstallExceptionMgr->SavePreInstallExceptionPath(bundleNameIter);
         }
     }
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: CreateStream
+ * @tc.desc: CreateStream when param is empty.
+ */
+HWTEST_F(BmsServiceStartupTest, CreateStream_0100, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    auto res = impl.CreateStream("");
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: CreateStream_0200
+ * @tc.name: CreateSignatureFileStream
+ * @tc.desc: CreateSignatureFileStream when param is empty.
+ */
+HWTEST_F(BmsServiceStartupTest, CreateStream_0200, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string name = "test";
+    auto res = impl.CreateSignatureFileStream(name, "");
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreateSignatureFileStream("", name);
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreateSignatureFileStream(name, name);
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: Marshalling_0100
+ * @tc.name: Marshalling
+ * @tc.desc: test Marshalling of DisposedRule
+ */
+HWTEST_F(BmsServiceStartupTest, Marshalling_0100, Function | SmallTest | Level1)
+{
+    DisposedRule rule;
+    std::vector<ElementName> elementList;
+    ElementName elementName(STRING_TYPE, STRING_TYPE, STRING_TYPE, STRING_TYPE);
+    elementList.emplace_back(elementName);
+    Parcel parcel;
+    bool res = rule.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+
+    auto ptr = rule.Unmarshalling(parcel);
+    ASSERT_NE(ptr, nullptr);
+    delete(ptr);
+}
+
+/**
+ * @tc.number: Marshalling_0200
+ * @tc.name: Marshalling
+ * @tc.desc: test Marshalling of BundlePackInfo
+ */
+HWTEST_F(BmsServiceStartupTest, Marshalling_0200, Function | SmallTest | Level1)
+{
+    BundlePackInfo info;
+    Parcel parcel;
+    bool res = info.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+
+    auto ptr = info.Unmarshalling(parcel);
+    ASSERT_NE(ptr, nullptr);
+    delete(ptr);
 }
 } // OHOS

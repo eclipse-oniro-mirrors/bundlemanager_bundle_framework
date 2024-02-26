@@ -534,7 +534,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
         }
         // There is only one innerModuleInfo when installing
         InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
-        APP_LOGD("current module:%s, dependencies = %s", moduleInfo.moduleName.c_str(),
+        APP_LOGD("current module:%{public}s, dependencies = %{public}s", moduleInfo.moduleName.c_str(),
             GetJsonStrFromInfo(moduleInfo.dependencies).c_str());
         bool isModuleExist = false;
         for (const auto &dependency : moduleInfo.dependencies) {
@@ -724,6 +724,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
     newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
+    newInfo.SetAllowAppRunWhenDeviceFirstLocked(preBundleConfigInfo.allowAppRunWhenDeviceFirstLocked);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
@@ -1380,6 +1381,7 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
     appProvisionInfo.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
+    appProvisionInfo.appServiceCapabilities = provisionInfo.appServiceCapabilities;
     return appProvisionInfo;
 }
 

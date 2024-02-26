@@ -242,6 +242,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleObtainCallingBundleName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
         &BundleMgrHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS),
+        &BundleMgrHost::HandleGetAllBundleStats);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL),
         &BundleMgrHost::HandleCheckAbilityEnableInstall);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID),
@@ -336,6 +338,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCompileProcessAOT);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_RESET),
         &BundleMgrHost::HandleCompileReset);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CAN_OPEN_LINK),
+        &BundleMgrHost::HandleCanOpenLink);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
+        &BundleMgrHost::HandleGetOdid);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2474,6 +2480,23 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<int64_t> bundleStats;
+    bool ret = GetAllBundleStats(userId, bundleStats);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret && !reply.WriteInt64Vector(bundleStats)) {
+        APP_LOGE("write bundleStats failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3163,6 +3186,40 @@ ErrCode BundleMgrHost::WriteBigString(const std::string &str, MessageParcel &rep
 {
     WRITE_PARCEL(reply.WriteUint32(str.size() + 1));
     WRITE_PARCEL(reply.WriteRawData(str.c_str(), str.size() + 1));
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCanOpenLink(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string link = data.ReadString();
+    bool canOpen = false;
+    ErrCode ret = CanOpenLink(link, canOpen);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(canOpen)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string odid;
+    auto ret = GetOdid(odid);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -158,7 +158,7 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
  */
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("GetBundleInstaller called");
+    APP_LOGI("GetBundleInstaller called");
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, SECOND_PARAM)) {
         APP_LOGE("GetBundleInstaller args init failed");
@@ -196,12 +196,13 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         executeFunc,
         GetBundleInstallerCompleted);
     callbackPtr.release();
+    APP_LOGI("call GetBundleInstaller done");
     return promise;
 }
 
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI GetBundleInstallerSync called.");
+    APP_LOGI("NAPI GetBundleInstallerSync called.");
     napi_value m_classBundleInstaller = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
@@ -222,6 +223,7 @@ napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
     APP_LOGD("call GetBundleInstallerSync done.");
     return nBundleInstaller;
+    APP_LOGI("call GetBundleInstallerSync done.");
 }
 
 static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
@@ -290,8 +292,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID, ERROR_INSTALL_HAP_FILEPATH_INVALID },
         { IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
         { IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
-        { IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED, ERROR_PERMISSION_DENIED_ERROR },
-        { IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED, ERROR_PERMISSION_DENIED_ERROR },
+        { IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED, ERROR_INSTALL_PERMISSION_CHECK_ERROR },
+        { IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED, ERROR_INSTALL_PERMISSION_CHECK_ERROR },
         { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
         { IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED, ERROR_BUNDLE_SERVICE_EXCEPTION },
         { IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST, ERROR_BUNDLE_SERVICE_EXCEPTION },
@@ -563,7 +565,7 @@ static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleNa
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
     if (!res) {
-        APP_LOGE("parse bundleName failed");
+        APP_LOGE("parse bundleName failed, bundleName is %{public}s", bundleName.c_str());
         return res;
     }
     if (property != nullptr) {
@@ -960,7 +962,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
  */
 napi_value Install(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("Install called");
+    APP_LOGI("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
@@ -1017,6 +1019,7 @@ napi_value Install(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
         OperationCompleted);
     callbackPtr.release();
+    APP_LOGI("call Install done");
     return promise;
 }
 
@@ -1188,15 +1191,16 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
 
 napi_value Recover(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("Recover called");
+    APP_LOGI("Recover called");
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::RECOVER;
+    APP_LOGI("call Recover done");
     return UninstallOrRecover(env, info, callbackPtr);
 }
 
 napi_value Uninstall(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("Uninstall called");
+    APP_LOGI("Uninstall called");
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::UNINSTALL;
     // uninstall uninstallParam
@@ -1207,6 +1211,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     if (firstType == napi_object) {
         return UninstallByUninstallParam(env, info, callbackPtr);
     }
+    APP_LOGI("call Uninstall done");
     return UninstallOrRecover(env, info, callbackPtr);
 }
 
@@ -1222,7 +1227,7 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
  */
 napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("UpdateBundleForSelf called");
+    APP_LOGI("UpdateBundleForSelf called");
     // obtain arguments of install interface
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
@@ -1274,6 +1279,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
         OperationCompleted);
     callbackPtr.release();
+    APP_LOGI("call UpdateBundleForSelf done");
     return promise;
 }
 } // AppExecFwk

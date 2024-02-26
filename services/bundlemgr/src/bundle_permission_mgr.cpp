@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -179,7 +179,7 @@ AccessToken::AccessTokenIDEx BundlePermissionMgr::CreateAccessTokenIdEx(
     hapInfo.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
     hapInfo.isSystemApp = innerBundleInfo.IsSystemApp();
     AccessToken::AccessTokenIDEx accessToken = AccessToken::AccessTokenKit::AllocHapToken(hapInfo, hapPolicy);
-    APP_LOGD("BundlePermissionMgr::CreateAccessTokenId bundleName: %{public}s, accessTokenId = %{public}u",
+    APP_LOGI("BundlePermissionMgr::CreateAccessTokenId bundleName: %{public}s, accessTokenId = %{public}u",
              bundleName.c_str(), accessToken.tokenIdExStruct.tokenID);
     return accessToken;
 }
@@ -199,7 +199,7 @@ bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(Security::AccessToke
 
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = newInfo.GetAppPrivilegeLevel();
-    APP_LOGD("newDefPermList size:%{public}zu, newPermissionStateList size:%{public}zu, isSystemApp: %{public}d",
+    APP_LOGI("newDefPermList size:%{public}zu, newPermissionStateList size:%{public}zu, isSystemApp: %{public}d",
              newDefPermList.size(), newPermissionStateList.size(), newInfo.IsSystemApp());
     hapPolicy.apl = GetTokenApl(apl);
     hapPolicy.domain = "domain"; // default
@@ -326,7 +326,7 @@ bool BundlePermissionMgr::AddDefineAndRequestPermissions(Security::AccessToken::
 
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
-    APP_LOGD("BundlePermissionMgr::AddDefineAndRequestPermissions apl : %{public}s, newDefPermList size : %{public}zu, \
+    APP_LOGI("BundlePermissionMgr::AddDefineAndRequestPermissions apl : %{public}s, newDefPermList size : %{public}zu, \
              newPermissionStateList size : %{public}zu", apl.c_str(), newDefPermList.size(),
              newPermissionStateList.size());
     hapPolicy.apl = GetTokenApl(apl);
@@ -375,6 +375,8 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
     const InnerBundleInfo &innerBundleInfo)
 {
     auto reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    APP_LOGI("bundleName:%{public}s requestPermission size :%{public}zu",
+        innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::vector<AccessToken::PermissionStateFull> permStateFullList;
     if (!reqPermissions.empty()) {
         for (const auto &reqPermission : reqPermissions) {
@@ -426,39 +428,39 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
     std::vector<std::string> userGrantPermList)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
-    APP_LOGD("bundleName:%{public}s, add system_grant permission: %{public}zu, add user_grant permission: %{public}zu",
+    APP_LOGI("bundleName:%{public}s, add system_grant permission: %{public}zu, add user_grant permission: %{public}zu",
         bundleName.c_str(), systemGrantPermList.size(), userGrantPermList.size());
     for (const auto &perm : systemGrantPermList) {
         if (!GrantPermission(tokenId, perm, AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED, bundleName)) {
             return false;
         }
     }
-    if (innerBundleInfo.GetIsPreInstallApp()) {
-        for (const auto &perm: userGrantPermList) {
-            bool userCancellable = false;
-            DefaultPermission permission;
-            if (!GetDefaultPermission(bundleName, permission)) {
-                continue;
-            }
+
+    DefaultPermission permission;
+    if (!GetDefaultPermission(bundleName, permission)) {
+        return true;
+    }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
-                !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
-                !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
-                !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
-                continue;
-            }
+    if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+        !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
+        !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
+        APP_LOGW("bundleName:%{public}s MatchSignature failed", bundleName.c_str());
+        return true;
+    }
 #endif
 
-            if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
-                continue;
-            }
-            AccessToken::PermissionFlag flag = userCancellable ?
-                AccessToken::PermissionFlag::PERMISSION_GRANTED_BY_POLICY :
-                AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED;
-            if (!GrantPermission(tokenId, perm, flag, bundleName)) {
-                return false;
-            }
+    for (const auto &perm: userGrantPermList) {
+        bool userCancellable = false;
+        if (!CheckPermissionInDefaultPermissions(permission, perm, userCancellable)) {
+            continue;
+        }
+        AccessToken::PermissionFlag flag = userCancellable ?
+            AccessToken::PermissionFlag::PERMISSION_GRANTED_BY_POLICY :
+            AccessToken::PermissionFlag::PERMISSION_SYSTEM_FIXED;
+        if (!GrantPermission(tokenId, perm, flag, bundleName)) {
+            return false;
         }
     }
     APP_LOGD("InnerGrantRequestPermissions end, bundleName:%{public}s", bundleName.c_str());
@@ -591,7 +593,7 @@ bool BundlePermissionMgr::CheckGrantPermission(
             break;
     }
     if (permDef.provisionEnable) {
-        APP_LOGD("CheckGrantPermission acls size: %{public}zu", acls.size());
+        APP_LOGI("CheckGrantPermission acls size: %{public}zu", acls.size());
         auto res = std::any_of(acls.begin(), acls.end(), [permDef](const auto &perm) {
             return permDef.permissionName == perm;
         });
@@ -599,29 +601,9 @@ bool BundlePermissionMgr::CheckGrantPermission(
             return res;
         }
     }
-    APP_LOGE("BundlePermissionMgr::CheckGrantPermission failed permission name : %{public}s",
-             permDef.permissionName.c_str());
+    APP_LOGE("CheckGrantPermission failed permission: %{public}s, availableLevel %{public}d, apl:%{public}s",
+        permDef.permissionName.c_str(), availableLevel, apl.c_str());
     return false;
-}
-
-bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
-{
-    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    APP_LOGD("callerToken : %{private}u", callerToken);
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE || callingUid == Constants::ROOT_UID) {
-        APP_LOGD("caller tokenType is native, verify success");
-        return true;
-    }
-    int32_t ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
-    if (ret == AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s denied", permissionName.c_str());
-        return false;
-    }
-    APP_LOGD("verify AccessToken success");
-    return true;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
@@ -636,6 +618,24 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
         return false;
     }
     return true;
+}
+
+bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    for (auto permissionName : permissionNames) {
+        if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
+            AccessToken::PermissionState::PERMISSION_GRANTED) {
+                APP_LOGD("verify success");
+                return true;
+            }
+    }
+    std::string errorMessage;
+    for (auto deniedPermission : permissionNames) {
+        errorMessage += deniedPermission + " ";
+    }
+    APP_LOGE("permission %{public}s denied, callerToken : %{public}u", errorMessage.c_str(), callerToken);
+    return false;
 }
 
 int32_t BundlePermissionMgr::VerifyPermission(
@@ -929,8 +929,8 @@ bool BundlePermissionMgr::IsSelfCalling()
 bool BundlePermissionMgr::VerifyUninstallPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("uninstall bundle permission denied");
         return false;
     }
@@ -940,8 +940,8 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 bool BundlePermissionMgr::VerifyRecoverPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RECOVER_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_RECOVER_BUNDLE})) {
         APP_LOGE("recover bundle permission denied");
         return false;
     }
@@ -964,8 +964,9 @@ bool BundlePermissionMgr::InnerFilterRequestPermissions(
     std::vector<std::string> &systemGrantPermList,
     std::vector<std::string> &userGrantPermList)
 {
-    APP_LOGD("start, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    APP_LOGI("start, bundleName:%{public}s request permission size :%{public}zu",
+        innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
     std::vector<std::string> acls = innerBundleInfo.GetAllowedAcls();
     for (const auto &reqPermission : reqPermissions) {

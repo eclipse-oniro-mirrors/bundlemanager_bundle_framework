@@ -42,6 +42,7 @@ struct PreBundleConfigInfo {
     bool hideDesktopIcon = false;
     bool appShareLibrary = false;
     bool allowEnableNotification = false;
+    bool allowAppRunWhenDeviceFirstLocked = false;
     std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
     std::vector<std::string> existInJsonFile;
@@ -69,6 +70,7 @@ struct PreBundleConfigInfo {
         hideDesktopIcon = false;
         appShareLibrary = false;
         allowEnableNotification = false;
+        allowAppRunWhenDeviceFirstLocked = false;
         allowCommonEvent.clear();
         appSignature.clear();
         existInJsonFile.clear();
@@ -91,6 +93,7 @@ struct PreBundleConfigInfo {
             + ", userDataClearable = " + GetBoolStrVal(userDataClearable)
             + ", hideDesktopIcon = " + GetBoolStrVal(hideDesktopIcon)
             + ", appShareLibrary = " + GetBoolStrVal(appShareLibrary)
+            + ", allowAppRunWhenDeviceFirstLocked = " + GetBoolStrVal(allowAppRunWhenDeviceFirstLocked)
             + ", allowEnableNotification = " + GetBoolStrVal(allowEnableNotification) + "]";
     }
 };

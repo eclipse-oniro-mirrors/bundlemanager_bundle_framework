@@ -22,6 +22,7 @@
         "package": "com.third.hiworld.example.h1",
         "name": "feature",
         "deviceType": [
+            "2in1",
             "tablet",
             "default",
             "tv",

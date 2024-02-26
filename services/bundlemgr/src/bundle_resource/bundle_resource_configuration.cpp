@@ -16,8 +16,8 @@
 #include "bundle_resource_configuration.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_resource_process.h"
 #include "bundle_system_state.h"
+#include "bundle_util.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
@@ -33,8 +33,6 @@ static const std::unordered_map<std::string, Global::Resource::ColorMode> BUNDLE
     {RESOURCE_LIGHT, Global::Resource::ColorMode::LIGHT},
     {RESOURCE_DARK, Global::Resource::ColorMode::DARK},
 };
-const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1 = "/system/app/ohos.global.systemres/SystemResources.hap";
-const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2 = "/system/app/SystemResources/SystemResources.hap";
 
 Global::Resource::ColorMode ConvertColorMode(const std::string &colorMode)
 {
@@ -63,7 +61,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
         APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
         return false;
     }
-    AddSystemResourceHap(resourceManager);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");
@@ -86,26 +83,44 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
     return true;
 }
 
-void BundleResourceConfiguration::AddSystemResourceHap(
+bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &hapPath,
+    const std::vector<std::string> &overlayHaps,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
 {
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
-        return;
+        return false;
     }
-    int32_t id = 0;
-    std::string systemResourcePath;
-    if (BundleResourceProcess::GetDefaultIconResource(id, systemResourcePath)) {
-        if (resourceManager->AddResource(systemResourcePath.c_str())) {
-            return;
+    // adapt overlay
+    if (overlayHaps.empty()) {
+        if (!resourceManager->AddResource(hapPath.c_str())) {
+            APP_LOGW("AddResource failed, hapPath: %{public}s", hapPath.c_str());
+        }
+    } else {
+        if (!resourceManager->AddResource(hapPath, overlayHaps)) {
+            APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
         }
     }
-    APP_LOGD("get failed, add default hap");
-    if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1.c_str()) ||
-        resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2.c_str())) {
-        return;
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (resConfig == nullptr) {
+        APP_LOGE("resConfig is nullptr");
+        return false;
     }
-    APP_LOGE("add system resource failed");
+
+#ifdef GLOBAL_I18_ENABLE
+    std::map<std::string, std::string> configs;
+    OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale(), configs);
+    resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
+#endif
+    std::string colorMode = BundleSystemState::GetInstance().GetSystemColorMode();
+    resConfig->SetColorMode(ConvertColorMode(colorMode));
+
+    Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
+    if (ret != Global::Resource::RState::SUCCESS) {
+        APP_LOGE("UpdateResConfig failed with errcode %{public}d", static_cast<int32_t>(ret));
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

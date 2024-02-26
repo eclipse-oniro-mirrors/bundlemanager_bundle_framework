@@ -196,6 +196,7 @@ const std::shared_ptr<BundleDataMgr> BmsBundleOtaUpdateTest::GetBundleDataMgr() 
  *                  "versionCode": 1000000 -> 2000000
  *                  "versionName": "1.0.0.0" -> "2.0.0.0"
  *                  "asanEnabled": true -> false
+ *                  "GWPAsanEnabled": true -> false
  */
 HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0001, Function | SmallTest | Level3)
 {
@@ -212,6 +213,7 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0001, Function | SmallTest | Level3
     EXPECT_EQ(applicationInfo.versionCode, VERSION_CODE1);
     EXPECT_EQ(applicationInfo.versionName, VERSION_NAME1);
     EXPECT_TRUE(applicationInfo.asanEnabled);
+    EXPECT_TRUE(applicationInfo.gwpAsanEnabled);
 
     bundleFile = RESOURCE_ROOT_PATH + OTAUPDATETESTAPPFIELD_BUNDLE;
     ret = OTAInstallSystemBundle(bundleFile);
@@ -222,6 +224,7 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0001, Function | SmallTest | Level3
     EXPECT_EQ(applicationInfo.versionCode, VERSION_CODE2);
     EXPECT_EQ(applicationInfo.versionName, VERSION_NAME2);
     EXPECT_FALSE(applicationInfo.asanEnabled);
+    EXPECT_FALSE(applicationInfo.gwpAsanEnabled);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
     ret = installer->UninstallSystemBundle(bundleName);

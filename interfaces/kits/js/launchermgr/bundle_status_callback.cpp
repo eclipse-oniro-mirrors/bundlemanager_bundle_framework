@@ -94,17 +94,20 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
         return;
     }
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) { APP_LOGI("BundleStatusCallback OnBundleAdded asyn work done"); },
         [](uv_work_t* work, int status) {
             // JS Thread
+            APP_LOGI("BundleStatusCallback OnBundleAdded in JS Thread");
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
+                APP_LOGE("asyncCallbackInfo is null");
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
             if (scope == nullptr) {
+                APP_LOGE("scope is null");
                 return;
             }
             napi_value callback = nullptr;
@@ -123,6 +126,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             }
         });
     if (ret != 0) {
+        APP_LOGE("OnBundleAdded failed due to call uv_queue_work failed");
         delete asyncCallbackInfo;
         delete work;
     }
@@ -156,16 +160,19 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
         return;
     }
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) { APP_LOGI("BundleStatusCallback OnBundleUpdated asyn work done"); },
         [](uv_work_t* work, int status) {
+            APP_LOGI("BundleStatusCallback OnBundleUpdated in JS Thread");
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
+                APP_LOGE("asyncCallbackInfo is null");
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
             if (scope == nullptr) {
+                APP_LOGE("scope is null");
                 return;
             }
             napi_value callback = nullptr;
@@ -184,6 +191,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             }
         });
     if (ret != 0) {
+        APP_LOGE("OnBundleUpdated failed due to call uv_queue_work failed");
         if (asyncCallbackInfo != nullptr) {
             delete asyncCallbackInfo;
         }
@@ -221,17 +229,20 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         return;
     }
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) { APP_LOGI("BundleStatusCallback OnBundleRemoved asyn work done"); },
         [](uv_work_t* work, int status) {
+            APP_LOGI("BundleStatusCallback OnBundleRemoved in JS Thread");
             // JS Thread
             AsyncCallbackInfo* asyncCallbackInfo =  reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
+                APP_LOGE("asyncCallbackInfo is null");
                 return;
             }
             std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
             napi_handle_scope scope = nullptr;
             napi_open_handle_scope(asyncCallbackInfo->env_, &scope);
             if (scope == nullptr) {
+                APP_LOGE("scope is null");
                 return;
             }
             napi_value callback = nullptr;
@@ -250,6 +261,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             }
         });
     if (ret != 0) {
+        APP_LOGE("OnBundleRemoved failed due to call uv_queue_work failed");
         delete asyncCallbackInfo;
         delete work;
     }

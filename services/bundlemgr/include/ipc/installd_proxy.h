@@ -19,6 +19,7 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "iremote_proxy.h"
 #include "ipc/installd_interface.h"
@@ -108,8 +109,11 @@ public:
      * @param bundleStats Indicates the bundle Stats.
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
-    virtual ErrCode GetBundleStats(
-        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) override;
+    virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID) override;
+
+    virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.

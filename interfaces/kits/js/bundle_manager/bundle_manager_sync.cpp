@@ -64,6 +64,21 @@ const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
 
+bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
+{
+    if (!UnwrapWant(env, args, want)) {
+        APP_LOGW("parse want failed");
+        return false;
+    }
+    bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
+    if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
+        want.GetUriString().empty() && want.GetType().empty()) {
+        APP_LOGW("implicit params all empty");
+        return false;
+    }
+    return true;
+}
+
 napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI SetApplicationEnabledSync called");
@@ -93,7 +108,7 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
     }
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetApplicationEnabled(bundleName, isEnable));
     if (ret != NO_ERROR) {
-        APP_LOGE("SetApplicationEnabledSync failed");
+        APP_LOGE("SetApplicationEnabledSync failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, SET_APPLICATION_ENABLED_SYNC, Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
         napi_throw(env, businessError);
@@ -170,7 +185,7 @@ napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info)
     bool isEnable = false;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsApplicationEnabled(bundleName, isEnable));
     if (ret != NO_ERROR) {
-        APP_LOGE("IsApplicationEnabledSync failed");
+        APP_LOGE("IsApplicationEnabledSync failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(env, ret, IS_APPLICATION_ENABLED_SYNC);
         napi_throw(env, businessError);
         return nullptr;
@@ -244,7 +259,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], extensionParamInfo.want)) {
+            if (!ParseWantWithParameter(env, args[i], extensionParamInfo.want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
@@ -441,7 +456,7 @@ napi_value GetPermissionDefSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetPermissionDef(permissionName, permissionDef));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetPermissionDef failed");
+        APP_LOGE("GetPermissionDef failed, permissionName is %{public}s", permissionName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_PERMISSION_DEF_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -505,7 +520,7 @@ napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetAbilityLabel failed");
+        APP_LOGE("GetAbilityLabel failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_ABILITY_LABEL_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -580,7 +595,8 @@ napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetLaunchWantForBundle failed");
+        APP_LOGE("GetLaunchWantForBundle failed, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -660,7 +676,8 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     std::string bundleName;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetNameForUid(uid, bundleName));
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleNameByUidSync failed");
+        APP_LOGE("GetBundleNameByUidSync failed, uid is %{public}d, bundleName is %{public}s",
+            uid, bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_NAME_BY_UID_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -877,7 +894,8 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo));
     if (ret != ERR_OK) {
-        APP_LOGE("GetAppProvisionInfoSync failed");
+        APP_LOGE("GetAppProvisionInfoSync failed, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_APP_PROVISION_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

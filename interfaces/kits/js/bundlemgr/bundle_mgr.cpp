@@ -650,7 +650,7 @@ static void ProcessAbilityInfos(
         APP_LOGI("-----abilityInfos is not null-----");
         size_t index = 0;
         for (const auto &item : abilityInfos) {
-            APP_LOGI("name{%s} ", item.name.c_str());
+            APP_LOGI("name: %{public}s ", item.name.c_str());
             napi_value objAbilityInfo = nullptr;
             napi_create_object(env, &objAbilityInfo);
             ConvertAbilityInfo(env, objAbilityInfo, item);
@@ -1135,11 +1135,10 @@ static void ProcessApplicationInfos(
         APP_LOGI("-----appInfos is not null-----");
         size_t index = 0;
         for (const auto &item : appInfos) {
-            APP_LOGI("name{%s} ", item.name.c_str());
-            APP_LOGI("bundleName{%s} ", item.bundleName.c_str());
+            APP_LOGI("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
             for (const auto &moduleInfo : item.moduleInfos) {
-                APP_LOGI("moduleName{%s} ", moduleInfo.moduleName.c_str());
-                APP_LOGI("bundleName{%s} ", moduleInfo.moduleSourceDir.c_str());
+                APP_LOGI("moduleName: %{public}s, moduleSourceDir: %{public}s ",
+                    moduleInfo.moduleName.c_str(), moduleInfo.moduleSourceDir.c_str());
             }
             napi_value objAppInfo;
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
@@ -1611,11 +1610,11 @@ static void ProcessBundleInfos(
         APP_LOGI("-----bundleInfos is not null-----");
         size_t index = 0;
         for (const auto &item : bundleInfos) {
-            APP_LOGD("name{%s} ", item.name.c_str());
-            APP_LOGD("bundleName{%s} ", item.applicationInfo.bundleName.c_str());
+            APP_LOGD("name is %{public}s and bundleName is %{public}s ",
+                item.name.c_str(), item.applicationInfo.bundleName.c_str());
             for (const auto &moduleInfo : item.applicationInfo.moduleInfos) {
-                APP_LOGD("moduleName{%s} ", moduleInfo.moduleName.c_str());
-                APP_LOGD("moduleSourceDir{%s} ", moduleInfo.moduleSourceDir.c_str());
+                APP_LOGD("moduleName: %{public}s, moduleSourceDir: %{public}s ",
+                    moduleInfo.moduleName.c_str(), moduleInfo.moduleSourceDir.c_str());
             }
             napi_value objBundleInfo = nullptr;
             napi_create_object(env, &objBundleInfo);
@@ -2065,8 +2064,7 @@ static void ProcessFormsInfo(napi_env env, napi_value result, const std::vector<
         APP_LOGI("-----formInfos is not null-----");
         size_t index = 0;
         for (const auto &item : formInfos) {
-            APP_LOGI("name{%s} ", item.name.c_str());
-            APP_LOGI("bundleName{%s} ", item.bundleName.c_str());
+            APP_LOGI("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
             napi_value objFormInfo;
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objFormInfo));
             ConvertFormInfo(env, objFormInfo, item);
@@ -2624,7 +2622,8 @@ static bool InnerSetApplicationEnabled(const std::string &bundleName, bool isEna
     }
     ErrCode result = iBundleMgr->SetApplicationEnabled(bundleName, isEnable);
     if (result != ERR_OK) {
-        APP_LOGE("InnerSetApplicationEnabled failed, error is %{public}d", result);
+        APP_LOGE("InnerSetApplicationEnabled failed, bundleName is %{public}s, error is %{public}d",
+            bundleName.c_str(), result);
         return false;
     }
     return true;
@@ -2660,7 +2659,8 @@ static bool InnerCleanBundleCacheCallback(
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (result != ERR_OK) {
-        APP_LOGE("CleanBundleDataFiles call error");
+        APP_LOGE("CleanBundleDataFiles call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
         return false;
     }
 
@@ -2730,7 +2730,7 @@ static bool InnerGetNameForUid(int32_t uid, std::string &bundleName)
         return false;
     }
     if (iBundleMgr->GetNameForUid(uid, bundleName) != ERR_OK) {
-        APP_LOGE("GetNameForUid failed");
+        APP_LOGE("GetNameForUid failed, uid is %{public}d, bundleName is %{public}s", uid, bundleName.c_str());
         return false;
     }
     return true;
@@ -3340,7 +3340,8 @@ static bool InnerGetBundleInfo(
     }
     bool ret = iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, bundleOptions.userId);
     if (!ret) {
-        APP_LOGE("bundleInfo is not find");
+        APP_LOGE("bundleInfo is not find, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, bundleOptions.userId);
     }
     return ret;
 }
@@ -4433,7 +4434,7 @@ static std::string InnerGetAbilityLabel(napi_env env, std::string &bundleName, s
     std::string label;
     ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
     if (ret != ERR_OK) {
-        APP_LOGE("can not GetAbilityLabel.");
+        APP_LOGE("can not GetAbilityLabel, bundleName is %{public}s.", bundleName.c_str());
         return Constants::EMPTY_STRING;
     }
     return label;
@@ -5064,6 +5065,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
     AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) AsyncGetBundleInstallerCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
     std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -5085,6 +5087,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
                     reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
                     return;
                 }
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -5125,19 +5128,20 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         napi_value promise;
         NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
         asyncCallbackInfo->deferred = deferred;
-
+        APP_LOGI("GetBundleInstaller promise");
         napi_value resourceName;
         NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
         NAPI_CALL(env, napi_create_async_work(
             env,
             nullptr,
             resourceName,
-            [](napi_env env, void *data) {},
+            [](napi_env env, void *data) { APP_LOGI("GetBundleInstaller promise async done"); },
             [](napi_env env, napi_status status, void *data) {
                 APP_LOGI("=================load=================");
                 AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
                     reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
                 if (asyncCallbackInfo == nullptr) {
+                    APP_LOGE("asyncCallbackInfo is nullptr");
                     return;
                 }
                 std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -5356,7 +5360,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Recover installParam error.");
+        APP_LOGE("Recover installParam error, bundleName is %{public}s.", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 
@@ -5529,7 +5533,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Uninstall installParam error.");
+        APP_LOGE("Uninstall installParam error, bundleName is %{public}s.", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 

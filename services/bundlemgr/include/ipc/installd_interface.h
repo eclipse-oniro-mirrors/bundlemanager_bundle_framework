@@ -151,7 +151,13 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(
-        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+        std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
     {
         return ERR_OK;
     }

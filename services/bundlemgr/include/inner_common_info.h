@@ -120,6 +120,9 @@ struct InnerModuleInfo {
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
     bool isEncrypted = false;
+    std::vector<std::string> querySchemes;
+    std::string routerMap;
+    std::vector<AppEnvironment> appEnvironments;
 };
 
 struct SkillUri {

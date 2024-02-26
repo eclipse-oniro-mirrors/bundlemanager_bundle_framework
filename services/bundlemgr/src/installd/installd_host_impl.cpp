@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -99,7 +99,7 @@ ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
         OHOS::ForceRemoveDirectory(bundleDir);
     }
     if (!InstalldOperator::MkRecursiveDir(bundleDir, true)) {
-        APP_LOGE("create bundle dir %{public}s failed", bundleDir.c_str());
+        APP_LOGE("create bundle dir %{public}s failed, errno:%{public}d", bundleDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     return ERR_OK;
@@ -119,11 +119,12 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::MkRecursiveDir(targetPath, true)) {
-        APP_LOGE("create target dir %{private}s failed", targetPath.c_str());
+        APP_LOGE("create target dir %{public}s failed, errno:%{public}d", targetPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi)) {
-        APP_LOGE("extract %{private}s to %{private}s failed", srcModulePath.c_str(), targetPath.c_str());
+        APP_LOGE("extract %{public}s to %{public}s failed errno:%{public}d",
+            srcModulePath.c_str(), targetPath.c_str(), errno);
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
@@ -144,7 +145,7 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     }
 
     if (!InstalldOperator::ExtractFiles(extractParam)) {
-        APP_LOGE("extract failed");
+        APP_LOGE("extract failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
@@ -166,7 +167,7 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
 
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
-    APP_LOGD("rename %{private}s to %{private}s", oldPath.c_str(), newPath.c_str());
+    APP_LOGD("rename %{public}s to %{public}s", oldPath.c_str(), newPath.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -176,7 +177,8 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::RenameDir(oldPath, newPath)) {
-        APP_LOGE("rename module dir %{private}s to %{private}s failed", oldPath.c_str(), newPath.c_str());
+        APP_LOGE("rename module dir %{public}s to %{public}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED;
     }
     return ERR_OK;
@@ -210,7 +212,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
-            APP_LOGW("CreateBackupExtHomeDir MkOwnerDir(backup's home dir) failed");
+            APP_LOGW("CreateBackupExtHomeDir MkOwnerDir(backup's home dir) failed errno:%{public}d", errno);
         });
     }
 }
@@ -222,7 +224,7 @@ static void CreateShareDir(const std::string &bundleName, const int32_t userid, 
     if (!InstalldOperator::MkOwnerDir(bundleShareDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
-            APP_LOGW("CreateShareDir MkOwnerDir(share's home dir) failed");
+            APP_LOGW("CreateShareDir MkOwnerDir(share's home dir) failed errno:%{public}d", errno);
         });
     }
 }
@@ -234,7 +236,7 @@ static void CreateCloudDir(const std::string &bundleName, const int32_t userid, 
     if (!InstalldOperator::MkOwnerDir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
-            APP_LOGW("CreateCloudDir MkOwnerDir(cloud's home dir) failed");
+            APP_LOGW("CreateCloudDir MkOwnerDir(cloud's home dir) failed errno:%{public}d", errno);
         });
     }
 }
@@ -281,14 +283,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         bundleDataDir += createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, createDirParam.uid, createDirParam.gid)) {
-            APP_LOGE("CreateBundledatadir MkOwnerDir failed");
+            APP_LOGE("CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
         if (el == Constants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
                     createDirParam.uid, createDirParam.gid)) {
-                    APP_LOGE("CreateBundledatadir MkOwnerDir el2 failed");
+                    APP_LOGE("CreateBundledatadir MkOwnerDir el2 failed errno:%{public}d", errno);
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
@@ -296,7 +298,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 Constants::LOG + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
                 logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
-                APP_LOGE("create log dir failed");
+                APP_LOGE("create log dir failed errno:%{public}d", errno);
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
         }
@@ -310,7 +312,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             + createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(
             databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DATABASE_DIR_GID)) {
-            APP_LOGE("CreateBundle databaseDir MkOwnerDir failed");
+            APP_LOGE("CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
         ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl,
@@ -324,14 +326,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
-        APP_LOGE("Failed to mk dir for distributedfile");
+        APP_LOGE("Failed to mk dir for distributedfile errno:%{public}d", errno);
     }
 
     distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
-        APP_LOGE("Failed to mk dir for non account distributedfile");
+        APP_LOGE("Failed to mk dir for non account distributedfile errno:%{public}d", errno);
     }
 
     std::string bundleBackupDir;
@@ -424,7 +426,7 @@ static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
     std::string shareFileDir = SHARE_FILE_PATH + bundleName;
     shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(shareFileDir)) {
-        APP_LOGE("remove dir %{public}s failed", shareFileDir.c_str());
+        APP_LOGE("remove dir %{public}s failed errno:%{public}d", shareFileDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
@@ -435,7 +437,7 @@ static void CleanShareDir(const std::string &bundleName, const int userid)
     std::string shareFileDir = SHARE_FILE_PATH + bundleName;
     shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteFiles(shareFileDir)) {
-        APP_LOGW("clean dir %{public}s failed", shareFileDir.c_str());
+        APP_LOGW("clean dir %{public}s failed errno:%{public}d", shareFileDir.c_str(), errno);
     }
 }
 
@@ -444,7 +446,7 @@ static ErrCode RemoveCloudDir(const std::string &bundleName, const int userid)
     std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
     cloudFileDir = cloudFileDir.replace(cloudFileDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(cloudFileDir)) {
-        APP_LOGE("remove dir %{public}s failed", cloudFileDir.c_str());
+        APP_LOGE("remove dir %{public}s failed errno:%{public}d", cloudFileDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
@@ -455,7 +457,7 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
     std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
     cloudFileDir = cloudFileDir.replace(cloudFileDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteFiles(cloudFileDir)) {
-        APP_LOGW("clean dir %{public}s failed", cloudFileDir.c_str());
+        APP_LOGW("clean dir %{public}s failed errno:%{public}d", cloudFileDir.c_str(), errno);
     }
 }
 
@@ -465,21 +467,21 @@ static void CleanBundleDataForEl2(const std::string &bundleName, const int useri
         Constants::PATH_SEPARATOR + std::to_string(userid);
     std::string databaseDir = dataDir + Constants::DATABASE + bundleName;
     if (!InstalldOperator::DeleteFiles(databaseDir)) {
-        APP_LOGW("clean dir %{public}s failed", databaseDir.c_str());
+        APP_LOGW("clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
     }
     std::string logDir = dataDir + Constants::LOG + bundleName;
     if (!InstalldOperator::DeleteFiles(logDir)) {
-        APP_LOGW("clean dir %{public}s failed", logDir.c_str());
+        APP_LOGW("clean dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
     }
     std::string bundleDataDir = dataDir + Constants::BASE + bundleName;
     for (const auto &dir : BUNDLE_DATA_DIR) {
         std::string subDir = bundleDataDir + dir;
         if (!InstalldOperator::DeleteFiles(subDir)) {
-            APP_LOGW("clean dir %{public}s failed", subDir.c_str());
+            APP_LOGW("clean dir %{public}s failed errno:%{public}d", subDir.c_str(), errno);
         }
     }
     if (!InstalldOperator::DeleteFilesExceptDirs(bundleDataDir, BUNDLE_DATA_DIR)) {
-        APP_LOGW("clean dir %{public}s failed", bundleDataDir.c_str());
+        APP_LOGW("clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
     }
 }
 
@@ -497,18 +499,18 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
     for (const auto &el : Constants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
         if (!InstalldOperator::DeleteDir(bundleDataDir)) {
-            APP_LOGE("remove dir %{public}s failed", bundleDataDir.c_str());
+            APP_LOGE("remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
         if (!InstalldOperator::DeleteDir(databaseDir)) {
-            APP_LOGE("remove dir %{public}s failed", databaseDir.c_str());
+            APP_LOGE("remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         if (el == Constants::BUNDLE_EL[1]) {
             std::string logDir = GetBundleDataDir(el, userid) + Constants::LOG + bundleName;
             if (!InstalldOperator::DeleteDir(logDir)) {
-                APP_LOGE("remove dir %{public}s failed", logDir.c_str());
+                APP_LOGE("remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
             }
         }
@@ -548,7 +550,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     for (const auto &el : Constants::BUNDLE_EL) {
         std::string moduleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + ModuleDir;
         if (!InstalldOperator::DeleteDir(moduleDataDir)) {
-            APP_LOGE("remove dir %{public}s failed", moduleDataDir.c_str());
+            APP_LOGE("remove dir %{public}s failed errno:%{public}d", moduleDataDir.c_str(), errno);
         }
     }
     return ERR_OK;
@@ -566,7 +568,7 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::DeleteDir(dir)) {
-        APP_LOGE("remove dir %{public}s failed", dir.c_str());
+        APP_LOGE("remove dir %{public}s failed errno:%{public}d", dir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
@@ -585,7 +587,7 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     }
 
     if (!InstalldOperator::DeleteFiles(dataDir)) {
-        APP_LOGE("CleanBundleDataDir delete files failed");
+        APP_LOGE("CleanBundleDataDir delete files failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_CLEAN_DIR_FAILED;
     }
     return ERR_OK;
@@ -609,11 +611,11 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         }
         std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
         if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
-            APP_LOGW("clean dir %{public}s failed", bundleDataDir.c_str());
+            APP_LOGW("clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
         }
         std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
         if (!InstalldOperator::DeleteFiles(databaseDir)) {
-            APP_LOGW("clean dir %{public}s failed", databaseDir.c_str());
+            APP_LOGW("clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
         }
     }
     CleanShareDir(bundleName, userid);
@@ -634,7 +636,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 }
 
 ErrCode InstalldHostImpl::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
@@ -669,30 +671,49 @@ ErrCode InstalldHostImpl::GetBundleStats(
     int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
     // index 0 : bundle data size
     bundleStats.push_back(fileSize + systemFolderSize);
-    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
-    bundleLocalSize -= cacheSize;
+    int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
     // index 1 : local bundle data size
-    bundleStats.push_back(bundleLocalSize);
-
-    // index 2 : distributed data size
-    std::string distributedfilePath = DISTRIBUTED_FILE;
-    distributedfilePath = distributedfilePath.replace(distributedfilePath.find("%"), 1, std::to_string(userId)) +
-        bundleName;
-    int64_t distributedFileSize = InstalldOperator::GetDiskUsage(distributedfilePath);
-    bundleStats.push_back(distributedFileSize);
-
-    // index 3 : database size
-    std::vector<std::string> dataBasePath;
-    for (const auto &el : Constants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
-            std::to_string(userId) + Constants::DATABASE + bundleName;
-        dataBasePath.push_back(filePath);
-    }
-    int64_t databaseFileSize = InstalldOperator::GetDiskUsageFromPath(dataBasePath);
-    bundleStats.push_back(databaseFileSize);
-
+    bundleStats.push_back(bundleDataSize);
+    bundleStats.push_back(0);
+    bundleStats.push_back(0);
+    int64_t cacheSize = InstalldOperator::GetDiskUsageFromPath(cachePath);
     // index 4 : cache size
     bundleStats.push_back(cacheSize);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleNames.empty() || bundleNames.size() != uids.size()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    int64_t totalFileSize = 0;
+    int64_t totalDataSize = 0;
+    for (int32_t index = 0; index < bundleNames.size(); ++index) {
+        const auto &bundleName = bundleNames[index];
+        const auto &uid = uids[index];
+        std::vector<std::string> bundlePath;
+        bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+        bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
+        // ark profile
+        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+        int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+        // index 0 : bundle data size
+        totalFileSize += fileSize;
+        int64_t bundleDataSize = InstalldOperator::GetDiskUsageFromQuota(uid);
+        // index 1 : local bundle data size
+        totalDataSize += bundleDataSize;
+    }
+    bundleStats.push_back(totalFileSize);
+    bundleStats.push_back(totalDataSize);
+    bundleStats.push_back(0);
+    bundleStats.push_back(0);
+    bundleStats.push_back(0);
     return ERR_OK;
 }
 
@@ -718,7 +739,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
-        APP_LOGE("HapFileRestorecon path: %{private}s failed, apl: %{public}s, errcode:%{public}d",
+        APP_LOGE("HapFileRestorecon path: %{public}s failed, apl: %{public}s, errcode:%{public}d",
             dir.c_str(), apl.c_str(), ret);
         return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
     }
@@ -767,8 +788,8 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::MoveFile(oldPath, newPath)) {
-        APP_LOGE("Move file %{public}s to %{public}s failed",
-            oldPath.c_str(), newPath.c_str());
+        APP_LOGE("Move file %{public}s to %{public}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     return ERR_OK;
@@ -781,9 +802,9 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::CopyFile(oldPath, newPath)) {
-        APP_LOGE("Copy file %{public}s to %{public}s failed",
-            oldPath.c_str(), newPath.c_str());
+    if (!InstalldOperator::CopyFileFast(oldPath, newPath)) {
+        APP_LOGE("Copy file %{public}s to %{public}s failed errno:%{public}d",
+            oldPath.c_str(), newPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
@@ -822,7 +843,7 @@ ErrCode InstalldHostImpl::Mkdir(
     }
 
     if (!InstalldOperator::MkOwnerDir(dir, mode, uid, gid)) {
-        APP_LOGE("Mkdir %{public}s failed", dir.c_str());
+        APP_LOGE("Mkdir %{public}s failed errno:%{public}d", dir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_MKDIR_FAILED;
     }
 
@@ -863,6 +884,7 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::ExtractDiffFiles(filePath, targetPath, cpuAbi)) {
+        APP_LOGE("fail to ExtractDiffFiles errno:%{public}d", errno);
         return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
     }
     return ERR_OK;
@@ -880,6 +902,7 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid)) {
+        APP_LOGE("fail to ApplyDiffPatch errno:%{public}d", errno);
         return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
     return ERR_OK;
@@ -973,7 +996,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper_)) {
+    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -1011,7 +1034,7 @@ ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::MoveFiles(srcDir, desDir)) {
-        APP_LOGE("move files failed");
+        APP_LOGE("move files failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     return ERR_OK;
@@ -1031,7 +1054,7 @@ ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
     }
 
     if (!InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap)) {
-        APP_LOGE("copy driver so files failed");
+        APP_LOGE("copy driver so files failed errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
     return ERR_OK;
@@ -1128,12 +1151,12 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
-                codeSignatureParam.modulePath, entryMap, fileType, codeSignatureParam.moduleName);
+                codeSignatureParam.modulePath, entryMap, fileType);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType,
-                codeSignatureParam.moduleName);
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
+        APP_LOGI("Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         APP_LOGD("Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);

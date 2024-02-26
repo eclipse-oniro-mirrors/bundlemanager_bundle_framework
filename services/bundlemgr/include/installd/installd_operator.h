@@ -177,7 +177,7 @@ public:
      * @param size Indicates the disk size.
      * @return Returns true if successfully; returns false otherwise.
      */
-    static int64_t GetDiskUsage(const std::string &dir);
+    static int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false);
     /**
      * @brief Traverse all cache directories.
      * @param currentPath Indicates the current path.
@@ -192,6 +192,10 @@ public:
      */
     static int64_t GetDiskUsageFromPath(const std::vector<std::string> &path);
 
+    static bool InitialiseQuotaMounts();
+
+    static int64_t GetDiskUsageFromQuota(const int32_t uid);
+
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
@@ -199,6 +203,8 @@ public:
         const std::string &currentPath, std::vector<std::string> &paths);
 
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
+
+    static bool CopyFileFast(const std::string &sourcePath, const std::string &destPath);
 
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
 
@@ -222,11 +228,10 @@ public:
     static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
         const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
     static ErrCode PerformCodeSignatureCheck(const CodeSignatureParam &codeSignatureParam,
-        std::shared_ptr<CodeSignHelper> &codeSignHelper, const Security::CodeSign::EntryMap &entryMap);
+        const Security::CodeSign::EntryMap &entryMap);
 #endif
 
-    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
-        std::shared_ptr<CodeSignHelper>& codeSignHelper);
+    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 

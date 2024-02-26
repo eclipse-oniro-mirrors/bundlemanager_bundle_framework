@@ -20,6 +20,7 @@
 #include "inner_bundle_info.h"
 #include "resource_info.h"
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -27,12 +28,6 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceProcess {
 public:
-    // used for show in desktop
-    static bool GetLauncherAbilityResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfo);
-    // used for show in settings
-    static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        ResourceInfo &resourceInfo);
     // get LauncherAbilityResourceInfo and BundleResourceInfo
     static bool GetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfo);
@@ -44,28 +39,32 @@ public:
         const std::string &abilityName, const int32_t userId,
         ResourceInfo &resourceInfo);
     // get all LauncherAbilityResourceInfo and BundleResourceInfo
-    static bool GetAllResourceInfo(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
+    static bool GetAllResourceInfo(const int32_t userId,
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
     // get LauncherAbilityResourceInfo when colorMode changed
     static bool GetResourceInfoByColorModeChanged(const std::vector<std::string> &resourceNames,
         std::vector<ResourceInfo> &resourceInfos);
 
-    static bool GetDefaultIconResource(int32_t &iconId, std::string &hapPath);
-
 private:
     static bool IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId);
 
-    static int64_t GetUpdateTime(const InnerBundleInfo &innerBundleInfo,  const int32_t userId);
+    // used for show in settings
+    static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        ResourceInfo &resourceInfo);
+    // get ability resource
+    static bool GetAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        std::vector<ResourceInfo> &resourceInfo);
 
-    static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability);
+    static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability,
+        bool hideDesktopIcon = false);
 
-    static ResourceInfo ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo,
-        const int32_t userId);
+    static ResourceInfo ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo);
 
-    static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo,  const int32_t userId,
+    static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
 
-    static std::string systemResourceHap_;
-    static int32_t defaultIconId_;
+    static void InnerProcessLauncherAbilityResource(const InnerBundleInfo &innerBundleInfo,
+        const std::vector<Skill> &skills, const AbilityType type, bool &needHideDeskTopIcon);
 };
 } // AppExecFwk
 } // OHOS

@@ -40,6 +40,7 @@ static void CreateApplicationType(napi_env env, napi_value value)
     SetNamedProperty(env, value, "Word Viewer", "WORD");
     SetNamedProperty(env, value, "Excel Viewer", "EXCEL");
     SetNamedProperty(env, value, "PPT Viewer", "PPT");
+    SetNamedProperty(env, value, "Email", "EMAIL");
 }
 
 static napi_value DefaultAppExport(napi_env env, napi_value exports)

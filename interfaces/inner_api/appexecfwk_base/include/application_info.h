@@ -171,6 +171,7 @@ struct ApplicationInfo : public Parcelable {
     bool removable = true;
     bool singleton = false;
     bool userDataClearable = true;
+    bool allowAppRunWhenDeviceFirstLocked = false;
     bool accessible = false;
     bool runningResourcesApply = false;
     bool associatedWakeUp = false;

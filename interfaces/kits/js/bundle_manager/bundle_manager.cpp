@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -54,6 +55,7 @@ constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
+constexpr const char* LINK = "link";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -81,6 +83,7 @@ const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
+const std::string CAN_OPEN_LINK = "CanOpenLink";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -91,6 +94,14 @@ static std::shared_mutex g_cacheMutex;
 static std::set<int32_t> g_supportedProfileList = { 1 };
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
+}
+
+void HandleCleanEnv(void *data)
+{
+    APP_LOGI("env change clear bms cache");
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    APP_LOGI("env change clear bms cache locked");
+    cache.clear();
 }
 
 ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -254,7 +265,7 @@ static void ProcessApplicationInfos(
     }
     size_t index = 0;
     for (const auto &item : appInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.bundleName.c_str());
+        APP_LOGD("name: %{public}s, bundleName: %{public}s ", item.name.c_str(), item.bundleName.c_str());
         napi_value objAppInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objAppInfo));
         CommonFunc::ConvertApplicationInfo(env, objAppInfo, item);
@@ -634,7 +645,7 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
     size_t len = 0;
     ErrCode ret = bundleMgr->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
     if (ret != ERR_OK) {
-        APP_LOGE("get media data failed");
+        APP_LOGE("get media data failed, bundleName is %{public}s", bundleName.c_str());
         return CommonFunc::ConvertErrCode(ret);
     }
     if (mediaDataPtr == nullptr || len == 0) {
@@ -702,6 +713,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
 
 void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
+    APP_LOGI("begin");
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
@@ -731,12 +743,13 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
+    APP_LOGI("before return");
     CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("begin to QueryAbilityInfos");
+    APP_LOGI("begin to QueryAbilityInfos");
     NapiArg args(env, info);
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -755,7 +768,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -785,7 +798,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call QueryAbilityInfos done");
+    APP_LOGI("call QueryAbilityInfos done");
     return promise;
 }
 
@@ -803,7 +816,7 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], want)) {
+            if (!ParseWantWithParameter(env, args[i], want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
@@ -1005,7 +1018,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -1550,7 +1563,8 @@ static ErrCode InnerCleanBundleCacheCallback(
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode result = iBundleMgr->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
     if (result != ERR_OK) {
-        APP_LOGE("CleanBundleDataFiles call error");
+        APP_LOGE("CleanBundleDataFiles call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
     }
     return CommonFunc::ConvertErrCode(result);
 }
@@ -1820,7 +1834,8 @@ static ErrCode InnerGetLaunchWantForBundleExec(
 
     ErrCode result = iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId);
     if (result != ERR_OK) {
-        APP_LOGE("GetLaunchWantForBundle call error");
+        APP_LOGE("GetLaunchWantForBundle call error, bundleName is %{public}s, userId is %{public}d",
+            bundleName.c_str(), userId);
     }
 
     return CommonFunc::ConvertErrCode(result);
@@ -2581,7 +2596,8 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetApplicationInfo failed");
+        APP_LOGE("GetApplicationInfo failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -2661,7 +2677,8 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfo failed");
+        APP_LOGE("GetBundleInfoV9 failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+            bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -2741,11 +2758,18 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO), &nGetBundleInfoWithSignatureInfo));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SIGNATURE_INFO",
         nGetBundleInfoWithSignatureInfo));
+
     napi_value nGetBundleInfoWithMenu;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU), &nGetBundleInfoWithMenu));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_MENU",
         nGetBundleInfoWithMenu));
+
+    napi_value nGetBundleInfoWithRouterMap;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), &nGetBundleInfoWithRouterMap));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ROUTER_MAP",
+        nGetBundleInfoWithRouterMap));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
@@ -2780,7 +2804,7 @@ static void ProcessBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name{%s}, bundleName{%s} ", item.name.c_str(), item.name.c_str());
+        APP_LOGD("name: %{public}s ", item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
         CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
@@ -2812,6 +2836,7 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
 
 void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
 {
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     BundleInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<BundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
@@ -3557,6 +3582,7 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
     if (ret != SUCCESS) {
+        APP_LOGE("GetSpecifiedDistributionType failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
@@ -3602,6 +3628,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
     if (ret != SUCCESS) {
+        APP_LOGE("GetAdditionalInfo call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -3652,7 +3679,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(flags, bundleInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfoForSelfSync failed");
+        APP_LOGE("GetBundleInfoForSelfSync failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -3729,6 +3756,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile));
     if (ret != SUCCESS) {
+        APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -3849,7 +3877,7 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     }
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("Call failed");
+        APP_LOGE("Call failed, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -3858,6 +3886,55 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     napi_value nRet = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     APP_LOGD("Call done");
+    return nRet;
+}
+
+ErrCode ParamsProcessCanOpenLink(napi_env env, napi_callback_info info,
+    std::string& link)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], link)) {
+        APP_LOGW("Parse link failed!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, LINK, TYPE_STRING);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    return ERR_OK;
+}
+
+napi_value CanOpenLink(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI CanOpenLink call");
+    napi_value nRet;
+    bool canOpen = false;
+    napi_get_boolean(env, canOpen, &nRet);
+    std::string link;
+    if (ParamsProcessCanOpenLink(env, info, link) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nRet;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nRet;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->CanOpenLink(link, canOpen));
+    if (ret != NO_ERROR) {
+        APP_LOGE("CanOpenLink failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, CAN_OPEN_LINK, "");
+        napi_throw(env, businessError);
+        return nRet;
+    }
+    NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
+    APP_LOGD("call CanOpenLink done.");
     return nRet;
 }
 }

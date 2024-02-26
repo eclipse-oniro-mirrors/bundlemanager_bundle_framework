@@ -151,7 +151,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to process bundle install");
+    APP_LOGI("begin to process bundle install");
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
@@ -195,7 +195,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
 ErrCode BaseBundleInstaller::InstallBundleByBundleName(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process bundle install by bundleName, which is %{public}s.", bundleName.c_str());
+    APP_LOGI("begin to process bundle install by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
     int32_t uid = Constants::INVALID_UID;
@@ -229,7 +229,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
 ErrCode BaseBundleInstaller::Recover(
     const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
+    APP_LOGI("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     if (!BundlePermissionMgr::Init()) {
         APP_LOGW("BundlePermissionMgr::Init failed");
@@ -265,7 +265,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process %{public}s bundle uninstall", bundleName.c_str());
+    APP_LOGI("begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
     // uninstall all sandbox app before
@@ -317,7 +317,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
-    APP_LOGD("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
+    APP_LOGI("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
     std::string bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
@@ -338,7 +338,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (info.GetBaseApplicationInfo().isSystemApp && !info.GetRemovable()) {
+    if (!info.GetRemovable()) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -441,7 +441,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
-    APP_LOGD("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
+    APP_LOGI("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
     // uninstall all sandbox app before
@@ -830,12 +830,11 @@ ErrCode BaseBundleInstaller::CheckAppService(
     }
 
     if (isAppExist) {
-        if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+        isAppService_ = oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
+        if (isAppService_ && oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
             APP_LOGW("Bundle(%{public}s) type is not same.", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
-
-        isAppService_ = oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
     }
     return ERR_OK;
 }
@@ -883,7 +882,7 @@ ErrCode BaseBundleInstaller::GrantRequestPermissions(const InnerBundleInfo &info
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
     const InstallParam &installParam, const Constants::AppType appType, int32_t &uid)
 {
-    APP_LOGD("ProcessBundleInstall bundlePath install paths=%s, hspPaths=%s",
+    APP_LOGD("ProcessBundleInstall bundlePath install paths=%{public}s, hspPaths=%{public}s",
         GetJsonStrFromInfo(inBundlePaths).c_str(), GetJsonStrFromInfo(installParam.sharedBundleDirPaths).c_str());
     if (dataMgr_ == nullptr) {
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -996,6 +995,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     InnerBundleInfo oldInfo;
     verifyCodeParams_ = installParam.verifyCodeParams;
     pgoParams_ = installParam.pgoParams;
+    copyHapToInstallPath_ = installParam.copyHapToInstallPath;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -1252,7 +1252,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp &&
+    if (!installParam.forceExecuted &&
         !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
@@ -1396,7 +1396,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 
     uid = curInnerBundleUserInfo.uid;
-    if (!installParam.forceExecuted && oldInfo.GetBaseApplicationInfo().isSystemApp
+    if (!installParam.forceExecuted
         && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
@@ -1945,7 +1945,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     if (noSkipsKill) {
         // kill the bundle process during updating
         if (!AbilityManagerHelper::UninstallApplicationProcesses(
-            oldInfo.GetApplicationName(), oldInfo.GetUid(userId_))) {
+            oldInfo.GetApplicationName(), oldInfo.GetUid(userId_), true)) {
             APP_LOGE("fail to kill running application");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
@@ -2355,7 +2355,7 @@ ErrCode BaseBundleInstaller::CreateBundleAndDataDir(InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 {
     auto appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_;
-    APP_LOGD("create bundle dir %{private}s", appCodePath.c_str());
+    APP_LOGD("create bundle dir %{public}s", appCodePath.c_str());
     ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(appCodePath);
     if (result != ERR_OK) {
         APP_LOGE("fail to create bundle dir, error is %{public}d", result);
@@ -2726,7 +2726,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     std::string targetPath;
     targetPath.append(ARK_CACHE_PATH).append(info.GetBundleName())
         .append(Constants::PATH_SEPARATOR).append(arkNativeFilePath);
-    APP_LOGD("Begin to extract an file, modulePath : %{private}s, targetPath : %{private}s, cpuAbi : %{public}s",
+    APP_LOGD("Begin to extract an file, modulePath : %{public}s, targetPath : %{public}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
     ExtractParam extractParam;
     extractParam.srcPath = modulePath_;
@@ -2805,7 +2805,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
     std::string targetPath;
     targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(Constants::PATH_SEPARATOR).append(bundleName);
-    APP_LOGD("Begin to extract ap file, modulePath : %{private}s, targetPath : %{private}s",
+    APP_LOGD("Begin to extract ap file, modulePath : %{public}s, targetPath : %{public}s",
         modulePath.c_str(), targetPath.c_str());
     ExtractParam extractParam;
     extractParam.srcPath = modulePath;
@@ -2838,13 +2838,13 @@ ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info,
     // remove bundle dir
     auto result = RemoveBundleCodeDir(info);
     if (result != ERR_OK) {
-        APP_LOGE("fail to remove bundle dir %{private}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
+        APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
         return result;
     }
     if (!isKeepData) {
         result = RemoveBundleDataDir(info);
         if (result != ERR_OK) {
-            APP_LOGE("fail to remove bundleData dir %{private}s, error is %{public}d",
+            APP_LOGE("fail to remove bundleData dir %{public}s, error is %{public}d",
                 info.GetBundleName().c_str(), result);
         }
     }
@@ -2934,7 +2934,7 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
 
 ErrCode BaseBundleInstaller::RemoveModuleDir(const std::string &modulePath) const
 {
-    APP_LOGD("module dir %{private}s to be removed", modulePath.c_str());
+    APP_LOGD("module dir %{public}s to be removed", modulePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(modulePath);
 }
 
@@ -2961,7 +2961,7 @@ ErrCode BaseBundleInstaller::RemoveModuleDataDir(
 ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,
     const std::string &targetSoPath, const std::string &cpuAbi)
 {
-    APP_LOGD("extract module to %{private}s", modulePath.c_str());
+    APP_LOGD("extract module to %{public}s", modulePath.c_str());
     auto result = InstalldClient::GetInstance()->ExtractModuleFiles(modulePath_, modulePath, targetSoPath, cpuAbi);
     if (result != ERR_OK) {
         APP_LOGE("extract module files failed, error is %{public}d", result);
@@ -3017,6 +3017,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    GenerateOdid(infos, hapVerifyRes);
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
@@ -3024,6 +3025,34 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     return ret;
+}
+
+
+void BaseBundleInstaller::GenerateOdid(
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (hapVerifyRes.size() < infos.size() || infos.empty()) {
+        APP_LOGE("hapVerifyRes size less than infos size or infos is empty");
+        return;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+
+    std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
+    if (developerId.empty()) {
+        developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
+    }
+    std::string odid;
+    dataMgr->GenerateOdid(developerId, odid);
+
+    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
+    for (auto &item : infos) {
+        item.second.UpdateOdid(developerId, odid);
+    }
 }
 
 void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
@@ -3287,7 +3316,8 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
 
     // kill the bundle process during uninstall.
     if (noSkipsKill) {
-        if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(
+            info.GetApplicationName(), info.GetUid(userId_), true)) {
             APP_LOGW("can not kill process");
         }
     }
@@ -3699,8 +3729,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     // 1. copy hsp or hap file to temp installation dir
     ErrCode result = ERR_OK;
-    for (auto it = hapPathRecords_.begin(); it != hapPathRecords_.end(); ++it) {
-        const auto &hapPathRecord = *it;
+    for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
@@ -3713,8 +3742,7 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 APP_LOGE("Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
             }
-            bool isLastHap = std::next(it) == hapPathRecords_.end();
-            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second, isLastHap) != ERR_OK) {
+            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 APP_LOGE("enable code signature failed");
                 return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
             }
@@ -4089,7 +4117,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         }
     }
 
-    APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
+    APP_LOGD("begin to extract module files, modulePath : %{public}s, targetSoPath : %{public}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
     std::string signatureFileDir = "";
     auto ret = FindSignatureFileDir(info.GetCurModuleName(), signatureFileDir);
@@ -4119,8 +4147,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &info, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir) const
 {
-    if (!info.GetIsPreInstallApp()) {
-        APP_LOGD("not pre-install app, skip verify code signature for native files");
+    if (copyHapToInstallPath_) {
+        APP_LOGI("hap will be copied to install path, and native files will be verified code signature later");
         return ERR_OK;
     }
     APP_LOGD("begin to verify code signature for native files");
@@ -4134,12 +4162,11 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = info.GetIsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.moduleName = info.GetCurModuleName();
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    const std::string &srcHapPath, const std::string &realHapPath, bool isLastHap)
+    const std::string &srcHapPath, const std::string &realHapPath)
 {
     APP_LOGD("begin to verify code signature for hap or internal hsp");
     auto iter = infos.find(srcHapPath);
@@ -4167,7 +4194,6 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.moduleName = moduleName;
     codeSignatureParam.isPreInstalledBundle = (iter->second).GetIsPreInstallApp();
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }

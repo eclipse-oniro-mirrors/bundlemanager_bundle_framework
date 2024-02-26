@@ -730,6 +730,7 @@ public:
 
     bool GetBundleStats(
         const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
@@ -866,6 +867,17 @@ public:
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
     ErrCode GetAppServiceHspBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo);
     ErrCode CreateBundleDataDir(int32_t userId) const;
+    void GenerateOdid(const std::string &developerId, std::string &odid) const;
+    ErrCode GetOdid(std::string &odid) const;
+
+    /**
+     * @brief Check whether the link can be opened.
+     * @param link Indicates the link to be opened.
+     * @param canOpen Indicates whether the link can be opened.
+     * @return  Returns result of the operation.
+     */
+    ErrCode CanOpenLink(
+        const std::string &link, bool &canOpen) const;
 
 private:
     /**
@@ -992,8 +1004,6 @@ private:
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
-    bool HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const;
     void EmplaceExtensionInfo(const InnerBundleInfo &info, ExtensionAbilityInfo &extensionInfo,
         int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos) const;
     void EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
@@ -1001,6 +1011,7 @@ private:
     void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
+    void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

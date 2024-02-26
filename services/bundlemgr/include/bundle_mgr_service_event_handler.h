@@ -39,6 +39,7 @@ enum class ResultCode {
 enum OTAFlag {
     CHECK_ELDIR = 0x00000001,
     CHECK_LOG_DIR = 0x00000010,
+    CHECK_FILE_MANAGER_DIR = 0x00000100,
 };
 
 enum class ScanResultCode {
@@ -92,6 +93,11 @@ public:
     void BmsStartEvent();
 
     static void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
+
+    static void ProcessSystemBundleInstall(
+        const PreScanInfo &preScanInfo,
+        Constants::AppType appType,
+        int32_t userId = Constants::UNSPECIFIED_USERID);
 
 private:
     /**
@@ -269,17 +275,6 @@ private:
      */
     void ProcessSystemBundleInstall(
         const std::string &scanDir,
-        Constants::AppType appType,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
-    /**
-     * @brief Install bundles by preScanInfo.
-     * @param preScanInfo Indicates the preScanInfo.
-     * @param appType Indicates the bundle type.
-     * @param userId Indicates userId.
-     * @return
-     */
-    void ProcessSystemBundleInstall(
-        const PreScanInfo &preScanInfo,
         Constants::AppType appType,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
@@ -468,6 +463,11 @@ private:
      */
     bool IsHotPatchApp(const std::string &bundleName);
 
+    void AddTasks(const std::map<int32_t, std::vector<PreScanInfo>,
+        std::greater<int32_t>> &taskMap, int32_t userId);
+    void AddTaskParallel(
+        int32_t taskPriority, const std::vector<PreScanInfo> &tasks, int32_t userId);
+
     bool CheckOtaFlag(OTAFlag flag, bool &result);
     bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
@@ -475,6 +475,8 @@ private:
 
     void ProcessCheckAppLogDir();
     void InnerProcessCheckAppLogDir();
+    void ProcessCheckAppFileManagerDir();
+    void InnerProcessCheckAppFileManagerDir();
 
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
@@ -483,7 +485,7 @@ private:
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
-    void SavePreInstallException(const std::string &bundleDir);
+    static void SavePreInstallException(const std::string &bundleDir);
     void HandlePreInstallException();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
@@ -496,6 +498,7 @@ private:
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
+    void ProcessRebootDeleteAotPath();
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();

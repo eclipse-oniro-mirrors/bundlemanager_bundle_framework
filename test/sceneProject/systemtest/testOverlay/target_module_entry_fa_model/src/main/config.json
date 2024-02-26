@@ -22,6 +22,7 @@
         "package": "entry",
         "name": "entry",
         "deviceType": [
+            "2in1",
             "tablet",
             "default",
             "tv",

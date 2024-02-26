@@ -53,6 +53,8 @@ public:
      */
     static int UninstallApp(const std::string &bundleName, int32_t uid);
 
+    static int UpgradeApp(const std::string &bundleName, int32_t uid);
+
     static bool UnloadSystemAbility(const int32_t systemAbilityId);
 };
 }  // namespace AppExecFwk

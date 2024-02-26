@@ -30,6 +30,8 @@ namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string HSP_PATH = ", path: ";
 const std::string SHARED_MODULE_TYPE = "shared";
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -84,7 +86,7 @@ ErrCode AppServiceFwkInstaller::Install(
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
     SendBundleSystemEvent(
-        GenerateEventMsg(),
+        hspPaths,
         BundleEventType::INSTALL,
         installParam,
         InstallScene::BOOT,
@@ -100,7 +102,6 @@ ErrCode AppServiceFwkInstaller::BeforeInstall(
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
-    bundleMsg_ = hspPaths[0];
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr_ == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -216,13 +217,46 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "Check app label failed %{public}d");
 
+    // delivery sign profile to code signature
+    result = DeliveryProfileToCodeSign(hapVerifyResults);
+    CHECK_RESULT(result, "delivery sign profile failed %{public}d");
+
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "Native so is incompatible in all hsps %{public}d");
 
+    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
+    appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    compileSdkType_ = newInfos.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
+        (newInfos.begin()->second).GetBaseApplicationInfo().compileSdkType;
+
+    GenerateOdid(newInfos, hapVerifyResults);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     APP_LOGI("CheckAndParseFiles End");
     return result;
+}
+
+void AppServiceFwkInstaller::GenerateOdid(
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (hapVerifyRes.size() < infos.size() || infos.empty()) {
+        APP_LOGE("hapVerifyRes size less than infos size or infos is empty");
+        return;
+    }
+
+    std::string developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.developerId;
+    if (developerId.empty()) {
+        developerId = hapVerifyRes[0].GetProvisionInfo().bundleInfo.bundleName;
+    }
+    std::string odid;
+    dataMgr_->GenerateOdid(developerId, odid);
+    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
+
+    for (auto &item : infos) {
+        item.second.UpdateOdid(developerId, odid);
+    }
 }
 
 ErrCode AppServiceFwkInstaller::CheckFileType(const std::vector<std::string> &bundlePaths)
@@ -417,6 +451,9 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
+        // verify hap or hsp code signature for compressed so files
+        result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath);
+        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir, nativeLibraryPath);
         CHECK_RESULT(result, "Move so to real path failed %{public}d");
@@ -703,29 +740,18 @@ void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
     }
 }
 
-std::string AppServiceFwkInstaller::GenerateEventMsg()
-{
-    std::string msg(bundleName_);
-    if (!bundleMsg_.empty()) {
-        if (!msg.empty()) {
-            msg.append(HSP_PATH);
-        }
-        msg.append(bundleMsg_);
-    }
-    return msg;
-}
-
 void AppServiceFwkInstaller::SendBundleSystemEvent(
-    const std::string &bundleName, BundleEventType bundleEventType,
+    const std::vector<std::string> &hspPaths, BundleEventType bundleEventType,
     const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
 {
     EventInfo sysEventInfo;
-    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.bundleName = bundleName_;
     sysEventInfo.isPreInstallApp = installParam.isPreInstallApp;
     sysEventInfo.errCode = errCode;
     sysEventInfo.userId = Constants::ALL_USERID;
     sysEventInfo.versionCode = versionCode_;
     sysEventInfo.preBundleScene = preBundleScene;
+    sysEventInfo.filePath = hspPaths;
     EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 
@@ -740,7 +766,9 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
         return true;
     }
-    if (oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+
+    if ((oldInfo.GetVersionCode() == versionCode_) &&
+        oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
         APP_LOGW("bundle %{public}s type is not same, existing bundle type is %{public}d",
             bundleName_.c_str(), oldInfo.GetApplicationBundleType());
         return false;
@@ -802,6 +830,51 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(const InnerBundleInfo &o
         + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
 
     return InstalldClient::GetInstance()->RemoveDir(versionDir);
+}
+
+ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bundlePath,
+    const std::string &cpuAbi, const std::string &targetSoPath) const
+{
+    APP_LOGD("begin to verify code signature for hsp native files");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = bundlePath;
+    codeSignatureParam.cpuAbi = cpuAbi;
+    codeSignatureParam.targetSoPath = targetSoPath;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
+    codeSignatureParam.isPreInstalledBundle = true;
+    return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const
+{
+    InnerBundleInfo oldInfo;
+    if (dataMgr_->FetchInnerBundleInfo(bundleName_, oldInfo)) {
+        APP_LOGD("shared bundle %{public}s has been installed and unnecessary to delivery sign profile",
+            bundleName_.c_str());
+        return ERR_OK;
+    }
+    if (hapVerifyResults.empty()) {
+        APP_LOGE("no sign info in the all haps!");
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[0].GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            APP_LOGE("invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
