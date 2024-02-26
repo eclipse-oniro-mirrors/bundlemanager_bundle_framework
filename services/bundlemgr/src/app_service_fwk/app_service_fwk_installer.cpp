@@ -217,6 +217,10 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "Check app label failed %{public}d");
 
+    // delivery sign profile to code signature
+    result = DeliveryProfileToCodeSign(hapVerifyResults);
+    CHECK_RESULT(result, "delivery sign profile failed %{public}d");
+
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "Native so is incompatible in all hsps %{public}d");
@@ -842,6 +846,35 @@ ErrCode AppServiceFwkInstaller::VerifyCodeSignatureForNativeFiles(const std::str
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = true;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const
+{
+    InnerBundleInfo oldInfo;
+    if (dataMgr_->FetchInnerBundleInfo(bundleName_, oldInfo)) {
+        APP_LOGD("shared bundle %{public}s has been installed and unnecessary to delivery sign profile",
+            bundleName_.c_str());
+        return ERR_OK;
+    }
+    if (hapVerifyResults.empty()) {
+        APP_LOGE("no sign info in the all haps!");
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[0].GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            APP_LOGE("invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
