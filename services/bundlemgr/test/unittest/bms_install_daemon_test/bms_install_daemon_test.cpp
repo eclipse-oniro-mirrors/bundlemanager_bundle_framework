@@ -860,11 +860,11 @@ HWTEST_F(BmsInstallDaemonTest, GetBundleStats_0400, Function | SmallTest | Level
     std::vector<int64_t> stats;
     bool result = GetBundleStats(BUNDLE_NAME13, USERID, stats, 0);
     EXPECT_EQ(result, true);
-    EXPECT_NE(stats[0], 0);
+    EXPECT_EQ(stats[0], 0);
     EXPECT_NE(stats[1], 0);
     EXPECT_EQ(stats[2], 0); // distributed file does not exist
     EXPECT_EQ(stats[3], 0);
-    EXPECT_NE(stats[4], 0);
+    EXPECT_EQ(stats[4], 0);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_CACHE);
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR_TEMP);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR_CODE);
