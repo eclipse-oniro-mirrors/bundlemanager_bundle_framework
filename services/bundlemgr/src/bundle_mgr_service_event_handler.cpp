@@ -893,7 +893,6 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     // Sort in descending order of install priority
     std::map<int32_t, std::vector<PreScanInfo>, std::greater<int32_t>> taskMap;
     std::list<std::string> hspDirs;
-    std::list<PreScanInfo> normalSystemApps;
     for (const auto &installInfo : installList_) {
         APP_LOGD("Inner process boot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
