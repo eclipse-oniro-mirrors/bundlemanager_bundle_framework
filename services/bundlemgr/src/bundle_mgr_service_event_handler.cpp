@@ -1053,6 +1053,7 @@ void BMSEventHandler::OnBundleRebootStart()
 void BMSEventHandler::ProcessRebootBundle()
 {
     APP_LOGI("BMSEventHandler Process reboot bundle start");
+    ProcessRebootDeleteAotPath();
     LoadAllPreInstallBundleInfos();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
@@ -1063,6 +1064,16 @@ void BMSEventHandler::ProcessRebootBundle()
 #endif
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
+}
+
+void BMSEventHandler::ProcessRebootDeleteAotPath()
+{
+    std::string removeAotPath = Constants::ARK_CACHE_PATH;
+    removeAotPath.append("*");
+    if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
+        APP_LOGE("delete aot dir %{public}s failed!", removeAotPath.c_str());
+        return;
+    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
