@@ -56,5 +56,21 @@ int32_t AccountHelper::GetCurrentActiveUserId()
     return 0;
 #endif
 }
+
+bool AccountHelper::IsOsAccountVerified(const int32_t userId)
+{
+#ifdef ACCOUNT_ENABLE
+    bool isOsAccountVerified = false;
+    int32_t ret = AccountSA::OsAccountManager::IsOsAccountVerified(userId, isOsAccountVerified);
+    if (ret != 0) {
+        APP_LOGE("IsOsAccountVerified failed ret:%{public}d", ret);
+        return false;
+    }
+    return isOsAccountVerified;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    return false;
+#endif
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

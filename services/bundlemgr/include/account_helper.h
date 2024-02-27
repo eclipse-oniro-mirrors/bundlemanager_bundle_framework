@@ -25,6 +25,8 @@ public:
     static int IsOsAccountExists(const int id, bool &isOsAccountExists);
 
     static int32_t GetCurrentActiveUserId();
+
+    static bool IsOsAccountVerified(const int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
