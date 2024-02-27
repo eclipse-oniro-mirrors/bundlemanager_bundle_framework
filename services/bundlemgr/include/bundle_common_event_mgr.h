@@ -40,6 +40,7 @@ enum class NotifyType {
     OVERLAY_STATE_CHANGED,
     DISPOSED_RULE_ADDED,
     DISPOSED_RULE_DELETED,
+    START_INSTALL,
 };
 
 enum class SandboxInstallType : uint32_t {
@@ -58,6 +59,7 @@ struct NotifyBundleEvents {
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     std::string appId;
+    std::string appIdentifier;
     bool isModuleUpdate = false;
 };
 

@@ -147,6 +147,34 @@ ErrCode BaseBundleInstaller::InstallBundle(
     return InstallBundle(bundlePaths, installParam, appType);
 }
 
+void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installParam,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (!installParam.needSendEvent) {
+        APP_LOGW("sendStartInstallNotify needSendEvent is false");
+        return;
+    }
+    if (bundleName_.empty()) {
+        APP_LOGW("sendStartInstallNotify bundleName is empty");
+        return;
+    }
+    for (auto item : infos) {
+        APP_LOGD("sendStartInstallNotify %{public}s  %{public}s %{public}s %{public}s",
+            bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
+            item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName_,
+            .modulePackage = item.second.GetCurModuleName(),
+            .appId = item.second.GetAppId(),
+            .appIdentifier = item.second.GetAppIdentifier(),
+            .type = NotifyType::START_INSTALL
+        };
+        if (NotifyBundleStatus(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for start install");
+        }
+    }
+}
+
 ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
@@ -960,6 +988,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
+
+    // to send notify of start install application
+    sendStartInstallNotify(installParam, newInfos);
 
     // check if bundle exists in extension
     result = CheckBundleInBmsExtension(bundleName_, userId_);
