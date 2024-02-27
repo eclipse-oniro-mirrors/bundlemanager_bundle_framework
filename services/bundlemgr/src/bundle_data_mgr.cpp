@@ -753,7 +753,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
-        APP_LOGE("ability not found, bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
+        APP_LOGW("UIAbility not found, bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
