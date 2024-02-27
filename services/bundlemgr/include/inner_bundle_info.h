@@ -293,6 +293,7 @@ public:
         ApplicationReservedFlag, baseApplicationInfo_, applicationReservedFlag, uint32_t);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(
         AllowAppRunWhenDeviceFirstLocked, baseApplicationInfo_, allowAppRunWhenDeviceFirstLocked, bool);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(TsanEnabled, baseApplicationInfo_, tsanEnabled, bool);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)

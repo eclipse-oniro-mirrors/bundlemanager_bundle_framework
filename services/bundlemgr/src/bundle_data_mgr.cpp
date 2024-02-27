@@ -329,6 +329,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
             oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
         }
+        updateTsanEnabled(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -533,6 +534,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
             oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
         }
+        updateTsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -6281,6 +6283,16 @@ ErrCode BundleDataMgr::GetOdid(std::string &odid) const
     std::string developerId;
     innerBundleInfo.GetDeveloperidAndOdid(developerId, odid);
     return ERR_OK;
+}
+
+void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    if (newInfo.GetTsanEnabled()) {
+        oldInfo.SetTsanEnabled(true);
+    }
+    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+        oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
