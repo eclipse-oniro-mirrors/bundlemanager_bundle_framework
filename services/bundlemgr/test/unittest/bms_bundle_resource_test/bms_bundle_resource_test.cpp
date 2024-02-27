@@ -993,6 +993,65 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_024
+ * Function: GetAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_024, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    LauncherAbilityResourceInfo info;
+    // empty param
+    auto ret = bundleResourceHostImpl->GetAbilityResourceInfo("", "", "", 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    // bundleName not exist
+    ret = bundleResourceHostImpl->GetAbilityResourceInfo(ABILITY_NAME, ABILITY_NAME, ABILITY_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    // moduleName not exist
+    ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, ABILITY_NAME, ABILITY_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    // abilityName not exist
+    ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, MODULE_NAME, MODULE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    // exist
+    ret = bundleResourceHostImpl->GetAbilityResourceInfo(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.bundleName, BUNDLE_NAME);
+    EXPECT_EQ(info.moduleName, MODULE_NAME);
+    EXPECT_EQ(info.abilityName, ABILITY_NAME);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_025
+ * Function: GetAbilityResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_025, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            LauncherAbilityResourceInfo info;
+            auto ret = resourceProxy->GetAbilityResourceInfo(BUNDLE_NAME, BUNDLE_NAME, BUNDLE_NAME, 0, info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0050
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
