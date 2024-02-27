@@ -1216,6 +1216,41 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_1100, Function | MediumTest |
 }
 
 /**
+ * @tc.number: QueryAbilityInfosV9_1200
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.implicit query ability infos with flags GET_ABILITY_INFO_WITH_SKILL_URI
+ */
+HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_1200, Function | MediumTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.hello");
+    want.AddEntity("entity.hello");
+
+    std::vector<AbilityInfo> abilityInfos;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL_URI);
+    ErrCode ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ElementName elementName("", BUNDLE_BACKUP_NAME, "", "");
+    want.SetElement(elementName);
+    ret = dataMgr->QueryAbilityInfosV9(want, flags, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(abilityInfos[0].skillUri.size(), 1);
+    EXPECT_EQ(abilityInfos[0].skillUri[0].scheme, "");
+    EXPECT_EQ(abilityInfos[0].skillUri[0].host, "example.com");
+    EXPECT_EQ(abilityInfos[0].skillUri[0].port, "80");
+    EXPECT_EQ(abilityInfos[0].skillUri[0].path, "path");
+    EXPECT_EQ(abilityInfos[0].skillUri[0].type, "");
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
  * @tc.number: GetApplicationInfoV9_0100
  * @tc.name: test GetApplicationInfoV9 proxy
  * @tc.desc: 1.query ability infos

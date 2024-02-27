@@ -37,6 +37,15 @@
                         ],
                         "entities": [
                             "entity.hello"
+                        ],
+                        "uris": [
+                            {
+                              "scheme":"",
+                              "host":"example.com",
+                              "port":"80",
+                              "path":"path",
+                              "type": ""
+                            }
                         ]
                     }
                 ],
@@ -58,6 +67,15 @@
                         ],
                         "entities": [
                             "entity.hello"
+                        ],
+                        "uris": [
+                            {
+                                "scheme":"",
+                                "host":"example.com",
+                                "port":"80",
+                                "path":"path",
+                                "type": ""
+                            }
                         ]
                     }
                 ],
