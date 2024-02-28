@@ -220,9 +220,7 @@ void UpdateAppDataMgr::ProcessFileManagerDir(const std::vector<BundleInfo> &bund
         if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
             continue;
         }
-        if (!CreateBundleCloudDir(bundleInfo, userId)) {
-            APP_LOGW("ProcessFileManageDir failed");
-        }
+        CreateBundleCloudDir(bundleInfo, userId);
     }
 }
 
