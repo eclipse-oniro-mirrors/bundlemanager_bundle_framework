@@ -29,8 +29,10 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
-    const std::string FILE_PATH =
-    "/data/test/BmsBundleVerifyManagerTest";
+    const std::string FILE_PATH = "/data/test/BmsBundleVerifyManagerTest/a.abc";
+    const std::string INVALID_PATH = "/data/test/../../BmsBundleVerifyManagerTest/a.abc";
+    const std::string INVALID_SUFFIX = "/data/test/BmsBundleVerifyManagerTest/a.so";
+    const std::string ABC_FILE = "a.abc";
     const std::string ERR_FILE_PATH = "data";
     const std::string BUNDLE_NAME = "com.ohos.launcher";
     const int32_t FD = 0;
@@ -202,5 +204,37 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0600, Function | SmallTes
 
     ret = impl.DeleteAbc("test.abc");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED);
+}
+
+/**
+ * @tc.number: InnerVerify
+ * @tc.name: test InnerVerify
+ * @tc.desc: 1.InnerVerify test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0700, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    abcPaths.push_back(INVALID_PATH);
+    abcNames.push_back(INVALID_PATH);
+    auto ret1 = impl.Verify(abcPaths, abcNames, true);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InnerVerify
+ * @tc.name: test InnerVerify
+ * @tc.desc: 1.InnerVerify test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0800, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    abcPaths.push_back(INVALID_SUFFIX);
+    abcNames.push_back(INVALID_SUFFIX);
+    auto ret1 = impl.Verify(abcPaths, abcNames, true);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 } // OHOS
