@@ -35,7 +35,6 @@ static napi_value BundleResourceExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllBundleResourceInfo", GetAllBundleResourceInfo),
         DECLARE_NAPI_FUNCTION("getAllLauncherAbilityResourceInfo", GetAllLauncherAbilityResourceInfo),
         DECLARE_NAPI_PROPERTY("ResourceFlag", resourceFlag),
-        DECLARE_NAPI_FUNCTION("getAbilityResourceInfo", GetAbilityResourceInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

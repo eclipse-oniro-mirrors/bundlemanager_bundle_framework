@@ -36,10 +36,6 @@ public:
 
     virtual ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
-
-    virtual ErrCode GetAbilityResourceInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, const uint32_t flags,
-        LauncherAbilityResourceInfo &launcherAbilityResourceInfo) override;
 };
 } // AppExecFwk
 } // OHOS

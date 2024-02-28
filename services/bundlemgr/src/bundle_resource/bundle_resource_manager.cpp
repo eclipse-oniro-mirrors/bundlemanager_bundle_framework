@@ -366,15 +366,5 @@ void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleResourcesChanged(userId);
 }
-
-ErrCode BundleResourceManager::GetAbilityResourceInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, const uint32_t flags,
-    LauncherAbilityResourceInfo &AbilityResourceInfo)
-{
-    APP_LOGD("start");
-    uint32_t resourceFlags = CheckResourceFlags(flags);
-    return bundleResourceRdb_->GetAbilityResourceInfo(bundleName, moduleName, abilityName,
-        resourceFlags, AbilityResourceInfo);
-}
 } // AppExecFwk
 } // OHOS

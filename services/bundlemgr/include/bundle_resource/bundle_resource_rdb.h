@@ -18,7 +18,6 @@
 
 #include <vector>
 
-#include "appexecfwk_errors.h"
 #include "bundle_system_state.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
@@ -56,10 +55,6 @@ public:
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
-    ErrCode GetAbilityResourceInfo(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, const uint32_t flags,
-        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
-
 private:
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
@@ -70,8 +65,6 @@ private:
         const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
         const uint32_t flags,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
-
-    bool IsKeyExist(const std::string &key);
 
     void ParseKey(const std::string &key,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
