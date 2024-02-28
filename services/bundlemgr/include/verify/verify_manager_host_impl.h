@@ -41,6 +41,11 @@ private:
     bool GetFileName(const std::string &sourcePath, std::string &fileName);
     bool GetFileDir(const std::string &sourcePath, std::string &fileDir);
     void RemoveTempFiles(const std::vector<std::string> &paths);
+    bool VerifyAbc(
+        const std::string &rootDir, const std::vector<std::string> &names);
+    bool CheckFileParam(
+        const std::vector<std::string> &abcPaths, const std::vector<std::string> &abcNames);
+    void Rollback(const std::string &rootDir, const std::vector<std::string> &names);
     ErrCode MkdirIfNotExist(const std::string &dir);
 
     std::atomic<uint32_t> id_ = 0;
