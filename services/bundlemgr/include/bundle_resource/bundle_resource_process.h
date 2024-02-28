@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_PROCESS_H
 
 #include "ability_info.h"
+#include "appexecfwk_errors.h"
 #include "inner_bundle_info.h"
 #include "resource_info.h"
 
@@ -35,7 +36,7 @@ public:
     static bool GetResourceInfoByBundleName(const std::string &bundleName, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfo);
     // get LauncherAbilityResourceInfo by abilityName
-    static bool GetResourceInfoByAbilityName(const std::string &bundleName, const std::string &moduleName,
+    static bool GetLauncherResourceInfoByAbilityName(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId,
         ResourceInfo &resourceInfo);
     // get all LauncherAbilityResourceInfo and BundleResourceInfo
@@ -51,20 +52,16 @@ private:
     // used for show in settings
     static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         ResourceInfo &resourceInfo);
-    // get ability resource
-    static bool GetAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    // get launcher ability resource
+    static bool GetLauncherAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfo);
 
-    static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability,
-        bool hideDesktopIcon = false);
+    static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability);
 
     static ResourceInfo ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo);
 
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
-
-    static void InnerProcessLauncherAbilityResource(const InnerBundleInfo &innerBundleInfo,
-        const std::vector<Skill> &skills, const AbilityType type, bool &needHideDeskTopIcon);
 };
 } // AppExecFwk
 } // OHOS

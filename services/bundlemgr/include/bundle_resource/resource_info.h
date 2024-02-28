@@ -46,8 +46,6 @@ public:
     std::string hapPath_;
     // used for parse overlay label and icon
     std::vector<std::string> overlayHapPaths_;
-    // hide desktop icon
-    bool hideDesktopIcon_ = false;
 };
 } // AppExecFwk
 } // OHOS

@@ -147,7 +147,7 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
     return InnerGetResourceInfo(item->second, userId, resourceInfo);
 }
 
-bool BundleResourceProcess::GetResourceInfoByAbilityName(
+bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
     const std::string &bundleName,
     const std::string &moduleName,
     const std::string &abilityName,
@@ -177,7 +177,7 @@ bool BundleResourceProcess::GetResourceInfoByAbilityName(
         return false;
     }
     std::vector<ResourceInfo> resourceInfos;
-    if (GetAbilityResourceInfos(item->second, userId, resourceInfos)) {
+    if (GetLauncherAbilityResourceInfos(item->second, userId, resourceInfos)) {
         for (const auto &info : resourceInfos) {
             if ((info.moduleName_ == moduleName) && (info.abilityName_ == abilityName)) {
                 resourceInfo = info;
@@ -240,7 +240,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
 
     // get ability
     std::vector<ResourceInfo> abilityResourceInfos;
-    if (GetAbilityResourceInfos(innerBundleInfo, userId, abilityResourceInfos)) {
+    if (GetLauncherAbilityResourceInfos(innerBundleInfo, userId, abilityResourceInfos)) {
         for (const auto &info : abilityResourceInfos) {
             resourceInfos.push_back(info);
         }
@@ -256,7 +256,7 @@ bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo
     return responseUserId != Constants::INVALID_USERID;
 }
 
-ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const AbilityInfo &info, bool hideDesktopIcon)
+ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const AbilityInfo &info)
 {
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = info.bundleName;
@@ -265,7 +265,6 @@ ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const A
     resourceInfo.labelId_ = info.labelId;
     resourceInfo.iconId_ = info.iconId;
     resourceInfo.hapPath_ = info.hapPath;
-    resourceInfo.hideDesktopIcon_ = hideDesktopIcon;
     return resourceInfo;
 }
 
@@ -288,10 +287,10 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundl
     return resourceInfo;
 }
 
-bool BundleResourceProcess::GetAbilityResourceInfos(
+bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
     const InnerBundleInfo &innerBundleInfo,
     const int32_t userId,
-    std::vector<ResourceInfo> &resourceInfo)
+    std::vector<ResourceInfo> &resourceInfos)
 {
     APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     if (innerBundleInfo.GetBundleName().empty()) {
@@ -299,44 +298,47 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
         return false;
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
-    bool hideDesktopIcon = true;
-    std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
-    std::map<std::string, std::vector<Skill>> skillInfos = innerBundleInfo.GetInnerSkillInfos();
-    for (const auto &item : abilityInfos) {
-        if (!innerBundleInfo.IsAbilityEnabled(item.second, innerBundleInfo.GetResponseUserId(userId))) {
-            APP_LOGW("bundleName:%{public}s abilityName:%{public}s is disabled", item.second.bundleName.c_str(),
-                item.second.name.c_str());
-            continue;
-        }
-        bool needHideDeskTopIcon = hideDesktopIcon;
-        auto skillsPair = skillInfos.find(item.first);
-        if (skillsPair != skillInfos.end()) {
-            InnerProcessLauncherAbilityResource(innerBundleInfo, skillsPair->second,
-                item.second.type, needHideDeskTopIcon);
-        }
-        resourceInfo.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second, needHideDeskTopIcon));
+    if (innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon) {
+        APP_LOGD("bundleName:%{public}s hide desktop icon", innerBundleInfo.GetBundleName().c_str());
+        return false;
     }
-    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfo.size(),
-        innerBundleInfo.GetBundleName().c_str());
-    return !resourceInfo.empty();
-}
+    if (innerBundleInfo.GetBaseBundleInfo().entryInstallationFree) {
+        APP_LOGD("bundleName:%{public}s is atomic service, hide desktop icon", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
 
-void BundleResourceProcess::InnerProcessLauncherAbilityResource(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<Skill> &skills, const AbilityType type, bool &needHideDeskTopIcon)
-{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
     OHOS::AAFwk::Want want;
     want.SetAction(Want::ACTION_HOME);
     want.AddEntity(Want::ENTITY_HOME);
-    for (const Skill& skill : skills) {
-        if (skill.MatchLauncher(want) && (type == AbilityType::PAGE)) {
-            needHideDeskTopIcon = innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon ||
-                innerBundleInfo.GetBaseBundleInfo().entryInstallationFree;
-            return;
-        }
+    std::vector<AbilityInfo> abilityInfos;
+    int64_t time = 0;
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
+
+    if (abilityInfos.empty()) {
+        APP_LOGW("bundleName: %{public}s no launcher ability Info", innerBundleInfo.GetBundleName().c_str());
+        return false;
     }
+    for (const auto &info : abilityInfos) {
+        if (!info.applicationInfo.enabled) {
+            continue;
+        }
+        if (!innerBundleInfo.IsAbilityEnabled(info, innerBundleInfo.GetResponseUserId(userId))) {
+            APP_LOGW("abilityName: %{public}s is disabled", info.name.c_str());
+            continue;
+        }
+        resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
+    }
+    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
+        innerBundleInfo.GetBundleName().c_str());
+    return !resourceInfos.empty();
 }
 } // AppExecFwk
 } // OHOS

@@ -997,14 +997,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
  * @tc.desc: 1. system running normally
- *           2. test GetAbilityResourceInfos
+ *           2. test GetLauncherAbilityResourceInfos
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest | Level0)
 {
     InnerBundleInfo bundleInfo;
     std::vector<ResourceInfo> resourceInfos;
     // bundleName empty
-    bool ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    bool ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1013,7 +1013,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.bundleType = BundleType::SHARED;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // bundle type is shared
-    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1021,7 +1021,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     applicationInfo.hideDesktopIcon = true;
     bundleInfo.SetBaseApplicationInfo(applicationInfo);
     // hideDesktopIcon is true
-    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
@@ -1031,14 +1031,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest
     info.entryInstallationFree = true;
     bundleInfo.SetBaseBundleInfo(info);
     // entryInstallationFree is true
-    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
     info.entryInstallationFree = false;
     bundleInfo.SetBaseBundleInfo(info);
     // abilityInfos is empty
-    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 }
@@ -1184,13 +1184,13 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0054, Function | SmallTest
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
  * @tc.desc: 1. system running normally
- *           2. test GetResourceInfoByAbilityName
+ *           2. test GetLauncherResourceInfoByAbilityName
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest | Level0)
 {
     ResourceInfo resourceInfo;
     // bundle not exist
-    bool ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+    bool ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
         USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
@@ -1198,23 +1198,23 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
     EXPECT_EQ(installResult, ERR_OK);
     // userId not exist
-    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
         200, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     // bundle exist, moduleName or abilityName not exist
-    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, "xxx", "yyy", USERID, resourceInfo);
+    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, "xxx", "yyy", USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     // bundle  moduleName exist, abilityName not exist
-    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, "yyy", USERID, resourceInfo);
+    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, "yyy", USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     // bundle  moduleName exist, abilityName exist
-    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
         USERID, resourceInfo);
     EXPECT_TRUE(ans);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
