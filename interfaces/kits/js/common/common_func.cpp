@@ -1776,6 +1776,11 @@ void CommonFunc::ConvertShortcutIntent(napi_env env,
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetAbility", nTargetClass));
+
+    napi_value nShortcutUri;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.shortcutUri.c_str(), NAPI_AUTO_LENGTH, &nShortcutUri));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "shortcutUri", nShortcutUri));
 }
 
 void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value)

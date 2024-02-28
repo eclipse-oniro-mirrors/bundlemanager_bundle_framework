@@ -347,6 +347,11 @@ static void ConvertShortcutIntent(napi_env env, napi_value objShortcutInfo,
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetClass", nTargetClass));
+
+    napi_value nShortcutUri;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, shortcutIntent.shortcutUri.c_str(), NAPI_AUTO_LENGTH, &nShortcutUri));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "shortcutUri", nShortcutUri));
 }
 
 static void ConvertShortcutInfo(
