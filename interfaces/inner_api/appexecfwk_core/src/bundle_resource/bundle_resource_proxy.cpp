@@ -150,41 +150,6 @@ ErrCode BundleResourceProxy::GetAllLauncherAbilityResourceInfo(const uint32_t fl
         BundleResourceInterfaceCode::GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, data, launcherAbilityResourceInfos);
 }
 
-ErrCode BundleResourceProxy::GetAbilityResourceInfo(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, const uint32_t flags,
-    LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
-    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("bundleName or moduleName or abilityName is empty.");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to write InterfaceToken");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to write bundleName");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to write moduleName");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to write abilityName");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteUint32(flags)) {
-        APP_LOGE("fail to write flags");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return GetParcelInfo<LauncherAbilityResourceInfo>(
-        BundleResourceInterfaceCode::GET_ABILITY_RESOURCE_INFO, data, launcherAbilityResourceInfo);
-}
-
 template<typename T>
 ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {

@@ -63,14 +63,5 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
 {
     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
 }
-
-napi_value GetAbilityResourceInfo(napi_env env, napi_callback_info info)
-{
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getAbilityResourceInfo");
-    napi_throw(env, error);
-    return nullptr;
-}
 } // AppExecFwk
 } // OHOS
