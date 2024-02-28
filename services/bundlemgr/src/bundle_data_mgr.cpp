@@ -1200,6 +1200,7 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(const std::vector<Skill> &skills, Ab
             skillinfo.type = uri.type;
             skillinfo.utd = uri.utd;
             skillinfo.maxFileSupported = uri.maxFileSupported;
+            skillinfo.linkFeature = uri.linkFeature;
             abilityInfo.skillUri.emplace_back(skillinfo);
         }
     }

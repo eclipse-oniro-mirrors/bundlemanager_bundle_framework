@@ -509,6 +509,7 @@ void to_json(nlohmann::json &jsonObject, const SkillUri &uri)
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE, uri.type},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_UTD, uri.utd},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED, uri.maxFileSupported},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_LINK_FEATURE, uri.linkFeature},
     };
 }
 
@@ -1119,6 +1120,14 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED,
         uri.maxFileSupported,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_LINK_FEATURE,
+        uri.linkFeature,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

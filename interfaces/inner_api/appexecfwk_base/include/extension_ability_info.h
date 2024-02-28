@@ -110,6 +110,7 @@ struct SkillUriForAbilityAndExtension {
     std::string type;
     std::string utd;
     int32_t maxFileSupported = 0;
+    std::string linkFeature;
 };
 
 struct ExtensionAbilityInfo : public Parcelable {

@@ -1247,6 +1247,7 @@ HWTEST_F(BmsBundleManagerTest, QueryAbilityInfosV9_1200, Function | MediumTest |
     EXPECT_EQ(abilityInfos[0].skillUri[0].port, "80");
     EXPECT_EQ(abilityInfos[0].skillUri[0].path, "path");
     EXPECT_EQ(abilityInfos[0].skillUri[0].type, "");
+    EXPECT_EQ(abilityInfos[0].skillUri[0].linkFeature, "test");
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 

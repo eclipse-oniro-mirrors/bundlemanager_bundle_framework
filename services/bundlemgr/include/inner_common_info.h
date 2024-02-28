@@ -134,6 +134,7 @@ struct SkillUri {
     std::string type;
     std::string utd;
     int32_t maxFileSupported = 0;
+    std::string linkFeature;
 };
 
 struct Skill {
