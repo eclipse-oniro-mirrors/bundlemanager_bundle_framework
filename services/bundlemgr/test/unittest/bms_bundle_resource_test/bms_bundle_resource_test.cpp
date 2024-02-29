@@ -429,6 +429,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0007, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "xxx";
 
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -674,6 +675,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "xxxx";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
 
@@ -989,6 +991,174 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest
     ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
     ans = resourceRdb.DeleteResourceInfo(resourceInfo2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0024
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0024, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/xxxx";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0025
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0025, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "$string";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0026
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0026, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "bundleName";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0027
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0027, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+
+/**
+ * @tc.number: BmsBundleResourceTest_0028
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0028, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName/moduleName/abilityName";
+    resourceInfo.icon_ = "data:image/png";
+    resourceInfo.label_ = "xxxx";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0029
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0029, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName/moduleName/abilityName";
+    resourceInfo.icon_ = "";
+    resourceInfo.label_ = "xxxx";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) == keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
 }
 

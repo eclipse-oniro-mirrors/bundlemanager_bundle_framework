@@ -2501,6 +2501,7 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
 
 void BMSEventHandler::CheckALLResourceInfo()
 {
+    APP_LOGI("start");
     std::thread ProcessBundleResourceThread(ProcessBundleResourceInfo);
     ProcessBundleResourceThread.detach();
 }

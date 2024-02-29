@@ -159,7 +159,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             APP_LOGE("GetString icon failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
-        if (icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) {
+        if ((icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) || icon.empty()) {
             APP_LOGW("keyName:%{public}s icon is invalid, need add again", name.c_str());
             continue;
         }
@@ -170,7 +170,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             APP_LOGE("GetString label failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
-        if ((label.find("$") != std::string::npos) || (label == name)) {
+        if ((label.find('$') == 0) || (label == name) || label.empty()) {
             APP_LOGW("keyName:%{public}s label is invalid, need add again", name.c_str());
             continue;
         }
