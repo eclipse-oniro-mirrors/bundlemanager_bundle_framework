@@ -81,6 +81,11 @@ ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPa
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
 
+    if (!CheckFileParam(abcPaths, abcNames)) {
+        APP_LOGE("CheckFile failed.");
+        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+    }
+
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("verify failed, dataMgr is null");
@@ -98,18 +103,63 @@ ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPa
     rootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
         .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
         .append(ABCS_DIR).append(Constants::PATH_SEPARATOR);
-    if (!VerifyAbc(abcPaths)) {
-        APP_LOGE("verify abc failed.");
-        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
-    }
-
     if (!MoveAbc(abcPaths, abcNames, rootDir)) {
         APP_LOGE("move abc failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
     }
 
+    if (!VerifyAbc(rootDir, abcNames)) {
+        APP_LOGE("verify abc failed.");
+        Rollback(rootDir, abcNames);
+        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
+    }
+
     APP_LOGI("verify abc success.");
     return ERR_OK;
+}
+
+bool VerifyManagerHostImpl::CheckFileParam(
+    const std::vector<std::string> &abcPaths, const std::vector<std::string> &abcNames)
+{
+    if (abcPaths.empty() || abcNames.empty()) {
+        APP_LOGE("CheckFile abcPath failed due to abcPaths or abcNames is empty");
+        return false;
+    }
+
+    for (const auto &abcPath : abcPaths) {
+        if (!IsValidPath(abcPath)) {
+            APP_LOGE("CheckFile abcPath(%{public}s) failed due to invalid path", abcPath.c_str());
+            return false;
+        }
+        if (!BundleUtil::CheckFileType(abcPath, Constants::ABC_FILE_SUFFIX)) {
+            APP_LOGE("CheckFile abcPath(%{public}s) failed due to not abc suffix.", abcPath.c_str());
+            return false;
+        }
+    }
+
+    for (const auto abcName : abcNames) {
+        if (!IsValidPath(abcName)) {
+            APP_LOGE("CheckFile abcName(%{public}s) failed due to invalid path", abcName.c_str());
+            return false;
+        }
+        if (!BundleUtil::CheckFileType(abcName, Constants::ABC_FILE_SUFFIX)) {
+            APP_LOGE("CheckFile abcName(%{public}s) failed due to not abc suffix.", abcName.c_str());
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool VerifyManagerHostImpl::VerifyAbc(
+    const std::string &rootDir, const std::vector<std::string> &names)
+{
+    std::vector<std::string> paths;
+    for (const auto &name : names) {
+        paths.emplace_back(rootDir + name);
+    }
+
+    return VerifyAbc(paths);
 }
 
 bool VerifyManagerHostImpl::VerifyAbc(const std::vector<std::string> &abcPaths)
@@ -220,6 +270,17 @@ bool VerifyManagerHostImpl::MoveAbc(const std::vector<std::string> &abcPaths,
     }
 
     return true;
+}
+
+void VerifyManagerHostImpl::Rollback(
+    const std::string &rootDir, const std::vector<std::string> &names)
+{
+    std::vector<std::string> paths;
+    for (const auto &name : names) {
+        paths.emplace_back(rootDir + name);
+    }
+
+    Rollback(paths);
 }
 
 void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
