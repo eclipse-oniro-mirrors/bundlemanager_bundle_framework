@@ -111,6 +111,12 @@
         "querySchemes": [
             "http",
             "welink"
+        ],
+        "appEnvironments": [
+            {
+                "name": "name",
+                "value": "value"
+            }
         ]
     }
 }

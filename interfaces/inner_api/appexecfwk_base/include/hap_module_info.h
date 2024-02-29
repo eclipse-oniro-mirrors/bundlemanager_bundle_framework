@@ -100,6 +100,15 @@ struct RouterItem : public Parcelable {
     static RouterItem *Unmarshalling(Parcel &parcel);
 };
 
+struct AppEnvironment : public Parcelable {
+    std::string name;
+    std::string value;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static AppEnvironment *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -162,6 +171,7 @@ struct HapModuleInfo : public Parcelable {
     std::string fileContextMenu;
     std::string routerMap;
     std::vector<RouterItem> routerArray;
+    std::vector<AppEnvironment> appEnvironments;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

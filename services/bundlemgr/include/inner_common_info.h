@@ -122,6 +122,7 @@ struct InnerModuleInfo {
     bool isEncrypted = false;
     std::vector<std::string> querySchemes;
     std::string routerMap;
+    std::vector<AppEnvironment> appEnvironments;
 };
 
 struct SkillUri {

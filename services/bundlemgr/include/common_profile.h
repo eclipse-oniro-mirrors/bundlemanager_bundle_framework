@@ -494,6 +494,9 @@ constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 
 // module router
 constexpr const char* MODULE_ROUTER_MAP = "routerMap";
+
+//module appEnvironment
+constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

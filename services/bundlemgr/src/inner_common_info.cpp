@@ -96,6 +96,7 @@ const std::string MODULE_ROUTER_MAP = "routerMap";
 const std::string STR_PHONE = "phone";
 const std::string STR_DEFAULT = "default";
 const std::string MODULE_QUERY_SCHEMES = "querySchemes";
+const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
 }  // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -494,6 +495,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_IS_ENCRYPTED, info.isEncrypted},
         {MODULE_QUERY_SCHEMES, info.querySchemes},
         {MODULE_ROUTER_MAP, info.routerMap},
+        {MODULE_APP_ENVIRONMENTS, info.appEnvironments},
     };
 }
 
@@ -1032,6 +1034,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<AppEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_ENVIRONMENTS,
+        info.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
