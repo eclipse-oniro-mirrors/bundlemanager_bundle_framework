@@ -17,7 +17,6 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_PROCESS_H
 
 #include "ability_info.h"
-#include "appexecfwk_errors.h"
 #include "inner_bundle_info.h"
 #include "resource_info.h"
 
@@ -54,7 +53,7 @@ private:
         ResourceInfo &resourceInfo);
     // get launcher ability resource
     static bool GetLauncherAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfo);
+        std::vector<ResourceInfo> &resourceInfos);
 
     static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability);
 

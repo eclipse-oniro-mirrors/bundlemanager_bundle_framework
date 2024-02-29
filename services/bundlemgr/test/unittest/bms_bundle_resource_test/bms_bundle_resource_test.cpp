@@ -1209,7 +1209,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
     // bundle  moduleName exist, abilityName not exist
-    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, "yyy", USERID, resourceInfo);
+    ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, "yyy",
+        USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.GetKey(), "");
 
