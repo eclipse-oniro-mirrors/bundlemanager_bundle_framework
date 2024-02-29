@@ -15,6 +15,8 @@
 
 #include "bundle_resource_event_subscriber.h"
 
+#include "bundle_common_event.h"
+#include "bundle_constants.h"
 #include "bundle_resource_callback.h"
 #include "common_event_support.h"
 
@@ -29,7 +31,8 @@ BundleResourceEventSubscriber::~BundleResourceEventSubscriber()
 
 void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    std::string action = data.GetWant().GetAction();
+    auto want = data.GetWant();
+    std::string action = want.GetAction();
     BundleResourceCallback callback;
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         // when reboot, user 0 switch to user 100, no need to flush resource rdb
@@ -39,7 +42,13 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
         }
         isFirstSwitch = false;
     }
-    // for other event
+    // for overlay event
+    if (action == OVERLAY_STATE_CHANGED) {
+        std::string bundleName = want.GetElement().GetBundleName();
+        bool isEnabled = want.GetBoolParam(Constants::OVERLAY_STATE, false);
+        int32_t userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
+        callback.OnOverlayStatusChanged(bundleName, isEnabled, userId);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

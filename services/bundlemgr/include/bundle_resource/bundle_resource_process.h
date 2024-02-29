@@ -61,6 +61,11 @@ private:
 
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
+
+    static bool CheckIsNeedProcessAbilityResource(const InnerBundleInfo &innerBundleInfo);
+
+    static bool GetOverlayModuleHapPaths(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, std::vector<std::string> &overlayHapPaths);
 };
 } // AppExecFwk
 } // OHOS
