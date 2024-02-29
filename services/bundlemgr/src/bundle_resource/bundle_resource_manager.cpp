@@ -80,7 +80,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     ResourceInfo resourceInfo;
-    if (!BundleResourceProcess::GetResourceInfoByAbilityName(bundleName, moduleName, abilityName,
+    if (!BundleResourceProcess::GetLauncherResourceInfoByAbilityName(bundleName, moduleName, abilityName,
         userId, resourceInfo)) {
         APP_LOGE("bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
