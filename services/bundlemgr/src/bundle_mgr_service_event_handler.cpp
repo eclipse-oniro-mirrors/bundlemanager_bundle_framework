@@ -313,6 +313,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
+        CheckALLResourceInfo();
     }
 
     needNotifyBundleScanStatus_ = true;
@@ -2496,6 +2497,12 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         }
     }
     APP_LOGI("ProcessRebootQuickFixBundleInstall end");
+}
+
+void BMSEventHandler::CheckALLResourceInfo()
+{
+    std::thread ProcessBundleResourceThread(ProcessBundleResourceInfo);
+    ProcessBundleResourceThread.detach();
 }
 
 void BMSEventHandler::ProcessBundleResourceInfo()

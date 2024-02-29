@@ -515,8 +515,9 @@ private:
     void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
     bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
     bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
+    void CheckALLResourceInfo();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
-    void ProcessBundleResourceInfo();
+    void static ProcessBundleResourceInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.
