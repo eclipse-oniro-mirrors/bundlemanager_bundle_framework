@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <thread>
 
+#include "account_helper.h"
 #include "app_control_manager.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
@@ -46,13 +47,26 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
         APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
-        std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
-        updateDataDirThread.detach();
+        std::lock_guard<std::mutex> lock(mutex_);
+        if ((userId_ != userId)) {
+            userId_ = userId;
+            std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
+            updateDataDirThread.detach();
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-        DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
+            DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
+        }
     }
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        int32_t userId = data.GetCode();
+        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is switched", userId);
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (AccountHelper::IsOsAccountVerified(userId) && (userId_ != userId)) {
+            APP_LOGI("UserUnlockedEventSubscriber userId:%{public}d has unlocked", userId);
+            userId_ = userId;
+            std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
+            updateDataDirThread.detach();
+        }
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
     APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
     Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();

@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_USER_LOCKED_EVENT_SUBSCRIBER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_USER_LOCKED_EVENT_SUBSCRIBER_H
 
+#include <mutex>
+
 #include "bundle_info.h"
 #include "common_event_data.h"
 #include "common_event_subscriber.h"
@@ -27,6 +29,10 @@ public:
     explicit UserUnlockedEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~UserUnlockedEventSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+
+private:
+    std::mutex mutex_;
+    int32_t userId_ = 0;
 };
 
 class UpdateAppDataMgr {
