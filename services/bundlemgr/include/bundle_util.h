@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_UTIL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_UTIL_H
 
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -174,6 +175,8 @@ public:
         std::vector<std::string> &toDeletePaths);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
     static std::string GenerateUuid();
+private:
+    static std::mutex g_mutex;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
