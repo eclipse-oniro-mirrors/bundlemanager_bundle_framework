@@ -1438,5 +1438,470 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetIconById_0100, Function | MediumTest | L
     ErrCode res = bundleMgrHost.HandleGetIconById(data, reply);
     EXPECT_EQ(res, ERR_INVALID_VALUE);
 }
+
+/**
+ * @tc.number: HandleGetQuickFixManagerProxy
+ * @tc.name: test the HandleGetQuickFixManagerProxy
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetQuickFixManagerProxy
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetQuickFixManagerProxy_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetQuickFixManagerProxy(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetDebugMode
+ * @tc.name: test the HandleSetDebugMode
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetDebugMode
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetDebugMode_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetDebugMode(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleVerifySystemApi
+ * @tc.name: test the HandleVerifySystemApi
+ * @tc.desc: 1. system running normally
+ *           2. test HandleVerifySystemApi
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleVerifySystemApi_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleVerifySystemApi(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetOverlayManagerProxy
+ * @tc.name: test the HandleGetOverlayManagerProxy
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetOverlayManagerProxy
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetOverlayManagerProxy_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetOverlayManagerProxy(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleProcessPreload
+ * @tc.name: test the HandleProcessPreload
+ * @tc.desc: 1. system running normally
+ *           2. test HandleProcessPreload
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleProcessPreload_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleProcessPreload(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetAppProvisionInfo
+ * @tc.name: test the HandleGetAppProvisionInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAppProvisionInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAppProvisionInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAppProvisionInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetProvisionMetadata
+ * @tc.name: test the HandleGetProvisionMetadata
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetProvisionMetadata
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetProvisionMetadata_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetProvisionMetadata(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetBaseSharedBundleInfos
+ * @tc.name: test the HandleGetBaseSharedBundleInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBaseSharedBundleInfos
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBaseSharedBundleInfos_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBaseSharedBundleInfos(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetAllSharedBundleInfo
+ * @tc.name: test the HandleGetAllSharedBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllSharedBundleInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllSharedBundleInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllSharedBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetSharedBundleInfo
+ * @tc.name: test the HandleGetSharedBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSharedBundleInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSharedBundleInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetSharedBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetSharedBundleInfoBySelf
+ * @tc.name: test the HandleGetSharedBundleInfoBySelf
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSharedBundleInfoBySelf
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSharedBundleInfoBySelf_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetSharedBundleInfoBySelf(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetSharedDependencies
+ * @tc.name: test the HandleGetSharedDependencies
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSharedDependencies
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSharedDependencies_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetSharedDependencies(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetProxyDataInfos
+ * @tc.name: test the HandleGetProxyDataInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetProxyDataInfos
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetProxyDataInfos_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetProxyDataInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAllProxyDataInfos
+ * @tc.name: test the HandleGetAllProxyDataInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllProxyDataInfos
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllProxyDataInfos_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAllProxyDataInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetSpecifiedDistributionType
+ * @tc.name: test the HandleGetSpecifiedDistributionType
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetSpecifiedDistributionType
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetSpecifiedDistributionType_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetSpecifiedDistributionType(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetAdditionalInfo
+ * @tc.name: test the HandleGetAdditionalInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAdditionalInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAdditionalInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetAdditionalInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleSetExtNameOrMIMEToApp
+ * @tc.name: test the HandleSetExtNameOrMIMEToApp
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetExtNameOrMIMEToApp_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetExtNameOrMIMEToApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleDelExtNameOrMIMEToApp
+ * @tc.name: test the HandleDelExtNameOrMIMEToApp
+ * @tc.desc: 1. system running normally
+ *           2. test HandleDelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleDelExtNameOrMIMEToApp_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleDelExtNameOrMIMEToApp(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleQueryDataGroupInfos
+ * @tc.name: test the HandleQueryDataGroupInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleQueryDataGroupInfos
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleQueryDataGroupInfos_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleQueryDataGroupInfos(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetPreferenceDirByGroupId
+ * @tc.name: test the HandleGetPreferenceDirByGroupId
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetPreferenceDirByGroupId
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetPreferenceDirByGroupId_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetPreferenceDirByGroupId(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleQueryAppGalleryBundleName
+ * @tc.name: test the HandleQueryAppGalleryBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleQueryAppGalleryBundleName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleQueryAppGalleryBundleName_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleQueryAppGalleryBundleName(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleQueryExtensionAbilityInfosWithTypeName
+ * @tc.name: test the HandleQueryExtensionAbilityInfosWithTypeName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleQueryExtensionAbilityInfosWithTypeName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleQueryExtensionAbilityInfosWithTypeName_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleQueryExtensionAbilityInfosWithTypeName(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleQueryExtensionAbilityInfosOnlyWithTypeName
+ * @tc.name: test the HandleQueryExtensionAbilityInfosOnlyWithTypeName
+ * @tc.desc: 1. system running normally
+ *           2. test HandleQueryExtensionAbilityInfosOnlyWithTypeName
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleQueryExtensionAbilityInfosOnlyWithTypeName_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleQueryExtensionAbilityInfosOnlyWithTypeName(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleResetAOTCompileStatus
+ * @tc.name: test the HandleResetAOTCompileStatus
+ * @tc.desc: 1. system running normally
+ *           2. test HandleResetAOTCompileStatus
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleResetAOTCompileStatus_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleResetAOTCompileStatus(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetJsonProfile
+ * @tc.name: test the HandleGetJsonProfile
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetJsonProfile
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetJsonProfile_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetJsonProfile(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetBundleResourceProxy
+ * @tc.name: test the HandleGetBundleResourceProxy
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetBundleResourceProxy
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetBundleResourceProxy_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetBundleResourceProxy(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: HandleSetAdditionalInfo
+ * @tc.name: test the HandleSetAdditionalInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleSetAdditionalInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleSetAdditionalInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleSetAdditionalInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetRecoverableApplicationInfo
+ * @tc.name: test the HandleGetRecoverableApplicationInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetRecoverableApplicationInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetRecoverableApplicationInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetRecoverableApplicationInfo(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleGetUninstalledBundleInfo
+ * @tc.name: test the HandleGetUninstalledBundleInfo
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetUninstalledBundleInfo
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetUninstalledBundleInfo_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleGetUninstalledBundleInfo(data, reply);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: HandleCreateBundleDataDir
+ * @tc.name: test the HandleCreateBundleDataDir
+ * @tc.desc: 1. system running normally
+ *           2. test HandleCreateBundleDataDir
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleCreateBundleDataDir_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleCreateBundleDataDir(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HandleCanOpenLink
+ * @tc.name: test the HandleCanOpenLink
+ * @tc.desc: 1. system running normally
+ *           2. test HandleCanOpenLink
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleCanOpenLink_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleCanOpenLink(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // AppExecFwk
 } // OHOS
