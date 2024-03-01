@@ -148,11 +148,12 @@ bool InstalldOperator::IsExistDir(const std::string &path)
     }
 
     struct stat buf = {};
-    if (stat(path.c_str(), &buf) != 0) {
+    if (stat(path.c_str(), &buf) == 0) {
+        return S_ISDIR(buf.st_mode);
+    } else {
         APP_LOGW("the path is not existed %{public}s, errno:%{public}d", path.c_str(), errno);
         return false;
     }
-    return S_ISDIR(buf.st_mode);
 }
 
 bool InstalldOperator::IsDirEmpty(const std::string &dir)

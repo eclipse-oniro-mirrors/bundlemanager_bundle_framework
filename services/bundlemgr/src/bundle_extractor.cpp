@@ -26,12 +26,12 @@ constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 }
 BundleExtractor::BundleExtractor(const std::string &source) : BaseExtractor(source)
 {
-    APP_LOGI("BundleExtractor is created");
+    APP_LOGD("BundleExtractor is created");
 }
 
 BundleExtractor::~BundleExtractor()
 {
-    APP_LOGI("BundleExtractoris destroyed");
+    APP_LOGD("BundleExtractoris destroyed");
 }
 
 bool BundleExtractor::ExtractProfile(std::ostream &dest) const
