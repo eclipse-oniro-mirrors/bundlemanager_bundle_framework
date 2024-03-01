@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "bundle_install_checker.h"
+#include "bundle_common_event_mgr.h"
 #include "event_report.h"
 #include "inner_bundle_info.h"
 #include "install_param.h"
@@ -77,6 +78,16 @@ public:
      * @param eventTemplate Indicates the template of EventInfo to send after installation.
      */
     void SendBundleSystemEvent(const EventInfo &eventTemplate) const;
+
+    /**
+     * @brief send notify to start install applicaiton
+     * @param installParam Indicates the install parameters.
+     * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
+    */
+    void sendStartSharedBundleInstallNotify(const InstallCheckParam &installCheckParam,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    
+    ErrCode NotifyBundleStatusOfShared(const NotifyBundleEvents &installRes);
 
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
 

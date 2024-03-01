@@ -33,6 +33,7 @@ namespace AppExecFwk {
 struct InstallCheckParam {
     bool isPreInstallApp = false;
     bool removable = true;
+    bool needSendEvent = true;
     // status of install bundle permission
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
