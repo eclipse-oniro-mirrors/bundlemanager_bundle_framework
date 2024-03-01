@@ -37,6 +37,7 @@ namespace {
 // ark compile option parameter key
 constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
 constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+constexpr const char* COMPILE_OPTCODE_RANGE_KEY = "ark.optcode.range";
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 }
 
@@ -124,6 +125,11 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
+    
+    // key rule is start:end,start:end......
+    std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
+    aotArgs.optBCRangeList = optBCRange;
+
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }

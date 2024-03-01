@@ -115,6 +115,9 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, appIdentifilerVal);
     appIdentifier = Str16ToStr8(appIdentifilerVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
+    std::u16string optBCRangeVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, optBCRangeVal);
+    optBCRangeList = Str16ToStr8(optBCRangeVal);
     return true;
 }
 
@@ -136,6 +139,7 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(optBCRangeList));
     return true;
 }
 
@@ -163,7 +167,8 @@ std::string AOTArgs::ToString() const
         + ", length = " + std::to_string(length)
         + ", bundleUid = " + std::to_string(bundleUid)
         + ", appIdentifier = " + appIdentifier
-        + ", isEncryptedBundle = " + std::to_string(isEncryptedBundle) + "]";
+        + ", isEncryptedBundle = " + std::to_string(isEncryptedBundle)
+        + ", optBCRangeList = " + optBCRangeList + "]";
     ret.append(" hspVector = ");
     for (const auto &hspInfo : hspVector) {
         ret.append(hspInfo.ToString());

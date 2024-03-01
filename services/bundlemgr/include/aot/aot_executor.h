@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_EXECUTOR
 
 #include <mutex>
+#include <nlohmann/json.hpp>
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
@@ -37,6 +38,7 @@ private:
     bool CheckArgs(const AOTArgs &aotArgs) const;
     bool GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
+    nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
     void ExecuteInChildProcess(const AOTArgs &aotArgs) const;
     void ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const;
 private:
