@@ -2815,6 +2815,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
         shortcutIntent.targetBundle = shortcutWant.bundleName;
         shortcutIntent.targetModule = shortcutWant.moduleName;
         shortcutIntent.targetClass = shortcutWant.abilityName;
+        shortcutIntent.shortcutUri = shortcutWant.shortcutUri;
         shortcutInfo.intents.emplace_back(shortcutIntent);
     }
 }

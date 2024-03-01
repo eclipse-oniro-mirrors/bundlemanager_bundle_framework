@@ -170,6 +170,7 @@ const std::string SHORTCUT_DISABLE_MESSAGE = "shortcutDisableMessage";
 const std::string SHORTCUT_INTENTS_TARGET_BUNDLE = "targetBundle";
 const std::string SHORTCUT_INTENTS_TARGET_MODULE = "targetModule";
 const std::string SHORTCUT_INTENTS_TARGET_CLASS = "targetClass";
+const std::string SHORTCUT_INTENTS_SHORTCUT_URI = "shortcutUri";
 const std::string COMMON_EVENT_NAME = ".MainAbililty";
 const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
@@ -622,6 +623,7 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
@@ -632,6 +634,7 @@ ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
+    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     return shortcutIntent;
 }
 
@@ -1116,6 +1119,7 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -1155,6 +1159,7 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -8018,6 +8023,7 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallT
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
     EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
     EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
+    EXPECT_EQ(result.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
 }
 
 /**

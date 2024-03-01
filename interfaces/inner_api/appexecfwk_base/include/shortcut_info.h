@@ -26,6 +26,7 @@ struct ShortcutWant {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
+    std::string shortcutUri;
 };
 
 struct Shortcut {
@@ -45,6 +46,7 @@ struct ShortcutIntent {
     std::string targetBundle;
     std::string targetModule;
     std::string targetClass;
+    std::string shortcutUri;
 };
 
 struct ShortcutInfo : public Parcelable {
