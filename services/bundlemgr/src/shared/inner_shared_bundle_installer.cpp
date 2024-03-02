@@ -125,10 +125,10 @@ void InnerSharedBundleInstaller::sendStartSharedBundleInstallNotify(const Instal
     }
     for (auto item : infos) {
         APP_LOGD("sendStartSharedBundleInstallNotify %{public}s  %{public}s %{public}s %{public}s",
-            bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
+            item.second.GetBundleName().c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
-            .bundleName = bundleName_,
+            .bundleName = item.second.GetBundleName(),
             .modulePackage = item.second.GetCurModuleName(),
             .appId = item.second.GetAppId(),
             .appIdentifier = item.second.GetAppIdentifier(),
