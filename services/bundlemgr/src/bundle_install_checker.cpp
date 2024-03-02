@@ -358,13 +358,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         } else {
             newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
         }
-
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
         if (result != ERR_OK) {
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
+        newInfo.SetOrganization(provisionInfo.organization);
 #ifndef X86_EMULATOR_MODE
         result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
         if (result != ERR_OK) {

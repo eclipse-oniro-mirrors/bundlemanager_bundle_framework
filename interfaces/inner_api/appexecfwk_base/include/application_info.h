@@ -261,6 +261,8 @@ struct ApplicationInfo : public Parcelable {
     uint32_t applicationReservedFlag = 0;
     bool tsanEnabled = false;
 
+    std::string organization;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

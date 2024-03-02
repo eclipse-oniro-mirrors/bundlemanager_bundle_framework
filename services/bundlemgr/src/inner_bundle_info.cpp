@@ -812,6 +812,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
     UpdateDebug(applicationInfo.debug, isEntry);
+    baseApplicationInfo_->organization = applicationInfo.organization;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
