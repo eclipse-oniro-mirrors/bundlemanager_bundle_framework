@@ -149,6 +149,9 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             APP_LOGE("GetString name failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
+        if (name.find("/") != std::string::npos) {
+            continue;
+        }
         // icon is invalid, need add again
         std::string icon;
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, icon);
@@ -156,8 +159,19 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             APP_LOGE("GetString icon failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
-        if (icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) {
+        if ((icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) || icon.empty()) {
             APP_LOGW("keyName:%{public}s icon is invalid, need add again", name.c_str());
+            continue;
+        }
+        // label is invalid, need add again
+        std::string label;
+        ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_LABEL, label);
+        if (ret != NativeRdb::E_OK) {
+            APP_LOGE("GetString label failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+            return false;
+        }
+        if ((label.find('$') == 0) || (label == name) || label.empty()) {
+            APP_LOGW("keyName:%{public}s label is invalid, need add again", name.c_str());
             continue;
         }
         keyNames.push_back(name);
