@@ -60,7 +60,7 @@ const std::string BUNDLE_APP_PROFILE_KEY_VERSION = "version";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "installationFree";
 const size_t ONE = 1;
 const size_t TWO = 2;
-const std::string OVER_MAX_PATH_SIZE(1025, 'x');
+const std::string OVER_MAX_PATH_SIZE(4097, 'x');
 const nlohmann::json CONFIG_JSON = R"(
     {
         "app": {
