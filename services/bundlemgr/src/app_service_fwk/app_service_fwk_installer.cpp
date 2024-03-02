@@ -65,6 +65,7 @@ void BuildCheckParam(
     checkParam.installEtpNormalBundlePermissionStatus = installParam.installEtpNormalBundlePermissionStatus;
     checkParam.installEtpMdmBundlePermissionStatus = installParam.installEtpMdmBundlePermissionStatus;
     checkParam.isCallByShell = installParam.isCallByShell;
+    checkParam.needSendEvent = installParam.needSendEvent;
 };
 }
 

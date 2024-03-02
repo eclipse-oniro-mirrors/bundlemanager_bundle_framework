@@ -86,6 +86,9 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
     CHECK_RESULT(result, "check hsp install condition failed %{public}d");
 
+    // to send notify of start install shared application
+    sendStartSharedBundleInstallNotify(checkParam, parsedBundles_);
+
     // check device type
     result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
     CHECK_RESULT(result, "check device type failed %{public}d");
@@ -111,6 +114,42 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
     return result;
+}
+
+void InnerSharedBundleInstaller::sendStartSharedBundleInstallNotify(const InstallCheckParam &installCheckParam,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (!installCheckParam.needSendEvent) {
+        APP_LOGW("sendStartSharedBundleInstallNotify needSendEvent is false");
+        return;
+    }
+    for (auto item : infos) {
+        APP_LOGD("sendStartSharedBundleInstallNotify %{public}s  %{public}s %{public}s %{public}s",
+            bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
+            item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName_,
+            .modulePackage = item.second.GetCurModuleName(),
+            .appId = item.second.GetAppId(),
+            .appIdentifier = item.second.GetAppIdentifier(),
+            .type = NotifyType::START_INSTALL
+        };
+        if (NotifyBundleStatusOfShared(installRes) != ERR_OK) {
+            APP_LOGW("notify status failed for start install");
+        }
+    }
+}
+
+ErrCode InnerSharedBundleInstaller::NotifyBundleStatusOfShared(const NotifyBundleEvents &installRes)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+    return ERR_OK;
 }
 
 ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
