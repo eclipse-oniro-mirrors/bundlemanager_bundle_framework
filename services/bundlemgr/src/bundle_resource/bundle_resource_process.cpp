@@ -44,7 +44,7 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
     }
     resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo);
     // process overlay hap paths
-    if (innerBundleInfo.GetOverlayType() != NON_OVERLAY_TYPE) {
+    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
         APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
         GetOverlayModuleHapPaths(resourceInfo.bundleName_, resourceInfo.moduleName_,
             userId, resourceInfo.overlayHapPaths_);
@@ -298,7 +298,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
     std::vector<ResourceInfo> &resourceInfos)
 {
     APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
-    if (CheckIsNeedProcessAbilityResource(innerBundleInfo)) {
+    if (!CheckIsNeedProcessAbilityResource(innerBundleInfo)) {
         APP_LOGW("bundleName:%{public}s no need add ability resource", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
@@ -330,7 +330,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
         resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
     }
     // process overlay hap paths
-    if (innerBundleInfo.GetOverlayType() != NON_OVERLAY_TYPE) {
+    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
         APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
         size_t size = resourceInfos.size();
         for (size_t index = 0; index < size; ++index) {

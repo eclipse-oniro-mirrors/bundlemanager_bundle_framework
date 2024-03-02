@@ -2583,5 +2583,179 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0105
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0105, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    bundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+
+    ResourceInfo resourceInfo;
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_TRUE(ans);
+    EXPECT_NE(resourceInfo.GetKey(), "");
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0106
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0106, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo bundleInfo;
+    bool ans = GetBundleDataMgr()->FetchInnerBundleInfo(BUNDLE_NAME, bundleInfo);
+    EXPECT_TRUE(ans);
+    bundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+
+    std::vector<ResourceInfo> resourceInfos;
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0107
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test CheckIsNeedProcessAbilityResource
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0107, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    bool ans = BundleResourceProcess::CheckIsNeedProcessAbilityResource(bundleInfo);
+    EXPECT_FALSE(ans);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::CheckIsNeedProcessAbilityResource(bundleInfo);
+    EXPECT_FALSE(ans);
+
+    applicationInfo.bundleType = BundleType::APP;
+    applicationInfo.hideDesktopIcon = true;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::CheckIsNeedProcessAbilityResource(bundleInfo);
+    EXPECT_FALSE(ans);
+
+    applicationInfo.hideDesktopIcon = false;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::CheckIsNeedProcessAbilityResource(bundleInfo);
+    EXPECT_TRUE(ans);
+
+    BundleInfo info;
+    info.entryInstallationFree = true;
+    bundleInfo.SetBaseBundleInfo(info);
+    ans = BundleResourceProcess::CheckIsNeedProcessAbilityResource(bundleInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0108
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetOverlayModuleHapPaths
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0108, Function | SmallTest | Level0)
+{
+    std::vector<std::string> overlayHapPaths;
+    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(BUNDLE_NAME, MODULE_NAME, USERID, overlayHapPaths);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0109
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnOverlayStatusChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0109, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnOverlayStatusChanged(BUNDLE_NAME_NOT_EXIST, true, 0);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0110
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnOverlayStatusChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0110, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnOverlayStatusChanged(BUNDLE_NAME_NOT_EXIST, true, USERID);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0111
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnOverlayStatusChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0111, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleResourceCallback callback;
+    bool ans = callback.OnOverlayStatusChanged(BUNDLE_NAME, true, USERID);
+    EXPECT_TRUE(ans);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0112
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnApplicationThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0112, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnApplicationThemeChanged("");
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0113
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnApplicationThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0113, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnApplicationThemeChanged("xxxxx");
+    EXPECT_TRUE(ans);
+}
 #endif
 } // OHOS

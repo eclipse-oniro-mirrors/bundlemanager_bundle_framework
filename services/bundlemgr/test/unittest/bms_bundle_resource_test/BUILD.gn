@@ -165,6 +165,12 @@ ohos_unittest("BmsBundleResourceTest") {
     }
     sources += bundle_resource
   }
+
+  if (bundle_framework_overlay_install) {
+    sources += overlay_installation
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
+
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
