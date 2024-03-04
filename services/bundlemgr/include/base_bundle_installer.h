@@ -494,9 +494,7 @@ private:
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(const InnerBundleInfo &info);
-    ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
-    ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
+    ErrCode UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.

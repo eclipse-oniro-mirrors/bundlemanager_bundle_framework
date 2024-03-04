@@ -3139,5 +3139,14 @@ void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::strin
     developerId = developerId_;
     odid = odid_;
 }
+
+void InnerBundleInfo::AddAllowedAcls(const std::vector<std::string> &allowedAcls)
+{
+    for (const auto &acl : allowedAcls) {
+        if (!acl.empty() && (std::find(allowedAcls_.begin(), allowedAcls_.end(), acl) == allowedAcls_.end())) {
+            allowedAcls_.emplace_back(acl);
+        }
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

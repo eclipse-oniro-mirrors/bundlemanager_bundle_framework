@@ -21,19 +21,6 @@ using namespace Security::AccessToken;
 
 #ifdef BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE
 
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const AccessTokenID tokenId)
-{
-    return false;
-}
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<std::string> &requestPermName,
-    const AccessTokenID tokenId)
-{
-    return false;
-}
-
 bool BundlePermissionMgr::VerifyCallingUid()
 {
     return false;
@@ -79,19 +66,6 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
     return false;
 }
 #else
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const AccessTokenID tokenId)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<std::string> &requestPermName,
-    const AccessTokenID tokenId)
-{
-    return true;
-}
 
 bool BundlePermissionMgr::VerifyCallingUid()
 {
@@ -177,33 +151,6 @@ bool BundlePermissionMgr::RequestPermissionFromUser(
     return true;
 }
 
-AccessTokenIDEx BundlePermissionMgr::CreateAccessTokenIdEx(
-    const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId)
-{
-    AccessTokenIDEx token;
-    return token;
-}
-
-AccessTokenIDEx BundlePermissionMgr::CreateAccessTokenIdEx(
-    const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
-    const int32_t dlpType, const HapPolicyParams &hapPolicy)
-{
-    AccessTokenIDEx token;
-    return token;
-}
-
-bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(AccessTokenIDEx &tokenIdEx,
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::AddDefineAndRequestPermissions(AccessTokenIDEx &tokenIdEx,
-    const InnerBundleInfo &innerBundleInfo, std::vector<std::string> &newRequestPermName)
-{
-    return true;
-}
-
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
     return 0;
@@ -218,13 +165,6 @@ bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo, uin
 int32_t BundlePermissionMgr::ClearUserGrantedPermissionState(const AccessTokenID tokenId)
 {
     return 0;
-}
-
-HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<PermissionStateFull> &permissions)
-{
-    HapPolicyParams policy;
-    return policy;
 }
 
 bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessTokenID tokenId,
@@ -286,37 +226,6 @@ std::vector<PermissionStateFull> BundlePermissionMgr::GetPermissionStateFullList
     return vec;
 }
 
-bool BundlePermissionMgr::CheckGrantPermission(const Security::AccessToken::PermissionDef &permDef,
-    const std::string &apl,
-    const std::vector<std::string> &acls)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::GetNewPermissionDefList(AccessTokenID tokenId,
-    const std::vector<Security::AccessToken::PermissionDef> &permissionDef,
-    std::vector<Security::AccessToken::PermissionDef> &newPermission)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::GetNewPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
-    const std::vector<Security::AccessToken::PermissionStateFull> &permissionState,
-    std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState,
-    std::vector<std::string> &newRequestPermName)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::InnerGrantRequestPermissions(
-    Security::AccessToken::AccessTokenID tokenId,
-    const InnerBundleInfo &innerBundleInfo,
-    std::vector<std::string> systemGrantPermList,
-    std::vector<std::string> userGrantPermList)
-{
-    return true;
-}
-
 Security::AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std::string &apl)
 {
     return Security::AccessToken::ATokenAplEnum::APL_NORMAL;
@@ -338,20 +247,6 @@ void BundlePermissionMgr::ConvertPermissionDef(
     Security::AccessToken::PermissionDef &permDef, const DefinePermission &defPermission,
     const std::string &bundleName)
 {
-}
-
-std::vector<std::string> BundlePermissionMgr::GetNeedDeleteDefinePermissionName(const InnerBundleInfo &oldInfo,
-    const InnerBundleInfo &newInfo)
-{
-    std::vector<std::string> vec;
-    return vec;
-}
-
-std::vector<std::string> BundlePermissionMgr::GetNeedDeleteRequestPermissionName(const InnerBundleInfo &oldInfo,
-    const InnerBundleInfo &newInfo)
-{
-    std::vector<std::string> vec;
-    return vec;
 }
 
 bool BundlePermissionMgr::GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission)
@@ -377,24 +272,29 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
     return true;
 }
 
-bool BundlePermissionMgr::GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
-    const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
-    const std::string &bundleName)
-{
-    return true;
-}
-
 void BundlePermissionMgr::AddPermissionUsedRecord(
     const std::string &permission, int32_t successCount, int32_t failCount)
 {
 }
 
-bool BundlePermissionMgr::InnerFilterRequestPermissions(
-    const InnerBundleInfo &innerBundleInfo,
-    std::vector<std::string> &systemGrantPermList,
-    std::vector<std::string> &userGrantPermList)
+
+Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId, const int32_t dlpType)
 {
-    return true;
+    Security::AccessToken::HapInfoParams params;
+    return params;
+}
+
+int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+    const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx)
+{
+    return 0;
+}
+
+int32_t BundlePermissionMgr::UpdateHapToken(
+    Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
+{
+    return 0;
 }
 } // AppExecFwk
 } // OHOS

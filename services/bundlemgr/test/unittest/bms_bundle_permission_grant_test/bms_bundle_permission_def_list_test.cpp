@@ -171,100 +171,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundlePermissionDefListTest::GetBundleDa
 
 /**
  * @tc.number: BmsBundlePermissionDefListTest
- * Function: UpdateDefineAndRequestPermissions
- * @tc.name: test UpdateDefineAndRequestPermissions verify false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0100, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    Security::AccessToken::AccessTokenIDEx tokenIdEx;
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    std::vector<std::string> newRequestPermName;
-    res = BundlePermissionMgr::UpdateDefineAndRequestPermissions(tokenIdEx, oldInfo, newInfo, newRequestPermName);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
- * Function: AddDefineAndRequestPermissions
- * @tc.name: test AddDefineAndRequestPermissions verify false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0200, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    Security::AccessToken::AccessTokenIDEx tokenIdEx;
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> newRequestPermName;
-    res = BundlePermissionMgr::AddDefineAndRequestPermissions(tokenIdEx, innerBundleInfo, newRequestPermName);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
- * Function: InnerGrantRequestPermissions
- * @tc.name: test InnerGrantRequestPermissions false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0300, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    Security::AccessToken::AccessTokenID tokenId = 0;
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> systemGrantPermList;
-    std::vector<std::string> userGrantPermList;
-    res = BundlePermissionMgr::InnerGrantRequestPermissions(
-        tokenId, innerBundleInfo, systemGrantPermList, userGrantPermList);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
- * Function: CheckGrantPermission
- * @tc.name: test CheckGrantPermission verify success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0400, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    AccessToken::PermissionDef permDef;
-    std::vector<std::string> acls;
-    permDef.availableLevel = AccessToken::ATokenAplEnum::APL_SYSTEM_CORE;
-    res = BundlePermissionMgr::CheckGrantPermission(permDef, Profile::AVAILABLELEVEL_SYSTEM_CORE, acls);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
- * Function: CheckGrantPermission
- * @tc.name: test CheckGrantPermission false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0500, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    AccessToken::PermissionDef permDef;
-    std::vector<std::string> acls;
-    permDef.availableLevel = AccessToken::ATokenAplEnum::APL_SYSTEM_CORE;
-    permDef.provisionEnable = true;
-    res = BundlePermissionMgr::CheckGrantPermission(permDef, Profile::AVAILABLELEVEL_SYSTEM_BASIC, acls);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
  * Function: GetRequestPermissionStates
  * @tc.name: test GetRequestPermissionStates success
  * @tc.desc: 1. system running normally
@@ -311,26 +217,6 @@ HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0800, Fu
     int32_t beginSystemApiVersion = 1;
     res = BundlePermissionMgr::VerifySystemApp(beginSystemApiVersion);
     EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionDefListTest
- * Function: InnerFilterRequestPermissions
- * @tc.name: test InnerFilterRequestPermissions verify success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionDefListTest, InnerFilterRequestPermissions_0100, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    InnerBundleInfo innerBundleInfo;
-    InitInnerBundleInfo(innerBundleInfo);
-    std::vector<std::string> systemGrantPermList;
-    std::vector<std::string> userGrantPermList;
-    bool result = BundlePermissionMgr::InnerFilterRequestPermissions(
-        innerBundleInfo, systemGrantPermList, userGrantPermList);
-    EXPECT_FALSE(result);
 }
 
 /**

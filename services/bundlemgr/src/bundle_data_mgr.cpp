@@ -343,7 +343,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
@@ -554,7 +554,11 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        } else {
+            oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
+        }
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {

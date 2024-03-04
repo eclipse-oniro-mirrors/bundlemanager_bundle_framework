@@ -659,6 +659,7 @@ public:
         }
     }
 
+
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
     ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
 
@@ -808,6 +809,7 @@ public:
         return hspModuleNames;
     }
 
+    void AddAllowedAcls(const std::vector<std::string> &allowedAcls);
     bool GetModuleBuildHash(const std::string &moduleName, std::string &buildHash) const
     {
         if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {

@@ -32,17 +32,6 @@ AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const H
     return token;
 }
 
-int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp, const std::string& appIDDesc,
-    int32_t apiVersion, const HapPolicyParams& policy)
-{
-    if (isSystemApp) {
-        tokenIDEx.tokenIdExStruct.tokenAttr = 1;
-    } else {
-        tokenIDEx.tokenIdExStruct.tokenAttr = 0;
-    }
-    return 0;
-}
-
 #ifdef BUNDLE_PERMISSION_START_FULL_FALSE
 int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
 {
@@ -168,6 +157,23 @@ AccessTokenIDEx AccessTokenKit::GetHapTokenIDEx(int userID, const std::string& b
 int AccessTokenKit::GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo)
 {
     nativeTokenInfo.processName = "foundation";
+    return 0;
+}
+
+int32_t AccessTokenKit::InitHapToken(const HapInfoParams& info, HapPolicyParams& policy, AccessTokenIDEx& fullTokenId)
+{
+    fullTokenId.tokenIDEx = 1;
+    return 0;
+}
+
+int32_t AccessTokenKit::UpdateHapToken(
+    AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info, const HapPolicyParams& policy)
+{
+    if (info.isSystemApp) {
+        tokenIdEx.tokenIdExStruct.tokenAttr = 1;
+    } else {
+        tokenIdEx.tokenIdExStruct.tokenAttr = 0;
+    }
     return 0;
 }
 }

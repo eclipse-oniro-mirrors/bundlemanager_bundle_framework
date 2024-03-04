@@ -1255,47 +1255,6 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8400, Functi
 }
 
 /**
- * @tc.number: BmsBundlePermissionFalseTest_8500
- * @tc.name: test the GrantRequestPermissions function of BaseBundleInstaller
- * @tc.desc: 1. system running normally
-*/
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller baseBundleInstaller;
-    InnerBundleInfo info;
-    uint32_t tokenId = 0;
-    ErrCode res = baseBundleInstaller.GrantRequestPermissions(info, tokenId);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
-}
-
-/**
- * @tc.number: BmsBundlePermissionFalseTest_8600
- * @tc.name: test the start function of BaseBundleInstaller
- * @tc.desc: 1. UpdateDefineAndRequestPermissions
-*/
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8600, Function | SmallTest | Level0)
-{
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = BUNDLE_NAME;
-    InnerBundleInfo oldInfo;
-    oldInfo.SetBaseApplicationInfo(applicationInfo);
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleName = BUNDLE_NAME;
-    userInfo.bundleUserInfo.userId = USERID;
-    userInfo.accessTokenId = USERID;
-    userInfo.accessTokenIdEx = USERID;
-    oldInfo.AddInnerBundleUserInfo(userInfo);
-
-    InnerBundleInfo newInfo;
-    newInfo.SetBaseApplicationInfo(applicationInfo);
-    newInfo.AddInnerBundleUserInfo(userInfo);
-    BaseBundleInstaller baseBundleInstaller;
-    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
-    auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
-}
-
-/**
  * @tc.number: BmsBundlePermissionFalseTest_8700
  * @tc.name: test GetSandboxHapModuleInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally

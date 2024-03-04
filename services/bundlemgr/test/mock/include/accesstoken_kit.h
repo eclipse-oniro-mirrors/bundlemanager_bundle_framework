@@ -27,8 +27,6 @@ namespace AccessToken {
 class AccessTokenKit {
 public:
     static AccessTokenIDEx AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy);
-    static int UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp, const std::string& appIDDesc,
-        int32_t apiVersion, const HapPolicyParams& policy);
     static int DeleteToken(AccessTokenID tokenID);
     /* Get token type by ATM service */
     static ATokenTypeEnum GetTokenType(AccessTokenID tokenID);
@@ -46,6 +44,9 @@ public:
     static AccessTokenID GetHapTokenID(int userID, const std::string& bundleName, int instIndex);
     static AccessTokenIDEx GetHapTokenIDEx(int userID, const std::string& bundleName, int instIndex);
     static int GetNativeTokenInfo(AccessTokenID tokenID, NativeTokenInfo &nativeTokenInfo);
+    static int32_t InitHapToken(const HapInfoParams& info, HapPolicyParams& policy, AccessTokenIDEx& fullTokenId);
+    static int32_t UpdateHapToken(
+        AccessTokenIDEx& tokenIdEx, const UpdateHapInfoParams& info, const HapPolicyParams& policy);
 };
 } // namespace AccessToken
 } // namespace Security
