@@ -659,7 +659,6 @@ public:
         }
     }
 
-
     bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
     ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
 

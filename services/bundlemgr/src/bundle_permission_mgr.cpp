@@ -676,7 +676,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(
 
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
 
-    auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx,updateHapInfoParams, hapPolicy);
+    auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);

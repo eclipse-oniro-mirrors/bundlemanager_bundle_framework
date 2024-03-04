@@ -554,11 +554,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
-            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
-        } else {
-            oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
-        }
+        ProcessAllowedAcls(newInfo, oldInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
@@ -6310,6 +6306,15 @@ void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundl
     if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
         oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
     }
+}
+
+void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        return;
+    }
+    oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
