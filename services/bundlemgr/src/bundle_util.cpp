@@ -758,12 +758,16 @@ std::string BundleUtil::GenerateUuid()
 
     // convert nanosecond timestamps to string
     std::string timestampString = std::to_string(timestampNanoseconds);
-    if (timestampString.size() < ORIGIN_STRING_LENGTH) {
-        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
+    std::hash<std::string> str_hash;
+    size_t hash_value = str_hash(timestampString);
+    timestampString += std::to_string(hash_value);
+    auto size = timestampString.size();
+    if (size < ORIGIN_STRING_LENGTH) {
+        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - size; i++) {
             timestampString += static_cast<char>(START_CHAR + i);
         }
     } else {
-        timestampString = timestampString.substr(ZERO, ORIGIN_STRING_LENGTH);
+        timestampString = timestampString.substr(size - ORIGIN_STRING_LENGTH);
     }
 
     for (int32_t index : SEPARATOR_POSITIONS) {
