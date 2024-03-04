@@ -61,6 +61,8 @@ public:
     void SetUp();
     void TearDown();
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+    void ClearDataMgr();
+    void ResetDataMgr();
 
 private:
     HspInfo CreateHspInfo() const;
@@ -119,6 +121,17 @@ void BmsAOTMgrTest::CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo)
     EXPECT_EQ(sourceHspInfo.hapPath, targetHspInfo.hapPath);
     EXPECT_EQ(sourceHspInfo.offset, targetHspInfo.offset);
     EXPECT_EQ(sourceHspInfo.length, targetHspInfo.length);
+}
+
+void BmsAOTMgrTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsAOTMgrTest::ResetDataMgr()
+{
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 /**
@@ -435,7 +448,11 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level0)
     innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    ClearDataMgr();
     auto ret = AOTHandler::GetInstance().GetArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
+    EXPECT_EQ(ret, "");
+    ResetDataMgr();
+    ret = AOTHandler::GetInstance().GetArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
     EXPECT_EQ(ret, "");
     auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
     if (iterator != dataMgr->bundleInfos_.end()) {
@@ -458,8 +475,17 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    ClearDataMgr();
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
+        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+    EXPECT_EQ(ret, std::nullopt);
+    AOTHandler::GetInstance().ClearArkCacheDir();
+    ResetDataMgr();
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
+        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+    EXPECT_EQ(ret, std::nullopt);
+    ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
         AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
     EXPECT_EQ(ret, std::nullopt);
     auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
@@ -478,6 +504,46 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
     EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: AOTHandler_1100
+ * @tc.name: test AOTHandler
+ * @tc.desc: bundle not exist, return std::nullopt
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1300, Function | SmallTest | Level0)
+{
+    std::string bundleName = "";
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleResetAOT(bundleName, true);
+    EXPECT_EQ(bundleName, "");
+    ResetDataMgr();
+
+    AOTHandler::GetInstance().HandleResetAOT(bundleName, true);
+    EXPECT_EQ(bundleName, "");
+
+    AOTHandler::GetInstance().HandleResetAOT(bundleName, false);
+    EXPECT_EQ(bundleName, "");
+}
+
+/**
+ * @tc.number: AOTHandler_1100
+ * @tc.name: test AOTHandler
+ * @tc.desc: bundle not exist, return std::nullopt
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
+{
+    std::string bundleName = "";
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_NONE, true);
+    EXPECT_EQ(bundleName, "");
+    ResetDataMgr();
+
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true);
+    EXPECT_EQ(bundleName, "");
+
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false);
+    EXPECT_EQ(bundleName, "");
 }
 
 /**

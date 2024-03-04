@@ -54,6 +54,7 @@ const std::string BUNDLE_NAME = "com.example.ohosproject.hmservice";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILURE = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
+const std::string EMPTY_STRING = "";
 const int TIMEOUT = 10;
 const int DEFAULT_USERID = 100;
 } // namespace
@@ -2426,6 +2427,27 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0400, TestSize.Level1)
     sourceFiles.push_back(HAP_PATH);
     ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0400
+ * @tc.name: CopyFiles
+ * @tc.desc: 1.Test the interface of CopyFiles
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0500, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    VerifyManagerProxy verifyManagerProxy(remoteObject);
+
+    ErrCode ret = verifyManagerProxy.DeleteAbc(EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR);
+
+    ret = verifyManagerProxy.DeleteAbc(HAP_PATH);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DELETE_ABC_SEND_REQUEST_FAILED);
 }
 
 /**
