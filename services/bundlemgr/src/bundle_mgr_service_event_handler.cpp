@@ -1232,7 +1232,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &iter : preInstallBundleInfos) {
-        APP_LOGW("load preInstallBundleInfos: %{public}s ", iter.GetBundleName().c_str());
+        APP_LOGD("load preInstallBundleInfos: %{public}s ", iter.GetBundleName().c_str());
         loadExistData_.emplace(iter.GetBundleName(), iter);
     }
 

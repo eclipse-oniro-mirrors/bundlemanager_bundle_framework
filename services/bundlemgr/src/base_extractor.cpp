@@ -32,12 +32,12 @@ constexpr const char* MODULE_PROFILE_NAME = "module.json";
 
 BaseExtractor::BaseExtractor(const std::string &source) : sourceFile_(source), zipFile_(source)
 {
-    APP_LOGI("BaseExtractor instance is created");
+    APP_LOGD("BaseExtractor instance is created");
 }
 
 BaseExtractor::~BaseExtractor()
 {
-    APP_LOGI("BaseExtractor instance is destroyed");
+    APP_LOGD("BaseExtractor instance is destroyed");
 }
 
 bool BaseExtractor::Init()
@@ -49,7 +49,6 @@ bool BaseExtractor::Init()
     ZipEntry zipEntry;
     isNewVersion_ = zipFile_.GetEntry(MODULE_PROFILE_NAME, zipEntry);
     initial_ = true;
-    APP_LOGI("success");
     return true;
 }
 

@@ -200,7 +200,6 @@ bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &rep
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    APP_LOGI("rename moduleDir %{public}s", oldPath.c_str());
     ErrCode result = RenameModuleDir(oldPath, newPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;

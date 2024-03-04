@@ -593,7 +593,7 @@ bool BundlePermissionMgr::CheckGrantPermission(
             break;
     }
     if (permDef.provisionEnable) {
-        APP_LOGI("CheckGrantPermission acls size: %{public}zu", acls.size());
+        APP_LOGI("acls size: %{public}zu", acls.size());
         auto res = std::any_of(acls.begin(), acls.end(), [permDef](const auto &perm) {
             return permDef.permissionName == perm;
         });
