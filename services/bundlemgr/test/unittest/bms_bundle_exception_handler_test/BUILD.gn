@@ -50,6 +50,7 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
   external_deps = [
     "appverify:libhapverify",
     "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
   ]

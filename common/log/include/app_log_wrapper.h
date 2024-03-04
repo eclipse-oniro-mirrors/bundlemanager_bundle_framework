@@ -53,22 +53,22 @@ private:
     static AppLogLevel level_;
 };
 
-#define __FILENAME__ (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
+#define FILENAME (__builtin_strrchr(__FILE__, '/') ? __builtin_strrchr(__FILE__, '/') + 1 : __FILE__)
 #define APP_LOGD(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_DEBUG, LOG_DOMAIN, APP_LOG_TAG, \
-    "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+    "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define APP_LOGI(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, APP_LOG_TAG, \
-    "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+    "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define APP_LOGW(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, APP_LOG_TAG, \
-    "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+    "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define APP_LOGE(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, APP_LOG_TAG, \
-    "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+    "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 #define APP_LOGF(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_FATAL, LOG_DOMAIN, APP_LOG_TAG, \
-    "[%{public}s(%{public}s:%{public}d)]" fmt, __FILENAME__, __FUNCTION__, __LINE__, ##__VA_ARGS__))
+    "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_STANDARD_COMMON_LOG_INCLUDE_APP_LOG_WRAPPER_H
