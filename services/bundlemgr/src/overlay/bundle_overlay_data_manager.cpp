@@ -17,6 +17,7 @@
 
 #include "bundle_common_event_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_helper.h"
 #include "ipc_skeleton.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -690,19 +691,24 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
 
     // 4. set enable state
     auto &statesVec = userInfo.bundleUserInfo.overlayModulesState;
+    bool needChangeState = false;
     for (auto &item : statesVec) {
         if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
             continue;
         }
+        std::string itemOld = item;
         item = isEnabled ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
             (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_DISABLED));
+        needChangeState = (itemOld != item);
         break;
     }
 
     // 5. save to date storage
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     dataMgr_->SaveOverlayInfo(bundleName, innerBundleInfo);
-
+    if (needChangeState) {
+        BundleResourceHelper::SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    }
     // 6. publish the common event "usual.event.OVERLAY_STATE_CHANGED"
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyOverlayModuleStateStatus(bundleName, moduleName, isEnabled, userId, userInfo.uid);

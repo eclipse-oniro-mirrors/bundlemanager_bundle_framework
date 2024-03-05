@@ -16,7 +16,6 @@
 #include "bundle_resource_register.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_common_event.h"
 #include "bundle_resource_event_subscriber.h"
 #include "resource_info.h"
 #ifdef ABILITY_RUNTIME_ENABLE
@@ -55,8 +54,6 @@ void BundleResourceRegister::RegisterCommonEventSubscriber()
     EventFwk::MatchingSkills matchingSkills;
     // for user changed
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
-    // for overlay changed
-    matchingSkills.AddEvent(OVERLAY_STATE_CHANGED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 

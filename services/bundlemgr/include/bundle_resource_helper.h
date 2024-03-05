@@ -46,6 +46,9 @@ public:
         const std::string &abilityName, bool enabled, const int32_t userId);
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
+
+    static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
+        int32_t userId);
 };
 } // AppExecFwk
 } // OHOS
