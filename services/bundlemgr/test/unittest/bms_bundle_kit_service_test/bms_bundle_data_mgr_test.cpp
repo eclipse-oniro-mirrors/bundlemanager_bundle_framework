@@ -3984,4 +3984,41 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleNameForUid_0100, Function | SmallTest | 
     ErrCode ret = bundleMgrProxy->GetBundleNameForUid(TEST_UID, bundleName);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0100
+ * @tc.name: ResetAOTCompileStatus
+ * @tc.desc: test ResetAOTCompileStatus.
+ */
+HWTEST_F(BmsBundleDataMgrTest, ResetAOTCompileStatus_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto ret = info.ResetAOTCompileStatus(MODULE_TEST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+
+    InnerModuleInfo innerModuleInfo;
+    info.innerModuleInfos_.insert(make_pair(MODULE_TEST, innerModuleInfo));
+    ret = info.ResetAOTCompileStatus(MODULE_TEST);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetQuerySchemes_0100
+ * @tc.name: GetQuerySchemes
+ * @tc.desc: test GetQuerySchemes.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetQuerySchemes_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto ret = info.GetQuerySchemes();
+    EXPECT_TRUE(ret.empty());
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfo.modulePackage = MODULE_TEST;
+    innerModuleInfo.querySchemes.push_back(MODULE_TEST);
+    info.innerModuleInfos_.insert(make_pair(MODULE_TEST, innerModuleInfo));
+    ret = info.GetQuerySchemes();
+    EXPECT_FALSE(ret.empty());
+}
 }
