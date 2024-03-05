@@ -24,6 +24,8 @@ namespace Constants {
     const std::string AP = "ap/";
     const std::string RES_FILE_PATH = "resources/resfile/";
     const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
+    const std::string IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
+    const std::string DEVELOPERMODE_STATE = "const.security.developermode.state";
     const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2, DIR_EL3, DIR_EL4};
     const std::map<std::string, std::string> ABI_MAP = {
         {ARM_EABI, "arm"},

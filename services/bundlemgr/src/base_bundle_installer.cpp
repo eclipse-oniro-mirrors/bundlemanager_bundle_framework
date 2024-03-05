@@ -3201,8 +3201,10 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
     if (!installParam.isSelfUpdate) {
         return ERR_OK;
     }
-    if (!OHOS::system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false)) {
-        APP_LOGE("not enterprise device");
+    if (!OHOS::system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false) &&
+        !OHOS::system::GetBoolParameter(Constants::IS_ENTERPRISE_DEVICE, false) &&
+        !OHOS::system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, false)) {
+        APP_LOGE("not enterprise device or developer mode is off");
         return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
     if (!isAppExist) {

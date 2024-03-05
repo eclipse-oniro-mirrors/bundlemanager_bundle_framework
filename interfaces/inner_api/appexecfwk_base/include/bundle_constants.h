@@ -307,6 +307,8 @@ constexpr const char* ABC_FILE_PATH = "abc_files";
 
 // system param
 extern const std::string ALLOW_ENTERPRISE_BUNDLE;
+extern const std::string IS_ENTERPRISE_DEVICE;
+extern const std::string DEVELOPERMODE_STATE;
 
 // sa id
 constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
