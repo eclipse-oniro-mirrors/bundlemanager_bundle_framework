@@ -29,9 +29,10 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
-    const std::string FILE_PATH = "/data/test/BmsBundleVerifyManagerTest/a.abc";
-    const std::string INVALID_PATH = "/data/test/../../BmsBundleVerifyManagerTest/a.abc";
-    const std::string INVALID_SUFFIX = "/data/test/BmsBundleVerifyManagerTest/a.so";
+    const std::string FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/a.abc";
+    const std::string INVALID_PATH = "/data/service/el1/public/bms/bundle_manager_service/../../a.abc";
+    const std::string INVALID_SUFFIX = "/data/service/el1/public/bms/bundle_manager_service/a.so";
+    const std::string INVALID_PREFIX = "/data/app/el1/bundle/public/a.abc";
     const std::string ABC_FILE = "a.abc";
     const std::string ERR_FILE_PATH = "data";
     const std::string BUNDLE_NAME = "com.ohos.launcher";
@@ -234,6 +235,22 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0800, Function | SmallTes
     std::vector<std::string> abcNames;
     abcPaths.push_back(INVALID_SUFFIX);
     abcNames.push_back(INVALID_SUFFIX);
+    auto ret1 = impl.Verify(abcPaths, abcNames, true);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InnerVerify
+ * @tc.name: test InnerVerify
+ * @tc.desc: 1.InnerVerify test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0900, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    abcPaths.push_back(INVALID_PREFIX);
+    abcNames.push_back(INVALID_PREFIX);
     auto ret1 = impl.Verify(abcPaths, abcNames, true);
     EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
