@@ -64,7 +64,9 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
-    DelayCloseRdbStore();
+    if (rdbStore_ != nullptr) {
+        DelayCloseRdbStore();
+    }
     return rdbStore_;
 }
 
