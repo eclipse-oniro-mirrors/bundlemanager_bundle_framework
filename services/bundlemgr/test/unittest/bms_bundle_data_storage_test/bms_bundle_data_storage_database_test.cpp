@@ -1114,7 +1114,8 @@ protected:
                 "overlayState": 0,
                 "resourcesApply":[],
                 "GWPAsanEnabled": false,
-                "tsanEnabled": false
+                "tsanEnabled": false,
+                "organization": ""
             },
             "baseBundleInfo": {
                 "abilityInfos": [

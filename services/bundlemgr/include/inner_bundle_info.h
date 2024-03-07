@@ -823,6 +823,12 @@ public:
         return dataGroupInfos_;
     }
 
+
+    void SetOrganization(const std::string &organization)
+    {
+        baseApplicationInfo_->organization = organization;
+    }
+
     void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info);
     void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId);
     void UpdateDataGroupInfos(
