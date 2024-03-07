@@ -101,14 +101,8 @@ const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
-    bool matchAction = MatchAction(want.GetAction());
-    if (!matchAction) {
-        APP_LOGD("Action does not match");
-        return false;
-    }
-    bool matchEntities = MatchEntities(want.GetEntities());
-    if (!matchEntities) {
-        APP_LOGD("Entities does not match");
+    if (!MatchActionAndEntities(want)) {
+        APP_LOGD("Action or entities does not match");
         return false;
     }
     std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
@@ -122,6 +116,30 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
         return false;
     }
     bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType());
+    if (!matchUriAndType) {
+        APP_LOGD("Uri or Type does not match");
+        return false;
+    }
+    return true;
+}
+
+bool Skill::Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
+{
+    if (!MatchActionAndEntities(want)) {
+        APP_LOGD("Action or entities does not match");
+        return false;
+    }
+    std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+    if (vecTypes.size() > 0) {
+        for (std::string strType : vecTypes) {
+            if (MatchUriAndType(want.GetUriString(), strType, matchUriIndex)) {
+                APP_LOGD("type %{public}s, Is Matched", strType.c_str());
+                return true;
+            }
+        }
+        return false;
+    }
+    bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType(), matchUriIndex);
     if (!matchUriAndType) {
         APP_LOGD("Uri or Type does not match");
         return false;
@@ -191,6 +209,21 @@ bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
     return true;
 }
 
+bool Skill::MatchActionAndEntities(const OHOS::AAFwk::Want &want) const
+{
+    bool matchAction = MatchAction(want.GetAction());
+    if (!matchAction) {
+        APP_LOGD("Action does not match");
+        return false;
+    }
+    bool matchEntities = MatchEntities(want.GetEntities());
+    if (!matchEntities) {
+        APP_LOGD("Entities does not match");
+        return false;
+    }
+    return true;
+}
+
 bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type) const
 {
     if (uriString.empty() && type.empty()) {
@@ -229,6 +262,59 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
         // case4 : param uri not empty, param type not empty
         for (const SkillUri &skillUri : uris) {
             if (MatchUri(uriString, skillUri) && MatchType(type, skillUri.type)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
+{
+    if (uriString.empty() && type.empty()) {
+        // case1 : param uri empty, param type empty
+        if (uris.empty()) {
+            return true;
+        }
+        for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+            const SkillUri &skillUri = uris[uriIndex];
+            if (skillUri.scheme.empty() && skillUri.type.empty()) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+        return false;
+    }
+    if (uris.empty()) {
+        return false;
+    }
+    if (!uriString.empty() && type.empty()) {
+        // case2 : param uri not empty, param type empty
+        for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+            const SkillUri &skillUri = uris[uriIndex];
+            if (MatchUri(uriString, skillUri) && skillUri.type.empty()) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+        // if uri is a file path, match type by the suffix
+        return MatchMimeType(uriString);
+    } else if (uriString.empty() && !type.empty()) {
+        // case3 : param uri empty, param type not empty
+        for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+            const SkillUri &skillUri = uris[uriIndex];
+            if (skillUri.scheme.empty() && MatchType(type, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+        return false;
+    } else {
+        // case4 : param uri not empty, param type not empty
+        for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+            const SkillUri &skillUri = uris[uriIndex];
+            if (MatchUri(uriString, skillUri) && MatchType(type, skillUri.type)) {
+                matchUriIndex = uriIndex;
                 return true;
             }
         }

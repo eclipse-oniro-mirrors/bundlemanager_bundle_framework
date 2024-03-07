@@ -20,6 +20,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <shared_mutex>
 #include <string>
@@ -925,7 +926,8 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
-    void AddAbilitySkillUrisInfo(const std::vector<Skill> &skills, AbilityInfo &abilityInfo) const;
+    void AddSkillUrisInfo(const std::vector<Skill> &skills, std::vector<SkillUriForAbilityAndExtension> &skillUris,
+        std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -942,7 +944,6 @@ private:
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
-    void AddExtensionSkillUrisInfo(const std::vector<Skill> &skills, ExtensionAbilityInfo &extensionAbilityInfo) const;
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
@@ -1005,10 +1006,11 @@ private:
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
     void EmplaceExtensionInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills,
-        ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &infos) const;
+        ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos,
+        std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
     void EmplaceAbilityInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills, AbilityInfo &abilityInfo,
-        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const;
+        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos,
+        std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
     void AddAppHspBundleName(const BundleType type, const std::string &bundleName);
     void ConvertServiceHspToSharedBundleInfo(const InnerBundleInfo &innerBundleInfo,
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;

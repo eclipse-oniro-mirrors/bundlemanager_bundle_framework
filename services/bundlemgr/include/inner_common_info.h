@@ -144,13 +144,16 @@ public:
     std::vector<std::string> entities;
     std::vector<SkillUri> uris;
     bool Match(const OHOS::AAFwk::Want &want) const;
+    bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
     bool MatchUtd(const std::string &utd, int32_t count) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
+    bool MatchActionAndEntities(const OHOS::AAFwk::Want &want) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
+    bool MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
