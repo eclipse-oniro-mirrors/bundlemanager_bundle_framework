@@ -1916,7 +1916,7 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
 
 void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const
 {
-    APP_LOGI("ProcessBundleRouterMap with flags: %{public}d", flag);
+    APP_LOGD("ProcessBundleRouterMap with flags: %{public}d", flag);
     if ((static_cast<uint32_t>(flag) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
         return;
