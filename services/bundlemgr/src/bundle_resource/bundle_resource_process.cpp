@@ -43,7 +43,12 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
         return false;
     }
     resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo);
-
+    // process overlay hap paths
+    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
+        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
+        GetOverlayModuleHapPaths(resourceInfo.bundleName_, resourceInfo.moduleName_,
+            userId, resourceInfo.overlayHapPaths_);
+    }
     return true;
 }
 
@@ -293,20 +298,8 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
     std::vector<ResourceInfo> &resourceInfos)
 {
     APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
-    if (innerBundleInfo.GetBundleName().empty()) {
-        APP_LOGE("bundleName is empty");
-        return false;
-    }
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-    if (innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon) {
-        APP_LOGD("bundleName:%{public}s hide desktop icon", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-    if (innerBundleInfo.GetBaseBundleInfo().entryInstallationFree) {
-        APP_LOGD("bundleName:%{public}s is atomic service, hide desktop icon", innerBundleInfo.GetBundleName().c_str());
+    if (!CheckIsNeedProcessAbilityResource(innerBundleInfo)) {
+        APP_LOGW("bundleName:%{public}s no need add ability resource", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
 
@@ -336,9 +329,80 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
         }
         resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
     }
+    // process overlay hap paths
+    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
+        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
+        size_t size = resourceInfos.size();
+        for (size_t index = 0; index < size; ++index) {
+            if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
+                resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
+                continue;
+            }
+            GetOverlayModuleHapPaths(resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
+                userId, resourceInfos[index].overlayHapPaths_);
+        }
+    }
     APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
         innerBundleInfo.GetBundleName().c_str());
     return !resourceInfos.empty();
+}
+
+bool BundleResourceProcess::CheckIsNeedProcessAbilityResource(const InnerBundleInfo &innerBundleInfo)
+{
+    if (innerBundleInfo.GetBundleName().empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+        APP_LOGD("bundleName:%{public}s is shared", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    if (innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon) {
+        APP_LOGD("bundleName:%{public}s hide desktop icon", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    if (innerBundleInfo.GetBaseBundleInfo().entryInstallationFree) {
+        APP_LOGD("bundleName:%{public}s is atomic service, hide desktop icon",
+            innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    return true;
+}
+
+bool BundleResourceProcess::GetOverlayModuleHapPaths(
+    const std::string &bundleName,
+    const std::string &moduleName,
+    int32_t userId,
+    std::vector<std::string> &overlayHapPaths)
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    auto overlayDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOverlayManagerProxy();
+    if (overlayDataMgr == nullptr) {
+        APP_LOGE("overlayDataMgr is nullptr");
+        return false;
+    }
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ErrCode ret = overlayDataMgr->GetOverlayModuleInfoForTarget(bundleName, moduleName, overlayModuleInfos, userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("get failed, bundleName:%{public}s, moduleName:%{public}s, errcode:%{public}d",
+            bundleName.c_str(), moduleName.c_str(), ret);
+        return false;
+    }
+    std::sort(overlayModuleInfos.begin(), overlayModuleInfos.end(),
+        [](const OverlayModuleInfo &lhs, const OverlayModuleInfo &rhs) -> bool {
+            return lhs.priority > rhs.priority;
+        });
+    APP_LOGD("bundleName:%{public}s, overlayModuleInfos.size :%{public}zu",
+        bundleName.c_str(), overlayModuleInfos.size());
+    for (const auto &info : overlayModuleInfos) {
+        if (info.state == OverlayState::OVERLAY_ENABLE) {
+            overlayHapPaths.emplace_back(info.hapPath);
+        }
+    }
+    APP_LOGD("bundleName:%{public}s, overlayHapPaths.size :%{public}zu",
+        bundleName.c_str(), overlayHapPaths.size());
+#endif
+    return true;
 }
 } // AppExecFwk
 } // OHOS

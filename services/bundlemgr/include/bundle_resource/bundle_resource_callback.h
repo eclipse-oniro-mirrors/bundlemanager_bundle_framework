@@ -41,6 +41,12 @@ public:
     // for ability enable or disable
     bool OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, bool enabled, const int32_t userId);
+
+    // for application theme changed
+    bool OnApplicationThemeChanged(const std::string &theme);
+
+    // for overlay
+    bool OnOverlayStatusChanged(const std::string &bundleName, bool isEnabled, int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

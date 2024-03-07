@@ -144,5 +144,16 @@ void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &re
     }
 #endif
 }
+
+void BundleResourceHelper::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
+    bool isEnabled, int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("bundleName: %{public}s, moduleName: %{public}s,isEnabled: %{public}d, userId: %{public}d",
+        bundleName.c_str(), moduleName.c_str(), isEnabled, userId);
+    BundleResourceCallback callback;
+    callback.OnOverlayStatusChanged(bundleName, isEnabled, userId);
+#endif
+}
 } // AppExecFwk
 } // OHOS

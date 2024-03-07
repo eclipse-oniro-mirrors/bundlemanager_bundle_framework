@@ -189,5 +189,47 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
     }
     return true;
 }
+
+bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
+{
+    APP_LOGI("start, theme:%{public}s", theme.c_str());
+    if (theme.empty()) {
+        APP_LOGW("theme is empty, no need to change");
+        return false;
+    }
+
+    APP_LOGI("end, theme:%{public}s", theme.c_str());
+    return true;
+}
+
+bool BundleResourceCallback::OnOverlayStatusChanged(
+    const std::string &bundleName,
+    bool isEnabled,
+    int32_t userId)
+{
+    APP_LOGI("start, bundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
+        bundleName.c_str(), isEnabled, userId);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId > 0) && (userId != currentUserId)) {
+        APP_LOGW("userId not same, currentUserId:%{public}d, userId:%{public}d", currentUserId, userId);
+        return false;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr");
+        return false;
+    }
+    if (!manager->DeleteResourceInfo(bundleName)) {
+        APP_LOGW("delete bundleName : %{public}s resource failed", bundleName.c_str());
+    }
+
+    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
+        APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
+        return false;
+    }
+    APP_LOGI("end, bundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
+        bundleName.c_str(), isEnabled, userId);
+    return true;
+}
 } // AppExecFwk
 } // OHOS

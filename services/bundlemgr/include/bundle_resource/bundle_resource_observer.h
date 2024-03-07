@@ -37,6 +37,8 @@ private:
     static void OnSystemColorModeChanged(const std::string &colorMode);
 
     static void OnSystemLanguageChange(const std::string &language);
+
+    static void OnApplicationThemeChanged(const std::string &theme);
 };
 #endif
 } // AppExecFwk
