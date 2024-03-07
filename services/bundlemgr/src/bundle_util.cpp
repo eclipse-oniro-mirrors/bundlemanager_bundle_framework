@@ -250,6 +250,15 @@ int64_t BundleUtil::GetCurrentTimeMs()
     return time;
 }
 
+int64_t BundleUtil::GetCurrentTimeNs()
+{
+    int64_t time =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
+        .count();
+    APP_LOGD("the current time in nanoseconds is %{public}" PRId64, time);
+    return time;
+}
+
 void BundleUtil::DeviceAndNameToKey(
     const std::string &deviceId, const std::string &bundleName, std::string &key)
 {
@@ -705,7 +714,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = Constants::SIGNATURE_FILE_PATH;
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
-    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeMs()));
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeNs()));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
