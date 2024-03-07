@@ -29,6 +29,7 @@ ohos_unittest("BmsEventHandlerTest") {
   sources -= [ "${services_path}/bundlemgr/src/system_bundle_installer.cpp" ]
   sources += [ "bms_event_handler_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp" ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
@@ -132,6 +133,7 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources +=
       [ "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp" ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
