@@ -135,6 +135,10 @@ bool VerifyManagerHostImpl::CheckFileParam(
             APP_LOGE("CheckFile abcPath(%{public}s) failed due to not abc suffix.", abcPath.c_str());
             return false;
         }
+        if (!BundleUtil::StartWith(abcPath, Constants::HAP_COPY_PATH)) {
+            APP_LOGE("CheckFile abcPath(%{public}s) failed due to prefix error.", abcPath.c_str());
+            return false;
+        }
     }
 
     for (const auto abcName : abcNames) {
