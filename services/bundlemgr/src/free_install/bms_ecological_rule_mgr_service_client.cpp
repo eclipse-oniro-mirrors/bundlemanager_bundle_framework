@@ -33,11 +33,6 @@ sptr<BmsEcologicalRuleMgrServiceDeathRecipient> BmsEcologicalRuleMgrServiceClien
 
 std::string BmsEcologicalRuleMgrServiceClient::ERMS_ORIGINAL_TARGET = "ecological_experience_original_target";
 
-inline int64_t GetCurrentTimeMicro()
-{
-    return duration_cast<microseconds>(system_clock::now().time_since_epoch()).count();
-}
-
 BmsEcologicalRuleMgrServiceClient::~BmsEcologicalRuleMgrServiceClient()
 {
     if (bmsEcologicalRuleMgrServiceProxy_ != nullptr) {
@@ -105,7 +100,6 @@ void BmsEcologicalRuleMgrServiceClient::OnRemoteSaDied(const wptr<IRemoteObject>
 int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS::AAFwk::Want &want,
     const BmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
-    int64_t start = GetCurrentTimeMicro();
     APP_LOGD("QueryFreeInstallExperience want = %{public}s, callerInfo = %{public}s", want.ToString().c_str(),
         callerInfo.ToString().c_str());
 
@@ -119,8 +113,6 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
         APP_LOGD("QueryFreeInstallExperience  isAllow = %{public}d, replaceWant = %{public}s", rule.isAllow,
             (*(rule.replaceWant)).ToString().c_str());
     }
-    int64_t cost = GetCurrentTimeMicro() - start;
-    APP_LOGD("[ERMS-DFX] QueryFreeInstallExperience interface cost %{public}lld  mirco seconds.", cost);
     return res;
 }
 
