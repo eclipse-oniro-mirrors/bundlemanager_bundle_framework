@@ -17,16 +17,6 @@ import("../../../../appexecfwk.gni")
 config("bundle_ndk_config") {
   include_dirs = [ "include" ]
 }
-ohos_ndk_headers("bundle_header") {
-  dest_dir = "$ndk_headers_out_dir/bundle/"
-  sources = [ "./include/native_interface_bundle.h" ]
-}
-
-ohos_ndk_library("libbundle_ndk") {
-  ndk_description_file = "./libbundle.ndk.json"
-  min_compact_version = "9"
-  output_name = "bundle_ndk"
-}
 
 ohos_shared_library("bundle_ndk") {
   public_configs = [ ":bundle_ndk_config" ]
