@@ -831,14 +831,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    std::string callingAppId = want.GetStringParam(PARAM_FREEINSTALL_APPID);
-    if (!callingAppId.empty()) {
-        callingAppids.push_back(callingAppId);
-    }
-    callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
-    if (callingAppids.empty() && callingBundleNames.empty()) {
-        this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
-    }
+    this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
