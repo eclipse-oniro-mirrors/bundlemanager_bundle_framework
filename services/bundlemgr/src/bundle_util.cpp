@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <fstream>
 #include <set>
+#include <sstream>
 #include <sys/sendfile.h>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -35,18 +36,18 @@
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
+#include "parameter.h"
 #include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const char START_CHAR = 'a';
-const size_t ZERO = 0;
 const size_t ORIGIN_STRING_LENGTH = 32;
 constexpr char UUID_SEPARATOR = '-';
 const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
+const uint32_t UUID_LENGTH_MAX = 512;
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
@@ -758,6 +759,29 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
     }
 }
 
+std::string BundleUtil::GetHexHash(const std::string &s)
+{
+	std::hash<std::string> hasher;
+	size_t hash = hasher(s);
+
+	std::stringstream ss;
+	ss << std::hex << hash;
+
+	std::string hash_str = ss.str();
+	return hash_str;
+}
+
+void BundleUtil::RecursiveHash(std::string& s)
+{
+	if (s.size() >= ORIGIN_STRING_LENGTH) {
+		s = s.substr(s.size() - ORIGIN_STRING_LENGTH);
+		return;
+	}
+	std::string hash = GetHexHash(s);
+	s += hash;
+	RecursiveHash(s);
+}
+
 std::string BundleUtil::GenerateUuid()
 {
     std::lock_guard<std::mutex> lock(g_mutex);
@@ -766,23 +790,29 @@ std::string BundleUtil::GenerateUuid()
         std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
 
     // convert nanosecond timestamps to string
-    std::string timestampString = std::to_string(timestampNanoseconds);
-    std::hash<std::string> str_hash;
-    size_t hash_value = str_hash(timestampString);
-    timestampString += std::to_string(hash_value);
-    auto size = timestampString.size();
-    if (size < ORIGIN_STRING_LENGTH) {
-        for (size_t i = ZERO; i < ORIGIN_STRING_LENGTH - size; i++) {
-            timestampString += static_cast<char>(START_CHAR + i);
-        }
+    std::string s = std::to_string(timestampNanoseconds);
+    std::string timeStr = GetHexHash(s);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    std::string deviceStr;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
     } else {
-        timestampString = timestampString.substr(size - ORIGIN_STRING_LENGTH);
+        deviceUdid = std::string{ deviceId };
+	    deviceStr = GetHexHash(deviceUdid);
+        APP_LOGI("GenerateUuid deviceUdid is %{public}s", deviceUdid.c_str());
     }
 
+    std::string uuid = timeStr + deviceStr;
+    RecursiveHash(uuid);
+
     for (int32_t index : SEPARATOR_POSITIONS) {
-        timestampString.insert(index, 1, UUID_SEPARATOR);
+        uuid.insert(index, 1, UUID_SEPARATOR);
     }
-    return timestampString;
+    APP_LOGI("GenerateUuid uuid is %{public}s", uuid.c_str());
+    return uuid;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

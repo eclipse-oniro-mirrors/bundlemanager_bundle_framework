@@ -73,4 +73,9 @@ int SetParameter(const char *key, const char *value)
 {
     return 0;
 }
+
+int GetDevUdid(char *udid, int size)
+{
+    return 0;
+}
 } // OHOS

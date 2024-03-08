@@ -180,6 +180,8 @@ public:
         std::vector<std::string> &toDeletePaths);
     static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
     static std::string GenerateUuid();
+    static std::string GetHexHash(const std::string &s);
+    static void RecursiveHash(std::string& s);
 private:
     static std::mutex g_mutex;
 };
