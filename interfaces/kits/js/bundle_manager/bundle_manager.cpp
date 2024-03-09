@@ -1745,6 +1745,21 @@ napi_value VerifyAbc(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
+{
+    return nullptr;
+}
+
+napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
+{
+    return nullptr;
+}
+
+napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
+{
+    return nullptr;
+}
+
 ErrCode InnerDeleteAbc(const std::string &path)
 {
     auto verifyManager = CommonFunc::GetVerifyManager();
