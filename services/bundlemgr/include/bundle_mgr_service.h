@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -40,6 +40,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_host_impl.h"
 #endif
+#include "dynamic_icon_manager_host_impl.h"
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -101,6 +102,8 @@ public:
      * @return Returns the pointer of IVerifyManager object.
      */
     sptr<IVerifyManager> GetVerifyManager() const;
+
+    sptr<IDynamicIconManager> GetDynamicIconManager() const;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<IDefaultApp> GetDefaultAppProxy() const;
@@ -192,6 +195,7 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     sptr<IVerifyManager> verifyManager_;
+    sptr<IDynamicIconManager> dynamicIconManager_;
     std::shared_ptr<BmsParam> bmsParam_;
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr_;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -692,6 +692,8 @@ public:
         std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
+
+    virtual sptr<IDynamicIconManager> GetDynamicIconManager() override;
 
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
 

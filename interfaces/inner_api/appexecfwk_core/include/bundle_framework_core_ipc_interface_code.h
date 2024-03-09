@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -160,6 +160,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CAN_OPEN_LINK,
     GET_ALL_BUNDLE_STATS,
     GET_ODID,
+    GET_DYNAMIC_ICON_MANAGER,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -286,6 +287,14 @@ enum class VerifyManagerInterfaceCode : uint32_t {
     VERIFY = 0,
     CREATE_FD = 1,
     DELETE_ABC = 2,
+};
+
+/* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */
+enum class DynamicIconManagerInterfaceCode : uint32_t {
+    ENABLE_DYNAMIC_ICON = 0,
+    DISABLE_DYNAMIC_ICON = 1,
+    GET_DYNAMIC_ICON = 2,
+    CREATE_FD = 3,
 };
 } // namespace AppExecFwk
 } // namespace OHOS

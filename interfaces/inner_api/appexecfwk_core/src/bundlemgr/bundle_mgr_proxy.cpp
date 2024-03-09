@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2162,6 +2162,31 @@ sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
     }
 
     return verifyManager;
+}
+
+sptr<IDynamicIconManager> BundleMgrProxy::GetDynamicIconManager()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get GetDynamicIconManager due to write InterfaceToken fail");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DYNAMIC_ICON_MANAGER, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return nullptr;
+    }
+    sptr<IDynamicIconManager> dynamicIconManager = iface_cast<IDynamicIconManager>(object);
+    if (dynamicIconManager == nullptr) {
+        APP_LOGE("dynamicIconManager is nullptr");
+    }
+    return dynamicIconManager;
 }
 
 bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)

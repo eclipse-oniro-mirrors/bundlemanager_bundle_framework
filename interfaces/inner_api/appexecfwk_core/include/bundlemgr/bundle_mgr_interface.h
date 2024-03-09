@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,6 +33,7 @@
 #include "../app_control/app_control_interface.h"
 #include "../bundle_resource/bundle_resource_interface.h"
 #include "../default_app/default_app_interface.h"
+#include "../dynamic_icon/dynamic_icon_manager_interface.h"
 #include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
 #include "../verify/verify_manager_interface.h"
@@ -1098,6 +1099,11 @@ public:
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)
     {
         return false;
+    }
+
+    virtual sptr<IDynamicIconManager> GetDynamicIconManager()
+    {
+        return nullptr;
     }
 
     virtual ErrCode GetSandboxAbilityInfo(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
