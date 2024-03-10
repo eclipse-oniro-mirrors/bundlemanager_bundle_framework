@@ -182,6 +182,7 @@ public:
     static std::string GenerateUuid();
     static std::string GetHexHash(const std::string &s);
     static void RecursiveHash(std::string& s);
+    static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
 private:
     static std::mutex g_mutex;
 };

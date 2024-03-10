@@ -761,25 +761,25 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 
 std::string BundleUtil::GetHexHash(const std::string &s)
 {
-	std::hash<std::string> hasher;
-	size_t hash = hasher(s);
+    std::hash<std::string> hasher;
+    size_t hash = hasher(s);
 
-	std::stringstream ss;
-	ss << std::hex << hash;
+    std::stringstream ss;
+    ss << std::hex << hash;
 
-	std::string hash_str = ss.str();
-	return hash_str;
+    std::string hash_str = ss.str();
+    return hash_str;
 }
 
 void BundleUtil::RecursiveHash(std::string& s)
 {
-	if (s.size() >= ORIGIN_STRING_LENGTH) {
-		s = s.substr(s.size() - ORIGIN_STRING_LENGTH);
-		return;
-	}
-	std::string hash = GetHexHash(s);
-	s += hash;
-	RecursiveHash(s);
+    if (s.size() >= ORIGIN_STRING_LENGTH) {
+        s = s.substr(s.size() - ORIGIN_STRING_LENGTH);
+        return;
+    }
+    std::string hash = GetHexHash(s);
+    s += hash;
+    RecursiveHash(s);
 }
 
 std::string BundleUtil::GenerateUuid()
@@ -801,7 +801,7 @@ std::string BundleUtil::GenerateUuid()
         APP_LOGW("GetDevUdid failed");
     } else {
         deviceUdid = std::string{ deviceId };
-	    deviceStr = GetHexHash(deviceUdid);
+        deviceStr = GetHexHash(deviceUdid);
         APP_LOGI("GenerateUuid deviceUdid is %{public}s", deviceUdid.c_str());
     }
 
@@ -813,6 +813,21 @@ std::string BundleUtil::GenerateUuid()
     }
     APP_LOGI("GenerateUuid uuid is %{public}s", uuid.c_str());
     return uuid;
+}
+
+std::string BundleUtil::ExtractGroupIdByDevelopId(const std::string &developerId)
+{
+    std::string::size_type dot_position = developerId.find('.');
+    if (dot_position == std::string::npos) {
+        // If cannot find '.' , the input string is developerId, return developerId
+        return developerId;
+    }
+    if (dot_position == 0) {
+        // if'.' In the first place, then groupId is empty, return developerId
+        return developerId.substr(1);
+    }
+    // If '.' If it is not the first place, there is a groupId, and the groupId is returned
+    return developerId.substr(0, dot_position);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
