@@ -157,43 +157,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundlePermissionStartFullTest::GetBundle
 }
 
 /**
- * @tc.number: BmsBundlePermissionStartFullTest
- * Function: UpdateDefineAndRequestPermissions
- * @tc.name: test UpdateDefineAndRequestPermissions verify false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0100, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    Security::AccessToken::AccessTokenIDEx tokenIdEx;
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    std::vector<std::string> newRequestPermName;
-    res = BundlePermissionMgr::UpdateDefineAndRequestPermissions(tokenIdEx, oldInfo, newInfo, newRequestPermName);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: BmsBundlePermissionStartFullTest
- * Function: AddDefineAndRequestPermissions
- * @tc.name: test AddDefineAndRequestPermissions false
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0200, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    Security::AccessToken::AccessTokenIDEx tokenIdEx;
-    InnerBundleInfo innerBundleInfo;
-    std::vector<std::string> newRequestPermName;
-    res = BundlePermissionMgr::AddDefineAndRequestPermissions(tokenIdEx, innerBundleInfo, newRequestPermName);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: BmsBundlePermissionStartFullTest_0300
  * Function: VerifySystemApp
  * @tc.name: test VerifySystemApp false

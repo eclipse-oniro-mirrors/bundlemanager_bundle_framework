@@ -60,34 +60,17 @@ public:
     static bool RequestPermissionFromUser(
         const std::string &bundleName, const std::string &permissionName, const int32_t userId);
 
-    static Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(
-        const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId);
+    static int32_t InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx);
 
-    static Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(
-        const InnerBundleInfo &innerBundleInfo, const std::string bundleName, const int32_t userId,
-        const int32_t dlpType, const Security::AccessToken::HapPolicyParams &hapPolicy);
-
-    static bool UpdateDefineAndRequestPermissions(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
-        const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName);
-
-    static bool AddDefineAndRequestPermissions(Security::AccessToken::AccessTokenIDEx &tokenIdEx,
-        const InnerBundleInfo &innerBundleInfo, std::vector<std::string> &newRequestPermName);
+    static int32_t UpdateHapToken(
+        Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo);
 
     static int32_t DeleteAccessTokenId(const Security::AccessToken::AccessTokenID tokenId);
-
-    static bool GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-        const Security::AccessToken::AccessTokenID tokenId);
-
-    static bool GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-        const std::vector<std::string> &requestPermName,
-        const Security::AccessToken::AccessTokenID tokenId);
 
     static bool GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId, const std::string deviceId);
 
     static int32_t ClearUserGrantedPermissionState(const Security::AccessToken::AccessTokenID tokenId);
-
-    static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
-        const std::vector<Security::AccessToken::PermissionStateFull> &permissions);
 
     static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
@@ -130,27 +113,12 @@ private:
     static std::vector<Security::AccessToken::PermissionStateFull> GetPermissionStateFullList(
         const InnerBundleInfo &innerBundleInfo);
 
-    static bool CheckGrantPermission(const Security::AccessToken::PermissionDef &permDef,
-        const std::string &apl,
-        const std::vector<std::string> &acls);
-
-    static bool GetNewPermissionDefList(Security::AccessToken::AccessTokenID tokenId,
-        const std::vector<Security::AccessToken::PermissionDef> &permissionDef,
-        std::vector<Security::AccessToken::PermissionDef> &newPermission);
-
-    static bool GetNewPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
-        const std::vector<Security::AccessToken::PermissionStateFull> &permissionState,
-        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState,
-        std::vector<std::string> &newRequestPermName);
-
-    static bool InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
-        const InnerBundleInfo &innerBundleInfo,
-        std::vector<std::string> systemGrantPermList,
-        std::vector<std::string> userGrantPermList);
-
     static Security::AccessToken::ATokenAplEnum GetTokenApl(const std::string &apl);
 
     static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo);
+
+    static Security::AccessToken::HapInfoParams CreateHapInfoParams(const InnerBundleInfo &innerBundleInfo,
+        const int32_t userId, const int32_t dlpType);
 
     static void ConvertPermissionDef(const Security::AccessToken::PermissionDef &permDef,
         PermissionDef &permissionDef);
@@ -160,12 +128,6 @@ private:
 
     static Security::AccessToken::ATokenAvailableTypeEnum GetAvailableType(const std::string &availableType);
 
-    static std::vector<std::string> GetNeedDeleteDefinePermissionName(const InnerBundleInfo &oldInfo,
-        const InnerBundleInfo &newInfo);
-
-    static std::vector<std::string> GetNeedDeleteRequestPermissionName(const InnerBundleInfo &oldInfo,
-        const InnerBundleInfo &newInfo);
-
     static bool GetDefaultPermission(const std::string &bundleName, DefaultPermission &permission);
 
     static bool MatchSignature(const DefaultPermission &permission, const std::vector<std::string> &signatures);
@@ -174,31 +136,6 @@ private:
 
     static bool CheckPermissionInDefaultPermissions(const DefaultPermission &defaultPermission,
         const std::string &permissionName, bool &userCancellable);
-
-    static bool GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
-        const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
-        const std::string &bundleName);
-
-    static bool InnerUpdateDefinePermission(
-        const Security::AccessToken::AccessTokenID tokenId,
-        const InnerBundleInfo &oldInfo,
-        const InnerBundleInfo &newInfo,
-        std::vector<Security::AccessToken::PermissionDef> &newDefPermList);
-
-    static bool InnerUpdateRequestPermission(
-        const Security::AccessToken::AccessTokenID tokenId,
-        const InnerBundleInfo &oldInfo,
-        const InnerBundleInfo &newInfo,
-        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
-        std::vector<std::string> &newRequestPermName);
-
-    static bool InnerFilterRequestPermissions(
-        const InnerBundleInfo &innerBundleInfo,
-        std::vector<std::string> &systemGrantPermList,
-        std::vector<std::string> &userGrantPermList);
-
-    static bool CheckPermissionAvailableType(const std::string &appDistributionType,
-        const Security::AccessToken::PermissionDef &permDef);
 
     static std::map<std::string, DefaultPermission> defaultPermissions_;
 };

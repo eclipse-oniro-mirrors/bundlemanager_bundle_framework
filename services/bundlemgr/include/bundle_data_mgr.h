@@ -1016,6 +1016,7 @@ private:
         std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
     void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

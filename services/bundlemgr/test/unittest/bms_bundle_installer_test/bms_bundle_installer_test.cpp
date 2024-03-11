@@ -1972,24 +1972,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2400, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_2500
- * @tc.name: test UpdateDefineAndRequestPermissions
- * @tc.desc: 1.Test the UpdateDefineAndRequestPermissions of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    InnerBundleUserInfo userInfo;
-    userInfo.accessTokenId = 0;
-    newInfo.innerBundleUserInfos_.insert(pair<std::string, InnerBundleUserInfo>("1", userInfo));
-
-    auto res = installer.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
  * @tc.number: baseBundleInstaller_2600
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test the ProcessBundleUninstall of BaseBundleInstaller

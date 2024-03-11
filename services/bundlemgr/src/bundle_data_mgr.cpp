@@ -343,7 +343,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
@@ -554,7 +554,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        ProcessAllowedAcls(newInfo, oldInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
@@ -6309,6 +6309,15 @@ void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundl
     if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
         oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
     }
+}
+
+void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
+        return;
+    }
+    oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

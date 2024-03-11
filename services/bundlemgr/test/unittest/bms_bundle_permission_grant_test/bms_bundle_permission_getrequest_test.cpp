@@ -74,48 +74,6 @@ void BmsBundlePermissionGetRequestTest::TearDown()
 
 /**
  * @tc.number: BmsBundlePermissionGetRequestTest
- * Function: GetNewPermissionDefList
- * @tc.name: test GetNewPermissionDefList success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_0100, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    AccessToken::AccessTokenID tokenId = 0;
-    AccessToken::PermissionDef permissionDef;
-    permissionDef.permissionName = PERMISSION_NAME;
-    std::vector<AccessToken::PermissionDef> permissionDefs;
-    permissionDefs.push_back(permissionDef);
-    std::vector<AccessToken::PermissionDef> newPermissionDef;
-    res = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDefs, newPermissionDef);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionGetRequestTest
- * Function: GetNewPermissionDefList
- * @tc.name: test GetNewPermissionDefList success
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsBundlePermissionGetRequestTest, BmsBundlePermissionGetRequestTest_0200, Function | SmallTest | Level0)
-{
-    bool res = BundlePermissionMgr::Init();
-    EXPECT_EQ(res, true);
-
-    AccessToken::AccessTokenID tokenId = 0;
-    AccessToken::PermissionDef permissionDef;
-    permissionDef.permissionName = ERR_PERMISSION_NAME;
-    std::vector<AccessToken::PermissionDef> permissionDefs;
-    permissionDefs.push_back(permissionDef);
-    std::vector<AccessToken::PermissionDef> newPermissionDef;
-    res = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDefs, newPermissionDef);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: BmsBundlePermissionGetRequestTest
  * Function: GetRequestPermissionStates
  * @tc.name: test GetRequestPermissionStates success
  * @tc.desc: 1. system running normally

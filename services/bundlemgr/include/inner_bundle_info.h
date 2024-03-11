@@ -808,6 +808,7 @@ public:
         return hspModuleNames;
     }
 
+    void AddAllowedAcls(const std::vector<std::string> &allowedAcls);
     bool GetModuleBuildHash(const std::string &moduleName, std::string &buildHash) const
     {
         if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {

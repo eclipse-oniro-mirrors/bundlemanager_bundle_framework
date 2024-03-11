@@ -103,16 +103,11 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     info.SetAppIndex(newAppIndex);
     info.SetIsSandbox(true);
 
-    // 4.1 get full permissions
-    std::vector<AccessToken::PermissionStateFull> allPermissions;
-    if (!BundlePermissionMgr::GetAllReqPermissionStateFull(info.GetAccessTokenId(userId_), allPermissions)) {
-        APP_LOGE("InstallSandboxApp get all permission failed");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_GET_PERMISSIONS_FAILED;
+    Security::AccessToken::AccessTokenIDEx newTokenIdEx;
+    if (BundlePermissionMgr::InitHapToken(info, userId_, dlpType, newTokenIdEx) != ERR_OK) {
+        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
-    // 4.2 generate accesstoken id
-    Security::AccessToken::HapPolicyParams hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(info, allPermissions);
-    auto newTokenIdEx =
-        BundlePermissionMgr::CreateAccessTokenIdEx(info, info.GetBundleName(), userId_, dlpType, hapPolicy);
 
     // 5. create data dir and generate uid and gid
     info.CleanInnerBundleUserInfos();

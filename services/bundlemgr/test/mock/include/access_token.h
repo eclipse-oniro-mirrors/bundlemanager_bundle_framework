@@ -122,19 +122,54 @@ class HapInfoParams final {
 public:
     int userID;
     std::string bundleName;
+    /** instance index */
     int instIndex;
-    std::string appIDDesc;
+    /**
+     * dlp type, for details about the valid values,
+     * see the definition of HapDlpType in the access_token.h file.
+     */
     int dlpType;
+    std::string appIDDesc;
+    /** which version of the SDK is used to develop the hap */
     int32_t apiVersion;
+    /** indicates whether the hap is a system app */
     bool isSystemApp;
+    /* app type */
+    std::string appDistributionType;
 };
 
+/**
+ * @brief Declares hap info params class
+ */
+class UpdateHapInfoParams final {
+public:
+    std::string appIDDesc;
+    /** which version of the SDK is used to develop the hap */
+    int32_t apiVersion;
+    /** indicates whether the hap is a system app */
+    bool isSystemApp;
+    /* app type */
+    std::string appDistributionType;
+};
+
+class PreAuthorizationInfo final {
+public:
+    std::string permissionName;
+    /** Whether the pre-authorization is non-cancelable */
+    bool userCancelable = false;
+};
 class HapPolicyParams final {
 public:
+    /**
+     * apl level, for details about the valid values,
+     * see the definition of ATokenAplEnum in the access_token.h file.
+     */
     ATokenAplEnum apl;
     std::string domain;
     std::vector<PermissionDef> permList;
     std::vector<PermissionStateFull> permStateList;
+    std::vector<std::string> aclRequestedList;
+    std::vector<PreAuthorizationInfo> preAuthorizationInfo;
 };
 } // namespace AccessToken
 } // namespace Security
