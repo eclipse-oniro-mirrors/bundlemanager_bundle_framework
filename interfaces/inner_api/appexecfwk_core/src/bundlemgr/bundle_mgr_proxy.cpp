@@ -2164,16 +2164,16 @@ sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
     return verifyManager;
 }
 
-sptr<IDynamicIconManager> BundleMgrProxy::GetDynamicIconManager()
+sptr<IExtendResourceManager> BundleMgrProxy::GetExtendResourceManager()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get GetDynamicIconManager due to write InterfaceToken fail");
+        APP_LOGE("fail to get GetExtendResourceManager due to write InterfaceToken fail");
         return nullptr;
     }
-    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DYNAMIC_ICON_MANAGER, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER, data, reply)) {
         return nullptr;
     }
 
@@ -2182,11 +2182,11 @@ sptr<IDynamicIconManager> BundleMgrProxy::GetDynamicIconManager()
         APP_LOGE("read failed");
         return nullptr;
     }
-    sptr<IDynamicIconManager> dynamicIconManager = iface_cast<IDynamicIconManager>(object);
-    if (dynamicIconManager == nullptr) {
-        APP_LOGE("dynamicIconManager is nullptr");
+    sptr<IExtendResourceManager> extendResourceManager = iface_cast<IExtendResourceManager>(object);
+    if (extendResourceManager == nullptr) {
+        APP_LOGE("extendResourceManager is nullptr");
     }
-    return dynamicIconManager;
+    return extendResourceManager;
 }
 
 bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)

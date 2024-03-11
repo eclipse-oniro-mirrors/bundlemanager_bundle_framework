@@ -33,7 +33,7 @@
 #include "../app_control/app_control_interface.h"
 #include "../bundle_resource/bundle_resource_interface.h"
 #include "../default_app/default_app_interface.h"
-#include "../dynamic_icon/dynamic_icon_manager_interface.h"
+#include "../extend_resource/extend_resource_manager_interface.h"
 #include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
 #include "../verify/verify_manager_interface.h"
@@ -1101,7 +1101,7 @@ public:
         return false;
     }
 
-    virtual sptr<IDynamicIconManager> GetDynamicIconManager()
+    virtual sptr<IExtendResourceManager> GetExtendResourceManager()
     {
         return nullptr;
     }

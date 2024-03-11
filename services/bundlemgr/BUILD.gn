@@ -29,7 +29,7 @@ config("bundlemgr_common_config") {
     "include/free_install",
     "include/distributed_manager",
     "include/driver",
-    "include/dynamic_icon",
+    "include/extend_resource",
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",

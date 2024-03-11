@@ -342,8 +342,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCanOpenLink);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
         &BundleMgrHost::HandleGetOdid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DYNAMIC_ICON_MANAGER),
-        &BundleMgrHost::HandleGetDynamicIconManager);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER),
+        &BundleMgrHost::HandleGetExtendResourceManager);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1620,17 +1620,17 @@ ErrCode BundleMgrHost::HandleGetVerifyManager(MessageParcel &data, MessageParcel
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetDynamicIconManager(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetExtendResourceManager(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    sptr<IDynamicIconManager> dynamicIconManager = GetDynamicIconManager();
-    if (dynamicIconManager == nullptr) {
-        APP_LOGE("dynamicIconManager is nullptr");
-        return ERR_BUNDLE_MANAGER_DYNAMIC_ICON_GET_DYNAMIC_ICON_MGR_FAILED;
+    sptr<IExtendResourceManager> extendResourceManager = GetExtendResourceManager();
+    if (extendResourceManager == nullptr) {
+        APP_LOGE("extendResourceManager is nullptr");
+        return ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_MGR_FAILED;
     }
 
-    if (!reply.WriteRemoteObject(dynamicIconManager->AsObject())) {
-        APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
+    if (!reply.WriteRemoteObject(extendResourceManager->AsObject())) {
+        APP_LOGE("failed to reply extendResourceManager, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

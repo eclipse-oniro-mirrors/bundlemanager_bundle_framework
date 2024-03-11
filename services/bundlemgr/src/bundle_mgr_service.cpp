@@ -118,6 +118,7 @@ bool BundleMgrService::Init()
     InitBundleDataMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
     CHECK_INIT_RESULT(InitVerifyManager(), "Init verifyManager fail");
+    CHECK_INIT_RESULT(InitExtendResourceManager(), "Init extendResourceManager fail");
     CHECK_INIT_RESULT(InitBundleEventHandler(), "Init bundleEventHandler fail");
     InitHidumpHelper();
     InitFreeInstall();
@@ -189,6 +190,15 @@ bool BundleMgrService::InitVerifyManager()
     }
 
     return verifyManager_ != nullptr;
+}
+
+bool BundleMgrService::InitExtendResourceManager()
+{
+    if (extendResourceManager_ == nullptr) {
+        extendResourceManager_ = new (std::nothrow) ExtendResourceManagerHostImpl();
+    }
+
+    return extendResourceManager_ != nullptr;
 }
 
 bool BundleMgrService::InitBundleEventHandler()
@@ -371,9 +381,9 @@ sptr<IVerifyManager> BundleMgrService::GetVerifyManager() const
     return verifyManager_;
 }
 
-sptr<IDynamicIconManager> BundleMgrService::GetDynamicIconManager() const
+sptr<IExtendResourceManager> BundleMgrService::GetExtendResourceManager() const
 {
-    return dynamicIconManager_;
+    return extendResourceManager_;
 }
 
 const std::shared_ptr<BmsParam> BundleMgrService::GetBmsParam() const

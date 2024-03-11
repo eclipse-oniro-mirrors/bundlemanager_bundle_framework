@@ -782,7 +782,7 @@ public:
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
-    virtual sptr<IDynamicIconManager> GetDynamicIconManager() override;
+    virtual sptr<IExtendResourceManager> GetExtendResourceManager() override;
 
     virtual bool CheckAbilityEnableInstall(
         const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;

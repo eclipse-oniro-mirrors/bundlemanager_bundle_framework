@@ -160,7 +160,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     CAN_OPEN_LINK,
     GET_ALL_BUNDLE_STATS,
     GET_ODID,
-    GET_DYNAMIC_ICON_MANAGER,
+    GET_EXTEND_RESOURCE_MANAGER,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -290,11 +290,14 @@ enum class VerifyManagerInterfaceCode : uint32_t {
 };
 
 /* SAID: 401-127 Interface No.127 subservice also provides the following interfaces */
-enum class DynamicIconManagerInterfaceCode : uint32_t {
-    ENABLE_DYNAMIC_ICON = 0,
-    DISABLE_DYNAMIC_ICON = 1,
-    GET_DYNAMIC_ICON = 2,
-    CREATE_FD = 3,
+enum class ExtendResourceManagerInterfaceCode : uint32_t {
+    ADD_EXT_RESOURCE = 0,
+    REMOVE_EXT_RESOURCE = 1,
+    GET_EXT_RESOURCE = 2,
+    ENABLE_DYNAMIC_ICON = 3,
+    DISABLE_DYNAMIC_ICON = 4,
+    GET_DYNAMIC_ICON = 5,
+    CREATE_FD = 6,
 };
 } // namespace AppExecFwk
 } // namespace OHOS
