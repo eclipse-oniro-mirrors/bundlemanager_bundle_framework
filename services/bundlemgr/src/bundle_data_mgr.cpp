@@ -6265,13 +6265,14 @@ void BundleDataMgr::GenerateOdid(const std::string &developerId, std::string &od
         APP_LOGE("developerId is empty");
         return;
     }
-
+    std::string groupId = BundleUtil::ExtractGroupIdByDevelopId(developerId);
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         std::string developerIdExist;
         std::string odidExist;
         item.second.GetDeveloperidAndOdid(developerIdExist, odidExist);
-        if (developerId == developerIdExist) {
+        std::string groupIdExist = BundleUtil::ExtractGroupIdByDevelopId(developerIdExist);
+        if (groupId == groupIdExist) {
             odid = odidExist;
             return;
         }
