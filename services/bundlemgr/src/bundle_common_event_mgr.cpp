@@ -96,7 +96,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
 
     // trigger the status callback for status listening
-    if (dataMgr != nullptr) {
+    if ((dataMgr != nullptr) && (installResult.type != NotifyType::START_INSTALL)) {
         auto &callbackMutex = dataMgr->GetStatusCallbackMutex();
         std::shared_lock<std::shared_mutex> lock(callbackMutex);
         auto callbackList = dataMgr->GetCallBackList();
