@@ -40,7 +40,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_host_impl.h"
 #endif
-#include "dynamic_icon_manager_host_impl.h"
+#include "extend_resource_manager_host_impl.h"
 #include "hidump_helper.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
@@ -103,7 +103,7 @@ public:
      */
     sptr<IVerifyManager> GetVerifyManager() const;
 
-    sptr<IDynamicIconManager> GetDynamicIconManager() const;
+    sptr<IExtendResourceManager> GetExtendResourceManager() const;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<IDefaultApp> GetDefaultAppProxy() const;
@@ -167,6 +167,7 @@ private:
     void InitBundleDataMgr();
     bool InitBundleUserMgr();
     bool InitVerifyManager();
+    bool InitExtendResourceManager();
     bool InitBundleEventHandler();
     void InitHidumpHelper();
     void InitFreeInstall();
@@ -195,7 +196,7 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     sptr<IVerifyManager> verifyManager_;
-    sptr<IDynamicIconManager> dynamicIconManager_;
+    sptr<IExtendResourceManager> extendResourceManager_;
     std::shared_ptr<BmsParam> bmsParam_;
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr_;
 

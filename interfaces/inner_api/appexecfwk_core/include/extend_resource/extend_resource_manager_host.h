@@ -13,31 +13,34 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MANAGER_HOST_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MANAGER_HOST_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_H
 
-#include "dynamic_icon_manager_interface.h"
+#include "extend_resource_manager_interface.h"
 #include "iremote_stub.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class DynamicIconManagerHost : public IRemoteStub<IDynamicIconManager> {
+class ExtendResourceManagerHost : public IRemoteStub<IExtendResourceManager> {
 public:
-    DynamicIconManagerHost();
-    virtual ~DynamicIconManagerHost();
+    ExtendResourceManagerHost();
+    virtual ~ExtendResourceManagerHost();
 
     int OnRemoteRequest(
         uint32_t code, MessageParcel& data, MessageParcel& reply, MessageOption& option) override;
 
 private:
+    ErrCode HandleAddExtResource(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleRemoveExtResource(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetExtResource(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleEnableDynamicIcon(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleDisableDynamicIcon(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleGetDynamicIcon(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateFd(MessageParcel& data, MessageParcel& reply);
 
-    DISALLOW_COPY_AND_MOVE(DynamicIconManagerHost);
+    DISALLOW_COPY_AND_MOVE(ExtendResourceManagerHost);
 };
 } // AppExecFwk
 } // OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MANAGER_HOST_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_H

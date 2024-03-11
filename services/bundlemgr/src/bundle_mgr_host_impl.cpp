@@ -1804,9 +1804,9 @@ sptr<IVerifyManager> BundleMgrHostImpl::GetVerifyManager()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetVerifyManager();
 }
 
-sptr<IDynamicIconManager> BundleMgrHostImpl::GetDynamicIconManager()
+sptr<IExtendResourceManager> BundleMgrHostImpl::GetExtendResourceManager()
 {
-    return DelayedSingleton<BundleMgrService>::GetInstance()->GetDynamicIconManager();
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetExtendResourceManager();
 }
 
 bool BundleMgrHostImpl::GetAllFormsInfo(std::vector<FormInfo> &formInfos)

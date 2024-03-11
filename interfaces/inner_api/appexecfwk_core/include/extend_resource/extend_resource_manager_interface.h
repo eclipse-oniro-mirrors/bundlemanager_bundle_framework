@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MGR_INTERFACE_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MGR_INTERFACE_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MGR_INTERFACE_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MGR_INTERFACE_H
 
 #include <vector>
 #include <string>
@@ -24,12 +24,30 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class IDynamicIconManager : public IRemoteBroker {
+class IExtendResourceManager : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.DynamicIconManager");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.ExtendResourceManager");
+
+    virtual ErrCode AddExtResource(
+        const std::string &bundleName, const std::vector<std::string> &filePaths)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode RemoveExtResource(
+        const std::string &bundleName, const std::vector<std::string> &moduleNames)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetExtResource(
+        const std::string &bundleName, std::vector<std::string> &moduleNames)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     virtual ErrCode EnableDynamicIcon(
-        const std::string &bundleName, const std::string &dynamicIconKey, const std::string &filePath)
+        const std::string &bundleName, const std::string &moudleName)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -39,7 +57,7 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &dynamicIconKey)
+    virtual ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moudleName)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -56,4 +74,4 @@ public:
 };
 } // AppExecFwk
 } // OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_DYNAMIC_ICON_MGR_INTERFACE_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_EXTEND_RESOURCE_MGR_INTERFACE_H

@@ -693,7 +693,7 @@ public:
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
 
-    virtual sptr<IDynamicIconManager> GetDynamicIconManager() override;
+    virtual sptr<IExtendResourceManager> GetExtendResourceManager() override;
 
     virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
 
