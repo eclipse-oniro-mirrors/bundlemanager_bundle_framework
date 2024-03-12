@@ -28,6 +28,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SEPARATOR = "/";
+const int32_t DEFAULT_BUFFER_SIZE = 65536;
+}
 ExtendResourceManagerProxy::ExtendResourceManagerProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IExtendResourceManager>(object)
 {
@@ -277,8 +281,55 @@ ErrCode ExtendResourceManagerProxy::CreateFd(
 }
 
 ErrCode ExtendResourceManagerProxy::CopyFiles(
-    const std::string &sourceFile, std::string &destFiles)
+    const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
 {
+    APP_LOGD("begin to copy files.");
+    if (sourceFiles.empty()) {
+        APP_LOGE("sourceFiles empty.");
+        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    }
+    std::vector<std::string> filePaths;
+    if (!BundleFileUtil::CheckFilePath(sourceFiles, filePaths)) {
+        APP_LOGE("CopyFiles CheckFilePath failed");
+        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    }
+    for (const std::string &sourcePath : filePaths) {
+        size_t pos = sourcePath.find_last_of(SEPARATOR);
+        if (pos == std::string::npos) {
+            APP_LOGE("invalid sourcePath.");
+            return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
+        }
+        std::string fileName = sourcePath.substr(pos + 1);
+        APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
+        int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
+        if (sourceFd < 0) {
+            APP_LOGE("open file failed, errno:%{public}d", errno);
+            return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
+        }
+        int32_t destFd = -1;
+        std::string destPath;
+        auto ret = CreateFd(fileName, destFd, destPath);
+        if ((ret != ERR_OK) || (destFd < 0) || (destPath.empty())) {
+            APP_LOGE("create fd failed.");
+            close(sourceFd);
+            return ret;
+        }
+        char buffer[DEFAULT_BUFFER_SIZE] = {0};
+        int offset = -1;
+        while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
+            if (write(destFd, buffer, offset) < 0) {
+                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
+                close(sourceFd);
+                close(destFd);
+                return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
+            }
+        }
+        destFiles.emplace_back(destPath);
+        close(sourceFd);
+        fsync(destFd);
+        close(destFd);
+    }
+    APP_LOGD("copy files success.");
     return ERR_OK;
 }
 

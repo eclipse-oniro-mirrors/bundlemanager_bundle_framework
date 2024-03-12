@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_EXTEND_RESOURCE_MANAGER_HOST_IMPL_H
 
 #include "extend_resource_manager_host.h"
+#include "inner_bundle_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,6 +37,37 @@ public:
     ErrCode DisableDynamicIcon(const std::string &bundleName) override;
     ErrCode GetDynamicIcon(const std::string &bundleName, std::string &moudleName) override;
     ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
+
+private:
+    ErrCode BeforeAddExtResource(
+        const std::string &bundleName, const std::vector<std::string> &filePaths);
+    bool CheckFileParam(const std::string &filePath);
+    ErrCode ProcessAddExtResource(
+        const std::string &bundleName, const std::vector<std::string> &filePaths);
+    ErrCode CopyToTempDir(const std::string &bundleName,
+        const std::vector<std::string> &oldFilePaths, std::vector<std::string> &newFilePaths);
+    bool GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+    void RollBack(const std::vector<std::string> &filePaths);
+    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode ParseExtendResourceFile(
+        const std::string &bundleName,
+        const std::vector<std::string> &filePaths,
+        std::vector<ExtendResourceInfo> &extendResourceInfos);
+    bool UpateExtResourcesDb(const std::string &bundleName,
+        const std::vector<ExtendResourceInfo> &extendResourceInfos);
+    bool RemoveExtResourcesDb(
+        const std::string &bundleName, const std::vector<std::string> &moduleNames);
+    void InnerSaveExtendResourceInfo(
+        const std::string &bundleName, const std::vector<std::string> &filePaths,
+        const std::vector<ExtendResourceInfo> &extendResourceInfos);
+    ErrCode CheckModuleExist(
+        const std::string &bundleName, const std::vector<std::string> &moduleNames,
+        std::vector<ExtendResourceInfo> &collectorExtResourceInfos);
+    void InnerRemoveExtendResources(
+        const std::string &bundleName, const std::vector<std::string> &moduleNames,
+        std::vector<ExtendResourceInfo> &extResourceInfos);
+
+    std::atomic<uint32_t> id_ = 0;
 };
 } // AppExecFwk
 } // OHOS

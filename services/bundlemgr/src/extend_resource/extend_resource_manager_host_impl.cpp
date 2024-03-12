@@ -20,13 +20,70 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_data_mgr.h"
+#include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SEPARATOR = "/";
+
+bool IsFileNameValid(const std::string &fileName)
+{
+    if (fileName.find("..") != std::string::npos
+        || fileName.find("/") != std::string::npos
+        || fileName.find("\\") != std::string::npos
+        || fileName.find("%") != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+bool IsValidPath(const std::string &path)
+{
+    if (path.find("..") != std::string::npos) {
+        return false;
+    }
+    return true;
+}
+
+std::string GetFileName(const std::string &sourcePath)
+{
+    size_t pos = sourcePath.find_last_of(SEPARATOR);
+    if (pos == std::string::npos) {
+        APP_LOGE("invalid sourcePath %{public}s.", sourcePath.c_str());
+        return sourcePath;
+    }
+    return sourcePath.substr(pos + 1);
+}
+
+std::string BuildResourcePath(const std::string &bundleName)
+{
+    std::string filePath;
+    filePath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(bundleName).append(Constants::PATH_SEPARATOR)
+        .append(Constants::EXT_RESOURCE_FILE_PATH).append(Constants::PATH_SEPARATOR);
+    return filePath;
+}
+
+void ConvertToExtendResourceInfo(
+    const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo,
+    ExtendResourceInfo &extendResourceInfo)
+{
+    extendResourceInfo.moduleName = innerBundleInfo.GetCurModuleName();
+    extendResourceInfo.iconId = innerBundleInfo.GetIconId();
+    std::string path = BuildResourcePath(bundleName);
+    path.append(extendResourceInfo.moduleName).append(Constants::EXT_RESOURCE_FILE_SUFFIX);
+    extendResourceInfo.filePath = path;
+}
+}
 ExtendResourceManagerHostImpl::ExtendResourceManagerHostImpl()
 {
     APP_LOGI("create ExtendResourceManagerHostImpl.");
@@ -40,16 +97,209 @@ ExtendResourceManagerHostImpl::~ExtendResourceManagerHostImpl()
 ErrCode ExtendResourceManagerHostImpl::AddExtResource(
     const std::string &bundleName, const std::vector<std::string> &filePaths)
 {
+    ErrCode ret = BeforeAddExtResource(bundleName, filePaths);
+    CHECK_RESULT(ret, "BeforeAddExtResource failed %{public}d");
+    ret = ProcessAddExtResource(bundleName, filePaths);
+    CHECK_RESULT(ret, "InnerEnableDynamicIcon failed %{public}d");
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHostImpl::BeforeAddExtResource(
+    const std::string &bundleName, const std::vector<std::string> &filePaths)
+{
     if (bundleName.empty() || filePaths.empty()) {
         APP_LOGE("fail to AddExtResource due to param is empty.");
         return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
     }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+
+    for (const auto &filePath: filePaths) {
+        if (!CheckFileParam(filePath)) {
+            APP_LOGE("CheckFile failed.");
+            return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        }
+    }
+
     return ERR_OK;
+}
+
+bool ExtendResourceManagerHostImpl::CheckFileParam(const std::string &filePath)
+{
+    if (!IsValidPath(filePath)) {
+        APP_LOGE("CheckFile filePath(%{public}s) failed due to invalid path", filePath.c_str());
+        return false;
+    }
+    if (!BundleUtil::CheckFileType(filePath, Constants::EXT_RESOURCE_FILE_SUFFIX)) {
+        APP_LOGE("CheckFile filePath(%{public}s) failed due to suffix error.", filePath.c_str());
+        return false;
+    }
+    if (!BundleUtil::StartWith(filePath, Constants::HAP_COPY_PATH)) {
+        APP_LOGE("CheckFile filePath(%{public}s) failed due to prefix error.", filePath.c_str());
+        return false;
+    }
+    return true;
+}
+
+ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
+    const std::string &bundleName, const std::vector<std::string> &filePaths)
+{
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::vector<std::string> newFilePaths;
+    ErrCode ret = CopyToTempDir(bundleName, filePaths, newFilePaths);
+    CHECK_RESULT(ret, "CopyToTempDir failed %{public}d");
+
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    if (ParseExtendResourceFile(bundleName, newFilePaths, extendResourceInfos) != ERR_OK) {
+        APP_LOGE("parse %{public}s extendResource failed", bundleName.c_str());
+        RollBack(newFilePaths);
+        return ERR_EXT_RESOURCE_MANAGER_PARSE_FILE_FAILED;
+    }
+
+    InnerSaveExtendResourceInfo(bundleName, newFilePaths, extendResourceInfos);
+    return ERR_OK;
+}
+
+void ExtendResourceManagerHostImpl::InnerSaveExtendResourceInfo(
+    const std::string &bundleName,
+    const std::vector<std::string> &filePaths,
+    const std::vector<ExtendResourceInfo> &extendResourceInfos)
+{
+    ErrCode ret = ERR_OK;
+    std::vector<ExtendResourceInfo> newExtendResourceInfos;
+    for (uint32_t i = 0; i < filePaths.size(); ++i) {
+        ret = InstalldClient::GetInstance()->MoveFile(
+            filePaths[i], extendResourceInfos[i].filePath);
+        if (ret != ERR_OK) {
+            APP_LOGW("MoveFile %{public}s file failed %{public}d",
+                extendResourceInfos[i].moduleName.c_str(), ret);
+            continue;
+        }
+
+        newExtendResourceInfos.emplace_back(extendResourceInfos[i]);
+    }
+    UpateExtResourcesDb(bundleName, newExtendResourceInfos);
+}
+
+ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
+    const std::string &bundleName,
+    const std::vector<std::string> &filePaths,
+    std::vector<ExtendResourceInfo> &extendResourceInfos)
+{
+    BundleInstallChecker bundleChecker;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    ErrCode ret = bundleChecker.CheckMultipleHapsSignInfo(filePaths, hapVerifyRes);
+    CHECK_RESULT(ret, "Check sign failed %{public}d");
+
+    for (uint32_t i = 0; i < filePaths.size(); ++i) {
+        BundleParser bundleParser;
+        InnerBundleInfo innerBundleInfo;
+        ErrCode result = bundleParser.Parse(filePaths[i], innerBundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("parse bundle info %{public}s failed, error: %{public}d",
+                filePaths[i].c_str(), result);
+            return result;
+        }
+
+        ExtendResourceInfo extendResourceInfo;
+        ConvertToExtendResourceInfo(bundleName, innerBundleInfo, extendResourceInfo);
+        extendResourceInfos.emplace_back(extendResourceInfo);
+    }
+
+    return ERR_OK;
+}
+
+ErrCode ExtendResourceManagerHostImpl::MkdirIfNotExist(const std::string &dir)
+{
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
+    if (result != ERR_OK) {
+        APP_LOGE("Check if dir exist failed %{public}d", result);
+        return result;
+    }
+    if (!isDirExist) {
+        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        if (result != ERR_OK) {
+            APP_LOGE("Create dir failed %{public}d", result);
+            return result;
+        }
+    }
+    return result;
+}
+
+ErrCode ExtendResourceManagerHostImpl::CopyToTempDir(const std::string &bundleName,
+    const std::vector<std::string> &oldFilePaths, std::vector<std::string> &newFilePaths)
+{
+    for (const auto &oldFile : oldFilePaths) {
+        std::string tempFile = BuildResourcePath(bundleName);
+        ErrCode ret = MkdirIfNotExist(tempFile);
+        if (ret != ERR_OK) {
+            APP_LOGE("mkdir fileDir %{public}s failed %{public}d", tempFile.c_str(), ret);
+            RollBack(newFilePaths);
+            return ret;
+        }
+        tempFile.append(GetFileName(oldFile));
+        ret = InstalldClient::GetInstance()->MoveFile(oldFile, tempFile);
+        if (ret != ERR_OK) {
+            APP_LOGE("MoveFile file %{public}s failed %{public}d", tempFile.c_str(), ret);
+            RollBack(newFilePaths);
+            return ret;
+        }
+        newFilePaths.emplace_back(tempFile);
+    }
+    return ERR_OK;
+}
+
+bool ExtendResourceManagerHostImpl::GetInnerBundleInfo(
+    const std::string &bundleName, InnerBundleInfo &info)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    return dataMgr->FetchInnerBundleInfo(bundleName, info);
+}
+
+bool ExtendResourceManagerHostImpl::UpateExtResourcesDb(const std::string &bundleName,
+    const std::vector<ExtendResourceInfo> &extendResourceInfos)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    return dataMgr->UpateExtResources(bundleName, extendResourceInfos);
+}
+
+bool ExtendResourceManagerHostImpl::RemoveExtResourcesDb(const std::string &bundleName,
+    const std::vector<std::string> &moduleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    return dataMgr->RemoveExtResources(bundleName, moduleNames);
+}
+
+void ExtendResourceManagerHostImpl::RollBack(const std::vector<std::string> &filePaths)
+{
+    for (const auto &filePath : filePaths) {
+        ErrCode result = InstalldClient::GetInstance()->RemoveDir(filePath);
+        if (result != ERR_OK) {
+            APP_LOGE("Remove failed %{public}s.", filePath.c_str());
+        }
+    }
 }
 
 ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
@@ -59,10 +309,52 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
         APP_LOGE("fail to RemoveExtResource due to param is empty.");
         return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
     }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    ErrCode ret = CheckModuleExist(bundleName, moduleNames, extendResourceInfos);
+    CHECK_RESULT(ret, "Check mpdule exist failed %{public}d");
+    InnerRemoveExtendResources(bundleName, moduleNames, extendResourceInfos);
+    return ERR_OK;
+}
+
+void ExtendResourceManagerHostImpl::InnerRemoveExtendResources(
+    const std::string &bundleName, const std::vector<std::string> &moduleNames,
+    std::vector<ExtendResourceInfo> &extResourceInfos)
+{
+    for (const auto &extResourceInfo : extResourceInfos) {
+        ErrCode result = InstalldClient::GetInstance()->RemoveDir(extResourceInfo.filePath);
+        if (result != ERR_OK) {
+            APP_LOGE("Remove failed %{public}s.", extResourceInfo.filePath.c_str());
+        }
+    }
+    RemoveExtResourcesDb(bundleName, moduleNames);
+}
+
+ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
+    const std::string &bundleName, const std::vector<std::string> &moduleNames,
+    std::vector<ExtendResourceInfo> &collectorExtResourceInfos)
+{
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::map<std::string, ExtendResourceInfo> extendResourceInfos = info.GetExtendResourceInfos();
+    for (const auto &moduleName : moduleNames) {
+        auto iter = extendResourceInfos.find(moduleName);
+        if (iter == extendResourceInfos.end()) {
+            APP_LOGE("Module not exist %{public}s.", moduleName.c_str());
+            return ERR_EXT_RESOURCE_MANAGER_REMOVE_MODULE_NOT_EXIST;
+        }
+
+        collectorExtResourceInfos.emplace_back(iter->second);
     }
     return ERR_OK;
 }
@@ -70,11 +362,33 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
 ErrCode ExtendResourceManagerHostImpl::GetExtResource(
     const std::string &bundleName, std::vector<std::string> &moduleNames)
 {
+    if (bundleName.empty() || moduleNames.empty()) {
+        APP_LOGE("fail to GetExtResource due to param is empty.");
+        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::map<std::string, ExtendResourceInfo> extendResourceInfos = info.GetExtendResourceInfos();
+    if (extendResourceInfos.empty()) {
+        APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_GET_FAILED;
+    }
+
+    for (const auto &extendResourceInfo : extendResourceInfos) {
+        moduleNames.emplace_back(extendResourceInfo.first);
+    }
+
     return ERR_OK;
 }
 
@@ -133,6 +447,26 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    if (!BundleUtil::CheckFileType(fileName, Constants::EXT_RESOURCE_FILE_SUFFIX)) {
+        APP_LOGE("not hsp file.");
+        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    }
+    if (!IsFileNameValid(fileName)) {
+        APP_LOGE("invalid fileName");
+        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    }
+    std::string tmpDir = BundleUtil::CreateInstallTempDir(
+        ++id_, DirType::EXT_RESOURCE_FILE_DIR);
+    if (tmpDir.empty()) {
+        APP_LOGE("create tmp dir failed.");
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
+    }
+    path = tmpDir + fileName;
+    if ((fd = BundleUtil::CreateFileDescriptor(path, 0)) < 0) {
+        APP_LOGE("create file descriptor failed.");
+        BundleUtil::DeleteDir(tmpDir);
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     return ERR_OK;
 }

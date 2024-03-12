@@ -309,6 +309,10 @@ constexpr const char* ABC_FILE_PATH = "abc_files";
 // system param
 extern const std::string ALLOW_ENTERPRISE_BUNDLE;
 
+//extResource
+constexpr const char* EXT_RESOURCE_FILE_SUFFIX = ".hsp";
+constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
+
 // sa id
 constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 // hmdfs and sharefs config
