@@ -917,6 +917,8 @@ public:
     void UpdateOdid(const std::string &developerId, const std::string &odid);
     void UpdateOdidByBundleInfo(const InnerBundleInfo &info);
     void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
+    bool IsAsanEnabled() const;
+    bool IsGwpAsanEnabled() const;
 
 private:
     bool IsExistLauncherAbility() const;

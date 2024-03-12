@@ -319,16 +319,6 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        if (newInfo.GetAsanEnabled()) {
-            oldInfo.SetAsanEnabled(true);
-        }
-        if (newInfo.GetGwpAsanEnabled()) {
-            oldInfo.SetGwpAsanEnabled(true);
-        }
-        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
-            oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
-            oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
-        }
         updateTsanEnabled(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
@@ -353,6 +343,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
         oldInfo.UpdateOdidByBundleInfo(newInfo);
+        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
+        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -414,6 +406,8 @@ bool BundleDataMgr::RemoveModuleInfo(
         if (!oldInfo.isExistedOverlayModule()) {
             oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
         }
+        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
+        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -524,16 +518,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
         oldInfo.UpdateModuleInfo(newInfo);
-        if (newInfo.GetAsanEnabled()) {
-            oldInfo.SetAsanEnabled(true);
-        }
-        if (newInfo.GetGwpAsanEnabled()) {
-            oldInfo.SetGwpAsanEnabled(true);
-        }
-        if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
-            oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
-            oldInfo.SetGwpAsanEnabled(newInfo.GetGwpAsanEnabled());
-        }
+        oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
+        oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.

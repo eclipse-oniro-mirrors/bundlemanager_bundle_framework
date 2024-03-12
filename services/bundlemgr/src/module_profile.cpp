@@ -2232,6 +2232,8 @@ bool ToInnerBundleInfo(
         APP_LOGE("To innerModuleInfo failed");
         return false;
     }
+    innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
+    innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

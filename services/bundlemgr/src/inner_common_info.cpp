@@ -97,6 +97,8 @@ const std::string STR_PHONE = "phone";
 const std::string STR_DEFAULT = "default";
 const std::string MODULE_QUERY_SCHEMES = "querySchemes";
 const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
+const std::string MODULE_ASAN_ENABLED = "asanEnabled";
+const std::string MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 }  // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -577,6 +579,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_QUERY_SCHEMES, info.querySchemes},
         {MODULE_ROUTER_MAP, info.routerMap},
         {MODULE_APP_ENVIRONMENTS, info.appEnvironments},
+        {MODULE_ASAN_ENABLED, info.asanEnabled},
+        {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
     };
 }
 
@@ -1123,6 +1127,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ASAN_ENABLED,
+        info.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_GWP_ASAN_ENABLED,
+        info.gwpAsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
