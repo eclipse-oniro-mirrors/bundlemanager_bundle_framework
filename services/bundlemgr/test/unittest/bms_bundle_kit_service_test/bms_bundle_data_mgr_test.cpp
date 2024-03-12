@@ -4022,4 +4022,51 @@ HWTEST_F(BmsBundleDataMgrTest, GetQuerySchemes_0100, Function | SmallTest | Leve
     ret = info.GetQuerySchemes();
     EXPECT_FALSE(ret.empty());
 }
+
+/**
+ * @tc.number: QueryLauncherAbility_0001
+ * @tc.name: test BmsExtensionClient::QueryLauncherAbility
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryLauncherAbility_0001, Function | MediumTest | Level1)
+{
+    Want want;
+    int32_t userId = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ClearDataMgr();
+    ErrCode ret = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+    ResetDataMgr();
+
+    userId = -1;
+    ret = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfos_0001
+ * @tc.name: test BmsExtensionClient::ImplicitQueryAbilityInfos
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0001, Function | MediumTest | Level1)
+{
+    Want want;
+    int32_t userId = 0;
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ClearDataMgr();
+    ErrCode ret = bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, true);
+    EXPECT_NE(ret, ERR_OK);
+    ResetDataMgr();
+
+    userId = -1;
+    ret = bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, true);
+    EXPECT_NE(ret, ERR_OK);
+}
 }

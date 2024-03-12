@@ -1934,4 +1934,28 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7100, Function | SmallTest | 
         MODULE_NAME_FEATURE6, EMPTY_STRING, BUNDLE_DATA_DIR, false);
     EXPECT_TRUE(res4.empty());
 }
+
+/**
+ * @tc.number: InstallDriverTest_7200
+ * @tc.name: test the CreateDriverSoDestinedDir of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test CreateDriverSoDestinedDir
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_7200, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    InnerBundleInfo info;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
+    Metadata metadata;
+    metadata.name = "cupsFilter";
+    metadata.resource = "./";
+    metadata.value = "./";
+    extensionAbilityInfo.metadata.push_back(metadata);
+    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
+
+    info.baseExtensionInfos_.insert(std::make_pair("1", extensionAbilityInfo));
+    auto res = driverInstaller->CopyDriverSoFile(info, RESOURCE_ROOT_PATH, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+}
 } // OHOS
