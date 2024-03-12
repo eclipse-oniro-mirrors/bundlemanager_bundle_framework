@@ -1302,6 +1302,10 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     if (want.GetAction() != SHARE_ACTION) {
         return false;
     }
+    std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
+    if (shareActionSkills.empty()) {
+        return false;
+    }
     auto wantParams = want.GetParams();
     auto pickerSummary = wantParams.GetWantParams(WANT_PARAM_PICKER_SUMMARY);
     int32_t totalCount = pickerSummary.GetIntParam(SUMMARY_TOTAL_COUNT, DEFAULT_SUMMARY_COUNT);
@@ -1317,14 +1321,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
             return false;
         }
         bool match = false;
-        for (const auto &skill : skills) {
-            auto &actions = skill.actions;
-            auto matchAction = std::find_if(std::begin(actions), std::end(actions), [](const auto &action) {
-                return SHARE_ACTION == action;
-            });
-            if (matchAction == actions.end()) {
-                continue;
-            }
+        for (const auto &skill : shareActionSkills) {
             if (skill.MatchUtd(utd, count)) {
                 match = true;
                 break;
@@ -1336,6 +1333,22 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
         }
     }
     return true;
+}
+
+std::vector<Skill> BundleDataMgr::FindSkillsContainShareAction(const std::vector<Skill> &skills) const
+{
+    std::vector<Skill> shareActionSkills;
+    for (const auto &skill : skills) {
+        auto &actions = skill.actions;
+        auto matchAction = std::find_if(std::begin(actions), std::end(actions), [](const auto &action) {
+            return SHARE_ACTION == action;
+        });
+        if (matchAction == actions.end()) {
+            continue;
+        }
+        shareActionSkills.emplace_back(skill);
+    }
+    return shareActionSkills;
 }
 
 void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const
