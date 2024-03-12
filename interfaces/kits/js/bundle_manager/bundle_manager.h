@@ -261,6 +261,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
 napi_value VerifyAbc(napi_env env, napi_callback_info info);
 napi_value DeleteAbc(napi_env env, napi_callback_info info);
+napi_value GetExtResource(napi_env env, napi_callback_info info);
 napi_value EnableDynamicIcon(napi_env env, napi_callback_info info);
 napi_value DisableDynamicIcon(napi_env env, napi_callback_info info);
 napi_value GetDynamicIcon(napi_env env, napi_callback_info info);

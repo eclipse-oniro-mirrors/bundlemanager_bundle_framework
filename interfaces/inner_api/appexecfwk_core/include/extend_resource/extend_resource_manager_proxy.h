@@ -40,7 +40,8 @@ public:
         const std::string &bundleName, std::string &moduleName) override;
 
 private:
-    virtual ErrCode CopyFiles(const std::string &sourceFile, std::string &destFile) override;
+    virtual ErrCode CopyFiles(
+        const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles) override;
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     bool SendRequest(ExtendResourceManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 

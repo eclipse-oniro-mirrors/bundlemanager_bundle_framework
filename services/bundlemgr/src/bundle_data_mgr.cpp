@@ -1787,6 +1787,58 @@ bool BundleDataMgr::GetApplicationInfos(
     return find;
 }
 
+bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
+    const std::vector<ExtendResourceInfo> &extendResourceInfos)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    auto info = infoItem->second;
+    info.AddExtendResourceInfos(extendResourceInfos);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    bundleInfos_.at(bundleName) = info;
+    return true;
+}
+
+bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
+    const std::vector<std::string> &moduleNames)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    auto info = infoItem->second;
+    info.RemoveExtendResourceInfos(moduleNames);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    bundleInfos_.at(bundleName) = info;
+    return true;
+}
+
 ErrCode BundleDataMgr::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) const
 {

@@ -31,6 +31,7 @@ enum class DirType {
     SIG_FILE_DIR = 2,
     ABC_FILE_DIR = 3,
     PGO_FILE_DIR = 4,
+    EXT_RESOURCE_FILE_DIR = 5,
     UNKNOWN
 };
 
