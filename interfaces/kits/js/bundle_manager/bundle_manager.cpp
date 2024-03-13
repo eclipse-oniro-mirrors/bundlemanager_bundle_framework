@@ -1745,6 +1745,11 @@ napi_value VerifyAbc(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value GetExtResource(napi_env env, napi_callback_info info)
+{
+    return nullptr;
+}
+
 napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
 {
     return nullptr;

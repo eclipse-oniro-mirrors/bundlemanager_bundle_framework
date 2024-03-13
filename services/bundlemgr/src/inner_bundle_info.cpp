@@ -59,6 +59,7 @@ const std::string INNER_BUNDLE_USER_INFOS = "innerBundleUserInfos";
 const std::string BUNDLE_IS_NEW_VERSION = "isNewVersion";
 const std::string BUNDLE_BASE_EXTENSION_INFOS = "baseExtensionInfos";
 const std::string BUNDLE_EXTENSION_SKILL_INFOS = "extensionSkillInfos";
+const std::string BUNDLE_EXTEND_RESOURCES = "extendResources";
 const std::string BUNDLE_PACK_INFO = "bundlePackInfo";
 const std::string ALLOWED_ACLS = "allowedAcls";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
@@ -73,6 +74,9 @@ const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const std::string DEVELOPER_ID = "developerId";
 const std::string ODID = "odid";
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
+const std::string EXT_RESOURCE_MODULE_NAME = "moduleName";
+const std::string EXT_RESOURCE_ICON_ID = "iconId";
+const std::string EXT_RESOURCE_FILE_PATH = "filePath";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -94,6 +98,48 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        EXT_RESOURCE_MODULE_NAME,
+        extendResourceInfo.moduleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        EXT_RESOURCE_ICON_ID,
+        extendResourceInfo.iconId,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        EXT_RESOURCE_FILE_PATH,
+        extendResourceInfo.filePath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ExtendResourceInfo from json error, error code : %{public}d", parseResult);
+    }
+}
+
+void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourceInfo)
+{
+    jsonObject = nlohmann::json {
+        {EXT_RESOURCE_MODULE_NAME, extendResourceInfo.moduleName},
+        {EXT_RESOURCE_ICON_ID, extendResourceInfo.iconId},
+        {EXT_RESOURCE_FILE_PATH, extendResourceInfo.filePath}
+    };
+}
 
 void InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
 {
@@ -202,6 +248,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
+    this->extendResourceInfos_ = info.extendResourceInfos_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
     if (info.baseApplicationInfo_ != nullptr) {
         *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
@@ -247,6 +294,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_IS_NEW_VERSION] = isNewVersion_;
     jsonObject[BUNDLE_BASE_EXTENSION_INFOS] = baseExtensionInfos_;
     jsonObject[BUNDLE_EXTENSION_SKILL_INFOS] = extensionSkillInfos_;
+    jsonObject[BUNDLE_EXTEND_RESOURCES] = extendResourceInfos_;
     jsonObject[BUNDLE_PACK_INFO] = *bundlePackInfo_;
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
@@ -412,6 +460,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         jsonObjectEnd,
         BUNDLE_EXTENSION_SKILL_INFOS,
         extensionSkillInfos_,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, ExtendResourceInfo>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_EXTEND_RESOURCES,
+        extendResourceInfos_,
         JsonType::OBJECT,
         false,
         parseResult,

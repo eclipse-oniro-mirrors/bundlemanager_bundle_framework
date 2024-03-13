@@ -385,6 +385,16 @@ sptr<IVerifyManager> CommonFunc::GetVerifyManager()
     return iBundleMgr->GetVerifyManager();
 }
 
+sptr<IExtendResourceManager> CommonFunc::GetExtendResourceManager()
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    return iBundleMgr->GetExtendResourceManager();
+}
+
 std::string CommonFunc::GetStringFromNAPI(napi_env env, napi_value value)
 {
     napi_valuetype valueType = napi_undefined;
