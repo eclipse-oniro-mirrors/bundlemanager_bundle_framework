@@ -66,6 +66,13 @@ private:
     void InnerRemoveExtendResources(
         const std::string &bundleName, const std::vector<std::string> &moduleNames,
         std::vector<ExtendResourceInfo> &extResourceInfos);
+    ErrCode GetExtendResourceInfo(const std::string &bundleName,
+        const std::string &moduleName, ExtendResourceInfo &extendResourceInfo);
+    bool ParseBundleResource(
+        const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo);
+    void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon);
+    void SaveCurDynamicIcon(const std::string &bundleName, const std::string &moduleName);
+    bool ResetBunldleResourceIcon(const std::string &bundleName);
 
     std::atomic<uint32_t> id_ = 0;
 };

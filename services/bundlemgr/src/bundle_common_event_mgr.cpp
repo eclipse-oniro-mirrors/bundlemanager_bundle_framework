@@ -32,6 +32,7 @@ constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
+constexpr const char* IS_ENABLE_DYNAMIC_ICON = "isEnableDynamicIcon";
 const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 }
 
@@ -202,6 +203,22 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+}
+
+void BundleCommonEventMgr::NotifyDynamicIconEvent(
+    const std::string &bundleName, bool isEnableDynamicIcon)
+{
+    APP_LOGI("NotifyDynamicIconEvent bundleName: %{public}s, %{public}d",
+        bundleName.c_str(), isEnableDynamicIcon);
+    OHOS::AAFwk::Want want;
+    want.SetAction(DYNAMIC_ICON_CHANGED);
+    ElementName element;
+    element.SetBundleName(bundleName);
+    want.SetElement(element);
+    want.SetParam(IS_ENABLE_DYNAMIC_ICON, isEnableDynamicIcon);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 

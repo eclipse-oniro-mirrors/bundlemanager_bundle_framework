@@ -111,6 +111,12 @@ constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
     "Failed to install the HAP because debug bundle cannot be installed under non-developer mode.";
 constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify abc.";
 constexpr const char* ERR_MSG_ERROR_DELETE_ABC = "Failed to delete abc.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_ADD_ERROR = "Failed to add extend resource.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_REMOVE_ERROR = "Failed to remove extend resource.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_GET_ERROR = "Failed to get extend resource.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR = "Failed to enable dynamic icon.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR = "Failed to disable dynamic icon.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR = "Failed to get dynamic icon.";
 constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "Not app gallery call.";
 constexpr const char* ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR =
     "Failed to install the HAP because the HAP requests wrong permissions.";
@@ -175,6 +181,12 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_VERIFY_ABC, ERR_MSG_ERROR_VERIFY_ABC},
     { ERROR_NOT_APP_GALLERY_CALL, ERROR_MSG_NOT_APP_GALLERY_CALL},
     { ERROR_DELETE_ABC, ERR_MSG_ERROR_DELETE_ABC},
+    { ERROR_ADD_EXTEND_RESOURCE, ERR_MSG_ERROR_EXT_RESOURCE_ADD_ERROR},
+    { ERROR_REMOVE_EXTEND_RESOURCE, ERR_MSG_ERROR_EXT_RESOURCE_REMOVE_ERROR},
+    { ERROR_GET_EXTEND_RESOURCE, ERR_MSG_ERROR_EXT_RESOURCE_GET_ERROR},
+    { ERROR_ENABLE_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR},
+    { ERROR_DISABLE_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR},
+    { ERROR_GET_DYNAMIC_ICON, ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR},
     { ERROR_INSTALL_PERMISSION_CHECK_ERROR, ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR},
     { ERROR_INVALID_LINK, ERR_MSG_INVALID_LINK },
     { ERROR_SCHEME_NOT_IN_QUERYSCHEMES, ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES },

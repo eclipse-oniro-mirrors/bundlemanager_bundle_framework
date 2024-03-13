@@ -23,6 +23,7 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
+#include "bundle_resource_manager.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -228,7 +229,78 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
     return true;
 }
 
+void BundleResourceProcess::ChangeDynamicIcon(
+    std::vector<ResourceInfo> &resourceInfos, const std::string &icon)
+{
+    for (auto &resourceInfo : resourceInfos) {
+        resourceInfo.icon_ = icon;
+        resourceInfo.iconNeedParse_ = false;
+    }
+}
+
+bool BundleResourceProcess::GetDynamicIcon(
+    const InnerBundleInfo &innerBundleInfo, std::string &icon)
+{
+    std::string curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule();
+    if (curDynamicIconModule.empty()) {
+        return false;
+    }
+
+    std::map<std::string, ExtendResourceInfo> extResourceInfos =
+        innerBundleInfo.GetExtendResourceInfos();
+    auto iter = extResourceInfos.find(curDynamicIconModule);
+    if (iter == extResourceInfos.end()) {
+        APP_LOGE("Module not exist %{public}s when getDynamicIcon .",
+            curDynamicIconModule.c_str());
+        return false;
+    }
+
+    auto &extendResourceInfo = iter->second;
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+
+    return manager->ParseIconResourceByPath(
+        extendResourceInfo.filePath, extendResourceInfo.iconId, icon);
+}
+
 bool BundleResourceProcess::InnerGetResourceInfo(
+    const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId,
+    std::vector<ResourceInfo> &resourceInfos)
+{
+    std::string dynamicIcon;
+    bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicIcon);
+    if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
+        if (!hasDynamicIcon) {
+            APP_LOGW("bundleName: %{public}s get bundle resource failed",
+                innerBundleInfo.GetBundleName().c_str());
+            return false;
+        }
+
+        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
+            innerBundleInfo.GetBundleName().c_str());
+        ResourceInfo defaultResourceInfo;
+        defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
+        defaultResourceInfo.labelNeedParse_ = false;
+        defaultResourceInfo.label_ = innerBundleInfo.GetBundleName();
+        defaultResourceInfo.iconNeedParse_ = false;
+        defaultResourceInfo.icon_ = dynamicIcon;
+        resourceInfos.emplace_back(defaultResourceInfo);
+    }
+
+    if (hasDynamicIcon) {
+        APP_LOGI("bundle %{public}s has dynamicIcon",
+            innerBundleInfo.GetBundleName().c_str());
+        ChangeDynamicIcon(resourceInfos, dynamicIcon);
+    }
+
+    return true;
+}
+
+bool BundleResourceProcess::OnGetResourceInfo(
     const InnerBundleInfo &innerBundleInfo,
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)

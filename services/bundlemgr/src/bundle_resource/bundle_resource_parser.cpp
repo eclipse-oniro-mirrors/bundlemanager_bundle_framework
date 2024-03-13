@@ -46,6 +46,12 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
     std::map<std::string, std::shared_ptr<Global::Resource::ResourceManager>> resourceManagerMap;
     size_t size = resourceInfos.size();
     for (size_t index = 0; index < size; ++index) {
+        if (!resourceInfos[index].iconNeedParse_ && !resourceInfos[index].labelNeedParse_) {
+            APP_LOGI("%{public}s does not need parse",
+                resourceInfos[index].bundleName_.c_str());
+            continue;
+        }
+
         auto resourceManager = resourceManagerMap[resourceInfos[index].moduleName_];
         if (resourceManager == nullptr) {
             std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
@@ -63,6 +69,7 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
                 APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             }
         }
+
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
             APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             if (index > 0) {
@@ -163,12 +170,14 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
         return false;
     }
     bool ans = true;
-    if (!ParseLabelResourceByResourceManager(resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
+    if (resourceInfo.labelNeedParse_ && !ParseLabelResourceByResourceManager(
+        resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
         APP_LOGE("ParseLabelResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
-    if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo.iconId_, resourceInfo.icon_)) {
+    if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(
+        resourceManager, resourceInfo.iconId_, resourceInfo.icon_)) {
         APP_LOGE("ParseIconResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }

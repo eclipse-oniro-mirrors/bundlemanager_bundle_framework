@@ -60,6 +60,7 @@ const std::string BUNDLE_IS_NEW_VERSION = "isNewVersion";
 const std::string BUNDLE_BASE_EXTENSION_INFOS = "baseExtensionInfos";
 const std::string BUNDLE_EXTENSION_SKILL_INFOS = "extensionSkillInfos";
 const std::string BUNDLE_EXTEND_RESOURCES = "extendResources";
+const std::string CUR_DYNAMIC_ICON_MODULE = "curDynamicIconModule";
 const std::string BUNDLE_PACK_INFO = "bundlePackInfo";
 const std::string ALLOWED_ACLS = "allowedAcls";
 const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
@@ -111,11 +112,11 @@ void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResou
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         EXT_RESOURCE_ICON_ID,
         extendResourceInfo.iconId,
-        JsonType::STRING,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -249,6 +250,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
     this->extendResourceInfos_ = info.extendResourceInfos_;
+    this->curDynamicIconModule_ = info.curDynamicIconModule_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
     if (info.baseApplicationInfo_ != nullptr) {
         *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
@@ -295,6 +297,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_BASE_EXTENSION_INFOS] = baseExtensionInfos_;
     jsonObject[BUNDLE_EXTENSION_SKILL_INFOS] = extensionSkillInfos_;
     jsonObject[BUNDLE_EXTEND_RESOURCES] = extendResourceInfos_;
+    jsonObject[CUR_DYNAMIC_ICON_MODULE] = curDynamicIconModule_;
     jsonObject[BUNDLE_PACK_INFO] = *bundlePackInfo_;
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
@@ -469,6 +472,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         BUNDLE_EXTEND_RESOURCES,
         extendResourceInfos_,
         JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        CUR_DYNAMIC_ICON_MODULE,
+        curDynamicIconModule_,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
