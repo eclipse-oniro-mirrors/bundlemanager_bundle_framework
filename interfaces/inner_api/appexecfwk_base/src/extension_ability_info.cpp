@@ -82,6 +82,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "remoteNotification", ExtensionAbilityType::REMOTE_NOTIFICATION },
     { "remoteLocation", ExtensionAbilityType::REMOTE_LOCATION },
     { "voip", ExtensionAbilityType::VOIP },
+    { "accountLogout", ExtensionAbilityType::ACCOUNTLOGOUT },
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
     { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
     { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
