@@ -58,6 +58,7 @@ constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
+constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -88,6 +89,13 @@ const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
+constexpr int32_t ENUM_ONE = 1;
+constexpr int32_t ENUM_TWO = 2;
+constexpr int32_t ENUM_THREE = 3;
+constexpr int32_t ENUM_FOUR = 4;
+constexpr int32_t ENUM_FIVE = 5;
+constexpr int32_t ENUM_SIX = 6;
+constexpr int32_t ENUM_SEVEN = 7;
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -97,13 +105,13 @@ static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
 static std::set<int32_t> g_supportedProfileList = { 1 };
 static std::map<int32_t, std::string> appDistributionTypeMap = {
-    { 1, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-    { 2, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-    { 3, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
-    { 4, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
-    { 5, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-    { 6, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-    { 7, Constants::APP_DISTRIBUTION_TYPE_NONE },
+    { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+    { ENUM_TWO, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+    { ENUM_THREE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+    { ENUM_FOUR, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+    { ENUM_FIVE, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+    { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
 };
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
@@ -2467,31 +2475,31 @@ void CreateApplicationFlagObject(napi_env env, napi_value value)
 void CreateAppDistributionTypeObject(napi_env env, napi_value value)
 {
     napi_value nAppGallery;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &nAppGallery));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_ONE, &nAppGallery));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_GALLERY", nAppGallery));
 
     napi_value nEnterprise;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 2, &nEnterprise));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_TWO, &nEnterprise));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE", nEnterprise));
 
     napi_value nEnterPriseNormal;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 3, &nEnterPriseNormal));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_THREE, &nEnterPriseNormal));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_NORMAL", nEnterPriseNormal));
 
     napi_value nEnterPriseMdm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 4, &nEnterPriseMdm));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_FOUR, &nEnterPriseMdm));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_MDM", nEnterPriseMdm));
 
     napi_value nOsIntegration;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 5, &nOsIntegration));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_FIVE, &nOsIntegration));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "OS_INTEGRATION", nOsIntegration));
 
     napi_value nCrowdTesting;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 6, &nCrowdTesting));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SIX, &nCrowdTesting));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWD_TESTING", nCrowdTesting));
 
     napi_value nNone;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 7, &nNone));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SEVEN, &nNone));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NONE", nNone));
 }
 

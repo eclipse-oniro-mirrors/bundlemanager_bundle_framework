@@ -4017,7 +4017,7 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
 }
 
 ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &developerId,
-        std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to GetAllBundleInfoByDeveloperId, developerId: %{public}s, userId :%{public}d",
@@ -4040,7 +4040,7 @@ ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &develop
 }
 
 ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
-        std::vector<std::string> &developerIdList, int32_t userId)
+    std::vector<std::string> &developerIdList, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to GetDeveloperIds of %{public}s", appDistributionType.c_str());
@@ -4057,7 +4057,6 @@ ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
         APP_LOGE("fail to GetDeveloperIds due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEVELOPER_IDS, data, reply)) {
