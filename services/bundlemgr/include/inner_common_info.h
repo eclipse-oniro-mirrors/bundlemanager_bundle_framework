@@ -123,6 +123,8 @@ struct InnerModuleInfo {
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
+    bool asanEnabled = false;
+    bool gwpAsanEnabled = false;
 };
 
 struct SkillUri {

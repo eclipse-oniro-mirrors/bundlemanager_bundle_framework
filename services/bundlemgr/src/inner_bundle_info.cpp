@@ -3204,5 +3204,39 @@ void InnerBundleInfo::AddAllowedAcls(const std::vector<std::string> &allowedAcls
         }
     }
 }
+
+bool InnerBundleInfo::IsAsanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.asanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.asanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool InnerBundleInfo::IsGwpAsanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.gwpAsanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.gwpAsanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
