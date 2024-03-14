@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_MANAGER_H
 
 #include <map>
+#include <mutex>
 #include <string>
 #include <vector>
 
@@ -97,6 +98,7 @@ private:
     void SendBundleResourcesChangedEvent(int32_t userId);
 
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
+    std::mutex mutex_;
 };
 } // AppExecFwk
 } // OHOS
