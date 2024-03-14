@@ -311,6 +311,10 @@ extern const std::string ALLOW_ENTERPRISE_BUNDLE;
 extern const std::string IS_ENTERPRISE_DEVICE;
 extern const std::string DEVELOPERMODE_STATE;
 
+//extResource
+constexpr const char* EXT_RESOURCE_FILE_SUFFIX = ".hsp";
+constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
+
 // sa id
 constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 // hmdfs and sharefs config

@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 #define FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
 
+#include "base_cb_info.h"
 #include "install_param.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -67,6 +68,13 @@ struct AsyncGetBundleInstallerCallbackInfo {
     napi_ref callback = nullptr;
 };
 
+struct ExtResourceCallbackInfo : public BaseCallbackInfo {
+    explicit ExtResourceCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    std::vector<std::string> moduleNames;
+    std::vector<std::string> filePaths;
+};
+
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
@@ -74,6 +82,8 @@ napi_value Recover(napi_env env, napi_callback_info info);
 napi_value Uninstall(napi_env env, napi_callback_info info);
 napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
 napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info);
+napi_value AddExtResource(napi_env env, napi_callback_info info);
+napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H

@@ -131,6 +131,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ModuleType", nModuleType),
         DECLARE_NAPI_PROPERTY("BundleType", nBundleType),
         DECLARE_NAPI_PROPERTY("CompatiblePolicy", nCompatiblePolicy),
+        DECLARE_NAPI_FUNCTION("getExtResource", GetExtResource),
         DECLARE_NAPI_FUNCTION("enableDynamicIcon", EnableDynamicIcon),
         DECLARE_NAPI_FUNCTION("disableDynamicIcon", DisableDynamicIcon),
         DECLARE_NAPI_FUNCTION("getDynamicIcon", GetDynamicIcon),

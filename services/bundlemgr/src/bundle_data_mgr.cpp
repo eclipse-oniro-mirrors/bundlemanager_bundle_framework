@@ -1302,6 +1302,10 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     if (want.GetAction() != SHARE_ACTION) {
         return false;
     }
+    std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
+    if (shareActionSkills.empty()) {
+        return false;
+    }
     auto wantParams = want.GetParams();
     auto pickerSummary = wantParams.GetWantParams(WANT_PARAM_PICKER_SUMMARY);
     int32_t totalCount = pickerSummary.GetIntParam(SUMMARY_TOTAL_COUNT, DEFAULT_SUMMARY_COUNT);
@@ -1317,14 +1321,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
             return false;
         }
         bool match = false;
-        for (const auto &skill : skills) {
-            auto &actions = skill.actions;
-            auto matchAction = std::find_if(std::begin(actions), std::end(actions), [](const auto &action) {
-                return SHARE_ACTION == action;
-            });
-            if (matchAction == actions.end()) {
-                continue;
-            }
+        for (const auto &skill : shareActionSkills) {
             if (skill.MatchUtd(utd, count)) {
                 match = true;
                 break;
@@ -1336,6 +1333,22 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
         }
     }
     return true;
+}
+
+std::vector<Skill> BundleDataMgr::FindSkillsContainShareAction(const std::vector<Skill> &skills) const
+{
+    std::vector<Skill> shareActionSkills;
+    for (const auto &skill : skills) {
+        auto &actions = skill.actions;
+        auto matchAction = std::find_if(std::begin(actions), std::end(actions), [](const auto &action) {
+            return SHARE_ACTION == action;
+        });
+        if (matchAction == actions.end()) {
+            continue;
+        }
+        shareActionSkills.emplace_back(skill);
+    }
+    return shareActionSkills;
 }
 
 void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const
@@ -1785,6 +1798,58 @@ bool BundleDataMgr::GetApplicationInfos(
     }
     APP_LOGD("get installed bundles success");
     return find;
+}
+
+bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
+    const std::vector<ExtendResourceInfo> &extendResourceInfos)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    auto info = infoItem->second;
+    info.AddExtendResourceInfos(extendResourceInfos);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    bundleInfos_.at(bundleName) = info;
+    return true;
+}
+
+bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
+    const std::vector<std::string> &moduleNames)
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return false;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    auto info = infoItem->second;
+    info.RemoveExtendResourceInfos(moduleNames);
+    if (!dataStorage_->SaveStorageBundleInfo(info)) {
+        APP_LOGW("SaveStorageBundleInfo failed %{public}s", bundleName.c_str());
+        return false;
+    }
+
+    bundleInfos_.at(bundleName) = info;
+    return true;
 }
 
 ErrCode BundleDataMgr::GetApplicationInfosV9(

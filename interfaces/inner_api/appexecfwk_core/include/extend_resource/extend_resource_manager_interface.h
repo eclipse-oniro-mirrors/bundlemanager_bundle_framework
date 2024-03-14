@@ -67,7 +67,8 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode CopyFiles(const std::string &sourceFile, std::string &destFile)
+    virtual ErrCode CopyFiles(
+        const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
     {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }

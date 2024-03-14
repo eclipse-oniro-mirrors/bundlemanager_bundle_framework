@@ -30,6 +30,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct ExtendResourceInfo {
+    std::string moduleName;
+    std::string iconId;
+    std::string filePath;
+};
+
 class InnerBundleInfo {
 public:
     enum class BundleStatus {
@@ -167,6 +173,33 @@ public:
         *baseApplicationInfo_ = applicationInfo;
     }
 
+    void AddExtendResourceInfos(std::vector<ExtendResourceInfo> extendResourceInfos)
+    {
+        for (const auto &extendResourceInfo : extendResourceInfos) {
+            extendResourceInfos_[extendResourceInfo.moduleName] = extendResourceInfo;
+        }
+    }
+
+    void RemoveExtendResourceInfo(const std::string &moduleName)
+    {
+        auto iter = extendResourceInfos_.find(moduleName);
+        if (iter != extendResourceInfos_.end()) {
+            extendResourceInfos_.erase(iter);
+        }
+    }
+
+    void RemoveExtendResourceInfos(const std::vector<std::string> &moduleNames)
+    {
+        for (const auto &moduleName : moduleNames) {
+            RemoveExtendResourceInfo(moduleName);
+        }
+    }
+
+    const std::map<std::string, ExtendResourceInfo> &GetExtendResourceInfos()
+    {
+        return extendResourceInfos_;
+    }
+
     void UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo, bool isEntry);
 
     bool GetApplicationEnabled(int32_t userId = Constants::UNSPECIFIED_USERID) const
@@ -294,6 +327,8 @@ public:
     BMS_DEFINE_PROPERTY_MEMBER_FILED(
         AllowAppRunWhenDeviceFirstLocked, baseApplicationInfo_, allowAppRunWhenDeviceFirstLocked, bool);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(TsanEnabled, baseApplicationInfo_, tsanEnabled, bool);
+    BMS_DEFINE_PROPERTY(CurDynamicIconModule, curDynamicIconModule_, std::string);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(IconId, baseApplicationInfo_, iconId, int32_t);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)
@@ -983,10 +1018,18 @@ private:
     // data group info
     std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
 
+    // key:moduleName value:ExtendResourceInfo
+    std::map<std::string, ExtendResourceInfo> extendResourceInfos_;
+    // curDynamicIconModule only in ExtendResourceInfos
+    std::string curDynamicIconModule_;
+
     // for odid
     std::string developerId_;
     std::string odid_;
 };
+
+void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);
+void to_json(nlohmann::json &jsonObject, const ExtendResourceInfo &extendResourceInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H

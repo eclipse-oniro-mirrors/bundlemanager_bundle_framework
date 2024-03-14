@@ -703,6 +703,10 @@ public:
     bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
         bool &findDefaultApp);
+    bool UpateExtResources(const std::string &bundleName,
+        const std::vector<ExtendResourceInfo> &extendResourceInfos);
+    bool RemoveExtResources(const std::string &bundleName,
+        const std::vector<std::string> &moduleNames);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.
@@ -1005,6 +1009,7 @@ private:
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
+    std::vector<Skill> FindSkillsContainShareAction(const std::vector<Skill> &skills) const;
     void EmplaceExtensionInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills,
         ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos,
         std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
