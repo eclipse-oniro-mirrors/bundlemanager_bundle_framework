@@ -22,15 +22,18 @@
 #include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_promise.h"
+#include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
+#include "thread_pool.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
-constexpr int32_t CHECK_INTERVAL = 100000; // 100ms
-constexpr int32_t MAX_WAIT_TIMES = 500; // 500 * 100ms = 50s
+constexpr int32_t MAX_TASK_NUMBER = 10;
+const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
+constexpr int32_t CHECK_INTERVAL = 50; // 50ms
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -158,34 +161,32 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
         APP_LOGE("resourceInfosMap is empty.");
         return false;
     }
-    int32_t taskTotalNum = static_cast<int32_t>(resourceInfosMap.size());
-    APP_LOGI("AddResourceInfos taskTotalNum: %{public}d, start", taskTotalNum);
-    std::atomic_uint taskEndNum = 0;
+    std::lock_guard<std::mutex> guard(mutex_);
+    APP_LOGI("bundle resource hold mutex");
+    std::shared_ptr<ThreadPool> threadPool = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
+    if (threadPool == nullptr) {
+        APP_LOGE("threadPool is nullptr");
+        return false;
+    }
+    threadPool->Start(std::thread::hardware_concurrency());
+    threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
     for (const auto &item : resourceInfosMap) {
         std::string bundleName = item.first;
-        auto task = [bundleName, &taskEndNum, &resourceInfosMap]() {
+        auto task = [bundleName, &resourceInfosMap]() {
             // need to parse label and icon
             if (resourceInfosMap.find(bundleName) != resourceInfosMap.end()) {
                 BundleResourceParser parser;
                 parser.ParseResourceInfos(resourceInfosMap[bundleName]);
             }
-            taskEndNum++;
         };
-        std::thread parseResourceThread(task);
-        parseResourceThread.detach();
+        threadPool->AddTask(task);
     }
-
-    int32_t tryTime = MAX_WAIT_TIMES;
-    while (tryTime > 0) {
-        if (static_cast<int32_t>(taskEndNum) >= taskTotalNum) {
-            APP_LOGI("All tasks has executed end");
-            break;
-        }
-        APP_LOGI("Wait for all tasks execute, tryTime:%{public}d", tryTime);
-        usleep(CHECK_INTERVAL);
-        --tryTime;
+    while (threadPool->GetCurTaskNum() > 0) {
+        APP_LOGI("sleep");
+        std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL));
     }
-    APP_LOGI("all tasks execute end");
+    threadPool->Stop();
+    APP_LOGI("All tasks has executed end");
     bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
     std::vector<ResourceInfo> resourceInfos;
     for (auto &item : resourceInfosMap) {
