@@ -30,12 +30,12 @@ BundleResourceParser::~BundleResourceParser()
 {
 }
 
-bool BundleResourceParser::ParseResourceInfo(ResourceInfo &resourceInfo)
+bool BundleResourceParser::ParseResourceInfo(const int32_t userId, ResourceInfo &resourceInfo)
 {
-    return ParseResourceInfoWithSameHap(resourceInfo);
+    return ParseResourceInfoWithSameHap(userId, resourceInfo);
 }
 
-bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourceInfos)
+bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
     APP_LOGD("start");
     if (resourceInfos.empty()) {
@@ -56,7 +56,7 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
             resourceManager =
                 std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
                     resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
-                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig));
+                    resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
             resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
             if (!BundleResourceConfiguration::InitResourceGlobalConfig(
                 resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager)) {
@@ -82,13 +82,21 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
     return true;
 }
 
-bool BundleResourceParser::ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo)
+bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo)
 {
     if (resourceInfo.hapPath_.empty()) {
         APP_LOGE("resourceInfo.hapPath_ is empty");
         return false;
     }
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (resConfig == nullptr) {
+        APP_LOGE("resConfig is nullptr");
+        return false;
+    }
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
+        std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager(
+            resourceInfo.bundleName_, resourceInfo.moduleName_,
+            resourceInfo.hapPath_, resourceInfo.overlayHapPaths_, *resConfig, 0, userId));
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
         return false;
