@@ -6385,5 +6385,103 @@ void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBund
     }
     oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
 }
+
+ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &developerId,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    int32_t requestUserId = GetUserId(userId);
+    APP_LOGI("requestUserId: %{public}d", requestUserId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        auto flag = GET_BASIC_APPLICATION_INFO;
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
+            continue;
+        }
+        // check developerId
+        std::string developerIdExist;
+        std::string odidExist;
+        innerBundleInfo.GetDeveloperidAndOdid(developerIdExist, odidExist);
+        if (developerIdExist != developerId) {
+            continue;
+        }
+
+        BundleInfo bundleInfo;
+
+        if (innerBundleInfo.GetBundleInfoV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION),
+            bundleInfo, responseUserId) != ERR_OK) {
+            continue;
+        }
+        bundleInfos.emplace_back(bundleInfo);
+    }
+    if (bundleInfos.empty()) {
+        APP_LOGW("bundleInfos is empty");
+    }
+    APP_LOGI("have %{public}d applications, their developerId is %{public}s", requestUserId, developerId.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
+    std::vector<std::string> &developerIdList, int32_t userId)
+{
+    int32_t requestUserId = GetUserId(userId);
+    APP_LOGI("requestUserId: %{public}d", requestUserId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::set<std::string> developerIdSet;
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED ||
+            innerBundleInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        auto flag = GET_BASIC_APPLICATION_INFO;
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
+            continue;
+        }
+        // check appDistributionType
+        if (innerBundleInfo.GetAppDistributionType() != appDistributionType) {
+            continue;
+        }
+
+        std::string developerIdExist;
+        std::string odidExist;
+        innerBundleInfo.GetDeveloperidAndOdid(developerIdExist, odidExist);
+        developerIdSet.emplace(developerIdExist);
+    }
+    for (const std::string &developerId : developerIdSet) {
+        developerIdList.emplace_back(developerId);
+    }
+    APP_LOGI("have %{public}d developers, their appDistributionType is %{public}s",
+        developerIdList.size(), appDistributionType.c_str());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

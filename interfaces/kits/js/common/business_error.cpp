@@ -117,6 +117,10 @@ constexpr const char* ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR =
 constexpr const char* ERR_MSG_INVALID_LINK = "The specified link is invalid.";
 constexpr const char* ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES =
     "The scheme of the specified link is not in the querySchemes.";
+constexpr const char* ERR_MSG_INVALID_DEVELOPER_ID =
+    "The specified developerId is invalid.";
+constexpr const char* ERR_MSG_ENUM_EROOR =
+    "Parameter error. The value of $ is not a valid enum $.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -178,6 +182,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_PERMISSION_CHECK_ERROR, ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR},
     { ERROR_INVALID_LINK, ERR_MSG_INVALID_LINK },
     { ERROR_SCHEME_NOT_IN_QUERYSCHEMES, ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES },
+    { ERROR_INVALID_DEVELOPERID, ERR_MSG_INVALID_DEVELOPER_ID },
 };
 } // namespace
 
@@ -231,6 +236,33 @@ napi_value BusinessError::CreateCommonError(
         }
     }
     return CreateError(env, err, errMessage);
+}
+
+void BusinessError::ThrowEnumError(napi_env env,
+    const std::string &parameter, const std::string &type)
+{
+    napi_value error = CreateEnumError(env, parameter, type);
+    napi_throw(env, error);
+}
+
+napi_value BusinessError::CreateEnumError(napi_env env,
+    const std::string &parameter, const std::string &enumClass)
+{
+    std::string errMessage = ERR_MSG_BUSINESS_ERROR;
+    auto iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, std::to_string(ERROR_PARAM_CHECK_ERROR));
+    }
+    errMessage += ERR_MSG_ENUM_EROOR;
+    iter = errMessage.find("$");
+    if (iter != std::string::npos) {
+        errMessage = errMessage.replace(iter, 1, parameter);
+        iter = errMessage.find("$");
+        if (iter != std::string::npos) {
+            errMessage = errMessage.replace(iter, 1, enumClass);
+        }
+    }
+    return CreateError(env, ERROR_PARAM_CHECK_ERROR, errMessage);
 }
 } // AppExecFwk
 } // OHOS

@@ -1335,6 +1335,18 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
+        std::vector<std::string> &developerIdList, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

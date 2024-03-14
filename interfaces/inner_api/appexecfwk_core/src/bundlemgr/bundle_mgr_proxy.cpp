@@ -4016,6 +4016,66 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
     return ret;
 }
 
+ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &developerId,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("begin to GetAllBundleInfoByDeveloperId, developerId: %{public}s, userId :%{public}d",
+        developerId.c_str(), userId);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllBundleInfoByDeveloperId due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(developerId)) {
+        APP_LOGE("failed to GetAllBundleInfoByDeveloperId due to write developerId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAllBundleInfoByDeveloperId due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID, data, bundleInfos);
+}
+
+ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
+        std::vector<std::string> &developerIdList, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("begin to GetDeveloperIds of %{public}s", appDistributionType.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetDeveloperIds due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteString(appDistributionType)) {
+        APP_LOGE("failed to GetDeveloperIds due to write appDistributionType fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetDeveloperIds due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEVELOPER_IDS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+        return res;
+    }
+    if (!reply.ReadStringVector(&developerIdList)) {
+        APP_LOGE("fail to GetDeveloperIds from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {

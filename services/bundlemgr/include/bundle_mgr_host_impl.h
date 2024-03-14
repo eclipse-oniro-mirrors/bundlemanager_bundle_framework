@@ -877,6 +877,12 @@ public:
 
     virtual ErrCode GetOdid(std::string &odid) override;
 
+    virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
+
+    virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
+        std::vector<std::string> &developerIdList, int32_t userId) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

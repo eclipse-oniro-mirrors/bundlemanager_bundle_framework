@@ -130,6 +130,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_DELETE_ABC_SEND_REQUEST_FAILED, ERROR_DELETE_ABC },
     { ERR_BUNDLE_MANAGER_INVALID_SCHEME, ERROR_INVALID_LINK },
     { ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES, ERROR_SCHEME_NOT_IN_QUERYSCHEMES },
+    { ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID, ERROR_INVALID_DEVELOPERID },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -1040,6 +1041,11 @@ void CommonFunc::ConvertAppProvisionInfo(
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, appProvisionInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &appIdentifier));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appIdentifier", appIdentifier));
+
+    napi_value organization;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.organization.c_str(), NAPI_AUTO_LENGTH, &organization));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "organization", organization));
 }
 
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,

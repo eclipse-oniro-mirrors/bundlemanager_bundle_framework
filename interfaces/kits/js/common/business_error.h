@@ -35,6 +35,12 @@ static napi_value CreateCommonError(napi_env env, int32_t err,
     const std::string &functionName = "", const std::string &permissionName = "");
 
 static napi_value CreateError(napi_env env, int32_t err, const std::string &msg);
+
+static void ThrowEnumError(napi_env env,
+    const std::string &parameter, const std::string &type);
+
+static napi_value CreateEnumError(napi_env env,
+    const std::string &parameter, const std::string &enumClass);
 };
 
 #define CHECK_STRING_EMPTY(env, str, strName)                                              \

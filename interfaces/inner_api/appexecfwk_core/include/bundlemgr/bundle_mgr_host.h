@@ -720,6 +720,10 @@ private:
 
     ErrCode HandleGetOdid(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllBundleInfoByDeveloperId(MessageParcel &data, MessageParcel &reply);
+    
+    ErrCode HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
