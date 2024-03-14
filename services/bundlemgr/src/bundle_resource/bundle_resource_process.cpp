@@ -441,9 +441,9 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
                 userId, resourceInfos[index].overlayHapPaths_);
         }
     }
-    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfo.size(),
+    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
         innerBundleInfo.GetBundleName().c_str());
-    return !resourceInfo.empty();
+    return !resourceInfos.empty();
 }
 } // AppExecFwk
 } // OHOS
