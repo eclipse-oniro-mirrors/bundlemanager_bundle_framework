@@ -3407,5 +3407,49 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
     }
     return dataMgr->GetOdid(odid);
 }
+
+ErrCode BundleMgrHostImpl::GetAllBundleInfoByDeveloperId(const std::string &developerId,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    APP_LOGI("start GetAllBundleInfoByDeveloperId for developerId: %{public}s with user: %{public}d",
+        developerId.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGI("verify permission success, begin to GetAllBundleInfoByDeveloperId");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionType,
+    std::vector<std::string> &developerIdList, int32_t userId)
+{
+    APP_LOGI("start GetDeveloperIds for appDistributionType: %{public}s with user: %{public}d",
+        appDistributionType.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGI("verify permission success, begin to GetDeveloperIds");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

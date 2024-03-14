@@ -883,6 +883,10 @@ public:
      */
     ErrCode CanOpenLink(
         const std::string &link, bool &canOpen) const;
+    ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId);
+    ErrCode GetDeveloperIds(const std::string &appDistributionType,
+        std::vector<std::string> &developerIdList, int32_t userId);
 
 private:
     /**

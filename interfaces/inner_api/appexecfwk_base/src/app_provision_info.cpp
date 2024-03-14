@@ -43,6 +43,7 @@ bool AppProvisionInfo::ReadFromParcel(Parcel &parcel)
     issuer = Str16ToStr8(parcel.ReadString16());
     appIdentifier = Str16ToStr8(parcel.ReadString16());
     appServiceCapabilities = Str16ToStr8(parcel.ReadString16());
+    organization = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -62,6 +63,7 @@ bool AppProvisionInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(issuer));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appServiceCapabilities));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
     return true;
 }
 

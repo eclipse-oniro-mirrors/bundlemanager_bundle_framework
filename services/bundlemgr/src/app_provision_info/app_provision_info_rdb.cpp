@@ -41,6 +41,7 @@ const std::string ADDITIONAL_INFO = "ADDITIONAL_INFO";
 const std::string DEFAULT_VALUE = "";
 const std::string APP_IDENTIFIER = "APP_IDENTIFIER";
 const std::string APP_SERVICE_CAPABILITIES = "APP_SERVICE_CAPABILITIES";
+const std::string ORGANIZATION = "ORGANIZATION";
 const int32_t INDEX_BUNDLE_NAME = 0;
 const int32_t INDEX_VERSION_CODE = 1;
 const int32_t INDEX_VERSION_NAME = 2;
@@ -57,6 +58,7 @@ const int32_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
 const int32_t INDEX_ADDITIONAL_INFO = 13;
 const int32_t INDEX_APP_IDENTIFIER = 14;
 const int32_t INDEX_APP_SERVICE_CAPABILITIES = 15;
+const int32_t INDEX_ORGANIZATION = 16;
 }
 
 AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
@@ -81,6 +83,8 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
         " ADD APP_IDENTIFIER TEXT;"));
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
         " ADD APP_SERVICE_CAPABILITIES TEXT;"));
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+        " ADD ORGANIZATION TEXT;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -114,6 +118,7 @@ bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleNa
     valuesBucket.PutString(ADDITIONAL_INFO, DEFAULT_VALUE);
     valuesBucket.PutString(APP_IDENTIFIER, appProvisionInfo.appIdentifier);
     valuesBucket.PutString(APP_SERVICE_CAPABILITIES, appProvisionInfo.appServiceCapabilities);
+    valuesBucket.PutString(ORGANIZATION, appProvisionInfo.organization);
 
     return rdbDataManager_->InsertData(valuesBucket);
 }
@@ -204,6 +209,8 @@ bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString appIdentifier failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_APP_SERVICE_CAPABILITIES, appProvisionInfo.appServiceCapabilities);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString appServiceCapabilities failed, ret: %{public}d");
+    ret = absSharedResultSet->GetString(INDEX_ORGANIZATION, appProvisionInfo.organization);
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString organization failed, ret: %{public}d");
     return true;
 }
 

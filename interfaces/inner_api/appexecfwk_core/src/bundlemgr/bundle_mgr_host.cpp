@@ -344,6 +344,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetOdid);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER),
         &BundleMgrHost::HandleGetExtendResourceManager);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID),
+        &BundleMgrHost::HandleGetAllBundleInfoByDeveloperId);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEVELOPER_IDS),
+        &BundleMgrHost::HandleGetDeveloperIds);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3238,6 +3242,46 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllBundleInfoByDeveloperId(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string developerId = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<BundleInfo> infos;
+    auto ret = GetAllBundleInfoByDeveloperId(developerId, infos, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(infos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string appDistributionType = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<std::string> developerIdList;
+    auto ret = GetDeveloperIds(appDistributionType, developerIdList, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteStringVector(developerIdList)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

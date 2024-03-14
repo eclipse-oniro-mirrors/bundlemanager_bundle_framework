@@ -916,6 +916,22 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode GetOdid(std::string &odid) override;
+    /**
+     * @brief Obtains BundleInfo of all bundles available in the system through the developerId.
+     * @param developerId Indicates the developerId of application.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
+     * @brief Obtains all developerId list through the specified distribution type of application.
+     * @param appDistributionType Indicates the distribution type of application.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
+        std::vector<std::string> &developerIdList, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     /**

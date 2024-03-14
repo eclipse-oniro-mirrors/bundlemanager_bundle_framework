@@ -56,6 +56,9 @@ constexpr const char* DELETE_ABC = "DeleteAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 constexpr const char* LINK = "link";
+constexpr const char* DEVELOPER_ID = "developerId";
+constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
+constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -84,6 +87,15 @@ const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
+const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
+const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
+constexpr int32_t ENUM_ONE = 1;
+constexpr int32_t ENUM_TWO = 2;
+constexpr int32_t ENUM_THREE = 3;
+constexpr int32_t ENUM_FOUR = 4;
+constexpr int32_t ENUM_FIVE = 5;
+constexpr int32_t ENUM_SIX = 6;
+constexpr int32_t ENUM_SEVEN = 7;
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -92,6 +104,15 @@ static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
 static std::set<int32_t> g_supportedProfileList = { 1 };
+static std::map<int32_t, std::string> appDistributionTypeMap = {
+    { ENUM_ONE, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+    { ENUM_TWO, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+    { ENUM_THREE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+    { ENUM_FOUR, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+    { ENUM_FIVE, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+    { ENUM_SIX, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    { ENUM_SEVEN, Constants::APP_DISTRIBUTION_TYPE_NONE },
+};
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
@@ -2451,6 +2472,37 @@ void CreateApplicationFlagObject(napi_env env, napi_value value)
         nGetApplicationInfoWithDisable));
 }
 
+void CreateAppDistributionTypeObject(napi_env env, napi_value value)
+{
+    napi_value nAppGallery;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_ONE, &nAppGallery));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_GALLERY", nAppGallery));
+
+    napi_value nEnterprise;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_TWO, &nEnterprise));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE", nEnterprise));
+
+    napi_value nEnterPriseNormal;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_THREE, &nEnterPriseNormal));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_NORMAL", nEnterPriseNormal));
+
+    napi_value nEnterPriseMdm;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_FOUR, &nEnterPriseMdm));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_MDM", nEnterPriseMdm));
+
+    napi_value nOsIntegration;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_FIVE, &nOsIntegration));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "OS_INTEGRATION", nOsIntegration));
+
+    napi_value nCrowdTesting;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SIX, &nCrowdTesting));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWD_TESTING", nCrowdTesting));
+
+    napi_value nNone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SEVEN, &nNone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NONE", nNone));
+}
+
 static ErrCode InnerGetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -3961,6 +4013,108 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
     APP_LOGD("call CanOpenLink done.");
     return nRet;
+}
+
+napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string developerId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], developerId)) {
+        APP_LOGE("Parse developerId failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DEVELOPER_ID, TYPE_STRING);
+        return nullptr;
+    }
+    CHECK_STRING_EMPTY(env, developerId, std::string{ DEVELOPER_ID });
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, userId));
+    if (ret != NO_ERROR) {
+        APP_LOGE("Call failed, developerId is %{public}s", developerId.c_str());
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nBundleInfos;
+    NAPI_CALL(env, napi_create_array(env, &nBundleInfos));
+    ProcessBundleInfos(env, nBundleInfos, bundleInfos,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION));
+    APP_LOGD("Call done");
+    return nBundleInfos;
+}
+
+static void ProcessStringVec(
+    napi_env env, napi_value result, const std::vector<std::string> &stringList)
+{
+    if (stringList.size() == 0) {
+        APP_LOGD("stringList is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : stringList) {
+        APP_LOGD("string: %{public}s ", item.c_str());
+        napi_value nString;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, item.c_str(), NAPI_AUTO_LENGTH, &nString));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, nString));
+        index++;
+    }
+}
+
+napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    int32_t appDistributionTypeEnum = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], appDistributionTypeEnum)) {
+        APP_LOGE("parseInt failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
+        APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
+        BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<std::string> developerIds;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetDeveloperIds(appDistributionTypeMap[appDistributionTypeEnum], developerIds, userId));
+    if (ret != NO_ERROR) {
+        APP_LOGE("Call failed, appDistributionType is %{public}d", appDistributionTypeEnum);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DEVELOPER_IDS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nDeveloperIds;
+    NAPI_CALL(env, napi_create_array(env, &nDeveloperIds));
+    ProcessStringVec(env, nDeveloperIds, developerIds);
+    APP_LOGD("Call done");
+    return nDeveloperIds;
 }
 }
 }

@@ -40,6 +40,7 @@ struct AppProvisionInfo : public Parcelable {
     std::string issuer;
     std::string appIdentifier;
     std::string appServiceCapabilities;
+    std::string organization;
     Validity validity;
     bool ReadFromParcel(Parcel &parcel);
     bool Marshalling(Parcel &parcel) const override;
