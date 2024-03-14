@@ -54,6 +54,9 @@ private:
     // get launcher ability resource
     static bool GetLauncherAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
+    // get all ability resource
+    static bool GetAbilityResourceInfos(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
+        std::vector<ResourceInfo> &resourceInfos);
 
     static ResourceInfo ConvertToLauncherAbilityResourceInfo(const AbilityInfo &ability);
 
