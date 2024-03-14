@@ -40,7 +40,7 @@ const std::map<std::string, int32_t> dimensionMap = {
     {"4*4", 4},
     {"2*1", 5},
     {"1*1", 6},
-    {"4*6", 7}
+    {"6*4", 7}
 };
 const std::map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
