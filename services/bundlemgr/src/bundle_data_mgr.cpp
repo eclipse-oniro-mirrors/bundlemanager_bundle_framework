@@ -4661,7 +4661,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
             extensionAbilityInfo.applicationInfo);
         return true;
     }
-    APP_LOGW("QueryExtensionAbilityInfoByUri (%{private}s) failed.", uri.c_str());
+    APP_LOGW("QueryExtensionAbilityInfoByUri (%{public}s) failed.", uri.c_str());
     return false;
 }
 
