@@ -30,7 +30,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 constexpr int32_t CHECK_INTERVAL = 100000; // 100ms
-constexpr int32_t MAX_WAIT_TIMES = 100; // 100 * 100ms = 10s
+constexpr int32_t MAX_WAIT_TIMES = 500; // 500 * 100ms = 50s
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -161,12 +161,14 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
     int32_t taskTotalNum = static_cast<int32_t>(resourceInfosMap.size());
     APP_LOGI("AddResourceInfos taskTotalNum: %{public}d, start", taskTotalNum);
     std::atomic_uint taskEndNum = 0;
-    for (auto &item : resourceInfosMap) {
-        auto &resourceInfos = item.second;
-        auto task = [&taskEndNum, &resourceInfos]() {
+    for (const auto &item : resourceInfosMap) {
+        std::string bundleName = item.first;
+        auto task = [bundleName, &taskEndNum, &resourceInfosMap]() {
             // need to parse label and icon
-            BundleResourceParser parser;
-            parser.ParseResourceInfos(resourceInfos);
+            if (resourceInfosMap.find(bundleName) != resourceInfosMap.end()) {
+                BundleResourceParser parser;
+                parser.ParseResourceInfos(resourceInfosMap[bundleName]);
+            }
             taskEndNum++;
         };
         std::thread parseResourceThread(task);
