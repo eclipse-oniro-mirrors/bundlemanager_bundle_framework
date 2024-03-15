@@ -100,6 +100,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::DESTORY_STREAM_INSTALLER):
             HandleDestoryBundleStreamInstaller(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER):
+            HandleUninstallAndRecoverMessage(data);
+            break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -318,6 +321,24 @@ void BundleInstallerHost::HandleDestoryBundleStreamInstaller(MessageParcel &data
     APP_LOGD("handle destoy stream installer message finish");
 }
 
+void BundleInstallerHost::HandleUninstallAndRecoverMessage(MessageParcel &data)
+{
+    APP_LOGD("handle UninstallAndRecover message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<InstallParam> installParam(data.ReadParcelable<InstallParam>());
+    if (installParam == nullptr) {
+        APP_LOGE("ReadParcelable<InstallParam> failed");
+        return;
+    }
+    sptr<IRemoteObject> object = data.ReadRemoteObject();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return;
+    }
+    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    UninstallAndRecover(bundleName, *installParam, statusReceiver);
+    APP_LOGD("handle UninstallAndRecover message finished");
+}
 
 bool BundleInstallerHost::Install(
     const std::string &bundleFilePath, const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
@@ -686,6 +707,29 @@ bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bu
         return false;
     }
     manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
+    return true;
+}
+
+bool BundleInstallerHost::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        APP_LOGE("statusReceiver invalid");
+        return false;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        statusReceiver->OnFinished(ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, "");
+        return false;
+    }
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
+        Constants::PERMISSION_UNINSTALL_BUNDLE})) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    manager_->CreateUninstallAndRecoverTask(bundleName, CheckInstallParam(installParam), statusReceiver);
     return true;
 }
 

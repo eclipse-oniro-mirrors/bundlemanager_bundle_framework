@@ -336,6 +336,29 @@ bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstaller
     return true;
 }
 
+bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel reply;
+    MessageParcel data;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
+    PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    PARCEL_WRITE(data, Parcelable, &installParam);
+    if (statusReceiver == nullptr) {
+        APP_LOGE("fail to uninstall quick fix, for statusReceiver is nullptr");
+        return false;
+    }
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
+        APP_LOGE("write parcel failed");
+        return false;
+    }
+
+    return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER, data, reply, option);
+}
+
 ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bundleFilePaths,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {

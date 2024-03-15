@@ -1278,4 +1278,34 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8300
     ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8400
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8400, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, receiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8500
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS
