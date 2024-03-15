@@ -782,7 +782,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     const BundlePackInfo &bundlePackInfo,
     InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("SetEntryInstallationFree start");
+    APP_LOGI("start");
     if (!bundlePackInfo.GetValid()) {
         APP_LOGW("no pack.info in the hap file");
         return;
@@ -803,7 +803,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     if (installationFree && !innerBundleInfo.GetIsNewVersion()) {
         innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
     }
-    APP_LOGI("SetEntryInstallationFree end");
+    APP_LOGI("end");
 }
 
 ErrCode BundleInstallChecker::CheckSystemSize(
@@ -1508,7 +1508,6 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
     if (system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, true)) {
-        APP_LOGI("check developer mode success");
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {

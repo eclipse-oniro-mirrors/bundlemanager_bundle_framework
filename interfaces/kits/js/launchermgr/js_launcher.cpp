@@ -883,7 +883,7 @@ static bool InnerJSGetShortcutInfos(napi_env env, const std::string& bundleName,
     }
     auto result = launcher->GetShortcutInfos(bundleName, shortcutInfos);
     if (!result) {
-        APP_LOGE("GetShortcutInfos call error, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGD("GetShortcutInfos call error, bundleName is %{public}s", bundleName.c_str());
         return false;
     }
     return true;

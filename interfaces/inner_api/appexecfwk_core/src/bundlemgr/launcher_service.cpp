@@ -267,7 +267,7 @@ bool LauncherService::GetShortcutInfos(
         return false;
     }
     if (infos.size() == 0) {
-        APP_LOGE("ShortcutInfo is not exist in system");
+        APP_LOGD("ShortcutInfo is not exist in system");
         return false;
     }
 
