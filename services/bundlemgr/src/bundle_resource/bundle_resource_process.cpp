@@ -183,7 +183,7 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
         return false;
     }
     std::vector<ResourceInfo> resourceInfos;
-    if (GetLauncherAbilityResourceInfos(item->second, userId, resourceInfos)) {
+    if (GetAbilityResourceInfos(item->second, userId, resourceInfos)) {
         for (const auto &info : resourceInfos) {
             if ((info.moduleName_ == moduleName) && (info.abilityName_ == abilityName)) {
                 resourceInfo = info;
@@ -317,7 +317,7 @@ bool BundleResourceProcess::OnGetResourceInfo(
 
     // get ability
     std::vector<ResourceInfo> abilityResourceInfos;
-    if (GetLauncherAbilityResourceInfos(innerBundleInfo, userId, abilityResourceInfos)) {
+    if (GetAbilityResourceInfos(innerBundleInfo, userId, abilityResourceInfos)) {
         for (const auto &info : abilityResourceInfos) {
             resourceInfos.push_back(info);
         }
@@ -475,6 +475,47 @@ bool BundleResourceProcess::GetOverlayModuleHapPaths(
         bundleName.c_str(), overlayHapPaths.size());
 #endif
     return true;
+}
+
+bool BundleResourceProcess::GetAbilityResourceInfos(
+    const InnerBundleInfo &innerBundleInfo,
+    const int32_t userId,
+    std::vector<ResourceInfo> &resourceInfos)
+{
+    APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    if (innerBundleInfo.GetBundleName().empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+        APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    for (const auto &item : abilityInfos) {
+        if (!innerBundleInfo.IsAbilityEnabled(item.second, innerBundleInfo.GetResponseUserId(userId))) {
+            APP_LOGW("bundleName:%{public}s abilityName:%{public}s is disabled", item.second.bundleName.c_str(),
+                item.second.name.c_str());
+            continue;
+        }
+        resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
+    }
+    // process overlay hap paths
+    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
+        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
+        size_t size = resourceInfos.size();
+        for (size_t index = 0; index < size; ++index) {
+            if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
+                resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
+                continue;
+            }
+            GetOverlayModuleHapPaths(resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
+                userId, resourceInfos[index].overlayHapPaths_);
+        }
+    }
+    APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
+        innerBundleInfo.GetBundleName().c_str());
+    return !resourceInfos.empty();
 }
 } // AppExecFwk
 } // OHOS

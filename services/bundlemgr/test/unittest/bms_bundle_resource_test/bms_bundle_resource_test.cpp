@@ -1939,6 +1939,69 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0079, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0080
+ * Function: GetAbilityResourceInfos
+ * @tc.name: test GetAbilityResourceInfos
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0080, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    // bundleName empty
+    bool ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    applicationInfo.bundleType = BundleType::APP;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0081
+ * Function: GetAbilityResourceInfos
+ * @tc.name: test GetAbilityResourceInfos
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo bundleInfo;
+    bool ans = GetBundleDataMgr()->FetchInnerBundleInfo(BUNDLE_NAME, bundleInfo);
+    EXPECT_TRUE(ans);
+    bundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+
+    std::vector<ResourceInfo> resourceInfos;
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+    
+    auto code = bundleInfo.SetAbilityEnabled(MODULE_NAME, ABILITY_NAME, false, USERID);
+    EXPECT_EQ(code, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos_2;
+    ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos_2);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos_2.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0088
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
