@@ -50,7 +50,7 @@ ErrCode ExtendResourceManagerProxy::AddExtResource(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || filePaths.empty()) {
         APP_LOGE("fail to AddExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -82,7 +82,7 @@ ErrCode ExtendResourceManagerProxy::RemoveExtResource(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleNames.empty()) {
         APP_LOGE("fail to RemoveExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -114,7 +114,7 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -151,7 +151,7 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -182,7 +182,7 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
         APP_LOGE("fail to DisableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -210,7 +210,7 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
         APP_LOGE("fail to GetDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -244,7 +244,7 @@ ErrCode ExtendResourceManagerProxy::CreateFd(
     APP_LOGD("begin to create fd.");
     if (fileName.empty()) {
         APP_LOGE("fileName is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -286,12 +286,12 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
     APP_LOGD("begin to copy files.");
     if (sourceFiles.empty()) {
         APP_LOGE("sourceFiles empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     std::vector<std::string> filePaths;
     if (!BundleFileUtil::CheckFilePath(sourceFiles, filePaths)) {
         APP_LOGE("CopyFiles CheckFilePath failed");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     for (const std::string &sourcePath : filePaths) {
         size_t pos = sourcePath.find_last_of(SEPARATOR);

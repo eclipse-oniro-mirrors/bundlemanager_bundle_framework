@@ -32,7 +32,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct ExtendResourceInfo {
     std::string moduleName;
-    std::string iconId;
+    int32_t iconId;
     std::string filePath;
 };
 
@@ -195,7 +195,7 @@ public:
         }
     }
 
-    const std::map<std::string, ExtendResourceInfo> &GetExtendResourceInfos()
+    const std::map<std::string, ExtendResourceInfo> &GetExtendResourceInfos() const
     {
         return extendResourceInfos_;
     }

@@ -351,6 +351,22 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
     }
 }
 
+bool BundleResourceManager::SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos)
+{
+    if (resourceInfos.empty()) {
+        APP_LOGE("resourceInfos is empty.");
+        return false;
+    }
+    return bundleResourceRdb_->AddResourceInfos(resourceInfos);
+}
+
+bool BundleResourceManager::ParseIconResourceByPath(
+    const std::string &filePath, const int32_t iconId, std::string &icon)
+{
+    BundleResourceParser parser;
+    return parser.ParseIconResourceByPath(filePath, iconId, icon);
+}
+
 std::string BundleResourceManager::GetDefaultIcon()
 {
     BundleResourceInfo bundleResourceInfo;

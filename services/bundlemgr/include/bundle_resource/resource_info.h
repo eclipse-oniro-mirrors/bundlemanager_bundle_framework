@@ -39,9 +39,11 @@ public:
     // label resource
     int32_t labelId_ = 0;
     std::string label_;
+    bool labelNeedParse_ = true;
     // icon resource
     int32_t iconId_ = 0;
     std::string icon_;
+    bool iconNeedParse_ = true;
     // used for parse label and icon
     std::string hapPath_;
     // used for parse overlay label and icon

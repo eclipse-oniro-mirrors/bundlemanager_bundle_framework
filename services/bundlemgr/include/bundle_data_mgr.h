@@ -707,6 +707,8 @@ public:
         const std::vector<ExtendResourceInfo> &extendResourceInfos);
     bool RemoveExtResources(const std::string &bundleName,
         const std::vector<std::string> &moduleNames);
+    bool UpateCurDynamicIconModule(
+        const std::string &bundleName, const std::string &moduleName);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.

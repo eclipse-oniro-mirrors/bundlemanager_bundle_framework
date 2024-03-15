@@ -25,6 +25,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -107,9 +108,14 @@ ErrCode ExtendResourceManagerHostImpl::AddExtResource(
 ErrCode ExtendResourceManagerHostImpl::BeforeAddExtResource(
     const std::string &bundleName, const std::vector<std::string> &filePaths)
 {
-    if (bundleName.empty() || filePaths.empty()) {
-        APP_LOGE("fail to AddExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to AddExtResource due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (filePaths.empty()) {
+        APP_LOGE("fail to AddExtResource due to filePaths is empty.");
+        return ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -121,7 +127,7 @@ ErrCode ExtendResourceManagerHostImpl::BeforeAddExtResource(
     for (const auto &filePath: filePaths) {
         if (!CheckFileParam(filePath)) {
             APP_LOGE("CheckFile failed.");
-            return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+            return ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED;
         }
     }
 
@@ -151,7 +157,7 @@ ErrCode ExtendResourceManagerHostImpl::ProcessAddExtResource(
     InnerBundleInfo info;
     if (!GetInnerBundleInfo(bundleName, info)) {
         APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
-        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     std::vector<std::string> newFilePaths;
@@ -305,9 +311,14 @@ void ExtendResourceManagerHostImpl::RollBack(const std::vector<std::string> &fil
 ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
     const std::string &bundleName, const std::vector<std::string> &moduleNames)
 {
-    if (bundleName.empty() || moduleNames.empty()) {
-        APP_LOGE("fail to RemoveExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to RemoveExtResource due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (moduleNames.empty()) {
+        APP_LOGE("fail to RemoveExtResource due to moduleName is empty.");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -343,7 +354,7 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
     InnerBundleInfo info;
     if (!GetInnerBundleInfo(bundleName, info)) {
         APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
-        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     std::map<std::string, ExtendResourceInfo> extendResourceInfos = info.GetExtendResourceInfos();
@@ -351,7 +362,7 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
         auto iter = extendResourceInfos.find(moduleName);
         if (iter == extendResourceInfos.end()) {
             APP_LOGE("Module not exist %{public}s.", moduleName.c_str());
-            return ERR_EXT_RESOURCE_MANAGER_REMOVE_MODULE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
         }
 
         collectorExtResourceInfos.emplace_back(iter->second);
@@ -362,9 +373,9 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
 ErrCode ExtendResourceManagerHostImpl::GetExtResource(
     const std::string &bundleName, std::vector<std::string> &moduleNames)
 {
-    if (bundleName.empty() || moduleNames.empty()) {
+    if (bundleName.empty()) {
         APP_LOGE("fail to GetExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -376,13 +387,13 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
     InnerBundleInfo info;
     if (!GetInnerBundleInfo(bundleName, info)) {
         APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
-        return ERR_EXT_RESOURCE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     std::map<std::string, ExtendResourceInfo> extendResourceInfos = info.GetExtendResourceInfos();
     if (extendResourceInfos.empty()) {
         APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
-        return ERR_EXT_RESOURCE_MANAGER_GET_FAILED;
+        return ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED;
     }
 
     for (const auto &extendResourceInfo : extendResourceInfos) {
@@ -395,30 +406,136 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
 ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     const std::string &bundleName, const std::string &moduleName)
 {
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to EnableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+    APP_LOGI("EnableDynamicIcon %{public}s, %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
+    if (moduleName.empty()) {
+        APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty.");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+
+    ExtendResourceInfo extendResourceInfo;
+    ErrCode ret = GetExtendResourceInfo(bundleName, moduleName, extendResourceInfo);
+    CHECK_RESULT(ret, "GetExtendResourceInfo failed %{public}d");
+    if (!ParseBundleResource(bundleName, extendResourceInfo)) {
+        APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
+    }
+
+    SaveCurDynamicIcon(bundleName, moduleName);
+    SendBroadcast(bundleName, true);
+    return ERR_OK;
+}
+
+void ExtendResourceManagerHostImpl::SaveCurDynamicIcon(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return;
+    }
+
+    dataMgr->UpateCurDynamicIconModule(bundleName, moduleName);
+}
+
+void ExtendResourceManagerHostImpl::SendBroadcast(
+    const std::string &bundleName, bool isEnableDynamicIcon)
+{
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon);
+}
+
+bool ExtendResourceManagerHostImpl::ParseBundleResource(
+    const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo)
+{
+    APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
+    std::string icon;
+    if (!BundleResourceHelper::ParseIconResourceByPath(
+        extendResourceInfo.filePath, extendResourceInfo.iconId, icon)) {
+        APP_LOGW("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    if (icon.empty()) {
+        APP_LOGE("icon is empty, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    if (!BundleResourceHelper::UpdateBundleIcon(bundleName, icon)) {
+        APP_LOGE("UpdateBundleIcon failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    return true;
+}
+
+ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &bundleName,
+    const std::string &moduleName, ExtendResourceInfo &extendResourceInfo)
+{
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::map<std::string, ExtendResourceInfo> extendResourceInfos = info.GetExtendResourceInfos();
+    if (extendResourceInfos.empty()) {
+        APP_LOGE("%{public}s no extend Resources", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto iter = extendResourceInfos.find(moduleName);
+    if (iter == extendResourceInfos.end()) {
+        APP_LOGE("%{public}s no %{public}s extend Resources", bundleName.c_str(), moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    extendResourceInfo = iter->second;
     return ERR_OK;
 }
 
 ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bundleName)
 {
+    APP_LOGI("DisableDynamicIcon %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("fail to DisableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::string curDynamicModule = info.GetCurDynamicIconModule();
+    if (curDynamicModule.empty()) {
+        APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
+    }
+
+    ResetBunldleResourceIcon(bundleName);
+    SaveCurDynamicIcon(bundleName, "");
+    SendBroadcast(bundleName, false);
     return ERR_OK;
+}
+
+bool ExtendResourceManagerHostImpl::ResetBunldleResourceIcon(const std::string &bundleName)
+{
+    return BundleResourceHelper::ResetBunldleResourceIcon(bundleName);
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
@@ -426,13 +543,28 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
 {
     if (bundleName.empty()) {
         APP_LOGE("fail to GetDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
+
+    InnerBundleInfo info;
+    if (!GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("GetInnerBundleInfo failed %{public}s.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    std::string curDynamicModule = info.GetCurDynamicIconModule();
+    if (curDynamicModule.empty()) {
+        APP_LOGE("%{public}s no enabled dynamic icon", bundleName.c_str());
+        return ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+    }
+
+    moudleName = curDynamicModule;
     return ERR_OK;
 }
 
@@ -441,7 +573,7 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
 {
     if (fileName.empty()) {
         APP_LOGE("fail to CreateFd due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
@@ -450,11 +582,11 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
     }
     if (!BundleUtil::CheckFileType(fileName, Constants::EXT_RESOURCE_FILE_SUFFIX)) {
         APP_LOGE("not hsp file.");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     if (!IsFileNameValid(fileName)) {
         APP_LOGE("invalid fileName");
-        return ERR_EXT_RESOURCE_MANAGER_PARAM_ERROR;
+        return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     std::string tmpDir = BundleUtil::CreateInstallTempDir(
         ++id_, DirType::EXT_RESOURCE_FILE_DIR);

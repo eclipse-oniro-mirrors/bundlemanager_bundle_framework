@@ -80,6 +80,11 @@ public:
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
+    bool SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos);
+
+    bool ParseIconResourceByPath(
+        const std::string &filePath, const int32_t iconId, std::string &icon);
+
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
 

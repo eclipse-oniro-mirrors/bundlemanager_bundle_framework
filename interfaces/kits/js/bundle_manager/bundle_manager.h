@@ -122,6 +122,13 @@ struct VerifyCallbackInfo : public BaseCallbackInfo {
     std::string deletePath;
 };
 
+struct DynamicIconCallbackInfo : public BaseCallbackInfo {
+    explicit DynamicIconCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    std::string moduleName;
+    std::vector<std::string> moduleNames;
+};
+
 enum AbilityProfileType : uint32_t {
     ABILITY_PROFILE = 0,
     EXTENSION_PROFILE,

@@ -75,6 +75,8 @@ public:
         int32_t userId, int32_t uid);
     void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data);
     void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId);
+    void NotifyDynamicIconEvent(
+        const std::string &bundleName, bool isEnableDynamicIcon);
     void NotifyBundleResourcesChanged(int32_t userId);
 
 private:
