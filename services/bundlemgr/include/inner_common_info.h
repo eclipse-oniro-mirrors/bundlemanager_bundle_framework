@@ -159,6 +159,7 @@ private:
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
+    bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
     bool MatchUtd(const OHOS::AAFwk::Want &want);
     std::string GetOptParamUri(const std::string &uriString) const;
 };

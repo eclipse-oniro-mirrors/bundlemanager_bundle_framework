@@ -1946,6 +1946,23 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0007, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: SkillFalse_0008
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0008, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    size_t matchUriIndex = 0;
+    bool ret = skill.MatchMimeType(".jpg", matchUriIndex);
+    EXPECT_EQ(true, ret);
+    EXPECT_EQ(matchUriIndex, 0);
+}
+
+/**
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
