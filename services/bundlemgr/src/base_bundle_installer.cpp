@@ -259,9 +259,6 @@ ErrCode BaseBundleInstaller::Recover(
 {
     APP_LOGI("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
-    if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
-    }
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
@@ -286,7 +283,6 @@ ErrCode BaseBundleInstaller::Recover(
         sysEventInfo_.preBundleScene,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    BundlePermissionMgr::UnInit();
     APP_LOGD("finish to process %{public}s bundle recover", bundleName.c_str());
     return result;
 }
