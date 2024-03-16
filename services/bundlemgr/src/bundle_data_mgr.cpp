@@ -52,6 +52,7 @@
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
 #include "parameters.h"
+#include "router_map_helper.h"
 #include "singleton.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
@@ -2039,6 +2040,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
             APP_LOGE("parse router array from json file %{public}s failed", routerJsonPath.c_str());
         }
     }
+    RouterMapHelper::BundleMergeRouter(bundleInfo);
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
