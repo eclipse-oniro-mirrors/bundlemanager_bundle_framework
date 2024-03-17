@@ -20,8 +20,12 @@
 #include <sstream>
 #include <string>
 
+#include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "extend_resource_manager_host_impl.h"
+#include "installd/installd_service.h"
+#include "installd_client.h"
+#include "mock_status_receiver.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -53,6 +57,12 @@ public:
     void SetUp();
     void TearDown();
 
+    ErrCode InstallBundle(const std::string &bundlePath) const;
+    ErrCode UnInstallBundle(const std::string &bundleName) const;
+    void StartInstalldService() const;
+    void StartBundleService();
+    const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
+
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -69,16 +79,86 @@ BmsExtendResourceManagerTest::~BmsExtendResourceManagerTest()
 void BmsExtendResourceManagerTest::SetUpTestCase()
 {}
 
+ErrCode BmsExtendResourceManagerTest::InstallBundle(const std::string &bundlePath) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.userId = USER_ID;
+    bool result = installer->Install(bundlePath, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsExtendResourceManagerTest::UnInstallBundle(const std::string &bundleName) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = USER_ID;
+    bool result = installer->Uninstall(bundleName, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+const std::shared_ptr<BundleDataMgr> BmsExtendResourceManagerTest::GetBundleDataMgr() const
+{
+    return bundleMgrService_->GetDataMgr();
+}
+
+
+void BmsExtendResourceManagerTest::StartInstalldService() const
+{}
+
+void BmsExtendResourceManagerTest::StartBundleService()
+{
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        bundleMgrService_->GetDataMgr()->AddUserId(USER_ID);
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
+}
+
 void BmsExtendResourceManagerTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
 }
 
 void BmsExtendResourceManagerTest::SetUp()
-{}
+{
+    StartBundleService();
+    StartInstalldService();
+    InstallBundle(BUNDLE_PATH);
+}
 
 void BmsExtendResourceManagerTest::TearDown()
-{}
+{
+    UnInstallBundle(BUNDLE_NAME);
+}
 
 /**
  * @tc.number: ExtResourceTest_0100
@@ -301,6 +381,5 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0500, Function | SmallTes
     impl.SaveCurDynamicIcon(BUNDLE_NAME2, TEST_MODULE);
     ret = impl.GetDynamicIcon(BUNDLE_NAME2, moudleName);
     EXPECT_FALSE(moudleName.empty());
-    impl.SaveCurDynamicIcon(BUNDLE_NAME2, "");
 }
 } // OHOS
