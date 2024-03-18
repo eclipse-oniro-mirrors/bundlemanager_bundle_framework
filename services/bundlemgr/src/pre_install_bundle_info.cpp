@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,9 @@ const std::string BUNDLE_PATHS = "bundlePaths";
 const std::string APP_TYPE = "appType";
 const std::string REMOVABLE = "removable";
 const std::string IS_UNINSTALLED = "isUninstalled";
+const std::string MODULE_NAME = "moduleName";
+const std::string LABEL_ID = "labelId";
+const std::string ICON_ID = "iconId";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -36,6 +39,9 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
     jsonObject[IS_UNINSTALLED] = isUninstalled_;
+    jsonObject[MODULE_NAME] = moduleName_;
+    jsonObject[LABEL_ID] = labelId_;
+    jsonObject[ICON_ID] = iconId_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -90,6 +96,30 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_NAME,
+        moduleName_,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        LABEL_ID,
+        labelId_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ICON_ID,
+        iconId_,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     return parseResult;
 }
 
@@ -102,6 +132,9 @@ std::string PreInstallBundleInfo::ToString() const
     j[APP_TYPE] = appType_;
     j[REMOVABLE] = removable_;
     j[IS_UNINSTALLED] = isUninstalled_;
+    j[MODULE_NAME] = moduleName_;
+    j[LABEL_ID] = labelId_;
+    j[ICON_ID] = iconId_;
     return j.dump();
 }
 

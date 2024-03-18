@@ -3207,6 +3207,19 @@ void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::strin
     odid = odid_;
 }
 
+bool InnerBundleInfo::GetPreinstalledApplicationInfo(PreinstalledApplicationInfo &preinstalledApplicationInfo) const
+{
+    for (const auto &info : innerModuleInfos_) {
+        if (info.second.isEntry) {
+            preinstalledApplicationInfo.moduleName = info.second.moduleName;
+            preinstalledApplicationInfo.labelId = info.second.labelId;
+            preinstalledApplicationInfo.iconId = info.second.iconId;
+            break;
+        }
+    }
+    return true;
+}
+
 void InnerBundleInfo::AddAllowedAcls(const std::vector<std::string> &allowedAcls)
 {
     for (const auto &acl : allowedAcls) {

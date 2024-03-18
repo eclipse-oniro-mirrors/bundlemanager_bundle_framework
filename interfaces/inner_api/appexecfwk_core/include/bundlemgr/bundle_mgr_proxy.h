@@ -25,6 +25,7 @@
 #include "clean_cache_callback_interface.h"
 #include "element_name.h"
 #include "iremote_proxy.h"
+#include "preinstalled_application_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -933,6 +934,13 @@ public:
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    /**
+     * @brief Get preinstalled application infos.
+     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

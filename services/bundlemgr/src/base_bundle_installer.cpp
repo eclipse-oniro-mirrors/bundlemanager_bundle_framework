@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -56,6 +56,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #include "scope_guard.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -715,6 +716,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #else
         preInstallBundleInfo.SetRemovable(newInfos.begin()->second.GetRemovable());
 #endif
+        PreinstalledApplicationInfo preinstalledApplicationInfo;
+        newInfos.begin()->second.GetPreinstalledApplicationInfo(preinstalledApplicationInfo);
+        preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
+        preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
+        preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 

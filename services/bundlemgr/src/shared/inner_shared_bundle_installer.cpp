@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "preinstalled_application_info.h"
 #include "shared/base_shared_bundle_info.h"
 
 namespace OHOS {
@@ -416,6 +417,11 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
 #else
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
+    PreinstalledApplicationInfo preinstalledApplicationInfo;
+    newBundleInfo_.GetPreinstalledApplicationInfo(preinstalledApplicationInfo);
+    preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
+    preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
+    preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
     dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
 
     return ERR_OK;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,6 +22,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "preinstalled_application_info.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -167,6 +168,11 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.AddBundlePath(item.first);
     }
     preInstallBundleInfo.SetRemovable(false);
+    PreinstalledApplicationInfo preinstalledApplicationInfo;
+    newInfos.begin()->second.GetPreinstalledApplicationInfo(preinstalledApplicationInfo);
+    preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
+    preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
+    preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
     }

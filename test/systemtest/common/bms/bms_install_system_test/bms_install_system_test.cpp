@@ -1923,6 +1923,23 @@ HWTEST_F(BmsInstallSystemTest, CompileReset_0100, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: GetAllPreinstalledApplicationInfos_0100
+ * @tc.name: GetAllPreinstalledApplicationInfos
+ * @tc.desc: test GetAllPreinstalledApplicationInfos.
+ */
+HWTEST_F(BmsInstallSystemTest, GetAllPreinstalledApplicationInfos_0100, Function | SmallTest | Level1)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrProxy->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: CreateBundleDataDir_0100
  * @tc.name: CreateBundleDataDir
  * @tc.desc: CreateBundleDataDir when param is default userId.

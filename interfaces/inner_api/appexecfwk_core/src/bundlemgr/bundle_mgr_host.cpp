@@ -27,6 +27,7 @@
 #include "datetime_ex.h"
 #include "ipc_types.h"
 #include "json_util.h"
+#include "preinstalled_application_info.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -342,6 +343,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCanOpenLink);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
         &BundleMgrHost::HandleGetOdid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO),
+        &BundleMgrHost::HandleGetAllPreinstalledApplicationInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER),
         &BundleMgrHost::HandleGetExtendResourceManager);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID),
@@ -3242,6 +3245,24 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called.");
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(preinstalledApplicationInfos, reply)) {
+        APP_LOGE("Write preset app infos failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     return ERR_OK;
 }
 

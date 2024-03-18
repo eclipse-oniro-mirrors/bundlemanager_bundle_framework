@@ -28,6 +28,7 @@
 #include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
 #include "bundle_install_checker.h"
+#include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -48,6 +49,7 @@
 #include "installd_client.h"
 #include "parameter.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
@@ -1064,6 +1066,7 @@ void BMSEventHandler::ProcessRebootBundle()
 #endif
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
+    ProcessCheckPreinstallDataDir();
 }
 
 void BMSEventHandler::ProcessRebootDeleteAotPath()
@@ -1158,6 +1161,53 @@ void BMSEventHandler::InnerProcessCheckAppDataDir()
             userId, bundleInfos, Constants::DIR_EL3);
         UpdateAppDataMgr::ProcessUpdateAppDataDir(
             userId, bundleInfos, Constants::DIR_EL4);
+    }
+}
+
+void BMSEventHandler::ProcessCheckPreinstallDataDir()
+{
+    bool CheckPreinstallData = false;
+    CheckOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA_DIR, CheckPreinstallData);
+    if (CheckPreinstallData) {
+        APP_LOGI("Not need to check preinstall app data dir due to has checked.");
+        return;
+    }
+    APP_LOGI("Need to check log dir.");
+    InnerProcessCheckPreinstallDataDir();
+    UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA_DIR);
+}
+
+void BMSEventHandler::HandlePreinstallAppPathInner(BundleMgrHostImpl &impl,
+    std::vector<std::string> &preinstalledAppPaths, std::shared_ptr<BundleDataMgr> &dataMgr,
+    PreInstallBundleInfo &preInstallBundleInfo)
+{
+    for (auto &preinstalledAppPath : preinstalledAppPaths) {
+        BundleInfo bundleInfo;
+        impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, bundleInfo);
+        PreinstalledApplicationInfo preinstalledApplicationInfo;
+        for (auto &moduleInfo : bundleInfo.hapModuleInfos) {
+            if (moduleInfo.moduleName == bundleInfo.entryModuleName) {
+                preinstalledApplicationInfo.moduleName = moduleInfo.moduleName;
+                preinstalledApplicationInfo.labelId = moduleInfo.labelId;
+                preinstalledApplicationInfo.iconId = moduleInfo.iconId;
+            }
+        }
+        preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
+        preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
+        preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
+        dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
+        }
+}
+
+void BMSEventHandler::InnerProcessCheckPreinstallDataDir()
+{
+    APP_LOGD("Called.");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    BundleMgrHostImpl impl;
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
+        HandlePreinstallAppPathInner(impl, preinstalledAppPaths, dataMgr, preInstallBundleInfo);
     }
 }
 
