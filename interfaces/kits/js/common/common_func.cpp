@@ -1720,6 +1720,16 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
     napi_value nUpdateTime;
     NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, bundleInfo.updateTime, &nUpdateTime));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, "updateTime", nUpdateTime));
+
+    napi_value nRouterMap;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nRouterMap));
+    for (size_t idx = 0; idx < bundleInfo.routerArray.size(); idx++) {
+        napi_value nRouterItem;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nRouterItem));
+        ConvertRouterItem(env, bundleInfo.routerArray[idx], nRouterItem);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, ROUTER_MAP, nRouterMap));
 }
 
 void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,

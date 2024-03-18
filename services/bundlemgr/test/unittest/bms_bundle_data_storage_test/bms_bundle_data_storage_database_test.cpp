@@ -1179,7 +1179,8 @@ protected:
                 "vendor": "ohos",
                 "versionCode": 1000000,
                 "versionName": "1.0.0",
-                "oldAppIds":[]
+                "oldAppIds":[],
+                "routerArray": []
             },
             "baseExtensionInfos_": {
             },

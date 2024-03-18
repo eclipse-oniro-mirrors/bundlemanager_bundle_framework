@@ -25,14 +25,14 @@ namespace OHOS {
 namespace AppExecFwk {
 class RouterMapHelper {
 public:
-    static void BundleMergeRouter(BundleInfo &info);
+    static void MergeRouter(BundleInfo &info);
+    static void MergeRouter(const std::vector<RouterItem>& routerArrayList,
+        std::vector<RouterItem>& routerArray, const std::set<std::string>& moduleNameSet);
     static int32_t Compare(const std::string &version1, const std::string &version2);
     static int32_t Compare(const SemVer &semVer1, const SemVer &semVer2);
     static int32_t CompareIdentifiers(const std::string& a, const std::string& b);
     static int32_t CompareMain(const SemVer &semVer1, const SemVer &semVer2);
     static int32_t ComparePre(const SemVer &semVer1, const SemVer &semVer2);
-    static void MergeRouter(const std::vector<RouterItem>& routerArrayList,
-        std::vector<RouterItem>& routerArray, const std::set<std::string>& moduleNameSet);
     static std::string ExtractVersionFromOhmurl(const std::string &ohmurl);
 };
 } // AppExecFwk

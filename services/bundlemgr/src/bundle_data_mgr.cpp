@@ -2040,7 +2040,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
             APP_LOGE("parse router array from json file %{public}s failed", routerJsonPath.c_str());
         }
     }
-    RouterMapHelper::BundleMergeRouter(bundleInfo);
+    RouterMapHelper::MergeRouter(bundleInfo);
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,

@@ -29,7 +29,7 @@ const std::regex ALNUM_REGEX("^[a-zA-Z0-9]*$");
 const std::regex NUM_REGEX("^[0-9]+$");
 }
 
-void RouterMapHelper::BundleMergeRouter(BundleInfo &info)
+void RouterMapHelper::MergeRouter(BundleInfo &info)
 {
     if (info.hapModuleInfos.empty()) {
         APP_LOGW("hapModuleInfos in bundleInfo is empty");
@@ -54,13 +54,14 @@ void RouterMapHelper::BundleMergeRouter(BundleInfo &info)
 std::string RouterMapHelper::ExtractVersionFromOhmurl(const std::string &ohmurl)
 {
     size_t lastAmpersandPos = ohmurl.rfind('&');
-    if (lastAmpersandPos != std::string::npos) {
-        // "+1" for start intercepting after the "&" character
-        std::string lastSegment =  ohmurl.substr(lastAmpersandPos + 1);
-        return lastSegment;
+    std::string versionString;
+    if (lastAmpersandPos == std::string::npos) {
+        APP_LOGI("No ampersand found in the input ohmurl");
+        return versionString;
     }
-    APP_LOGW("No ampersand found in the input ohmurl");
-    return "";
+    // "+1" for start intercepting after the "&" character
+    versionString =  ohmurl.substr(lastAmpersandPos + 1);
+    return versionString;
 }
 
 void RouterMapHelper::MergeRouter(const std::vector<RouterItem>& routerArrayList,
