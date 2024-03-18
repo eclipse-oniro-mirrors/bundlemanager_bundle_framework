@@ -44,6 +44,7 @@
 #include "bundle_resource_register.h"
 #include "bundle_system_state.h"
 #include "launcher_ability_resource_info.h"
+#include "nlohmann/json.hpp"
 #endif
 
 #include "bundle_verify_mgr.h"
@@ -1483,11 +1484,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest
     resourceInfo.labelId_ = 0;
     resourceInfo.iconId_ = 0;
     BundleResourceParser parser;
-    bool ans = parser.ParseResourceInfo(resourceInfo);
+    bool ans = parser.ParseResourceInfo(USERID, resourceInfo);
     EXPECT_FALSE(ans);
 
     resourceInfo.hapPath_ = HAP_FILE_PATH1;
-    ans = parser.ParseResourceInfo(resourceInfo);
+    ans = parser.ParseResourceInfo(USERID, resourceInfo);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfo.label_, BUNDLE_NAME);
 }
@@ -1503,7 +1504,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0063, Function | SmallTest
 {
     std::vector<ResourceInfo> resourceInfos;
     BundleResourceParser parser;
-    bool ans = parser.ParseResourceInfos(resourceInfos);
+    bool ans = parser.ParseResourceInfos(USERID, resourceInfos);
     EXPECT_FALSE(ans);
 
     ResourceInfo resourceInfo;
@@ -1513,7 +1514,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0063, Function | SmallTest
     resourceInfo.iconId_ = 0;
     resourceInfos.push_back(resourceInfo);
 
-    ans = parser.ParseResourceInfos(resourceInfos);
+    ans = parser.ParseResourceInfos(USERID, resourceInfos);
     EXPECT_FALSE(ans);
 }
 
@@ -1665,12 +1666,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0069, Function | SmallTest
     if (!resourceInfos.empty()) {
         ResourceInfo resourceInfo;
         BundleResourceParser parser;
-        ans = parser.ParseResourceInfo(resourceInfos[0]);
+        ans = parser.ParseResourceInfo(USERID, resourceInfos[0]);
         EXPECT_TRUE(ans);
         EXPECT_NE(resourceInfos[0].label_, "");
         EXPECT_NE(resourceInfos[0].icon_, "");
 
-        ans = parser.ParseResourceInfos(resourceInfos);
+        ans = parser.ParseResourceInfos(USERID, resourceInfos);
         EXPECT_TRUE(ans);
         for (const auto &info : resourceInfos) {
             EXPECT_NE(info.label_, "");
@@ -1702,12 +1703,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0070, Function | SmallTest
     if (!resourceInfos.empty()) {
         ResourceInfo resourceInfo;
         BundleResourceParser parser;
-        ans = parser.ParseResourceInfo(resourceInfos[0]); // labelId and iconId = 0
+        ans = parser.ParseResourceInfo(USERID, resourceInfos[0]); // labelId and iconId = 0
         EXPECT_FALSE(ans);
         EXPECT_EQ(resourceInfos[0].label_, "");
         EXPECT_EQ(resourceInfos[0].icon_, "");
 
-        ans = parser.ParseResourceInfos(resourceInfos);
+        ans = parser.ParseResourceInfos(USERID, resourceInfos);
         EXPECT_FALSE(ans);
     }
 
@@ -2818,6 +2819,69 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0113, Function | SmallTest
 {
     BundleResourceCallback callback;
     bool ans = callback.OnApplicationThemeChanged("xxxxx");
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0114
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnApplicationThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0114, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    nlohmann::json theme = R"(
+        {
+            "icons": 0,
+            "skin": 0,
+            "font": 0
+        }
+    )"_json;
+    bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0115
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnApplicationThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0115, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    nlohmann::json theme = R"(
+        {
+            "icons": 1,
+            "skin": 1,
+            "font": 0
+        }
+    )"_json;
+    bool ans = callback.OnApplicationThemeChanged(theme.dump());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0116
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test OnApplicationThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    nlohmann::json theme = R"(
+        {
+            "icons": 1,
+            "skin": 1,
+            "font": 1
+        }
+    )"_json;
+    bool ans = callback.OnApplicationThemeChanged(theme.dump());
     EXPECT_TRUE(ans);
 }
 #endif

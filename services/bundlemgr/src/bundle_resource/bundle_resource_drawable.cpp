@@ -32,14 +32,25 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     if (resourceManager == nullptr) {
         return false;
     }
+    BundleResourceImageInfo info;
     OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
-    Global::Resource::RState state;
+    std::string themeMask = resourceManager->GetThemeMask();
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundInfo;
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
+    Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
+    if (state == Global::Resource::SUCCESS) {
+        auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
+            themeMask, drawableType, resourceManager);
+        if (drawableDescriptor == nullptr) {
+            return false;
+        }
+        return info.ConvertToString(drawableDescriptor->GetPixelMap(), icon);
+    }
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
         iconId, resourceManager, state, drawableType, 0);
     if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
         return false;
     }
-    BundleResourceImageInfo info;
     return info.ConvertToString(drawableDescriptor->GetPixelMap(), icon);
 #else
     return false;

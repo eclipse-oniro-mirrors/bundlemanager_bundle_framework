@@ -30,17 +30,17 @@ public:
 
     ~BundleResourceParser();
     // parse label and icon
-    bool ParseResourceInfo(ResourceInfo &resourceInfo);
+    bool ParseResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
 
     // parse label and icon
-    bool ParseResourceInfos(std::vector<ResourceInfo> &resourceInfos);
+    bool ParseResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     // parse icon resource by hapPath
     bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon);
 
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
-    bool ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo);
+    bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);
 
     // parse label resource by hapPath
     bool ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label);
