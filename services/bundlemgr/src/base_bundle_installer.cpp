@@ -96,7 +96,8 @@ const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.sceneboard",
     "com.ohos.callui",
-    "com.ohos.mms"
+    "com.ohos.mms",
+    "com.ohos.FusionSearch"
 };
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
