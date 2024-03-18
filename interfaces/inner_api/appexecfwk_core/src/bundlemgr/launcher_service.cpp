@@ -243,32 +243,27 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
     return true;
 }
 
-bool LauncherService::GetShortcutInfos(
+ErrCode LauncherService::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
     APP_LOGD("GetShortcutInfos called");
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
-        APP_LOGE("non-system app calling system api");
-        return false;
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     std::vector<ShortcutInfo> infos;
     if (!iBundleMgr->GetShortcutInfos(bundleName, infos)) {
-        APP_LOGE("Get shortcut infos failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infos.size() == 0) {
-        APP_LOGE("ShortcutInfo is not exist in system");
-        return false;
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
 
     for (ShortcutInfo shortcutInfo : infos) {
@@ -276,7 +271,7 @@ bool LauncherService::GetShortcutInfos(
             shortcutInfos.emplace_back(shortcutInfo);
         }
     }
-    return true;
+    return ERR_OK;
 }
 
 void LauncherService::InitWant(Want &want, const std::string &bundleName)

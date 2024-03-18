@@ -1994,7 +1994,7 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
         std::string menuProfile = hapModuleInfo.fileContextMenu;
         auto pos = menuProfile.find(PROFILE_PREFIX);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid menu profile");
+            APP_LOGD("invalid menu profile");
             continue;
         }
         std::string menuFileName = menuProfile.substr(pos + PROFILE_PREFIX_LENGTH);
@@ -2022,7 +2022,7 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
         std::string routerPath = hapModuleInfo.routerMap;
         auto pos = routerPath.find(PROFILE_PREFIX);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid router profile");
+            APP_LOGD("invalid router profile");
             continue;
         }
         std::string routerJsonName = routerPath.substr(pos + PROFILE_PREFIX_LENGTH);
@@ -3646,7 +3646,7 @@ bool BundleDataMgr::GetFormsInfoByModule(
     if (formInfos.empty()) {
         return false;
     }
-    APP_LOGW("module forminfo find success");
+    APP_LOGD("module forminfo find success");
     return true;
 }
 

@@ -22,12 +22,12 @@ namespace OHOS {
 namespace AppExecFwk {
 SystemBundleInstaller::SystemBundleInstaller()
 {
-    APP_LOGI("system bundle installer instance is created");
+    APP_LOGD("system bundle installer instance is created");
 }
 
 SystemBundleInstaller::~SystemBundleInstaller()
 {
-    APP_LOGI("system bundle installer instance is destroyed");
+    APP_LOGD("system bundle installer instance is destroyed");
 }
 
 ErrCode SystemBundleInstaller::InstallSystemBundle(

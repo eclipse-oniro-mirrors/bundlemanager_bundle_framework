@@ -307,7 +307,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
 {
     std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
-        APP_LOGE("fail to access error:%{public}d", errno);
+        APP_LOGD("fail to access error:%{public}d", errno);
         if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
             APP_LOGE("make bundle dir error:%{public}d", errno);
             return;

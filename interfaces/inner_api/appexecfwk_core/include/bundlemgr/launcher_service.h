@@ -69,7 +69,7 @@ public:
      * @param launcherShortcutInfo List of LauncherShortcutInfo objects if obtained.
      * @return Returns true if the function is successfully called; returns false otherwise.
      */
-    virtual bool GetShortcutInfos(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfo);
+    virtual ErrCode GetShortcutInfos(const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfo);
     /**
      * @brief Obtains information about the launcher ability of all application that appears on launcher.
      * @param userId Indicates the id for the user.
