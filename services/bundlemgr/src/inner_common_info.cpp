@@ -300,7 +300,7 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
             }
         }
         // if uri is a file path, match type by the suffix
-        return MatchMimeType(uriString);
+        return MatchMimeType(uriString, matchUriIndex);
     } else if (uriString.empty() && !type.empty()) {
         // case3 : param uri empty, param type not empty
         for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
@@ -451,6 +451,27 @@ bool Skill::MatchMimeType(const std::string & uriString) const
             if ((MatchUri(uriString, skillUri) ||
                 (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
                 MatchType(mimeType, skillUri.type)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) const
+{
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+        const SkillUri &skillUri = uris[uriIndex];
+        for (const auto &mimeType : mimeTypes) {
+            if ((MatchUri(uriString, skillUri) ||
+                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(mimeType, skillUri.type)) {
+                matchUriIndex = uriIndex;
                 return true;
             }
         }
