@@ -36,6 +36,7 @@ namespace {
     const std::string ABC_FILE = "a.abc";
     const std::string ERR_FILE_PATH = "data";
     const std::string BUNDLE_NAME = "com.ohos.launcher";
+    const std::string EMPTY_STRING = "";
     const int32_t FD = 0;
 }  // namespace
 
@@ -86,6 +87,8 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0100, Function | SmallTes
     std::vector<std::string> abcPaths;
     abcPaths.push_back(FILE_PATH);
     abcPaths.push_back(ERR_FILE_PATH);
+    abcPaths.push_back(EMPTY_STRING);
+    
     auto ret = impl.VerifyAbc(abcPaths);
     EXPECT_FALSE(ret);
 }
@@ -149,13 +152,19 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0400, Function | SmallTes
     VerifyManagerHostImpl impl;
     std::vector<std::string> abcPaths;
     std::vector<std::string> abcNames;
+    abcPaths.push_back(EMPTY_STRING);
+    impl.RemoveTempFiles(abcPaths);
+    abcPaths.clear();
+
     abcPaths.push_back(FILE_PATH);
     abcNames.push_back(FILE_PATH);
-
     impl.RemoveTempFiles(abcPaths);
+
     std::string fileName = BUNDLE_NAME;
     auto ret = impl.GetFileName(FILE_PATH, fileName);
     EXPECT_TRUE(ret);
+    ret = impl.GetFileName(ERR_FILE_PATH, fileName);
+    EXPECT_FALSE(ret);
 
     auto ret1 = impl.InnerVerify(abcPaths, abcNames, true);
     EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED);
@@ -253,5 +262,83 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0900, Function | SmallTes
     abcNames.push_back(INVALID_PREFIX);
     auto ret1 = impl.Verify(abcPaths, abcNames, true);
     EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckFileParam
+ * @tc.name: test CheckFileParam
+ * @tc.desc: 1.CheckFileParam test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1000, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    auto ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+    abcPaths.push_back(INVALID_PREFIX);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcPaths.clear();
+    abcNames.push_back(INVALID_PREFIX);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcPaths.push_back(INVALID_PREFIX);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+}
+
+/**
+ * @tc.number: CheckFileParam
+ * @tc.name: test CheckFileParam
+ * @tc.desc: 1.CheckFileParam test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1100, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    abcPaths.push_back(INVALID_PATH);
+    abcNames.push_back(INVALID_PATH);
+    auto ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcPaths.clear();
+    abcPaths.push_back(ERR_FILE_PATH);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcPaths.clear();
+    abcPaths.push_back(INVALID_PREFIX);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1); 
+}
+
+/**
+ * @tc.number: CheckFileParam
+ * @tc.name: test CheckFileParam
+ * @tc.desc: 1.CheckFileParam test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1200, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    abcPaths.push_back(FILE_PATH);
+    abcNames.push_back(INVALID_PATH);
+    auto ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcNames.clear();
+    abcNames.push_back(ERR_FILE_PATH);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_FALSE(ret1);
+
+    abcNames.clear();
+    abcNames.push_back(FILE_PATH);
+    ret1 = impl.CheckFileParam(abcPaths, abcNames);
+    EXPECT_TRUE(ret1); 
 }
 } // OHOS
