@@ -171,6 +171,23 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
     AddTask(task, "UninstallTask : bundleName : " + uninstallParam.bundleName);
 }
 
+void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bundleName,
+    const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
+{
+    auto installer = CreateInstaller(statusReceiver);
+    if (installer == nullptr) {
+        APP_LOGE("create installer failed");
+        return;
+    }
+    auto task = [installer, bundleName, installParam] {
+        BundleMemoryGuard memoryGuard;
+        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        installer->UninstallAndRecover(bundleName, installParam);
+        XCollieHelper::CancelTimer(timerId);
+    };
+    AddTask(task, "UninstallAndRecover: bundleName : " + bundleName);
+}
+
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
 {
     int64_t installerId = GetMicroTickCount();

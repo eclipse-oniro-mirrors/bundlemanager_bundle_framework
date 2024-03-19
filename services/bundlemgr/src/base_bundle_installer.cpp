@@ -1208,6 +1208,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    if (installParam.isUninstallAndRecover && !oldInfo.GetIsPreInstallApp()) {
+        APP_LOGE("UninstallAndRecover bundle is not pre-install app.");
+        return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
+    }
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -1225,7 +1229,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted &&
-        !oldInfo.GetRemovable() && installParam.noSkipsKill) {
+        !oldInfo.GetRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }

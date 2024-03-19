@@ -207,6 +207,7 @@ enum class BundleInstallerInterfaceCode : uint32_t {
     UNINSTALL_SANDBOX_APP,
     CREATE_STREAM_INSTALLER,
     DESTORY_STREAM_INSTALLER,
+    UNINSTALL_AND_RECOVER,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

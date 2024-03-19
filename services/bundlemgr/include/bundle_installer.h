@@ -97,6 +97,8 @@ public:
     virtual void UpdateInstallerState(const InstallerState state) override;
     void UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam);
 
+    void UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam);
+
 private:
     /**
      * @brief Get all exist common userId.
