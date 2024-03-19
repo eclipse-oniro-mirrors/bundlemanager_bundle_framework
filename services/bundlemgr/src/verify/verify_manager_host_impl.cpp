@@ -141,7 +141,7 @@ bool VerifyManagerHostImpl::CheckFileParam(
         }
     }
 
-    for (const auto abcName : abcNames) {
+    for (const std::string &abcName : abcNames) {
         if (!IsValidPath(abcName)) {
             APP_LOGE("CheckFile abcName(%{public}s) failed due to invalid path", abcName.c_str());
             return false;

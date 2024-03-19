@@ -165,9 +165,9 @@ void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installPara
         NotifyBundleEvents installRes = {
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
+            .type = NotifyType::START_INSTALL,
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .type = NotifyType::START_INSTALL
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for start install");
