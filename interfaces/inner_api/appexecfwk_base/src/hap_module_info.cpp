@@ -88,6 +88,9 @@ const std::string ROUTER_ITEM_KEY_PAGE_MODULE = "pageModule";
 const std::string ROUTER_ITEM_KEY_PAGE_SOURCE_FILE = "pageSourceFile";
 const std::string ROUTER_ITEM_KEY_BUILD_FUNCTION = "buildFunction";
 const std::string ROUTER_ITEM_KEY_DATA = "data";
+const std::string ROUTER_ITEM_KEY_OHMURL = "ohmurl";
+const std::string ROUTER_ITEM_KEY_BUNDLE_NAME = "bundleName";
+const std::string ROUTER_ITEM_KEY_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
@@ -310,6 +313,9 @@ bool RouterItem::ReadFromParcel(Parcel &parcel)
         std::string value = Str16ToStr8(parcel.ReadString16());
         data.emplace(key, value);
     }
+    ohmurl = Str16ToStr8(parcel.ReadString16());
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -336,6 +342,9 @@ bool RouterItem::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(ohmurl));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     return true;
 }
 
@@ -346,7 +355,10 @@ void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem)
         {ROUTER_ITEM_KEY_PAGE_MODULE, routerItem.pageModule},
         {ROUTER_ITEM_KEY_PAGE_SOURCE_FILE, routerItem.pageSourceFile},
         {ROUTER_ITEM_KEY_BUILD_FUNCTION, routerItem.buildFunction},
-        {ROUTER_ITEM_KEY_DATA, routerItem.data}
+        {ROUTER_ITEM_KEY_DATA, routerItem.data},
+        {ROUTER_ITEM_KEY_OHMURL, routerItem.ohmurl},
+        {ROUTER_ITEM_KEY_BUNDLE_NAME, routerItem.bundleName},
+        {ROUTER_ITEM_KEY_MODULE_NAME, routerItem.moduleName}
     };
 }
 
@@ -391,6 +403,30 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         ROUTER_ITEM_KEY_DATA,
         routerItem.data,
         JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_OHMURL,
+        routerItem.ohmurl,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_BUNDLE_NAME,
+        routerItem.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_MODULE_NAME,
+        routerItem.moduleName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

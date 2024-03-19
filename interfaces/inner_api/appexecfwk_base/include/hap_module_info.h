@@ -94,6 +94,9 @@ struct RouterItem : public Parcelable {
     std::string pageSourceFile;
     std::string buildFunction;
     std::map<std::string, std::string> data;
+    std::string ohmurl;
+    std::string bundleName;
+    std::string moduleName;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
