@@ -641,6 +641,7 @@ private:
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
+    void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -694,6 +695,7 @@ private:
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
+    std::string appDistributionType_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

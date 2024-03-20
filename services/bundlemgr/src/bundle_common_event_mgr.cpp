@@ -33,6 +33,8 @@ constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
 constexpr const char* IS_ENABLE_DYNAMIC_ICON = "isEnableDynamicIcon";
+constexpr const char* APP_IDENTIFIER = "appIdentifier";
+constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 }
 
@@ -85,6 +87,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
     want.SetParam(APP_ID, installResult.appId);
     want.SetParam(IS_MODULE_UPDATE, installResult.isModuleUpdate);
+    want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);
+    want.SetParam(APP_DISTRIBUTION_TYPE, installResult.appDistributionType);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
