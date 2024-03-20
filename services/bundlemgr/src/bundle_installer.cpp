@@ -245,7 +245,7 @@ void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const I
             resultCode = ERR_OK;
         }
     } else {
-        resultCode = (errCode.size() > 0) ? errCode[0] : ERR_OK;
+        resultCode = (errCode.size() > 0) ? errCode[0] : ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
