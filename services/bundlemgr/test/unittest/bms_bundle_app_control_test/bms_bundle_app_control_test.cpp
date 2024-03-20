@@ -1404,4 +1404,20 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4400, Function | Sma
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     EXPECT_EQ(disposedRules.empty(), true);
 }
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4400
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4500, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto appControlManager = impl->appControlManager_;
+    std::vector<DisposedRule> disposedRules;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    ErrCode res = appControlManager->GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, userId, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(disposedRules.empty(), true);
+}
 } // OHOS
