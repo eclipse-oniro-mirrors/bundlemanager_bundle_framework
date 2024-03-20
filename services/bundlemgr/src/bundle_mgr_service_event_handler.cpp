@@ -947,7 +947,7 @@ void BMSEventHandler::AddTaskParallel(
         return;
     }
 
-    size_t threadsNum = installerHost->GetThreadsNum();
+    size_t threadsNum = static_cast<size_t>(installerHost->GetThreadsNum());
     APP_LOGI("priority: %{public}d, tasks: %{public}zu, userId: %{public}d, threadsNum: %{public}zu.",
         taskPriority, tasks.size(), userId, threadsNum);
     std::atomic_uint taskEndNum = 0;
