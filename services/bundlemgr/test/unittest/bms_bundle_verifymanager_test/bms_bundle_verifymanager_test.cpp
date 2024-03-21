@@ -313,7 +313,7 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1100, Function | SmallTes
     abcPaths.clear();
     abcPaths.push_back(INVALID_PREFIX);
     ret1 = impl.CheckFileParam(abcPaths, abcNames);
-    EXPECT_FALSE(ret1); 
+    EXPECT_FALSE(ret1);
 }
 
 /**
@@ -339,6 +339,6 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1200, Function | SmallTes
     abcNames.clear();
     abcNames.push_back(FILE_PATH);
     ret1 = impl.CheckFileParam(abcPaths, abcNames);
-    EXPECT_TRUE(ret1); 
+    EXPECT_TRUE(ret1);
 }
 } // OHOS
