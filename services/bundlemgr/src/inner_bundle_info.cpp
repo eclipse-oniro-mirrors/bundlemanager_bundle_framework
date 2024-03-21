@@ -763,6 +763,23 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     return abilitys;
 }
 
+std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(const std::string continueType, int32_t userId) const
+{
+    APP_LOGI("count: %{public}d", baseAbilityInfos_.size());
+    for (const auto &ability : baseAbilityInfos_) {
+        AbilityInfo abilityInfo = ability.second;
+        std::vector<std::string> continueTypes = abilityInfo.continueType;
+        auto item = std::find(continueTypes.begin(), continueTypes.end(), continueType);
+        if (item != continueTypes.end()) {
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                abilityInfo.applicationInfo);
+            return abilityInfo;
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     const std::string &moduleName, const std::string &extensionName) const
 {

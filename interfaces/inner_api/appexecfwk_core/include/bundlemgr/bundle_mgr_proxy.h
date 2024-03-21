@@ -940,6 +940,17 @@ public:
      */
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
 
+    /**
+     * @brief Query the AbilityInfo by continueType.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param continueType Indicates the continue type of the ability.
+     * @param abilityInfo Indicates the obtained AbilityInfo object.
+     * @param userId Indicates the information of the user.
+     * @return Returns true if the AbilityInfos is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

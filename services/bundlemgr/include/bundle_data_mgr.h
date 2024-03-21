@@ -896,6 +896,9 @@ public:
     ErrCode AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
         Security::AccessToken::AccessTokenIDEx accessToken);
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
+    ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
+
 private:
     /**
      * @brief Init transferStates.
