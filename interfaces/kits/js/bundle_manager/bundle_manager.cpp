@@ -2823,7 +2823,7 @@ void CreateAppDistributionTypeObject(napi_env env, napi_value value)
 
     napi_value nCrowdTesting;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SIX, &nCrowdTesting));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWD_TESTING", nCrowdTesting));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWDTESTING", nCrowdTesting));
 
     napi_value nNone;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SEVEN, &nNone));

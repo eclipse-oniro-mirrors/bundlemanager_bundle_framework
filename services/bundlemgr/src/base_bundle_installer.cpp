@@ -194,7 +194,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .type = GetNotifyType(),
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isModuleUpdate = isModuleUpdate_
+            .isModuleUpdate = isModuleUpdate_,
+            .appDistributionType = appDistributionType_
         };
         if (installParam.allUser) {
             AddBundleStatus(installRes);
@@ -234,7 +235,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .resultCode = result,
             .type = NotifyType::INSTALL,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .appDistributionType = appDistributionType_
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -267,7 +269,8 @@ ErrCode BaseBundleInstaller::Recover(
             .resultCode = result,
             .type = NotifyType::INSTALL,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .appDistributionType = appDistributionType_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -2988,9 +2991,17 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    SetAppDistributionType(infos);
     return ret;
 }
 
+void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        return;
+    }
+    appDistributionType_ = infos.begin()->second.GetAppDistributionType();
+}
 
 void BaseBundleInstaller::GenerateOdid(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
