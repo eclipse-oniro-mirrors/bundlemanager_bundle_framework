@@ -1718,12 +1718,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
         if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
             && AllowSingletonChange(newInfo.GetBundleName())) {
-            APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
             singletonState_ = SingletonState::SINGLETON_TO_NON;
+        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
+            && AllowSingletonChange(newInfo.GetBundleName())) {
+            singletonState_ = SingletonState::NON_TO_SINGLETON;
         } else {
             APP_LOGE("Singleton not allow changed");
             return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
         }
+        APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
     }
 
     auto result = CheckOverlayUpdate(oldInfo, newInfo, userId_);
