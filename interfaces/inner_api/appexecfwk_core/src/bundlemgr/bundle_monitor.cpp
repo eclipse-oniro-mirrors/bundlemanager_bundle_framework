@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,7 +26,10 @@ BundleMonitor::BundleMonitor(const EventFwk::CommonEventSubscribeInfo &subscribe
 bool BundleMonitor::Subscribe(const sptr<IBundleStatusCallback> &callback)
 {
     APP_LOGI("Subscribe called");
-    callback_ = callback;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callback_ = callback;
+    }
 
     if (EventFwk::CommonEventManager::SubscribeCommonEvent(shared_from_this()) != true) {
         APP_LOGE("SubscribeCommonEvent occur exception.");
@@ -42,7 +45,10 @@ bool BundleMonitor::UnSubscribe()
         APP_LOGE("UnsubscribeCommonEvent occur exception.");
         return false;
     }
-    callback_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callback_ = nullptr;
+    }
     return true;
 }
 
@@ -55,6 +61,7 @@ void BundleMonitor::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
     int userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
     APP_LOGI("OnReceiveEvent action = %{public}s, bundle = %{public}s, userId = %{public}d",
         action.c_str(), bundleName.c_str(), userId);
+    std::lock_guard<std::mutex> lock(mutex_);
     if ((action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) && (callback_ != nullptr)) {
         callback_->OnBundleAdded(bundleName, userId);
     } else if ((action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) && (callback_ != nullptr)) {
