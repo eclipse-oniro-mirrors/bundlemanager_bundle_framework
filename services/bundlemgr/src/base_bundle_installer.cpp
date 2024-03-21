@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -165,9 +165,9 @@ void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installPara
         NotifyBundleEvents installRes = {
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
+            .type = NotifyType::START_INSTALL,
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .type = NotifyType::START_INSTALL
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for start install");
@@ -1085,7 +1085,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
-    sync();
+    ForceWriteToDisk();
     return result;
 }
 
@@ -1211,6 +1211,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    if (installParam.isUninstallAndRecover && !oldInfo.GetIsPreInstallApp()) {
+        APP_LOGE("UninstallAndRecover bundle is not pre-install app.");
+        return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
+    }
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -1228,7 +1232,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted &&
-        !oldInfo.GetRemovable() && installParam.noSkipsKill) {
+        !oldInfo.GetRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -4713,6 +4717,16 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInf
     }
     APP_LOGI("UpdateHapToken %{public}s end", bundleName_.c_str());
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ForceWriteToDisk() const
+{
+    auto task = []() {
+        APP_LOGI("sync begin");
+        sync();
+        APP_LOGI("sync end");
+    };
+    std::thread(task).detach();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

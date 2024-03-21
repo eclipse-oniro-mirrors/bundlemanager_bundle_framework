@@ -642,6 +642,7 @@ private:
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void ForceWriteToDisk() const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

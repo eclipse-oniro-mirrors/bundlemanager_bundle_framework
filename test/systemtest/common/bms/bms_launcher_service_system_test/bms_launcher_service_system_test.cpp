@@ -789,8 +789,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0100, Function | MediumT
     LauncherService launcherservice;
     std::string bundleName = "com.third.hiworld.example1";
     std::vector<ShortcutInfo> shortcutInfos;
-    bool result = launcherservice.GetShortcutInfos(bundleName, shortcutInfos);
-    EXPECT_FALSE(result) << "Get ability list failed";
+    auto result = launcherservice.GetShortcutInfos(bundleName, shortcutInfos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     Uninstall(TEST_BUNDLE_NAME, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";
@@ -811,8 +811,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, GetShortcutInfos_0200, Function | MediumT
     LauncherService launcherservice;
 
     std::vector<ShortcutInfo> shortcutInfos;
-    bool result = launcherservice.GetShortcutInfos("", shortcutInfos);
-    EXPECT_FALSE(result) << "Get ability list failed";
+    auto result = launcherservice.GetShortcutInfos("", shortcutInfos);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 
     GTEST_LOG_(INFO) << "END GetShortcutInfos_0200";
 }

@@ -33,6 +33,7 @@ config("bundlemgr_common_config") {
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
+    "include/navigation",
     "include/shared",
     "include/quick_fix/state/include",
     "include/verify",

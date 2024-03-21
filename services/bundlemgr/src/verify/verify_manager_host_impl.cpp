@@ -68,16 +68,8 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
 ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths,
     const std::vector<std::string> &abcNames, bool flag)
 {
-    ErrCode ret = InnerVerify(abcPaths, abcNames, flag);
-    RemoveTempFiles(abcPaths);
-    return ret;
-}
-
-ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPaths,
-    const std::vector<std::string> &abcNames, bool flag)
-{
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
-        APP_LOGE("verify install permission failed.");
+        APP_LOGE("verify permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
 
@@ -86,6 +78,14 @@ ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPa
         return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
     }
 
+    ErrCode ret = InnerVerify(abcPaths, abcNames, flag);
+    RemoveTempFiles(abcPaths);
+    return ret;
+}
+
+ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPaths,
+    const std::vector<std::string> &abcNames, bool flag)
+{
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("verify failed, dataMgr is null");
@@ -141,7 +141,7 @@ bool VerifyManagerHostImpl::CheckFileParam(
         }
     }
 
-    for (const auto abcName : abcNames) {
+    for (const std::string &abcName : abcNames) {
         if (!IsValidPath(abcName)) {
             APP_LOGE("CheckFile abcName(%{public}s) failed due to invalid path", abcName.c_str());
             return false;

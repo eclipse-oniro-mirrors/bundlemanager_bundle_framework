@@ -122,9 +122,13 @@ bool BundleResourceManager::DeleteAllResourceInfo()
 
 bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
 {
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfo(resourceInfo)) {
+    if (!parser.ParseResourceInfo(currentUserId, resourceInfo)) {
         APP_LOGW("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
         BundleResourceInfo bundleResourceInfo;
         if (GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
@@ -144,9 +148,13 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
         APP_LOGE("resourceInfos is empty.");
         return false;
     }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfos(resourceInfos)) {
+    if (!parser.ParseResourceInfos(currentUserId, resourceInfos)) {
         APP_LOGW("Parse ResourceInfos failed, need to modify label and icon");
         for (auto &resourceInfo : resourceInfos) {
             ProcessResourceInfoWhenParseFailed(resourceInfo);
@@ -170,13 +178,17 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
     }
     threadPool->Start(std::thread::hardware_concurrency());
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     for (const auto &item : resourceInfosMap) {
         std::string bundleName = item.first;
-        auto task = [bundleName, &resourceInfosMap]() {
+        auto task = [currentUserId, bundleName, &resourceInfosMap]() {
             // need to parse label and icon
             if (resourceInfosMap.find(bundleName) != resourceInfosMap.end()) {
                 BundleResourceParser parser;
-                parser.ParseResourceInfos(resourceInfosMap[bundleName]);
+                parser.ParseResourceInfos(currentUserId, resourceInfosMap[bundleName]);
             }
         };
         threadPool->AddTask(task);
@@ -209,7 +221,7 @@ void BundleResourceManager::ProcessResourceInfo(
         resourceInfo.label_ = resourceInfo.bundleName_;
     }
     if (resourceInfo.icon_.empty()) {
-        if (!resourceInfos.empty()) {
+        if (!resourceInfos.empty() && !resourceInfos[0].icon_.empty()) {
             resourceInfo.icon_ = resourceInfos[0].icon_;
         } else {
             ProcessResourceInfoWhenParseFailed(resourceInfo);

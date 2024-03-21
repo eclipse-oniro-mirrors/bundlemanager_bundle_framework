@@ -3180,7 +3180,7 @@ std::vector<std::string> InnerBundleInfo::GetQuerySchemes() const
         return std::vector<std::string>();
     }
     std::vector<std::string> querySchemes = innerModuleInfos_.at(entryModuleName).querySchemes;
-    for (int32_t i = 0; i < querySchemes.size(); i++) {
+    for (size_t i = 0; i < querySchemes.size(); i++) {
         transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
     }
     return querySchemes;
