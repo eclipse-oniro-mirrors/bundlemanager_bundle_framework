@@ -372,7 +372,7 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
         auto iter = extendResourceInfos.find(moduleName);
         if (iter == extendResourceInfos.end()) {
             APP_LOGE("Module not exist %{public}s.", moduleName.c_str());
-            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+            return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
         }
 
         collectorExtResourceInfos.emplace_back(iter->second);
