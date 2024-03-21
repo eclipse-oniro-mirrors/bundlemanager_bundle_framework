@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -102,7 +102,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/navigation", ExtensionAbilityType::SYSPICKER_NAVIGATION },
     { "sysPicker/appSelector", ExtensionAbilityType::SYSPICKER_APPSELECTOR },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
-    { "vpn", ExtensionAbilityType::VPN }
+    { "vpn", ExtensionAbilityType::VPN },
+    { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART }
 };
 
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
