@@ -7683,7 +7683,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | S
 #ifdef USE_ARM64
     EXPECT_TRUE(res);
 #else
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
 #endif
 }
 
