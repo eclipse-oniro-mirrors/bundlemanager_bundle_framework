@@ -53,6 +53,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
+constexpr const char* APP_LINKING = "applinking";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -2415,9 +2416,27 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
     if (isBrokerServiceExisted_ &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
+        FilterAbilityInfos(abilityInfos);
         return true;
     }
     return ret;
+}
+
+void BundleMgrHostImpl::FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos)
+{
+    AbilityInfo appLinkingAbility;
+    bool hasAppLinking = false;
+    for (const auto& ability : abilityInfos) {
+        if (ability.kind == APP_LINKING) {
+            appLinkingAbility = ability;
+            hasAppLinking = true;
+            break;
+        }
+    }
+    if (hasAppLinking) {
+        abilityInfos.clear();
+        abilityInfos.push_back(appLinkingAbility);
+    }
 }
 
 int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)
