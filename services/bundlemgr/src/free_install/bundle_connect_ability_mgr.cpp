@@ -1116,7 +1116,7 @@ bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerIn
 void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCallerInfo &callerInfo, int32_t userId)
 {
     callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
-    callerInfo.uid = want.GetIntParam(Want::PARAM_RESV_CALLER_UID, IPCSkeleton::GetCallingUid());
+    callerInfo.uid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
     callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
     callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
     callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
