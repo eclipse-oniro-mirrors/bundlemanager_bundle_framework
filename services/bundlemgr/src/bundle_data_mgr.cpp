@@ -321,6 +321,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         updateTsanEnabled(newInfo, oldInfo);
+        ProcessAllowedAcls(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -334,7 +335,6 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
@@ -518,6 +518,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
+        ProcessAllowedAcls(newInfo, oldInfo);
         oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
@@ -541,7 +542,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-        ProcessAllowedAcls(newInfo, oldInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
