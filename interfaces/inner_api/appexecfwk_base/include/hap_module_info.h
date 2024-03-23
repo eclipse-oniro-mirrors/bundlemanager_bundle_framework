@@ -175,6 +175,7 @@ struct HapModuleInfo : public Parcelable {
     std::string routerMap;
     std::vector<RouterItem> routerArray;
     std::vector<AppEnvironment> appEnvironments;
+    std::string packageName;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

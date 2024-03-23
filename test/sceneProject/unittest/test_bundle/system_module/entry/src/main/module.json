@@ -180,6 +180,7 @@
                 "description":"$string:permdesc_provider002",
                 "descriptionId":113
             }
-        ]
+        ],
+        "packageName": "packageNameTest"
     }
 }

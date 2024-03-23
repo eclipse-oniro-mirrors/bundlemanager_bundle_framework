@@ -675,6 +675,8 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(extensionInfos.iconId, 16777229);
         EXPECT_EQ(extensionInfos.label, "$string:extension_name");
         EXPECT_EQ(extensionInfos.labelId, 16777220);
+
+        EXPECT_EQ(hapModuleInfo.packageName, "packageNameTest");
     }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }

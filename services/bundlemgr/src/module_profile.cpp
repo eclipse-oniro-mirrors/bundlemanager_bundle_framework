@@ -262,6 +262,7 @@ struct Module {
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
+    std::string packageName;
 };
 
 struct ModuleJson {
@@ -1471,6 +1472,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PACKAGE_NAME,
+        module.packageName,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -2180,6 +2189,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
+    innerModuleInfo.packageName = moduleJson.module.packageName;
     return true;
 }
 
