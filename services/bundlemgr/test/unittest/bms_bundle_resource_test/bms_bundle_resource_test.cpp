@@ -1301,7 +1301,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0053, Function | SmallTest
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
+    // overlay type is OVERLAY_EXTERNAL_BUNDLE
+    bundleInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 100, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
     // userId not exist
+    bundleInfo.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
     ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 200, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
@@ -2741,8 +2748,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0107, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0108, Function | SmallTest | Level0)
 {
+    InnerBundleInfo info;
     std::vector<std::string> overlayHapPaths;
-    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(BUNDLE_NAME, MODULE_NAME, USERID, overlayHapPaths);
+    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
     EXPECT_FALSE(ans);
 }
 
@@ -2883,6 +2891,97 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest
     )"_json;
     bool ans = callback.OnApplicationThemeChanged(theme.dump());
     EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0117
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetOverlayModuleHapPaths
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01117, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.modulePackage = MODULE_NAME;
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos[MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(moduleInfos);
+    std::vector<std::string> overlayHapPaths;
+    // overlay moduleInfo is empty
+    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(overlayHapPaths.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0118
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetOverlayModuleHapPaths
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME;
+    info.SetBaseBundleInfo(bundleInfo);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.modulePackage = MODULE_NAME;
+    OverlayModuleInfo overlayModuleInfo;
+    overlayModuleInfo.moduleName = "1_overlay";
+    overlayModuleInfo.targetModuleName = MODULE_NAME;
+    overlayModuleInfo.hapPath = "hapPath";
+    overlayModuleInfo.priority = 1;
+
+    OverlayModuleInfo overlayModuleInfo_2;
+    overlayModuleInfo_2.moduleName = "2_overlay";
+    overlayModuleInfo_2.targetModuleName = MODULE_NAME;
+    overlayModuleInfo_2.hapPath = "hapPath2";
+    overlayModuleInfo_2.priority = 2;
+
+    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo)
+    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo_2)
+    std::map<std::string, InnerModuleInfo> moduleInfos;
+    moduleInfos[MODULE_NAME] = moduleInfo;
+    info.AddInnerModuleInfo(moduleInfos);
+    std::vector<std::string> overlayHapPaths;
+    // overlay state is empty
+    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(overlayHapPaths.empty());
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USER_ID;
+    innerUserInfo.bundleUserInfo.overlayModulesState.push_back("1_overlay_1");
+    innerUserInfo.bundleUserInfo.overlayModulesState.push_back("2_overlay_2");
+    innerUserInfo.bundleName = BUNDLE_NAME;
+
+    info.AddInnerBundleUserInfo(innerUserInfo);
+    std::vector<std::string> overlayHapPaths;
+    // overlay moduleInfo is empty
+    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(overlayHapPaths.size(), 1);
 }
 #endif
 } // OHOS

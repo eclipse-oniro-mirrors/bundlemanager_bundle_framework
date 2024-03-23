@@ -70,7 +70,7 @@ private:
 
     static bool CheckIsNeedProcessAbilityResource(const InnerBundleInfo &innerBundleInfo);
 
-    static bool GetOverlayModuleHapPaths(const std::string &bundleName, const std::string &moduleName,
+    static bool GetOverlayModuleHapPaths(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         int32_t userId, std::vector<std::string> &overlayHapPaths);
 
     static void ChangeDynamicIcon(
