@@ -1301,14 +1301,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0053, Function | SmallTest
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 
-    // overlay type is OVERLAY_EXTERNAL_BUNDLE
-    bundleInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
-    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 100, resourceInfos);
-    EXPECT_FALSE(ans);
-    EXPECT_TRUE(resourceInfos.empty());
-
     // userId not exist
-    bundleInfo.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
     ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 200, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
@@ -2948,19 +2941,21 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTes
     moduleInfo.moduleName = MODULE_NAME;
     moduleInfo.modulePackage = MODULE_NAME;
     OverlayModuleInfo overlayModuleInfo;
+    overlayModuleInfo.bundleName = BUNDLE_NAME;
     overlayModuleInfo.moduleName = "1_overlay";
     overlayModuleInfo.targetModuleName = MODULE_NAME;
     overlayModuleInfo.hapPath = "hapPath";
     overlayModuleInfo.priority = 1;
 
     OverlayModuleInfo overlayModuleInfo_2;
+    overlayModuleInfo_2.bundleName = BUNDLE_NAME;
     overlayModuleInfo_2.moduleName = "2_overlay";
     overlayModuleInfo_2.targetModuleName = MODULE_NAME;
     overlayModuleInfo_2.hapPath = "hapPath2";
     overlayModuleInfo_2.priority = 2;
 
-    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo)
-    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo_2)
+    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo);
+    moduleInfo.overlayModuleInfo.push_back(overlayModuleInfo_2);
     std::map<std::string, InnerModuleInfo> moduleInfos;
     moduleInfos[MODULE_NAME] = moduleInfo;
     info.AddInnerModuleInfo(moduleInfos);
@@ -2971,16 +2966,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTes
     EXPECT_TRUE(overlayHapPaths.empty());
 
     InnerBundleUserInfo innerUserInfo;
-    innerUserInfo.bundleUserInfo.userId = USER_ID;
+    innerUserInfo.bundleUserInfo.userId = USERID;
     innerUserInfo.bundleUserInfo.overlayModulesState.push_back("1_overlay_1");
     innerUserInfo.bundleUserInfo.overlayModulesState.push_back("2_overlay_2");
     innerUserInfo.bundleName = BUNDLE_NAME;
 
     info.AddInnerBundleUserInfo(innerUserInfo);
-    std::vector<std::string> overlayHapPaths;
-    // overlay moduleInfo is empty
-    bool ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
-    EXPECT_FALSE(ans);
+    ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
+    EXPECT_TRUE(ans);
     EXPECT_EQ(overlayHapPaths.size(), 1);
 }
 #endif

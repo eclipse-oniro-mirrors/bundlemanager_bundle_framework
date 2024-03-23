@@ -54,10 +54,6 @@ bool BundleResourceProcess::GetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfo)
 {
-    if (innerBundleInfo.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
-        APP_LOGW("bundle %{public}s is external overlay hap, no need to add", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
@@ -105,10 +101,6 @@ bool BundleResourceProcess::GetAllResourceInfo(
                 item.second.GetBundleName().c_str(), userId);
             continue;
         }
-        if (item.second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
-            APP_LOGW("bundle %{public}s is external overlay hap, no need to add", item.second.GetBundleName().c_str());
-            continue;
-        }
         if (!item.second.GetApplicationEnabled(item.second.GetResponseUserId(userId))) {
             APP_LOGD("bundle %{public}s is disabled in userId: %{public}d",
                 item.second.GetBundleName().c_str(), userId);
@@ -148,11 +140,6 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         return false;
     }
 
-    if (item->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
-        APP_LOGW("bundle %{public}s is external overlay hap, no need to add", item->second.GetBundleName().c_str());
-        return false;
-    }
-
     if (!item->second.GetApplicationEnabled(item->second.GetResponseUserId(userId))) {
         APP_LOGW("bundle %{public}s is disabled in userId:%{public}d",
             item->second.GetBundleName().c_str(), userId);
@@ -185,10 +172,6 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
     if (!IsBundleExist(item->second, userId)) {
         APP_LOGW("bundle %{public}s is not exist in userId: %{public}d",
             item->second.GetBundleName().c_str(), userId);
-        return false;
-    }
-    if (item->second.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
-        APP_LOGW("bundle %{public}s is external overlay hap, no need to add", item->second.GetBundleName().c_str());
         return false;
     }
     if (item->second.IsDisabled()) {
@@ -460,7 +443,7 @@ bool BundleResourceProcess::GetOverlayModuleHapPaths(
 {
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(moduleName);
-    if (innerModuleInfo == nullptr) {
+    if (innerModuleInfo == std::nullopt) {
         APP_LOGE("moduleName:%{public}s is not exist", moduleName.c_str());
         return false;
     }
@@ -468,11 +451,15 @@ bool BundleResourceProcess::GetOverlayModuleHapPaths(
         APP_LOGD("moduleName:%{public}s has no overlay module", moduleName.c_str());
         return false;
     }
-    APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    APP_LOGI("bundleName:%{public}s need add overlay hap path", bundleName.c_str());
     auto overlayModuleInfos = innerModuleInfo->overlayModuleInfo;
     for (auto &info : overlayModuleInfos) {
-        // get overlay module state
-        innerBundleInfo.GetOverlayModuleState(info.moduleName, userId, info.state)
+        if (info.bundleName == bundleName) {
+            innerBundleInfo.GetOverlayModuleState(info.moduleName, userId, info.state);
+        } else {
+            GetExternalOverlayHapState(info.bundleName, info.moduleName, userId, info.state);
+        }
     }
     // sort by priority
     std::sort(overlayModuleInfos.begin(), overlayModuleInfos.end(),
@@ -487,6 +474,28 @@ bool BundleResourceProcess::GetOverlayModuleHapPaths(
     }
     if (overlayHapPaths.empty()) {
         APP_LOGE("moduleName:%{public}s overlay hap path is empty", moduleName.c_str());
+        return false;
+    }
+    return true;
+#endif
+    return true;
+}
+
+bool BundleResourceProcess::GetExternalOverlayHapState(const std::string &bundleName,
+    const std::string &moduleName, const int32_t userId, int32_t &state)
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    APP_LOGD("bundleName:%{public}s, moduleName:%{public}s get overlay state", bundleName.c_str(), moduleName.c_str());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    InnerBundleInfo bundleInfo;
+    if (!dataMgr->QueryOverlayInnerBundleInfo(bundleName, bundleInfo)) {
+        return false;
+    }
+    if (!bundleInfo.GetOverlayModuleState(moduleName, userId, state)) {
         return false;
     }
     return true;
@@ -531,6 +540,24 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
         innerBundleInfo.GetBundleName().c_str());
     return !resourceInfos.empty();
+}
+
+void BundleResourceProcess::GetTargetBundleName(const std::string &bundleName,
+    std::string &targetBundleName)
+{
+    targetBundleName = bundleName;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    InnerBundleInfo bundleInfo;
+    if (!dataMgr->QueryOverlayInnerBundleInfo(bundleName, bundleInfo)) {
+        return;
+    }
+    if (bundleInfo.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
+        targetBundleName = bundleInfo.GetTargetBundleName();
+    }
 }
 } // AppExecFwk
 } // OHOS

@@ -397,5 +397,11 @@ void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleResourcesChanged(userId);
 }
+
+void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName)
+{
+    APP_LOGD("start");
+    BundleResourceProcess::GetTargetBundleName(bundleName, targetBundleName);
+}
 } // AppExecFwk
 } // OHOS

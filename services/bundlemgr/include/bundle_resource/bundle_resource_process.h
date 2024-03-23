@@ -45,6 +45,8 @@ public:
     static bool GetResourceInfoByColorModeChanged(const std::vector<std::string> &resourceNames,
         std::vector<ResourceInfo> &resourceInfos);
 
+    static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
+
 private:
     static bool IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId);
 
@@ -78,6 +80,9 @@ private:
 
     static bool GetDynamicIcon(
         const InnerBundleInfo &innerBundleInfo, std::string &icon);
+
+    static bool GetExternalOverlayHapState(const std::string &bundleName,
+        const std::string &moduleName, const int32_t userId, int32_t &state);
 };
 } // AppExecFwk
 } // OHOS
