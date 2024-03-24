@@ -465,8 +465,7 @@ bool BundleResourceProcess::GetOverlayModuleHapPaths(
     std::sort(overlayModuleInfos.begin(), overlayModuleInfos.end(),
         [](const OverlayModuleInfo &lhs, const OverlayModuleInfo &rhs) -> bool {
             return lhs.priority > rhs.priority;
-        }
-    );
+        });
     for (const auto &info : overlayModuleInfos) {
         if (info.state == OverlayState::OVERLAY_ENABLE) {
             overlayHapPaths.emplace_back(info.hapPath);
