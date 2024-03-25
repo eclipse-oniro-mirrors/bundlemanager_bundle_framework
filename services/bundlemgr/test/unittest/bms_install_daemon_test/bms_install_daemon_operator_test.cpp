@@ -672,9 +672,12 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | Sma
     bool ret = InstalldOperator::ApplyDiffPatch(
         TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
     EXPECT_EQ(ret, false);
+    std::string tempPath = "/data/test/installOperator";
+    CreateQuickFileDir(tempPath);
     ret = InstalldOperator::ApplyDiffPatch(
-        TEST_STRING, TEST_STRING, TEST_STRING, 0);
+        tempPath, tempPath, tempPath, 0);
     EXPECT_EQ(ret, true);
+    DeleteQuickFileDir(tempPath);
 }
 
 /**
