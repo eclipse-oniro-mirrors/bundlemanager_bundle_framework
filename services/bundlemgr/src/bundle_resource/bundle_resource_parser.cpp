@@ -348,6 +348,10 @@ bool BundleResourceParser::ParseForegroundAndBackgroundResource(
     ResourceInfo &resourceInfo)
 {
     APP_LOGD("start");
+    if (resourceManager == nullptr) {
+        APP_LOGE("resourceManager is nullptr");
+        return false;
+    }
     uint32_t foregroundId = 0;
     uint32_t backgroundId = 0;
     if (!ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId)) {

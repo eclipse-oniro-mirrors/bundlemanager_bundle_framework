@@ -38,8 +38,7 @@ BundleResourceRdb::BundleResourceRdb()
         "CREATE TABLE IF NOT EXISTS "
         + std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME)
         + "(NAME TEXT NOT NULL, UPDATE_TIME INTEGER, LABEL TEXT, ICON TEXT, "
-        + "SYSTEM_STATE TEXT NOT NULL, FOREGROUND BLOB, BACKGROUND BLOB, MASK BLOB, "
-        + "PRIMARY KEY (NAME, SYSTEM_STATE));");
+        + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME, SYSTEM_STATE));");
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " +
         std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME) +
         " ADD FOREGROUND BLOB;"));

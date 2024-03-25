@@ -3,11 +3,8 @@
         "abilities": [
             {
                 "description": "$string:MainAbility_desc",
-                "descriptionId": 16777218,
-                "icon": "$media:icon",
-                "iconId": 16777222,
+                "icon": "$media:layered_image",
                 "label": "$string:MainAbility_label",
-                "labelId": 16777219,
                 "launchType": "multiton",
                 "name": "MainAbility",
                 "skills": [
