@@ -19,6 +19,7 @@
 #include <string>
 
 #include "resource_manager.h"
+#include "resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -28,7 +29,7 @@ public:
         const uint32_t iconId,
         const int32_t density,
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        std::string &icon);
+        ResourceInfo &resourceInfo);
 };
 } // AppExecFwk
 } // OHOS

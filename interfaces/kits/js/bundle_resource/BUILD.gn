@@ -44,7 +44,18 @@ ohos_shared_library("bundleresourcemanager") {
 
   if (bundle_framework_bundle_resource) {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
-    sources += [ "bundle_resource.cpp" ]
+    sources += [
+      "bundle_resource.cpp",
+      "bundle_resource_drawable_utils.cpp",
+    ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+        "resource_management:global_resmgr",
+      ]
+    }
   } else {
     sources += [ "bundle_resource_unsupported.cpp" ]
   }

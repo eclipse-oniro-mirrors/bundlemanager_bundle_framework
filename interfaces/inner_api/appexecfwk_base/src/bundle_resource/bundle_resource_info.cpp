@@ -34,6 +34,8 @@ bool BundleResourceInfo::ReadFromParcel(Parcel &parcel)
     std::u16string iconVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, iconVal);
     icon = Str16ToStr8(iconVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(UInt8Vector, parcel, &foreground);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(UInt8Vector, parcel, &background);
     return true;
 }
 
@@ -42,6 +44,8 @@ bool BundleResourceInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(UInt8Vector, parcel, foreground);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(UInt8Vector, parcel, background);
     return true;
 }
 

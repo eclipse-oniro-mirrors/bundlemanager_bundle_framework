@@ -29,6 +29,9 @@ struct LauncherAbilityResourceInfo : Parcelable {
     std::string label;
     std::string icon;
 
+    std::vector<uint8_t> foreground;
+    std::vector<uint8_t> background;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static LauncherAbilityResourceInfo *Unmarshalling(Parcel &parcel);

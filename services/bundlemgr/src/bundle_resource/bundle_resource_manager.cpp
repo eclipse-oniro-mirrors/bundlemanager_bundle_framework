@@ -223,6 +223,8 @@ void BundleResourceManager::ProcessResourceInfo(
     if (resourceInfo.icon_.empty()) {
         if (!resourceInfos.empty() && !resourceInfos[0].icon_.empty()) {
             resourceInfo.icon_ = resourceInfos[0].icon_;
+            resourceInfo.foreground_ = resourceInfos[0].foreground_;
+            resourceInfo.background_ = resourceInfos[0].background_;
         } else {
             ProcessResourceInfoWhenParseFailed(resourceInfo);
         }
@@ -345,7 +347,9 @@ uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ||
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON))) {
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ||
+        ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR))) {
         return flags;
     }
     APP_LOGD("illegal flags");
@@ -363,7 +367,7 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
         return;
     }
     if (resourceInfo.icon_.empty()) {
-        resourceInfo.icon_ = GetDefaultIcon();
+        GetDefaultIcon(resourceInfo);
     }
 }
 
@@ -383,16 +387,19 @@ bool BundleResourceManager::ParseIconResourceByPath(
     return parser.ParseIconResourceByPath(filePath, iconId, icon);
 }
 
-std::string BundleResourceManager::GetDefaultIcon()
+void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
 {
     BundleResourceInfo bundleResourceInfo;
     if (!GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON),
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
         bundleResourceInfo)) {
         APP_LOGE("get default icon failed");
-        return std::string();
+        return;
     }
-    return bundleResourceInfo.icon;
+    resourceInfo.icon_ = bundleResourceInfo.icon;
+    resourceInfo.foreground_ = bundleResourceInfo.foreground;
+    resourceInfo.background_ = bundleResourceInfo.background;
 }
 
 void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)

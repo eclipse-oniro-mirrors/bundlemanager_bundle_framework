@@ -1632,18 +1632,20 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0066, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0067, Function | SmallTest | Level0)
 {
-    std::string icon;
+    ResourceInfo info;
+    info.iconId_ = 0;
     BundleResourceParser parser;
-    bool ans = parser.ParseIconResourceByResourceManager(nullptr, 0, icon);
+    bool ans = parser.ParseIconResourceByResourceManager(nullptr, info);
     EXPECT_FALSE(ans);
 
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    ans = parser.ParseIconResourceByResourceManager(resourceManager, 0, icon);
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, info);
     EXPECT_FALSE(ans);
 
-    ans = parser.ParseIconResourceByResourceManager(resourceManager, 1, icon); // iconId not exist
+    info.iconId_ = 1;
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, info); // iconId not exist
     EXPECT_FALSE(ans);
-    EXPECT_EQ(icon, "");
+    EXPECT_EQ(info.icon_, "");
 }
 
 /**
@@ -3009,6 +3011,32 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTes
     ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
     EXPECT_TRUE(ans);
     EXPECT_EQ(overlayHapPaths.size(), 1);
+}
+
+/**
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0117, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    if (!resourceInfos.empty()) {
+        BundleResourceParser parser;
+        ans = parser.ParseThemeIcon(nullptr, resourceInfos[0]);
+        EXPECT_FALSE(ans);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
 } // OHOS

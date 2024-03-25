@@ -37,12 +37,16 @@ constexpr const char* UPDATE_TIME = "UPDATE_TIME";
 constexpr const char* LABEL = "LABEL";
 constexpr const char* ICON = "ICON";
 constexpr const char* SYSTEM_STATE = "SYSTEM_STATE";
+constexpr const char* FOREGROUND = "FOREGROUND";
+constexpr const char* BACKGROUND = "BACKGROUND";
 
 constexpr int32_t INDEX_NAME = 0;
 constexpr int32_t INDEX_UPDATE_TIME = 1;
 constexpr int32_t INDEX_LABEL = 2;
 constexpr int32_t INDEX_ICON = 3;
 constexpr int32_t INDEX_SYSTEM_STATE = 4;
+constexpr int32_t INDEX_FOREGROUND = 5;
+constexpr int32_t INDEX_BACKGROUND = 6;
 }
 } // AppExecFwk
 } // OHOS
