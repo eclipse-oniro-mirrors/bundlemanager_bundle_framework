@@ -272,7 +272,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    bool ret = GetBundleNameForUid(uid, bundleName);
+    bool ret = dataMgr->GetBundleNameForUid(uid, bundleName);
     if (!ret) {
         APP_LOGE("GetBundleNameForUid failed, uid is %{public}d", uid);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -444,6 +444,16 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
 bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
     APP_LOGD("start GetBundleNameForUid, uid : %{public}d", uid);
+    if (!BundlePermissionMgr::IsSystemApp() &&
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
+        Constants::PERMISSION_GET_BUNDLE_INFO})) {
+        APP_LOGE("verify query permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2520,7 +2530,12 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
 
 bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 {
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    bool ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), bundleName);
     if (!ret) {
         APP_LOGE("query calling bundle name failed");
         return false;
@@ -2903,16 +2918,16 @@ ErrCode BundleMgrHostImpl::GetSharedDependencies(const std::string &bundleName, 
 
 bool BundleMgrHostImpl::VerifyDependency(const std::string &sharedBundleName)
 {
-    std::string callingBundleName;
-    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-    if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
-        return false;
-    }
-
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    std::string callingBundleName;
+    bool ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
         return false;
     }
 
