@@ -256,16 +256,20 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
         APP_LOGE("manager is nullptr");
         return false;
     }
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGW("delete bundleName : %{public}s resource failed", bundleName.c_str());
+    std::string targetBundleName = bundleName;
+    manager->GetTargetBundleName(bundleName, targetBundleName);
+    APP_LOGI("bundleName:%{public}s, targetBundleName:%{public}s overlay changed", bundleName.c_str(),
+        targetBundleName.c_str());
+    if (!manager->DeleteResourceInfo(targetBundleName)) {
+        APP_LOGW("delete targetBundleName : %{public}s resource failed", targetBundleName.c_str());
     }
 
-    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
-        APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
+    if (!manager->AddResourceInfoByBundleName(targetBundleName, userId)) {
+        APP_LOGE("add targetBundleName : %{public}s resource failed", targetBundleName.c_str());
         return false;
     }
-    APP_LOGI("end, bundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
-        bundleName.c_str(), isEnabled, userId);
+    APP_LOGI("end, targetBundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
+        targetBundleName.c_str(), isEnabled, userId);
     return true;
 }
 } // AppExecFwk

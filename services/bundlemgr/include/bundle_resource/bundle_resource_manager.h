@@ -85,6 +85,8 @@ public:
     bool ParseIconResourceByPath(
         const std::string &filePath, const int32_t iconId, std::string &icon);
 
+    void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
+
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
 
