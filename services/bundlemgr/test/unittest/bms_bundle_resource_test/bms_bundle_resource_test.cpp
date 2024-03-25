@@ -1419,6 +1419,40 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0057
+ * Function: ProcessResourceInfoWhenParseFailed
+ * @tc.name: test ProcessResourceInfoWhenParseFailed
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessResourceInfoWhenParseFailed
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0057, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo info;
+        info.bundleName_ = "bundleName";
+        info.label_ = "label";
+        info.icon_ = "icon";
+        manager->ProcessResourceInfoWhenParseFailed(info);
+        EXPECT_NE(info.label_, info.bundleName_);
+
+        info.label_ = "";
+        info.icon_ = "";
+        manager->ProcessResourceInfoWhenParseFailed(info);
+        EXPECT_EQ(info.label_, info.bundleName_);
+        EXPECT_FALSE(info.icon_.empty());
+
+        info.bundleName_ = "ohos.global.systemres";
+        info.label_ = "";
+        info.icon_ = "";
+        manager->ProcessResourceInfoWhenParseFailed(info);
+        EXPECT_EQ(info.label_, info.bundleName_);
+        EXPECT_TRUE(info.icon_.empty());
+    }
+}
+
+/**
  * @tc.number: BmsBundleResourceTest_0060
  * Function: BundleResourceParam
  * @tc.name: test BundleResourceParam
