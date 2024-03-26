@@ -879,6 +879,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
+    CHECK_STRING_EMPTY(env, bundleName, std::string{ BUNDLE_NAME });
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
