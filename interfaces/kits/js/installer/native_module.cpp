@@ -55,7 +55,7 @@ static napi_value BundleInstallerExport(napi_env env, napi_value exports)
             properties,
             &m_classBundleInstaller));
     napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
-    APP_LOGI("export bundle installer success.");
+    APP_LOGD("export bundle installer success.");
     return exports;
 }
 

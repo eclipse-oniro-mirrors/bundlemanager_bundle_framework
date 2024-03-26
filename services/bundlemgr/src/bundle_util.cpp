@@ -605,7 +605,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
 
     close(sourceFd);
     close(destFd);
-    APP_LOGI("sendfile success");
+    APP_LOGD("sendfile success");
     return true;
 }
 

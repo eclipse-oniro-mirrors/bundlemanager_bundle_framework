@@ -189,7 +189,7 @@ bool LauncherService::GetAbilityList(
 
 bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    APP_LOGI("GetAllLauncherAbilityInfos start");
+    APP_LOGI("start");
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -235,9 +235,9 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
     }
 
     if (launcherAbilityInfos.empty()) {
-        APP_LOGW("GetAllLauncherAbilityInfos success, but launcherAbilityInfos is empty");
+        APP_LOGW("success, but launcherAbilityInfos is empty");
     } else {
-        APP_LOGI("GetAllLauncherAbilityInfos success");
+        APP_LOGI("success");
     }
 
     return true;
