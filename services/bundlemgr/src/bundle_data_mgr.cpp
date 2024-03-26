@@ -6496,7 +6496,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
         developerIdList.emplace_back(developerId);
     }
     APP_LOGI("have %{public}d developers, their appDistributionType is %{public}s",
-        developerIdList.size(), appDistributionType.c_str());
+        static_cast<int32_t>(developerIdList.size()), appDistributionType.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk
