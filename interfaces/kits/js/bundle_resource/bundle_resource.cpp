@@ -76,6 +76,9 @@ static void ConvertBundleResourceInfo(
 
     napi_value nDrawableDescriptor = BundleResourceDrawableUtils::ConvertToDrawableDescriptor(
         env, bundleResourceInfo.foreground, bundleResourceInfo.background);
+    if (nDrawableDescriptor == nullptr) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nDrawableDescriptor));
+    }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleResourceInfo,
         DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
 
@@ -138,6 +141,9 @@ static void ConvertLauncherAbilityResourceInfo(
 
     napi_value nDrawableDescriptor = BundleResourceDrawableUtils::ConvertToDrawableDescriptor(
         env, launcherAbilityResourceInfo.foreground, launcherAbilityResourceInfo.background);
+    if (nDrawableDescriptor == nullptr) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nDrawableDescriptor));
+    }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objLauncherAbilityResourceInfo,
         DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
 
