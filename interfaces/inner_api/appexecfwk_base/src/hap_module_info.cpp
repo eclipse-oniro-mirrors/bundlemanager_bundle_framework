@@ -94,6 +94,7 @@ const std::string ROUTER_ITEM_KEY_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
+const std::string HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -679,6 +680,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         appEnvironments.emplace_back(*appEnvironment);
     }
+    packageName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -802,6 +804,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(packageName));
     return true;
 }
 
@@ -862,7 +865,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu},
         {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
-        {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments}
+        {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
+        {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName}
     };
 }
 
@@ -1310,6 +1314,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_PACKAGE_NAME,
+        hapModuleInfo.packageName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
     }

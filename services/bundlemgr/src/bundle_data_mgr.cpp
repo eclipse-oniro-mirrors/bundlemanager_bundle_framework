@@ -83,6 +83,7 @@ constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_inte
 constexpr const char* ADDITION_PROFILE_PATH = "resources/base/profile/addition.json";
 constexpr const char* NETWORK_PROFILE_PATH = "resources/base/profile/network_config.json";
 constexpr const char* UTD_SDT_PROFILE_PATH = "resources/rawfile/arkdata/utd/utd.json5";
+constexpr const char* PKG_CONTEXT_PROFILE_PATH = "pkgContextInfo.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
@@ -92,7 +93,8 @@ const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
     { ProfileType::ADDITION_PROFILE, ADDITION_PROFILE_PATH},
     { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
-    { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH}
+    { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH },
+    { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH }
 };
 const std::string SCHEME_END = "://";
 }

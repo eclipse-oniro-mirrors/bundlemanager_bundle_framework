@@ -27,7 +27,8 @@ enum ProfileType {
     INTENT_PROFILE = 1,
     ADDITION_PROFILE = 2,
     NETWORK_PROFILE = 3,
-    UTD_SDT_PROFILE = 4
+    UTD_SDT_PROFILE = 4,
+    PKG_CONTEXT_PROFILE = 5
 };
 
 // stores module information about an application

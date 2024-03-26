@@ -125,6 +125,7 @@ struct InnerModuleInfo {
     std::vector<AppEnvironment> appEnvironments;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
+    std::string packageName;
 };
 
 struct SkillUri {

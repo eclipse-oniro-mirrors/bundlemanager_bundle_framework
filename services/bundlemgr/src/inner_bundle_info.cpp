@@ -664,6 +664,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.fileContextMenu = it->second.fileContextMenu;
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
+    hapInfo.packageName = it->second.packageName;
     return hapInfo;
 }
 

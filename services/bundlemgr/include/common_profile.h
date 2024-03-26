@@ -497,6 +497,8 @@ constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 
 //module appEnvironment
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
+//module packageName
+constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS
