@@ -214,9 +214,8 @@ bool BundleResourceHelper::ResetBunldleResourceIcon(const std::string &bundleNam
         return false;
     }
 
-    std::string key = bundleName + Constants::SEPARATOR;
     // Delete dynamic icon resource
-    if (!manager->DeleteResourceInfo(key)) {
+    if (!manager->DeleteResourceInfo(bundleName)) {
         APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }

@@ -527,8 +527,8 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
     }
 
-    ResetBunldleResourceIcon(bundleName);
     SaveCurDynamicIcon(bundleName, "");
+    ResetBunldleResourceIcon(bundleName);
     SendBroadcast(bundleName, false);
     return ERR_OK;
 }
