@@ -28,6 +28,7 @@ namespace {
 const std::string JSON_KEY_VERSION = "version";
 const std::string JSON_KEY_TARGETINFO = "targetInfo";
 const std::string JSON_KEY_TARGETEXTSETTING = "targetExtSetting";
+const std::string JSON_KEY_EMBEDDED = "embedded";
 const std::string JSON_KEY_EXTINFO = "extInfo";
 const std::string JSON_KEY_TRANSACTID = "transactId";
 const std::string JSON_KEY_FLAGS = "flags";
@@ -320,6 +321,7 @@ void to_json(nlohmann::json &jsonObject, const TargetAbilityInfo &targetAbilityI
         {JSON_KEY_VERSION, targetAbilityInfo.version},
         {JSON_KEY_TARGETINFO, targetAbilityInfo.targetInfo},
         {JSON_KEY_TARGETEXTSETTING, targetAbilityInfo.targetExtSetting},
+        {JSON_KEY_EMBEDDED, targetAbilityInfo.embedded},
     };
 }
 
@@ -351,6 +353,14 @@ void from_json(const nlohmann::json &jsonObject, TargetAbilityInfo &targetAbilit
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_EMBEDDED,
+        targetAbilityInfo.embedded,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module targetAbilityInfo from jsonObject error, error code : %{public}d", parseResult);
     }
@@ -375,6 +385,7 @@ bool TargetAbilityInfo::ReadFromParcel(Parcel &parcel)
     } else {
         return false;
     }
+    embedded = parcel.ReadInt32();
     return true;
 }
 
@@ -383,6 +394,7 @@ bool TargetAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(version));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &targetInfo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &targetExtSetting);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, &embedded);
     return true;
 }
 
