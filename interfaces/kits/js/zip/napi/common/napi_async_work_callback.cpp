@@ -85,13 +85,13 @@ NapiValue NapiAsyncWorkCallback::Schedule(string procedureName, NContextCBExec c
     napi_status status =
         napi_create_async_work(env_, nullptr, resource, CallbackExecute, CallbackComplete, ctx_, &ctx_->awork_);
     if (status != napi_ok) {
-        APP_LOGE("INNER BUG. Failed to create async work for %{public}d", status);
+        APP_LOGE("Failed to create async work for %{public}d", status);
         return NapiValue();
     }
 
     status = napi_queue_async_work(env_, ctx_->awork_);
     if (status != napi_ok) {
-        APP_LOGE("INNER BUG. Failed to queue async work for %{public}d", status);
+        APP_LOGE("Failed to queue async work for %{public}d", status);
         return NapiValue();
     }
 
