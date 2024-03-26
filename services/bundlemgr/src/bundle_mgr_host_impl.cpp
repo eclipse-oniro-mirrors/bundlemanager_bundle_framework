@@ -40,6 +40,7 @@
 #endif
 #include "element_name.h"
 #include "ffrt.h"
+#include "hitrace_meter.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -90,6 +91,7 @@ bool BundleMgrHostImpl::GetApplicationInfo(
 ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetApplicationInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         appName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -181,6 +183,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
 bool BundleMgrHostImpl::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
     // API9 need to be system app
@@ -232,6 +235,7 @@ ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleNam
 ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetBundleInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -264,6 +268,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
 
 ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto uid = IPCSkeleton::GetCallingUid();
     int32_t userId = uid / Constants::BASE_USER_RANGE;
     std::string bundleName;
@@ -484,6 +489,7 @@ bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string>
 
 ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
@@ -716,6 +722,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(const Want &want, std::vector<AbilityI
 bool BundleMgrHostImpl::QueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
@@ -745,6 +752,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
 ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -775,6 +783,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
 ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
     const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start QueryLauncherAbilityInfos, userId : %{public}d", userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -900,6 +909,7 @@ bool BundleMgrHostImpl::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundl
 
 std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &abilityName)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetAbilityLabel, bundleName : %{public}s, abilityName : %{public}s",
         bundleName.c_str(), abilityName.c_str());
     // API9 need to be system app otherwise return empty data
@@ -1110,6 +1120,7 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t
 
 ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName, Want &want, int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
@@ -1664,6 +1675,7 @@ ErrCode BundleMgrHostImpl::SetModuleUpgradeFlag(const std::string &bundleName,
 
 ErrCode BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName, bool &isEnable)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
@@ -1730,6 +1742,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 
 ErrCode BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start IsAbilityEnabled");
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
@@ -1792,6 +1805,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
 
 sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetBundleInstaller");
     if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
@@ -2007,6 +2021,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
 ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("QueryExtensionAbilityInfosV9 without type begin");
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
@@ -2080,6 +2095,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
 ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const ExtensionAbilityType &extensionType,
     int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("QueryExtensionAbilityInfosV9 begin");
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");

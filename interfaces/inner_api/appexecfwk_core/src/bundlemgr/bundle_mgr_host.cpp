@@ -1818,6 +1818,7 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutType(MessageParcel &data
 
 ErrCode BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9(MessageParcel &data, MessageParcel &reply)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (!want) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -1865,6 +1866,7 @@ ErrCode BundleMgrHost::HandleQueryExtAbilityInfos(MessageParcel &data, MessagePa
 
 ErrCode BundleMgrHost::HandleQueryExtAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");

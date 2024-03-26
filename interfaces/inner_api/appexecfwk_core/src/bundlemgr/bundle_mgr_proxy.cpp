@@ -2512,6 +2512,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to QueryExtensionAbilityInfos due to write InterfaceToken fail");
