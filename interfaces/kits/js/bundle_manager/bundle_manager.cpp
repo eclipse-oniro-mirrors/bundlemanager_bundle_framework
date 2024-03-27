@@ -4446,7 +4446,8 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
-        GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec, GetAllPreinstalledApplicationInfosComplete);
+        GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec,
+        GetAllPreinstalledApplicationInfosComplete);
     callbackPtr.release();
     return promise;
 }
