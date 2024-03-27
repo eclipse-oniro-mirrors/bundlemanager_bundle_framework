@@ -120,6 +120,9 @@ const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 const std::string APPLICATION_TSAN_ENABLED = "tsanEnabled";
 const std::string APPLICATION_ORGANIZATION = "organization";
+const std::string APPLICATION_APP_ENVIRONMENTS = "appEnvironments";
+const std::string APP_ENVIRONMENTS_NAME = "name";
+const std::string APP_ENVIRONMENTS_VALUE = "value";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -233,6 +236,64 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
         }
     }
     return true;
+}
+
+bool ApplicationEnvironment::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    value = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool ApplicationEnvironment::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
+    return true;
+}
+
+ApplicationEnvironment *ApplicationEnvironment::Unmarshalling(Parcel &parcel)
+{
+    ApplicationEnvironment *info = new (std::nothrow) ApplicationEnvironment();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const ApplicationEnvironment &applicationEnvironment)
+{
+    jsonObject = nlohmann::json {
+        {APP_ENVIRONMENTS_NAME, applicationEnvironment.name},
+        {APP_ENVIRONMENTS_VALUE, applicationEnvironment.value}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applicationEnvironment)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_NAME,
+        applicationEnvironment.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_VALUE,
+        applicationEnvironment.value,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ApplicationEnvironment from database error, error code : %{public}d", parseResult);
+    }
 }
 
 bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
@@ -421,6 +482,17 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     applicationReservedFlag = parcel.ReadUint32();
     tsanEnabled = parcel.ReadBool();
     organization = Str16ToStr8(parcel.ReadString16());
+    int32_t applicationEnvironmentsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationEnvironmentsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, applicationEnvironmentsSize, &appEnvironments);
+    for (int32_t i = 0; i < applicationEnvironmentsSize; ++i) {
+        std::unique_ptr<ApplicationEnvironment> applicationEnvironment(parcel.ReadParcelable<ApplicationEnvironment>());
+        if (!applicationEnvironment) {
+            APP_LOGE("ReadParcelable<ApplicationEnvironment> failed");
+            return false;
+        }
+        appEnvironments.emplace_back(*applicationEnvironment);
+    }
     return true;
 }
 
@@ -574,6 +646,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, tsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
+    for (auto &item : appEnvironments) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
     return true;
 }
 
@@ -763,7 +839,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
-        {APPLICATION_ORGANIZATION, applicationInfo.organization}
+        {APPLICATION_ORGANIZATION, applicationInfo.organization},
+        {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments}
     };
 }
 
@@ -1451,6 +1528,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_ENVIRONMENTS,
+        applicationInfo.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

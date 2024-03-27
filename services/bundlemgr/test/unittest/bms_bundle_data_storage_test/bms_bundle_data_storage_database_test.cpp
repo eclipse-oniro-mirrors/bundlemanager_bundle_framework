@@ -1115,7 +1115,8 @@ protected:
                 "resourcesApply":[],
                 "GWPAsanEnabled": false,
                 "tsanEnabled": false,
-                "organization": ""
+                "organization": "",
+                "appEnvironments": []
             },
             "baseBundleInfo": {
                 "abilityInfos": [

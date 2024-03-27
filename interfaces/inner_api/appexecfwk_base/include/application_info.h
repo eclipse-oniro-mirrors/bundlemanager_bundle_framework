@@ -111,6 +111,15 @@ struct Resource : public Parcelable {
     static Resource *Unmarshalling(Parcel &parcel);
 };
 
+struct ApplicationEnvironment : public Parcelable {
+    std::string name;
+    std::string value;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static ApplicationEnvironment *Unmarshalling(Parcel &parcel);
+};
+
 struct ApplicationInfo;
 
 struct CompatibleApplicationInfo : public Parcelable {
@@ -262,6 +271,7 @@ struct ApplicationInfo : public Parcelable {
     bool tsanEnabled = false;
 
     std::string organization;
+    std::vector<ApplicationEnvironment> appEnvironments;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
