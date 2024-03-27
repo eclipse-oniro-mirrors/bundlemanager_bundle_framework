@@ -378,8 +378,8 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -546,8 +546,8 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
