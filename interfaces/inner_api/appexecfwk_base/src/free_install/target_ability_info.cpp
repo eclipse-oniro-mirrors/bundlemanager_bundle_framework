@@ -15,6 +15,7 @@
 
 #include "target_ability_info.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "json_util.h"
@@ -62,7 +63,7 @@ void from_json(const nlohmann::json &jsonObject, TargetExtSetting &targetExtSett
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module targetExtSetting from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMSTag::FREE_INSTALL, "read module targetExtSetting from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -93,7 +94,7 @@ TargetExtSetting *TargetExtSetting::Unmarshalling(Parcel &parcel)
 {
     TargetExtSetting *targetExtSettingInfo = new (std::nothrow) TargetExtSetting();
     if (targetExtSettingInfo && !targetExtSettingInfo->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMSTag::FREE_INSTALL, "read from parcel failed");
         delete targetExtSettingInfo;
         targetExtSettingInfo = nullptr;
     }
@@ -237,7 +238,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module targetInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMSTag::FREE_INSTALL, "read module targetInfo from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -307,7 +308,7 @@ TargetInfo *TargetInfo::Unmarshalling(Parcel &parcel)
 {
     TargetInfo *targetInfo = new (std::nothrow) TargetInfo();
     if (targetInfo && !targetInfo->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMSTag::FREE_INSTALL, "read from parcel failed");
         delete targetInfo;
         targetInfo = nullptr;
     }
@@ -352,7 +353,7 @@ void from_json(const nlohmann::json &jsonObject, TargetAbilityInfo &targetAbilit
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module targetAbilityInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMSTag::FREE_INSTALL, "read module targetAbilityInfo from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -390,7 +391,7 @@ TargetAbilityInfo *TargetAbilityInfo::Unmarshalling(Parcel &parcel)
 {
     TargetAbilityInfo *targetAbilityInfo = new (std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo && !targetAbilityInfo->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMSTag::FREE_INSTALL, "read from parcel failed");
         delete targetAbilityInfo;
         targetAbilityInfo = nullptr;
     }

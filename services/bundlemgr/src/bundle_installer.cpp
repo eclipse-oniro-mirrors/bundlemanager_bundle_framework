@@ -188,7 +188,7 @@ void BundleInstaller::Uninstall(
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    APP_LOGI("UpdateInstallerState in bundleInstaller state %{public}d", state);
+    APP_LOGI("state: %{public}d", state);
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));

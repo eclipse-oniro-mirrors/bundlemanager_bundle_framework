@@ -1089,7 +1089,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             InnerBundleInfo innerBundleInfo;
             ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
             if (ret != ERR_OK) {
-                APP_LOGW("ImplicitQueryAllAbilityInfosV9 failed, bundleName:%{public}s", item.first.c_str());
+                APP_LOGW("failed, bundleName:%{public}s", item.first.c_str());
                 continue;
             }
 
@@ -2967,7 +2967,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     APP_LOGD("GetInnerBundleInfoWithFlags: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW("GetInnerBundleInfoWithFlags: bundleName %{public}s not find", bundleName.c_str());
+        APP_LOGW("bundleName %{public}s not find", bundleName.c_str());
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
@@ -5036,7 +5036,7 @@ bool BundleDataMgr::GetElement(int32_t userId, const ElementName& elementName, E
 ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len, int32_t userId) const
 {
-    APP_LOGI("begin to GetMediaData.");
+    APP_LOGI("begin");
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);

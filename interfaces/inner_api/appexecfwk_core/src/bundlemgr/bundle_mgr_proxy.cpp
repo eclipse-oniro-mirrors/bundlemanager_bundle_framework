@@ -4013,7 +4013,7 @@ ErrCode BundleMgrProxy::GetOdid(std::string &odid)
     if (ret == ERR_OK) {
         odid = reply.ReadString();
     }
-    APP_LOGI("GetOdid ret: %{public}d, odid: %{private}s", ret, odid.c_str());
+    APP_LOGD("GetOdid ret: %{public}d, odid: %{private}s", ret, odid.c_str());
     return ret;
 }
 
@@ -4174,7 +4174,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode cod
         }
         APP_LOGD("get parcelable infos success");
     }
-    APP_LOGW("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 

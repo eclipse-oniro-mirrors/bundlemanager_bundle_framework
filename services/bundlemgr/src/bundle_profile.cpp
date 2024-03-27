@@ -2650,7 +2650,7 @@ ErrCode BundleProfile::TransformTo(
 
 ErrCode BundleProfile::TransformTo(const std::ostringstream &source, BundlePackInfo &bundlePackInfo)
 {
-    APP_LOGI("transform packinfo stream to bundle pack info");
+    APP_LOGD("transform packinfo stream to bundle pack info");
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");

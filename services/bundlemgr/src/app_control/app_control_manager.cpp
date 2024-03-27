@@ -20,6 +20,7 @@
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
 #include "app_jump_interceptor_manager_rdb.h"
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
@@ -41,13 +42,12 @@ AppControlManager::AppControlManager()
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
     bool isAppJumpEnabled = OHOS::system::GetBoolParameter(
         OHOS::AppExecFwk::PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE, false);
-    APP_LOGE("GetBoolParameter -> isAppJumpEnabled:%{public}s", (isAppJumpEnabled ? "true" : "false"));
     if (isAppJumpEnabled) {
-        APP_LOGI("App jump intercetor enabled, start init to AppJumpInterceptorManagerRdb");
+        LOG_I(BMSTag::APP_CONTROL, "App jump intercetor enabled, start init to AppJumpInterceptorManagerRdb");
         appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
         appJumpInterceptorManagerDb_->SubscribeCommonEvent();
     } else {
-        APP_LOGI("App jump intercetor disabled");
+        LOG_I(BMSTag::APP_CONTROL, "App jump intercetor disabled");
     }
     commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
 }
@@ -59,7 +59,7 @@ AppControlManager::~AppControlManager()
 ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingName,
     const std::vector<std::string> &appIds, const std::string &controlRuleType, int32_t userId)
 {
-    APP_LOGD("AddAppInstallControlRule");
+    LOG_D(BMSTag::APP_CONTROL, "AddAppInstallControlRule");
     auto ret = appControlManagerDb_->AddAppInstallControlRule(callingName, appIds, controlRuleType, userId);
     if ((ret == ERR_OK) && !isAppInstallControlEnabled_) {
         isAppInstallControlEnabled_ = true;
@@ -70,7 +70,7 @@ ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingNa
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
     const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
-    APP_LOGD("DeleteAppInstallControlRule");
+    LOG_D(BMSTag::APP_CONTROL, "DeleteAppInstallControlRule");
     auto ret = appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
     if ((ret == ERR_OK) && isAppInstallControlEnabled_) {
         SetAppInstallControlStatus();
@@ -81,7 +81,7 @@ ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callin
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
     const std::string &controlRuleType, int32_t userId)
 {
-    APP_LOGD("CleanInstallControlRule");
+    LOG_D(BMSTag::APP_CONTROL, "CleanInstallControlRule");
     auto ret = appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, userId);
     if ((ret == ERR_OK) && isAppInstallControlEnabled_) {
         SetAppInstallControlStatus();
@@ -92,14 +92,14 @@ ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callin
 ErrCode AppControlManager::GetAppInstallControlRule(const std::string &callingName,
     const std::string &controlRuleType, int32_t userId, std::vector<std::string> &appIds)
 {
-    APP_LOGD("GetAppInstallControlRule");
+    LOG_D(BMSTag::APP_CONTROL, "GetAppInstallControlRule");
     return appControlManagerDb_->GetAppInstallControlRule(callingName, controlRuleType, userId, appIds);
 }
 
 ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    APP_LOGD("AddAppRunningControlRule");
+    LOG_D(BMSTag::APP_CONTROL, "AddAppRunningControlRule");
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     ErrCode ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
     if (ret == ERR_OK) {
@@ -147,7 +147,7 @@ ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBu
     const std::string &targetBundleName, int32_t userId)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return appJumpInterceptorManagerDb_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
@@ -156,7 +156,7 @@ ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBu
 ErrCode AppControlManager::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return appJumpInterceptorManagerDb_->AddAppJumpControlRule(controlRules, userId);
@@ -165,7 +165,7 @@ ErrCode AppControlManager::AddAppJumpControlRule(const std::vector<AppJumpContro
 ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return appJumpInterceptorManagerDb_->DeleteAppJumpControlRule(controlRules, userId);
@@ -174,7 +174,7 @@ ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpCon
 ErrCode AppControlManager::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return appJumpInterceptorManagerDb_->DeleteRuleByCallerBundleName(callerBundleName, userId);
@@ -183,7 +183,7 @@ ErrCode AppControlManager::DeleteRuleByCallerBundleName(const std::string &calle
 ErrCode AppControlManager::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return appJumpInterceptorManagerDb_->DeleteRuleByTargetBundleName(targetBundleName, userId);
@@ -193,7 +193,7 @@ ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundle
     const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
 {
     if (appJumpInterceptorManagerDb_ == nullptr) {
-        APP_LOGE("DataMgr rdb is not init");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto ret = appJumpInterceptorManagerDb_->GetAppJumpControlRule(callerBundleName, targetBundleName,
@@ -205,7 +205,7 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
 {
     auto ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("SetDisposedStatus to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "SetDisposedStatus to rdb failed");
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
@@ -222,7 +222,7 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
 {
     auto ret = appControlManagerDb_->DeleteDisposedStatus(APP_MARKET_CALLING, appId, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("DeleteDisposedStatus to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "DeleteDisposedStatus to rdb failed");
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
@@ -246,14 +246,14 @@ ErrCode AppControlManager::GetAppRunningControlRule(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
     ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
-        APP_LOGW("DataMgr GetBundleInfoV9 failed");
+        LOG_W(BMSTag::APP_CONTROL, "DataMgr GetBundleInfoV9 failed");
         return ret;
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
@@ -278,20 +278,20 @@ void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> 
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
+        LOG_E(BMSTag::APP_CONTROL, "dataMgr is null");
         return;
     }
     std::for_each(rules.cbegin(), rules.cend(), [&dataMgr, userId](const auto &rule) {
         std::string bundleName = dataMgr->GetBundleNameByAppId(rule.appId);
         if (bundleName.empty()) {
-            APP_LOGW("GetBundleNameByAppId failed");
+            LOG_W(BMSTag::APP_CONTROL, "GetBundleNameByAppId failed");
             return;
         }
         BundleInfo bundleInfo;
         ErrCode ret = dataMgr->GetBundleInfoV9(
             bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
         if (ret != ERR_OK) {
-            APP_LOGW("GetBundleInfoV9 failed");
+            LOG_W(BMSTag::APP_CONTROL, "GetBundleInfoV9 failed");
             return;
         }
         AbilityManagerHelper::UninstallApplicationProcesses(bundleName, bundleInfo.uid);
@@ -323,7 +323,7 @@ ErrCode AppControlManager::SetDisposedRule(
 {
     auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("SetDisposedStatus to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "SetDisposedStatus to rdb failed");
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
@@ -343,7 +343,7 @@ ErrCode AppControlManager::GetDisposedRule(
 {
     auto ret = appControlManagerDb_->GetDisposedRule(callerName, appId, rule, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("GetDisposedRule to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "GetDisposedRule to rdb failed");
         return ret;
     }
     return ERR_OK;
@@ -354,7 +354,7 @@ ErrCode AppControlManager::DeleteDisposedRule(
 {
     auto ret = appControlManagerDb_->DeleteDisposedRule(callerName, appId, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("DeleteDisposedRule to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "DeleteDisposedRule to rdb failed");
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
@@ -373,7 +373,7 @@ ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const std::string &appI
 {
     auto ret = appControlManagerDb_->DeleteAllDisposedRuleByBundle(appId, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("DeleteAllDisposedRuleByBundle to rdb failed");
+        LOG_E(BMSTag::APP_CONTROL, "DeleteAllDisposedRuleByBundle to rdb failed");
         return ret;
     }
     std::string key = appId + std::string("_") + std::to_string(userId);
@@ -398,14 +398,14 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMSTag::APP_CONTROL, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleInfo bundleInfo;
     ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
-        APP_LOGW("DataMgr GetBundleInfoV9 failed");
+        LOG_W(BMSTag::APP_CONTROL, "DataMgr GetBundleInfoV9 failed");
         return ret;
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
@@ -417,7 +417,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     }
     ret = appControlManagerDb_->GetAbilityRunningControlRule(bundleInfo.appId, userId, disposedRules);
     if (ret != ERR_OK) {
-        APP_LOGW("GetAbilityRunningControlRule from rdb failed");
+        LOG_W(BMSTag::APP_CONTROL, "GetAbilityRunningControlRule from rdb failed");
         return ret;
     }
     abilityRunningControlRuleCache_[key] = disposedRules;

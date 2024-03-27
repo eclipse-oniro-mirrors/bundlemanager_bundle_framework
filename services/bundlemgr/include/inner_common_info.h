@@ -126,6 +126,7 @@ struct InnerModuleInfo {
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
     std::string packageName;
+    std::string appStartup;
 };
 
 struct SkillUri {
