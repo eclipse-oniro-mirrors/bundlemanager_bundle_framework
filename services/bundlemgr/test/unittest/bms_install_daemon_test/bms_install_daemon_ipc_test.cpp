@@ -794,7 +794,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3900, Function | SmallTest |
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = installdProxy->DeliverySignProfile(TEST_STRING, MAX_PARCEL_CAPACITY, profileBlock);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);   
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -808,6 +808,6 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4000, Function | SmallTest |
     EXPECT_NE(installdProxy, nullptr);
 
     auto ret = installdProxy->RemoveSignProfile(TEST_STRING);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);  
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 } // OHOS
