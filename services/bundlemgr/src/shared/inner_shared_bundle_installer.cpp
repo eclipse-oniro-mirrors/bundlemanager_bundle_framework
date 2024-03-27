@@ -417,11 +417,13 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
 #else
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
-    PreinstalledApplicationInfo preinstalledApplicationInfo;
-    newBundleInfo_.GetPreinstalledApplicationInfo(preinstalledApplicationInfo);
-    preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
-    preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
-    preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
+    std::string entryModuleName;
+    int32_t labelId;
+    int32_t iconId;
+    newBundleInfo_.GetPreinstalledApplicationInfo(entryModuleName, labelId, iconId);
+    preInstallBundleInfo.SetModuleName(entryModuleName);
+    preInstallBundleInfo.SetLabelId(labelId);
+    preInstallBundleInfo.SetIconId(iconId);
     dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
 
     return ERR_OK;

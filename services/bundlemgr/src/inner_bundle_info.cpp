@@ -3207,13 +3207,15 @@ void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::strin
     odid = odid_;
 }
 
-bool InnerBundleInfo::GetPreinstalledApplicationInfo(PreinstalledApplicationInfo &preinstalledApplicationInfo) const
+bool InnerBundleInfo::GetPreinstalledApplicationInfo(
+    std::string &entryModuleName, int32_t &labelId, int32_t &iconId) const
 {
+    APP_LOGD("Called");
     for (const auto &info : innerModuleInfos_) {
+        labelId = info.second.labelId;
+        iconId = info.second.iconId;
         if (info.second.isEntry) {
-            preinstalledApplicationInfo.moduleName = info.second.moduleName;
-            preinstalledApplicationInfo.labelId = info.second.labelId;
-            preinstalledApplicationInfo.iconId = info.second.iconId;
+            entryModuleName = info.second.moduleName;
             break;
         }
     }

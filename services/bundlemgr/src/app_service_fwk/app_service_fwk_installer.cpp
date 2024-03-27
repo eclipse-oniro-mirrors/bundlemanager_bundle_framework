@@ -168,11 +168,13 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.AddBundlePath(item.first);
     }
     preInstallBundleInfo.SetRemovable(false);
-    PreinstalledApplicationInfo preinstalledApplicationInfo;
-    newInfos.begin()->second.GetPreinstalledApplicationInfo(preinstalledApplicationInfo);
-    preInstallBundleInfo.SetModuleName(preinstalledApplicationInfo.moduleName);
-    preInstallBundleInfo.SetLabelId(preinstalledApplicationInfo.labelId);
-    preInstallBundleInfo.SetIconId(preinstalledApplicationInfo.iconId);
+    std::string entryModuleName;
+    int32_t labelId;
+    int32_t iconId;
+    newInfos.begin()->second.GetPreinstalledApplicationInfo(entryModuleName, labelId, iconId);
+    preInstallBundleInfo.SetModuleName(entryModuleName);
+    preInstallBundleInfo.SetLabelId(labelId);
+    preInstallBundleInfo.SetIconId(iconId);
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
     }

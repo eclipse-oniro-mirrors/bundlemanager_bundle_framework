@@ -3259,7 +3259,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !WriteParcelableVector(preinstalledApplicationInfos, reply)) {
-        APP_LOGE("Write preset app infos failed.");
+        APP_LOGE("Write preinstalled app infos failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

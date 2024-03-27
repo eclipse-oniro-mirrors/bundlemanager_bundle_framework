@@ -3422,7 +3422,6 @@ ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
@@ -3434,7 +3433,6 @@ ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
         preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
         preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
     }
-    BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, 1, 0);
     return ERR_OK;
 }
 

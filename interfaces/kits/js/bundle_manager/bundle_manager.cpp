@@ -91,7 +91,7 @@ const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
-const std::string GET_ALL_PRESET_APP_INFOS = "GetAllPreinstalledApplicationInfos";
+const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 constexpr int32_t ENUM_ONE = 1;
@@ -4400,7 +4400,7 @@ void GetAllPreinstalledApplicationInfosComplete(napi_env env, napi_status status
         ProcessPreinstalledApplicationInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->preinstalledApplicationInfos);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_PRESET_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            GET_ALL_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<PreinstalledApplicationInfosCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
@@ -4446,7 +4446,7 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
-        GET_ALL_PRESET_APP_INFOS, GetAllPreinstalledApplicationInfosExec, GetAllPreinstalledApplicationInfosComplete);
+        GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec, GetAllPreinstalledApplicationInfosComplete);
     callbackPtr.release();
     return promise;
 }
