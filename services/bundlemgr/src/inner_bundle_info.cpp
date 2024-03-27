@@ -611,6 +611,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
+    hapInfo.appStartup = it->second.appStartup;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;

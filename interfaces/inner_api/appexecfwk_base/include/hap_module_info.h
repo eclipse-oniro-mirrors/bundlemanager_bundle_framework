@@ -179,6 +179,7 @@ struct HapModuleInfo : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);
+    std::string appStartup;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

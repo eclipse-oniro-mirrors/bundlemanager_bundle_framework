@@ -95,6 +95,7 @@ const std::string HAP_MODULE_INFO_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string HAP_MODULE_INFO_PACKAGE_NAME = "packageName";
+const std::string HAP_MODULE_INFO_APP_STARTUP = "appStartup";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -535,6 +536,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     hashValue = Str16ToStr8(parcel.ReadString16());
     hapPath = Str16ToStr8(parcel.ReadString16());
     supportedModes = parcel.ReadInt32();
+    appStartup = Str16ToStr8(parcel.ReadString16());
 
     int32_t reqCapabilitiesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilitiesSize);
@@ -723,6 +725,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashValue));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appStartup));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqCapabilities.size());
     for (auto &reqCapability : reqCapabilities) {
@@ -866,7 +869,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ROUTER_MAP, hapModuleInfo.routerMap},
         {HAP_MODULE_INFO_ROUTER_ARRAY, hapModuleInfo.routerArray},
         {HAP_MODULE_INFO_APP_ENVIRONMENTS, hapModuleInfo.appEnvironments},
-        {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName}
+        {HAP_MODULE_INFO_PACKAGE_NAME, hapModuleInfo.packageName},
+        {HAP_MODULE_INFO_APP_STARTUP, hapModuleInfo.appStartup}
     };
 }
 
@@ -1318,6 +1322,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_PACKAGE_NAME,
         hapModuleInfo.packageName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_APP_STARTUP,
+        hapModuleInfo.appStartup,
         JsonType::STRING,
         false,
         parseResult,
