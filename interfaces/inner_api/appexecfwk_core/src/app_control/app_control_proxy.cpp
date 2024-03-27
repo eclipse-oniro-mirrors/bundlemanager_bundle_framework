@@ -593,7 +593,7 @@ ErrCode AppControlProxy::GetParcelableInfo(AppControlManagerInterfaceCode code, 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     parcelableInfo = *info;
-    APP_LOGI("GetParcelableInfo success.");
+    APP_LOGD("GetParcelableInfo success.");
     return NO_ERROR;
 }
 

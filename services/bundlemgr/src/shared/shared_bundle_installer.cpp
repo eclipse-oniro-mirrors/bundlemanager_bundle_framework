@@ -24,12 +24,12 @@ namespace AppExecFwk {
 SharedBundleInstaller::SharedBundleInstaller(const InstallParam &installParam, const Constants::AppType appType)
     : installParam_(installParam), appType_(appType)
 {
-    APP_LOGI("shared bundle installer instance is created");
+    APP_LOGD("shared bundle installer instance is created");
 }
 
 SharedBundleInstaller::~SharedBundleInstaller()
 {
-    APP_LOGI("shared bundle installer instance is destroyed");
+    APP_LOGD("shared bundle installer instance is destroyed");
 }
 
 ErrCode SharedBundleInstaller::ParseFiles()
