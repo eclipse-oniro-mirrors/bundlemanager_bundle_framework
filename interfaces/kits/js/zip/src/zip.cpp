@@ -397,16 +397,8 @@ bool ZipFileIsValid(const std::string &srcFile)
     return true;
 }
 
-ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
+ErrCode GetOriginalSize(PlatformFile zipFd, int64_t &originalSize)
 {
-    if (!ZipFileIsValid(srcFile)) {
-        return ERR_ZLIB_SRC_FILE_DISABLED;
-    }
-    PlatformFile zipFd = open(srcFile.c_str(), S_IREAD, O_CREAT);
-    if (zipFd == kInvalidPlatformFile) {
-        APP_LOGI("Failed to open file, errno: %{public}d, %{public}s", errno, strerror(errno));
-        return ERR_ZLIB_SRC_FILE_DISABLED;
-    }
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(zipFd)) {
         APP_LOGI("Failed to open, not ZIP format or damaged.");
@@ -431,8 +423,22 @@ ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
         }
     }
     originalSize = totalSize;
-    close(zipFd);
     return ERR_OK;
+}
+
+ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
+{
+    if (!ZipFileIsValid(srcFile)) {
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    }
+    PlatformFile zipFd = open(srcFile.c_str(), S_IREAD, O_CREAT);
+    if (zipFd == kInvalidPlatformFile) {
+        APP_LOGI("Failed to open file, errno: %{public}d, %{public}s", errno, strerror(errno));
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    }
+    ErrCode ret = GetOriginalSize(zipFd, originalSize);
+    close(zipFd);
+    return ret;
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
