@@ -1018,7 +1018,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -1062,7 +1062,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -3910,7 +3910,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -3953,7 +3953,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
                 APP_LOGW("sandbox map contains invalid element");
                 continue;
             }
-            std::string innerBundleName = item.first.substr(0, pos);
+            std::string innerBundleName = item.first.substr(pos + 1);
             if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
                 APP_LOGW("obtain innerBundleInfo of sandbox app failed");
                 continue;
@@ -5414,7 +5414,7 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
         abilityInfo = *ability;
         return ERR_OK;
     }
-    
+
     ErrCode ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
     if (ret != ERR_OK) {
         APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", innerBundleInfo.GetBundleName().c_str(), ret);

@@ -311,7 +311,7 @@ void BmsSandboxAppTest::DeleteSandboxAppInfo(const std::string &bundleName, cons
 
 void BmsSandboxAppTest::CheckPathAreExisted(const std::string &bundleName, int32_t appIndex)
 {
-    auto innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     auto dataPath = BUNDLE_DATA_DIR1 + innerBundleName;
     int32_t ret = access(dataPath.c_str(), F_OK);
     EXPECT_EQ(ret, 0);
@@ -347,7 +347,7 @@ void BmsSandboxAppTest::CheckPathAreExisted(const std::string &bundleName, int32
 
 void BmsSandboxAppTest::CheckPathAreNonExisted(const std::string &bundleName, int32_t appIndex)
 {
-    auto innerBundleName = bundleName + Constants::FILE_UNDERLINE + std::to_string(appIndex);
+    auto innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     auto dataPath = BUNDLE_DATA_DIR1 + innerBundleName;
     int32_t ret = access(dataPath.c_str(), F_OK);
     EXPECT_NE(ret, 0);
@@ -416,7 +416,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0200, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, INVALID_DLP_TYPE, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -437,7 +438,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0300, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_3, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -458,7 +460,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0400, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, INVALID_USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -507,7 +510,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_0700, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, INVALID_DLP_TYPE, INVALID_USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -554,7 +558,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1000, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, INVALID_USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -575,7 +580,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1100, Function | SmallTest 
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, INVALID_USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -598,7 +604,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1200, Function | SmallTest 
     EXPECT_EQ(appIndex, APP_INDEX_1);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -621,7 +628,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1300, Function | SmallTest 
     EXPECT_EQ(appIndex, APP_INDEX_1);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
 }
 
@@ -651,7 +659,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1400, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_2);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
 }
@@ -682,7 +691,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1500, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_2);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
 }
@@ -713,7 +723,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1600, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_2);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
 }
@@ -744,7 +755,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1700, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_2);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
 }
@@ -781,7 +793,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1800, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_1);
     CheckPathAreExisted(OTHER_BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(OTHER_BUNDLE_NAME, APP_INDEX_1);
@@ -819,7 +832,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_1900, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_1);
     CheckPathAreExisted(OTHER_BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(OTHER_BUNDLE_NAME, APP_INDEX_1);
@@ -856,7 +870,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2000, Function | SmallTest 
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -885,8 +900,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppInstallTest_2100, Function | SmallTest 
     EXPECT_EQ(secondAppIndex, APP_INDEX_2);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_2);
 
-    installRes = UninstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(installRes, ERR_OK);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_2);
@@ -927,7 +942,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0200, Function | SmallTes
     auto res = UninstallSandboxApp(BUNDLE_NAME, INVALID_APP_INDEX, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -955,7 +971,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0300, Function | SmallTes
     res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, Constants::DEFAULT_USERID - 1);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1005,7 +1022,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0600, Function | SmallTes
     auto res = UninstallSandboxApp(BUNDLE_NAME, INVALID_APP_INDEX, INVALID_USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1049,7 +1067,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_0900, Function | SmallTes
     auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1075,7 +1094,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1000, Function | SmallTes
     auto res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, INVALID_USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1104,7 +1124,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1100, Function | SmallTes
     res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1143,7 +1164,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1200, Function | SmallTes
     EXPECT_EQ(res, ERR_OK);
     CheckPathAreExisted(OTHER_BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
 }
 
@@ -1183,7 +1205,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1300, Function | SmallTes
     EXPECT_EQ(res, ERR_OK);
     CheckPathAreExisted(BUNDLE_NAME, APP_INDEX_1);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
 }
 
@@ -1226,7 +1249,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1400, Function | SmallTes
     res = UninstallSandboxApp(OTHER_BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
 }
 
@@ -1269,7 +1293,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1500, Function | SmallTes
     res = UninstallSandboxApp(BUNDLE_NAME, APP_INDEX_1, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     UninstallBundle(OTHER_BUNDLE_NAME);
 }
 
@@ -1294,7 +1319,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1600, Function | SmallTes
     ret = installer->InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, userId, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1330,7 +1356,8 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1700, Function | SmallTes
     info.AddInnerBundleUserInfo(innerUserInfo);
     installer->SandboxAppRollBack(info, USERID);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_APPEXECFWK_USER_NOT_EXIST);
 }
 
 /**
@@ -1395,7 +1422,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0100, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME_INVALID, APP_INDEX_1, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1423,7 +1451,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0200, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, INVALID_APP_INDEX, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1451,7 +1480,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0300, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, INVALID_USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1479,7 +1509,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0400, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME_INVALID, APP_INDEX_1, INVALID_USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1507,7 +1538,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0500, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, INVALID_APP_INDEX, INVALID_USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1535,7 +1567,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0600, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME_INVALID, INVALID_APP_INDEX, INVALID_USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1569,7 +1602,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0800, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1597,7 +1631,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_0900, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, INVALID_USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1625,7 +1660,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1000, Function | SmallTest | Lev
     auto testRet = GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
     EXPECT_EQ(testRet, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1654,7 +1690,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1100, Function | SmallTest | Lev
     auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
     EXPECT_EQ(testRet, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1676,7 +1713,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1200, Function | SmallTest | Lev
     auto testRet = bundleSandboxAppHelper->GetSandboxAppBundleInfo(BUNDLE_NAME, APP_INDEX_1, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_INSTALL_NO_SANDBOX_APP_INFO);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1699,7 +1737,8 @@ HWTEST_F(BmsSandboxAppTest, BmsGETSandboxAppMSG_1300, Function | SmallTest | Lev
         BUNDLE_NAME, APP_INDEX_1, Constants::ALL_USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1729,7 +1768,8 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
     ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_NE(testRet, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1797,7 +1837,8 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest |
     ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_MODULE_INFO);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1825,7 +1866,8 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0500, Function | SmallTest |
     ErrCode testRet = bundleSandboxAppHelper->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1898,7 +1940,8 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0300, Function | SmallTest |
     ErrCode testRet = GetInnerBundleInfoByUid(-1, info);
     EXPECT_NE(testRet, ERR_OK);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
 }
 
 /**
@@ -1996,7 +2039,8 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
     ret1 = GenerateSandboxAppIndex("");
     EXPECT_EQ(ret1, Constants::INITIAL_APP_INDEX);
 
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
 }
 
@@ -2033,7 +2077,8 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0100, Function | SmallTest | Level
     DeleteSandboxAppInfo("", 0);
 
     DeleteSandboxAppInfo(BUNDLE_NAME, 0);
-    UninstallBundle(BUNDLE_NAME);
+    auto uninstallRes = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(uninstallRes, ERR_OK);
     CheckPathAreNonExisted(BUNDLE_NAME, APP_INDEX_1);
 }
 
