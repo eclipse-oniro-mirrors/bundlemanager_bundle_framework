@@ -280,8 +280,8 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
         return false;
     }
     if (FilePath::DirectoryExists(destDir)) {
-        if (!FilePath::PathIsValid(destDir)) {
-            APP_LOGI("%{public}s called, FilePath::PathIsValid(destDir) fail.", __func__);
+        if (!FilePath::PathIsWriteable(destDir)) {
+            APP_LOGI("%{public}s called, FilePath::PathIsWriteable(destDir) fail.", __func__);
             zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         }
     } else {

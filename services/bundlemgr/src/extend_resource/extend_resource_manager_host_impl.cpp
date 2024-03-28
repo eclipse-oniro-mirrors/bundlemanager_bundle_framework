@@ -118,6 +118,11 @@ ErrCode ExtendResourceManagerHostImpl::BeforeAddExtResource(
         return ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED;
     }
 
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify permission failed");
@@ -321,6 +326,11 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
 
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify permission failed");
@@ -362,7 +372,7 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
         auto iter = extendResourceInfos.find(moduleName);
         if (iter == extendResourceInfos.end()) {
             APP_LOGE("Module not exist %{public}s.", moduleName.c_str());
-            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+            return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
         }
 
         collectorExtResourceInfos.emplace_back(iter->second);
@@ -376,6 +386,11 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
     if (bundleName.empty()) {
         APP_LOGE("fail to GetExtResource due to param is empty.");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
@@ -416,6 +431,11 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     if (moduleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty.");
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -509,6 +529,12 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         APP_LOGE("fail to DisableDynamicIcon due to param is empty.");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
         APP_LOGE("verify permission failed");
@@ -546,6 +572,11 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
         Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
@@ -574,6 +605,10 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
     if (fileName.empty()) {
         APP_LOGE("fail to CreateFd due to param is empty.");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {

@@ -14,11 +14,14 @@
  */
 #include <cstdio>
 #include <cstring>
+#include <memory>
 #include <unistd.h>
 
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi_zlib.h"
+#include "class_checksum/checksum_n_exporter.h"
+#include "properties/prop_n_exporter.h"
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
@@ -35,6 +38,21 @@ static napi_value Init(napi_env env, napi_value exports)
     MemLevelInit(env, exports);
     ErrorCodeInit(env, exports);
     ZlibInit(env, exports);
+    std::vector<std::unique_ptr<NapiExporter>> products;
+    products.emplace_back(std::make_unique<PropNExporter>(env, exports));
+    products.emplace_back(std::make_unique<ChecksumNExporter>(env, exports));
+
+    for (auto &&product : products) {
+#ifdef WIN_PLATFORM
+        std::string nExporterName = product->GetNExporterName();
+#else
+        std::string nExporterName = product->GetClassName();
+#endif
+        if (!product->Export()) {
+            APP_LOGE("Failed to export class %{public}s for module fileio", nExporterName.c_str());
+            return nullptr;
+        }
+    }
     return exports;
 }
 EXTERN_C_END

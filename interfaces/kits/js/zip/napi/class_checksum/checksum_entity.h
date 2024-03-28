@@ -1,10 +1,10 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,23 +13,14 @@
  * limitations under the License.
  */
 
-#include "quick_fix/patch_extractor.h"
-
-#include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
+#ifndef INTERFACES_KITS_JS_ZIP_NAPI_CLASS_CHECKSUM_CHECKSUM_ENTITY_H
+#define INTERFACES_KITS_JS_ZIP_NAPI_CLASS_CHECKSUM_CHECKSUM_ENTITY_H
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr const char* PATCH_PROFILE_NAME = "patch.json";
-}
-
-PatchExtractor::PatchExtractor(const std::string &source) : BaseExtractor(source) {}
-
-bool PatchExtractor::ExtractPatchProfile(std::ostream &dest) const
-{
-    LOG_D(BMSTag::QUICK_FIX, "start to extract patch.json");
-    return ExtractByName(PATCH_PROFILE_NAME, dest);
-}
+namespace LIBZIP {
+struct ChecksumEntity {};
+}  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
+#endif  // INTERFACES_KITS_JS_ZIP_NAPI_CLASS_CHECKSUM_CHECKSUM_ENTITY_H

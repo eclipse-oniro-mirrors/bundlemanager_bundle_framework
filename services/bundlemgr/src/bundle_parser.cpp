@@ -147,7 +147,7 @@ ErrCode BundleParser::Parse(
 
 ErrCode BundleParser::ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const
 {
-    APP_LOGI("parse from %{private}s", pathName.c_str());
+    APP_LOGD("parse from %{private}s", pathName.c_str());
     BundleExtractor bundleExtractor(pathName);
     if (!bundleExtractor.Init()) {
         APP_LOGE("bundle extractor init failed");
