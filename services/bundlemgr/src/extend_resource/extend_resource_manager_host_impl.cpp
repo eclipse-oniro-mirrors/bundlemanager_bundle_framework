@@ -331,8 +331,8 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_INSTALL_BUNDLE, Constants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }

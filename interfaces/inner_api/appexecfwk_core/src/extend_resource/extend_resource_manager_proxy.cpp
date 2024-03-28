@@ -48,8 +48,12 @@ ErrCode ExtendResourceManagerProxy::AddExtResource(
 {
     APP_LOGD("begin to AddExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (bundleName.empty() || filePaths.empty()) {
-        APP_LOGE("fail to AddExtResource due to param is empty.");
+    if (bundleName.empty()) {
+        APP_LOGE("fail to AddExtResource due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (filePaths.empty()) {
+        APP_LOGE("fail to AddExtResource due to filePaths is empty.");
         return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     MessageParcel data;
@@ -80,9 +84,13 @@ ErrCode ExtendResourceManagerProxy::RemoveExtResource(
 {
     APP_LOGD("begin to RemoveExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (bundleName.empty() || moduleNames.empty()) {
-        APP_LOGE("fail to RemoveExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to RemoveExtResource due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleNames.empty()) {
+        APP_LOGE("fail to RemoveExtResource due to moduleNames is empty.");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -113,8 +121,8 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
     APP_LOGD("begin to GetExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetExtResource due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED;
+        APP_LOGE("fail to GetExtResource due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -149,9 +157,13 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
 {
     APP_LOGD("begin to EnableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (bundleName.empty() || moduleName.empty()) {
-        APP_LOGE("fail to EnableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED;
+    if (bundleName.empty()) {
+        APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty.");
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -181,8 +193,8 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
     APP_LOGD("begin to DisableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to DisableDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
+        APP_LOGE("fail to DisableDynamicIcon due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -209,8 +221,8 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
     APP_LOGD("begin to GetDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetDynamicIcon due to param is empty.");
-        return ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED;
+        APP_LOGE("fail to GetDynamicIcon due to bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
