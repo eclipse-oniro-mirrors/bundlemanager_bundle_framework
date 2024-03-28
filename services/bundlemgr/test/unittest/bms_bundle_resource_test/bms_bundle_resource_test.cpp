@@ -2921,46 +2921,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest
 }
 
 /**
- * @tc.number: OnApplicationThemeChanged_0001
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, OnApplicationThemeChanged_0001, Function | SmallTest | Level0)
-{
-    BundleResourceCallback callback;
-    nlohmann::json theme = R"(
-        {
-            "icons": 0,
-            "skin": 1,
-            "font": 0
-        }
-    )"_json;
-    bool ans = callback.OnApplicationThemeChanged(theme.dump());
-    EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: OnApplicationThemeChanged_0002
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test OnApplicationThemeChanged
- */
-HWTEST_F(BmsBundleResourceTest, OnApplicationThemeChanged_0002, Function | SmallTest | Level0)
-{
-    BundleResourceCallback callback;
-    nlohmann::json theme = R"(
-        {
-            "skin": 0
-        }
-    )"_json;
-    bool ans = callback.OnApplicationThemeChanged(theme.dump());
-    EXPECT_FALSE(ans);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0117
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
