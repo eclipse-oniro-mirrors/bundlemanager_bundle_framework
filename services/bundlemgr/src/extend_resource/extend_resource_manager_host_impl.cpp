@@ -331,8 +331,8 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_INSTALL_BUNDLE, Constants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -393,8 +393,8 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -577,8 +577,8 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -605,6 +605,10 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
     if (fileName.empty()) {
         APP_LOGE("fail to CreateFd due to param is empty.");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {
