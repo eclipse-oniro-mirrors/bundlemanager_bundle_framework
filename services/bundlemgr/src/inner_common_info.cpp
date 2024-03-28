@@ -100,6 +100,7 @@ const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
 const std::string MODULE_ASAN_ENABLED = "asanEnabled";
 const std::string MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 const std::string MODULE_PACKAGE_NAME = "packageName";
+const std::string MODULE_APP_STARTUP = "appStartup";
 }  // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -604,6 +605,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_ASAN_ENABLED, info.asanEnabled},
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
+        {MODULE_APP_STARTUP, info.appStartup},
     };
 }
 
@@ -1170,6 +1172,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_PACKAGE_NAME,
         info.packageName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_STARTUP,
+        info.appStartup,
         JsonType::STRING,
         false,
         parseResult,

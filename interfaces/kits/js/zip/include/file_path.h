@@ -52,6 +52,7 @@ public:
     static bool DirectoryExists(const FilePath &path);
     static bool PathIsValid(const FilePath &path);
     static bool PathIsReadable(const FilePath &path);
+    static bool PathIsWriteable(const FilePath &path);
     static bool IsDir(const FilePath &path);
     static bool GetZipAllDirFiles(const std::string &path, std::vector<std::string> &files);
     // Returns a FilePath by appending a separator and the supplied path

@@ -54,7 +54,7 @@ constexpr const char* ERR_MSG_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED =
     "Failed to install because not allowed to share app library";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
 constexpr const char* ERR_MSG_BUNDLE_NOT_PREINSTALLED =
-    "Failed to uninstall and recover the HAP because the HAP is not pre-installed.";
+    "Failed to uninstall updates because the HAP is not pre-installed.";
 constexpr const char* ERR_ZLIB_SRC_FILE_INVALID_MSG = "The Input source file is invalid.";
 constexpr const char* ERR_ZLIB_DEST_FILE_INVALID_MSG = "The Input destination file is invalid.";
 constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR =

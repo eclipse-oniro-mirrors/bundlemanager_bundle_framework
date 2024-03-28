@@ -758,8 +758,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
     for (const auto &item : extensions) {
         if (item.second.type == ExtensionAbilityType::UNSPECIFIED &&
             !BMSEventHandler::CheckExtensionTypeInConfig(item.second.extensionTypeName)) {
-            APP_LOGE("Parse error, There is no corresponding type in the configuration");
-            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            APP_LOGW("Parse error, There is no corresponding type in the configuration");
         }
     }
 
