@@ -161,6 +161,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
 bool Unzip(const std::string &srcFile, const std::string &destFile, const OPTIONS options,
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
+ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize);
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
