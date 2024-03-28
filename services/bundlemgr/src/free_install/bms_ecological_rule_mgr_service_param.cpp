@@ -178,7 +178,7 @@ bool BmsCallerInfo::Marshalling(Parcel &parcel) const
 
 std::string BmsCallerInfo::ToString() const
 {
-    std::string str = "CallerInfo{packageName:" + packageName + ",uid:" + std::to_string(uid) +
+    std::string str = "BmsCallerInfo{packageName:" + packageName + ",uid:" + std::to_string(uid) +
         ",pid:" + std::to_string(pid) + ",callerAppType:" + std::to_string(callerAppType) +
         ",targetAppType:" + std::to_string(targetAppType) + ",callerModelType:" + std::to_string(callerModelType) +
         ",targetAppDistType:" + targetAppDistType + ",targetLinkFeature:" + targetLinkFeature + ",targetLinkType:" +

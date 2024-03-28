@@ -841,6 +841,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
+    targetAbilityInfo->targetInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 
@@ -992,7 +993,6 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     targetAbilityInfo->targetInfo = *targetInfo;
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
-    targetAbilityInfo->embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
