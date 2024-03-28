@@ -4097,10 +4097,10 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 }
 
 bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
-    int32_t& profileType, std::string& bundleName, std::string& moduleName)
+    int32_t& profileType, std::string& bundleName, std::string& moduleName, int32_t& userId)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return false;
@@ -4127,7 +4127,7 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
         napi_throw(env, businessError);
         return false;
     }
-    if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], moduleName)) {
             APP_LOGW("parse moduleName failed, try to get profile from entry module!");
         } else if (moduleName.empty()) {
@@ -4135,6 +4135,13 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
             napi_value businessError = BusinessError::CreateCommonError(
                 env, ERROR_MODULE_NOT_EXIST, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
             napi_throw(env, businessError);
+            return false;
+        }
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_FOUR) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], userId)) {
+            APP_LOGE("userId invalid");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
             return false;
         }
     }
@@ -4147,7 +4154,8 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     int32_t profileType = 0;
     std::string bundleName;
     std::string moduleName;
-    if (!ParamsProcessGetJsonProfile(env, info, profileType, bundleName, moduleName)) {
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (!ParamsProcessGetJsonProfile(env, info, profileType, bundleName, moduleName, userId)) {
         APP_LOGE("paramsProcess failed");
         return nullptr;
     }
@@ -4158,7 +4166,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     }
     std::string profile;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile));
+        iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile, userId));
     if (ret != SUCCESS) {
         APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
