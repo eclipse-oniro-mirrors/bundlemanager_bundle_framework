@@ -363,6 +363,7 @@ bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, co
 ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bundleFilePaths,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("stream install start");
     if (statusReceiver == nullptr) {
         APP_LOGE("stream install failed due to nullptr status receiver");

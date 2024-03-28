@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ ErrCode DefaultAppHostImpl::IsDefaultApplication(const std::string& type, bool& 
 
 ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMSTag::DEFAULT_APP, "GetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
     return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }

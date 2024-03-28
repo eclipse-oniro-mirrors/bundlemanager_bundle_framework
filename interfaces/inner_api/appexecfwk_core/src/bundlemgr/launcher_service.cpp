@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "bundle_mgr_service_death_recipient.h"
 #include "common_event_subscribe_info.h"
 #include "common_event_support.h"
+#include "hitrace_meter.h"
 #include "matching_skills.h"
 #include "operation_builder.h"
 
@@ -304,6 +305,7 @@ void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability
 ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("GetLauncherAbilityByBundleName called");
     if (bundleName.empty()) {
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
