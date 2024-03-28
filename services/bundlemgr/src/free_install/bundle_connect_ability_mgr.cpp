@@ -926,7 +926,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     std::string bundleName = want.GetElement().GetBundleName();
     std::string abilityName = want.GetElement().GetAbilityName();
     std::string moduleName = want.GetElement().GetModuleName();
-    if (bundleName == "" || abilityName == "") {
+    if (bundleName == "") {
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, callBack);
         LOG_E(BMSTag::FREE_INSTALL, "bundle name or ability name is null");
         return false;
@@ -939,6 +939,18 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     }
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName,
         flags, innerBundleInfo, userId);
+    if (!innerBundleInfoResult) {
+        APP_LOGE("GetInnerBundleInfoWithFlags failed.");
+        return false;
+    }
+    if (abilityName.empty()) {
+        Want launchWant;
+        auto launchWantResult = bundleDataMgr_->GetLaunchWantForBundle(bundleName, launchWant, userId);
+        if (launchWantResult == ERR_OK) {
+            (const_cast<Want &>(want)).SetModuleName(launchWant.GetModuleName());
+        }
+        return CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);
+    }
     bool abilityInfoResult = bundleDataMgr_->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!abilityInfoResult) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
@@ -951,14 +963,20 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
             moduleName = abilityInfo.moduleName;
         }
     }
-    if (innerBundleInfoResult && abilityInfoResult) {
-        bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
-        if (!isModuleNeedUpdate) {
-            CallAbilityManager(ServiceCenterResultCode::FREE_INSTALL_OK, want, userId, callBack);
-        }
-        return true;
+    if (abilityInfoResult) {
+        return CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);
     }
     return false;
+}
+
+bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdateWrap(InnerBundleInfo &innerBundleInfo, const Want &want,
+    int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
+    if (!isModuleNeedUpdate) {
+        CallAbilityManager(ServiceCenterResultCode::FREE_INSTALL_OK, want, userId, callBack);
+    }
+    return true;
 }
 
 bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,

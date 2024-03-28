@@ -257,6 +257,8 @@ private:
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, BmsExperienceRule &rule);
     bool CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const;
     bool GetModuleName(const InnerBundleInfo &innerBundleInfo, const Want &want, std::string &moduleName) const;
+    bool CheckIsModuleNeedUpdateWrap(InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId,
+        const sptr<IRemoteObject> &callBack);
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
