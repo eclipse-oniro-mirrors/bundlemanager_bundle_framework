@@ -3928,6 +3928,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
+            CHECK_STRING_EMPTY(env, asyncCallbackInfo->bundleName, std::string{ BUNDLE_NAME });
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -4412,22 +4413,27 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
 {
     APP_LOGD("Called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
         APP_LOGE("Param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    int32_t appDistributionTypeEnum = 0;
-    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], appDistributionTypeEnum)) {
-        APP_LOGE("parseInt failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
-        return nullptr;
+    std::string distributionType;
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        int32_t appDistributionTypeEnum = 0;
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], appDistributionTypeEnum)) {
+            APP_LOGE("parseInt failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
+            return nullptr;
+        }
+        if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
+            APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
+            BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
+            return nullptr;
+        }
+        distributionType = std::string{ appDistributionTypeMap[appDistributionTypeEnum] };
     }
-    if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
-        APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
-        BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
-        return nullptr;
-    }
+
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
@@ -4437,9 +4443,9 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
     std::vector<std::string> developerIds;
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetDeveloperIds(appDistributionTypeMap[appDistributionTypeEnum], developerIds, userId));
+        iBundleMgr->GetDeveloperIds(distributionType, developerIds, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("Call failed, appDistributionType is %{public}d", appDistributionTypeEnum);
+        APP_LOGW("Call failed, appDistributionType is %{public}s", distributionType.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_DEVELOPER_IDS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

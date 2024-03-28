@@ -6483,7 +6483,7 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
             continue;
         }
         // check appDistributionType
-        if (innerBundleInfo.GetAppDistributionType() != appDistributionType) {
+        if (!appDistributionType.empty() && innerBundleInfo.GetAppDistributionType() != appDistributionType) {
             continue;
         }
 
