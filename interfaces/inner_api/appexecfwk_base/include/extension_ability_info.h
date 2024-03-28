@@ -62,6 +62,7 @@ enum class ExtensionAbilityType {
     ACTION = 19,
     ADS_SERVICE = 20,
     EMBEDDED_UI = 21,
+    INSIGHT_INTENT_UI = 22,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
