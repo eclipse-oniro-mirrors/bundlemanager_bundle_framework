@@ -2973,6 +2973,21 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3200, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_3201
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3201, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    std::string bundlePath = "/data/storage/el2/base/../../bundle";
+    ErrCode retCode = hostImpl->GetBundleArchiveInfoV9(bundlePath, flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_3300
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.test GetPermissionDef
