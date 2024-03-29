@@ -228,6 +228,7 @@ struct App {
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     bool gwpAsanEnabled = false;
     bool tsanEnabled = false;
+    std::vector<ApplicationEnvironment> appEnvironments;
 };
 
 struct Module {
@@ -1205,6 +1206,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_ENVIRONMENTS,
+        app.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1908,6 +1917,7 @@ bool ToApplicationInfo(
     applicationInfo.compileSdkType = app.compileSdkType;
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
+    applicationInfo.appEnvironments = app.appEnvironments;
     return true;
 }
 

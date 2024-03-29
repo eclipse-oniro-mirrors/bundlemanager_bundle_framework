@@ -15,6 +15,12 @@
     "singleUser": true,
     "vendor": "huawei",
     "versionCode": 1000000,
-    "versionName": "1.0.0"
+    "versionName": "1.0.0",
+    "appEnvironments": [
+      {
+        "name": "name1",
+        "value": "value1"
+      }
+    ]
   }
 }

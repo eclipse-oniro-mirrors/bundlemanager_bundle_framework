@@ -329,6 +329,8 @@ public:
     BMS_DEFINE_PROPERTY_MEMBER_FILED(TsanEnabled, baseApplicationInfo_, tsanEnabled, bool);
     BMS_DEFINE_PROPERTY(CurDynamicIconModule, curDynamicIconModule_, std::string);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(IconId, baseApplicationInfo_, iconId, int32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        AppEnvironments, baseApplicationInfo_, appEnvironments, std::vector<ApplicationEnvironment>);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)

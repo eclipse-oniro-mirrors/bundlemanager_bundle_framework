@@ -324,6 +324,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         updateTsanEnabled(newInfo, oldInfo);
         ProcessAllowedAcls(newInfo, oldInfo);
+        updateAppEnvironments(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -525,6 +526,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
+        updateAppEnvironments(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -6400,6 +6402,20 @@ void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBund
         return;
     }
     oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
+}
+
+void BundleDataMgr::updateAppEnvironments(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
+    bool flag = true;
+    for (const auto &innerModuleInfo : oldInfo.GetInnerModuleInfos()) {
+        if (innerModuleInfo.second.distro.moduleType == "entry") {
+            flag = false;
+        }
+    }
+    if (flag || (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
+        oldInfo.SetAppEnvironments(newInfo.GetAppEnvironments());
+    }
 }
 
 ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &developerId,
