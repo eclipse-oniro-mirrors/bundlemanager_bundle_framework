@@ -1014,6 +1014,10 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if (hapFilePath.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGD("invalid hapFilePath");
+        return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
+    }
     if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == 0) {
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
