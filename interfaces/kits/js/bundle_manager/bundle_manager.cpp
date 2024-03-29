@@ -4355,7 +4355,7 @@ void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicat
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, preinstalledApplicationInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objPreinstalledApplicationInfo, "entryModuleName", nModuleName));
+        napi_set_named_property(env, objPreinstalledApplicationInfo, "moduleName", nModuleName));
 
     napi_value nLabelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.labelId, &nLabelId));
