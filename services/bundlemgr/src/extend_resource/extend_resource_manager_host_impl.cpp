@@ -25,7 +25,11 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_resource_helper.h"
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource/bundle_resource_manager.h"
+#include "bundle_resource/bundle_resource_parser.h"
+#include "bundle_resource/resource_info.h"
+#endif
 #include "bundle_util.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -480,24 +484,34 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
     const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo)
 {
     APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
-    std::string icon;
-    if (!BundleResourceHelper::ParseIconResourceByPath(
-        extendResourceInfo.filePath, extendResourceInfo.iconId, icon)) {
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    BundleResourceParser bundleResourceParser;
+    ResourceInfo info;
+    info.bundleName_ = bundleName;
+    info.iconId_ = extendResourceInfo.iconId;
+    if (bundleResourceParser.ParseIconResourceByPath(extendResourceInfo.filePath,
+        extendResourceInfo.iconId, info)) {
         APP_LOGW("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
-    if (icon.empty()) {
+    if (info.icon_.empty()) {
         APP_LOGE("icon is empty, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
-    if (!BundleResourceHelper::UpdateBundleIcon(bundleName, icon)) {
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->UpdateBundleIcon(bundleName, info)) {
         APP_LOGE("UpdateBundleIcon failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
     return true;
+#else
+    APP_LOGI("bundle resource not support");
+    return false;
+#endif
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &bundleName,
@@ -554,14 +568,38 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
     }
 
     SaveCurDynamicIcon(bundleName, "");
-    ResetBunldleResourceIcon(bundleName);
+    ResetBundleResourceIcon(bundleName);
     SendBroadcast(bundleName, false);
     return ERR_OK;
 }
 
-bool ExtendResourceManagerHostImpl::ResetBunldleResourceIcon(const std::string &bundleName)
+bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &bundleName)
 {
-    return BundleResourceHelper::ResetBunldleResourceIcon(bundleName);
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI("ResetBundleResourceIcon %{public}s", bundleName.c_str());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+
+    // Delete dynamic icon resource
+    if (!manager->DeleteResourceInfo(bundleName)) {
+        APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    // Reset default icon
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!manager->GetLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfos)) {
+        APP_LOGD("No default icon, bundleName:%{public}s", bundleName.c_str());
+    }
+
+    return true;
+#else
+    return false;
+#endif
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
