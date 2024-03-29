@@ -716,13 +716,21 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #else
         preInstallBundleInfo.SetRemovable(newInfos.begin()->second.GetRemovable());
 #endif
-        std::string entryModuleName;
-        int32_t labelId;
-        int32_t iconId;
-        newInfos.begin()->second.GetPreinstalledApplicationInfo(entryModuleName, labelId, iconId);
-        preInstallBundleInfo.SetModuleName(entryModuleName);
-        preInstallBundleInfo.SetLabelId(labelId);
-        preInstallBundleInfo.SetIconId(iconId);
+        bool isEntryFlag = false;
+        for (const auto &innerBundleInfo : newInfos) {
+            for (const auto &info : innerBundleInfo.second.GetInnerModuleInfos()) {
+                preInstallBundleInfo.SetLabelId(info.second.labelId);
+                preInstallBundleInfo.SetIconId(info.second.iconId);
+                preInstallBundleInfo.SetModuleName(info.second.moduleName);
+                if (info.second.isEntry) {
+                    isEntryFlag = true;
+                    break;
+                }
+            }
+            if (isEntryFlag) {
+                break;
+            }
+        }
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 

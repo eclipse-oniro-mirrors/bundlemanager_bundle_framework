@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -168,13 +168,22 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.AddBundlePath(item.first);
     }
     preInstallBundleInfo.SetRemovable(false);
-    std::string entryModuleName;
-    int32_t labelId;
-    int32_t iconId;
-    newInfos.begin()->second.GetPreinstalledApplicationInfo(entryModuleName, labelId, iconId);
-    preInstallBundleInfo.SetModuleName(entryModuleName);
-    preInstallBundleInfo.SetLabelId(labelId);
-    preInstallBundleInfo.SetIconId(iconId);
+
+    bool isEntryFlag = false;
+    for (const auto &innerBundleInfo : newInfos) {
+        for (const auto &info : innerBundleInfo.second.GetInnerModuleInfos()) {
+            preInstallBundleInfo.SetLabelId(info.second.labelId);
+            preInstallBundleInfo.SetIconId(info.second.iconId);
+            preInstallBundleInfo.SetModuleName(info.second.moduleName);
+            if (info.second.isEntry) {
+                isEntryFlag = true;
+                break;
+            }
+        }
+        if (isEntryFlag) {
+            break;
+        }
+    }
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
     }

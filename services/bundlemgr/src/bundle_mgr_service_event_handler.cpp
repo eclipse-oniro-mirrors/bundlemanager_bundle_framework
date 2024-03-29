@@ -1188,24 +1188,27 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
     for (auto &preInstallBundleInfo : preInstallBundleInfos) {
         BundleInfo bundleInfo;
         if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(), BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
-            preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconId);
-            preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelId);
-            preInstallBundleInfo.SetModuleName(bundleInfo.entryModuleName);
+            preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.iconResource.moduleName);
             dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
         }
         BundleMgrHostImpl impl;
+        BundleInfo resultBundleInfo;
         auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
         for (auto preinstalledAppPath: preinstalledAppPaths) {
-            BundleInfo resultBundleInfo;
             if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
                 APP_LOGE("Get bundle archive info fail.");
                 return;
             }
-            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelId);
-            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconId);
-            preInstallBundleInfo.SetModuleName(resultBundleInfo.entryModuleName);
-            dataMgr->SavePreInstallBundleInfo(resultBundleInfo.name, preInstallBundleInfo);
+            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetModuleName(resultBundleInfo.applicationInfo.labelResource.moduleName);
+            if (resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                break;
+            }
         }
+        dataMgr->SavePreInstallBundleInfo(resultBundleInfo.name, preInstallBundleInfo);
     }
 }
 

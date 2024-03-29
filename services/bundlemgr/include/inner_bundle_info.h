@@ -953,7 +953,6 @@ public:
     void UpdateOdid(const std::string &developerId, const std::string &odid);
     void UpdateOdidByBundleInfo(const InnerBundleInfo &info);
     void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
-    bool GetPreinstalledApplicationInfo(std::string &entryModuleName, int32_t &labelId, int32_t &iconId) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
 
