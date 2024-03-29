@@ -1169,7 +1169,7 @@ void BMSEventHandler::ProcessCheckPreinstallData()
     bool checkPreinstallData = false;
     CheckOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA, checkPreinstallData);
     if (checkPreinstallData) {
-        APP_LOGI("Not need to check preinstall app data dir due to has checked.");
+        APP_LOGI("Not need to check preinstall app data due to has checked.");
         return;
     }
     APP_LOGI("Need to check preinstall data.");
@@ -1184,40 +1184,27 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         APP_LOGE("DataMgr is nullptr");
         return;
     }
-    std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::ALL_USERID)) {
-        APP_LOGE("GetAllBundleInfos failed.");
-        return;
-    }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &preInstallBundleInfo : preInstallBundleInfos) {
-        bool foundFlag = false;
-        for (auto& bundleInfo : bundleInfos) {
-            if (preInstallBundleInfo.GetBundleName() == bundleInfo.name) {
-                foundFlag = true;
-                preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconId);
-                preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelId);
-                if (bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-                    preInstallBundleInfo.SetModuleName(bundleInfo.hapModuleInfos[0].name);
-                }
-                dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
-            }
+        BundleInfo bundleInfo;
+        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(), BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconId);
+            preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelId);
+            preInstallBundleInfo.SetModuleName(bundleInfo.entryModuleName);
+            dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
         }
-        if (!foundFlag) {
-            BundleMgrHostImpl impl;
-            auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
-            for (auto preinstalledAppPath: preinstalledAppPaths) {
-                BundleInfo resultBundleInfo;
-                if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
-                    return;
-                }
-                preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelId);
-                preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconId);
-                if (resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-                    preInstallBundleInfo.SetModuleName(resultBundleInfo.hapModuleInfos[0].name);
-                }
-                dataMgr->SavePreInstallBundleInfo(resultBundleInfo.name, preInstallBundleInfo);
+        BundleMgrHostImpl impl;
+        auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
+        for (auto preinstalledAppPath: preinstalledAppPaths) {
+            BundleInfo resultBundleInfo;
+            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+                APP_LOGE("Get bundle archive info fail.");
+                return;
             }
+            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelId);
+            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconId);
+            preInstallBundleInfo.SetModuleName(resultBundleInfo.entryModuleName);
+            dataMgr->SavePreInstallBundleInfo(resultBundleInfo.name, preInstallBundleInfo);
         }
     }
 }
