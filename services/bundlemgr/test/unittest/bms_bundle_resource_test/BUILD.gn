@@ -61,6 +61,7 @@ ohos_unittest("BmsBundleResourceTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps

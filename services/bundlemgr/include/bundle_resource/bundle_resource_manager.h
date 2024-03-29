@@ -98,7 +98,7 @@ private:
 
     void ProcessResourceInfo(const std::vector<ResourceInfo> &resourceInfos, ResourceInfo &resourceInfo);
 
-    std::string GetDefaultIcon();
+    void GetDefaultIcon(ResourceInfo &resourceInfo);
 
     uint32_t CheckResourceFlags(const uint32_t flags);
 

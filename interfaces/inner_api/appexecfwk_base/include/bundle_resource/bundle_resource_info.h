@@ -27,16 +27,21 @@ enum class ResourceFlag {
     GET_RESOURCE_INFO_ALL = 0x00000001,
     // Used to obtained the label resource info
     GET_RESOURCE_INFO_WITH_LABEL = 0x00000002,
-    //Used to obtained the icon resource info
+    // Used to obtained the icon resource info
     GET_RESOURCE_INFO_WITH_ICON = 0x00000004,
-    //Used to obtain the resource info sorted by label
-    GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008
+    // Used to obtain the resource info sorted by label
+    GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008,
+    // Used to obtain the icon drawable object
+    GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = 0x00000010,
 };
 
 struct BundleResourceInfo : Parcelable {
     std::string bundleName;
     std::string label;
     std::string icon;
+
+    std::vector<uint8_t> foreground;
+    std::vector<uint8_t> background;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

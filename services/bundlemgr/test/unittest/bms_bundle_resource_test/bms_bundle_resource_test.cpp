@@ -78,6 +78,9 @@ const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/b
 const std::string HAP_NOT_EXIST = "not exist";
 const std::string HAP_NO_ICON = "/data/test/resource/bms/accesstoken_bundle/bmsThirdBundle2.hap";
 const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
+// test layered image
+const std::string BUNDLE_NAME_LAYERED_IMAGE = "com.example.thumbnailtest";
+const std::string LAYERED_IMAGE_HAP_PATH = "/data/test/resource/bms/accesstoken_bundle/thumbnail.hap";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -1632,18 +1635,20 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0066, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0067, Function | SmallTest | Level0)
 {
-    std::string icon;
+    ResourceInfo info;
+    info.iconId_ = 0;
     BundleResourceParser parser;
-    bool ans = parser.ParseIconResourceByResourceManager(nullptr, 0, icon);
+    bool ans = parser.ParseIconResourceByResourceManager(nullptr, info);
     EXPECT_FALSE(ans);
 
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    ans = parser.ParseIconResourceByResourceManager(resourceManager, 0, icon);
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, info);
     EXPECT_FALSE(ans);
 
-    ans = parser.ParseIconResourceByResourceManager(resourceManager, 1, icon); // iconId not exist
+    info.iconId_ = 1;
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, info); // iconId not exist
     EXPECT_FALSE(ans);
-    EXPECT_EQ(icon, "");
+    EXPECT_EQ(info.icon_, "");
 }
 
 /**
@@ -2927,7 +2932,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0116, Function | SmallTest
  * @tc.desc: 1. system running normally
  *           2. test GetOverlayModuleHapPaths
  */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01117, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0117, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -2959,7 +2964,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01117, Function | SmallTes
  * @tc.desc: 1. system running normally
  *           2. test GetOverlayModuleHapPaths
  */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0118, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
     BundleInfo bundleInfo;
@@ -3009,6 +3014,396 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_01118, Function | SmallTes
     ans = BundleResourceProcess::GetOverlayModuleHapPaths(info, MODULE_NAME, USERID, overlayHapPaths);
     EXPECT_TRUE(ans);
     EXPECT_EQ(overlayHapPaths.size(), 1);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0119
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0119, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.background_.emplace_back(2);
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    BundleResourceInfo info;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), info);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info.bundleName, resourceInfo.bundleName_);
+    EXPECT_TRUE(info.icon.empty());
+    EXPECT_TRUE(info.label.empty());
+    EXPECT_FALSE(info.foreground.empty());
+    if (!info.foreground.empty()) {
+        EXPECT_EQ(info.foreground[0], resourceInfo.foreground_[0]);
+    }
+    EXPECT_FALSE(info.background.empty());
+    if (!info.background.empty()) {
+        EXPECT_EQ(info.background[0], resourceInfo.background_[0]);
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0120
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0120, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.background_.emplace_back(2);
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    BundleResourceInfo info;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info.icon, resourceInfo.icon_);
+    EXPECT_EQ(info.label, resourceInfo.label_);
+    EXPECT_FALSE(info.foreground.empty());
+    if (!info.foreground.empty()) {
+        EXPECT_EQ(info.foreground[0], resourceInfo.foreground_[0]);
+    }
+    EXPECT_FALSE(info.background.empty());
+    if (!info.background.empty()) {
+        EXPECT_EQ(info.background[0], resourceInfo.background_[0]);
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0121
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0121, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.background_.emplace_back(2);
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_TRUE(infos[0].icon.empty());
+        EXPECT_TRUE(infos[0].label.empty());
+
+        EXPECT_FALSE(infos[0].foreground.empty());
+        if (!infos[0].foreground.empty()) {
+            EXPECT_EQ(infos[0].foreground[0], resourceInfo.foreground_[0]);
+        }
+        EXPECT_FALSE(infos[0].background.empty());
+        if (!infos[0].background.empty()) {
+            EXPECT_EQ(infos[0].background[0], resourceInfo.background_[0]);
+        }
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0122
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0122, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    resourceInfo.foreground_.emplace_back(1);
+    resourceInfo.background_.emplace_back(2);
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].icon, resourceInfo.icon_);
+        EXPECT_EQ(infos[0].label, resourceInfo.label_);
+
+        EXPECT_FALSE(infos[0].foreground.empty());
+        if (!infos[0].foreground.empty()) {
+            EXPECT_EQ(infos[0].foreground[0], resourceInfo.foreground_[0]);
+        }
+        EXPECT_FALSE(infos[0].background.empty());
+        if (!infos[0].background.empty()) {
+            EXPECT_EQ(infos[0].background[0], resourceInfo.background_[0]);
+        }
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0123
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseThemeIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0123, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    BundleResourceParser parser;
+    bool ans = parser.ParseThemeIcon(nullptr, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ans = parser.ParseThemeIcon(nullptr, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0124
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconIdFromJson
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0124, Function | SmallTest | Level0)
+{
+    nlohmann::json layeredImagedJson = R"(
+        {
+            "layered-image" : {
+                "background" : "$media:1",
+                "foreground" : "$media:2"
+            }
+        }
+    )"_json;
+
+    std::string jsonBuff(layeredImagedJson.dump());
+    uint32_t foregroundId = 0;
+    uint32_t backgroundId = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(foregroundId, 2);
+    EXPECT_EQ(backgroundId, 1);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0125
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconIdFromJson
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0125, Function | SmallTest | Level0)
+{
+    // error format
+    nlohmann::json layeredImagedJson = R"(
+        {}
+    )"_json;
+
+    std::string jsonBuff(layeredImagedJson.dump());
+    uint32_t foregroundId = 0;
+    uint32_t backgroundId = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0126
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconIdFromJson
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0126, Function | SmallTest | Level0)
+{
+    // error format
+    nlohmann::json layeredImagedJson = R"(
+        {
+            "error-key" : {
+                "background" : "$media:1",
+                "foreground" : "$media:2"
+            }
+        }
+    )"_json;
+
+    std::string jsonBuff(layeredImagedJson.dump());
+    uint32_t foregroundId = 0;
+    uint32_t backgroundId = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0127
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconIdFromJson
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0127, Function | SmallTest | Level0)
+{
+    // error format
+    nlohmann::json layeredImagedJson = R"(
+        {
+            "layered-image" : {
+                "background" : "",
+                "foreground" : ""
+            }
+        }
+    )"_json;
+
+    std::string jsonBuff(layeredImagedJson.dump());
+    uint32_t foregroundId = 0;
+    uint32_t backgroundId = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0128
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconIdFromJson
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0128, Function | SmallTest | Level0)
+{
+    nlohmann::json layeredImagedJson = R"(
+        {
+            "layered-image" : {
+                "background" : "$media",
+                "foreground" : "$media"
+            }
+        }
+    )"_json;
+
+    std::string jsonBuff(layeredImagedJson.dump());
+    uint32_t foregroundId = 0;
+    uint32_t backgroundId = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(foregroundId, 0);
+    EXPECT_EQ(backgroundId, 0);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0129
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseForegroundAndBackgroundResource
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0129, Function | SmallTest | Level0)
+{
+    // error format
+    nlohmann::json layeredImagedJson_1 = R"(
+        {
+            "layered-image" : {
+                "background" : "$media:1",
+                "foreground" : "$media:2"
+            }
+        }
+    )"_json;
+    std::string jsonBuff(layeredImagedJson_1.dump());
+    ResourceInfo resourceInfo;
+    BundleResourceParser parser;
+    bool ans = parser.ParseForegroundAndBackgroundResource(nullptr, jsonBuff, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ans = parser.ParseForegroundAndBackgroundResource(resourceManager, jsonBuff, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+
+    nlohmann::json layeredImagedJson_2 = R"(
+        {
+            "layered-image" : {
+                "background" : "$media:1",
+                "foreground" : "$media:2"
+            }
+        }
+    )"_json;
+
+    std::string jsonBuff_2(layeredImagedJson_1.dump());
+    ans = parser.ParseForegroundAndBackgroundResource(resourceManager, jsonBuff_2, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0130
+ * @tc.name: test GetLauncherAbilityResourceInfo
+ * @tc.desc: 1. test parse layered image
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0130, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(LAYERED_IMAGE_HAP_PATH);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<LauncherAbilityResourceInfo> infos;
+        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME_LAYERED_IMAGE,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), infos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(infos.empty());
+        if (!infos.empty()) {
+            EXPECT_EQ(infos[0].bundleName, BUNDLE_NAME_LAYERED_IMAGE);
+            EXPECT_FALSE(infos[0].foreground.empty());
+            EXPECT_FALSE(infos[0].background.empty());
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_LAYERED_IMAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
 } // OHOS

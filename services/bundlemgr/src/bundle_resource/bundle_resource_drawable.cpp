@@ -26,7 +26,7 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     const uint32_t iconId,
     const int32_t density,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-    std::string &icon)
+    ResourceInfo &resourceInfo)
 {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     if (resourceManager == nullptr) {
@@ -39,19 +39,29 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
     Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
     if (state == Global::Resource::SUCCESS) {
+        // init foreground
+        resourceInfo.foreground_.resize(foregroundInfo.second);
+        for (size_t index = 0; index < foregroundInfo.second; ++index) {
+            resourceInfo.foreground_[index] = foregroundInfo.first[index];
+        }
+        // init background
+        resourceInfo.background_.resize(backgroundInfo.second);
+        for (size_t index = 0; index < backgroundInfo.second; ++index) {
+            resourceInfo.background_[index] = backgroundInfo.first[index];
+        }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
             themeMask, drawableType, resourceManager);
         if (drawableDescriptor == nullptr) {
             return false;
         }
-        return info.ConvertToString(drawableDescriptor->GetPixelMap(), icon);
+        return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
     }
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
         iconId, resourceManager, state, drawableType, 0);
     if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
         return false;
     }
-    return info.ConvertToString(drawableDescriptor->GetPixelMap(), icon);
+    return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
 #else
     return false;
 #endif

@@ -43,6 +43,20 @@ bool LauncherAbilityResourceInfo::ReadFromParcel(Parcel &parcel)
     std::u16string iconVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, iconVal);
     icon = Str16ToStr8(iconVal);
+
+    int32_t foregroundSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, foregroundSize);
+    CONTAINER_SECURITY_VERIFY(parcel, foregroundSize, &foreground);
+    for (auto i = 0; i < foregroundSize; i++) {
+        foreground.emplace_back(parcel.ReadUint8());
+    }
+
+    int32_t backgroundSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, backgroundSize);
+    CONTAINER_SECURITY_VERIFY(parcel, backgroundSize, &background);
+    for (auto i = 0; i < backgroundSize; i++) {
+        background.emplace_back(parcel.ReadUint8());
+    }
     return true;
 }
 
@@ -53,6 +67,14 @@ bool LauncherAbilityResourceInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(label));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(icon));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, foreground.size());
+    for (const auto &data : foreground) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, data);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, background.size());
+    for (const auto &data : background) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, data);
+    }
     return true;
 }
 

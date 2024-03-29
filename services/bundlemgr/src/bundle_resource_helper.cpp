@@ -198,6 +198,8 @@ bool BundleResourceHelper::ParseIconResourceByPath(
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     BundleResourceParser bundleResourceParser;
+    ResourceInfo info;
+    info.iconId_ = iconId;
     return bundleResourceParser.ParseIconResourceByPath(filePath, iconId, icon);
 #else
     return false;
