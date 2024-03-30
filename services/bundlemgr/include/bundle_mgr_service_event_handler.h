@@ -478,6 +478,9 @@ private:
     void ProcessCheckAppFileManagerDir();
     void InnerProcessCheckAppFileManagerDir();
 
+    bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
