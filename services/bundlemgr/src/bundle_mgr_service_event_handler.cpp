@@ -1786,30 +1786,8 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
             continue;
         }
-
-        // Check the installed module.
-        // If the corresponding Hap does not exist, it should be uninstalled.
-        for (auto moduleName : hasInstalledInfo.hapModuleNames) {
-            bool hasModuleHapExist = false;
-            for (auto parserInfoIter : listIter->second) {
-                auto parserModuleNames = parserInfoIter.second.GetModuleNameVec();
-                if (!parserModuleNames.empty() && moduleName == parserModuleNames[0]) {
-                    hasModuleHapExist = true;
-                    break;
-                }
-            }
-
-            if (!hasModuleHapExist) {
-                APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
-                    bundleName.c_str(), moduleName.c_str());
-                SystemBundleInstaller installer;
-                if (!installer.UninstallSystemBundle(bundleName, moduleName)) {
-                    APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
-                        bundleName.c_str(), moduleName.c_str());
-                }
-            }
-        }
-
+        // Check the installed module
+        InnerProcessUninstallModule(hasInstalledInfo, listIter->second);
         // Check the preInstall path in Db.
         // If the corresponding Hap does not exist, it should be deleted.
         auto parserInfoMap = listIter->second;
@@ -1828,6 +1806,46 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
     }
 
     APP_LOGI("Reboot scan and OTA uninstall success");
+}
+
+void BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        APP_LOGI("bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
+        return;
+    }
+    if (bundleInfo.versionCode > infos.begin()->second.GetVersionCode()) {
+        APP_LOGI("bundleName:%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
+        return;
+    }
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+            return;
+        }
+    }
+    // Check the installed module.
+    // If the corresponding Hap does not exist, it should be uninstalled.
+    for (auto moduleName : bundleInfo.hapModuleNames) {
+        bool hasModuleHapExist = false;
+        for (auto parserInfoIter : infos) {
+            auto parserModuleNames = parserInfoIter.second.GetModuleNameVec();
+            if (!parserModuleNames.empty() && moduleName == parserModuleNames[0]) {
+                hasModuleHapExist = true;
+                break;
+            }
+        }
+
+        if (!hasModuleHapExist) {
+            APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
+                bundleInfo.name.c_str(), moduleName.c_str());
+            SystemBundleInstaller installer;
+            if (!installer.UninstallSystemBundle(bundleInfo.name, moduleName)) {
+                APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
+                    bundleInfo.name.c_str(), moduleName.c_str());
+            }
+        }
+    }
 }
 
 void BMSEventHandler::DeletePreInfoInDb(
