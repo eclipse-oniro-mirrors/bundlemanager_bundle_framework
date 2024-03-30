@@ -2269,6 +2269,22 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0011, TestSize.Level1)
 }
 
 /**
+ * @tc.number: BundleMgrClientImpl_0011
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: 1.Test the interface of CreateBundleDataDir
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0012, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    ErrCode res = impl.CreateBundleDataDir(DEFAULT_USERID);
+    EXPECT_EQ(res, ERR_OK);
+    impl.OnDeath();
+}
+
+/**
  * @tc.number: BundleMgrClientImplIsNull_0400
  * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
  * @tc.desc: 1. test is failed

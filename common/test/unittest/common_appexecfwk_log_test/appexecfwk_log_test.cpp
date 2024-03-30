@@ -94,4 +94,7 @@ HWTEST_F(AppExecFwkLogTest, AppLogWrapper_003, TestSize.Level0)
 
     result = AppLogWrapper::GetBriefFileName(nullptr);
     EXPECT_EQ(exceptStr, result);
+
+    bool res = AppLogWrapper::JudgeLevel(AppLogLevel::DEBUG);
+    EXPECT_TRUE(res);
 }
