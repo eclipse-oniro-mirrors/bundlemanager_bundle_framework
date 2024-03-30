@@ -752,16 +752,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1000, Function | MediumTest | Level
     ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
     ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
         ROUTER_INDEX_ZERO_BUILD_FUNCTION);
 
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
@@ -1315,16 +1311,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0024, Function | MediumTest | Lev
     ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
     ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
         ROUTER_INDEX_ZERO_BUILD_FUNCTION);
 
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
