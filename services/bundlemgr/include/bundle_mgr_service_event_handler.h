@@ -478,7 +478,7 @@ private:
     void ProcessCheckAppFileManagerDir();
     void InnerProcessCheckAppFileManagerDir();
 
-    void InnerProcessUninstallModule(const BundleInfo &bundleInfo,
+    bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     bool IsSystemUpgrade();

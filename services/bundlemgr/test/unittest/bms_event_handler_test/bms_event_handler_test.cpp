@@ -439,6 +439,71 @@ HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0200, Function | Smal
 }
 
 /**
+ * @tc.number: InnerProcessUninstallModule_0100
+ * @tc.name: InnerProcessUninstallModule
+ * @tc.desc: test InnerProcessUninstallModule
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    BundleInfo bundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.versionCode = 2;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.versionCode = 1;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    infos[TEST_BUNDLE_NAME] = innerBundleInfo;
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    EXPECT_FALSE(ret);
+
+    bundleInfo.versionCode = 1;
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    EXPECT_FALSE(ret);
+
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.hapPath = "/data/app/el1/bundle/public/xxxxx";
+    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerProcessUninstallModule_0200
+ * @tc.name: InnerProcessUninstallModule
+ * @tc.desc: test InnerProcessUninstallModule
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 1;
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.hapPath = "/system/app/xxxx";
+    bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
+    bundleInfo.hapModuleNames.emplace_back(MODULE_NAME);
+    bundleInfo.hapModuleNames.emplace_back(MODULE_NAME_TWO);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    BundleInfo baseBundleInfo;
+    baseBundleInfo.versionCode = 1;
+    innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    infos[TEST_BUNDLE_NAME] = innerBundleInfo;
+
+    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: ProcessOTAInstallSystemSharedBundle_0100
  * @tc.name: ProcessOTAInstallSystemSharedBundle
  * @tc.desc: test ProcessOTAInstallSystemSharedBundle with empty filePath

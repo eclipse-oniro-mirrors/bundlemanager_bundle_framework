@@ -1787,7 +1787,9 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             continue;
         }
         // Check the installed module
-        InnerProcessUninstallModule(hasInstalledInfo, listIter->second);
+        if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second)) {
+            APP_LOGI("bundleName:%{public}s need delete module", bundleName.c_str());
+        }
         // Check the preInstall path in Db.
         // If the corresponding Hap does not exist, it should be deleted.
         auto parserInfoMap = listIter->second;
@@ -1808,22 +1810,23 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
     APP_LOGI("Reboot scan and OTA uninstall success");
 }
 
-void BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
+bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (infos.empty()) {
         APP_LOGI("bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
-        return;
+        return false;
     }
     if (bundleInfo.versionCode > infos.begin()->second.GetVersionCode()) {
         APP_LOGI("bundleName:%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
-        return;
+        return false;
     }
     for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
         if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
-            return;
+            return false;
         }
     }
+    bool needUninstallModule = false;
     // Check the installed module.
     // If the corresponding Hap does not exist, it should be uninstalled.
     for (auto moduleName : bundleInfo.hapModuleNames) {
@@ -1839,6 +1842,7 @@ void BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         if (!hasModuleHapExist) {
             APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
                 bundleInfo.name.c_str(), moduleName.c_str());
+            needUninstallModule = true;
             SystemBundleInstaller installer;
             if (!installer.UninstallSystemBundle(bundleInfo.name, moduleName)) {
                 APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
@@ -1846,6 +1850,7 @@ void BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
             }
         }
     }
+    return needUninstallModule;
 }
 
 void BMSEventHandler::DeletePreInfoInDb(
