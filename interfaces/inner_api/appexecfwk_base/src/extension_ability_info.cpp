@@ -105,7 +105,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/appSelector", ExtensionAbilityType::SYSPICKER_APPSELECTOR },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
     { "vpn", ExtensionAbilityType::VPN },
-    { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART }
+    { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
+    { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN }
 };
 
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
