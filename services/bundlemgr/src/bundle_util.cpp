@@ -804,7 +804,6 @@ std::string BundleUtil::GenerateUuid()
     } else {
         deviceUdid = std::string{ deviceId };
         deviceStr = GetHexHash(deviceUdid);
-        APP_LOGI("GenerateUuid deviceUdid is %{public}s", deviceUdid.c_str());
     }
 
     std::string uuid = timeStr + deviceStr;
@@ -813,7 +812,6 @@ std::string BundleUtil::GenerateUuid()
     for (int32_t index : SEPARATOR_POSITIONS) {
         uuid.insert(index, 1, UUID_SEPARATOR);
     }
-    APP_LOGI("GenerateUuid uuid is %{public}s", uuid.c_str());
     return uuid;
 }
 
