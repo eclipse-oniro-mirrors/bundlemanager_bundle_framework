@@ -27,6 +27,8 @@ namespace OHOS {
 namespace {
 constexpr int32_t UID = 100;
 constexpr int32_t GID = 100;
+constexpr int32_t DATA_LENGTH = 100;
+constexpr int32_t MAX_PARCEL_CAPACITY = 101 * 1024 * 1024;
 constexpr int64_t LAST_MODIFY_TIME = 8707247;
 constexpr bool IS_DIR = false;
 std::string TEST_STRING = "test.string";
@@ -660,6 +662,152 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3100, Function | SmallTest |
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
     auto ret = installdProxy->CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3200
+ * @tc.name: test Marshalling function of CreateBundleDataDirWithVector
+ * @tc.desc: 1. calling CreateBundleDataDirWithVector of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3200, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::vector<CreateDirParam> createDirParams;
+    auto ret = installdProxy->CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+
+    CreateDirParam createDirParam;
+    createDirParams.push_back(createDirParam);
+    ret = installdProxy->CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3300
+ * @tc.name: test Marshalling function of GetAllBundleStats
+ * @tc.desc: 1. calling GetAllBundleStats of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3300, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> bundleNames;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    bundleNames.push_back(TEST_STRING);
+    bundleStats.push_back(LAST_MODIFY_TIME);
+    uids.push_back(UID);
+    auto ret = installdProxy->GetAllBundleStats(bundleNames, UID, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3400
+ * @tc.name: test Marshalling function of IsExistApFile
+ * @tc.desc: 1. calling IsExistApFile of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3400, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    bool isExist = true;
+    auto ret = installdProxy->IsExistApFile(TEST_STRING, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3500
+ * @tc.name: test Marshalling function of MoveFiles
+ * @tc.desc: 1. calling MoveFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    auto ret = installdProxy->MoveFiles(TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3600
+ * @tc.name: test Marshalling function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::unordered_multimap<std::string, std::string> dirMap;
+    auto ret = installdProxy->ExtractDriverSoFiles(TEST_STRING, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3600
+ * @tc.name: test Marshalling function of ExtractEncryptedSoFiles
+ * @tc.desc: 1. calling ExtractEncryptedSoFiles of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3700, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::unordered_multimap<std::string, std::string> dirMap;
+    auto ret = installdProxy->ExtractEncryptedSoFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, UID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3800
+ * @tc.name: test Marshalling function of VerifyCodeSignatureForHap
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3800, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    CodeSignatureParam codeSignatureParam;
+    auto ret = installdProxy->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3900
+ * @tc.name: test Marshalling function of DeliverySignProfile
+ * @tc.desc: 1. calling DeliverySignProfile of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3900, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    unsigned char *profileBlock;
+    auto ret = installdProxy->DeliverySignProfile(TEST_STRING, DATA_LENGTH, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = installdProxy->DeliverySignProfile(TEST_STRING, MAX_PARCEL_CAPACITY, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4000
+ * @tc.name: test Marshalling function of RemoveSignProfile
+ * @tc.desc: 1. calling RemoveSignProfile of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4000, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    auto ret = installdProxy->RemoveSignProfile(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 } // OHOS
