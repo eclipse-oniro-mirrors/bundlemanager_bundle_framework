@@ -1192,6 +1192,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
             preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
             preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.iconResource.moduleName);
             dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
+            continue;
         }
         BundleMgrHostImpl impl;
         BundleInfo resultBundleInfo;
