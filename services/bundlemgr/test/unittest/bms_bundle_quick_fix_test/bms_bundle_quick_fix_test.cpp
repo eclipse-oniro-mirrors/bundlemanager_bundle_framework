@@ -60,6 +60,7 @@ const std::string BUNDLE_NAME_DEMO = "com.example.demo.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest3.hap";
 const std::string HQF_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hqf";
+const std::string HAP_PATH_TEST_RAW_FILE = "/data/test/resource/bms/quick_fix/driver_feature_hap.hap";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string QUICK_FIX_ABI = "arms";
@@ -4587,5 +4588,62 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0001, Function | SmallTest | Leve
     deployer->patchPaths_.push_back(path);
     ErrCode ret = deployer->DeployQuickFix();
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeployQuickFix_0002
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0002, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths;
+        PatchParser patchParser;
+        bool hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_FALSE(hasResourceFile);
+        paths.emplace_back("");
+        paths.emplace_back(BUNDLE_NAME);
+        hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_FALSE(hasResourceFile);
+        paths.emplace_back(HAP_PATH_TEST_RAW_FILE);
+        hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_TRUE(hasResourceFile);
+    }
+}
+
+/**
+ * @tc.number: DeployQuickFix_0003
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths;
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.debug = true;
+        bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+        auto ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.applicationInfo.debug = false;
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        paths.emplace_back(HAP_PATH_TEST_RAW_FILE);
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_TRUE(ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
+    }
 }
 } // OHOS
