@@ -17,7 +17,6 @@ import("../../../appexecfwk.gni")
 config("bundlemgr_graphics_config") {
   include_dirs = [
     "include",
-    "//third_party/json/include/",
     "../../inner_api/appexecfwk_base/include",
   ]
 }
@@ -53,6 +52,7 @@ ohos_shared_library("bundlemgr_graphics") {
     "samgr:samgr_proxy",
   ]
 
+  public_external_deps = [ "json:nlohmann_json_static" ]
   subsystem_name = "bundlemanager"
   innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"

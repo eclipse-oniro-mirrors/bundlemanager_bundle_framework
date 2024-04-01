@@ -15,10 +15,7 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("launcherbundlemanager") {
-  include_dirs = [
-    "//third_party/node/src",
-    "${kits_path}/js/common",
-  ]
+  include_dirs = [ "${kits_path}/js/common" ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -50,7 +47,7 @@ ohos_shared_library("launcherbundlemanager") {
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
-
+  public_external_deps = [ "node:node_header_notice" ]
   relative_install_dir = "module/bundle"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

@@ -18,9 +18,6 @@ config("zip_config") {
   include_dirs = [
     "include",
     "napi",
-    "//third_party/libuv/include",
-    "//third_party/node/src",
-    "//third_party/zlib",
     "${kits_path}/js/common",
     "napi/common",
     "napi/class_checksum",
@@ -79,7 +76,11 @@ ohos_shared_library("zlib") {
     "hilog:libhilog_base",
     "napi:ace_napi",
   ]
-
+  public_external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
+    "zlib:libz",
+  ]
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

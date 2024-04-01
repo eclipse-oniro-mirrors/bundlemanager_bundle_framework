@@ -77,7 +77,8 @@
                 "code_signature",
                 "udmf",
                 "ace_engine",
-                "code_crypto_metadata_process"
+                "code_crypto_metadata_process",
+                "json"
             ],
             "third_party": [
                 "json",

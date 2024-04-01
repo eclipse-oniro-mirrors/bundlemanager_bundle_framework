@@ -62,11 +62,7 @@ config("overlay_installation_config") {
 }
 
 config("bundlemgr_parse_config") {
-  include_dirs = [
-    "//third_party/json/include",
-    "//third_party/zlib/contrib/minizip",
-    "//third_party/zlib",
-  ]
+  include_dirs = [ "//third_party/zlib/contrib/minizip" ]
 }
 
 bundlemgr_parser_common_config = [
@@ -93,6 +89,11 @@ ohos_source_set("parser_common") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+  ]
+
+  public_external_deps = [
+    "json:nlohmann_json_static",
+    "zlib:libz",
   ]
 
   part_name = "bundle_framework"
@@ -159,6 +160,11 @@ ohos_source_set("bundle_parser") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+  ]
+
+  public_external_deps = [
+    "json:nlohmann_json_static",
+    "zlib:libz",
   ]
 
   defines = []
