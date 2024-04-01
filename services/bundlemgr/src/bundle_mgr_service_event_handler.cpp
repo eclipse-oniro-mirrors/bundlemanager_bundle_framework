@@ -1190,7 +1190,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(), BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
             preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconResource.id);
             preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
-            preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.iconResource.moduleName);
+            preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.labelResource.moduleName);
             dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
             continue;
         }
@@ -1202,8 +1202,8 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
                 APP_LOGE("Get bundle archive info fail.");
                 return;
             }
-            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.iconResource.id);
-            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(resultBundleInfo.applicationInfo.labelResource.moduleName);
             if (resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
                 break;
