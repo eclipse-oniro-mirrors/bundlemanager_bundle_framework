@@ -24,6 +24,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace
+{
+const std::string RESOURCES_RAW_FILE = "/resources/rawfile";
+} // namespace
+
 ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const
 {
     LOG_D(BMSTag::QUICK_FIX, "Parse patch.json from %{private}s", pathName.c_str());
@@ -70,6 +75,31 @@ ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
     }
     LOG_D(BMSTag::QUICK_FIX, "Parse quick fix files end.");
     return ERR_OK;
+}
+
+bool PatchParser::HasResourceFile(const std::string &filePath) const
+{
+    LOG_D(BMSTag::QUICK_FIX, "check filePath has resource file start");
+    if (filePath.empty()) {
+        return false;
+    }
+    PatchExtractor patchExtractor(filePath);
+    if (!patchExtractor.Init()) {
+        LOG_E(BMSTag::QUICK_FIX, "patch extractor init failed");
+        return false;
+    }
+    return patchExtractor.HasEntry(RESOURCES_RAW_FILE);
+}
+
+bool PatchParser::HasResourceFile(const std::vector<std::string> &filePaths) const
+{
+    LOG_D(BMSTag::QUICK_FIX, "check filePaths has resource file start");
+    for (size_t index = 0; index < filePaths.size(); ++index) {
+        if (HasResourceFile(filePaths[index])) {
+            return true;
+        }
+    }
+    return false;
 }
 } // namespace AppExecFwk
 } // namespace OHOS
