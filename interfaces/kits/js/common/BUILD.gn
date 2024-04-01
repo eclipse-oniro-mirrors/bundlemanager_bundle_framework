@@ -14,6 +14,12 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
+config("bundle_napi_common_config") {
+  include_dirs = [
+    "./",
+    "../bundlemgr",
+  ]
+}
 ohos_shared_library("bundle_napi_common") {
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -31,6 +37,8 @@ ohos_shared_library("bundle_napi_common") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
   ]
+
+  public_configs = [ ":bundle_napi_common_config" ]
 
   external_deps = [
     "ability_base:want",
