@@ -5750,7 +5750,7 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
         std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
         for (const auto &info : moduleInfos) {
             if (info.second.isEntry) {
-                moduleNameTmp = info.first;
+                moduleNameTmp = info.second.moduleName;
                 APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
                 break;
             }
