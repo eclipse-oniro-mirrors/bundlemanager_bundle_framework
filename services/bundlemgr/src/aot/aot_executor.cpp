@@ -47,6 +47,7 @@ constexpr const char* PROCESS_UID = "processUid";
 constexpr const char* BUNDLE_UID = "bundleUid";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
+constexpr const char* IS_SCREEN_OFF = "isScreenOff";
 constexpr const char* PGO_DIR = "pgoDir";
 }
 
@@ -131,6 +132,7 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
     subject[BUNDLE_UID] = DecToHex(aotArgs.bundleUid);
     subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
     subject[IS_ENCRYPTED_BUNDLE] = DecToHex(aotArgs.isEncryptedBundle);
+    subject[IS_SCREEN_OFF] = DecToHex(aotArgs.isScreenOff);
     subject[PGO_DIR] = filePath.parent_path().string();
     return subject;
 }
@@ -158,7 +160,8 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
         "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
         "--compiler-pkg-info=" + subject.dump(),
         "--compiler-external-pkg-info=" + objectArray.dump(),
-        "--compiler-opt-bc-range=" + aotArgs.optBCRangeList
+        "--compiler-opt-bc-range=" + aotArgs.optBCRangeList,
+        "--compiler-device-state=" + std::to_string(aotArgs.isScreenOff)
     };
     tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
 

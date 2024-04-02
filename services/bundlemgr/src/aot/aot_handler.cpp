@@ -125,10 +125,13 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
-    
+
     // key rule is start:end,start:end......
     std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
     aotArgs.optBCRangeList = optBCRange;
+
+    bool deviceIsScreenOff = CheckDeviceState();
+    aotArgs.isScreenOff = static_cast<uint32_t>(deviceIsScreenOff);
 
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
