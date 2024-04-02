@@ -489,7 +489,7 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
     ResourceInfo info;
     info.bundleName_ = bundleName;
     info.iconId_ = extendResourceInfo.iconId;
-    if (bundleResourceParser.ParseIconResourceByPath(extendResourceInfo.filePath,
+    if (!bundleResourceParser.ParseIconResourceByPath(extendResourceInfo.filePath,
         extendResourceInfo.iconId, info)) {
         APP_LOGW("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
         return false;
