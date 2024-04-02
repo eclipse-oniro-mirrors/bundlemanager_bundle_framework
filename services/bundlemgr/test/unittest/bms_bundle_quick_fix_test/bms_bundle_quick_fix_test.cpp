@@ -4643,7 +4643,7 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Leve
 
         paths.emplace_back(HAP_PATH_TEST_RAW_FILE);
         ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
-        EXPECT_TRUE(ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
     }
 }
 } // OHOS

@@ -24,9 +24,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace
-{
-const std::string RESOURCES_RAW_FILE = "/resources/rawfile";
+namespace {
+const std::string RESOURCES_RAW_FILE = "resources/rawfile/";
 } // namespace
 
 ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const
@@ -88,7 +87,8 @@ bool PatchParser::HasResourceFile(const std::string &filePath) const
         LOG_E(BMSTag::QUICK_FIX, "patch extractor init failed");
         return false;
     }
-    return patchExtractor.HasEntry(RESOURCES_RAW_FILE);
+
+    return patchExtractor.IsDirExist(RESOURCES_RAW_FILE);
 }
 
 bool PatchParser::HasResourceFile(const std::vector<std::string> &filePaths) const
@@ -99,6 +99,7 @@ bool PatchParser::HasResourceFile(const std::vector<std::string> &filePaths) con
             return true;
         }
     }
+    LOG_D(BMSTag::QUICK_FIX, "does not exist resource rawfile");
     return false;
 }
 } // namespace AppExecFwk
