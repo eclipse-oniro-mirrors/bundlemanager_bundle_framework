@@ -45,12 +45,26 @@ struct BmsCallerInfo : public Parcelable {
         TYPE_BOXED_ATOM_SERVICE = 5
     };
 
+    enum {
+        MODEL_STAGE = 0,
+        MODEL_FA
+    };
+
     std::string packageName;
     int32_t uid = 0;
     int32_t pid = 0;
 
     int32_t callerAppType = TYPE_INVALID;
     int32_t targetAppType = TYPE_INVALID;
+
+    int32_t callerModelType = 0L;
+    std::string targetAppDistType = "";
+    std::string targetLinkFeature = "";
+    int32_t targetLinkType = 0L;
+    int32_t callerAbilityType = 0L;
+    int32_t embedded = 0;
+    std::string callerAppProvisionType;
+    std::string targetAppProvisionType;
 
     bool ReadFromParcel(Parcel &parcel);
 

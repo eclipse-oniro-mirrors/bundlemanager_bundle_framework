@@ -80,7 +80,6 @@ BmsCallerInfo *BmsCallerInfo::Unmarshalling(Parcel &in)
         LOG_E(BMSTag::FREE_INSTALL, "new callerInfo failed, return nullptr");
         return nullptr;
     }
-
     info->packageName = in.ReadString();
     LOG_I(BMSTag::FREE_INSTALL, "read packageName result: %{public}s", info->packageName.c_str());
 
@@ -89,25 +88,41 @@ BmsCallerInfo *BmsCallerInfo::Unmarshalling(Parcel &in)
         delete info;
         return nullptr;
     }
-
     if (!in.ReadInt32(info->pid)) {
         LOG_E(BMSTag::FREE_INSTALL, "read pid failed");
         delete info;
         return nullptr;
     }
-
     if (!in.ReadInt32(info->callerAppType)) {
         LOG_E(BMSTag::FREE_INSTALL, "read callerAppType failed");
         delete info;
         return nullptr;
     }
-
     if (!in.ReadInt32(info->targetAppType)) {
         LOG_E(BMSTag::FREE_INSTALL, "read targetAppType failed");
         delete info;
         return nullptr;
     }
-
+    if (!in.ReadInt32(info->callerModelType)) {
+        delete info;
+        return nullptr;
+    }
+    info->targetAppDistType = in.ReadString();
+    info->targetLinkFeature = in.ReadString();
+    if (!in.ReadInt32(info->targetLinkType)) {
+        delete info;
+        return nullptr;
+    }
+    if (!in.ReadInt32(info->callerAbilityType)) {
+        delete info;
+        return nullptr;
+    }
+    if (!in.ReadInt32(info->embedded)) {
+        delete info;
+        return nullptr;
+    }
+    info->callerAppProvisionType = in.ReadString();
+    info->targetAppProvisionType = in.ReadString();
     return info;
 }
 
@@ -117,24 +132,45 @@ bool BmsCallerInfo::Marshalling(Parcel &parcel) const
         LOG_E(BMSTag::FREE_INSTALL, "write packageName failed");
         return false;
     }
-
     if (!parcel.WriteInt32(uid)) {
         LOG_E(BMSTag::FREE_INSTALL, "write uid failed");
         return false;
     }
-
     if (!parcel.WriteInt32(pid)) {
         LOG_E(BMSTag::FREE_INSTALL, "write pid failed");
         return false;
     }
-
     if (!parcel.WriteInt32(callerAppType)) {
         LOG_E(BMSTag::FREE_INSTALL, "write callerAppType failed");
         return false;
     }
-
     if (!parcel.WriteInt32(targetAppType)) {
         LOG_E(BMSTag::FREE_INSTALL, "write targetAppType failed");
+        return false;
+    }
+    if (!parcel.WriteInt32(callerModelType)) {
+        APP_LOGE("write callerModelType failed");
+        return false;
+    }
+    if (!parcel.WriteString(targetAppDistType)) {
+        return false;
+    }
+    if (!parcel.WriteString(targetLinkFeature)) {
+        return false;
+    }
+    if (!parcel.WriteInt32(targetLinkType)) {
+        return false;
+    }
+    if (!parcel.WriteInt32(callerAbilityType)) {
+        return false;
+    }
+    if (!parcel.WriteInt32(embedded)) {
+        return false;
+    }
+    if (!parcel.WriteString(callerAppProvisionType)) {
+        return false;
+    }
+    if (!parcel.WriteString(targetAppProvisionType)) {
         return false;
     }
     return true;
@@ -144,7 +180,11 @@ std::string BmsCallerInfo::ToString() const
 {
     std::string str = "BmsCallerInfo{packageName:" + packageName + ",uid:" + std::to_string(uid) +
         ",pid:" + std::to_string(pid) + ",callerAppType:" + std::to_string(callerAppType) +
-        ",targetAppType:" + std::to_string(targetAppType) + "}";
+        ",targetAppType:" + std::to_string(targetAppType) + ",callerModelType:" + std::to_string(callerModelType) +
+        ",targetAppDistType:" + targetAppDistType + ",targetLinkFeature:" + targetLinkFeature + ",targetLinkType:" +
+        std::to_string(targetLinkType) + ",callerAbilityType:" + std::to_string(callerAbilityType) + ",embedded:" +
+        std::to_string(embedded) + ",callerAppProvisionType:" + callerAppProvisionType + ",targetAppProvisionType:" +
+        targetAppProvisionType + "}";
     return str;
 }
 } // namespace AppExecFwk

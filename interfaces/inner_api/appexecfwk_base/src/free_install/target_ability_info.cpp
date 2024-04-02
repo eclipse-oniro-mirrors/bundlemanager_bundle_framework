@@ -41,6 +41,7 @@ const std::string JSON_KEY_PRELOAD_MODULE_NAMES = "preloadModuleNames";
 const std::string JSON_KEY_ACTION = "action";
 const std::string JSON_KEY_URI = "uri";
 const std::string JSON_KEY_TYPE = "type";
+const std::string JSON_KEY_EMBEDDED = "embedded";
 }  // namespace
 
 void to_json(nlohmann::json &jsonObject, const TargetExtSetting &targetExtSetting)
@@ -117,7 +118,8 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
         {JSON_KEY_CALLINGAPPTYPE, targetInfo.callingAppType},
         {JSON_KEY_CALLINGBUNDLENAMES, targetInfo.callingBundleNames},
         {JSON_KEY_CALLINGAPPIDS, targetInfo.callingAppIds},
-        {JSON_KEY_PRELOAD_MODULE_NAMES, targetInfo.preloadModuleNames}
+        {JSON_KEY_PRELOAD_MODULE_NAMES, targetInfo.preloadModuleNames},
+        {JSON_KEY_EMBEDDED, targetInfo.embedded}
     };
 }
 
@@ -237,6 +239,14 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_EMBEDDED,
+        targetInfo.embedded,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         LOG_E(BMSTag::FREE_INSTALL, "read module targetInfo from jsonObject error: %{public}d", parseResult);
     }
@@ -273,6 +283,7 @@ bool TargetInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < preloadModuleNamesSize; i++) {
         preloadModuleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    embedded = parcel.ReadInt32();
     return true;
 }
 
@@ -301,6 +312,7 @@ bool TargetInfo::Marshalling(Parcel &parcel) const
     for (auto &preloadItem : preloadModuleNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(preloadItem));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, embedded);
     return true;
 }
 

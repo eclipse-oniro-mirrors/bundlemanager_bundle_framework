@@ -38,6 +38,9 @@ namespace AppExecFwk {
 namespace {
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
+const std::string PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE = "send_to_erms_targetAppDistType";
+const std::string PARAM_FREEINSTALL_EMBEDDED = "send_to_erms_embedded";
+const std::string PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE = "send_to_erms_targetAppProvisionType";
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
 const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
@@ -65,6 +68,7 @@ constexpr uint32_t FREE_INSTALL_DONE = 0;
 constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
 constexpr uint32_t TYPE_HARMONEY_APP = 1;
 constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
+constexpr uint32_t DEFAULT_VALUE = -1;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -837,6 +841,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
+    targetAbilityInfo->targetInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 
@@ -1137,9 +1142,12 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
 {
     callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
     callerInfo.uid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
-    callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
+    callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, DEFAULT_VALUE);
     callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
     callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
+    callerInfo.targetAppDistType = want.GetStringParam(PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE);
+    callerInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
+    callerInfo.targetAppProvisionType = want.GetStringParam(PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE);
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
@@ -1158,6 +1166,17 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     if (!getCallerResult) {
         LOG_E(BMSTag::FREE_INSTALL, "Get callerAppInfo failed.");
         return;
+    }
+    callerInfo.callerAppProvisionType = callerAppInfo.appProvisionType;
+    InnerBundleInfo info;
+    bool getInnerBundleInfoRes = bundleDataMgr_->GetInnerBundleInfo(callerBundleName, info);
+    if (!getInnerBundleInfoRes) {
+        APP_LOGW("Get callerInnerBundleInfo failed.");
+        return;
+    }
+    callerInfo.callerModelType = BmsCallerInfo::MODEL_FA;
+    if (info.GetIsNewVersion()) {
+        callerInfo.callerModelType = BmsCallerInfo::MODEL_STAGE;
     }
     if (callerAppInfo.bundleType == AppExecFwk::BundleType::ATOMIC_SERVICE) {
         LOG_D(BMSTag::FREE_INSTALL, "the caller type is atomic service");
