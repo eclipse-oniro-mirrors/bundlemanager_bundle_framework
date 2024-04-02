@@ -63,6 +63,7 @@ const std::string OPERATION_FAILED = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string FINGER_PRINT = "8E93863FC32EE238060BF69A9B37E2608FFFB21F93C862DD511CBAC9F30024B5";
 const std::string DEFAULT_APP_BUNDLE_NAME = "com.test.defaultApp";
 const std::string DEFAULT_APP_MODULE_NAME = "module01";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
@@ -7000,6 +7001,33 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0200, Function | MediumTes
         bundleMgrProxy->GetBundleArchiveInfoV9("", 0, bundleInfo);
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
     std::cout << "END GetBundleArchiveInfoV9_0200" << std::endl;
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoV9_0300
+ * @tc.name: test query archive information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.query archive information with signature information
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleArchiveInfoV9_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleArchiveInfoV9_0300" << std::endl;
+    BundleInfo bundleInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
+    ErrCode getInfoResult = bundleMgrProxy->GetBundleArchiveInfoV9(hapFilePath,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION), bundleInfo);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    EXPECT_EQ(bundleInfo.signatureInfo.appId, APPID);
+    EXPECT_EQ(bundleInfo.signatureInfo.fingerprint, FINGER_PRINT);
+    EXPECT_EQ(bundleInfo.signatureInfo.appIdentifier, "");
+    EXPECT_EQ(bundleInfo.applicationInfo.appPrivilegeLevel, "system_core");
+    EXPECT_EQ(bundleInfo.applicationInfo.appProvisionType, "release");
+    EXPECT_EQ(bundleInfo.applicationInfo.appDistributionType, "os_integration");
+    std::cout << "END GetBundleArchiveInfoV9_0300" << std::endl;
 }
 
 /**

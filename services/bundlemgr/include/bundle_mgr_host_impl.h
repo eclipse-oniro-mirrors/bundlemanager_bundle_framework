@@ -915,6 +915,7 @@ private:
     ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
+    void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
 
     bool isBrokerServiceExisted_ = false;
 };

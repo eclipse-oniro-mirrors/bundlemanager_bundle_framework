@@ -994,6 +994,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
             return false;
         }
         APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
+        SetProvisionInfoToInnerBundleInfo(realPath, info);
         info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
         return true;
     } else {
@@ -1035,6 +1036,10 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGE("parse bundle info failed, error: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
+    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
+        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
+        SetProvisionInfoToInnerBundleInfo(realPath, info);
+    }
     info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     return ERR_OK;
 }
@@ -1044,8 +1049,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
 {
     std::string bundleName;
     int32_t apiVersion = fromV9 ? Constants::INVALID_API_VERSION : Constants::API_VERSION_NINE;
-    if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(apiVersion)) {
+    if (!BundlePermissionMgr::IsSystemApp() && !BundlePermissionMgr::VerifyCallingBundleSdkVersion(apiVersion)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -1084,8 +1088,8 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         BundleUtil::DeleteDir(tempHapPath);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    SetProvisionInfoToInnerBundleInfo(realPath, info);
     BundleUtil::DeleteDir(tempHapPath);
-    APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
     if (fromV9) {
         info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
     } else {
@@ -3506,6 +3510,40 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
+}
+
+void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)
+{
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode verifyRes = BundleVerifyMgr::HapVerify(hapPath, hapVerifyResult);
+    if (verifyRes != ERR_OK) {
+        return;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
+    bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
+    info.SetAppType(isSystemApp ? Constants::AppType::SYSTEM_APP : Constants::AppType::THIRD_PARTY_APP);
+    info.SetProvisionId(provisionInfo.appId);
+    info.SetCertificateFingerprint(provisionInfo.fingerprint);
+    info.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
+    info.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
+    bool isDebug = provisionInfo.type == Security::Verify::ProvisionType::DEBUG;
+    info.SetAppProvisionType(isDebug ? Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE);
+    std::string distributionType;
+    std::unordered_map<Security::Verify::AppDistType, std::string> map = {
+        { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
+        { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+        { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+        { Security::Verify::AppDistType::ENTERPRISE_NORMAL, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+        { Security::Verify::AppDistType::ENTERPRISE_MDM, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+        { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+        { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    };
+    auto typeIter = map.find(provisionInfo.distributionType);
+    if (typeIter == map.end()) {
+        distributionType = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    }
+    distributionType = typeIter->second;
+    info.SetAppDistributionType(distributionType);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
