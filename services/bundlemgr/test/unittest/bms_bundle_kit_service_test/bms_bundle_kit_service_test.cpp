@@ -9088,13 +9088,13 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 
-    innerBundleInfo.SetIsNewVersion(true);
-    innerBundleInfo.UpdateAppDetailAbilityAttrs();
-
-    innerBundleInfo.baseApplicationInfo_->iconId = 1;
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+
+    const auto abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    EXPECT_FALSE(abilityInfos.find(ABILITY_NAME) == abilityInfos.end());
+    EXPECT_TRUE(abilityInfos.find(BUNDLE_NAME) == abilityInfos.end());
 }
 
 /**

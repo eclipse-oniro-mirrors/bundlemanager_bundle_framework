@@ -344,6 +344,9 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
+        if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
+            AddAppDetailAbilityInfo(oldInfo);
+        }
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
         oldInfo.UpdateOdidByBundleInfo(newInfo);
@@ -517,7 +520,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         || statusItem->second == InstallState::USER_CHANGE) {
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
-        bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
         if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
@@ -548,7 +550,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
-        if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
+        if (oldInfo.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(oldInfo);
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -1422,26 +1424,20 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     AbilityInfo appDetailAbility;
     appDetailAbility.name = Constants::APP_DETAIL_ABILITY;
     appDetailAbility.bundleName = info.GetBundleName();
-    std::vector<std::string> moduleNameVec;
-    info.GetModuleNames(moduleNameVec);
-    if (!moduleNameVec.empty()) {
-        appDetailAbility.moduleName = moduleNameVec[0];
-    } else {
-        APP_LOGD("AddAppDetailAbilityInfo error: %{public}s has no module.", appDetailAbility.bundleName.c_str());
-    }
     appDetailAbility.enabled = true;
     appDetailAbility.type = AbilityType::PAGE;
-    appDetailAbility.package = info.GetCurrentModulePackage();
     appDetailAbility.isNativeAbility = true;
 
     ApplicationInfo applicationInfo = info.GetBaseApplicationInfo();
     appDetailAbility.applicationName = applicationInfo.name;
-    appDetailAbility.labelId = applicationInfo.labelId;
+    appDetailAbility.labelId = applicationInfo.labelResource.id;
     if (!info.GetIsNewVersion()) {
         appDetailAbility.labelId = 0;
         appDetailAbility.label = info.GetBundleName();
     }
-    appDetailAbility.iconId = applicationInfo.iconId;
+    appDetailAbility.iconId = applicationInfo.iconResource.id;
+    appDetailAbility.moduleName = applicationInfo.iconResource.moduleName;
+
     if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {
         APP_LOGD("AddAppDetailAbilityInfo appDetailAbility.iconId is 0.");
         // get system resource icon Id
@@ -1456,11 +1452,12 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     // not show in the mission list
     appDetailAbility.removeMissionAfterTerminate = true;
     // set hapPath, for label resource
-    auto hapModuleInfo = info.FindHapModuleInfo(appDetailAbility.package);
-    if (hapModuleInfo) {
-        appDetailAbility.hapPath = hapModuleInfo->hapPath;
+    auto innerModuleInfo = info.GetInnerModuleInfoByModuleName(appDetailAbility.moduleName);
+    if (innerModuleInfo) {
+        appDetailAbility.package = innerModuleInfo->modulePackage;
+        appDetailAbility.hapPath = innerModuleInfo->hapPath;
     }
-
+    appDetailAbility.visible = true;
     std::string keyName;
     keyName.append(appDetailAbility.bundleName).append(".")
         .append(appDetailAbility.package).append(".").append(appDetailAbility.name);
