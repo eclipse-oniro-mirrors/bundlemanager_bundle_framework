@@ -45,6 +45,7 @@ struct ExtensionFormInfo {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = true;
+    bool fontScaleFollowSystem = true;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

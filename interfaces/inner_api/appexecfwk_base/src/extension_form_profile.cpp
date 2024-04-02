@@ -83,6 +83,7 @@ struct ExtensionFormProfileInfo {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = false;
+    bool fontScaleFollowSystem = true;
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -295,6 +296,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::FONT_SCALE_FOLLOW_SYSTEM,
+        extensionFormProfileInfo.fontScaleFollowSystem,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -412,6 +421,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.dataProxyEnabled = form.dataProxyEnabled;
     info.isDynamic = form.isDynamic;
     info.transparencyEnabled = form.transparencyEnabled;
+    info.fontScaleFollowSystem = form.fontScaleFollowSystem;
     return true;
 }
 

@@ -65,6 +65,7 @@ const std::string JSON_KEY_DATA_PROXY_ENABLED = "dataProxyEnabled";
 const std::string JSON_KEY_IS_DYNAMIC = "isDynamic";
 const std::string JSON_KEY_TRANSPARENCY_ENABLED = "transparencyEnabled";
 const std::string JSON_KEY_PRIVACY_LEVEL = "privacyLevel";
+const std::string JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -110,6 +111,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     dataProxyEnabled = formInfo.dataProxyEnabled;
     isDynamic = formInfo.isDynamic;
     transparencyEnabled = formInfo.transparencyEnabled;
+    fontScaleFollowSystem = formInfo.fontScaleFollowSystem;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -196,6 +198,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     isDynamic = parcel.ReadBool();
     transparencyEnabled = parcel.ReadBool();
     privacyLevel = parcel.ReadInt32();
+    fontScaleFollowSystem = parcel.ReadBool();
     return true;
 }
 
@@ -268,6 +271,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDynamic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, transparencyEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, privacyLevel);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, fontScaleFollowSystem);
     return true;
 }
 
@@ -330,7 +334,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled},
         {JSON_KEY_IS_DYNAMIC, formInfo.isDynamic},
         {JSON_KEY_TRANSPARENCY_ENABLED, formInfo.transparencyEnabled},
-        {JSON_KEY_PRIVACY_LEVEL, formInfo.privacyLevel}
+        {JSON_KEY_PRIVACY_LEVEL, formInfo.privacyLevel},
+        {JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM, formInfo.fontScaleFollowSystem}
         };
 }
 
@@ -657,6 +662,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         JSON_KEY_PRIVACY_LEVEL,
         formInfo.privacyLevel,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM,
+        formInfo.fontScaleFollowSystem,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
