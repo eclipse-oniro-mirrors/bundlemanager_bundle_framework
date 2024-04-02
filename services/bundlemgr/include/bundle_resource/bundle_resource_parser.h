@@ -36,7 +36,7 @@ public:
     bool ParseResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     // parse icon resource by hapPath
-    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon);
+    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, ResourceInfo &resourceInfo);
 
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.

@@ -72,7 +72,7 @@ private:
         const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo);
     void SendBroadcast(const std::string &bundleName, bool isEnableDynamicIcon);
     void SaveCurDynamicIcon(const std::string &bundleName, const std::string &moduleName);
-    bool ResetBunldleResourceIcon(const std::string &bundleName);
+    bool ResetBundleResourceIcon(const std::string &bundleName);
 
     std::atomic<uint32_t> id_ = 0;
 };

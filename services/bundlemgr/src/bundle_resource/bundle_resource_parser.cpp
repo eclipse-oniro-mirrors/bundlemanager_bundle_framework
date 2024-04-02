@@ -171,7 +171,8 @@ bool BundleResourceParser::ParseLabelResourceByPath(
     return true;
 }
 
-bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon)
+bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId,
+    ResourceInfo &resourceInfo)
 {
     if (hapPath.empty()) {
         APP_LOGE("hapPath is empty");
@@ -186,13 +187,11 @@ bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, c
         APP_LOGE("InitResourceGlobalConfig failed, hapPath:%{private}s", hapPath.c_str());
         return false;
     }
-    ResourceInfo resourceInfo;
     resourceInfo.iconId_ = iconId;
     if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
         APP_LOGE("failed, iconId: %{public}d", iconId);
         return false;
     }
-    icon = resourceInfo.icon_;
     return true;
 }
 

@@ -380,13 +380,6 @@ bool BundleResourceManager::SaveResourceInfos(std::vector<ResourceInfo> &resourc
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
-bool BundleResourceManager::ParseIconResourceByPath(
-    const std::string &filePath, const int32_t iconId, std::string &icon)
-{
-    BundleResourceParser parser;
-    return parser.ParseIconResourceByPath(filePath, iconId, icon);
-}
-
 void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
 {
     BundleResourceInfo bundleResourceInfo;
@@ -413,6 +406,52 @@ void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, s
 {
     APP_LOGD("start");
     BundleResourceProcess::GetTargetBundleName(bundleName, targetBundleName);
+}
+
+bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo)
+{
+    APP_LOGI("bundleName:%{public}s update icon", bundleName.c_str());
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceInfo bundleResourceInfo;
+    if (!GetBundleResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
+        bundleResourceInfo)) {
+        APP_LOGW("GetBundleResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+    } else {
+        resourceInfo.bundleName_ = bundleResourceInfo.bundleName;
+        resourceInfo.moduleName_ = Constants::EMPTY_STRING;
+        resourceInfo.abilityName_ = Constants::EMPTY_STRING;
+        resourceInfo.label_ = bundleResourceInfo.label;
+        resourceInfos.emplace_back(resourceInfo);
+    }
+
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!GetLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
+        launcherAbilityResourceInfos)) {
+        APP_LOGW("GetLauncherAbilityResourceInfo failed, bundleName:%{public}s",
+            bundleName.c_str());
+    } else {
+        for (const auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
+            resourceInfo.bundleName_ = launcherAbilityResourceInfo.bundleName;
+            resourceInfo.abilityName_ = launcherAbilityResourceInfo.abilityName;
+            resourceInfo.moduleName_ = launcherAbilityResourceInfo.moduleName;
+            resourceInfo.label_ = launcherAbilityResourceInfo.label;
+            resourceInfos.emplace_back(resourceInfo);
+        }
+    }
+    if (resourceInfos.empty()) {
+        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
+            bundleName.c_str());
+        resourceInfo.bundleName_ = bundleName;
+        resourceInfo.moduleName_ = Constants::EMPTY_STRING;
+        resourceInfo.abilityName_ = Constants::EMPTY_STRING;
+        resourceInfo.label_ = bundleName;
+        resourceInfos.emplace_back(resourceInfo);
+    }
+
+    APP_LOGI("UpdateBundleIcon %{public}s, size: %{public}zu", bundleName.c_str(), resourceInfos.size());
+    return SaveResourceInfos(resourceInfos);
 }
 } // AppExecFwk
 } // OHOS

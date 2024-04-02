@@ -47,13 +47,6 @@ public:
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
 
-    static bool ParseIconResourceByPath(const std::string &filePath, const int32_t iconId, std::string &icon);
-
-    static bool UpdateBundleIcon(const std::string &bundleName, const std::string &icon);
-
-    // Delete dynamic icon resource and reset default icon
-    static bool ResetBunldleResourceIcon(const std::string &bundleName);
-
     static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId);
 };
