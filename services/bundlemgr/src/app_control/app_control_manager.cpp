@@ -134,7 +134,22 @@ ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callin
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
 {
-    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
+    ErrCode res = appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
+    if (res != ERR_OK) {
+        return res;
+    }
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    for (auto it = appRunningControlRuleResult_.begin(); it != appRunningControlRuleResult_.end();) {
+        std::string key = it->first;
+        std::string targetUserId = std::to_string(userId);
+        if (key.size() >= targetUserId.size() &&
+            key.compare(key.size() - targetUserId.size(), targetUserId.size(), targetUserId) == 0) {
+            it = appRunningControlRuleResult_.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return res;
 }
 
 ErrCode AppControlManager::GetAppRunningControlRule(
