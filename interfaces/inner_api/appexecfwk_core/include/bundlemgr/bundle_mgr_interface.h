@@ -36,7 +36,7 @@
 #include "foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include/extend_resource/extend_resource_manager_interface.h"
 #include "foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include/overlay/overlay_manager_interface.h"
 #include "foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include/quick_fix/quick_fix_manager_interface.h"
-#include "foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include/verify/verify_manager_interface.h"  
+#include "foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core/include/verify/verify_manager_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
