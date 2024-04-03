@@ -1799,7 +1799,7 @@ bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -1825,7 +1825,7 @@ bool BundleDataMgr::RemoveExtResources(const std::string &bundleName,
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
@@ -1851,7 +1851,7 @@ bool BundleDataMgr::UpateCurDynamicIconModule(
         return false;
     }
 
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
