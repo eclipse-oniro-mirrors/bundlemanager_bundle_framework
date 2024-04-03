@@ -78,7 +78,8 @@
                 "udmf",
                 "ace_engine",
                 "code_crypto_metadata_process",
-                "json"
+                "json",
+                "zlib"
             ],
             "third_party": [
                 "json",

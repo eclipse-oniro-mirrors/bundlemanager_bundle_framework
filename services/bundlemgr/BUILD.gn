@@ -83,12 +83,12 @@ ohos_source_set("parser_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "zlib:shared_libz",
   ]
 
   public_external_deps = [
@@ -243,7 +243,6 @@ ohos_shared_library("libbms") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/zlib:shared_libz",
   ]
 
   version_script = "libbms.map"
@@ -263,6 +262,7 @@ ohos_shared_library("libbms") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
+    "zlib:shared_libz",
   ]
 
   if (bundle_framework_power_mgr_enable) {

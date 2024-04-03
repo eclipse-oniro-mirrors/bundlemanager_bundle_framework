@@ -66,7 +66,6 @@ ohos_shared_library("zlib") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
-    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
@@ -75,6 +74,7 @@ ohos_shared_library("zlib") {
     "hilog:libhilog",
     "hilog:libhilog_base",
     "napi:ace_napi",
+    "zlib:shared_libz",
   ]
   public_external_deps = [
     "libuv:uv",
