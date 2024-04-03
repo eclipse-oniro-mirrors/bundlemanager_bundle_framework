@@ -3512,6 +3512,26 @@ ErrCode BundleMgrHostImpl::GetDeveloperIds(const std::string &appDistributionTyp
     return dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
 }
 
+ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, const bool &state)
+{
+    APP_LOGD("start SwitchUninstallState, bundleName : %{public}s, state : %{public}d", bundleName.c_str(), state);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to SwitchUninstallState");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SwitchUninstallState(bundleName, state);
+}
+
 void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info)
 {
     Security::Verify::HapVerifyResult hapVerifyResult;

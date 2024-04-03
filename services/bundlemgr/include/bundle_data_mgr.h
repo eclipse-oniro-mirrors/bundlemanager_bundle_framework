@@ -889,6 +889,7 @@ public:
         std::vector<BundleInfo> &bundleInfos, int32_t userId);
     ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId);
+    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
 
 private:
     /**

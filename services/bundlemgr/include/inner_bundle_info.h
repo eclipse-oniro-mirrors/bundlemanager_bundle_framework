@@ -956,7 +956,9 @@ public:
     void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
-
+    bool GetUninstallState() const;
+    void SetUninstallState(const bool &uninstallState);
+    
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
@@ -1030,6 +1032,9 @@ private:
     // for odid
     std::string developerId_;
     std::string odid_;
+
+    // use to control uninstalling
+    bool uninstallState_ = true;
 };
 
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);

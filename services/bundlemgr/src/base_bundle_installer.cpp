@@ -343,6 +343,25 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     return result;
 }
 
+
+ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
+{
+    if (!info.GetRemovable()) {
+        APP_LOGE("uninstall system app");
+        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+    if (!info.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), info.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGE("uninstall bundle is not shared library");
+        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
     APP_LOGI("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
@@ -366,13 +385,10 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (!info.GetRemovable()) {
-        APP_LOGE("uninstall system app");
-        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
-    }
-    if (info.GetApplicationBundleType() != BundleType::SHARED) {
-        APP_LOGE("uninstall bundle is not shared library");
-        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    ErrCode ret = CheckUninstallInnerBundleInfo(info, bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGW("CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
+        return ret;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
         APP_LOGE("uninstall shared library is relied");
@@ -1238,6 +1254,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
+    if (!oldInfo.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGE("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1380,6 +1402,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+
+    if (!oldInfo.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     bool isModuleExist = oldInfo.FindModule(modulePackage);

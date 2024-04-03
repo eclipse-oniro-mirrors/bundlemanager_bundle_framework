@@ -932,6 +932,13 @@ public:
      */
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
+     * @brief Switch uninstall state of a specified application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param state Indicates whether the specified application can be uninstalled.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
 
 private:
     /**
