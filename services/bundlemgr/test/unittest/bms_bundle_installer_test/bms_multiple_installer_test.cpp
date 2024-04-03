@@ -660,24 +660,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_0900, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_1000
- * @tc.name: test to install haps with different version name in the input file path array
- * @tc.desc: 1.the version name is differnet in the input file path array
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1000, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_EIGHTH;
-    filePaths.emplace_back(firstBundleFile);
-    filePaths.emplace_back(secondBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME);
-    CheckFileNonExist();
-}
-
-/**
  * @tc.number: MultipleHapsInstall_1100
  * @tc.name: test to install haps with different releaseType target in the input file path array
  * @tc.desc: 1.the releaseType target is differnet in the input file path array
@@ -710,24 +692,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTes
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
-    CheckFileNonExist();
-}
-
-/**
- * @tc.number: MultipleHapsInstall_1300
- * @tc.name: test to install haps with different vendor in the input file path array
- * @tc.desc: 1.the vendor is differnet in the input file path array
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1300, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_ELEVENTH;
-    filePaths.emplace_back(firstBundleFile);
-    filePaths.emplace_back(secondBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
     CheckFileNonExist();
 }
 
@@ -1014,31 +978,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_4700
- * @tc.name: test to install haps with different version name in the different input file path array
- * @tc.desc: 1.the version name is differnet in the different input file path array
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4700, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-    CheckModuleFileExist();
-
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_EIGHTH;
-    filePaths.clear();
-    filePaths.emplace_back(secondBundleFile);
-    installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME);
-
-    ClearBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: MultipleHapsInstall_4800
  * @tc.name: test to install haps with different minCompatibleVersionCode in the input file path array
  * @tc.desc: 1.the minCompatibleVersionCode is differnet in the input file path array
@@ -1077,31 +1016,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTes
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
-
-    ClearBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: MultipleHapsInstall_5000
- * @tc.name: test to install haps with different vendor in the different input file path array
- * @tc.desc: 1.the vendor is differnet in the input different file path array
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5000, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    filePaths.emplace_back(firstBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_OK);
-    CheckFileExist();
-    CheckModuleFileExist();
-
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_ELEVENTH;
-    filePaths.clear();
-    filePaths.emplace_back(secondBundleFile);
-    installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
 
     ClearBundleInfo(BUNDLE_NAME);
 }

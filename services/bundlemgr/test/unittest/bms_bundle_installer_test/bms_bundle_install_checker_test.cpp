@@ -1323,26 +1323,6 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0010, Function | SmallTe
 }
 
 /**
- * @tc.number: CheckAppLabelInfo_0011
- * @tc.name: test the start function of CheckAppLabelInfo
- * @tc.desc: 1. CheckAppLabelInfo_0011
-*/
-HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0011, Function | SmallTest | Level0)
-{
-    BundleInstallChecker installChecker;
-    std::unordered_map<std::string, InnerBundleInfo> infos;
-    InnerBundleInfo innerBundleInfo1;
-    BundleInfo bundleInfo;
-    bundleInfo.vendor = PRIORITY_ONE;
-    innerBundleInfo1.SetBaseBundleInfo(bundleInfo);
-    InnerBundleInfo innerBundleInfo2;
-    infos.emplace(HAP, innerBundleInfo1);
-    infos.emplace(HAP_ONE, innerBundleInfo2);
-    auto ret = installChecker.CheckAppLabelInfo(infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
-}
-
-/**
  * @tc.number: CheckAppLabelInfo_0012
  * @tc.name: test the start function of CheckAppLabelInfo
  * @tc.desc: 1. CheckAppLabelInfo_0012

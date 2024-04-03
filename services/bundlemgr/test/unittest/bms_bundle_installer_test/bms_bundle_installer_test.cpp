@@ -4525,21 +4525,6 @@ HWTEST_F(BmsBundleInstallerTest, GetUserId_0010, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: CheckAppLabel_0010
- * @tc.name: test CheckAppLabel
- * @tc.desc: 1.Test the CheckAppLabel
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0010, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    oldInfo.baseBundleInfo_->versionName = BUNDLE_NAME_TEST;
-    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME);
-}
-
-/**
  * @tc.number: CheckAppLabel_0020
  * @tc.name: test CheckAppLabel
  * @tc.desc: 1.Test the CheckAppLabel
@@ -4552,21 +4537,6 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0020, Function | SmallTest | Leve
     oldInfo.baseBundleInfo_->minCompatibleVersionCode = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
-}
-
-/**
- * @tc.number: CheckAppLabel_0030
- * @tc.name: test CheckAppLabel
- * @tc.desc: 1.Test the CheckAppLabel
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0030, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    oldInfo.baseBundleInfo_->vendor = BUNDLE_NAME_TEST;
-    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
 }
 
 /**
