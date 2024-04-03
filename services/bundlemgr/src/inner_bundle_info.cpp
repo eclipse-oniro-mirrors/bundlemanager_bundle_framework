@@ -892,15 +892,7 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
     }
     for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
         if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
-            if (!baseApplicationInfo_->needAppDetail) {
-                baseAbilityInfos_.erase(iter);
-                return;
-            }
-            if (isNewVersion_) {
-                iter->second.labelId = baseApplicationInfo_->labelId;
-                iter->second.iconId =
-                    (baseApplicationInfo_->iconId == 0) ? iter->second.iconId : baseApplicationInfo_->iconId;
-            }
+            baseAbilityInfos_.erase(iter);
             return;
         }
     }
