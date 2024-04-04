@@ -31,13 +31,17 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
-const std::string DOUBLE_SEPARATOR = "//";
 const std::string ABCS_DIR = "abcs";
 const std::string ABCS_TEMP_DIR = "temp/";
-const std::string DATA_STORAGE_EL1 = "/data/storage/el1/bundle/";
-const std::string DATA_STORAGE_EL2 = "/data/storage/el2/base/";
-const std::string DATA_STORAGE_EL3 = "/data/storage/el3/base/";
-const std::string DATA_STORAGE_EL4 = "/data/storage/el4/base/";
+const std::string DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+const std::string DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+const std::string DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
+const std::string DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+const std::string DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+const std::string DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+const std::string DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+const std::string DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+const std::string DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 
 bool IsValidPath(const std::string &path)
 {
@@ -45,9 +49,6 @@ bool IsValidPath(const std::string &path)
         return false;
     }
     if (path.find("..") != std::string::npos) {
-        return false;
-    }
-    if (path.find(DOUBLE_SEPARATOR) != std::string::npos) {
         return false;
     }
     return true;
@@ -69,6 +70,67 @@ std::string GetTempRootDir(const std::string &bundleName)
         .append(bundleName).append(Constants::PATH_SEPARATOR).append(ABCS_DIR)
         .append(Constants::PATH_SEPARATOR).append(ABCS_TEMP_DIR);
     return tempRootDir;
+}
+
+bool GetDataDir(const std::string &path, std::string &suffix, std::string &el, std::string &baseType)
+{
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL1_BASE.size());
+        el = Constants::DIR_EL1;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL1_DATABASE.size());
+        el = Constants::DIR_EL1;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL2_BASE.size());
+        el = Constants::DIR_EL2;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL2_DATABASE.size());
+        el = Constants::DIR_EL2;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL3_BASE.size());
+        el = Constants::DIR_EL3;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL3_DATABASE.size());
+        el = Constants::DIR_EL3;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL4_BASE.size());
+        el = Constants::DIR_EL4;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL4_DATABASE.size());
+        el = Constants::DIR_EL4;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    return false;
 }
 }
 
@@ -185,38 +247,24 @@ std::string VerifyManagerHostImpl::GetRealPath(
     }
 
     std::string filePath;
-    if (BundleUtil::StartWith(path, DATA_STORAGE_EL1)) {
-        auto suffix = path.substr(DATA_STORAGE_EL1.size());
+    if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
+        auto suffix = path.substr(DATA_STORAGE_BUNDLE.size());
         filePath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
-        return filePath;
-    }
-
-    if (BundleUtil::StartWith(path, DATA_STORAGE_EL2)) {
-        auto suffix = path.substr(DATA_STORAGE_EL2.size());
-        filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(Constants::DIR_EL2)
-            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(Constants::BASE)
             .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
         return filePath;
     }
 
-    if (BundleUtil::StartWith(path, DATA_STORAGE_EL3)) {
-        auto suffix = path.substr(DATA_STORAGE_EL3.size());
-        filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(Constants::DIR_EL3)
-            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(Constants::BASE)
-            .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
+    std::string suffix;
+    std::string el;
+    std::string baseType;
+    if (!GetDataDir(path, suffix, el, baseType)) {
+        APP_LOGW("The path %{public}s is illegal.", path.c_str());
         return filePath;
     }
 
-    if (BundleUtil::StartWith(path, DATA_STORAGE_EL4)) {
-        auto suffix = path.substr(DATA_STORAGE_EL4.size());
-        filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(Constants::DIR_EL4)
-            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(Constants::BASE)
+    filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(el)
+            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
             .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
-        return filePath;
-    }
-
-    APP_LOGW("The path %{public}s is illegal.", path.c_str());
     return filePath;
 }
 
