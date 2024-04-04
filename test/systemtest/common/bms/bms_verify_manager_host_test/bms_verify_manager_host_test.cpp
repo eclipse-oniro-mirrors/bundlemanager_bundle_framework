@@ -23,7 +23,6 @@
 using namespace testing::ext;
 namespace {
 const uint32_t CODE_VERIFY = 0;
-const uint32_t CODE_CREATE_FD = 1;
 const uint32_t CODE_DELETE_ABC = 2;
 const uint32_t CODE_ERR = 3;
 }
@@ -66,9 +65,6 @@ HWTEST_F(BmsVerifyManagerHostTest, OnRemoteRequest_0100, Function | MediumTest |
     ErrCode res = verifyManagerHost.OnRemoteRequest(CODE_VERIFY, data, reply, option);
     EXPECT_EQ(res, OBJECT_NULL);
 
-    res = verifyManagerHost.OnRemoteRequest(CODE_CREATE_FD, data, reply, option);
-    EXPECT_EQ(res, OBJECT_NULL);
-
     res = verifyManagerHost.OnRemoteRequest(CODE_DELETE_ABC, data, reply, option);
     EXPECT_EQ(res, OBJECT_NULL);
 
@@ -88,21 +84,6 @@ HWTEST_F(BmsVerifyManagerHostTest, HandleVerify_0100, Function | MediumTest | Le
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = verifyManagerHost.HandleVerify(data, reply);
-    EXPECT_EQ(res, ERR_OK);
-}
-
-/**
- * @tc.number: HandleCreateFd_0100
- * @tc.name: test the HandleCreateFd
- * @tc.desc: 1. system running normally
- *           2. test HandleCreateFd
- */
-HWTEST_F(BmsVerifyManagerHostTest, HandleCreateFd_0100, Function | MediumTest | Level1)
-{
-    VerifyManagerHost verifyManagerHost;
-    MessageParcel data;
-    MessageParcel reply;
-    ErrCode res = verifyManagerHost.HandleCreateFd(data, reply);
     EXPECT_EQ(res, ERR_OK);
 }
 
