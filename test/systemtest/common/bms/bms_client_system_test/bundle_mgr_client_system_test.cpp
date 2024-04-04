@@ -54,6 +54,7 @@ const std::string BUNDLE_NAME = "com.example.ohosproject.hmservice";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILURE = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
+const std::string EMPTY_STRING = "";
 const int TIMEOUT = 10;
 const int DEFAULT_USERID = 100;
 } // namespace

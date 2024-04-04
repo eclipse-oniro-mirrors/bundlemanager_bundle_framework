@@ -35,25 +35,39 @@ namespace {
     const std::string ABC_FILE = "a.abc";
     const std::string ERR_FILE_PATH = "data";
     const std::string BUNDLE_NAME = "com.ohos.launcher";
+    const std::string EMPTY_STRING = "";
     const int32_t FD = 0;
     const int32_t USERID = 100;
 
     const std::string DATA_STORAGE = "/data/storage//testdir1/testdir2/test.abc";
-    const std::string DATA_STORAGE_EL1_ONE = "/data/storage/el1/bundle/testdir1/testdir2/test.abc";
-    const std::string DATA_STORAGE_EL1_TWO = "data/storage/el1/bundle/testdir1/testdir2/test.abc";
+    const std::string DATA_STORAGE_EL1_BUNDLE_ONE = "/data/storage/el1/bundle/testdir1/testdir2/test.abc";
+    const std::string DATA_STORAGE_EL1_BUNDLE_TWO = "data/storage/el1/bundle/testdir1/testdir2/test.abc";
+    const std::string DATA_STORAGE_EL1 = "/data/storage/el1/base/testdir1/testdir2/test.abc";
+    const std::string DATA_STORAGE_EL1_I = "/data/storage/el1/database/testdir1/testdir2/test.abc";
     const std::string DATA_STORAGE_EL2 = "/data/storage/el2/base/testdir1/testdir2/test.abc";
     const std::string DATA_STORAGE_EL2_I = "/data/storage/el2/database/testdir1/testdir2/test.abc";
-    const std::string DATA_STORAGE_EL2_II = "/data/storage/el2/base//testdir1/testdir2/test.abc";
     const std::string DATA_STORAGE_EL3 = "/data/storage/el3/base/testdir1/testdir2/test.abc";
+    const std::string DATA_STORAGE_EL3_I = "/data/storage/el3/database/testdir1/testdir2/test.abc";
     const std::string DATA_STORAGE_EL4 = "/data/storage/el4/base/testdir1/testdir2/test.abc";
-    const std::string REAL_DATA_STORAGE_EL1 =
+    const std::string DATA_STORAGE_EL4_I = "/data/storage/el4/database/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_BUNDLE_EL1 =
         "/data/app/el1/bundle/public/com.ohos.launcher/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_EL1 =
+        "/data/app/el1/100/base/com.ohos.launcher/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_EL1_I =
+        "/data/app/el1/100/database/com.ohos.launcher/testdir1/testdir2/test.abc";
     const std::string REAL_DATA_STORAGE_EL2 =
         "/data/app/el2/100/base/com.ohos.launcher/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_EL2_I =
+        "/data/app/el2/100/database/com.ohos.launcher/testdir1/testdir2/test.abc";
     const std::string REAL_DATA_STORAGE_EL3 =
         "/data/app/el3/100/base/com.ohos.launcher/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_EL3_I =
+        "/data/app/el3/100/database/com.ohos.launcher/testdir1/testdir2/test.abc";
     const std::string REAL_DATA_STORAGE_EL4 =
         "/data/app/el4/100/base/com.ohos.launcher/testdir1/testdir2/test.abc";
+    const std::string REAL_DATA_STORAGE_EL4_I =
+        "/data/app/el4/100/database/com.ohos.launcher/testdir1/testdir2/test.abc";
 }  // namespace
 
 class BmsBundleVerifyManagerTest : public testing::Test {
@@ -264,11 +278,6 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0900, Function | SmallTes
     abcPaths.push_back(INVALID_PATH);
     ret1 = impl.CheckFileParam(abcPaths);
     EXPECT_FALSE(ret1);
-
-    abcPaths.clear();
-    abcPaths.push_back(DATA_STORAGE_EL2_II);
-    ret1 = impl.CheckFileParam(abcPaths);
-    EXPECT_FALSE(ret1);
 }
 
 /**
@@ -279,20 +288,35 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_0900, Function | SmallTes
 HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1000, Function | SmallTest | Level1)
 {
     VerifyManagerHostImpl impl;
-    auto ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_ONE);
+    auto ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_BUNDLE_ONE);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_BUNDLE_EL1);
+
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_BUNDLE_TWO);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_BUNDLE_EL1);
+
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1);
     EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL1);
 
-    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_TWO);
-    EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL1);
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL1_I);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL1_I);
 
     ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL2);
     EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL2);
 
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL2_I);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL2_I);
+
     ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL3);
     EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL3);
 
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL3_I);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL3_I);
+
     ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL4);
     EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL4);
+
+    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL4_I);
+    EXPECT_EQ(ret1, REAL_DATA_STORAGE_EL4_I);
 }
 
 /**
@@ -304,9 +328,6 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1100, Function | SmallTes
 {
     VerifyManagerHostImpl impl;
     auto ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE);
-    EXPECT_TRUE(ret1.empty());
-
-    ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE_EL2_I);
     EXPECT_TRUE(ret1.empty());
 }
 } // OHOS
