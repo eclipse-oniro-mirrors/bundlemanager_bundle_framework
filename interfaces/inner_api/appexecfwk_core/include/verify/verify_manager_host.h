@@ -31,8 +31,6 @@ public:
 
 private:
     ErrCode HandleVerify(MessageParcel& data, MessageParcel& reply);
-    ErrCode HandleCopyFiles(MessageParcel& data, MessageParcel& reply);
-    ErrCode HandleCreateFd(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteAbc(MessageParcel& data, MessageParcel& reply);
 
     DISALLOW_COPY_AND_MOVE(VerifyManagerHost);

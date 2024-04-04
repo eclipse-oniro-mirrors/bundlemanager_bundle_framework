@@ -52,8 +52,6 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     switch (code) {
         case static_cast<uint32_t>(VerifyManagerInterfaceCode::VERIFY):
             return HandleVerify(data, reply);
-        case static_cast<uint32_t>(VerifyManagerInterfaceCode::CREATE_FD):
-            return HandleCreateFd(data, reply);
         case static_cast<uint32_t>(VerifyManagerInterfaceCode::DELETE_ABC):
             return HandleDeleteAbc(data, reply);
         default:
@@ -72,47 +70,11 @@ ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& repl
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    std::vector<std::string> abcNames;
-    if (!data.ReadStringVector(&abcNames)) {
-        APP_LOGE("read abcNames failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-
-    bool flag = data.ReadBool();
-    auto ret = Verify(abcPaths, abcNames, flag);
+    auto ret = Verify(abcPaths);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ERR_OK;
-}
-
-ErrCode VerifyManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
-{
-    APP_LOGD("begin to HandleCreateFd.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string fileName = data.ReadString();
-    int32_t fd = -1;
-    std::string path;
-    auto ret = CreateFd(fileName, fd, path);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write ret failed.");
-        close(fd);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret == ERR_OK) {
-        if (!reply.WriteFileDescriptor(fd)) {
-            APP_LOGE("write fd failed.");
-            close(fd);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-        if (!reply.WriteString(path)) {
-            APP_LOGE("write path failed.");
-            close(fd);
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    close(fd);
     return ERR_OK;
 }
 
