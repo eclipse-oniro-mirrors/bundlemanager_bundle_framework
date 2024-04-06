@@ -17,7 +17,7 @@
 #include "bms_ecological_rule_mgr_service_client.h"
 #include "iremote_broker.h"
 #include "iservice_registry.h"
-
+#include <cinttypes>
 namespace OHOS {
 namespace AppExecFwk {
 
@@ -120,7 +120,7 @@ int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS
             (*(rule.replaceWant)).ToString().c_str());
     }
     int64_t cost = GetCurrentTimeMicro() - start;
-    APP_LOGD("[ERMS-DFX] QueryFreeInstallExperience interface cost %{public}lld  mirco seconds.", cost);
+    APP_LOGD("[ERMS-DFX] QueryFreeInstallExperience interface cost %{public}" PRId64"  mirco seconds.", cost);
     return res;
 }
 
