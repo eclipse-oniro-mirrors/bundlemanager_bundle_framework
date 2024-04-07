@@ -38,6 +38,7 @@ constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* ASSETS_DIR = "assets";
 constexpr const char* RESOURCES_INDEX = "resources.index";
+constexpr const char* SYSTEM_APP_DIR = "/system/app";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";

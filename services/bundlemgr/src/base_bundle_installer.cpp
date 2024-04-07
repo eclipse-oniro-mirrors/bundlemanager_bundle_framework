@@ -1080,6 +1080,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
+    RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     RemoveOldGroupDirs();
@@ -4232,6 +4233,27 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
         return;
     }
     AOTHandler::GetInstance().HandleInstall(infos);
+}
+
+void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo) const
+{
+    if (!isOTA) {
+        return;
+    }
+    for (const auto &info : newInfos) {
+        std::string newHapPath = info.second.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (newHapPath.empty() || newHapPath.rfind(Constants::SYSTEM_APP_DIR, 0) != 0) {
+            continue;
+        }
+        std::string oldHapPath = oldInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+            continue;
+        }
+        if (!InstalldClient::GetInstance()->RemoveDir(oldHapPath)) {
+            APP_LOGW("remove old hap failed, errno: %{public}d", errno);
+        }
+    }
 }
 
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
