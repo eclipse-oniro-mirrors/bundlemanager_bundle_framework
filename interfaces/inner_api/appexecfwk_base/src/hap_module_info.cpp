@@ -84,7 +84,6 @@ const std::string HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
 const std::string HAP_MODULE_INFO_ROUTER_MAP = "routerMap";
 const std::string HAP_MODULE_INFO_ROUTER_ARRAY = "routerArray";
 const std::string ROUTER_ITEM_KEY_NAME = "name";
-const std::string ROUTER_ITEM_KEY_PAGE_MODULE = "pageModule";
 const std::string ROUTER_ITEM_KEY_PAGE_SOURCE_FILE = "pageSourceFile";
 const std::string ROUTER_ITEM_KEY_BUILD_FUNCTION = "buildFunction";
 const std::string ROUTER_ITEM_KEY_DATA = "data";
@@ -303,7 +302,6 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
 bool RouterItem::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
-    pageModule = Str16ToStr8(parcel.ReadString16());
     pageSourceFile = Str16ToStr8(parcel.ReadString16());
     buildFunction = Str16ToStr8(parcel.ReadString16());
 
@@ -335,7 +333,6 @@ RouterItem *RouterItem::Unmarshalling(Parcel &parcel)
 bool RouterItem::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageModule));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageSourceFile));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildFunction));
 
@@ -354,7 +351,6 @@ void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem)
 {
     jsonObject = nlohmann::json {
         {ROUTER_ITEM_KEY_NAME, routerItem.name},
-        {ROUTER_ITEM_KEY_PAGE_MODULE, routerItem.pageModule},
         {ROUTER_ITEM_KEY_PAGE_SOURCE_FILE, routerItem.pageSourceFile},
         {ROUTER_ITEM_KEY_BUILD_FUNCTION, routerItem.buildFunction},
         {ROUTER_ITEM_KEY_DATA, routerItem.data},
@@ -374,14 +370,6 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         routerItem.name,
         JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        ROUTER_ITEM_KEY_PAGE_MODULE,
-        routerItem.pageModule,
-        JsonType::STRING,
-        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,

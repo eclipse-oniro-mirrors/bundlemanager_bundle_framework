@@ -82,7 +82,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem0()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&entry&entry/resources/base/profile&1.2.1";
@@ -95,7 +94,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem1()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "feature";
     item.pageSourceFile = "feature/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&feature&feature/resources/base/profile&1.2.1";
@@ -108,7 +106,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem2()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "library";
     item.pageSourceFile = "library/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&library&library/resources/base/profile&1.2.1";
@@ -121,7 +118,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem3()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&entry&entry/resources/base/profile&1.2.2";
@@ -134,7 +130,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem4()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&entry&entry/resources/base/profile&1.2.1";
@@ -147,7 +142,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem5()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest";
@@ -160,7 +154,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem6()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "feature";
     item.pageSourceFile = "feature/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest";
@@ -173,7 +166,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem7()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTestROUTER_ITEM_TEST_SIZE3";
@@ -186,7 +178,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem8()
 {
     RouterItem item;
     item.name = "DynamicPage1";
-    item.pageModule = "library";
     item.pageSourceFile = "library/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest";
@@ -199,7 +190,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem9()
 {
     RouterItem item;
     item.name = "DynamicPage2";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest&com.example.test&entry&entry/resources/base/profile&1.2.1ohmurlTest";
@@ -212,7 +202,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem10()
 {
     RouterItem item;
     item.name = "DynamicPage3";
-    item.pageModule = "feature";
     item.pageSourceFile = "feature/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest";
@@ -225,7 +214,6 @@ RouterItem BmsBundleNavigationTest::GenerateRouterItem11()
 {
     RouterItem item;
     item.name = "DynamicPage4";
-    item.pageModule = "entry";
     item.pageSourceFile = "entry/src/index";
     item.buildFunction = "myBuildFunction1";
     item.ohmurl = "ohmurlTest";

@@ -64,7 +64,6 @@ constexpr const char* STATE = "state";
 constexpr const char* DEBUG = "debug";
 constexpr const char* EXTENSION_ABILITY_TYPE_NAME = "extensionAbilityTypeName";
 constexpr const char* ROUTER_MAP = "routerMap";
-constexpr const char* PAGE_MODULE = "pageModule";
 constexpr const char* PAGE_SOURCE_FILE = "pageSourceFile";
 constexpr const char* BUILD_FUNCTION = "buildFunction";
 constexpr const char* DATA = "data";
@@ -1572,11 +1571,6 @@ void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, n
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
         env, routerItem.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
-
-    napi_value nPageModule;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, routerItem.pageModule.c_str(), NAPI_AUTO_LENGTH, &nPageModule));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, PAGE_MODULE, nPageModule));
 
     napi_value nPageSourceFile;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
