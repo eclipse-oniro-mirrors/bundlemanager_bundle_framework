@@ -406,7 +406,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 #ifdef USE_PRE_BUNDLE_PROFILE
         GetPrivilegeCapability(checkParam, newInfo);
 #endif
-        if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
+        if ((provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) ||
+            (checkParam.specifiedDistributionType == Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING)) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
         } else {
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
