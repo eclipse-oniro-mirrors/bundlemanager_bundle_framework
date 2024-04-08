@@ -446,28 +446,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0002, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0003
- * Function: CheckAppQuickFixInfos
- * @tc.name: test QuickFixChecker
- * @tc.require: issueI5N7AD
- * @tc.desc: 1. check bundle version name not same
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0003, Function | SmallTest | Level0)
-{
-    std::unordered_map<std::string, AppQuickFix> infos;
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    infos.emplace("appQuickFix_1", appQuickFix);
-
-    appQuickFix.versionName = "2.0.0";
-    appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "feature";
-    infos.emplace("appQuickFix_2", appQuickFix);
-
-    QuickFixChecker checker;
-    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0004
  * Function: CheckAppQuickFixInfos
  * @tc.name: test QuickFixChecker
@@ -487,28 +465,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0004, Function | SmallTest
     QuickFixChecker checker;
     ErrCode ret = checker.CheckAppQuickFixInfos(infos);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0005
- * Function: CheckAppQuickFixInfos
- * @tc.name: test QuickFixChecker
- * @tc.require: issueI5N7AD
- * @tc.desc: 1. check patch version code not same
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0005, Function | SmallTest | Level0)
-{
-    std::unordered_map<std::string, AppQuickFix> infos;
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    infos.emplace("appQuickFix_1", appQuickFix);
-
-    appQuickFix.deployingAppqfInfo.versionName = "2.0.0";
-    appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "feature";
-    infos.emplace("appQuickFix_2", appQuickFix);
-
-    QuickFixChecker checker;
-    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME);
 }
 
 /**
@@ -2105,35 +2061,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0075, Function | SmallTest
     QuickFixChecker checker;
     auto ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0076
- * Function: CheckPatchWithInstalledBundle
- * @tc.name: test CheckPatchWithInstalledBundle
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckPatchWithInstalledBundle
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0076, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
-
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
-        appQuickFix.deployingAppqfInfo.versionCode = 2;
-        BundleInfo bundleInfo;
-        ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
-        EXPECT_EQ(ret, ERR_OK);
-        Security::Verify::ProvisionInfo provisionInfo;
-        bundleInfo.versionName = "3.0";
-        QuickFixChecker checker;
-        ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME);
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**

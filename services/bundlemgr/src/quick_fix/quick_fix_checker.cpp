@@ -51,17 +51,9 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
             LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix versionCode not same");
             return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_NOT_SAME;
         }
-        if (appQuickFix.versionName != info.second.versionName) {
-            LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix versionName not same");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME;
-        }
         if (appQuickFix.deployingAppqfInfo.versionCode != info.second.deployingAppqfInfo.versionCode) {
             LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix patchVersionCode not same");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME;
-        }
-        if (appQuickFix.deployingAppqfInfo.versionName != info.second.deployingAppqfInfo.versionName) {
-            LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix patchVersionName not same");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME;
         }
         if (appQuickFix.deployingAppqfInfo.type != info.second.deployingAppqfInfo.type) {
             LOG_E(BMSTag::QUICK_FIX, "error: QuickFixType not same");
@@ -96,11 +88,6 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
         // patch and hot reload can not both exist
         LOG_E(BMSTag::QUICK_FIX, "hot reload type already existed, hot reload and patch type can not both exist");
         return ERR_BUNDLEMANAGER_QUICK_FIX_HOT_RELOAD_ALREADY_EXISTED;
-    }
-    if (bundleInfo.versionName != appQuickFix.versionName) {
-        LOG_E(BMSTag::QUICK_FIX, "error: versionName not same, appQuickFix: %{public}s, bundleInfo: %{public}s",
-            appQuickFix.versionName.c_str(), bundleInfo.versionName.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME;
     }
 
     const auto &qfInfo = appQuickFix.deployingAppqfInfo;

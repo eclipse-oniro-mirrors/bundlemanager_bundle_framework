@@ -3570,14 +3570,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 {
     // check app label for inheritance installation
     APP_LOGD("CheckAppLabel begin");
-    if (oldInfo.GetVersionName() != newInfo.GetVersionName()) {
-        return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-    }
     if (oldInfo.GetMinCompatibleVersionCode() != newInfo.GetMinCompatibleVersionCode()) {
         return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-    }
-    if (oldInfo.GetVendor() != newInfo.GetVendor()) {
-        return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
     }
     if (oldInfo.GetTargetVersion()!= newInfo.GetTargetVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;

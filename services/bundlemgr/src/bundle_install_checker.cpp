@@ -874,9 +874,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     APP_LOGD("Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
-    std::string vendor = (infos.begin()->second).GetVendor();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
-    std::string versionName = (infos.begin()->second).GetVersionName();
     uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
     uint32_t target = (infos.begin()->second).GetTargetVersion();
     std::string releaseType = (infos.begin()->second).GetReleaseType();
@@ -903,16 +901,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             if (versionCode != info.second.GetVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
-            if (versionName != info.second.GetVersionName()) {
-                return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-            }
             if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
             }
-        }
-        // check vendor
-        if (vendor != info.second.GetVendor()) {
-            return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
         }
         // check release type
         if (target != info.second.GetTargetVersion()) {
