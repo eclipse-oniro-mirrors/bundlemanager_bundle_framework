@@ -2980,6 +2980,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     InstallCheckParam checkParam;
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
     checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
+    checkParam.specifiedDistributionType = installParam.specifiedDistributionType;
     checkParam.appType = appType;
     checkParam.removable = installParam.removable;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
