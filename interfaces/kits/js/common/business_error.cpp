@@ -129,6 +129,8 @@ constexpr const char* ERR_MSG_INVALID_DEVELOPER_ID =
     "The specified developerId is invalid.";
 constexpr const char* ERR_MSG_ENUM_EROOR =
     "Parameter error. The value of $ is not a valid enum $.";
+constexpr const char* ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED =
+    "The specified application can not be uninstalled.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -198,6 +200,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INVALID_LINK, ERR_MSG_INVALID_LINK },
     { ERROR_SCHEME_NOT_IN_QUERYSCHEMES, ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES },
     { ERROR_INVALID_DEVELOPERID, ERR_MSG_INVALID_DEVELOPER_ID },
+    { ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED },
 };
 } // namespace
 

@@ -74,6 +74,7 @@ const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const std::string DEVELOPER_ID = "developerId";
 const std::string ODID = "odid";
+const std::string UNINSTALL_STATE = "uninstallState";
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 const std::string EXT_RESOURCE_MODULE_NAME = "moduleName";
 const std::string EXT_RESOURCE_ICON_ID = "iconId";
@@ -267,6 +268,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->dataGroupInfos_ = info.dataGroupInfos_;
     this->developerId_ = info.developerId_;
     this->odid_ = info.odid_;
+    this->uninstallState_ = info.uninstallState_;
     return *this;
 }
 
@@ -308,6 +310,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
     jsonObject[DEVELOPER_ID] = developerId_;
     jsonObject[ODID] = odid_;
+    jsonObject[UNINSTALL_STATE] = uninstallState_;
 }
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -560,6 +563,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         ODID,
         odid_,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        UNINSTALL_STATE,
+        uninstallState_,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -3242,6 +3253,16 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
         }
     }
     return false;
+}
+
+bool InnerBundleInfo::GetUninstallState() const
+{
+    return uninstallState_;
+}
+
+void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
+{
+    uninstallState_ = uninstallState;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

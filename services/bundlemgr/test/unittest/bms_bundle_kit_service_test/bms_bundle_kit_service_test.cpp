@@ -226,6 +226,7 @@ const std::string SHORTCUTS_KEY = "shortcuts";
 const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
+const std::string BUNDLE_NAME_UNINSTALL_STATE = "bundleNameUninstallState";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -10578,5 +10579,56 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppServiceHspInfo_0001, Function | SmallTes
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo_2);
     ret = innerBundleInfo.GetAppServiceHspInfo(info);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0001
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0002
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetRemovable(false);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0003
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    EXPECT_TRUE(info.uninstallState_);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(info.uninstallState_);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
 }
 }

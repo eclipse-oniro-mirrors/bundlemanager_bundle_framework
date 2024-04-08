@@ -90,6 +90,7 @@ const int32_t PERMS_INDEX_TWO = 2;
 const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
+const int32_t PERMS_INDEX_SIX = 6;
 const size_t ODID_LENGTH = 36;
 }  // namespace
 
@@ -291,7 +292,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 6;
+    const int32_t permsNum = 7;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -300,6 +301,7 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_THREE] = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
     perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
     perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+    perms[PERMS_INDEX_SIX] = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -8584,6 +8586,63 @@ HWTEST_F(ActsBmsKitSystemTest, AppControlCache_0001, Function | MediumTest | Lev
     EXPECT_EQ(controlRuleResult2.controlMessage, "");
     Uninstall(appName, resvec);
     std::cout << "END AppControlCache_0001" << std::endl;
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0001
+ * @tc.name: test SwitchUninstallState interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call SwitchUninstallState
+ */
+HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START SwitchUninstallState_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    auto queryResult = bundleMgrProxy->SwitchUninstallState(appName, false);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_NE(uninstallResult, "Success");
+
+    queryResult = bundleMgrProxy->SwitchUninstallState(appName, true);
+    EXPECT_EQ(queryResult, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END SwitchUninstallState_0001" << std::endl;
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0002
+ * @tc.name: test SwitchUninstallState interface
+ * @tc.desc: SwitchUninstallState failed for bundleName is empty
+ */
+HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START SwitchUninstallState_0002" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    auto queryResult = bundleMgrProxy->SwitchUninstallState("", false);
+    EXPECT_NE(queryResult, ERR_OK);
+
+    std::cout << "END SwitchUninstallState_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

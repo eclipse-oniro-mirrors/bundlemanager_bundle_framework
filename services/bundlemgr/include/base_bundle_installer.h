@@ -113,6 +113,7 @@ protected:
      * @param uninstallParam Indicates the input of uninstallParam.
      * @return Returns ERR_OK if the application uninstall successfully; returns error code otherwise.
      */
+    ErrCode CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName);
     ErrCode UninstallBundleByUninstallParam(const UninstallParam &uninstallParam);
     /**
      * @brief Update the installer state.

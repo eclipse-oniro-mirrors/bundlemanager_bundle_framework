@@ -163,6 +163,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_EXTEND_RESOURCE_MANAGER,
     GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID,
     GET_DEVELOPER_IDS,
+    SWITCH_UNINSTALL_STATE,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

@@ -59,6 +59,7 @@ constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -93,6 +94,7 @@ const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
+const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -4454,6 +4456,47 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
     ProcessStringVec(env, nDeveloperIds, developerIds);
     APP_LOGD("Call done");
     return nDeveloperIds;
+}
+
+napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("NAPI SwitchUninstallState call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    bool state;
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], state)) {
+        APP_LOGE("Parse state failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, STATE, TYPE_BOOLEAN);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SwitchUninstallState(bundleName, state));
+    if (ret != NO_ERROR) {
+        APP_LOGE("SwitchUninstallState failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SWITCH_UNINSTALL_STATE, "");
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    APP_LOGD("call SwitchUninstallState done.");
+    return nRet;
 }
 }
 }

@@ -724,6 +724,8 @@ private:
     
     ErrCode HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSwitchUninstallState(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

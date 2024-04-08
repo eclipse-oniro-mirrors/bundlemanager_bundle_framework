@@ -6505,5 +6505,29 @@ ErrCode BundleDataMgr::GetDeveloperIds(const std::string &appDistributionType,
         static_cast<int32_t>(developerIdList.size()), appDistributionType.c_str());
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const bool &state)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (!innerBundleInfo.GetRemovable() && state) {
+        APP_LOGW("the bundle : %{public}s is not removable", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
+    }
+    if (innerBundleInfo.GetUninstallState() == state) {
+        return ERR_OK;
+    }
+    innerBundleInfo.SetUninstallState(state);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
