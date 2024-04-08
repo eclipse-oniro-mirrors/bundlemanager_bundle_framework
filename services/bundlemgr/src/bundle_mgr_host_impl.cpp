@@ -3364,6 +3364,9 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
             recoverableApplication.bundleName = bundleInfo.name;
             recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
             recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
+            recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
+            recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
             if (!bundleInfo.hapModuleInfos.empty()) {
                 recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
             }
