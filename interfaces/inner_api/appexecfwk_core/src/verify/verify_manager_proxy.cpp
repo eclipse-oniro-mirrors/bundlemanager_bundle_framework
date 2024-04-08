@@ -28,10 +28,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string SEPARATOR = "/";
-const int32_t DEFAULT_BUFFER_SIZE = 65536;
-}
 
 VerifyManagerProxy::VerifyManagerProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IVerifyManager>(object)
@@ -44,8 +40,7 @@ VerifyManagerProxy::~VerifyManagerProxy()
     APP_LOGI("destroy VerifyManagerProxy.");
 }
 
-ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths,
-    const std::vector<std::string> &abcNames, bool flag)
+ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths)
 {
     APP_LOGI("begin to call Verify.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -61,14 +56,6 @@ ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths,
     }
     if (!data.WriteStringVector(abcPaths)) {
         APP_LOGE("write abcPaths failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteStringVector(abcNames)) {
-        APP_LOGE("write abcNames failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteBool(flag)) {
-        APP_LOGE("write flag failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -96,100 +83,6 @@ ErrCode VerifyManagerProxy::RemoveFiles(const std::vector<std::string> &abcPaths
         }
     }
 
-    return ERR_OK;
-}
-
-ErrCode VerifyManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
-{
-    APP_LOGD("begin to create fd.");
-    if (fileName.empty()) {
-        APP_LOGE("fileName is empty.");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interface token failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(fileName)) {
-        APP_LOGE("write fileName failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendRequest(VerifyManagerInterfaceCode::CREATE_FD, data, reply)) {
-        APP_LOGE("send request failed.");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    auto ret = reply.ReadInt32();
-    if (ret != ERR_OK) {
-        APP_LOGE("reply return false.");
-        return ret;
-    }
-    fd = reply.ReadFileDescriptor();
-    if (fd < 0) {
-        APP_LOGE("invalid fd.");
-        return ERR_BUNDLE_MANAGER_VERIFY_CREATE_FD_FAILED;
-    }
-    path = reply.ReadString();
-    if (path.empty()) {
-        APP_LOGE("invalid path.");
-        close(fd);
-        return ERR_BUNDLE_MANAGER_VERIFY_INVALID_TARGET_DIR;
-    }
-    APP_LOGD("create fd success.");
-    return ERR_OK;
-}
-
-ErrCode VerifyManagerProxy::CopyFiles(
-    const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
-{
-    APP_LOGD("begin to copy files.");
-    if (sourceFiles.empty()) {
-        APP_LOGE("sourceFiles empty.");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
-    }
-    std::vector<std::string> filePaths;
-    if (!BundleFileUtil::CheckFilePath(sourceFiles, filePaths)) {
-        APP_LOGE("CopyFiles CheckFilePath failed");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
-    }
-    for (const std::string &sourcePath : filePaths) {
-        size_t pos = sourcePath.find_last_of(SEPARATOR);
-        if (pos == std::string::npos) {
-            APP_LOGE("invalid sourcePath.");
-            return ERR_BUNDLE_MANAGER_VERIFY_INVALID_PATH;
-        }
-        std::string fileName = sourcePath.substr(pos + 1);
-        APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
-        int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
-        if (sourceFd < 0) {
-            APP_LOGE("open file failed, errno:%{public}d", errno);
-            return ERR_BUNDLE_MANAGER_VERIFY_OPEN_SOURCE_FILE_FAILED;
-        }
-        int32_t destFd = -1;
-        std::string destPath;
-        auto ret = CreateFd(fileName, destFd, destPath);
-        if ((ret != ERR_OK) || (destFd < 0) || (destPath.empty())) {
-            APP_LOGE("create fd failed.");
-            close(sourceFd);
-            return ret;
-        }
-        char buffer[DEFAULT_BUFFER_SIZE] = {0};
-        int offset = -1;
-        while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
-            if (write(destFd, buffer, offset) < 0) {
-                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
-                close(sourceFd);
-                close(destFd);
-                return ERR_BUNDLE_MANAGER_VERIFY_WRITE_FILE_FAILED;
-            }
-        }
-        destFiles.emplace_back(destPath);
-        close(sourceFd);
-        fsync(destFd);
-        close(destFd);
-    }
-    APP_LOGD("copy files success.");
     return ERR_OK;
 }
 

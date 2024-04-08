@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_VERIFY_VERIFY_MANAGER_PROXY_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICE_BUNDLEMGR_INCLUDE_VERIFY_VERIFY_MANAGER_PROXY_H
 
+#include <mutex>
+#include <shared_mutex>
 #include "verify_manager_host.h"
 
 namespace OHOS {
@@ -25,30 +27,37 @@ public:
     VerifyManagerHostImpl();
     virtual ~VerifyManagerHostImpl();
 
-    ErrCode Verify(const std::vector<std::string> &abcPaths,
-        const std::vector<std::string> &abcNames, bool flag) override;
+    ErrCode Verify(const std::vector<std::string> &abcPaths) override;
 
-    ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     ErrCode DeleteAbc(const std::string &path) override;
 
 private:
-    ErrCode InnerVerify(const std::vector<std::string> &abcPaths,
-        const std::vector<std::string> &abcNames, bool flag);
+    ErrCode InnerVerify(const std::string &bundleName,
+        const std::vector<std::string> &abcPaths);
+    bool CopyFilesToTempDir(const std::string &bundleName, int32_t userId,
+        const std::vector<std::string> &abcPaths);
     bool VerifyAbc(const std::vector<std::string> &abcPaths);
-    bool MoveAbc(const std::vector<std::string> &abcPaths,
-        const std::vector<std::string> &abcNames, const std::string &pathDir);
+    bool MoveAbc(const std::string &bundleName,
+        const std::vector<std::string> &abcPaths);
     void Rollback(const std::vector<std::string> &paths);
     bool GetFileName(const std::string &sourcePath, std::string &fileName);
     bool GetFileDir(const std::string &sourcePath, std::string &fileDir);
+    void RemoveTempFiles(const std::string &bundleName);
     void RemoveTempFiles(const std::vector<std::string> &paths);
     bool VerifyAbc(
         const std::string &rootDir, const std::vector<std::string> &names);
-    bool CheckFileParam(
-        const std::vector<std::string> &abcPaths, const std::vector<std::string> &abcNames);
+    bool CheckFileParam(const std::vector<std::string> &abcPaths);
     void Rollback(const std::string &rootDir, const std::vector<std::string> &names);
     ErrCode MkdirIfNotExist(const std::string &dir);
+    std::mutex &GetBundleMutex(const std::string &bundleName);
+    std::string GetRealPath(const std::string &bundleName,
+        int32_t userId, const std::string &relativePath);
+    bool GetCallingBundleName(std::string &bundleName);
 
     std::atomic<uint32_t> id_ = 0;
+    // using for locking by bundleName
+    std::unordered_map<std::string, std::mutex> bundleMutexMap_;
+    mutable std::shared_mutex bundleMutex_;
 };
 } // AppExecFwk
 } // OHOS

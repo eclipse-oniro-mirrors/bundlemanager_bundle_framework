@@ -1357,14 +1357,7 @@ void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &ability
     }
 
     if (abilityInfo.iconId == 0) {
-        if (isStage) {
-            abilityInfo.iconId = abilityInfo.applicationInfo.iconId;
-        } else {
-            auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
-            if (iter != bundleInfos_.end()) {
-                abilityInfo.iconId = iter->second.GetBaseApplicationInfo().iconId;
-            }
-        }
+        abilityInfo.iconId = abilityInfo.applicationInfo.iconId;
     }
 }
 

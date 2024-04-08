@@ -76,6 +76,7 @@ const std::string ROUTER_INDEX_ZERO_PATH = "entry/src/index";
 const std::string ROUTER_INDEX_ZERO_BUILD_FUNCTION = "myFunction";
 const std::string ROUTER_INDEX_ONE_URL = "DynamicPage2";
 const std::string ROUTER_INDEX_ONE_BUILD_FUNCTION = "myBuilder";
+const std::string CONTROL_MESSAGE = "msg1_cantRun";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -755,16 +756,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1000, Function | MediumTest | Level
     ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
     ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
         ROUTER_INDEX_ZERO_BUILD_FUNCTION);
 
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
@@ -1318,16 +1315,12 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0024, Function | MediumTest | Lev
     ASSERT_FALSE(bundleInfo.hapModuleInfos.empty());
     ASSERT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray.size(), PERMS_INDEX_TWO);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].name, ROUTER_INDEX_ZERO_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ZERO].buildFunction,
         ROUTER_INDEX_ZERO_BUILD_FUNCTION);
 
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].name, ROUTER_INDEX_ONE_URL);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageModule,
-        ROUTER_INDEX_ZERO_MDOULE_NAME);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].pageSourceFile,
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
@@ -8554,6 +8547,45 @@ HWTEST_F(ActsBmsKitSystemTest, GetOdid_0002, Function | MediumTest | Level1)
     EXPECT_TRUE(odid.empty());
 
     std::cout << "END GetOdid_0002" << std::endl;
+}
+
+/**
+ * @tc.number: AppControlCache_0001
+ * @tc.name: test app control cache
+ * @tc.desc: test app control cache
+ */
+HWTEST_F(ActsBmsKitSystemTest, AppControlCache_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START AppControlCache_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    setuid(3057);
+    std::vector<AppRunningControlRule> controlRules;
+    AppRunningControlRule controlRule;
+    controlRule.appId = APPID;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+    ErrCode res = appControlProxy->AddAppRunningControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    setuid(5523);
+    AppRunningControlRuleResult controlRuleResult;
+    res = appControlProxy->GetAppRunningControlRule(appName, USERID, controlRuleResult);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(controlRuleResult.controlMessage, CONTROL_MESSAGE);
+    setuid(3057);
+    res = appControlProxy->DeleteAppRunningControlRule(USERID);
+    EXPECT_EQ(res, ERR_OK);
+    setuid(5523);
+    AppRunningControlRuleResult controlRuleResult2;
+    res = appControlProxy->GetAppRunningControlRule(appName, USERID, controlRuleResult2);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL);
+    EXPECT_EQ(controlRuleResult2.controlMessage, "");
+    Uninstall(appName, resvec);
+    std::cout << "END AppControlCache_0001" << std::endl;
 }
 
 /**

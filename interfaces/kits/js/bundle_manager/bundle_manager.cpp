@@ -1681,14 +1681,7 @@ ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    std::vector<std::string> destFiles;
-    ErrCode ret = verifyManager->CopyFiles(abcPaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = verifyManager->Verify(destFiles, abcPaths, flag);
+    ErrCode ret = verifyManager->Verify(abcPaths);
     if (ret == ERR_OK && flag) {
         verifyManager->RemoveFiles(abcPaths);
     }
