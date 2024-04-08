@@ -1593,8 +1593,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
     EXPECT_EQ(ret, ERR_APPEXECFWK_USER_NOT_EXIST);
     innerBundleInfo.innerBundleUserInfos_.emplace("key", userInfo);
     installer.userId_ = Constants::ALL_USERID;
+    installer.dataMgr_ = GetBundleDataMgr();
     ret = installer.RemoveBundleUserData(innerBundleInfo, needRemoveData);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
 
 /**
@@ -1931,10 +1932,10 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     ErrCode res = installer.RemoveBundle(info, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 
     res = installer.RemoveBundle(info, true);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
 
 /**
