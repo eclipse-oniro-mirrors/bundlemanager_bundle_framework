@@ -82,10 +82,8 @@
                 "zlib"
             ],
             "third_party": [
-                "json",
                 "libuv",
                 "node",
-                "zlib",
                 "jsoncpp"
             ]
         },

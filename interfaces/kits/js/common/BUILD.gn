@@ -17,7 +17,7 @@ import("../../../../appexecfwk.gni")
 config("bundle_napi_common_config") {
   include_dirs = [
     "./",
-    "../bundlemgr",
+    "${kits_path}/js/bundlemgr",
   ]
 }
 ohos_shared_library("bundle_napi_common") {
