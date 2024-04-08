@@ -112,9 +112,8 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     std::unordered_map<std::string, AppQuickFix> infos;
     // parse and check multi app quick fix info
     ErrCode ret = ParseAndCheckAppQuickFixInfos(bundleFilePaths, infos);
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
     const AppQuickFix &appQuickFix = infos.begin()->second;
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
     const QuickFixMark &mark = oldInnerAppQuickFix.GetQuickFixMark();
@@ -127,17 +126,17 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     if (isExist && (appQuickFix.deployingAppqfInfo.type == oldAppQuickFix.deployingAppqfInfo.type)) {
         // check current app quick fix version code
         ret = CheckPatchVersionCode(appQuickFix, oldAppQuickFix);
-        if (ret != ERR_OK) {
-            return ret;
-        }
+        CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
     }
     // check bundleName exist
     BundleInfo bundleInfo;
     ret = GetBundleInfo(appQuickFix.bundleName, bundleInfo);
-    if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "GetBundleInfo failed, bundleName: %{public}s", appQuickFix.bundleName.c_str());
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
+    // check resources/rawfile whether valid
+    ret = CheckHqfResourceIsValid(bundleFilePaths, bundleInfo);
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
     // check with installed bundle
     if (appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) {
         ret = ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
@@ -146,20 +145,16 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     } else {
         ret = ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
     // convert to InnerAppQuickFix
     ret = ToInnerAppQuickFix(infos, oldInnerAppQuickFix, newInnerAppQuickFix);
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
     // save infos and update status DEPLOY_START
     ret = SaveAppQuickFix(newInnerAppQuickFix);
-    if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "SaveAppQuickFix failed, errcode: %{public}d", ret);
-        return ret;
-    }
+    CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
+
     LOG_I(BMSTag::QUICK_FIX, "ToDeployStartStatus end.");
     return ERR_OK;
 }
@@ -935,6 +930,23 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
         }
     }
     LOG_D(BMSTag::QUICK_FIX, "end");
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
+    const std::vector<std::string> bundleFilePaths, const BundleInfo &bundleInfo)
+{
+    LOG_D(BMSTag::QUICK_FIX, "start, bundleName:%{public}s", bundleInfo.name.c_str());
+    if (bundleInfo.applicationInfo.debug &&
+        (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
+        return ERR_OK;
+    }
+    PatchParser patchParser;
+    bool hasResourceFile = patchParser.HasResourceFile(bundleFilePaths);
+    if (hasResourceFile) {
+        LOG_W(BMSTag::QUICK_FIX, "bundleName:%{public}s check resource failed", bundleInfo.name.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED;
+    }
     return ERR_OK;
 }
 } // AppExecFwk
