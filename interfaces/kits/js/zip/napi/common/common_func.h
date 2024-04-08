@@ -27,7 +27,7 @@ namespace LIBZIP {
 struct CommonFunc {
     static bool SetZStreamValue(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, unsigned long, void *, size_t> GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg);
-    static std::tuple<bool, unsigned long, unsigned long, size_t> GetAdler32CombineArg(
+    static std::tuple<bool, unsigned long, unsigned long, int64_t> GetAdler32CombineArg(
         napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, uint64_t, void *, size_t> GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg);
 };
