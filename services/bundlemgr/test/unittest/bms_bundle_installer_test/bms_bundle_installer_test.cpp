@@ -54,6 +54,7 @@ namespace OHOS {
 namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
+const std::string SYSTEMFIEID_HAP_PATH = "/data/app/el1/bundle/public/com.query.test/module01.hap";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string MODULE_NAME_TEST = "moduleName";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
@@ -5404,5 +5405,89 @@ HWTEST_F(BmsBundleInstallerTest, DeleteOldNativeLibraryPath_0050, TestSize.Level
     installer.otaInstall_ = true;
     ret = installer.NeedDeleteOldNativeLib(newInfos, oldInfo);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: RemoveOldHapIfOTA_0010
+ * @tc.name: RemoveOldHapIfOTANotOTA
+ * @tc.desc: test RemoveOldHapIfOTA not OTA
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0010, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace(bundleFile, newInfo);
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
+    oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
+
+    BaseBundleInstaller installer;
+    installer.RemoveOldHapIfOTA(false, newInfos, oldInfo);
+    auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: RemoveOldHapIfOTA_0020
+ * @tc.name: RemoveOldHapIfOTANoHapInData
+ * @tc.desc: test RemoveOldHapIfOTA no hap in data
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0020, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace(bundleFile, newInfo);
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = "/system/app/module01/module01.hap";
+    oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
+
+    BaseBundleInstaller installer;
+    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: RemoveOldHapIfOTA_0030
+ * @tc.name: RemoveOldHapIfOTASuccess
+ * @tc.desc: test RemoveOldHapIfOTA success
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace(bundleFile, newInfo);
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
+    oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
+
+    BaseBundleInstaller installer;
+    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
+    EXPECT_EQ(exist, -1);
+    UnInstallBundle(SYSTEMFIEID_NAME);
 }
 } // OHOS
