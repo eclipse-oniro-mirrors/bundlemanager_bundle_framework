@@ -236,7 +236,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0400, Function | SmallTes
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED);
 }
 
 /**

@@ -90,7 +90,7 @@ ErrCode ExtendResourceManagerProxy::RemoveExtResource(
     }
     if (moduleNames.empty()) {
         APP_LOGE("fail to RemoveExtResource due to moduleNames is empty.");
-        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
