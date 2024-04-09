@@ -6454,6 +6454,7 @@ ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &develope
     }
     if (bundleInfos.empty()) {
         APP_LOGW("bundleInfos is empty");
+        return ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID;
     }
     APP_LOGI("have %{public}d applications, their developerId is %{public}s", requestUserId, developerId.c_str());
     return ERR_OK;
