@@ -87,6 +87,18 @@ static bool ParseWantWithoutVerification(napi_env env, napi_value args, Want &wa
 
 static bool ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& abilityInfo);
 
+static bool ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo &shortcutInfo);
+
+static bool ParseShortcutWant(napi_env env, napi_value param, ShortcutIntent &shortcutIntent);
+
+static bool ParseShortcutWantArray(
+    napi_env env, napi_value args, std::vector<ShortcutIntent> &shortcutIntents);
+
+static bool ParseParameters(
+    napi_env env, napi_value args, std::map<std::string, std::string> &parameters);
+
+static bool ParseParameterItem(napi_env env, napi_value param, std::string &key, std::string &value);
+
 static ErrCode ConvertErrCode(ErrCode nativeErrCode);
 
 static void ConvertWindowSize(napi_env env, const AbilityInfo &abilityInfo, napi_value value);
@@ -166,6 +178,9 @@ static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
 static void ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value);
 
 static void ConvertRouterDataInfos(napi_env env, const std::map<std::string, std::string> &data, napi_value objInfos);
+
+static void ConvertParameters(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos);
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
