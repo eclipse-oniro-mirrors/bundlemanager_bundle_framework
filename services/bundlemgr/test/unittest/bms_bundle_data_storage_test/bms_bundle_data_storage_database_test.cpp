@@ -624,7 +624,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             ],
             "installTime":1678677771,
             "uid":20010065,
-            "updateTime":1678677771
+            "updateTime":1678677771,
+            "cloneInfos":{}
         }
     },
     "innerModuleInfos":{
@@ -718,7 +719,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             }
         ]
     },
-    "userId_":0
+    "userId_":0,
+    "uninstallState":true
 })"_json;
 }  // namespace
 
@@ -1116,7 +1118,9 @@ protected:
                 "GWPAsanEnabled": false,
                 "tsanEnabled": false,
                 "organization": "",
-                "appEnvironments": []
+                "appEnvironments": [],
+                "multiAppMode":"CLONE_APP",
+                "maxInstanceNum":1
             },
             "baseBundleInfo": {
                 "abilityInfos": [
