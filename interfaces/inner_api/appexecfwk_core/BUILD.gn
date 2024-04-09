@@ -64,8 +64,6 @@ ohos_shared_library("appexecfwk_core") {
     ":bundlemgr_sdk_config",
   ]
 
-  all_dependent_configs = [ ":bundlemgr_sdk_config" ]
-
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
