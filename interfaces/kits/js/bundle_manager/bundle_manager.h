@@ -193,7 +193,8 @@ struct QueryHash  {
     size_t operator()(const Query &query) const
     {
         return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
-            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
+            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_) ^
+            std::hash<napi_env>()(query.env_);
     }
 };
 
