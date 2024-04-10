@@ -45,6 +45,7 @@ struct ExtensionFormInfo {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = true;
+    std::vector<int32_t> supportShapes {};
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
