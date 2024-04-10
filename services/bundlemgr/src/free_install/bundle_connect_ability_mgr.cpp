@@ -837,7 +837,12 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
+    if (IPCSkeleton::GetCallingUid() == Constants::DMS_UID) {
+        callingAppids.push_back(want.GetStringParam(PARAM_FREEINSTALL_APPID));
+        callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
+    } else {
+        this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
+    }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
