@@ -69,6 +69,7 @@ constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
 constexpr uint32_t TYPE_HARMONEY_APP = 1;
 constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
 constexpr uint32_t DEFAULT_VALUE = -1;
+constexpr uint32_t DEFAULT_EMBEDDED_VALUE = 0;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -841,7 +842,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
     targetAbilityInfo->targetInfo.flags = GetTargetInfoFlag(want, deviceId, bundleName, callingBundleNames);
     targetAbilityInfo->targetInfo.reasonFlag = static_cast<int32_t>(innerBundleInfo.GetModuleUpgradeFlag(moduleName));
-    targetAbilityInfo->targetInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
+    targetAbilityInfo->targetInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_EMBEDDED_VALUE);
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 
@@ -1146,7 +1147,7 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
     callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
     callerInfo.targetAppDistType = want.GetStringParam(PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE);
-    callerInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_VALUE);
+    callerInfo.embedded = want.GetIntParam(PARAM_FREEINSTALL_EMBEDDED, DEFAULT_EMBEDDED_VALUE);
     callerInfo.targetAppProvisionType = want.GetStringParam(PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE);
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
