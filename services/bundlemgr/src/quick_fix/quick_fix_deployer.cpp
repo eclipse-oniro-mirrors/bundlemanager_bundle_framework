@@ -346,6 +346,9 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     if (ret != ERR_OK) {
         return ret;
     }
+    if (ExtractQuickFixResFile(appQuickFix, bundleInfo) != ERR_OK) {
+        LOG_E(BMSTag::QUICK_FIX, "error: ExtractQuickFixResFile failed");
+    }
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
     }
@@ -353,40 +356,10 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
     ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
 
-    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
-    for (const auto &hqf : appQfInfo.hqfInfos) {
-        // if hap has no so file then continue
-        std::string tmpSoPath = oldSoPath;
-
-        InnerBundleInfo innerBundleInfo;
-        if (!FetchInnerBundleInfo(appQuickFix.bundleName, innerBundleInfo)) {
-            LOG_E(BMSTag::QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
-            return false;
-        }
-        int32_t bundleUid = Constants::INVALID_UID;
-        if (innerBundleInfo.IsEncryptedMoudle(hqf.moduleName)) {
-            InnerBundleUserInfo innerBundleUserInfo;
-            if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
-                LOG_E(BMSTag::QUICK_FIX, "no user info of bundle %{public}s", appQuickFix.bundleName.c_str());
-                return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
-            }
-            bundleUid = innerBundleUserInfo.uid;
-            if (!ExtractEncryptedSoFiles(bundleInfo, hqf.moduleName, bundleUid, tmpSoPath)) {
-                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
-                continue;
-            }
-        } else {
-            if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
-                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
-                continue;
-            }
-        }
-
-        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath, bundleUid);
-        if (result != ERR_OK) {
-            LOG_E(BMSTag::QUICK_FIX, "bundleName: %{public}s Process failed.", appQuickFix.bundleName.c_str());
-            return result;
-        }
+    ret = ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+    if (ret != ERR_OK) {
+        LOG_E(BMSTag::QUICK_FIX, "error: ExtractSoAndApplyDiff failed");
+        return ret;
     }
     return ERR_OK;
 }
@@ -768,6 +741,48 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
     return ERR_OK;
 }
 
+ErrCode QuickFixDeployer::ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
+    const std::string &patchPath)
+{
+    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+    for (const auto &hqf : appQfInfo.hqfInfos) {
+        // if hap has no so file then continue
+        std::string tmpSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
+
+        InnerBundleInfo innerBundleInfo;
+        if (!FetchInnerBundleInfo(appQuickFix.bundleName, innerBundleInfo)) {
+            LOG_E(BMSTag::QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+        }
+        int32_t bundleUid = Constants::INVALID_UID;
+        if (innerBundleInfo.IsEncryptedMoudle(hqf.moduleName)) {
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
+                LOG_E(BMSTag::QUICK_FIX, "no user info of bundle %{public}s", appQuickFix.bundleName.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+            }
+            bundleUid = innerBundleUserInfo.uid;
+            if (!ExtractEncryptedSoFiles(bundleInfo, hqf.moduleName, bundleUid, tmpSoPath)) {
+                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
+                continue;
+            }
+        } else {
+            if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
+                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
+                continue;
+            }
+        }
+
+        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath, bundleUid);
+        if (result != ERR_OK) {
+            LOG_E(BMSTag::QUICK_FIX, "bundleName: %{public}s Process failed.", appQuickFix.bundleName.c_str());
+            return result;
+        }
+    }
+    return ERR_OK;
+}
+
 bool QuickFixDeployer::ExtractSoFiles(
     const BundleInfo &bundleInfo,
     const std::string &moduleName,
@@ -947,6 +962,39 @@ ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
         LOG_W(BMSTag::QUICK_FIX, "bundleName:%{public}s check resource failed", bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED;
     }
+    return ERR_OK;
+}
+
+ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
+{
+    LOG_D(BMSTag::QUICK_FIX, "ExtractQuickFixResFile start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+    if (appQfInfo.hqfInfos.empty()) {
+        LOG_E(BMSTag::QUICK_FIX, "hqfInfos is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
+    }
+    for (const auto &hqf : appQfInfo.hqfInfos) {
+        auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
+            [hqf](const HapModuleInfo &info) {
+                return info.moduleName == hqf.moduleName;
+            });
+        if (iter == bundleInfo.hapModuleInfos.end()) {
+            LOG_W(BMSTag::QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            continue;
+        }
+
+        std::string targetPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
+            Constants::PATH_SEPARATOR + hqf.moduleName + Constants::PATH_SEPARATOR + Constants::RES_FILE_PATH;
+        ExtractParam extractParam;
+        extractParam.extractFileType = ExtractFileType::RES_FILE;
+        extractParam.srcPath = hqf.hqfFilePath;
+        extractParam.targetPath = targetPath;
+        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+            LOG_W(BMSTag::QUICK_FIX, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
+            continue;
+        }
+    }
+    LOG_D(BMSTag::QUICK_FIX, "ExtractQuickFixResFile end");
     return ERR_OK;
 }
 } // AppExecFwk

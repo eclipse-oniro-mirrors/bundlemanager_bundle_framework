@@ -3169,6 +3169,45 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0530, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0540
+ * Function: ExtractQuickFixResFile
+ * @tc.name: test ExtractQuickFixResFile
+ * @tc.require: issueI9CPVJ
+ * @tc.desc: ExtractQuickFixResFile empty hqfInfos
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0540, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    std::vector<HqfInfo> hqfInfo;
+    appQuickFix.deployingAppqfInfo.hqfInfos = hqfInfo;
+    BundleInfo bundleInfo;
+    auto ret = deployer->ExtractQuickFixResFile(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0550
+ * Function: ExtractQuickFixResFile
+ * @tc.name: test ExtractQuickFixResFile
+ * @tc.require: issueI9CPVJ
+ * @tc.desc: ExtractQuickFixResFile ok
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0550, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    BundleInfo bundleInfo;
+    ErrCode ret = deployer->GetBundleInfo(BUNDLE_NAME, bundleInfo);
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    ret = deployer->ExtractQuickFixResFile(appQuickFix, bundleInfo);
+    UninstallBundleInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BmsBundleQuickFixTest_0096
  * Function: ParseAndCheckAppQuickFixInfos
  * @tc.name: test ParseAndCheckAppQuickFixInfos
