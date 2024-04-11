@@ -104,6 +104,9 @@ private:
 
     void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
 
+    ErrCode ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
+        const std::string &patchPath);
+
     bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName, std::string &tmpSoPath);
 
     ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
@@ -118,6 +121,8 @@ private:
     ErrCode VerifyCodeSignatureForHqf(const InnerAppQuickFix &innerAppQuickFix, const std::string &hqfSoPath);
 
     ErrCode CheckHqfResourceIsValid(const std::vector<std::string> bundleFilePaths, const BundleInfo &bundleInfo);
+
+    ErrCode ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
