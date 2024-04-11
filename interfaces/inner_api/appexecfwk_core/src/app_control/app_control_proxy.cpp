@@ -26,37 +26,37 @@ namespace OHOS {
 namespace AppExecFwk {
 AppControlProxy::AppControlProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IAppControlMgr>(object)
 {
-    LOG_D(BMSTag::APP_CONTROL, "create AppControlProxy.");
+    LOG_D(BMS_TAG_APP_CONTROL, "create AppControlProxy.");
 }
 
 AppControlProxy::~AppControlProxy()
 {
-    LOG_D(BMSTag::APP_CONTROL, "destroy AppControlProxy.");
+    LOG_D(BMS_TAG_APP_CONTROL, "destroy AppControlProxy.");
 }
 
 ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string> &appIds,
     const AppInstallControlRuleType controlRuleType, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call AddAppInstallControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call AddAppInstallControlRule.");
     if (appIds.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "AddAppInstallControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "AddAppInstallControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteStringVector(appIds, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write appIds failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(controlRuleType))) {
-        LOG_E(BMSTag::APP_CONTROL, "write controlRuleType failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write controlRuleType failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -67,26 +67,26 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
 ErrCode AppControlProxy::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
     const std::vector<std::string> &appIds, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call DeleteAppInstallControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call DeleteAppInstallControlRule.");
     if (appIds.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "DeleteAppInstallControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteAppInstallControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(controlRuleType))) {
-        LOG_E(BMSTag::APP_CONTROL, "write controlRuleType failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write controlRuleType failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteStringVector(appIds, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write appIds failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -97,18 +97,18 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(const AppInstallControlRule
 ErrCode AppControlProxy::DeleteAppInstallControlRule(
     const AppInstallControlRuleType controlRuleType, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call DeleteAppInstallControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call DeleteAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(controlRuleType))) {
-        LOG_E(BMSTag::APP_CONTROL, "write controlRuleType failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write controlRuleType failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -119,18 +119,18 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(
 ErrCode AppControlProxy::GetAppInstallControlRule(
     const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call GetAppInstallControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call GetAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(controlRuleType))) {
-        LOG_E(BMSTag::APP_CONTROL, "write controlRuleType failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write controlRuleType failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
@@ -139,22 +139,22 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
 ErrCode AppControlProxy::AddAppRunningControlRule(
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call AddAppRunningControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call AddAppRunningControlRule.");
     if (controlRules.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "AddAppRunningControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "AddAppRunningControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteParcelableVector(controlRules, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write AppRunningControlRule failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write AppRunningControlRule failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -163,22 +163,22 @@ ErrCode AppControlProxy::AddAppRunningControlRule(
 ErrCode AppControlProxy::DeleteAppRunningControlRule(
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call delete AppRunningControlRules.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call delete AppRunningControlRules.");
     if (controlRules.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "DeleteAppRunningControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteAppRunningControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteParcelableVector(controlRules, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write AppRunningControlRule failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write AppRunningControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -188,14 +188,14 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(
 
 ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call delete appRunningControlRuleType.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call delete appRunningControlRuleType.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -205,14 +205,14 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
 
 ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call GetAppInstallControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call GetAppInstallControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
@@ -221,18 +221,18 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
 ErrCode AppControlProxy::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call GetAppRunningControlRuleResult.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call GetAppRunningControlRuleResult.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to GetMediaData due to write bundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to GetMediaData due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfo<AppRunningControlRuleResult>(
@@ -243,24 +243,24 @@ ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBund
     const std::string &targetBundleName, int32_t userId)
 {
     if (callerBundleName.empty() || targetBundleName.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "ConfirmAppJumpControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "ConfirmAppJumpControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(callerBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write callerBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write callerBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(targetBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write targetBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write targetBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -270,20 +270,20 @@ ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBund
 ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
     if (controlRules.empty()) {
-        LOG_E(BMSTag::APP_CONTROL, "DeleteAppJumpControlRule failed due to params error.");
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteAppJumpControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteParcelableVector(controlRules, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write AppJumpControlRule failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write AppJumpControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -295,15 +295,15 @@ ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpContr
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!WriteParcelableVector(controlRules, data)) {
-        LOG_E(BMSTag::APP_CONTROL, "write AppJumpControlRule failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write AppJumpControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -314,15 +314,15 @@ ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerB
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(callerBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write callerBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write callerBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -333,15 +333,15 @@ ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetB
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(targetBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write targetBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write targetBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -354,19 +354,19 @@ ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleNa
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(callerBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write callerBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write callerBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(targetBundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "fail to write targetBundleName fail");
+        LOG_E(BMS_TAG_APP_CONTROL, "fail to write targetBundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfo<AppJumpControlRule>(
@@ -376,33 +376,33 @@ ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleNa
 ErrCode AppControlProxy::SetDisposedStatus(
     const std::string &appId, const Want &want, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "proxy begin to SetDisposedStatus.");
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to SetDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        LOG_E(BMSTag::APP_CONTROL, "write want failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write want failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_STATUS, data, reply);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "SendRequest failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "SendRequest failed.");
         return ret;
     }
     ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "host return error : %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -410,29 +410,29 @@ ErrCode AppControlProxy::SetDisposedStatus(
 
 ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "proxy begin to DeleteDisposedStatus.");
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to DeleteDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS, data, reply);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "SendRequest failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "SendRequest failed.");
         return ret;
     }
     ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "host return error : %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -440,23 +440,23 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId, int32_t 
 
 ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "proxy begin to GetDisposedStatus.");
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to GetDisposedStatus.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = GetParcelableInfo<Want>(AppControlManagerInterfaceCode::GET_DISPOSED_STATUS, data, want);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "host return error : %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -465,33 +465,33 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want,
 ErrCode AppControlProxy::SetDisposedRule(
     const std::string &appId, DisposedRule &disposedRule, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "proxy begin to SetDisposedRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to SetDisposedRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&disposedRule)) {
-        LOG_E(BMSTag::APP_CONTROL, "write disposedRule failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write disposedRule failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE, data, reply);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "SendRequest failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "SendRequest failed.");
         return ret;
     }
     ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "host return error : %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -499,23 +499,23 @@ ErrCode AppControlProxy::SetDisposedRule(
 
 ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
-    LOG_D(BMSTag::APP_CONTROL, "proxy begin to GetDisposedRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to GetDisposedRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write appId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write appId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = GetParcelableInfo<DisposedRule>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE, data, rule);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "host return error : %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -524,18 +524,18 @@ ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule 
 ErrCode AppControlProxy::GetAbilityRunningControlRule(
     const std::string &bundleName, int32_t userId, std::vector<DisposedRule> &rules)
 {
-    LOG_D(BMSTag::APP_CONTROL, "begin to call GetAbilityRunningControlRule.");
+    LOG_D(BMS_TAG_APP_CONTROL, "begin to call GetAbilityRunningControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMSTag::APP_CONTROL, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        LOG_E(BMSTag::APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMSTag::APP_CONTROL, "write userId failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfos(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE, data, rules);
@@ -544,13 +544,13 @@ ErrCode AppControlProxy::GetAbilityRunningControlRule(
 bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data)
 {
     if (!data.WriteInt32(stringVector.size())) {
-        LOG_E(BMSTag::APP_CONTROL, "write ParcelableVector failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
         return false;
     }
 
     for (auto &string : stringVector) {
         if (!data.WriteString(string)) {
-            LOG_E(BMSTag::APP_CONTROL, "write string failed");
+            LOG_E(BMS_TAG_APP_CONTROL, "write string failed");
             return false;
         }
     }
@@ -562,13 +562,13 @@ bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVect
 {
     data.SetDataCapacity(Constants::CAPACITY_SIZE);
     if (!data.WriteInt32(parcelableVector.size())) {
-        LOG_E(BMSTag::APP_CONTROL, "write ParcelableVector failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
         return false;
     }
 
     for (const auto &parcelable : parcelableVector) {
         if (!data.WriteParcelable(&parcelable)) {
-            LOG_E(BMSTag::APP_CONTROL, "write ParcelableVector failed");
+            LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
             return false;
         }
     }
@@ -581,7 +581,7 @@ ErrCode AppControlProxy::GetParcelableInfo(AppControlManagerInterfaceCode code, 
     MessageParcel reply;
     int32_t ret = SendRequest(code, data, reply);
     if (ret != NO_ERROR) {
-        LOG_E(BMSTag::APP_CONTROL, "get return error=%{public}d from host", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "get return error=%{public}d from host", ret);
         return ret;
     }
     ret = reply.ReadInt32();
@@ -590,11 +590,11 @@ ErrCode AppControlProxy::GetParcelableInfo(AppControlManagerInterfaceCode code, 
     }
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
     if (info == nullptr) {
-        LOG_E(BMSTag::APP_CONTROL, "ReadParcelable failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "ReadParcelable failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     parcelableInfo = *info;
-    LOG_D(BMSTag::APP_CONTROL, "GetParcelableInfo success.");
+    LOG_D(BMS_TAG_APP_CONTROL, "GetParcelableInfo success.");
     return NO_ERROR;
 }
 
@@ -612,7 +612,7 @@ int32_t AppControlProxy::GetParcelableInfos(
     for (int32_t i = 0; i < infoSize; i++) {
         stringVector.emplace_back(reply.ReadString());
     }
-    LOG_D(BMSTag::APP_CONTROL, "Read string vector success");
+    LOG_D(BMS_TAG_APP_CONTROL, "Read string vector success");
     return NO_ERROR;
 }
 
@@ -626,7 +626,7 @@ bool AppControlProxy::GetParcelableInfos(
     }
 
     if (!reply.ReadBool()) {
-        LOG_E(BMSTag::APP_CONTROL, "readParcelableInfo failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "readParcelableInfo failed");
         return false;
     }
 
@@ -634,12 +634,12 @@ bool AppControlProxy::GetParcelableInfos(
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (info == nullptr) {
-            LOG_E(BMSTag::APP_CONTROL, "Read Parcelable infos failed");
+            LOG_E(BMS_TAG_APP_CONTROL, "Read Parcelable infos failed");
             return false;
         }
         parcelableInfos.emplace_back(*info);
     }
-    LOG_D(BMSTag::APP_CONTROL, "get parcelable infos success");
+    LOG_D(BMS_TAG_APP_CONTROL, "get parcelable infos success");
     return true;
 }
 
@@ -648,12 +648,12 @@ int32_t AppControlProxy::SendRequest(AppControlManagerInterfaceCode code, Messag
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOG_E(BMSTag::APP_CONTROL, "failed to send request %{public}d due to remote object null.", code);
+        LOG_E(BMS_TAG_APP_CONTROL, "failed to send request %{public}d due to remote object null.", code);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        LOG_E(BMSTag::APP_CONTROL, "receive error code %{public}d in transact %{public}d", result, code);
+        LOG_E(BMS_TAG_APP_CONTROL, "receive error code %{public}d in transact %{public}d", result, code);
     }
     return result;
 }

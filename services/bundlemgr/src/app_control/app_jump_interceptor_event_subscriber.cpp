@@ -41,28 +41,28 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     int32_t userId = want.GetIntParam(WANT_PARAM_USER_ID, -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
     if (action.empty() || userId < 0 || db == nullptr) {
-        LOG_E(BMSTag::APP_CONTROL, "%{public}s failed, empty action: %{public}s, userId:%{public}d",
+        LOG_E(BMS_TAG_APP_CONTROL, "%{public}s failed, empty action: %{public}s, userId:%{public}d",
             __func__, action.c_str(), userId);
         return;
     }
     if (bundleName.empty() && action != EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        LOG_E(BMSTag::APP_CONTROL, "%{public}s failed, invalid param, action: %{public}s, bundleName: %{public}s",
+        LOG_E(BMS_TAG_APP_CONTROL, "%{public}s failed, invalid param, action: %{public}s, bundleName: %{public}s",
             __func__, action.c_str(), bundleName.c_str());
         return;
     }
-    LOG_I(BMSTag::APP_CONTROL, "%{public}s, action:%{public}s.", __func__, action.c_str());
+    LOG_I(BMS_TAG_APP_CONTROL, "%{public}s, action:%{public}s.", __func__, action.c_str());
     std::weak_ptr<AppJumpInterceptorEventSubscriber> weakThis = shared_from_this();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
-        LOG_I(BMSTag::APP_CONTROL, "bundle remove, bundleName: %{public}s", bundleName.c_str());
+        LOG_I(BMS_TAG_APP_CONTROL, "bundle remove, bundleName: %{public}s", bundleName.c_str());
         auto task = [weakThis, bundleName, db, userId]() {
             BundleMemoryGuard memoryGuard;
             if (db == nullptr) {
-                LOG_E(BMSTag::APP_CONTROL, "Get invalid db");
+                LOG_E(BMS_TAG_APP_CONTROL, "Get invalid db");
                 return;
             }
             std::shared_ptr<AppJumpInterceptorEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {
-                LOG_I(BMSTag::APP_CONTROL, "delete rule bundleName:%{public}s userId:%{public}d",
+                LOG_I(BMS_TAG_APP_CONTROL, "delete rule bundleName:%{public}s userId:%{public}d",
                     bundleName.c_str(), userId);
                 db->DeleteRuleByCallerBundleName(bundleName, userId);
                 db->DeleteRuleByTargetBundleName(bundleName, userId);
@@ -70,7 +70,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
         };
         ffrt::submit(task);
     } else {
-        LOG_W(BMSTag::APP_CONTROL, "%{public}s warnning, invalid action.", __func__);
+        LOG_W(BMS_TAG_APP_CONTROL, "%{public}s warnning, invalid action.", __func__);
     }
 }
 } // AppExecFwk
