@@ -33,10 +33,10 @@ namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
 
-tuple<bool, unsigned long, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
+tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
-    uint64_t adler = 0U;
+    int64_t adler = 0U;
 
     // The first argument
     NapiValue adlerNVal(env, funcArg[ArgumentPosition::FIRST]);
@@ -59,10 +59,10 @@ tuple<bool, unsigned long, void *, size_t> CommonFunc::GetAdler32Arg(napi_env en
     return {true, adler, buf, bufLen};
 }
 
-tuple<bool, uint64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
+tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
-    uint64_t crc64 = 0U;
+    int64_t crc64 = 0U;
 
     // The first argument
     NapiValue crc64NVal(env, funcArg[ArgumentPosition::FIRST]);
