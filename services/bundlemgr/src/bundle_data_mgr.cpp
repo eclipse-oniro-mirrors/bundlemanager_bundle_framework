@@ -6573,5 +6573,50 @@ bool BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     return false;
 #endif
 }
+
+ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
+    Security::AccessToken::AccessTokenIDEx accessToken)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.AddCloneBundle(userId, appIndex, accessToken);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo addCloneBundleInfo fail");
+        return res;
+    }
+    APP_LOGD("update bundle info in memory for add clone, userId: %{public}d, appIndex: %{public}d", userId, appIndex);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    APP_LOGD("update bundle info in storage for add clone, userId: %{public}d, appIndex: %{public}d", userId, appIndex);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.RemoveCloneBundle(userId, appIndex);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo RemoveCloneBundle fail");
+        return res;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

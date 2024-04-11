@@ -683,5 +683,43 @@ bool BundleInstallerProxy::SendInstallRequest(
     }
     return true;
 }
+
+ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to InstallCloneApp due to write MessageParcel fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(bundleName))) {
+        APP_LOGE("failed to InstallCloneApp due to write bundleName fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to InstallCloneApp due to write userId fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("failed to InstallCloneApp due to write appIndex fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret =
+        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_CLONE_APP, data, reply, option);
+    if (!ret) {
+        APP_LOGE("install clone app failed due to send request fail");
+        return ERR_APPEXECFWK_CLONE_INSTALL_SEND_REQUEST_ERROR;
+    }
+
+    auto res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        appIndex = reply.ReadInt32();
+    }
+    return res;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

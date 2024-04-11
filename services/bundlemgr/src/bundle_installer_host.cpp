@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_clone_installer.h"
 #include "bundle_constants.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
@@ -61,14 +62,12 @@ int BundleInstallerHost::OnRemoteRequest(
 {
     BundleMemoryGuard memoryGuard;
     APP_LOGD("bundle installer host onReceived message, the message code is %{public}u", code);
-
     std::u16string descripter = GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
         APP_LOGE("fail to write reply message in bundle mgr host due to the reply is nullptr");
         return OBJECT_NULL;
     }
-
     switch (code) {
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL):
             HandleInstallMessage(data);
@@ -102,6 +101,9 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER):
             HandleUninstallAndRecoverMessage(data);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_CLONE_APP):
+            HandleInstallCloneApp(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -746,6 +748,46 @@ int32_t BundleInstallerHost::GetThreadsNum()
 size_t BundleInstallerHost::GetCurTaskNum()
 {
     return manager_->GetCurTaskNum();
+}
+
+ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int32_t userId, int32_t& appIndex)
+{
+    APP_LOGD("call InstallCloneApp, params[bundleName: %{public}s, user_id: %{public}d, appIndex: %{public}d]",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("install clone app failed due to error parameters");
+        return ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("vnon-system app calling system api, installCloneApp bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("InstallCloneApp permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
+    return installer->InstallCloneApp(bundleName, userId, appIndex);
+}
+
+void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGD("handle install clone app message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+ 
+    APP_LOGI("receive Install CLone App Request");
+
+    auto ret = InstallCloneApp(bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+    }
+
+    if (ret == ERR_OK && !reply.WriteInt32(appIndex)) {
+        APP_LOGE("write failed");
+    }
+    APP_LOGD("handle install clone app message finished");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

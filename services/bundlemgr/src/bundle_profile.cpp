@@ -121,6 +121,12 @@ struct ApiVersion {
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
 };
+
+struct MultiAppMode {
+    std::string type;
+    int32_t maxAdditionalNumber;
+};
+
 // config.json app
 struct App {
     std::string bundleName;
@@ -137,6 +143,7 @@ struct App {
     bool userDataClearable = true;
     bool asanEnabled = false;
     std::vector<std::string> targetBundleList;
+    MultiAppMode multiAppMode;
 };
 
 struct ReqVersion {
@@ -440,6 +447,28 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
         ArrayType::NOT_ARRAY);
 }
 
+void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
+{
+    // these are required fields.
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_MULTI_APP_MODE_PROFILE_KEY_TYPE,
+        multiAppMode.type,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_MULTI_APP_MODE_PROFILE_KEY_MAX_ADDITIONAL_NUMBER,
+        multiAppMode.maxAdditionalNumber,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
 void from_json(const nlohmann::json &jsonObject, App &app)
 {
     // these are required fields.
@@ -541,6 +570,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED,
         app.asanEnabled,
         JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<MultiAppMode>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_MULTI_APP_MODE,
+        app.multiAppMode,
+        JsonType::OBJECT,
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
@@ -2235,6 +2272,9 @@ bool ToApplicationInfo(
         applicationInfo.descriptionResource = BundleUtil::GetResource(
             configJson.app.bundleName, configJson.module.distro.moduleName, configJson.module.descriptionId);
     }
+
+    applicationInfo.multiAppMode = configJson.app.multiAppMode.type;
+    applicationInfo.maxInstanceNum = configJson.app.multiAppMode.maxAdditionalNumber;
     return true;
 }
 

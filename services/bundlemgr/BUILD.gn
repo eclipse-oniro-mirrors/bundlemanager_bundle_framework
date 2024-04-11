@@ -24,6 +24,7 @@ config("bundlemgr_common_config") {
     "include/bundlemgr",
     "include/bms_extension",
     "include/bundle_resource",
+    "include/clone",
     "include/common",
     "include/default_app",
     "include/free_install",
