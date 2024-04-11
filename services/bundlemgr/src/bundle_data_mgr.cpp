@@ -5360,6 +5360,7 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
 ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
     int32_t userId, std::vector<ProxyData> &proxyDatas) const
 {
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo info;
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(
         bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), info, userId);
