@@ -91,5 +91,6 @@ group("systemtest_bms") {
     "bms_stream_installer_host_test:systemtest",
     "bms_uninstall_system_test:systemtest",
     "bms_verify_manager_host_test:systemtest",
+    "extend_resource_manager_host_test:systemtest",
   ]
 }
