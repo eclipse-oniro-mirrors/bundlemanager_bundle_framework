@@ -393,6 +393,20 @@ private:
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
         bool removable);
+
+    /**
+     * @brief OTA Install system app and system vendor bundles.
+     * @param filePaths Indicates the filePaths.
+     * @param bundleName Indicates the bundleName.
+     * @param appType Indicates the bundle type.
+     * @param removable Indicates whether it can be removed.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool OTAInstallSystemBundleNeedCheckUser(
+        const std::vector<std::string> &filePaths,
+        const std::string &bundleName,
+        Constants::AppType appType,
+        bool removable);
     /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.
