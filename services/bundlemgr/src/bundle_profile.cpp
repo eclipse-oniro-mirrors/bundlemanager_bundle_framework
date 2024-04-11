@@ -2589,8 +2589,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp &&
-        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
