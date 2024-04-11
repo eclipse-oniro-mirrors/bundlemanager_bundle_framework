@@ -18,6 +18,7 @@
 
 #include "bundle_info.h"
 #include "bundle_pack_info.h"
+#include "bundle_clone_info.h"
 #include "bundle_user_info.h"
 #include "common_event_info.h"
 #include "data_group_info.h"
@@ -150,6 +151,8 @@ void to_json(nlohmann::json &jsonObject, const AppEnvironment &appEnvironment);
 void from_json(const nlohmann::json &jsonObject, AppEnvironment &appEnvironment);
 void to_json(nlohmann::json &jsonObject, const ApplicationEnvironment &applicationEnvironment);
 void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applicationEnvironment);
+void to_json(nlohmann::json& jsonObject, const BundleCloneInfo& bundleCloneInfo);
+void from_json(const nlohmann::json& jsonObject, BundleCloneInfo& bundleCloneInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
