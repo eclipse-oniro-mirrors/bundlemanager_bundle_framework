@@ -182,6 +182,14 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (app_domain_verify_enabled) {
+    external_deps += [
+      "app_domain_verify:app_domain_verify_common",
+      "app_domain_verify:app_domain_verify_mgr_client",
+    ]
+    defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
+  }
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {

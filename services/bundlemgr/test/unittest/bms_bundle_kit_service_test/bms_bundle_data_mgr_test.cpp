@@ -147,6 +147,8 @@ const std::string EXT_NAME = "extName";
 const std::string MIME_TYPE = "application/x-maker";
 const std::string EMPTY_STRING = "";
 const std::string TEST_DATA_GROUP_ID = "1";
+const std::string TEST_URI_HTTPS = "https://www.test.com";
+const std::string TEST_URI_HTTP = "http://www.test.com";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -208,6 +210,7 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
+const int32_t GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040;
 const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
 }  // namespace
 
@@ -4329,5 +4332,75 @@ HWTEST_F(BmsBundleDataMgrTest, ModifyLauncherAbilityInfoTest, Function | MediumT
     abilityInfo.applicationInfo.iconId = -1;
     bmsExtensionClient->ModifyLauncherAbilityInfo(abilityInfo);
     EXPECT_EQ(abilityInfo.iconId, abilityInfo.applicationInfo.iconId);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByAppLinking_0010
+ * @tc.name: FilterAbilityInfosByAppLinkingEmptyAbilityInfos
+ * @tc.desc: test FilterAbilityInfosByAppLinking with empty abilityInfos.
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0010, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetUri(TEST_URI_HTTPS);
+    int32_t flags = GET_ABILITY_INFO_WITH_APP_LINKING;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByAppLinking_0020
+ * @tc.name: FilterAbilityInfosByAppLinkingWithoutFlag
+ * @tc.desc: test FilterAbilityInfosByAppLinking without flag.
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0020, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetUri(TEST_URI_HTTPS);
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo abilityInfo;
+    abilityInfos.emplace_back(abilityInfo);
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByAppLinking_0030
+ * @tc.name: FilterAbilityInfosByAppLinkingUriNotHttps
+ * @tc.desc: test FilterAbilityInfosByAppLinking with uri not start with https.
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0030, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetUri(TEST_URI_HTTP);
+    int32_t flags = GET_ABILITY_INFO_WITH_APP_LINKING;
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo abilityInfo;
+    abilityInfos.emplace_back(abilityInfo);
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByAppLinking_0040
+ * @tc.name: FilterAbilityInfosByAppLinkingSuccess
+ * @tc.desc: test FilterAbilityInfosByAppLinking success.
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0040, Function | SmallTest | Level1)
+{
+    Want want;
+    want.SetUri(TEST_URI_HTTPS);
+    int32_t flags = GET_ABILITY_INFO_WITH_APP_LINKING;
+    std::vector<AbilityInfo> abilityInfos;
+    AbilityInfo abilityInfo;
+    abilityInfos.emplace_back(abilityInfo);
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
+    EXPECT_TRUE(res);
 }
 }

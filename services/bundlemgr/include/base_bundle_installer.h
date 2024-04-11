@@ -31,6 +31,10 @@
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
 
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+#include "app_domain_verify_mgr_client.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 class BaseBundleInstaller {
@@ -646,6 +650,11 @@ private:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ForceWriteToDisk() const;
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
+#endif
+    void VerifyDomain();
+    void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

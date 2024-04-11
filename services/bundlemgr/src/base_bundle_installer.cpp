@@ -80,6 +80,7 @@ const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+const std::string SKILL_URI_SCHEME_HTTPS = "https";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -1103,6 +1104,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
+    VerifyDomain();
     ForceWriteToDisk();
     return result;
 }
@@ -1348,6 +1350,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     BundleResourceHelper::DeleteResourceInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
+    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     return ERR_OK;
 }
 
@@ -1459,6 +1462,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
+
+            ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
 
             result = DeleteOldArkNativeFile(oldInfo);
             if (result != ERR_OK) {
@@ -4772,6 +4777,86 @@ void BaseBundleInstaller::ForceWriteToDisk() const
         APP_LOGI("sync end");
     };
     std::thread(task).detach();
+}
+
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+void BaseBundleInstaller::PrepareSkillUri(const std::vector<Skill> &skills,
+    std::vector<AppDomainVerify::SkillUri> &skillUris) const
+{
+    for (const auto &skill : skills) {
+        if (!skill.domainVerify) {
+            continue;
+        }
+        for (const auto &uri : skill.uris) {
+            if (uri.scheme != SKILL_URI_SCHEME_HTTPS) {
+                continue;
+            }
+            AppDomainVerify::SkillUri skillUri;
+            skillUri.scheme = uri.scheme;
+            skillUri.host = uri.host;
+            skillUri.port = uri.port;
+            skillUri.path = uri.path;
+            skillUri.pathStartWith = uri.pathStartWith;
+            skillUri.pathRegex = uri.pathRegex;
+            skillUri.type = uri.type;
+            skillUris.push_back(skillUri);
+        }
+    }
+}
+#endif
+
+void BaseBundleInstaller::VerifyDomain()
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGD("start to verify domain");
+    if (isAppExist_) {
+        APP_LOGI("app exist, need to clear old domain info");
+        ClearDomainVerifyStatus(appIdentifier_, bundleName_);
+    }
+    InnerBundleInfo bundleInfo;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+    std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
+    for (const auto &skillInfo : skillInfos) {
+        PrepareSkillUri(skillInfo.second, skillUris);
+    }
+    if (skillUris.empty()) {
+        APP_LOGI("no skill uri need to verify domain");
+        return;
+    }
+    std::string fingerprint = bundleInfo.GetCertificateFingerprint();
+    APP_LOGI("start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    // call VerifyDomain
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
+        appIdentifier_, bundleName_, fingerprint, skillUris);
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
+}
+
+void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifier,
+    const std::string &bundleName) const
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGI("start to clear domain verify status");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    // call ClearDomainVerifyStatus
+    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->ClearDomainVerifyStatus(
+        appIdentifier, bundleName)) {
+        APP_LOGW("ClearDomainVerifyStatus failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

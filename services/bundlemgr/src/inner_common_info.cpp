@@ -630,7 +630,8 @@ void to_json(nlohmann::json &jsonObject, const Skill &skill)
     jsonObject = nlohmann::json {
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_ACTIONS, skill.actions},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_ENTITIES, skill.entities},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_URIS, skill.uris}
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_URIS, skill.uris},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY, skill.domainVerify},
     };
 }
 
@@ -1317,6 +1318,14 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY,
+        skill.domainVerify,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("Skill from_json error, error code : %{public}d", parseResult);
     }

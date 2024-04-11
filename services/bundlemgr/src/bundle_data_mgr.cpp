@@ -59,6 +59,10 @@
 #endif
 #include "bundle_extractor.h"
 
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+#include "app_domain_verify_mgr_client.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -889,6 +893,10 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
     } else {
         // query all
         ImplicitQueryAllAbilityInfosV9(want, flags, requestUserId, abilityInfos, appIndex);
+    }
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    if (FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos)) {
+        abilityInfos = filteredAbilityInfos;
     }
     // sort by priority, descending order.
     if (abilityInfos.size() > 1) {
@@ -6530,6 +6538,40 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     return ERR_OK;
+}
+
+bool BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
+    std::vector<AbilityInfo> &abilityInfos, std::vector<AbilityInfo> &filteredAbilityInfos) const
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGD("FilterAbility start");
+    if (abilityInfos.empty()) {
+        APP_LOGD("abilityInfos is empty");
+        return false;
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) !=
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGD("flags does not contain GET_ABILITY_INFO_WITH_APP_LINKING");
+        return false;
+    }
+    if (want.GetUriString().rfind("https", 0) != 0) {
+        APP_LOGD("scheme is not https");
+        return false;
+    }
+    // call FiltedAbilityInfos
+    APP_LOGI("call FilterAbilities");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->FilterAbilities(
+        want, abilityInfos, filteredAbilityInfos)) {
+        APP_LOGE("FilterAbilities failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    return true;
+#else
+    APP_LOGI("AppDomainVerify is not enabled");
+    return false;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
