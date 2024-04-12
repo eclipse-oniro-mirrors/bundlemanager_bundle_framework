@@ -2572,7 +2572,7 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
 void BMSEventHandler::DeleteAllBundleResourceInfo()
 {
     APP_LOGI("delete all bundle resource when ota start");
-    if (BundleResourceHelper::DeleteAllResourceInfo()) {
+    if (!BundleResourceHelper::DeleteAllResourceInfo()) {
         APP_LOGE("delete all bundle resource failed");
     }
     APP_LOGI("delete all bundle resource when ota end");
