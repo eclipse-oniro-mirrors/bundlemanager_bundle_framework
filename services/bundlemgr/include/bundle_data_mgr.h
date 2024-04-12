@@ -291,10 +291,11 @@ public:
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param bundleInfo Indicates the obtained BundleInfo object.
      * @param userId Indicates the user ID.
+     * @param appIndex Indicates the app index.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
-        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -317,7 +318,7 @@ public:
      * @param bundleName Indicates the obtained bundle name.
      * @return Returns true if the bundle name is successfully obtained; returns false otherwise.
      */
-    bool GetBundleNameForUid(const int uid, std::string &bundleName) const;
+    bool GetBundleNameForUid(const int32_t uid, std::string &bundleName) const;
     /**
      * @brief Obtains all bundle names of a specified application based on the given application UID.
      * @param uid Indicates the uid.
@@ -870,7 +871,9 @@ public:
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
         std::string &profile) const;
     bool GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds) const;
-    ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+    ErrCode GetInnerBundleInfoByUid(const int32_t uid, InnerBundleInfo &innerBundleInfo) const;
+    ErrCode GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerBundleInfo &innerBundleInfo,
+        int32_t &appIndex) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
@@ -898,6 +901,7 @@ public:
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
     ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
+    ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
 
 private:
     /**
@@ -1040,6 +1044,15 @@ private:
     void updateAppEnvironments(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     bool FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos, std::vector<AbilityInfo> &filteredAbilityInfos) const;
+    void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
+        const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
+    void ModifyApplicationInfoByCloneInfo(const BundleCloneInfo &cloneInfo, ApplicationInfo &applicationInfo) const;
+    void ModifyBundleInfoByCloneInfo(const BundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
+    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId, int32_t flag,
+        BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
+    void GetCloneBundleInfosV9(const InnerBundleInfo& info, int32_t userId, int32_t flags,
+        BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
+    void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;
