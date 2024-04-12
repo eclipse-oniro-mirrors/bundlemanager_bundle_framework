@@ -28,6 +28,7 @@
 #include "hitrace_meter.h"
 #include "json_util.h"
 #include "parcel.h"
+#include "scope_guard.h"
 #include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "string_ex.h"
@@ -1170,6 +1171,7 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     }
     callerInfo.callerAppProvisionType = callerAppInfo.appProvisionType;
     InnerBundleInfo info;
+    ScopeGuard enableGuard([&] { bundleDataMgr_->EnableBundle(callerBundleName); });
     bool getInnerBundleInfoRes = bundleDataMgr_->GetInnerBundleInfo(callerBundleName, info);
     if (!getInnerBundleInfoRes) {
         APP_LOGW("Get callerInnerBundleInfo failed.");
