@@ -24,6 +24,7 @@
 #include "parcel_macro.h"
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -112,32 +113,32 @@ bool BundleMgrProxy::GetApplicationInfo(
     const std::string &appName, const ApplicationFlag flag, const int userId, ApplicationInfo &appInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetApplicationInfo of %{public}s", appName.c_str());
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to GetApplicationInfo of %{public}s", appName.c_str());
     if (appName.empty()) {
-        APP_LOGE("fail to GetApplicationInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfo due to write descriptor fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write descriptor fail");
         return false;
     }
     if (!data.WriteString(appName)) {
-        APP_LOGE("fail to GetApplicationInfo due to write appName fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write appName fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write userId fail");
         return false;
     }
 
     if (!GetParcelableInfo<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFO, data, appInfo)) {
-        APP_LOGE("fail to GetApplicationInfo from server");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo from server");
         return false;
     }
     return true;
@@ -147,33 +148,33 @@ bool BundleMgrProxy::GetApplicationInfo(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetApplicationInfo of %{public}s", appName.c_str());
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to GetApplicationInfo of %{public}s", appName.c_str());
     if (appName.empty()) {
-        APP_LOGE("fail to GetApplicationInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(appName)) {
-        APP_LOGE("fail to GetApplicationInfo due to write appName fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write appName fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write userId fail");
         return false;
     }
 
     if (!GetParcelableInfo<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS, data, appInfo)) {
-        APP_LOGE("fail to GetApplicationInfo from server");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo from server");
         return false;
     }
     return true;
@@ -183,34 +184,34 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to GetApplicationInfoV9 of %{public}s", appName.c_str());
     if (appName.empty()) {
-        APP_LOGE("fail to GetApplicationInfoV9 due to params empty");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfoV9 due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 due to write MessageParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appName)) {
-        APP_LOGE("fail to GetApplicationInfoV9 due to write appName fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 due to write appName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetApplicationInfoV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfoV9 due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
     if (res != ERR_OK) {
-        APP_LOGE("fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -220,23 +221,23 @@ bool BundleMgrProxy::GetApplicationInfos(
     const ApplicationFlag flag, int userId, std::vector<ApplicationInfo> &appInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get GetApplicationInfos of specific userId id %{private}d", userId);
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to get GetApplicationInfos of specific userId id %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfo due to write descriptor fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write descriptor fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfos due to write userId error");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfos due to write userId error");
         return false;
     }
 
     if (!GetParcelableInfos<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS, data, appInfos)) {
-        APP_LOGE("fail to GetApplicationInfos from server");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfos from server");
         return false;
     }
     return true;
@@ -246,23 +247,23 @@ bool BundleMgrProxy::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get GetApplicationInfos of specific userId id %{private}d", userId);
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to get GetApplicationInfos of specific userId id %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write MessageParcel fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfos due to write userId error");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfos due to write userId error");
         return false;
     }
     if (!GetVectorFromParcelIntelligent<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, appInfos)) {
-        APP_LOGE("failed to GetApplicationInfos from server");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "failed to GetApplicationInfos from server");
         return false;
     }
     return true;
@@ -272,18 +273,18 @@ ErrCode BundleMgrProxy::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get GetApplicationInfosV9 of specific userId id %{private}d", userId);
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "begin to get GetApplicationInfosV9 of specific userId id %{private}d", userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetApplicationInfosV9 due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfosV9 due to write MessageParcel fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetApplicationInfosV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfosV9 due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfosV9 due to write userId error");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "fail to GetApplicationInfosV9 due to write userId error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<ApplicationInfo>(
@@ -294,27 +295,27 @@ bool BundleMgrProxy::GetBundleInfo(
     const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetBundleInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfo due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleInfo due to write bundleName fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write bundleName fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetBundleInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write userId fail");
         return false;
     }
 
@@ -326,32 +327,32 @@ bool BundleMgrProxy::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetBundleInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfo due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleInfo due to write bundleName fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write bundleName fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfo due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write userId fail");
         return false;
     }
     if (GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)!= ERR_OK) {
-        APP_LOGE("fail to GetBundleInfo from server");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo from server");
         return false;
     }
     return true;
@@ -361,34 +362,34 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle info of %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info of %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetBundleInfoV9 due to params empty");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfoV9 due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleInfoV9 due to write bundleName fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfoV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfoV9 due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     auto res = GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("fail to GetBundleInfoV9 from server, error code: %{public}d", res);
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoV9 from server, error code: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -397,22 +398,22 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
 ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle info for self");
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info for self");
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfoForSelf due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -513,23 +514,23 @@ bool BundleMgrProxy::GetBundleInfos(
     const BundleFlag flag, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle infos");
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfos due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetBundleInfos due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write userId fail");
         return false;
     }
     if (!GetVectorFromParcelIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS, data, bundleInfos)) {
-        APP_LOGE("fail to GetBundleInfos from server");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos from server");
         return false;
     }
     return true;
@@ -539,23 +540,23 @@ bool BundleMgrProxy::GetBundleInfos(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle infos");
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfos due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfos due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos due to write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfo due to write userId fail");
         return false;
     }
     if (!GetVectorFromParcelIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, bundleInfos)) {
-        APP_LOGE("fail to GetBundleInfos from server");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfos from server");
         return false;
     }
     return true;
@@ -564,18 +565,18 @@ bool BundleMgrProxy::GetBundleInfos(
 ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get bundle infos");
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfosV9 due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfosV9 due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfosV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfosV9 due to write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBundleInfosV9 due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
@@ -911,16 +912,16 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, AbilityInfo &abilityInfo
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write want fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO, data, abilityInfo)) {
-        APP_LOGE("fail to query ability info from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo from server fail");
         return false;
     }
     return true;
@@ -932,32 +933,32 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write want fail");
         return false;
     }
 
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write flags");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write flags fail");
         return false;
     }
 
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write userId");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write userId fail");
         return false;
     }
 
     if (!data.WriteRemoteObject(callBack)) {
-        APP_LOGE("fail to callBack, for write parcel");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "callBack write parcel fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(
         BundleMgrInterfaceCode::QUERY_ABILITY_INFO_WITH_CALLBACK, data, abilityInfo)) {
-        APP_LOGE("fail to query ability info from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo from server fail");
         return false;
     }
     return true;
@@ -1017,24 +1018,24 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo mutiparam due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo mutiparam write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfo mutiparam due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo mutiparam write want fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to QueryAbilityInfo mutiparam due to write flags fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo mutiparam write flags fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfo mutiparam due to write userId error");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo mutiparam write userId fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_MUTI_PARAM, data, abilityInfo)) {
-        APP_LOGE("fail to query ability info mutiparam from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo mutiparam from server fail");
         return false;
     }
     return true;
@@ -1045,16 +1046,16 @@ bool BundleMgrProxy::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfos due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfos due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos write want fail");
         return false;
     }
 
     if (!GetParcelableInfos<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS, data, abilityInfos)) {
-        APP_LOGE("fail to QueryAbilityInfos from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos from server fail");
         return false;
     }
     return true;
@@ -1066,24 +1067,24 @@ bool BundleMgrProxy::QueryAbilityInfos(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos mutiparam write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos mutiparam write want fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam due to write flags fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos mutiparam write flags fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam due to write userId error");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos mutiparam write userId fail");
         return false;
     }
     if (!GetVectorFromParcelIntelligent<AbilityInfo>(
         BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_MUTI_PARAM, data, abilityInfos)) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos mutiparam from server fail");
         return false;
     }
     return true;
@@ -1095,19 +1096,19 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interfaceToken failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write interfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("write want failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("write flags failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write flags failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("write userId failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
@@ -1120,15 +1121,15 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interfaceToken failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write interfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("write want failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("write userId failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
@@ -1140,20 +1141,20 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfos mutiparam due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos write want fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos write userId fail");
         return false;
     }
     if (!GetVectorFromParcelIntelligent<AbilityInfo>(
         BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
-        APP_LOGE("fail to QueryAbilityInfos from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfos from server fail");
         return false;
     }
     return true;
@@ -1164,16 +1165,16 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(const std::string &abilityUri, Abilit
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfoByUri due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfoByUri write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(abilityUri)) {
-        APP_LOGE("fail to QueryAbilityInfoByUri due to write abilityUri fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfoByUri write abilityUri fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI, data, abilityInfo)) {
-        APP_LOGE("fail to QueryAbilityInfoByUri from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfoByUri from server fail");
         return false;
     }
     return true;
@@ -1184,16 +1185,16 @@ bool BundleMgrProxy::QueryAbilityInfosByUri(const std::string &abilityUri, std::
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfosByUri due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfosByUri write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(abilityUri)) {
-        APP_LOGE("fail to QueryAbilityInfosByUri due to write abilityUri fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfosByUri write abilityUri fail");
         return false;
     }
 
     if (!GetParcelableInfos<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_BY_URI, data, abilityInfos)) {
-        APP_LOGE("fail to QueryAbilityInfosByUri from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfosByUri from server fail");
         return false;
     }
     return true;
@@ -1204,15 +1205,15 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfoByUri due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfoByUri write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(abilityUri)) {
-        APP_LOGE("fail to QueryAbilityInfoByUri due to write abilityUri fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfoByUri write abilityUri fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryAbilityInfo write userId fail");
         return false;
     }
 
@@ -2019,28 +2020,29 @@ bool BundleMgrProxy::GetAbilityInfo(
     const std::string &bundleName, const std::string &abilityName, AbilityInfo &abilityInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("GetAbilityInfo bundleName :%{public}s, abilityName :%{public}s", bundleName.c_str(), abilityName.c_str());
+    LOG_D(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo bundleName:%{public}s abilityName:%{public}s",
+        bundleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetAbilityInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo failed params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAbilityInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAbilityInfo due to write bundleName fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write bundleName fail");
         return false;
     }
     if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAbilityInfo due to write abilityName fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write abilityName fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::GET_ABILITY_INFO, data, abilityInfo)) {
-        APP_LOGE("fail to GetAbilityInfo from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo from server fail");
         return false;
     }
     return true;
@@ -2051,34 +2053,34 @@ bool BundleMgrProxy::GetAbilityInfo(
     const std::string &abilityName, AbilityInfo &abilityInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("GetAbilityInfo:bundleName :%{public}s, moduleName :%{public}s, abilityName :%{public}s",
+    LOG_D(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("fail to GetAbilityInfo due to params empty");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo failed params empty");
         return false;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAbilityInfo due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAbilityInfo due to write bundleName fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write bundleName fail");
         return false;
     }
     if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetAbilityInfo due to write moduleName fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write moduleName fail");
         return false;
     }
     if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAbilityInfo due to write abilityName fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo write abilityName fail");
         return false;
     }
 
     if (!GetParcelableInfo<AbilityInfo>(
         BundleMgrInterfaceCode::GET_ABILITY_INFO_WITH_MODULE_NAME, data, abilityInfo)) {
-        APP_LOGE("fail to GetAbilityInfo from server");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "GetAbilityInfo from server fail");
         return false;
     }
     return true;
@@ -2403,24 +2405,24 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const int32_t 
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write InterfaceToken fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write want fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write want fail");
         return false;
     }
     if (!data.WriteInt32(flag)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write userId fail");
         return false;
     }
 
     if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "fail to obtain extensionInfos");
         return false;
     }
     return true;
@@ -2431,19 +2433,19 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, int32_t f
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write want fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write want fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode(
@@ -2455,28 +2457,28 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const Extensio
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write InterfaceToken fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write want fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write want fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int32_t>(extensionType))) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write type fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write type fail");
         return false;
     }
     if (!data.WriteInt32(flag)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write flag fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write userId fail");
         return false;
     }
 
     if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "fail to obtain extensionInfos");
         return false;
     }
     return true;
@@ -2487,23 +2489,23 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write want fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write want fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(static_cast<int32_t>(extensionType))) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write type fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write type fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_V9, data, extensionInfos);
@@ -2515,20 +2517,20 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &exte
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write InterfaceToken fail");
         return false;
     }
     if (!data.WriteInt32(static_cast<int32_t>(extensionType))) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write type fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write type fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryExtensionAbilityInfos due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos write userId fail");
         return false;
     }
 
     if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_BY_TYPE, data, extensionInfos)) {
-        APP_LOGE("fail to obtain extensionInfos");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "fail to obtain extensionInfos");
         return false;
     }
     return true;
@@ -2559,29 +2561,29 @@ bool BundleMgrProxy::VerifyCallingPermission(const std::string &permission)
 bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
-    APP_LOGD("begin to QueryExtensionAbilityInfoByUri");
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "begin to QueryExtensionAbilityInfoByUri");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (uri.empty()) {
-        APP_LOGE("uri is empty");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "uri is empty");
         return false;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to QueryExtensionAbilityInfoByUri due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfoByUri write MessageParcel fail");
         return false;
     }
     if (!data.WriteString(uri)) {
-        APP_LOGE("failed to QueryExtensionAbilityInfoByUri due to write uri fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfoByUri write uri fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to QueryExtensionAbilityInfoByUri due to write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfoByUri write userId fail");
         return false;
     }
 
     if (!GetParcelableInfo<ExtensionAbilityInfo>(
         BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI, data, extensionAbilityInfo)) {
-        APP_LOGE("failed to QueryExtensionAbilityInfoByUri from server");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "failed to QueryExtensionAbilityInfoByUri from server");
         return false;
     }
     return true;
@@ -2590,23 +2592,23 @@ bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int3
 bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
 {
-    APP_LOGD("begin to ImplicitQueryInfoByPriority");
+    LOG_D(BMS_TAG_QUERY_ABILITY, "begin to ImplicitQueryInfoByPriority");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to implicit query info by priority due to write MessageParcel fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "ImplicitQueryInfoByPriority write MessageParcel fail");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to implicit query info by priority due to write want fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "ImplicitQueryInfoByPriority write want fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to implicit query info by priority due to write flags fail");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "ImplicitQueryInfoByPriority write flags fail");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to implicit query info by priority due to write userId error");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "ImplicitQueryInfoByPriority write userId error");
         return false;
     }
 
@@ -2616,20 +2618,20 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
     }
 
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "reply result false");
         return false;
     }
 
     std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
     if (abilityInfoPtr == nullptr) {
-        APP_LOGE("read AbilityInfo failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "read AbilityInfo failed");
         return false;
     }
     abilityInfo = *abilityInfoPtr;
 
     std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
     if (extensionInfoPtr == nullptr) {
-        APP_LOGE("read ExtensionAbilityInfo failed");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "read ExtensionAbilityInfo failed");
         return false;
     }
     extensionInfo = *extensionInfoPtr;
@@ -2639,27 +2641,27 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
 bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    APP_LOGD("begin to ImplicitQueryInfos");
+    LOG_D(BMS_TAG_QUERY_ABILITY, "begin to ImplicitQueryInfos");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "WriteInterfaceToken failed.");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("WriteParcelable want failed.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "WriteParcelable want failed.");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("WriteInt32 flags failed.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "WriteInt32 flags failed.");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("WriteInt32 userId failed.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "WriteInt32 userId failed.");
         return false;
     }
     if (!data.WriteBool(withDefault)) {
-        APP_LOGE("WriteBool withDefault failed.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "WriteBool withDefault failed.");
         return false;
     }
 
@@ -2668,14 +2670,14 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         return false;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false.");
+        LOG_E(BMS_TAG_QUERY_ABILITY, "reply result false.");
         return false;
     }
     int32_t abilityInfoSize = reply.ReadInt32();
     for (int32_t i = 0; i < abilityInfoSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
         if (abilityInfoPtr == nullptr) {
-            APP_LOGE("Read Parcelable abilityInfos failed.");
+            LOG_E(BMS_TAG_QUERY_ABILITY, "Read Parcelable abilityInfos failed.");
             return false;
         }
         abilityInfos.emplace_back(*abilityInfoPtr);
@@ -2684,7 +2686,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     for (int32_t i = 0; i < extensionInfoSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
         if (extensionInfoPtr == nullptr) {
-            APP_LOGE("Read Parcelable extensionInfos failed.");
+            LOG_E(BMS_TAG_QUERY_ABILITY, "Read Parcelable extensionInfos failed.");
             return false;
         }
         extensionInfos.emplace_back(*extensionInfoPtr);
@@ -3756,23 +3758,23 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want,
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("Write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "Write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("Write want fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "Write want fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(extensionTypeName)) {
-        APP_LOGE("Write type fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "Write type fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flag)) {
-        APP_LOGE("Write flag fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "Write flag fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("Write userId fail");
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "Write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,

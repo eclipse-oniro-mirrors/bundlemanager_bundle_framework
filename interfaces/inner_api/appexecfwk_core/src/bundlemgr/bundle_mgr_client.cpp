@@ -16,6 +16,7 @@
 
 #include "ability_info.h"
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_mgr_client_impl.h"
 #include "extension_ability_info.h"
 #include "hap_module_info.h"
@@ -47,7 +48,7 @@ bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleF
     int32_t userId)
 {
     if (impl_ == nullptr) {
-        APP_LOGE("Bundle mgr client impl is nullptr");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "Bundle mgr client impl is nullptr");
         return false;
     }
     return impl_->GetBundleInfo(bundleName, flag, bundleInfo, userId);

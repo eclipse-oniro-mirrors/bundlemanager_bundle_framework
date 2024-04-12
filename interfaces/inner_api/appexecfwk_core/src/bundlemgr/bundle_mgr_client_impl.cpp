@@ -19,6 +19,7 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -64,11 +65,11 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
 bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {
-    APP_LOGD("GetBundleInfo begin");
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "GetBundleInfo begin");
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "failed to connect");
         return false;
     }
 
