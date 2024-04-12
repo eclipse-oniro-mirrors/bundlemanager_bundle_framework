@@ -166,6 +166,8 @@ public:
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     bool CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
+    bool CheckSupportAppTypes(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const;
 
 private:
 
