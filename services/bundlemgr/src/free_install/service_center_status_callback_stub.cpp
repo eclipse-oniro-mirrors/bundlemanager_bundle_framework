@@ -30,7 +30,7 @@ const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.opena
 
 ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
 {
-    LOG_I(BMSTag::FREE_INSTALL, "ServiceCenterStatusCallbackStub is created");
+    LOG_I(BMS_TAG_FREE_INSTALL, "ServiceCenterStatusCallbackStub is created");
 }
 
 int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
@@ -38,12 +38,12 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
 {
     BundleMemoryGuard memoryGuard;
     if (data.ReadInterfaceToken() != SEEVICE_CENTER_CALLBACK_TOKEN) {
-        LOG_E(BMSTag::FREE_INSTALL, "verify interface token failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "verify interface token failed");
         return -1;
     }
 
     auto result = data.ReadString16();
-    LOG_D(BMSTag::FREE_INSTALL, "OnRemoteRequest:code:%{public}d, result:%{public}s",
+    LOG_D(BMS_TAG_FREE_INSTALL, "OnRemoteRequest:code:%{public}d, result:%{public}s",
         code, Str16ToStr8(result).c_str());
     return OnInstallFinished(Str16ToStr8(result));
 }

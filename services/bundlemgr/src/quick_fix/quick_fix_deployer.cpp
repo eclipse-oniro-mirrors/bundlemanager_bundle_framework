@@ -42,7 +42,7 @@ ErrCode QuickFixDeployer::Execute()
 {
     ErrCode ret = DeployQuickFix();
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "QuickFixDeployer errcode %{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "QuickFixDeployer errcode %{public}d", ret);
     }
     return ret;
 }
@@ -50,7 +50,7 @@ ErrCode QuickFixDeployer::Execute()
 ErrCode QuickFixDeployer::DeployQuickFix()
 {
     if (patchPaths_.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
-        LOG_E(BMSTag::QUICK_FIX, "DeployQuickFix wrong parms");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
@@ -63,7 +63,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
         for (const auto &path: realFilePaths) {
             std::string tempPath = path.substr(0, path.rfind(Constants::PATH_SEPARATOR));
             if (InstalldClient::GetInstance()->RemoveDir(tempPath) != ERR_OK) {
-                LOG_E(BMSTag::QUICK_FIX, "RemovePatchFile failed path: %{private}s", tempPath.c_str());
+                LOG_E(BMS_TAG_QUICK_FIX, "RemovePatchFile failed path: %{private}s", tempPath.c_str());
             }
         }
     });
@@ -96,7 +96,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
             oldPath += Constants::PATCH_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
         }
         if (InstalldClient::GetInstance()->RemoveDir(oldPath)) {
-            LOG_E(BMSTag::QUICK_FIX, "delete %{private}s failed", oldPath.c_str());
+            LOG_E(BMS_TAG_QUICK_FIX, "delete %{private}s failed", oldPath.c_str());
         }
     }
     return ERR_OK;
@@ -105,7 +105,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
 ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bundleFilePaths,
     InnerAppQuickFix &newInnerAppQuickFix, InnerAppQuickFix &oldInnerAppQuickFix)
 {
-    LOG_I(BMSTag::QUICK_FIX, "ToDeployStartStatus start.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ToDeployStartStatus start.");
     if (GetQuickFixDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -118,7 +118,7 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     bool isExist = quickFixDataMgr_->QueryInnerAppQuickFix(appQuickFix.bundleName, oldInnerAppQuickFix);
     const QuickFixMark &mark = oldInnerAppQuickFix.GetQuickFixMark();
     if (isExist && (mark.status != QuickFixStatus::DEPLOY_START) && (mark.status != QuickFixStatus::DEPLOY_END)) {
-        LOG_E(BMSTag::QUICK_FIX, "error: wrong quick fix status, now status : %{public}d", mark.status);
+        LOG_E(BMS_TAG_QUICK_FIX, "error: wrong quick fix status, now status : %{public}d", mark.status);
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATCH_STATUS;
     }
     const AppQuickFix &oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
@@ -155,13 +155,13 @@ ErrCode QuickFixDeployer::ToDeployStartStatus(const std::vector<std::string> &bu
     ret = SaveAppQuickFix(newInnerAppQuickFix);
     CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(ret);
 
-    LOG_I(BMSTag::QUICK_FIX, "ToDeployStartStatus end.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ToDeployStartStatus end.");
     return ERR_OK;
 }
 
 void QuickFixDeployer::ToDeployQuickFixResult(const AppQuickFix &appQuickFix)
 {
-    LOG_D(BMSTag::QUICK_FIX, "ToDeployQuickFixResult start.");
+    LOG_D(BMS_TAG_QUICK_FIX, "ToDeployQuickFixResult start.");
     deployQuickFixResult_.bundleName = appQuickFix.bundleName;
     deployQuickFixResult_.bundleVersionCode = appQuickFix.versionCode;
     deployQuickFixResult_.patchVersionCode = appQuickFix.deployingAppqfInfo.versionCode;
@@ -171,7 +171,7 @@ void QuickFixDeployer::ToDeployQuickFixResult(const AppQuickFix &appQuickFix)
     for (const auto &hqf : appQuickFix.deployingAppqfInfo.hqfInfos) {
         deployQuickFixResult_.moduleNames.emplace_back(hqf.moduleName);
     }
-    LOG_D(BMSTag::QUICK_FIX, "ToDeployQuickFixResult end.");
+    LOG_D(BMS_TAG_QUICK_FIX, "ToDeployQuickFixResult end.");
 }
 
 ErrCode QuickFixDeployer::ProcessPatchDeployStart(
@@ -179,27 +179,27 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
     const BundleInfo &bundleInfo,
     std::unordered_map<std::string, AppQuickFix> &infos)
 {
-    LOG_I(BMSTag::QUICK_FIX, "ProcessPatchDeployStart start.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ProcessPatchDeployStart start.");
     if (infos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix infos is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: appQuickFix infos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     QuickFixChecker checker;
     // check multiple cpuAbi and native library path
     ErrCode ret = checker.CheckMultiNativeSo(infos);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "ProcessPatchDeployStart check native so failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessPatchDeployStart check native so failed");
         return ret;
     }
     // parse signature info
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     ret = checker.CheckMultipleHqfsSignInfo(bundleFilePaths, hapVerifyRes);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "ProcessPatchDeployStart check check multiple hqfs signInfo failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessPatchDeployStart check check multiple hqfs signInfo failed");
         return ret;
     }
     if (hapVerifyRes.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix hapVerifyRes is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: appQuickFix hapVerifyRes is empty");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
     const auto &provisionInfo = hapVerifyRes[0].GetProvisionInfo();
@@ -207,11 +207,11 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
     // check with installed bundle, signature info, bundleName, versionCode
     ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
         return ret;
     }
     appDistributionType_ = checker.GetAppDistributionType(provisionInfo.distributionType);
-    LOG_I(BMSTag::QUICK_FIX, "ProcessPatchDeployStart end.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ProcessPatchDeployStart end.");
     return ERR_OK;
 }
 
@@ -219,21 +219,21 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployStart(
     const BundleInfo &bundleInfo,
     const AppQuickFix &appQuickFix)
 {
-    LOG_I(BMSTag::QUICK_FIX, "ProcessHotReloadDeployStart start.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ProcessHotReloadDeployStart start.");
     QuickFixChecker checker;
     ErrCode ret = checker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "check AppQuickFixInfos with installed bundle failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "check AppQuickFixInfos with installed bundle failed");
         return ret;
     }
-    LOG_I(BMSTag::QUICK_FIX, "ProcessHotReloadDeployStart end.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ProcessHotReloadDeployStart end.");
     return ERR_OK;
 }
 
 ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFix,
     const InnerAppQuickFix &oldInnerAppQuickFix)
 {
-    LOG_I(BMSTag::QUICK_FIX, "ToDeployEndStatus start.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ToDeployEndStatus start.");
     if ((GetQuickFixDataMgr() != ERR_OK)) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
@@ -250,11 +250,11 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     } else if (newQuickFix.deployingAppqfInfo.type == QuickFixType::HOT_RELOAD) {
         ret = ProcessHotReloadDeployEnd(newQuickFix, newPatchPath);
     } else {
-        LOG_E(BMSTag::QUICK_FIX, "error: unknown QuickFixType");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: unknown QuickFixType");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "Process Patch or HotReload DeployEnd failed, bundleName:%{public}s",
+        LOG_E(BMS_TAG_QUICK_FIX, "Process Patch or HotReload DeployEnd failed, bundleName:%{public}s",
             newQuickFix.bundleName.c_str());
         return ret;
     }
@@ -266,12 +266,12 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     // move hqf files to new patch path
     ret = MoveHqfFiles(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error MoveHqfFiles failed, bundleName: %{public}s", newQuickFix.bundleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "error MoveHqfFiles failed, bundleName: %{public}s", newQuickFix.bundleName.c_str());
         return ret;
     }
     ret = VerifyCodeSignatureForHqf(newInnerAppQuickFix, newPatchPath);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "verify failed bundleName: %{public}s", newQuickFix.bundleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "verify failed bundleName: %{public}s", newQuickFix.bundleName.c_str());
         return ret;
     }
     // save and update status DEPLOY_END
@@ -282,12 +282,12 @@ ErrCode QuickFixDeployer::ToDeployEndStatus(InnerAppQuickFix &newInnerAppQuickFi
     ToDeployQuickFixResult(newQuickFix);
     ret = SaveToInnerBundleInfo(newInnerAppQuickFix);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: bundleName %{public}s update failed due to innerBundleInfo failed",
+        LOG_E(BMS_TAG_QUICK_FIX, "error: bundleName %{public}s update failed due to innerBundleInfo failed",
             newQuickFix.bundleName.c_str());
         return ret;
     }
     guardRemovePatchPath.Dismiss();
-    LOG_I(BMSTag::QUICK_FIX, "ToDeployEndStatus end.");
+    LOG_I(BMS_TAG_QUICK_FIX, "ToDeployEndStatus end.");
     return ERR_OK;
 }
 
@@ -318,7 +318,7 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
     auto libraryPath = nativeLibraryPath;
     std::string soPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
     if (InstalldClient::GetInstance()->IsExistDir(soPath, isSoExist) != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "ProcessNativeLibraryPath IsExistDir(%{public}s) failed", soPath.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessNativeLibraryPath IsExistDir(%{public}s) failed", soPath.c_str());
         return;
     }
 
@@ -327,7 +327,7 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
         nativeLibraryPath = Constants::PATCH_PATH +
             std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + Constants::PATH_SEPARATOR + libraryPath;
     } else {
-        LOG_I(BMSTag::QUICK_FIX, "So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
+        LOG_I(BMS_TAG_QUICK_FIX, "So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
             soPath.c_str(), nativeLibraryPath.c_str());
         nativeLibraryPath.clear();
     }
@@ -338,7 +338,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     patchPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
         Constants::PATH_SEPARATOR + Constants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: creat patch path failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: creat patch path failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     BundleInfo bundleInfo;
@@ -347,7 +347,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         return ret;
     }
     if (ExtractQuickFixResFile(appQuickFix, bundleInfo) != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: ExtractQuickFixResFile failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: ExtractQuickFixResFile failed");
     }
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
@@ -358,7 +358,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
 
     ret = ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: ExtractSoAndApplyDiff failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: ExtractSoAndApplyDiff failed");
         return ret;
     }
     return ERR_OK;
@@ -371,7 +371,7 @@ ErrCode QuickFixDeployer::ProcessHotReloadDeployEnd(const AppQuickFix &appQuickF
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: creat hotreload path failed, errcode %{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "error: creat hotreload path failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     return ERR_OK;
@@ -385,7 +385,7 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     PatchParser patchParser;
     ErrCode ret = patchParser.ParsePatchInfo(bundleFilePaths, infos);
     if ((ret != ERR_OK) || infos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "parse AppQuickFixFiles failed, errcode %{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "parse AppQuickFixFiles failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
 
@@ -394,12 +394,12 @@ ErrCode QuickFixDeployer::ParseAndCheckAppQuickFixInfos(
     // check multiple AppQuickFix
     ret = checker.CheckAppQuickFixInfos(infos);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "check AppQuickFixInfos failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "check AppQuickFixInfos failed");
         return ret;
     }
     const QuickFixType &quickFixType = infos.begin()->second.deployingAppqfInfo.type;
     if (quickFixType == QuickFixType::UNKNOWN) {
-        LOG_E(BMSTag::QUICK_FIX, "error unknown quick fix type");
+        LOG_E(BMS_TAG_QUICK_FIX, "error unknown quick fix type");
         return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
     // hqf file path
@@ -424,13 +424,13 @@ void QuickFixDeployer::ResetNativeSoAttrs(AppQuickFix &appQuickFix)
 {
     auto &appqfInfo = appQuickFix.deployingAppqfInfo;
     if (appqfInfo.hqfInfos.size() != 1) {
-        LOG_W(BMSTag::QUICK_FIX, "The number of hqfInfos is not one.");
+        LOG_W(BMS_TAG_QUICK_FIX, "The number of hqfInfos is not one.");
         return;
     }
 
     bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, appqfInfo.hqfInfos[0].moduleName);
     if (!isLibIsolated) {
-        LOG_W(BMSTag::QUICK_FIX, "Lib is not isolated.");
+        LOG_W(BMS_TAG_QUICK_FIX, "Lib is not isolated.");
         return;
     }
 
@@ -445,7 +445,7 @@ bool QuickFixDeployer::IsLibIsolated(
 {
     InnerBundleInfo innerBundleInfo;
     if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMSTag::QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
         return false;
     }
 
@@ -457,12 +457,12 @@ bool QuickFixDeployer::FetchInnerBundleInfo(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "error dataMgr is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "error dataMgr is nullptr");
         return false;
     }
 
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMSTag::QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", bundleName.c_str());
         return false;
     }
 
@@ -502,18 +502,18 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
 {
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "error: bms is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: bms is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     std::shared_ptr<BundleDataMgr> dataMgr = bms->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "error: dataMgr is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: dataMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // check bundleName is exists
     if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT,
         bundleInfo, Constants::ANY_USERID)) {
-        LOG_E(BMSTag::QUICK_FIX, "error: GetBundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "error: GetBundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
     }
     return ERR_OK;
@@ -522,9 +522,9 @@ ErrCode QuickFixDeployer::GetBundleInfo(const std::string &bundleName, BundleInf
 ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::string, AppQuickFix> infos,
     const InnerAppQuickFix &oldInnerAppQuickFix, InnerAppQuickFix &newInnerAppQuickFix)
 {
-    LOG_D(BMSTag::QUICK_FIX, "ToInnerAppQuickFix start");
+    LOG_D(BMS_TAG_QUICK_FIX, "ToInnerAppQuickFix start");
     if (infos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: appQuickFix is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     AppQuickFix oldAppQuickFix = oldInnerAppQuickFix.GetAppQuickFix();
@@ -540,12 +540,12 @@ ErrCode QuickFixDeployer::ToInnerAppQuickFix(const std::unordered_map<std::strin
         // hqfInfos will not be empty, it has been judged before.
         const std::string &moduleName = quickFix.deployingAppqfInfo.hqfInfos[0].moduleName;
         if (!newInnerAppQuickFix.AddHqfInfo(quickFix)) {
-            LOG_E(BMSTag::QUICK_FIX, "error: appQuickFix add hqf moduleName: %{public}s failed", moduleName.c_str());
+            LOG_E(BMS_TAG_QUICK_FIX, "error: appQuickFix add hqf moduleName: %{public}s failed", moduleName.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_ADD_HQF_FAILED;
         }
     }
     newInnerAppQuickFix.SetQuickFixMark(mark);
-    LOG_D(BMSTag::QUICK_FIX, "ToInnerAppQuickFix end");
+    LOG_D(BMS_TAG_QUICK_FIX, "ToInnerAppQuickFix end");
     return ERR_OK;
 }
 
@@ -560,18 +560,18 @@ ErrCode QuickFixDeployer::CheckPatchVersionCode(
         (newInfo.versionCode > oldInfoDeploying.versionCode)) {
         return ERR_OK;
     }
-    LOG_E(BMSTag::QUICK_FIX, "CheckPatchVersionCode failed, version code should be greater than the original");
+    LOG_E(BMS_TAG_QUICK_FIX, "CheckPatchVersionCode failed, version code should be greater than the original");
     return ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_CODE_ERROR;
 }
 
 ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
     if ((GetQuickFixDataMgr() != ERR_OK)) {
-        LOG_E(BMSTag::QUICK_FIX, "error: quickFixDataMgr_ is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "error: quickFixDataMgr_ is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     if (!quickFixDataMgr_->SaveInnerAppQuickFix(innerAppQuickFix)) {
-        LOG_E(BMSTag::QUICK_FIX, "bundleName: %{public}s, inner app quick fix save failed",
+        LOG_E(BMS_TAG_QUICK_FIX, "bundleName: %{public}s, inner app quick fix save failed",
             innerAppQuickFix.GetAppQuickFix().bundleName.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED;
     }
@@ -580,9 +580,9 @@ ErrCode QuickFixDeployer::SaveAppQuickFix(const InnerAppQuickFix &innerAppQuickF
 
 ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const std::string &targetPath)
 {
-    LOG_D(BMSTag::QUICK_FIX, "MoveHqfFiles start.");
+    LOG_D(BMS_TAG_QUICK_FIX, "MoveHqfFiles start.");
     if (targetPath.empty() || (GetQuickFixDataMgr() != ERR_OK)) {
-        LOG_E(BMSTag::QUICK_FIX, "MoveHqfFiles params error");
+        LOG_E(BMS_TAG_QUICK_FIX, "MoveHqfFiles params error");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     QuickFixMark mark = innerAppQuickFix.GetQuickFixMark();
@@ -593,13 +593,13 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     }
     for (HqfInfo &info : appQuickFix.deployingAppqfInfo.hqfInfos) {
         if (info.hqfFilePath.empty()) {
-            LOG_E(BMSTag::QUICK_FIX, "error hapFilePath is empty");
+            LOG_E(BMS_TAG_QUICK_FIX, "error hapFilePath is empty");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
         ErrCode ret = InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
-            LOG_E(BMSTag::QUICK_FIX, "error CopyFile failed, errcode: %{public}d", ret);
+            LOG_E(BMS_TAG_QUICK_FIX, "error CopyFile failed, errcode: %{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
@@ -607,7 +607,7 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     mark.status = QuickFixStatus::DEPLOY_END;
     innerAppQuickFix.SetQuickFixMark(mark);
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
-    LOG_D(BMSTag::QUICK_FIX, "MoveHqfFiles end.");
+    LOG_D(BMS_TAG_QUICK_FIX, "MoveHqfFiles end.");
     return ERR_OK;
 }
 
@@ -621,7 +621,7 @@ ErrCode QuickFixDeployer::GetQuickFixDataMgr()
     if (quickFixDataMgr_ == nullptr) {
         quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
         if (quickFixDataMgr_ == nullptr) {
-            LOG_E(BMSTag::QUICK_FIX, "error: quickFixDataMgr_ is nullptr");
+            LOG_E(BMS_TAG_QUICK_FIX, "error: quickFixDataMgr_ is nullptr");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
         }
     }
@@ -632,14 +632,14 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "error dataMgr is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "error dataMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     const std::string &bundleName = newInnerAppQuickFix.GetAppQuickFix().bundleName;
     InnerBundleInfo innerBundleInfo;
     // obtain innerBundleInfo and enableGuard used to enable bundle which is under disable status
     if (!dataMgr->GetInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMSTag::QUICK_FIX, "cannot obtain the innerbundleInfo from data mgr");
+        LOG_E(BMS_TAG_QUICK_FIX, "cannot obtain the innerbundleInfo from data mgr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
     }
     ScopeGuard enableGuard([&bundleName, &dataMgr] { dataMgr->EnableBundle(bundleName); });
@@ -650,7 +650,7 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
     innerBundleInfo.SetAppQuickFix(appQuickFix);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataMgr->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMSTag::QUICK_FIX, "update quickfix innerbundleInfo failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "update quickfix innerbundleInfo failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // send quick fix data
@@ -663,23 +663,23 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
 {
     for (const auto &path : bundleFilePaths) {
         if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
-            LOG_E(BMSTag::QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
+            LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         if (path.find(Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
             Constants::SECURITY_QUICK_FIX_PATH + Constants::PATH_SEPARATOR) != 0) {
-            LOG_E(BMSTag::QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
+            LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
     }
     ErrCode ret = BundleUtil::CheckFilePath(bundleFilePaths, realFilePaths);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "ProcessBundleFilePaths CheckFilePath failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths CheckFilePath failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     for (const auto &path : realFilePaths) {
         if (!BundleUtil::CheckFileType(path, Constants::QUICK_FIX_FILE_SUFFIX)) {
-            LOG_E(BMSTag::QUICK_FIX, "ProcessBundleFilePaths CheckFileType failed.");
+            LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths CheckFileType failed.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
     }
@@ -703,10 +703,10 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
 ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
     const AppQuickFix &appQuickFix, const std::string &hqfSoPath, const BundleInfo &bundleInfo)
 {
-    LOG_D(BMSTag::QUICK_FIX, "start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    LOG_D(BMS_TAG_QUICK_FIX, "start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     if (appQfInfo.hqfInfos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "hqfInfos is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "hqfInfos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     for (const auto &hqf : appQfInfo.hqfInfos) {
@@ -715,7 +715,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
                 return info.moduleName == hqf.moduleName;
             });
         if (iter == bundleInfo.hapModuleInfos.end()) {
-            LOG_W(BMSTag::QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            LOG_W(BMS_TAG_QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
             continue;
         }
 
@@ -723,7 +723,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
         std::string cpuAbi;
         bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
         if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
-            LOG_D(BMSTag::QUICK_FIX, "no so file");
+            LOG_D(BMS_TAG_QUICK_FIX, "no so file");
             continue;
         }
         std::string soPath = hqfSoPath + Constants::PATH_SEPARATOR + libraryPath;
@@ -733,11 +733,11 @@ ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
         extractParam.targetPath = soPath;
         extractParam.cpuAbi = cpuAbi;
         if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
-            LOG_W(BMSTag::QUICK_FIX, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
+            LOG_W(BMS_TAG_QUICK_FIX, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
             continue;
         }
     }
-    LOG_D(BMSTag::QUICK_FIX, "end");
+    LOG_D(BMS_TAG_QUICK_FIX, "end");
     return ERR_OK;
 }
 
@@ -752,31 +752,31 @@ ErrCode QuickFixDeployer::ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, 
 
         InnerBundleInfo innerBundleInfo;
         if (!FetchInnerBundleInfo(appQuickFix.bundleName, innerBundleInfo)) {
-            LOG_E(BMSTag::QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
+            LOG_E(BMS_TAG_QUICK_FIX, "Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
         }
         int32_t bundleUid = Constants::INVALID_UID;
         if (innerBundleInfo.IsEncryptedMoudle(hqf.moduleName)) {
             InnerBundleUserInfo innerBundleUserInfo;
             if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
-                LOG_E(BMSTag::QUICK_FIX, "no user info of bundle %{public}s", appQuickFix.bundleName.c_str());
+                LOG_E(BMS_TAG_QUICK_FIX, "no user info of bundle %{public}s", appQuickFix.bundleName.c_str());
                 return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
             }
             bundleUid = innerBundleUserInfo.uid;
             if (!ExtractEncryptedSoFiles(bundleInfo, hqf.moduleName, bundleUid, tmpSoPath)) {
-                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
+                LOG_W(BMS_TAG_QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
                 continue;
             }
         } else {
             if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
-                LOG_W(BMSTag::QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
+                LOG_W(BMS_TAG_QUICK_FIX, "module:%{public}s has no so file", hqf.moduleName.c_str());
                 continue;
             }
         }
 
         auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath, bundleUid);
         if (result != ERR_OK) {
-            LOG_E(BMSTag::QUICK_FIX, "bundleName: %{public}s Process failed.", appQuickFix.bundleName.c_str());
+            LOG_E(BMS_TAG_QUICK_FIX, "bundleName: %{public}s Process failed.", appQuickFix.bundleName.c_str());
             return result;
         }
     }
@@ -813,7 +813,7 @@ bool QuickFixDeployer::ExtractSoFiles(
     extractParam.targetPath = tmpSoPath;
     extractParam.cpuAbi = cpuAbi;
     if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
-        LOG_W(BMSTag::QUICK_FIX, "bundleName: %{public}s moduleName: %{public}s extract so failed, ",
+        LOG_W(BMS_TAG_QUICK_FIX, "bundleName: %{public}s moduleName: %{public}s extract so failed, ",
             bundleInfo.name.c_str(), moduleName.c_str());
         return false;
     }
@@ -836,14 +836,14 @@ ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, 
     // extract diff so to targetPath
     auto ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "error: ExtractDiffFiles failed errcode :%{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "error: ExtractDiffFiles failed errcode :%{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
     }
     // apply diff patch
     std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
     ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     if (ret != ERR_OK) {
-        LOG_E(BMSTag::QUICK_FIX, "ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
+        LOG_E(BMS_TAG_QUICK_FIX, "ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
             appQuickFix.bundleName.c_str(), ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
@@ -853,7 +853,7 @@ ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, 
 bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName,
     int32_t uid, std::string &tmpSoPath)
 {
-    LOG_D(BMSTag::QUICK_FIX, "start to extract decoded so files to tmp path");
+    LOG_D(BMS_TAG_QUICK_FIX, "start to extract decoded so files to tmp path");
     auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
         [&moduleName](const HapModuleInfo &info) {
             return info.moduleName == moduleName;
@@ -879,7 +879,7 @@ bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, con
     }
     tmpSoPath = (tmpSoPath.back() == Constants::PATH_SEPARATOR[0]) ? (tmpSoPath + moduleName) :
         (tmpSoPath + Constants::PATH_SEPARATOR + moduleName + Constants::PATH_SEPARATOR);
-    LOG_D(BMSTag::QUICK_FIX, "real so path is %{public}s tmpSoPath is %{public}s",
+    LOG_D(BMS_TAG_QUICK_FIX, "real so path is %{public}s tmpSoPath is %{public}s",
         realSoFilesPath.c_str(), tmpSoPath.c_str());
     return InstalldClient::GetInstance()->ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid) ==
         ERR_OK;
@@ -892,7 +892,7 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
     std::string cpuAbi;
     bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
     if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
-        LOG_I(BMSTag::QUICK_FIX, "no so file");
+        LOG_I(BMS_TAG_QUICK_FIX, "no so file");
         codeSignatureParam.targetSoPath = "";
     } else {
         std::string soPath = hqfSoPath.substr(0, hqfSoPath.rfind(Constants::PATH_SEPARATOR) + 1) + libraryPath;
@@ -913,7 +913,7 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
     const InnerAppQuickFix &innerAppQuickFix, const std::string &hqfSoPath)
 {
     AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
-    LOG_D(BMSTag::QUICK_FIX, "start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    LOG_D(BMS_TAG_QUICK_FIX, "start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
     BundleInfo bundleInfo;
     if (GetBundleInfo(appQuickFix.bundleName, bundleInfo) != ERR_OK) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
@@ -923,7 +923,7 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
     }
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     if (appQfInfo.hqfInfos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "hqfInfos is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "hqfInfos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     for (const auto &hqf : appQfInfo.hqfInfos) {
@@ -932,7 +932,7 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
                 return info.moduleName == hqf.moduleName;
             });
         if (iter == bundleInfo.hapModuleInfos.end()) {
-            LOG_W(BMSTag::QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            LOG_W(BMS_TAG_QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
             continue;
         }
 
@@ -940,18 +940,18 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
         PrepareCodeSignatureParam(appQuickFix, hqf, bundleInfo, hqfSoPath, codeSignatureParam);
         ErrCode ret = InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
         if (ret != ERR_OK) {
-            LOG_E(BMSTag::QUICK_FIX, "moduleName: %{public}s verify code signature failed", hqf.moduleName.c_str());
+            LOG_E(BMS_TAG_QUICK_FIX, "moduleName: %{public}s verify code signature failed", hqf.moduleName.c_str());
             return ret;
         }
     }
-    LOG_D(BMSTag::QUICK_FIX, "end");
+    LOG_D(BMS_TAG_QUICK_FIX, "end");
     return ERR_OK;
 }
 
 ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
     const std::vector<std::string> bundleFilePaths, const BundleInfo &bundleInfo)
 {
-    LOG_D(BMSTag::QUICK_FIX, "start, bundleName:%{public}s", bundleInfo.name.c_str());
+    LOG_D(BMS_TAG_QUICK_FIX, "start, bundleName:%{public}s", bundleInfo.name.c_str());
     if (bundleInfo.applicationInfo.debug &&
         (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ERR_OK;
@@ -959,7 +959,7 @@ ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
     PatchParser patchParser;
     bool hasResourceFile = patchParser.HasResourceFile(bundleFilePaths);
     if (hasResourceFile) {
-        LOG_W(BMSTag::QUICK_FIX, "bundleName:%{public}s check resource failed", bundleInfo.name.c_str());
+        LOG_W(BMS_TAG_QUICK_FIX, "bundleName:%{public}s check resource failed", bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED;
     }
     return ERR_OK;
@@ -967,10 +967,10 @@ ErrCode QuickFixDeployer::CheckHqfResourceIsValid(
 
 ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo)
 {
-    LOG_D(BMSTag::QUICK_FIX, "ExtractQuickFixResFile start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    LOG_D(BMS_TAG_QUICK_FIX, "ExtractQuickFixResFile start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     if (appQfInfo.hqfInfos.empty()) {
-        LOG_E(BMSTag::QUICK_FIX, "hqfInfos is empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "hqfInfos is empty");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
     }
     for (const auto &hqf : appQfInfo.hqfInfos) {
@@ -979,7 +979,7 @@ ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix,
                 return info.moduleName == hqf.moduleName;
             });
         if (iter == bundleInfo.hapModuleInfos.end()) {
-            LOG_W(BMSTag::QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            LOG_W(BMS_TAG_QUICK_FIX, "moduleName:%{public}s not exist", hqf.moduleName.c_str());
             continue;
         }
 
@@ -990,11 +990,11 @@ ErrCode QuickFixDeployer::ExtractQuickFixResFile(const AppQuickFix &appQuickFix,
         extractParam.srcPath = hqf.hqfFilePath;
         extractParam.targetPath = targetPath;
         if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
-            LOG_W(BMSTag::QUICK_FIX, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
+            LOG_W(BMS_TAG_QUICK_FIX, "moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
             continue;
         }
     }
-    LOG_D(BMSTag::QUICK_FIX, "ExtractQuickFixResFile end");
+    LOG_D(BMS_TAG_QUICK_FIX, "ExtractQuickFixResFile end");
     return ERR_OK;
 }
 } // AppExecFwk
