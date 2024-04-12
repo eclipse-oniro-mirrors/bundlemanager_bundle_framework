@@ -2987,6 +2987,18 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     return true;
 }
 
+bool BundleDataMgr::GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName,
+    const int32_t flags, InnerBundleInfo &info, int32_t userId) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    bool res = GetInnerBundleInfoWithFlags(bundleName, flags, info, userId);
+    if (!res) {
+        APP_LOGD("GetInnerBundleInfoWithBundleFlagsAndLock: bundleName %{public}s not find", bundleName.c_str());
+        return res;
+    }
+    return true;
+}
+
 ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId) const
 {

@@ -199,9 +199,9 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
     }
     InnerBundleInfo innerBundleInfo;
     int32_t flag = ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE;
-    auto ret = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, flag, innerBundleInfo, userId);
+    auto ret = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName, flag, innerBundleInfo, userId);
     if (!ret) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "GetInnerBundleInfoWithFlags failed.");
+        LOG_E(BMS_TAG_FREE_INSTALL, "GetInnerBundleInfoWithBundleFlagsAndLock failed.");
         return false;
     }
     if (innerBundleInfo.GetBaseApplicationInfo().bundleType != BundleType::ATOMIC_SERVICE) {
@@ -944,10 +944,10 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
         LOG_E(BMS_TAG_FREE_INSTALL, "GetDataMgr failed, bundleDataMgr_ is nullptr");
         return false;
     }
-    bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName,
+    bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName,
         flags, innerBundleInfo, userId);
     if (!innerBundleInfoResult) {
-        APP_LOGE("GetInnerBundleInfoWithFlags failed.");
+        APP_LOGE("GetInnerBundleInfoWithBundleFlagsAndLock failed.");
         return false;
     }
     if (abilityName.empty()) {
@@ -1084,7 +1084,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     }
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo innerBundleInfo;
-    bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, want.GetFlags(), innerBundleInfo, userId);
+    bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName, want.GetFlags(), innerBundleInfo, userId);
     if (!innerBundleInfo.GetEntryInstallationFree()) {
         LOG_I(BMS_TAG_FREE_INSTALL, "bundleName:%{public}s is atomic application", bundleName.c_str());
         return;
@@ -1171,8 +1171,8 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     }
     callerInfo.callerAppProvisionType = callerAppInfo.appProvisionType;
     InnerBundleInfo info;
-    ScopeGuard enableGuard([&] { bundleDataMgr_->EnableBundle(callerBundleName); });
-    bool getInnerBundleInfoRes = bundleDataMgr_->GetInnerBundleInfo(callerBundleName, info);
+    bool getInnerBundleInfoRes = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(callerBundleName,
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, info, userId);
     if (!getInnerBundleInfoRes) {
         APP_LOGW("Get callerInnerBundleInfo failed.");
         return;
