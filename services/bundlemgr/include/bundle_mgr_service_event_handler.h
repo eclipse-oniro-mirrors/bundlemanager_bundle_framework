@@ -535,6 +535,8 @@ private:
     void CheckALLResourceInfo();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
+    // Used to delete all bundle resource Info
+    void DeleteAllBundleResourceInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.

@@ -1055,6 +1055,7 @@ void BMSEventHandler::ProcessRebootBundle()
     APP_LOGI("BMSEventHandler Process reboot bundle start");
     ProcessRebootDeleteAotPath();
     LoadAllPreInstallBundleInfos();
+    DeleteAllBundleResourceInfo();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -2594,6 +2595,15 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     eventInfo.errCode = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
+}
+
+void BMSEventHandler::DeleteAllBundleResourceInfo()
+{
+    APP_LOGI("delete all bundle resource when ota start");
+    if (!BundleResourceHelper::DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource failed");
+    }
+    APP_LOGI("delete all bundle resource when ota end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
