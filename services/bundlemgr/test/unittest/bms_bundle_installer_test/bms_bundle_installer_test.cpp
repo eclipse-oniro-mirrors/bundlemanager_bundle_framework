@@ -5529,4 +5529,163 @@ HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0030, Function | SmallTest | Le
     installer.PrepareSkillUri(skills, skillUris);
     EXPECT_EQ(skillUris.size(), 1);
 }
+
+/**
+ * @tc.number: UpdateBundleForSelf_0100
+ * @tc.name: test Install
+ * @tc.desc: test UpdateBundleForSelf of BundleInstallerHost
+*/
+HWTEST_F(BmsBundleInstallerTest, UpdateBundleForSelf_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    bool ret = bundleInstallerHost.UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0100
+ * @tc.name: test ExtractEncryptedSoFiles
+ * @tc.desc: test ExtractEncryptedSoFiles of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractEncryptedSoFiles_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    std::string tmpSoPath = "";
+    int32_t uid = -1;
+    bool ret = installer.ExtractEncryptedSoFiles(info, tmpSoPath, uid);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CopyPgoFile_0100
+ * @tc.name: test CopyPgoFile
+ * @tc.desc: test CopyPgoFile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CopyPgoFile_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto ret = installer.CopyPgoFile("", "", "", USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0100
+ * @tc.name: test UninstallBundleFromBmsExtension
+ * @tc.desc: test UninstallBundleFromBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    auto ret = installer.UninstallBundleFromBmsExtension("");
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallBundleFromBmsExtension_0200
+ * @tc.name: test UninstallBundleFromBmsExtension_0100
+ * @tc.desc: test UninstallBundleFromBmsExtension_0100 of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    
+    BaseBundleInstaller installer;
+    auto ret = installer.UninstallBundleFromBmsExtension(BUNDLE_BACKUP_NAME);
+    EXPECT_NE(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: CheckBundleInBmsExtension_0100
+ * @tc.name: test CheckBundleInBmsExtension
+ * @tc.desc: test CheckBundleInBmsExtension of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckBundleInBmsExtension, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    auto ret = installer.CheckBundleInBmsExtension(BUNDLE_BACKUP_NAME, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: UpdateHapToken_0100
+ * @tc.name: test UpdateHapToken
+ * @tc.desc: test UpdateHapToken of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, UpdateHapToken_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo newInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.accessTokenId = 0;
+    innerBundleUserInfos.try_emplace(BUNDLE_NAME, info);
+    info.accessTokenId = -1;
+    innerBundleUserInfos.try_emplace(BUNDLE_NAME, info);
+    newInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    BaseBundleInstaller installer;
+    auto ret = installer.UpdateHapToken(true, newInfo);
+    EXPECT_NE(ret, ERR_OK);
+
+    ret = installer.UpdateHapToken(false, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithVector_0100
+ * @tc.name: test CreateBundleDataDirWithVector
+ * @tc.desc: test CreateBundleDataDirWithVector of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDirWithVector_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<CreateDirParam> createDirParams;
+    auto ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_OK);
+
+    CreateDirParam createDirParam;
+    createDirParams.push_back(createDirParam);
+    ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test GetAllBundleStats
+ * @tc.desc: test GetAllBundleStats of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> bundleNames;
+    std::vector<int64_t> bundleStats = { 0 };
+    std::vector<int32_t> uids;
+    bundleNames.push_back(TEST_STRING);
+    uids.push_back(EDM_UID);
+    auto ret = hostImpl.GetAllBundleStats(bundleNames, EDM_UID, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsExistApFile_0100
+ * @tc.name: test IsExistApFile
+ * @tc.desc: test IsExistApFile of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, IsExistApFile_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    bool isExist = true;
+    auto ret = hostImpl.IsExistApFile(TEST_STRING, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
