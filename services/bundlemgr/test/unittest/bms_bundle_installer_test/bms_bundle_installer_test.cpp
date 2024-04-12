@@ -30,6 +30,9 @@
 #include "app_control_manager_host_impl.h"
 #include "app_control_constants.h"
 #endif
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+#include "app_domain_verify_mgr_client.h"
+#endif
 #include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
@@ -5459,5 +5462,71 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | 
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, -1);
     UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: PrepareSkillUri_0010
+ * @tc.name: PrepareSkillUriNotDomainVerify
+ * @tc.desc: test PrepareSkillUri without domainVerify
+ */
+HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0010, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    SkillUri skillUri;
+    skillUri.scheme = "https";
+    skillUri.host = "www.test.com";
+    skill.uris.push_back(skillUri);
+    skill.domainVerify = false;
+    skills.push_back(skill);
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+
+    BaseBundleInstaller installer;
+    installer.PrepareSkillUri(skills, skillUris);
+    EXPECT_EQ(skillUris.size(), 0);
+}
+
+/**
+ * @tc.number: PrepareSkillUri_0020
+ * @tc.name: PrepareSkillUriNotHttps
+ * @tc.desc: test PrepareSkillUri without https
+ */
+HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0020, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    SkillUri skillUri;
+    skillUri.scheme = "http";
+    skillUri.host = "www.test.com";
+    skill.uris.push_back(skillUri);
+    skill.domainVerify = true;
+    skills.push_back(skill);
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+
+    BaseBundleInstaller installer;
+    installer.PrepareSkillUri(skills, skillUris);
+    EXPECT_EQ(skillUris.size(), 0);
+}
+
+/**
+ * @tc.number: PrepareSkillUri_0030
+ * @tc.name: PrepareSkillUriSuccess
+ * @tc.desc: test PrepareSkillUri success
+ */
+HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0030, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    SkillUri skillUri;
+    skillUri.scheme = "https";
+    skillUri.host = "www.test.com";
+    skill.uris.push_back(skillUri);
+    skill.domainVerify = true;
+    skills.push_back(skill);
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+
+    BaseBundleInstaller installer;
+    installer.PrepareSkillUri(skills, skillUris);
+    EXPECT_EQ(skillUris.size(), 1);
 }
 } // OHOS

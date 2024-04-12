@@ -904,4 +904,65 @@ HWTEST_F(BmsServiceStartupTest, Marshalling_0200, Function | SmallTest | Level1)
     ASSERT_NE(ptr, nullptr);
     delete(ptr);
 }
+
+/**
+ * @tc.number: Marshalling_0300
+ * @tc.name: Marshalling
+ * @tc.desc: test Marshalling of BmsExperienceRule
+ */
+HWTEST_F(BmsServiceStartupTest, Marshalling_0300, Function | SmallTest | Level1)
+{
+    BmsExperienceRule rule;
+    Parcel parcel;
+    bool res = rule.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+
+    auto ptr = rule.Unmarshalling(parcel);
+    ASSERT_NE(ptr, nullptr);
+    delete(ptr);
+}
+
+/**
+ * @tc.number: Marshalling_0400
+ * @tc.name: Marshalling
+ * @tc.desc: test Marshalling of BmsCallerInfo
+ */
+HWTEST_F(BmsServiceStartupTest, Marshalling_0400, Function | SmallTest | Level1)
+{
+    BmsCallerInfo info;
+    Parcel parcel;
+    bool res = info.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+
+    auto ptr = info.Unmarshalling(parcel);
+    ASSERT_NE(ptr, nullptr);
+    delete(ptr);
+}
+
+/**
+ * @tc.number: CheckConnectService_0100
+ * @tc.name: CheckConnectService
+ * @tc.desc: test CheckConnectService of BmsEcologicalRuleMgrServiceClient
+ */
+HWTEST_F(BmsServiceStartupTest, CheckConnectService_0100, Function | SmallTest | Level1)
+{
+    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    bool ret = client->CheckConnectService();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: QueryFreeInstallExperience_0100
+ * @tc.name: QueryFreeInstallExperience
+ * @tc.desc: test QueryFreeInstallExperience of BmsEcologicalRuleMgrServiceClient
+ */
+HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0100, Function | SmallTest | Level1)
+{
+    auto client = BmsEcologicalRuleMgrServiceClient::GetInstance();
+    Want want;
+    BmsCallerInfo callerInfo;
+    BmsExperienceRule rule;
+    auto ret = client->QueryFreeInstallExperience(want, callerInfo, rule);
+    EXPECT_EQ(ret, OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED);
+}
 } // OHOS

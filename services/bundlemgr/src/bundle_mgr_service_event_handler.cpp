@@ -1433,7 +1433,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+        if (!OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
             SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -1980,6 +1980,34 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    return ret == ERR_OK;
+}
+
+bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
+    const std::vector<std::string> &filePaths,
+    const std::string &bundleName,
+    Constants::AppType appType,
+    bool removable)
+{
+    if (filePaths.empty()) {
+        APP_LOGE("File path is empty");
+        return false;
+    }
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
+    SystemBundleInstaller installer;
+    ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }

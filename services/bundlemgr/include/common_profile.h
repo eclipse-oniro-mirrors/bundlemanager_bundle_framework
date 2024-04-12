@@ -135,6 +135,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "inst
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ACTIONS = "actions";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ENTITIES = "entities";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_URIS = "uris";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY = "domainVerify";
 // sub BUNDLE_MODULE_PROFILE_KEY_URIS
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_SCHEME = "scheme";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_HOST = "host";
