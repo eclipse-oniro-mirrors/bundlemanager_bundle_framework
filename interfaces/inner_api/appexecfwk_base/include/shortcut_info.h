@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHORTCUT_INFO_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHORTCUT_INFO_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include "parcel.h"
@@ -26,7 +27,7 @@ struct ShortcutWant {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
-    std::string shortcutUri;
+    std::map<std::string, std::string> parameters;
 };
 
 struct Shortcut {
@@ -46,7 +47,7 @@ struct ShortcutIntent {
     std::string targetBundle;
     std::string targetModule;
     std::string targetClass;
-    std::string shortcutUri;
+    std::map<std::string, std::string> parameters;
 };
 
 struct ShortcutInfo : public Parcelable {

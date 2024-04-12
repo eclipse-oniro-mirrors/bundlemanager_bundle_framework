@@ -166,6 +166,7 @@ constexpr const char* PERMISSION_UNINSTALL_SANDBOX_BUNDLE = "ohos.permission.UNI
 constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 

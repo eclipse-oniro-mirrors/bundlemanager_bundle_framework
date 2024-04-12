@@ -137,7 +137,6 @@ const std::string SHORTCUT_DISABLE_MESSAGE = "shortcutDisableMessage";
 const std::string SHORTCUT_INTENTS_TARGET_BUNDLE = "targetBundle";
 const std::string SHORTCUT_INTENTS_TARGET_MODULE = "targetModule";
 const std::string SHORTCUT_INTENTS_TARGET_CLASS = "targetClass";
-const std::string SHORTCUT_INTENTS_SHORTCUT_URI = "shortcutUri";
 const std::string COMMON_EVENT_NAME = ".MainAbililty";
 const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
@@ -599,7 +598,6 @@ ShortcutInfo BmsBundleDataMgrTest::MockShortcutInfo(
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
@@ -610,7 +608,6 @@ ShortcutIntent BmsBundleDataMgrTest::MockShortcutIntent() const
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     return shortcutIntent;
 }
 
@@ -875,7 +872,7 @@ HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfoV9_0200, Function | Small
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
-    
+
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -1093,7 +1090,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetApplicationInfos_0100, Function | SmallTest | 
 HWTEST_F(BmsBundleDataMgrTest, GetApplicationInfos_0200, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    
+
     std::vector<ApplicationInfo> abilityInfo;
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
