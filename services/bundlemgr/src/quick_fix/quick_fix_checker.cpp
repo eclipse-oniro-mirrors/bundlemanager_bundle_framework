@@ -285,17 +285,8 @@ ErrCode QuickFixChecker::CheckMultiNativeSo(
 
 std::string QuickFixChecker::GetAppDistributionType(const Security::Verify::AppDistType &type)
 {
-    std::unordered_map<Security::Verify::AppDistType, std::string> map = {
-        { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
-        { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-        { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-        { Security::Verify::AppDistType::ENTERPRISE_NORMAL, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
-        { Security::Verify::AppDistType::ENTERPRISE_MDM, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
-        { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-        { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-    };
-    auto typeIter = map.find(type);
-    if (typeIter == map.end()) {
+    auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(type);
+    if (typeIter == APP_DISTRIBUTION_TYPE_MAPS.end()) {
         LOG_E(BMS_TAG_QUICK_FIX, "wrong AppDistType");
         return Constants::APP_DISTRIBUTION_TYPE_NONE;
     }
