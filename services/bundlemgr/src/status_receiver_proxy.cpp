@@ -31,7 +31,7 @@ namespace {
 // struct for transform internal error code/message to result which open to developer
 struct ReceivedResult {
     int32_t clientCode = -1;
-    std::string clientMessage;
+    const char* clientMessage;
 };
 
 const char* MSG_SUCCESS = "[SUCCESS]";
