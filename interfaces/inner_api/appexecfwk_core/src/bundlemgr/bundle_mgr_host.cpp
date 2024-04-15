@@ -3265,9 +3265,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    const size_t  newDataCapacity = 409600; // 400k
-
-    if (vectorSize > 500 && !reply.SetDataCapacity(newDataCapacity)) {
+    if (vectorSize > 500 && !reply.SetDataCapacity(Constants::PREINSTALL_PARCEL_CAPACITY)) {
         APP_LOGE("SetDataCapacity failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

@@ -242,6 +242,7 @@ const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
+constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
