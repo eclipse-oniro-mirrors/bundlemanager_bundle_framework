@@ -55,7 +55,7 @@ enum ErrCodeSuffix {
 
 const std::unordered_map<int32_t, std::pair<int32_t, std::string>> errCodeTable{
     {EFAULT, {ZLIB_SYS_CAP_TAG + E_PERM, "Bad address"}},
-    {EINVAL, {ELEGACY_ARGUMENT + E_PERM, "Invalid argument"}},
+    {EINVAL, {ELEGACY_ARGUMENT + E_PERM, "The parameter check failed"}},
     {-1, {ZLIB_SYS_CAP_TAG + E_SRCH, "System error"}},
     {-2, {ZLIB_SYS_CAP_TAG + E_INTR, "ZStream error"}},
     {-3, {ZLIB_SYS_CAP_TAG + E_IO, "Data error"}},
