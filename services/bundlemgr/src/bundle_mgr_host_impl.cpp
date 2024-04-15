@@ -1859,8 +1859,7 @@ bool BundleMgrHostImpl::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 bool BundleMgrHostImpl::GetFormsInfoByApp(const std::string &bundleName, std::vector<FormInfo> &formInfos)
 {
     APP_LOGD("start GetFormsInfoByApp, bundleName : %{public}s", bundleName.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -1878,8 +1877,7 @@ bool BundleMgrHostImpl::GetFormsInfoByModule(
 {
     APP_LOGD("start GetFormsInfoByModule, bundleName : %{public}s, moduleName : %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -2218,8 +2216,7 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
 std::string BundleMgrHostImpl::GetAppPrivilegeLevel(const std::string &bundleName, int32_t userId)
 {
     APP_LOGD("start GetAppPrivilegeLevel");
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return Constants::EMPTY_STRING;
@@ -2926,8 +2923,7 @@ ErrCode BundleMgrHostImpl::GetSharedDependencies(const std::string &bundleName, 
 {
     APP_LOGD("GetSharedDependencies: bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
