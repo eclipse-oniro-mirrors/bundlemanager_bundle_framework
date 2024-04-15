@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
@@ -26,14 +27,14 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : statusCallback_(statusCallback)
 {
-    APP_LOGI("enter QuickFixer");
+    LOG_I(BMS_TAG_QUICK_FIX, "enter QuickFixer");
 }
 
 void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug)
 {
-    APP_LOGI("DeployQuickFix start");
+    LOG_I(BMS_TAG_QUICK_FIX, "DeployQuickFix start");
     if (statusCallback_ == nullptr) {
-        APP_LOGE("DeployQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to nullptr statusCallback");
     }
 
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(bundleFilePaths, isDebug);
@@ -50,9 +51,9 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
 
 void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 {
-    APP_LOGI("SwitchQuickFix start");
+    LOG_I(BMS_TAG_QUICK_FIX, "SwitchQuickFix start");
     if (statusCallback_ == nullptr) {
-        APP_LOGE("SwitchQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_QUICK_FIX, "SwitchQuickFix failed due to nullptr statusCallback");
     }
 
     std::unique_ptr<IQuickFix> switcher = std::make_unique<QuickFixSwitcher>(bundleName, enable);
@@ -70,9 +71,9 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 
 void QuickFixer::DeleteQuickFix(const std::string &bundleName)
 {
-    APP_LOGI("DeleteQuickFix start");
+    LOG_I(BMS_TAG_QUICK_FIX, "DeleteQuickFix start");
     if (statusCallback_ == nullptr) {
-        APP_LOGE("DeleteQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeleteQuickFix failed due to nullptr statusCallback");
     }
 
     std::unique_ptr<IQuickFix> deleter = std::make_unique<QuickFixDeleter>(bundleName);

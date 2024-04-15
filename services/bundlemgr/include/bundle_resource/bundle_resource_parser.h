@@ -30,17 +30,17 @@ public:
 
     ~BundleResourceParser();
     // parse label and icon
-    bool ParseResourceInfo(ResourceInfo &resourceInfo);
+    bool ParseResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
 
     // parse label and icon
-    bool ParseResourceInfos(std::vector<ResourceInfo> &resourceInfos);
+    bool ParseResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     // parse icon resource by hapPath
-    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon);
+    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, ResourceInfo &resourceInfo);
 
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
-    bool ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo);
+    bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);
 
     // parse label resource by hapPath
     bool ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label);
@@ -52,9 +52,23 @@ private:
     bool ParseLabelResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         const int32_t labelId, std::string &label);
 
-    // parse label resource by resourceManager
+    // parse foreground/background/mask icons resource by resourceManager
     bool ParseIconResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        const int32_t iconId, std::string &icon);
+        ResourceInfo &resourceInfo);
+
+    bool ParseForegroundAndBackgroundResource(
+        const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        const std::string &jsonBuff, const int32_t density, ResourceInfo &resourceInfo);
+
+    bool ParseIconIdFromJson(const std::string &jsonBuff, uint32_t &foregroundId, uint32_t &backgroundId);
+
+    bool GetMediaDataById(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        const uint32_t iconId, const int32_t density, std::vector<uint8_t> &data);
+
+    bool ParseThemeIcon(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        const int32_t density, ResourceInfo &resourceInfo);
+
+    void ProcessResourceInfoWhenParseFailed(const ResourceInfo &oldResourceInfo, ResourceInfo &newResourceInfo);
 };
 } // AppExecFwk
 } // OHOS

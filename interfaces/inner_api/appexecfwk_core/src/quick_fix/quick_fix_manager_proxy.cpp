@@ -19,6 +19,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_file_util.h"
@@ -35,46 +36,46 @@ const int32_t DEFAULT_BUFFER_SIZE = 65536;
 
 QuickFixManagerProxy::QuickFixManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IQuickFixManager>(object)
 {
-    APP_LOGI("create QuickFixManagerProxy.");
+    LOG_I(BMS_TAG_QUICK_FIX, "create QuickFixManagerProxy.");
 }
 
 QuickFixManagerProxy::~QuickFixManagerProxy()
 {
-    APP_LOGI("destroy QuickFixManagerProxy.");
+    LOG_I(BMS_TAG_QUICK_FIX, "destroy QuickFixManagerProxy.");
 }
 
 ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
 {
-    APP_LOGI("begin to call DeployQuickFix.");
+    LOG_I(BMS_TAG_QUICK_FIX, "begin to call DeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
-        APP_LOGE("DeployQuickFix failed due to params error.");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to params error.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteStringVector(bundleFilePaths)) {
-        APP_LOGE("write bundleFilePaths failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write bundleFilePaths failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(isDebug)) {
-        APP_LOGE("write isDebug failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write isDebug failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {
-        APP_LOGE("write parcel failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX, data, reply)) {
-        APP_LOGE("SendRequest failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
@@ -84,35 +85,35 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
 ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    APP_LOGI("begin to call SwitchQuickFix.");
+    LOG_I(BMS_TAG_QUICK_FIX, "begin to call SwitchQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
-        APP_LOGE("SwitchQuickFix failed due to params error.");
+        LOG_E(BMS_TAG_QUICK_FIX, "SwitchQuickFix failed due to params error.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("write bundleName failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(enable)) {
-        APP_LOGE("write enable failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write enable failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {
-        APP_LOGE("write parcel failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX, data, reply)) {
-        APP_LOGE("SendRequest failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
@@ -122,31 +123,31 @@ ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool
 ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    APP_LOGI("begin to call DeleteQuickFix.");
+    LOG_I(BMS_TAG_QUICK_FIX, "begin to call DeleteQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (bundleName.empty() || (statusCallback == nullptr)) {
-        APP_LOGE("DeleteQuickFix failed due to params error.");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeleteQuickFix failed due to params error.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("write bundleName failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {
-        APP_LOGE("write parcel failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write parcel failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX, data, reply)) {
-        APP_LOGE("SendRequest failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
 
@@ -155,76 +156,76 @@ ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
 
 ErrCode QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
-    APP_LOGD("begin to create fd.");
+    LOG_D(BMS_TAG_QUICK_FIX, "begin to create fd.");
     if (fileName.empty()) {
-        APP_LOGE("fileName is empty.");
+        LOG_E(BMS_TAG_QUICK_FIX, "fileName is empty.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interface token failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write interface token failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(fileName)) {
-        APP_LOGE("write fileName failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "write fileName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendRequest(QuickFixManagerInterfaceCode::CREATE_FD, data, reply)) {
-        APP_LOGE("send request failed.");
+        LOG_E(BMS_TAG_QUICK_FIX, "send request failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("reply return false.");
+        LOG_E(BMS_TAG_QUICK_FIX, "reply return false.");
         return ret;
     }
     fd = reply.ReadFileDescriptor();
     if (fd < 0) {
-        APP_LOGE("invalid fd.");
+        LOG_E(BMS_TAG_QUICK_FIX, "invalid fd.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_FD_FAILED;
     }
     path = reply.ReadString();
     if (path.empty()) {
-        APP_LOGE("invalid path.");
+        LOG_E(BMS_TAG_QUICK_FIX, "invalid path.");
         close(fd);
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_TARGET_DIR;
     }
-    APP_LOGD("create fd success.");
+    LOG_D(BMS_TAG_QUICK_FIX, "create fd success.");
     return ERR_OK;
 }
 
 ErrCode QuickFixManagerProxy::CopyFiles(
     const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
 {
-    APP_LOGD("begin to copy files.");
+    LOG_D(BMS_TAG_QUICK_FIX, "begin to copy files.");
     if (sourceFiles.empty()) {
-        APP_LOGE("sourceFiles empty.");
+        LOG_E(BMS_TAG_QUICK_FIX, "sourceFiles empty.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     std::vector<std::string> hqfFilePaths;
     if (!BundleFileUtil::CheckFilePath(sourceFiles, hqfFilePaths)) {
-        APP_LOGE("CopyFiles CheckFilePath failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "CopyFiles CheckFilePath failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     for (const std::string &sourcePath : hqfFilePaths) {
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
-            APP_LOGE("invalid sourcePath.");
+            LOG_E(BMS_TAG_QUICK_FIX, "invalid sourcePath.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
         std::string fileName = sourcePath.substr(pos + 1);
-        APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
+        LOG_D(BMS_TAG_QUICK_FIX, "sourcePath:%{private}s fileName:%{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
-            APP_LOGE("open file failed, errno:%{public}d", errno);
+            LOG_E(BMS_TAG_QUICK_FIX, "open file failed, errno:%{public}d", errno);
             return ERR_BUNDLEMANAGER_QUICK_FIX_OPEN_SOURCE_FILE_FAILED;
         }
         int32_t destFd = -1;
         std::string destPath;
         auto ret = CreateFd(fileName, destFd, destPath);
         if ((ret != ERR_OK) || (destFd < 0) || (destPath.empty())) {
-            APP_LOGE("create fd failed.");
+            LOG_E(BMS_TAG_QUICK_FIX, "create fd failed.");
             close(sourceFd);
             return ret;
         }
@@ -232,7 +233,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         int offset = -1;
         while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
             if (write(destFd, buffer, offset) < 0) {
-                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
+                LOG_E(BMS_TAG_QUICK_FIX, "write file to the temp dir failed, errno %{public}d", errno);
                 close(sourceFd);
                 close(destFd);
                 return ERR_BUNDLEMANAGER_QUICK_FIX_WRITE_FILE_FAILED;
@@ -243,7 +244,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
         fsync(destFd);
         close(destFd);
     }
-    APP_LOGD("copy files success.");
+    LOG_D(BMS_TAG_QUICK_FIX, "copy files success.");
     return ERR_OK;
 }
 
@@ -252,12 +253,12 @@ bool QuickFixManagerProxy::SendRequest(QuickFixManagerInterfaceCode code, Messag
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("failed to send request %{public}d due to remote object null.", code);
+        LOG_E(BMS_TAG_QUICK_FIX, "failed to send request %{public}d due to remote object null.", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
+        LOG_E(BMS_TAG_QUICK_FIX, "receive error code %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

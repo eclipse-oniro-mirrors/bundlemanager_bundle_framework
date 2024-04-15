@@ -26,7 +26,7 @@ namespace AppExecFwk {
  */
 class IBundleManagerCallback : public IRemoteBroker {
 public:
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleFramework.BundleManagerCallback");
+    DECLARE_INTERFACE_DESCRIPTOR(u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback");
 
     /**
      * @brief Will be execute when free query rpc id is complete.

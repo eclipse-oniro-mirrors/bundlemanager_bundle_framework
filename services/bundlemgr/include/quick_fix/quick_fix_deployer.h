@@ -104,6 +104,9 @@ private:
 
     void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
 
+    ErrCode ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo,
+        const std::string &patchPath);
+
     bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName, std::string &tmpSoPath);
 
     ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
@@ -117,11 +120,22 @@ private:
 
     ErrCode VerifyCodeSignatureForHqf(const InnerAppQuickFix &innerAppQuickFix, const std::string &hqfSoPath);
 
+    ErrCode CheckHqfResourceIsValid(const std::vector<std::string> bundleFilePaths, const BundleInfo &bundleInfo);
+
+    ErrCode ExtractQuickFixResFile(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
+
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     bool isDebug_ = false;
+
+#define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
+    do {                                                                           \
+        if ((errcode) != ERR_OK) {                                          \
+            return (errcode);                                                          \
+        }                                                                          \
+    } while (0)
 };
 } // AppExecFwk
 } // OHOS

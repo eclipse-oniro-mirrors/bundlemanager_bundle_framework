@@ -97,6 +97,9 @@ public:
      */
     void CreateUninstallTask(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceive);
 
+    void CreateUninstallAndRecoverTask(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver);
+
     void AddTask(const ThreadPoolTask &task, const std::string &taskName);
     size_t GetCurTaskNum();
     int32_t GetThreadsNum()

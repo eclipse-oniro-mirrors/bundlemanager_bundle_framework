@@ -15,6 +15,7 @@
 
 #include "install_result.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
@@ -72,7 +73,7 @@ void from_json(const nlohmann::json &jsonObject, Result &result)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module result from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module result from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -105,7 +106,7 @@ void from_json(const nlohmann::json &jsonObject, Progress &progress)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module progress from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module progress from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -147,7 +148,7 @@ void from_json(const nlohmann::json &jsonObject, InstallResult &installResult)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module installResult from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module installResult from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -171,7 +172,7 @@ Result *Result::Unmarshalling(Parcel &parcel)
 {
     Result *result = new (std::nothrow) Result();
     if (result && !result->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "read from parcel failed");
         delete result;
         result = nullptr;
     }
@@ -196,7 +197,7 @@ Progress *Progress::Unmarshalling(Parcel &parcel)
 {
     Progress *progress = new (std::nothrow) Progress();
     if (progress && !progress->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "read from parcel failed");
         delete progress;
         progress = nullptr;
     }
@@ -238,7 +239,7 @@ InstallResult *InstallResult::Unmarshalling(Parcel &parcel)
 {
     InstallResult *installResult = new (std::nothrow) InstallResult();
     if (installResult && !installResult->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "read from parcel failed");
         delete installResult;
         installResult = nullptr;
     }

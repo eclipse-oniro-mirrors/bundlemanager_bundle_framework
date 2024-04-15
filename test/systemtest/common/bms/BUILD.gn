@@ -76,6 +76,7 @@ group("systemtest_bms") {
     "acts_bms_kit_system_test:systemtest",
     "bms_app_control_host_test:systemtest",
     "bms_bundle_mgr_host_test:systemtest",
+    "bms_bundle_resource_host_test:systemtest",
     "bms_clean_cache_callback_host_test:systemtest",
     "bms_client_system_test:systemtest",
     "bms_code_signature_test:systemtest",
@@ -90,5 +91,6 @@ group("systemtest_bms") {
     "bms_stream_installer_host_test:systemtest",
     "bms_uninstall_system_test:systemtest",
     "bms_verify_manager_host_test:systemtest",
+    "extend_resource_manager_host_test:systemtest",
   ]
 }

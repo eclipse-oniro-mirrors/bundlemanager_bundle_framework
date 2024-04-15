@@ -285,12 +285,12 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
     APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
         permissionName.c_str(), callerToken);
     if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
-        AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
-            callerToken);
-        return false;
+        AccessToken::PermissionState::PERMISSION_GRANTED) {
+        return true;
     }
-    return true;
+    APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
+        callerToken);
+    return false;
 }
 
 bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::string> &permissionNames)

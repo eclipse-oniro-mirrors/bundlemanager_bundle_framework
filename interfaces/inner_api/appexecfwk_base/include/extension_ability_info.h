@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,7 @@ enum class ExtensionAbilityType {
     ACTION = 19,
     ADS_SERVICE = 20,
     EMBEDDED_UI = 21,
+    INSIGHT_INTENT_UI = 22,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -71,6 +72,8 @@ enum class ExtensionAbilityType {
     REMOTE_LOCATION = 261,
     VOIP = 262,
     ACCOUNTLOGOUT = 263,
+    STATUS_BAR_VIEW = 264,
+    LIVEVIEW_LOCKSCREEN = 265,
     SYSDIALOG_USERAUTH = 300,
     SYSDIALOG_COMMON = 301,
     SYSDIALOG_ATOMICSERVICEPANEL = 302,
@@ -89,7 +92,8 @@ enum class ExtensionAbilityType {
     SYSPICKER_APPSELECTOR = 407,
     SYS_COMMON_UI = 500,
     AUTO_FILL_PASSWORD = 501,
-    VPN = 502
+    VPN = 502,
+    AUTO_FILL_SMART = 503
 };
 
 enum class CompileMode {

@@ -15,6 +15,7 @@
 
 #include "service_center_death_recipient.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "parcel.h"
 #include "want.h"
@@ -23,11 +24,11 @@ namespace OHOS {
 namespace AppExecFwk {
 void ServiceCenterDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDeath)
 {
-    APP_LOGI("service center died");
+    LOG_I(BMS_TAG_FREE_INSTALL, "service center died");
 
     auto mgr = connectAbilityMgr_.lock();
     if (mgr == nullptr) {
-        APP_LOGE("mgr pointer is nullptr.");
+        LOG_E(BMS_TAG_FREE_INSTALL, "mgr pointer is nullptr.");
         return;
     }
     mgr->DeathRecipientSendCallback();

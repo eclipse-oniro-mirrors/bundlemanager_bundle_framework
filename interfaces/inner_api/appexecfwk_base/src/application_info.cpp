@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -120,6 +120,11 @@ const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 const std::string APPLICATION_TSAN_ENABLED = "tsanEnabled";
 const std::string APPLICATION_ORGANIZATION = "organization";
+const std::string APPLICATION_APP_ENVIRONMENTS = "appEnvironments";
+const std::string APPLICATION_MULTI_APP_MODE = "multiAppMode";
+const std::string APPLICATION_MAX_INSTANCE_NUM = "maxInstanceNum";
+const std::string APP_ENVIRONMENTS_NAME = "name";
+const std::string APP_ENVIRONMENTS_VALUE = "value";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -233,6 +238,64 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
         }
     }
     return true;
+}
+
+bool ApplicationEnvironment::ReadFromParcel(Parcel &parcel)
+{
+    name = Str16ToStr8(parcel.ReadString16());
+    value = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool ApplicationEnvironment::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(value));
+    return true;
+}
+
+ApplicationEnvironment *ApplicationEnvironment::Unmarshalling(Parcel &parcel)
+{
+    ApplicationEnvironment *info = new (std::nothrow) ApplicationEnvironment();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const ApplicationEnvironment &applicationEnvironment)
+{
+    jsonObject = nlohmann::json {
+        {APP_ENVIRONMENTS_NAME, applicationEnvironment.name},
+        {APP_ENVIRONMENTS_VALUE, applicationEnvironment.value}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applicationEnvironment)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_NAME,
+        applicationEnvironment.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_ENVIRONMENTS_VALUE,
+        applicationEnvironment.value,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ApplicationEnvironment from database error, error code : %{public}d", parseResult);
+    }
 }
 
 bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
@@ -421,6 +484,17 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     applicationReservedFlag = parcel.ReadUint32();
     tsanEnabled = parcel.ReadBool();
     organization = Str16ToStr8(parcel.ReadString16());
+    int32_t applicationEnvironmentsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationEnvironmentsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, applicationEnvironmentsSize, &appEnvironments);
+    for (int32_t i = 0; i < applicationEnvironmentsSize; ++i) {
+        std::unique_ptr<ApplicationEnvironment> applicationEnvironment(parcel.ReadParcelable<ApplicationEnvironment>());
+        if (!applicationEnvironment) {
+            APP_LOGE("ReadParcelable<ApplicationEnvironment> failed");
+            return false;
+        }
+        appEnvironments.emplace_back(*applicationEnvironment);
+    }
     return true;
 }
 
@@ -574,6 +648,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, tsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
+    for (auto &item : appEnvironments) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
     return true;
 }
 
@@ -763,7 +841,10 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
-        {APPLICATION_ORGANIZATION, applicationInfo.organization}
+        {APPLICATION_ORGANIZATION, applicationInfo.organization},
+        {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
+        {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
+        {APPLICATION_MAX_INSTANCE_NUM, applicationInfo.maxInstanceNum}
     };
 }
 
@@ -771,686 +852,185 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_NAME,
-        applicationInfo.name,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        Constants::BUNDLE_NAME,
-        applicationInfo.bundleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_VERSION_CODE,
-        applicationInfo.versionCode,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_VERSION_NAME,
-        applicationInfo.versionName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_MIN_COMPATIBLE_VERSION_CODE,
-        applicationInfo.minCompatibleVersionCode,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_API_COMPATIBLE_VERSION,
-        applicationInfo.apiCompatibleVersion,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_API_TARGET_VERSION,
-        applicationInfo.apiTargetVersion,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ICON_PATH,
-        applicationInfo.iconPath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ICON_ID,
-        applicationInfo.iconId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_LABEL,
-        applicationInfo.label,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_LABEL_ID,
-        applicationInfo.labelId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DESCRIPTION,
-        applicationInfo.description,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DESCRIPTION_ID,
-        applicationInfo.descriptionId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_KEEP_ALIVE,
-        applicationInfo.keepAlive,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_REMOVABLE,
-        applicationInfo.removable,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_SINGLETON,
-        applicationInfo.singleton,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_USER_DATA_CLEARABLE,
-        applicationInfo.userDataClearable,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
-        applicationInfo.allowAppRunWhenDeviceFirstLocked,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ACCESSIBLE,
-        applicationInfo.accessible,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_IS_SYSTEM_APP,
-        applicationInfo.isSystemApp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_IS_LAUNCHER_APP,
-        applicationInfo.isLauncherApp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_IS_FREEINSTALL_APP,
-        applicationInfo.isFreeInstallApp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_RUNNING_RESOURCES_APPLY,
-        applicationInfo.runningResourcesApply,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ASSOCIATED_WAKE_UP,
-        applicationInfo.associatedWakeUp,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_HIDE_DESKTOP_ICON,
-        applicationInfo.hideDesktopIcon,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_FORM_VISIBLE_NOTIFY,
-        applicationInfo.formVisibleNotify,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ALLOW_COMMON_EVENT,
-        applicationInfo.allowCommonEvent,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_CODE_PATH,
-        applicationInfo.codePath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DATA_DIR,
-        applicationInfo.dataDir,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DATA_BASE_DIR,
-        applicationInfo.dataBaseDir,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_CACHE_DIR,
-        applicationInfo.cacheDir,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ENTRY_DIR,
-        applicationInfo.entryDir,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_API_RELEASETYPE,
-        applicationInfo.apiReleaseType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DEBUG,
-        applicationInfo.debug,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DEVICE_ID,
-        applicationInfo.deviceId,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED,
-        applicationInfo.distributedNotificationEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ALLOW_ENABLE_NOTIFICATION,
-        applicationInfo.allowEnableNotification,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ENTITY_TYPE,
-        applicationInfo.entityType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_PROCESS,
-        applicationInfo.process,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_SUPPORTED_MODES,
-        applicationInfo.supportedModes,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_VENDOR,
-        applicationInfo.vendor,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_PRIVILEGE_LEVEL,
-        applicationInfo.appPrivilegeLevel,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ACCESSTOKEN_ID,
-        applicationInfo.accessTokenId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint64_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ACCESSTOKEN_ID_EX,
-        applicationInfo.accessTokenIdEx,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ENABLED,
-        applicationInfo.enabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_UID,
-        applicationInfo.uid,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_PERMISSIONS,
-        applicationInfo.permissions,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_MODULE_SOURCE_DIRS,
-        applicationInfo.moduleSourceDirs,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<std::vector<ModuleInfo>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_MODULE_INFOS,
-        applicationInfo.moduleInfos,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
-    GetValueIfFindKey<std::map<std::string, std::vector<CustomizeData>>>(jsonObject,
-        jsonObjectEnd,
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_NAME,
+        applicationInfo.name, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, Constants::BUNDLE_NAME,
+        applicationInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_VERSION_CODE,
+        applicationInfo.versionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_VERSION_NAME,
+        applicationInfo.versionName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MIN_COMPATIBLE_VERSION_CODE,
+        applicationInfo.minCompatibleVersionCode, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_COMPATIBLE_VERSION,
+        applicationInfo.apiCompatibleVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_API_TARGET_VERSION,
+        applicationInfo.apiTargetVersion, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ICON_PATH,
+        applicationInfo.iconPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_ICON_ID,
+        applicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_LABEL,
+        applicationInfo.label, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_ID,
+        applicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION,
+        applicationInfo.description, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_ID,
+        applicationInfo.descriptionId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_KEEP_ALIVE,
+        applicationInfo.keepAlive, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_REMOVABLE,
+        applicationInfo.removable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_SINGLETON,
+        applicationInfo.singleton, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_USER_DATA_CLEARABLE,
+        applicationInfo.userDataClearable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED,
+        applicationInfo.allowAppRunWhenDeviceFirstLocked, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSIBLE,
+        applicationInfo.accessible, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_SYSTEM_APP,
+        applicationInfo.isSystemApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_LAUNCHER_APP,
+        applicationInfo.isLauncherApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_FREEINSTALL_APP,
+        applicationInfo.isFreeInstallApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_RUNNING_RESOURCES_APPLY,
+        applicationInfo.runningResourcesApply, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ASSOCIATED_WAKE_UP,
+        applicationInfo.associatedWakeUp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_HIDE_DESKTOP_ICON,
+        applicationInfo.hideDesktopIcon, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_FORM_VISIBLE_NOTIFY,
+        applicationInfo.formVisibleNotify, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_COMMON_EVENT,
+        applicationInfo.allowCommonEvent, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CODE_PATH,
+        applicationInfo.codePath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DATA_DIR,
+        applicationInfo.dataDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DATA_BASE_DIR,
+        applicationInfo.dataBaseDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CACHE_DIR,
+        applicationInfo.cacheDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_DIR,
+        applicationInfo.entryDir, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_API_RELEASETYPE,
+        applicationInfo.apiReleaseType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_DEBUG,
+        applicationInfo.debug, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_DEVICE_ID,
+        applicationInfo.deviceId, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED,
+        applicationInfo.distributedNotificationEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ALLOW_ENABLE_NOTIFICATION,
+        applicationInfo.allowEnableNotification, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTITY_TYPE,
+        applicationInfo.entityType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_PROCESS,
+        applicationInfo.process, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_SUPPORTED_MODES,
+        applicationInfo.supportedModes, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_VENDOR,
+        applicationInfo.vendor, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_PRIVILEGE_LEVEL,
+        applicationInfo.appPrivilegeLevel, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSTOKEN_ID,
+        applicationInfo.accessTokenId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint64_t>(jsonObject, jsonObjectEnd, APPLICATION_ACCESSTOKEN_ID_EX,
+        applicationInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ENABLED,
+        applicationInfo.enabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_UID,
+        applicationInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_PERMISSIONS,
+        applicationInfo.permissions, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_MODULE_SOURCE_DIRS,
+        applicationInfo.moduleSourceDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::vector<ModuleInfo>>(jsonObject, jsonObjectEnd, APPLICATION_MODULE_INFOS,
+        applicationInfo.moduleInfos, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetValueIfFindKey<std::map<std::string, std::vector<CustomizeData>>>(jsonObject, jsonObjectEnd,
         APPLICATION_META_DATA_CONFIG_JSON,
-        applicationInfo.metaData,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<Metadata>>>(jsonObject,
-        jsonObjectEnd,
+        applicationInfo.metaData, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::vector<Metadata>>>(jsonObject, jsonObjectEnd,
         APPLICATION_META_DATA_MODULE_JSON,
-        applicationInfo.metadata,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_FINGERPRINT,
-        applicationInfo.fingerprint,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ICON,
-        applicationInfo.icon,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_FLAGS,
-        applicationInfo.flags,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ENTRY_MODULE_NAME,
-        applicationInfo.entryModuleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_NATIVE_LIBRARY_PATH,
-        applicationInfo.nativeLibraryPath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_CPU_ABI,
-        applicationInfo.cpuAbi,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ARK_NATIVE_FILE_PATH,
-        applicationInfo.arkNativeFilePath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ARK_NATIVE_FILE_ABI,
-        applicationInfo.arkNativeFileAbi,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_IS_COMPRESS_NATIVE_LIBS,
-        applicationInfo.isCompressNativeLibs,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_SIGNATURE_KEY,
-        applicationInfo.signatureKey,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_TARGETBUNDLELIST,
-        applicationInfo.targetBundleList,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_DISTRIBUTION_TYPE,
-        applicationInfo.appDistributionType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_PROVISION_TYPE,
-        applicationInfo.appProvisionType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<Resource>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ICON_RESOURCE,
-        applicationInfo.iconResource,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<Resource>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_LABEL_RESOURCE,
-        applicationInfo.labelResource,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<Resource>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_DESCRIPTION_RESOURCE,
-        applicationInfo.descriptionResource,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_MULTI_PROJECTS,
-        applicationInfo.multiProjects,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int64_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_CROWDTEST_DEADLINE,
-        applicationInfo.crowdtestDeadline,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<AppQuickFix>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_QUICK_FIX,
-        applicationInfo.appQuickFix,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_NEED_APP_DETAIL,
-        applicationInfo.needAppDetail,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
-        applicationInfo.appDetailAbilityLibraryPath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_TARGET_BUNDLE_NAME,
-        applicationInfo.targetBundleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_TARGET_PRIORITY,
-        applicationInfo.targetPriority,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_OVERLAY_STATE,
-        applicationInfo.overlayState,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ASAN_ENABLED,
-        applicationInfo.asanEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ASAN_LOG_PATH,
-        applicationInfo.asanLogPath,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<BundleType>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_APP_TYPE,
-        applicationInfo.bundleType,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_COMPILE_SDK_VERSION,
-        applicationInfo.compileSdkVersion,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_COMPILE_SDK_TYPE,
-        applicationInfo.compileSdkType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_RESOURCES_APPLY,
-        applicationInfo.resourcesApply,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::NUMBER);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_GWP_ASAN_ENABLED,
-        applicationInfo.gwpAsanEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_RESERVED_FLAG,
-        applicationInfo.applicationReservedFlag,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_TSAN_ENABLED,
-        applicationInfo.tsanEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_ORGANIZATION,
-        applicationInfo.organization,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+        applicationInfo.metadata, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_FINGERPRINT,
+        applicationInfo.fingerprint, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ICON,
+        applicationInfo.icon, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_FLAGS,
+        applicationInfo.flags, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ENTRY_MODULE_NAME,
+        applicationInfo.entryModuleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_NATIVE_LIBRARY_PATH,
+        applicationInfo.nativeLibraryPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CPU_ABI,
+        applicationInfo.cpuAbi, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_PATH,
+        applicationInfo.arkNativeFilePath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ARK_NATIVE_FILE_ABI,
+        applicationInfo.arkNativeFileAbi, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_IS_COMPRESS_NATIVE_LIBS,
+        applicationInfo.isCompressNativeLibs, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_SIGNATURE_KEY,
+        applicationInfo.signatureKey, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, APPLICATION_TARGETBUNDLELIST,
+        applicationInfo.targetBundleList, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_DISTRIBUTION_TYPE,
+        applicationInfo.appDistributionType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_PROVISION_TYPE,
+        applicationInfo.appProvisionType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_ICON_RESOURCE,
+        applicationInfo.iconResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_LABEL_RESOURCE,
+        applicationInfo.labelResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Resource>(jsonObject, jsonObjectEnd, APPLICATION_DESCRIPTION_RESOURCE,
+        applicationInfo.descriptionResource, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_PROJECTS,
+        applicationInfo.multiProjects, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, APPLICATION_CROWDTEST_DEADLINE,
+        applicationInfo.crowdtestDeadline, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AppQuickFix>(jsonObject, jsonObjectEnd, APPLICATION_APP_QUICK_FIX,
+        applicationInfo.appQuickFix, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_NEED_APP_DETAIL,
+        applicationInfo.needAppDetail, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH,
+        applicationInfo.appDetailAbilityLibraryPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_APP_TARGET_BUNDLE_NAME,
+        applicationInfo.targetBundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_APP_TARGET_PRIORITY,
+        applicationInfo.targetPriority, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject, jsonObjectEnd, APPLICATION_APP_OVERLAY_STATE,
+        applicationInfo.overlayState, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_ASAN_ENABLED,
+        applicationInfo.asanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ASAN_LOG_PATH,
+        applicationInfo.asanLogPath, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, APPLICATION_APP_TYPE,
+        applicationInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_VERSION,
+        applicationInfo.compileSdkVersion, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_COMPILE_SDK_TYPE,
+        applicationInfo.compileSdkType, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, APPLICATION_RESOURCES_APPLY,
+        applicationInfo.resourcesApply, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_GWP_ASAN_ENABLED,
+        applicationInfo.gwpAsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, APPLICATION_RESERVED_FLAG,
+        applicationInfo.applicationReservedFlag, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_TSAN_ENABLED,
+        applicationInfo.tsanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_ORGANIZATION,
+        applicationInfo.organization, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject, jsonObjectEnd,
+        APPLICATION_APP_ENVIRONMENTS,
+        applicationInfo.appEnvironments, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE,
+        applicationInfo.multiAppMode, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MAX_INSTANCE_NUM,
+        applicationInfo.maxInstanceNum, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

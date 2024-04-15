@@ -1359,6 +1359,11 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

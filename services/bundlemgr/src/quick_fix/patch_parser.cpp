@@ -17,35 +17,40 @@
 
 #include <sstream>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "patch_extractor.h"
 #include "patch_profile.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string RESOURCES_RAW_FILE = "resources/rawfile/";
+} // namespace
+
 ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const
 {
-    APP_LOGD("Parse patch.json from %{private}s", pathName.c_str());
+    LOG_D(BMS_TAG_QUICK_FIX, "Parse patch.json from %{private}s", pathName.c_str());
     if (pathName.empty()) {
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
     PatchExtractor patchExtractor(pathName);
     if (!patchExtractor.Init()) {
-        APP_LOGE("patch extractor init failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "patch extractor init failed");
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
     
     std::ostringstream outStreamForHatchInfo;
     if (!patchExtractor.ExtractPatchProfile(outStreamForHatchInfo)) {
-        APP_LOGE("extract patch.json failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "extract patch.json failed");
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
-    APP_LOGD("extract patch complete");
+    LOG_D(BMS_TAG_QUICK_FIX, "extract patch complete");
 
     PatchProfile patchProfile;
     ErrCode ret = patchProfile.TransformTo(outStreamForHatchInfo, patchExtractor, appQuickFix);
     if (ret != ERR_OK) {
-        APP_LOGE("transform stream to appQuickFix failed %{public}d", ret);
+        LOG_E(BMS_TAG_QUICK_FIX, "transform stream to appQuickFix failed %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -54,7 +59,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &ap
 ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
     std::unordered_map<std::string, AppQuickFix> &appQuickFixes) const
 {
-    APP_LOGD("Parse quick fix files start.");
+    LOG_D(BMS_TAG_QUICK_FIX, "Parse quick fix files start.");
     if (filePaths.empty()) {
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
@@ -62,13 +67,40 @@ ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
         AppQuickFix appQuickFix;
         ErrCode result = ParsePatchInfo(filePaths[index], appQuickFix);
         if (result != ERR_OK) {
-            APP_LOGE("quick fix parse failed %{public}d", result);
+            LOG_E(BMS_TAG_QUICK_FIX, "quick fix parse failed %{public}d", result);
             return result;
         }
         appQuickFixes.emplace(filePaths[index], appQuickFix);
     }
-    APP_LOGD("Parse quick fix files end.");
+    LOG_D(BMS_TAG_QUICK_FIX, "Parse quick fix files end.");
     return ERR_OK;
+}
+
+bool PatchParser::HasResourceFile(const std::string &filePath) const
+{
+    LOG_D(BMS_TAG_QUICK_FIX, "check filePath has resource file start");
+    if (filePath.empty()) {
+        return false;
+    }
+    PatchExtractor patchExtractor(filePath);
+    if (!patchExtractor.Init()) {
+        LOG_E(BMS_TAG_QUICK_FIX, "patch extractor init failed");
+        return false;
+    }
+
+    return patchExtractor.IsDirExist(RESOURCES_RAW_FILE);
+}
+
+bool PatchParser::HasResourceFile(const std::vector<std::string> &filePaths) const
+{
+    LOG_D(BMS_TAG_QUICK_FIX, "check filePaths has resource file start");
+    for (size_t index = 0; index < filePaths.size(); ++index) {
+        if (HasResourceFile(filePaths[index])) {
+            return true;
+        }
+    }
+    LOG_D(BMS_TAG_QUICK_FIX, "does not exist resource rawfile");
+    return false;
 }
 } // namespace AppExecFwk
 } // namespace OHOS

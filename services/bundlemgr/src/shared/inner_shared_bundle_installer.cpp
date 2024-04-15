@@ -131,9 +131,9 @@ void InnerSharedBundleInstaller::sendStartSharedBundleInstallNotify(const Instal
         NotifyBundleEvents installRes = {
             .bundleName = item.second.GetBundleName(),
             .modulePackage = item.second.GetCurModuleName(),
+            .type = NotifyType::START_INSTALL,
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .type = NotifyType::START_INSTALL
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         if (NotifyBundleStatusOfShared(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for start install");

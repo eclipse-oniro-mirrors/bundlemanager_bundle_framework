@@ -2269,6 +2269,22 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0011, TestSize.Level1)
 }
 
 /**
+ * @tc.number: BundleMgrClientImpl_0011
+ * @tc.name: CreateBundleDataDir
+ * @tc.desc: 1.Test the interface of CreateBundleDataDir
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0012, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    sptr<IBundleMgr> proxy = GetBundleMgrProxy();
+    impl.bundleMgr_ = proxy;
+    impl.Connect();
+    ErrCode res = impl.CreateBundleDataDir(DEFAULT_USERID);
+    EXPECT_EQ(res, ERR_OK);
+    impl.OnDeath();
+}
+
+/**
  * @tc.number: BundleMgrClientImplIsNull_0400
  * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
  * @tc.desc: 1. test is failed
@@ -2357,41 +2373,19 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0100, TestSize.Level1)
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     VerifyManagerProxy verifyManagerProxy(remoteObject);
     std::vector<std::string> abcPaths;
-    std::vector<std::string> abcNames;
-    ErrCode ret = verifyManagerProxy.Verify(abcPaths, abcNames, true);
+    ErrCode ret = verifyManagerProxy.Verify(abcPaths);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
     abcPaths.push_back(HAP_PATH);
-    ret = verifyManagerProxy.Verify(abcPaths, abcNames, true);
+    ret = verifyManagerProxy.Verify(abcPaths);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_SEND_REQUEST_FAILED);
 }
 
 /**
  * @tc.number: VerifyManagerProxy_0200
- * @tc.name: CreateFd
- * @tc.desc: 1.Test the interface of CreateFd
- */
-HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0200, TestSize.Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    EXPECT_NE(systemAbilityManager, nullptr);
-
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    VerifyManagerProxy verifyManagerProxy(remoteObject);
-    int32_t fd = 4;
-    std::string path;
-    ErrCode ret = verifyManagerProxy.CreateFd("", fd, path);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
-    ret = verifyManagerProxy.CreateFd(BUNDLE_NAME, fd, path);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
- * @tc.number: VerifyManagerProxy_0300
  * @tc.name: RemoveFiles
  * @tc.desc: 1.Test the interface of RemoveFiles
  */
-HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0300, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0200, TestSize.Level1)
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -2407,34 +2401,11 @@ HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0300, TestSize.Level1)
 }
 
 /**
- * @tc.number: VerifyManagerProxy_0400
+ * @tc.number: VerifyManagerProxy_0300
  * @tc.name: CopyFiles
  * @tc.desc: 1.Test the interface of CopyFiles
  */
-HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0400, TestSize.Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    EXPECT_NE(systemAbilityManager, nullptr);
-
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    VerifyManagerProxy verifyManagerProxy(remoteObject);
-    std::vector<std::string> sourceFiles;
-    std::vector<std::string> destFiles;
-    ErrCode ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
-
-    sourceFiles.push_back(HAP_PATH);
-    ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
-}
-
-/**
- * @tc.number: VerifyManagerProxy_0400
- * @tc.name: CopyFiles
- * @tc.desc: 1.Test the interface of CopyFiles
- */
-HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0500, TestSize.Level1)
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0300, TestSize.Level1)
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();

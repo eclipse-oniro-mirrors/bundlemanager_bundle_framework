@@ -99,6 +99,8 @@ const std::string MODULE_QUERY_SCHEMES = "querySchemes";
 const std::string MODULE_APP_ENVIRONMENTS = "appEnvironments";
 const std::string MODULE_ASAN_ENABLED = "asanEnabled";
 const std::string MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
+const std::string MODULE_PACKAGE_NAME = "packageName";
+const std::string MODULE_APP_STARTUP = "appStartup";
 }  // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -300,7 +302,7 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
             }
         }
         // if uri is a file path, match type by the suffix
-        return MatchMimeType(uriString);
+        return MatchMimeType(uriString, matchUriIndex);
     } else if (uriString.empty() && !type.empty()) {
         // case3 : param uri empty, param type not empty
         for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
@@ -458,6 +460,27 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     return false;
 }
 
+bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) const
+{
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+        const SkillUri &skillUri = uris[uriIndex];
+        for (const auto &mimeType : mimeTypes) {
+            if ((MatchUri(uriString, skillUri) ||
+                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(mimeType, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Skill::MatchUtd(const std::string &utd, int32_t count) const
 {
     for (const SkillUri &skillUri : uris) {
@@ -581,6 +604,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_APP_ENVIRONMENTS, info.appEnvironments},
         {MODULE_ASAN_ENABLED, info.asanEnabled},
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
+        {MODULE_PACKAGE_NAME, info.packageName},
+        {MODULE_APP_STARTUP, info.appStartup},
     };
 }
 
@@ -605,7 +630,8 @@ void to_json(nlohmann::json &jsonObject, const Skill &skill)
     jsonObject = nlohmann::json {
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_ACTIONS, skill.actions},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_ENTITIES, skill.entities},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_URIS, skill.uris}
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_URIS, skill.uris},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY, skill.domainVerify},
     };
 }
 
@@ -1143,6 +1169,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PACKAGE_NAME,
+        info.packageName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_STARTUP,
+        info.appStartup,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1276,6 +1318,14 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY,
+        skill.domainVerify,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("Skill from_json error, error code : %{public}d", parseResult);
     }

@@ -17,6 +17,7 @@
 
 #include <algorithm>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
@@ -58,12 +59,12 @@ AppQuickFix InnerAppQuickFix::GetAppQuickFix() const
 bool InnerAppQuickFix::AddHqfInfo(const AppQuickFix &newInfo)
 {
     if (newInfo.deployingAppqfInfo.hqfInfos.empty()) {
-        APP_LOGE("InnerAppQuickFix::AddHqfInfo failed due to hqfInfos empty");
+        LOG_E(BMS_TAG_QUICK_FIX, "InnerAppQuickFix::AddHqfInfo failed due to hqfInfos empty");
         return false;
     }
     for (const auto &item : newInfo.deployingAppqfInfo.hqfInfos) {
         if (!RemoveHqfInfo(item.moduleName)) {
-            APP_LOGD("moduleName %{public}s does not exist", item.moduleName.c_str());
+            LOG_D(BMS_TAG_QUICK_FIX, "moduleName %{public}s does not exist", item.moduleName.c_str());
         }
         appQuickFix_.deployingAppqfInfo.hqfInfos.emplace_back(item);
     }
@@ -77,7 +78,7 @@ bool InnerAppQuickFix::RemoveHqfInfo(const std::string &moduleName)
         std::end(appQuickFix_.deployingAppqfInfo.hqfInfos),
         [moduleName] (const auto &item) { return item.moduleName == moduleName;});
     if (iter == appQuickFix_.deployingAppqfInfo.hqfInfos.end()) {
-        APP_LOGE("InnerAppQuickFix::RemoveHqfInfo failed due to %{public}s does not exist", moduleName.c_str());
+        LOG_E(BMS_TAG_QUICK_FIX, "RemoveHqfInfo failed due to %{public}s does not exist", moduleName.c_str());
         return false;
     }
     appQuickFix_.deployingAppqfInfo.hqfInfos.erase(iter);
@@ -135,7 +136,7 @@ int32_t InnerAppQuickFix::FromJson(const nlohmann::json &jsonObject)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerAppQuickFix from database error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_QUICK_FIX, "read InnerAppQuickFix from database error, error code : %{public}d", parseResult);
     }
     return parseResult;
 }
@@ -169,7 +170,7 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("QuickFixMark from_json error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_QUICK_FIX, "QuickFixMark from_json error, error code : %{public}d", parseResult);
     }
 }
 } // AppExecFwk

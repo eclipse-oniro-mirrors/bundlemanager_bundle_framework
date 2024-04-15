@@ -128,7 +128,6 @@ ohos_unittest("BmsBundleInstallerTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -174,6 +173,22 @@ ohos_unittest("BmsBundleInstallerTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (app_domain_verify_enabled) {
+    external_deps += [
+      "app_domain_verify:app_domain_verify_common",
+      "app_domain_verify:app_domain_verify_mgr_client",
+    ]
+    defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
 }
 
@@ -280,7 +295,6 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -326,6 +340,14 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -435,7 +457,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -487,6 +508,14 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -569,7 +598,6 @@ ohos_unittest("BmsBundleInstallIpcTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -620,6 +648,14 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -696,7 +732,6 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -748,6 +783,14 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -825,7 +868,6 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -876,6 +918,14 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -957,7 +1007,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -1008,6 +1057,14 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -1119,7 +1176,6 @@ ohos_unittest("BmsBundleInstallDriverTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -1170,6 +1226,14 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 
@@ -1269,7 +1333,6 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -1315,6 +1378,14 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 

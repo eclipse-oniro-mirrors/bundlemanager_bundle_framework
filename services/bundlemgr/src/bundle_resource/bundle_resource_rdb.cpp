@@ -39,6 +39,12 @@ BundleResourceRdb::BundleResourceRdb()
         + std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME)
         + "(NAME TEXT NOT NULL, UPDATE_TIME INTEGER, LABEL TEXT, ICON TEXT, "
         + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME, SYSTEM_STATE));");
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " +
+        std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME) +
+        " ADD FOREGROUND BLOB;"));
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " +
+        std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME) +
+        " ADD BACKGROUND BLOB;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -61,6 +67,12 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
     valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
     valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
     valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
+    // used for layered icons
+    valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfo.foreground_);
+    valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfo.background_);
+    APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", resourceInfo.GetKey().c_str(),
+        resourceInfo.foreground_.size(), resourceInfo.background_.size());
+
     return rdbDataManager_->InsertData(valuesBucket);
 }
 
@@ -85,6 +97,11 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         valuesBucket.PutString(BundleResourceConstants::LABEL, info.label_);
         valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
+        // used for layered icons
+        valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, info.foreground_);
+        valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, info.background_);
+        APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", info.GetKey().c_str(),
+            info.foreground_.size(), info.background_.size());
         valuesBuckets.emplace_back(valuesBucket);
     }
     int64_t insertNum = 0;
@@ -393,6 +410,16 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, bundleResourceInfo.icon);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
     }
+
+    bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (getAll || getDrawable) {
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND, bundleResourceInfo.foreground);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
+
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_BACKGROUND, bundleResourceInfo.background);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
+    }
     return true;
 }
 
@@ -427,6 +454,18 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
     if (getAll || getIcon) {
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, launcherAbilityResourceInfo.icon);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
+    }
+
+    bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (getAll || getDrawable) {
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND,
+            launcherAbilityResourceInfo.foreground);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
+
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_BACKGROUND,
+            launcherAbilityResourceInfo.background);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob background, ret: %{public}d");
     }
     return true;
 }

@@ -1946,6 +1946,23 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0007, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: SkillFalse_0008
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0008, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    size_t matchUriIndex = 0;
+    bool ret = skill.MatchMimeType(".jpg", matchUriIndex);
+    EXPECT_EQ(true, ret);
+    EXPECT_EQ(matchUriIndex, 0);
+}
+
+/**
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
@@ -2953,6 +2970,21 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3200, Function | MediumTest | L
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode retCode = hostImpl->GetBundleArchiveInfoV9(bundlePath, flags, bundleInfo);
     EXPECT_EQ(retCode, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostImpl_3201
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test GetBundleArchiveInfoV9
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_3201, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    std::string bundlePath = "/data/storage/el2/base/../../bundle";
+    ErrCode retCode = hostImpl->GetBundleArchiveInfoV9(bundlePath, flags, bundleInfo);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INVALID_HAP_PATH);
 }
 
 /**

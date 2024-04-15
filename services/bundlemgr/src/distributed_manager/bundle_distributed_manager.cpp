@@ -20,11 +20,14 @@
 #include "bundle_manager_callback.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
-#include "distributed_device_profile_client.h"
 #include "free_install_params.h"
 #include "json_util.h"
 #include "scope_guard.h"
 #include "syscap_interface.h"
+
+#ifdef BMS_DEVICE_INFO_MANAGER_ENABLE
+#include "distributed_device_profile_client.h"
+#endif // BMS_DEVICE_INFO_MANAGER_ENABLE
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,8 +39,6 @@ const std::string DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 // syscap
-constexpr const char* SYSCAP_SERVICE_ID = "syscap";
-constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
 constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
 constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }
@@ -72,16 +73,15 @@ bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, Target
 
 int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcIdResult &rpcIdResult)
 {
-    DeviceProfile::ServiceCharacteristicProfile profile;
-    profile.SetServiceId(SYSCAP_SERVICE_ID);
-    profile.SetServiceType(SYSCAP_SERVICE_TYPE);
-    int32_t result = DeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
-        want.GetElement().GetDeviceID(), SYSCAP_SERVICE_ID, profile);
+#ifdef BMS_DEVICE_INFO_MANAGER_ENABLE
+    DistributedDeviceProfile::DeviceProfile profile;
+    int32_t result = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
+        want.GetElement().GetDeviceID(), profile);
     if (result != 0) {
         APP_LOGE("GetDeviceProfile failed result:%{public}d", result);
         return ErrorCode::GET_DEVICE_PROFILE_FAILED;
     }
-    std::string jsonData = profile.GetCharacteristicProfileJson();
+    std::string jsonData = profile.GetOsSysCap();
     APP_LOGI("CharacteristicProfileJson:%{public}s", jsonData.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false);
     if (jsonObject.is_discarded()) {
@@ -110,6 +110,10 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         }
     }
     return ErrorCode::NO_ERROR;
+#else
+    APP_LOGW("BMS_DEVICE_INFO_MANAGER_ENABLE is false");
+    return ErrorCode::ERR_BMS_DEVICE_INFO_MANAGER_ENABLE_DISABLED;
+#endif
 }
 
 bool BundleDistributedManager::CheckAbilityEnableInstall(
@@ -150,7 +154,10 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
         BundleMemoryGuard memoryGuard;
-        this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+        auto res = this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+        if (!res) {
+            SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, targetAbilityInfo.targetInfo.transactId);
+        }
     };
     ffrt::submit(queryRpcIdByAbilityFunc);
     return true;
@@ -168,13 +175,15 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
         APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
-        return false;
+        SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, targetAbilityInfo.targetInfo.transactId);
+        return true;
     }
     std::string bundleName;
     std::string abilityName;
     if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
-        return false;
+        SendCallbackRequest(ErrorCode::CONNECT_FAILED, targetAbilityInfo.targetInfo.transactId);
+        return true;
     }
     Want serviceCenterWant;
     serviceCenterWant.SetElementName(bundleName, abilityName);
@@ -182,7 +191,7 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
     if (!ret) {
         APP_LOGE("fail to connect ServiceCenter");
         SendCallbackRequest(ErrorCode::CONNECT_FAILED, targetAbilityInfo.targetInfo.transactId);
-        return false;
+        return true;
     }
     const std::string targetInfo = GetJsonStrFromInfo(targetAbilityInfo);
     APP_LOGI("queryRpcId param :%{public}s", targetInfo.c_str());
@@ -210,7 +219,7 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
     if (!ret) {
         APP_LOGE("send request to serviceCenter failed");
         SendCallbackRequest(ErrorCode::SEND_REQUEST_FAILED, targetAbilityInfo.targetInfo.transactId);
-        return false;
+        return true;
     }
     OutTimeMonitor(targetAbilityInfo.targetInfo.transactId);
     return true;

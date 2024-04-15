@@ -122,12 +122,16 @@ bool BundleResourceManager::DeleteAllResourceInfo()
 
 bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
 {
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfo(resourceInfo)) {
+    if (!parser.ParseResourceInfo(currentUserId, resourceInfo)) {
         APP_LOGW("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
         BundleResourceInfo bundleResourceInfo;
-        if (GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
+        if (GetBundleResourceInfo(resourceInfo.bundleName_,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo)) {
             // default ability label and icon
             resourceInfo.label_ = resourceInfo.label_.empty() ? bundleResourceInfo.label : resourceInfo.label_;
@@ -144,9 +148,13 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
         APP_LOGE("resourceInfos is empty.");
         return false;
     }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfos(resourceInfos)) {
+    if (!parser.ParseResourceInfos(currentUserId, resourceInfos)) {
         APP_LOGW("Parse ResourceInfos failed, need to modify label and icon");
         for (auto &resourceInfo : resourceInfos) {
             ProcessResourceInfoWhenParseFailed(resourceInfo);
@@ -170,13 +178,17 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
     }
     threadPool->Start(std::thread::hardware_concurrency());
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
+    }
     for (const auto &item : resourceInfosMap) {
         std::string bundleName = item.first;
-        auto task = [bundleName, &resourceInfosMap]() {
+        auto task = [currentUserId, bundleName, &resourceInfosMap]() {
             // need to parse label and icon
             if (resourceInfosMap.find(bundleName) != resourceInfosMap.end()) {
                 BundleResourceParser parser;
-                parser.ParseResourceInfos(resourceInfosMap[bundleName]);
+                parser.ParseResourceInfos(currentUserId, resourceInfosMap[bundleName]);
             }
         };
         threadPool->AddTask(task);
@@ -209,8 +221,10 @@ void BundleResourceManager::ProcessResourceInfo(
         resourceInfo.label_ = resourceInfo.bundleName_;
     }
     if (resourceInfo.icon_.empty()) {
-        if (!resourceInfos.empty()) {
+        if (!resourceInfos.empty() && !resourceInfos[0].icon_.empty()) {
             resourceInfo.icon_ = resourceInfos[0].icon_;
+            resourceInfo.foreground_ = resourceInfos[0].foreground_;
+            resourceInfo.background_ = resourceInfos[0].background_;
         } else {
             ProcessResourceInfoWhenParseFailed(resourceInfo);
         }
@@ -333,7 +347,9 @@ uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ||
         ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON))) {
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ||
+        ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR))) {
         return flags;
     }
     APP_LOGD("illegal flags");
@@ -346,8 +362,12 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
     if (resourceInfo.label_.empty()) {
         resourceInfo.label_ = resourceInfo.bundleName_;
     }
+    if (resourceInfo.bundleName_ == GLOBAL_RESOURCE_BUNDLE_NAME) {
+        APP_LOGE("bundleName: %{public}s default resource parse failed", resourceInfo.bundleName_.c_str());
+        return;
+    }
     if (resourceInfo.icon_.empty()) {
-        resourceInfo.icon_ = GetDefaultIcon();
+        GetDefaultIcon(resourceInfo);
     }
 }
 
@@ -360,23 +380,19 @@ bool BundleResourceManager::SaveResourceInfos(std::vector<ResourceInfo> &resourc
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
-bool BundleResourceManager::ParseIconResourceByPath(
-    const std::string &filePath, const int32_t iconId, std::string &icon)
-{
-    BundleResourceParser parser;
-    return parser.ParseIconResourceByPath(filePath, iconId, icon);
-}
-
-std::string BundleResourceManager::GetDefaultIcon()
+void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
 {
     BundleResourceInfo bundleResourceInfo;
     if (!GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON),
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
         bundleResourceInfo)) {
         APP_LOGE("get default icon failed");
-        return std::string();
+        return;
     }
-    return bundleResourceInfo.icon;
+    resourceInfo.icon_ = bundleResourceInfo.icon;
+    resourceInfo.foreground_ = bundleResourceInfo.foreground;
+    resourceInfo.background_ = bundleResourceInfo.background;
 }
 
 void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
@@ -384,6 +400,58 @@ void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
     APP_LOGD("send bundleResource event");
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleResourcesChanged(userId);
+}
+
+void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName)
+{
+    APP_LOGD("start");
+    BundleResourceProcess::GetTargetBundleName(bundleName, targetBundleName);
+}
+
+bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo)
+{
+    APP_LOGI("bundleName:%{public}s update icon", bundleName.c_str());
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceInfo bundleResourceInfo;
+    if (!GetBundleResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
+        bundleResourceInfo)) {
+        APP_LOGW("GetBundleResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+    } else {
+        resourceInfo.bundleName_ = bundleResourceInfo.bundleName;
+        resourceInfo.moduleName_ = Constants::EMPTY_STRING;
+        resourceInfo.abilityName_ = Constants::EMPTY_STRING;
+        resourceInfo.label_ = bundleResourceInfo.label;
+        resourceInfos.emplace_back(resourceInfo);
+    }
+
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!GetLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
+        launcherAbilityResourceInfos)) {
+        APP_LOGW("GetLauncherAbilityResourceInfo failed, bundleName:%{public}s",
+            bundleName.c_str());
+    } else {
+        for (const auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
+            resourceInfo.bundleName_ = launcherAbilityResourceInfo.bundleName;
+            resourceInfo.abilityName_ = launcherAbilityResourceInfo.abilityName;
+            resourceInfo.moduleName_ = launcherAbilityResourceInfo.moduleName;
+            resourceInfo.label_ = launcherAbilityResourceInfo.label;
+            resourceInfos.emplace_back(resourceInfo);
+        }
+    }
+    if (resourceInfos.empty()) {
+        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
+            bundleName.c_str());
+        resourceInfo.bundleName_ = bundleName;
+        resourceInfo.moduleName_ = Constants::EMPTY_STRING;
+        resourceInfo.abilityName_ = Constants::EMPTY_STRING;
+        resourceInfo.label_ = bundleName;
+        resourceInfos.emplace_back(resourceInfo);
+    }
+
+    APP_LOGI("UpdateBundleIcon %{public}s, size: %{public}zu", bundleName.c_str(), resourceInfos.size());
+    return SaveResourceInfos(resourceInfos);
 }
 } // AppExecFwk
 } // OHOS

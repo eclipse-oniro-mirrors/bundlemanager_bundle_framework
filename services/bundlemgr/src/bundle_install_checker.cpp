@@ -406,7 +406,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 #ifdef USE_PRE_BUNDLE_PROFILE
         GetPrivilegeCapability(checkParam, newInfo);
 #endif
-        if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
+        if ((provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) ||
+            (checkParam.specifiedDistributionType == Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING)) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
         } else {
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
@@ -758,8 +759,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
     for (const auto &item : extensions) {
         if (item.second.type == ExtensionAbilityType::UNSPECIFIED &&
             !BMSEventHandler::CheckExtensionTypeInConfig(item.second.extensionTypeName)) {
-            APP_LOGE("Parse error, There is no corresponding type in the configuration");
-            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+            APP_LOGW("Parse error, There is no corresponding type in the configuration");
         }
     }
 
@@ -782,7 +782,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     const BundlePackInfo &bundlePackInfo,
     InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("SetEntryInstallationFree start");
+    APP_LOGI("start");
     if (!bundlePackInfo.GetValid()) {
         APP_LOGW("no pack.info in the hap file");
         return;
@@ -803,7 +803,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     if (installationFree && !innerBundleInfo.GetIsNewVersion()) {
         innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
     }
-    APP_LOGI("SetEntryInstallationFree end");
+    APP_LOGI("end");
 }
 
 ErrCode BundleInstallChecker::CheckSystemSize(
@@ -874,9 +874,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     APP_LOGD("Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
-    std::string vendor = (infos.begin()->second).GetVendor();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
-    std::string versionName = (infos.begin()->second).GetVersionName();
     uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
     uint32_t target = (infos.begin()->second).GetTargetVersion();
     std::string releaseType = (infos.begin()->second).GetReleaseType();
@@ -903,16 +901,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             if (versionCode != info.second.GetVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
-            if (versionName != info.second.GetVersionName()) {
-                return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-            }
             if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
             }
-        }
-        // check vendor
-        if (vendor != info.second.GetVendor()) {
-            return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
         }
         // check release type
         if (target != info.second.GetTargetVersion()) {
@@ -1509,7 +1500,6 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
     if (system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, true)) {
-        APP_LOGI("check developer mode success");
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {

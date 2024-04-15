@@ -170,7 +170,6 @@ const std::string SHORTCUT_DISABLE_MESSAGE = "shortcutDisableMessage";
 const std::string SHORTCUT_INTENTS_TARGET_BUNDLE = "targetBundle";
 const std::string SHORTCUT_INTENTS_TARGET_MODULE = "targetModule";
 const std::string SHORTCUT_INTENTS_TARGET_CLASS = "targetClass";
-const std::string SHORTCUT_INTENTS_SHORTCUT_URI = "shortcutUri";
 const std::string COMMON_EVENT_NAME = ".MainAbililty";
 const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
@@ -226,6 +225,7 @@ const std::string SHORTCUTS_KEY = "shortcuts";
 const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
+const std::string BUNDLE_NAME_UNINSTALL_STATE = "bundleNameUninstallState";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -624,7 +624,6 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
@@ -635,7 +634,6 @@ ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     return shortcutIntent;
 }
 
@@ -1120,7 +1118,6 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -1160,7 +1157,6 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -7683,7 +7679,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | S
 #ifdef USE_ARM64
     EXPECT_TRUE(res);
 #else
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
 #endif
 }
 
@@ -8024,7 +8020,6 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallT
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
     EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
     EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-    EXPECT_EQ(result.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
 }
 
 /**
@@ -9088,13 +9083,13 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 
-    innerBundleInfo.SetIsNewVersion(true);
-    innerBundleInfo.UpdateAppDetailAbilityAttrs();
-
-    innerBundleInfo.baseApplicationInfo_->iconId = 1;
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+
+    const auto abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    EXPECT_FALSE(abilityInfos.find(ABILITY_NAME) == abilityInfos.end());
+    EXPECT_TRUE(abilityInfos.find(BUNDLE_NAME) == abilityInfos.end());
 }
 
 /**
@@ -10578,5 +10573,56 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppServiceHspInfo_0001, Function | SmallTes
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo_2);
     ret = innerBundleInfo.GetAppServiceHspInfo(info);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0001
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0002
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetRemovable(false);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0003
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    EXPECT_TRUE(info.uninstallState_);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(info.uninstallState_);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
 }
 }

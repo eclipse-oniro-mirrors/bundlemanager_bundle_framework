@@ -54,7 +54,7 @@ sptr<IBundleMgr> BundleGraphicsClientImpl::GetBundleMgr()
 
 std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(const uint8_t *data, size_t len)
 {
-    APP_LOGI("begin LoadImageFile");
+    APP_LOGI("begin");
     uint32_t errorCode = 0;
     Media::SourceOptions opts;
     std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
@@ -69,14 +69,14 @@ std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(const u
         APP_LOGE("failed to create pixelmap err %{public}d", errorCode);
         return nullptr;
     }
-    APP_LOGI("LoadImageFile finish");
+    APP_LOGI("end");
     return std::shared_ptr<Media::PixelMap>(std::move(pixelMapPtr));
 }
 
 ErrCode BundleGraphicsClientImpl::GetAbilityPixelMapIcon(const std::string &bundleName,
     const std::string &moduleName, const std::string &abilityName, std::shared_ptr<Media::PixelMap> &pixelMap)
 {
-    APP_LOGI("begin GetAbilityPixelMapIcon");
+    APP_LOGI("begin");
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");

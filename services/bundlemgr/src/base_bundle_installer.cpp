@@ -81,6 +81,7 @@ const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+const std::string SKILL_URI_SCHEME_HTTPS = "https";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -97,7 +98,8 @@ const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.sceneboard",
     "com.ohos.callui",
-    "com.ohos.mms"
+    "com.ohos.mms",
+    "com.ohos.FusionSearch"
 };
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
@@ -166,9 +168,9 @@ void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installPara
         NotifyBundleEvents installRes = {
             .bundleName = bundleName_,
             .modulePackage = item.second.GetCurModuleName(),
+            .type = NotifyType::START_INSTALL,
             .appId = item.second.GetAppId(),
-            .appIdentifier = item.second.GetAppIdentifier(),
-            .type = NotifyType::START_INSTALL
+            .appIdentifier = item.second.GetAppIdentifier()
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for start install");
@@ -195,7 +197,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .type = GetNotifyType(),
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isModuleUpdate = isModuleUpdate_
+            .isModuleUpdate = isModuleUpdate_,
+            .appDistributionType = appDistributionType_
         };
         if (installParam.allUser) {
             AddBundleStatus(installRes);
@@ -235,7 +238,8 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .resultCode = result,
             .type = NotifyType::INSTALL,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .appDistributionType = appDistributionType_
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -260,9 +264,6 @@ ErrCode BaseBundleInstaller::Recover(
 {
     APP_LOGI("begin to process bundle recover by bundleName, which is %{public}s.", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
-    if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
-    }
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
@@ -271,7 +272,8 @@ ErrCode BaseBundleInstaller::Recover(
             .resultCode = result,
             .type = NotifyType::INSTALL,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .appDistributionType = appDistributionType_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -287,7 +289,6 @@ ErrCode BaseBundleInstaller::Recover(
         sysEventInfo_.preBundleScene,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    BundlePermissionMgr::UnInit();
     APP_LOGD("finish to process %{public}s bundle recover", bundleName.c_str());
     return result;
 }
@@ -344,6 +345,25 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     return result;
 }
 
+
+ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
+{
+    if (!info.GetRemovable()) {
+        APP_LOGE("uninstall system app");
+        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+    if (!info.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), info.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGE("uninstall bundle is not shared library");
+        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
     APP_LOGI("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
@@ -367,13 +387,10 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (!info.GetRemovable()) {
-        APP_LOGE("uninstall system app");
-        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
-    }
-    if (info.GetApplicationBundleType() != BundleType::SHARED) {
-        APP_LOGE("uninstall bundle is not shared library");
-        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    ErrCode ret = CheckUninstallInnerBundleInfo(info, bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGW("CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
+        return ret;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
         APP_LOGE("uninstall shared library is relied");
@@ -1096,13 +1113,15 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
+    RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     RemoveOldGroupDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
-    sync();
+    VerifyDomain();
+    ForceWriteToDisk();
     return result;
 }
 
@@ -1228,6 +1247,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
+    if (installParam.isUninstallAndRecover && !oldInfo.GetIsPreInstallApp()) {
+        APP_LOGE("UninstallAndRecover bundle is not pre-install app.");
+        return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
+    }
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -1245,9 +1268,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted &&
-        !oldInfo.GetRemovable() && installParam.noSkipsKill) {
+        !oldInfo.GetRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+
+    if (!oldInfo.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
@@ -1337,6 +1366,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     BundleResourceHelper::DeleteResourceInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
+    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     return ERR_OK;
 }
 
@@ -1394,6 +1424,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
+    if (!oldInfo.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+
     bool isModuleExist = oldInfo.FindModule(modulePackage);
     if (!isModuleExist) {
         APP_LOGE("uninstall bundle info missing");
@@ -1442,6 +1478,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
+
+            ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
 
             result = DeleteOldArkNativeFile(oldInfo);
             if (result != ERR_OK) {
@@ -1734,12 +1772,15 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
         if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
             && AllowSingletonChange(newInfo.GetBundleName())) {
-            APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
             singletonState_ = SingletonState::SINGLETON_TO_NON;
+        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
+            && AllowSingletonChange(newInfo.GetBundleName())) {
+            singletonState_ = SingletonState::NON_TO_SINGLETON;
         } else {
             APP_LOGE("Singleton not allow changed");
             return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
         }
+        APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
     }
 
     auto result = CheckOverlayUpdate(oldInfo, newInfo, userId_);
@@ -2989,6 +3030,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     InstallCheckParam checkParam;
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
     checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
+    checkParam.specifiedDistributionType = installParam.specifiedDistributionType;
     checkParam.appType = appType;
     checkParam.removable = installParam.removable;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
@@ -3004,9 +3046,17 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    SetAppDistributionType(infos);
     return ret;
 }
 
+void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        return;
+    }
+    appDistributionType_ = infos.begin()->second.GetAppDistributionType();
+}
 
 void BaseBundleInstaller::GenerateOdid(
     std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -3542,14 +3592,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 {
     // check app label for inheritance installation
     APP_LOGD("CheckAppLabel begin");
-    if (oldInfo.GetVersionName() != newInfo.GetVersionName()) {
-        return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-    }
     if (oldInfo.GetMinCompatibleVersionCode() != newInfo.GetMinCompatibleVersionCode()) {
         return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-    }
-    if (oldInfo.GetVendor() != newInfo.GetVendor()) {
-        return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
     }
     if (oldInfo.GetTargetVersion()!= newInfo.GetTargetVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
@@ -4235,6 +4279,23 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
+void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
+{
+    if (!isOTA) {
+        return;
+    }
+    for (const auto &info : newInfos) {
+        std::string oldHapPath = oldInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+            continue;
+        }
+        if (!InstalldClient::GetInstance()->RemoveDir(oldHapPath)) {
+            APP_LOGW("remove old hap failed, errno: %{public}d", errno);
+        }
+    }
+}
+
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
     std::vector<std::string> &bundlePaths)
 {
@@ -4722,6 +4783,96 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInf
     }
     APP_LOGI("UpdateHapToken %{public}s end", bundleName_.c_str());
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ForceWriteToDisk() const
+{
+    auto task = []() {
+        APP_LOGI("sync begin");
+        sync();
+        APP_LOGI("sync end");
+    };
+    std::thread(task).detach();
+}
+
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+void BaseBundleInstaller::PrepareSkillUri(const std::vector<Skill> &skills,
+    std::vector<AppDomainVerify::SkillUri> &skillUris) const
+{
+    for (const auto &skill : skills) {
+        if (!skill.domainVerify) {
+            continue;
+        }
+        for (const auto &uri : skill.uris) {
+            if (uri.scheme != SKILL_URI_SCHEME_HTTPS) {
+                continue;
+            }
+            AppDomainVerify::SkillUri skillUri;
+            skillUri.scheme = uri.scheme;
+            skillUri.host = uri.host;
+            skillUri.port = uri.port;
+            skillUri.path = uri.path;
+            skillUri.pathStartWith = uri.pathStartWith;
+            skillUri.pathRegex = uri.pathRegex;
+            skillUri.type = uri.type;
+            skillUris.push_back(skillUri);
+        }
+    }
+}
+#endif
+
+void BaseBundleInstaller::VerifyDomain()
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGD("start to verify domain");
+    if (isAppExist_) {
+        APP_LOGI("app exist, need to clear old domain info");
+        ClearDomainVerifyStatus(appIdentifier_, bundleName_);
+    }
+    InnerBundleInfo bundleInfo;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+    std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
+    for (const auto &skillInfo : skillInfos) {
+        PrepareSkillUri(skillInfo.second, skillUris);
+    }
+    if (skillUris.empty()) {
+        APP_LOGI("no skill uri need to verify domain");
+        return;
+    }
+    std::string fingerprint = bundleInfo.GetCertificateFingerprint();
+    APP_LOGI("start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    // call VerifyDomain
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
+        appIdentifier_, bundleName_, fingerprint, skillUris);
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
+}
+
+void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifier,
+    const std::string &bundleName) const
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGI("start to clear domain verify status");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    // call ClearDomainVerifyStatus
+    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->ClearDomainVerifyStatus(
+        appIdentifier, bundleName)) {
+        APP_LOGW("ClearDomainVerifyStatus failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

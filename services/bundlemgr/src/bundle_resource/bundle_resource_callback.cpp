@@ -15,6 +15,7 @@
 
 #include "bundle_resource_callback.h"
 
+#include "nlohmann/json.hpp"
 #include <string>
 
 #include "account_helper.h"
@@ -23,6 +24,7 @@
 #include "bundle_resource_manager.h"
 #include "bundle_resource_param.h"
 #include "bundle_system_state.h"
+#include "json_util.h"
 #include "resource_info.h"
 
 namespace OHOS {
@@ -198,6 +200,41 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
         return false;
     }
 
+    nlohmann::json jsonObject = nlohmann::json::parse(theme, nullptr, false);
+    if (jsonObject.is_discarded()) {
+        APP_LOGE("failed to parse theme: %{public}s.", theme.c_str());
+        return false;
+    }
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    int32_t updateIcons = 0;
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, "icons", updateIcons,
+        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    int32_t updateSkin = 0;
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, "skin", updateSkin,
+        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    if ((updateIcons == 0) && (updateSkin == 0)) {
+        APP_LOGI("icons and skin both no need to change, return");
+        return false;
+    }
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr");
+        return false;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        currentUserId = Constants::START_USERID;
+    }
+
+    if (!manager->DeleteAllResourceInfo()) {
+        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed", currentUserId);
+    }
+    if (!manager->AddAllResourceInfo(currentUserId)) {
+        APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
+        return false;
+    }
     APP_LOGI("end, theme:%{public}s", theme.c_str());
     return true;
 }
@@ -219,16 +256,20 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
         APP_LOGE("manager is nullptr");
         return false;
     }
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGW("delete bundleName : %{public}s resource failed", bundleName.c_str());
+    std::string targetBundleName = bundleName;
+    manager->GetTargetBundleName(bundleName, targetBundleName);
+    APP_LOGI("bundleName:%{public}s, targetBundleName:%{public}s overlay changed", bundleName.c_str(),
+        targetBundleName.c_str());
+    if (!manager->DeleteResourceInfo(targetBundleName)) {
+        APP_LOGW("delete targetBundleName : %{public}s resource failed", targetBundleName.c_str());
     }
 
-    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
-        APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
+    if (!manager->AddResourceInfoByBundleName(targetBundleName, userId)) {
+        APP_LOGE("add targetBundleName : %{public}s resource failed", targetBundleName.c_str());
         return false;
     }
-    APP_LOGI("end, bundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
-        bundleName.c_str(), isEnabled, userId);
+    APP_LOGI("end, targetBundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
+        targetBundleName.c_str(), isEnabled, userId);
     return true;
 }
 } // AppExecFwk

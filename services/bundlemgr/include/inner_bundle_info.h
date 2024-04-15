@@ -330,6 +330,8 @@ public:
     BMS_DEFINE_PROPERTY_MEMBER_FILED(TsanEnabled, baseApplicationInfo_, tsanEnabled, bool);
     BMS_DEFINE_PROPERTY(CurDynamicIconModule, curDynamicIconModule_, std::string);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(IconId, baseApplicationInfo_, iconId, int32_t);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        AppEnvironments, baseApplicationInfo_, appEnvironments, std::vector<ApplicationEnvironment>);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)
@@ -955,7 +957,9 @@ public:
     void GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const;
     bool IsAsanEnabled() const;
     bool IsGwpAsanEnabled() const;
-
+    bool GetUninstallState() const;
+    void SetUninstallState(const bool &uninstallState);
+    
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
@@ -1029,6 +1033,9 @@ private:
     // for odid
     std::string developerId_;
     std::string odid_;
+
+    // use to control uninstalling
+    bool uninstallState_ = true;
 };
 
 void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResourceInfo);

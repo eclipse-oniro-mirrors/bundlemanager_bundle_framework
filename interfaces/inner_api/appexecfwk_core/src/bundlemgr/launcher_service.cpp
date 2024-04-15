@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "bundle_mgr_service_death_recipient.h"
 #include "common_event_subscribe_info.h"
 #include "common_event_support.h"
+#include "hitrace_meter.h"
 #include "matching_skills.h"
 #include "operation_builder.h"
 
@@ -189,7 +190,7 @@ bool LauncherService::GetAbilityList(
 
 bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
-    APP_LOGI("GetAllLauncherAbilityInfos start");
+    APP_LOGI("start");
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -235,40 +236,35 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
     }
 
     if (launcherAbilityInfos.empty()) {
-        APP_LOGW("GetAllLauncherAbilityInfos success, but launcherAbilityInfos is empty");
+        APP_LOGW("success, but launcherAbilityInfos is empty");
     } else {
-        APP_LOGI("GetAllLauncherAbilityInfos success");
+        APP_LOGI("success");
     }
 
     return true;
 }
 
-bool LauncherService::GetShortcutInfos(
+ErrCode LauncherService::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
     APP_LOGD("GetShortcutInfos called");
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
-        APP_LOGE("non-system app calling system api");
-        return false;
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     std::vector<ShortcutInfo> infos;
     if (!iBundleMgr->GetShortcutInfos(bundleName, infos)) {
-        APP_LOGE("Get shortcut infos failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infos.size() == 0) {
-        APP_LOGE("ShortcutInfo is not exist in system");
-        return false;
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
 
     for (ShortcutInfo shortcutInfo : infos) {
@@ -276,7 +272,7 @@ bool LauncherService::GetShortcutInfos(
             shortcutInfos.emplace_back(shortcutInfo);
         }
     }
-    return true;
+    return ERR_OK;
 }
 
 void LauncherService::InitWant(Want &want, const std::string &bundleName)
@@ -309,6 +305,7 @@ void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability
 ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("GetLauncherAbilityByBundleName called");
     if (bundleName.empty()) {
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());

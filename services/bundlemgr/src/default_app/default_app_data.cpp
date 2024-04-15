@@ -17,6 +17,7 @@
 
 #include <mutex>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "common_profile.h"
@@ -39,7 +40,7 @@ namespace {
 
 std::string DefaultAppData::ToString() const
 {
-    APP_LOGD("DefaultAppData ToString begin.");
+    LOG_D(BMS_TAG_DEFAULT_APP, "DefaultAppData ToString begin.");
     nlohmann::json j;
     j[INFOS] = infos;
     return j.dump();
@@ -47,13 +48,13 @@ std::string DefaultAppData::ToString() const
 
 void DefaultAppData::ToJson(nlohmann::json& jsonObject) const
 {
-    APP_LOGD("DefaultAppData ToJson begin.");
+    LOG_D(BMS_TAG_DEFAULT_APP, "DefaultAppData ToJson begin.");
     jsonObject[INFOS] = infos;
 }
 
 int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 {
-    APP_LOGD("DefaultAppData FromJson begin.");
+    LOG_D(BMS_TAG_DEFAULT_APP, "DefaultAppData FromJson begin.");
     const auto& jsonObjectEnd = jsonObject.end();
     std::lock_guard<std::mutex> lock(g_mutex);
     g_defaultAppJson = ERR_OK;
@@ -66,7 +67,7 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
         g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     if (g_defaultAppJson != ERR_OK) {
-        APP_LOGE("DefaultAppData FromJson failed, error code : %{public}d", g_defaultAppJson);
+        LOG_E(BMS_TAG_DEFAULT_APP, "DefaultAppData FromJson failed, error code : %{public}d", g_defaultAppJson);
     }
     int32_t ret = g_defaultAppJson;
     g_defaultAppJson = ERR_OK;
@@ -75,15 +76,15 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 
 void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
 {
-    APP_LOGD("begin to ParseDefaultApplicationConfig.");
+    LOG_D(BMS_TAG_DEFAULT_APP, "begin to ParseDefaultApplicationConfig.");
     if (jsonObject.is_discarded() || !jsonObject.is_array() || jsonObject.empty()) {
-        APP_LOGW("json format error.");
+        LOG_W(BMS_TAG_DEFAULT_APP, "json format error.");
         return;
     }
     std::lock_guard<std::mutex> lock(g_mutex);
     for (const auto& object : jsonObject) {
         if (!object.is_object()) {
-            APP_LOGW("not json object.");
+            LOG_W(BMS_TAG_DEFAULT_APP, "not json object.");
             continue;
         }
         Element element;
@@ -91,7 +92,7 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         from_json(object, element);
         g_defaultAppJson = ERR_OK;
         if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
-            APP_LOGW("bad element format.");
+            LOG_W(BMS_TAG_DEFAULT_APP, "bad element format.");
             continue;
         }
         infos.try_emplace(element.type, element);
@@ -100,7 +101,7 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
 
 void to_json(nlohmann::json& jsonObject, const Element& element)
 {
-    APP_LOGD("Element to_json begin.");
+    LOG_D(BMS_TAG_DEFAULT_APP, "Element to_json begin.");
     jsonObject = nlohmann::json {
         {BUNDLE_NAME, element.bundleName},
         {MODULE_NAME, element.moduleName},
@@ -112,7 +113,7 @@ void to_json(nlohmann::json& jsonObject, const Element& element)
 
 void from_json(const nlohmann::json& jsonObject, Element& element)
 {
-    APP_LOGD("Element from_json begin");
+    LOG_D(BMS_TAG_DEFAULT_APP, "Element from_json begin");
     const auto& jsonObjectEnd = jsonObject.end();
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -163,7 +164,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     if (g_defaultAppJson != ERR_OK) {
-        APP_LOGE("Element from_json error, error code : %{public}d", g_defaultAppJson);
+        LOG_E(BMS_TAG_DEFAULT_APP, "Element from_json error, error code : %{public}d", g_defaultAppJson);
     }
 }
 }

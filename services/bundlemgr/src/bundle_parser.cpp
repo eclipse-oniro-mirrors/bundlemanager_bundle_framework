@@ -147,7 +147,7 @@ ErrCode BundleParser::Parse(
 
 ErrCode BundleParser::ParsePackInfo(const std::string &pathName, BundlePackInfo &bundlePackInfo) const
 {
-    APP_LOGI("parse from %{private}s", pathName.c_str());
+    APP_LOGD("parse from %{private}s", pathName.c_str());
     BundleExtractor bundleExtractor(pathName);
     if (!bundleExtractor.Init()) {
         APP_LOGE("bundle extractor init failed");
@@ -296,7 +296,7 @@ ErrCode BundleParser::ParseRouterArray(
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
-    nlohmann::json jsonBuf = nlohmann::json::parse(jsonString);
+    nlohmann::json jsonBuf = nlohmann::json::parse(jsonString, nullptr, false);
     if (jsonBuf.is_discarded()) {
         APP_LOGE("json file %{private}s is discarded", jsonString.c_str());
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;

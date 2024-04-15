@@ -17,6 +17,8 @@
 
 #include <string>
 
+#include "ability_manager_client.h"
+#include "ability_manager_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
 #include "business_error.h"
@@ -24,6 +26,7 @@
 #include "ipc_skeleton.h"
 #include "js_launcher_service.h"
 #include "napi_arg.h"
+#include "napi_common_start_options.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -36,6 +39,15 @@ namespace {
     constexpr const char* GET_SHORTCUT_INFO_SYNC = "GetShortcutInfoSync";
     constexpr const char* BUNDLE_NAME = "bundleName";
     constexpr const char* USER_ID = "userId";
+    constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
+    constexpr const char* PARSE_START_OPTIONS = "ParseStartOptions";
+    constexpr const char* START_SHORTCUT = "StartShortcut";
+
+    const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
+        {ERR_OK, ERR_OK},
+        {ERR_PERMISSION_DENIED, ERR_BUNDLE_MANAGER_PERMISSION_DENIED},
+        {ERR_NOT_SYSTEM_APP, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED}
+    };
 }
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()
 {
@@ -350,6 +362,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
+
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -372,6 +385,99 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
     APP_LOGI("call GetShortcutInfoSync done.");
     return nShortcutInfos;
+}
+
+static ErrCode InnerStartShortcut(const OHOS::AppExecFwk::ShortcutInfo &shortcutInfo,
+    const OHOS::AAFwk::StartOptions &startOptions)
+{
+    if (shortcutInfo.intents.empty()) {
+        APP_LOGW("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    AAFwk::Want want;
+    ElementName element;
+    element.SetBundleName(shortcutInfo.intents[0].targetBundle);
+    element.SetModuleName(shortcutInfo.intents[0].targetModule);
+    element.SetAbilityName(shortcutInfo.intents[0].targetClass);
+    want.SetElement(element);
+    for (const auto &item : shortcutInfo.intents[0].parameters) {
+        want.SetParam(item.first, item.second);
+    }
+    auto res = AAFwk::AbilityManagerClient::GetInstance()->StartShortcut(want, startOptions);
+    auto it = START_SHORTCUT_RES_MAP.find(res);
+    if (it == START_SHORTCUT_RES_MAP.end()) {
+        return ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED;
+    }
+    return it->second;
+}
+
+void StartShortcutExec(napi_env env, void *data)
+{
+    StartShortcutCallbackInfo *asyncCallbackInfo = reinterpret_cast<StartShortcutCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerStartShortcut(asyncCallbackInfo->shortcutInfo, asyncCallbackInfo->startOptions);
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+}
+
+void StartShortcutComplete(napi_env env, napi_status status, void *data)
+{
+    StartShortcutCallbackInfo *asyncCallbackInfo = reinterpret_cast<StartShortcutCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<StartShortcutCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, START_SHORTCUT, Constants::PERMISSION_START_SHORTCUT);
+    }
+
+    CommonFunc::NapiReturnDeferred<StartShortcutCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value StartShortcut(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("napi begin StartShortcut");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    StartShortcutCallbackInfo *asyncCallbackInfo = new (std::nothrow) StartShortcutCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<StartShortcutCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+            return nullptr;
+        }
+        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+            if (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_ONE], asyncCallbackInfo->startOptions)) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
+                return nullptr;
+            }
+        }
+    } else {
+        APP_LOGE("parameters error");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<StartShortcutCallbackInfo>(
+        env, asyncCallbackInfo, "StartShortcut", StartShortcutExec, StartShortcutComplete);
+    callbackPtr.release();
+    APP_LOGI("call StartShortcut done");
+    return promise;
 }
 }
 }

@@ -82,8 +82,9 @@ public:
 
     bool SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
-    bool ParseIconResourceByPath(
-        const std::string &filePath, const int32_t iconId, std::string &icon);
+    void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
+
+    bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
 
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
@@ -96,7 +97,7 @@ private:
 
     void ProcessResourceInfo(const std::vector<ResourceInfo> &resourceInfos, ResourceInfo &resourceInfo);
 
-    std::string GetDefaultIcon();
+    void GetDefaultIcon(ResourceInfo &resourceInfo);
 
     uint32_t CheckResourceFlags(const uint32_t flags);
 

@@ -31,6 +31,7 @@ enum ErrorCode {
     GET_DEVICE_PROFILE_FAILED = -103,
     DECODE_SYS_CAP_FAILED = -104,
     COMPARE_PC_ID_FAILED = -105,
+    ERR_BMS_DEVICE_INFO_MANAGER_ENABLE_DISABLED = -106,
 };
 
 struct QueryRpcIdParams : public virtual RefBase {

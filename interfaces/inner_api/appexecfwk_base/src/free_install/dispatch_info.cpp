@@ -15,6 +15,7 @@
 
 #include "dispatch_info.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
@@ -47,7 +48,7 @@ void from_json(const nlohmann::json &jsonObject, DispatcherInfo &dispatcherInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module dispatcherInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module dispatcherInfo from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -67,7 +68,7 @@ DispatcherInfo *DispatcherInfo::Unmarshalling(Parcel &parcel)
 {
     DispatcherInfo *dispatcherInfo = new (std::nothrow) DispatcherInfo();
     if (dispatcherInfo && !dispatcherInfo->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "read from parcel failed");
         delete dispatcherInfo;
         dispatcherInfo = nullptr;
     }

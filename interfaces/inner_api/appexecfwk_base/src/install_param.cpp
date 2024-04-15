@@ -74,6 +74,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string pgoPath = Str16ToStr8(parcel.ReadString16());
         pgoParams.emplace(moduleName, pgoPath);
     }
+    isUninstallAndRecover = parcel.ReadBool();
     return true;
 }
 
@@ -121,6 +122,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isUninstallAndRecover);
     return true;
 }
 

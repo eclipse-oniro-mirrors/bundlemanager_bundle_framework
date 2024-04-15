@@ -24,6 +24,7 @@
 #include "app_control_constants.h"
 #include "app_control_manager.h"
 #endif
+#include "app_log_tag_wrapper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "common_profile.h"
@@ -74,6 +75,7 @@ const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const std::string DEVELOPER_ID = "developerId";
 const std::string ODID = "odid";
+const std::string UNINSTALL_STATE = "uninstallState";
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 const std::string EXT_RESOURCE_MODULE_NAME = "moduleName";
 const std::string EXT_RESOURCE_ICON_ID = "iconId";
@@ -267,6 +269,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->dataGroupInfos_ = info.dataGroupInfos_;
     this->developerId_ = info.developerId_;
     this->odid_ = info.odid_;
+    this->uninstallState_ = info.uninstallState_;
     return *this;
 }
 
@@ -308,6 +311,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
     jsonObject[DEVELOPER_ID] = developerId_;
     jsonObject[ODID] = odid_;
+    jsonObject[UNINSTALL_STATE] = uninstallState_;
 }
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -563,6 +567,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        UNINSTALL_STATE,
+        uninstallState_,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -611,6 +623,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.isModuleJson = it->second.isModuleJson;
     hapInfo.isStageBasedModel = it->second.isStageBasedModel;
     hapInfo.deviceTypes = it->second.deviceTypes;
+    hapInfo.appStartup = it->second.appStartup;
     std::string moduleType = it->second.distro.moduleType;
     if (moduleType == Profile::MODULE_TYPE_ENTRY) {
         hapInfo.moduleType = ModuleType::ENTRY;
@@ -664,6 +677,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.fileContextMenu = it->second.fileContextMenu;
     hapInfo.routerMap = it->second.routerMap;
     hapInfo.appEnvironments = it->second.appEnvironments;
+    hapInfo.packageName = it->second.packageName;
     return hapInfo;
 }
 
@@ -890,15 +904,7 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
     }
     for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
         if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
-            if (!baseApplicationInfo_->needAppDetail) {
-                baseAbilityInfos_.erase(iter);
-                return;
-            }
-            if (isNewVersion_) {
-                iter->second.labelId = baseApplicationInfo_->labelId;
-                iter->second.iconId =
-                    (baseApplicationInfo_->iconId == 0) ? iter->second.iconId : baseApplicationInfo_->iconId;
-            }
+            baseAbilityInfos_.erase(iter);
             return;
         }
     }
@@ -1248,12 +1254,12 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
 
     if (baseApplicationInfo_ == nullptr) {
-        APP_LOGE("baseApplicationInfo_ is nullptr");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "baseApplicationInfo_ is nullptr");
         return;
     }
     appInfo = *baseApplicationInfo_;
@@ -1308,7 +1314,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -1364,7 +1370,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
             userId, GetBundleName().c_str());
         return false;
     }
@@ -1402,7 +1408,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            APP_LOGE("can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
@@ -1415,7 +1421,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo,
             bundleInfo.applicationInfo.accessTokenId, bundleInfo.applicationInfo.deviceId)) {
-            APP_LOGE("get request permission state failed");
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
@@ -1428,7 +1434,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo", userId);
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -1451,7 +1457,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            APP_LOGE("can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     ProcessBundleFlags(flags, userId, bundleInfo);
@@ -2353,7 +2359,7 @@ int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const
 int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
 {
     if (innerBundleUserInfos_.empty()) {
-        APP_LOGE("Get responseUserId failed due to user map is empty.");
+        APP_LOGE("user map is empty.");
         return Constants::INVALID_USERID;
     }
 
@@ -2883,7 +2889,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
         shortcutIntent.targetBundle = shortcutWant.bundleName;
         shortcutIntent.targetModule = shortcutWant.moduleName;
         shortcutIntent.targetClass = shortcutWant.abilityName;
-        shortcutIntent.shortcutUri = shortcutWant.shortcutUri;
+        shortcutIntent.parameters = shortcutWant.parameters;
         shortcutInfo.intents.emplace_back(shortcutIntent);
     }
 }
@@ -3180,7 +3186,7 @@ std::vector<std::string> InnerBundleInfo::GetQuerySchemes() const
         return std::vector<std::string>();
     }
     std::vector<std::string> querySchemes = innerModuleInfos_.at(entryModuleName).querySchemes;
-    for (int32_t i = 0; i < querySchemes.size(); i++) {
+    for (size_t i = 0; i < querySchemes.size(); i++) {
         transform(querySchemes[i].begin(), querySchemes[i].end(), querySchemes[i].begin(), ::tolower);
     }
     return querySchemes;
@@ -3248,6 +3254,16 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
         }
     }
     return false;
+}
+
+bool InnerBundleInfo::GetUninstallState() const
+{
+    return uninstallState_;
+}
+
+void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
+{
+    uninstallState_ = uninstallState;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bms_ecological_rule_mgr_service_client.h"
 #include "iremote_broker.h"
@@ -58,13 +59,13 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
 {
     sptr<ISystemAbilityManager> samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgr == nullptr) {
-        APP_LOGE("GetSystemAbilityManager error");
+        LOG_E(BMS_TAG_FREE_INSTALL, "GetSystemAbilityManager error");
         return nullptr;
     }
 
     auto systemAbility = samgr->CheckSystemAbility(6105);
     if (systemAbility == nullptr) {
-        APP_LOGE("CheckSystemAbility error, ECOLOGICALRULEMANAGERSERVICE_ID = 6105");
+        LOG_E(BMS_TAG_FREE_INSTALL, "CheckSystemAbility error, ECOLOGICALRULEMANAGERSERVICE_ID = 6105");
         return nullptr;
     }
 
@@ -73,7 +74,7 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
 
     sptr<IBmsEcologicalRuleMgrService> iBmsErms = iface_cast<IBmsEcologicalRuleMgrService>(systemAbility);
     if (iBmsErms == nullptr) {
-        APP_LOGE("systemAbility cast error");
+        LOG_E(BMS_TAG_FREE_INSTALL, "systemAbility cast error");
         iBmsErms = new BmsEcologicalRuleMgrServiceProxy(systemAbility);
     }
     return iBmsErms;
@@ -82,11 +83,11 @@ sptr<IBmsEcologicalRuleMgrService> BmsEcologicalRuleMgrServiceClient::ConnectSer
 bool BmsEcologicalRuleMgrServiceClient::CheckConnectService()
 {
     if (bmsEcologicalRuleMgrServiceProxy_ == nullptr) {
-        APP_LOGW("redo ConnectService");
+        LOG_W(BMS_TAG_FREE_INSTALL, "redo ConnectService");
         bmsEcologicalRuleMgrServiceProxy_ = ConnectService();
     }
     if (bmsEcologicalRuleMgrServiceProxy_ == nullptr) {
-        APP_LOGE("Connect SA Failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "Connect SA Failed");
         return false;
     }
     return true;
@@ -100,17 +101,17 @@ void BmsEcologicalRuleMgrServiceClient::OnRemoteSaDied(const wptr<IRemoteObject>
 int32_t BmsEcologicalRuleMgrServiceClient::QueryFreeInstallExperience(const OHOS::AAFwk::Want &want,
     const BmsCallerInfo &callerInfo, BmsExperienceRule &rule)
 {
-    APP_LOGD("QueryFreeInstallExperience want = %{public}s, callerInfo = %{public}s", want.ToString().c_str(),
+    LOG_D(BMS_TAG_FREE_INSTALL, "want = %{public}s, callerInfo = %{public}s", want.ToString().c_str(),
         callerInfo.ToString().c_str());
 
     if (!CheckConnectService()) {
-        APP_LOGW("check Connect SA Failed");
+        LOG_W(BMS_TAG_FREE_INSTALL, "check Connect SA Failed");
         return OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED;
     }
     int32_t res = bmsEcologicalRuleMgrServiceProxy_->QueryFreeInstallExperience(want, callerInfo, rule);
     if (rule.replaceWant != nullptr) {
         rule.replaceWant->SetParam(ERMS_ORIGINAL_TARGET, want.ToString());
-        APP_LOGD("QueryFreeInstallExperience  isAllow = %{public}d, replaceWant = %{public}s", rule.isAllow,
+        LOG_D(BMS_TAG_FREE_INSTALL, "isAllow = %{public}d, replaceWant = %{public}s", rule.isAllow,
             (*(rule.replaceWant)).ToString().c_str());
     }
     return res;
@@ -128,21 +129,21 @@ BmsEcologicalRuleMgrServiceProxy::BmsEcologicalRuleMgrServiceProxy(const sptr<IR
 int32_t BmsEcologicalRuleMgrServiceProxy::QueryFreeInstallExperience(const Want &want, const BmsCallerInfo &callerInfo,
     BmsExperienceRule &rule)
 {
-    APP_LOGI("QueryFreeInstallExperience called");
+    LOG_I(BMS_TAG_FREE_INSTALL, "QueryFreeInstallExperience called");
     MessageParcel data;
 
     if (!data.WriteInterfaceToken(ERMS_INTERFACE_TOKEN)) {
-        APP_LOGE("write token failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "write token failed");
         return ERR_FAILED;
     }
 
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("write want failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "write want failed");
         return ERR_FAILED;
     }
 
     if (!data.WriteParcelable(&callerInfo)) {
-        APP_LOGE("write callerInfo failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "write callerInfo failed");
         return ERR_FAILED;
     }
 
@@ -151,24 +152,24 @@ int32_t BmsEcologicalRuleMgrServiceProxy::QueryFreeInstallExperience(const Want 
 
     auto remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("get Remote failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "get Remote failed");
         return ERR_FAILED;
     }
 
     int32_t ret = remote->SendRequest(QUERY_FREE_INSTALL_EXPERIENCE_CMD, data, reply, option);
     if (ret != ERR_NONE) {
-        APP_LOGE("SendRequest error, ret = %{public}d", ret);
+        LOG_E(BMS_TAG_FREE_INSTALL, "SendRequest error, ret = %{public}d", ret);
         return ERR_FAILED;
     }
 
     std::unique_ptr<BmsExperienceRule> sptrRule(reply.ReadParcelable<BmsExperienceRule>());
     if (sptrRule == nullptr) {
-        APP_LOGE("readParcelable sptrRule error");
+        LOG_E(BMS_TAG_FREE_INSTALL, "readParcelable sptrRule error");
         return ERR_FAILED;
     }
 
     rule = *sptrRule;
-    APP_LOGI("QueryFreeInstallExperience end");
+    LOG_I(BMS_TAG_FREE_INSTALL, "QueryFreeInstallExperience end");
     return ERR_OK;
 }
 
@@ -180,7 +181,7 @@ bool BmsEcologicalRuleMgrServiceProxy::ReadParcelableVector(std::vector<T> &parc
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (info == nullptr) {
-            APP_LOGE("read Parcelable infos failed");
+            LOG_E(BMS_TAG_FREE_INSTALL, "read Parcelable infos failed");
             return false;
         }
         parcelableVector.emplace_back(*info);

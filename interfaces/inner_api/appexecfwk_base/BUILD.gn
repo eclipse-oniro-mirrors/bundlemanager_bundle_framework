@@ -42,6 +42,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/app_running_control_rule.cpp",
     "src/app_running_control_rule_result.cpp",
     "src/application_info.cpp",
+    "src/bundle_clone_info.cpp",
     "src/bundle_constants.cpp",
     "src/bundle_info.cpp",
     "src/bundle_pack_info.cpp",

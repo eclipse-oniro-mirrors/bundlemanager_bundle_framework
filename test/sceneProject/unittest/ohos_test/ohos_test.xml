@@ -290,6 +290,8 @@
         src="res" />
       <option name="push" value="test_bundle/bmsAccessTokentest3.hap -> /data/test/resource/bms/quick_fix/"
         src="res" />
+      <option name="push" value="driver_test/driver_feature_hap.hap -> /data/test/resource/bms/quick_fix/"
+        src="res" />
     </preparer>
   </target>
   <target name="BmsBundleQuickFixSwitcherTest">
@@ -410,6 +412,8 @@
         src="res" />
       <option name="push" value="test_bundle/bmsThirdBundle2.hap -> /data/test/resource/bms/accesstoken_bundle/"
         src="res" />
+      <option name="push" value="test_bundle/thumbnail.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
     </preparer>
   </target>
   <target name="BmsBundleAppServiceFwkInstallerTest">
@@ -420,5 +424,13 @@
       <option name="push" value="bundle_app_service/appService_v2_library1.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
       <option name="push" value="bundle_app_service/appService_v2_library2.hsp -> /data/test/resource/bms/app_service_test/" src="res" />
       </preparer>
+  </target>
+  <target name="BmsExtendResourceManagerTest">
+    <preparer>
+      <option name="push" value="test_bundle/resourceManagerTest.hap -> /data/test/resource/bms/resource_manager/"
+        src="res" />
+      <option name="push" value="bundle_app_service/appService_v1_library1.hsp -> /data/test/resource/bms/app_service_test/"
+        src="res" />
+    </preparer>
   </target>
 </configuration>

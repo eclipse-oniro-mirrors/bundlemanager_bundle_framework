@@ -24,6 +24,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_resource_manager.h"
+#include "bundle_resource_parser.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,11 +46,7 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
     }
     resourceInfo = ConvertToBundleResourceInfo(innerBundleInfo);
     // process overlay hap paths
-    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
-        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
-        GetOverlayModuleHapPaths(resourceInfo.bundleName_, resourceInfo.moduleName_,
-            userId, resourceInfo.overlayHapPaths_);
-    }
+    GetOverlayModuleHapPaths(innerBundleInfo, resourceInfo.moduleName_, userId, resourceInfo.overlayHapPaths_);
     return true;
 }
 
@@ -230,16 +227,18 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
 }
 
 void BundleResourceProcess::ChangeDynamicIcon(
-    std::vector<ResourceInfo> &resourceInfos, const std::string &icon)
+    std::vector<ResourceInfo> &resourceInfos, const ResourceInfo &resourceInfo)
 {
-    for (auto &resourceInfo : resourceInfos) {
-        resourceInfo.icon_ = icon;
-        resourceInfo.iconNeedParse_ = false;
+    for (auto &info : resourceInfos) {
+        info.icon_ = resourceInfo.icon_;
+        info.foreground_ = resourceInfo.foreground_;
+        info.background_ = resourceInfo.background_;
+        info.iconNeedParse_ = false;
     }
 }
 
 bool BundleResourceProcess::GetDynamicIcon(
-    const InnerBundleInfo &innerBundleInfo, std::string &icon)
+    const InnerBundleInfo &innerBundleInfo, ResourceInfo &resourceInfo)
 {
     std::string curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule();
     if (curDynamicIconModule.empty()) {
@@ -254,16 +253,14 @@ bool BundleResourceProcess::GetDynamicIcon(
             curDynamicIconModule.c_str());
         return false;
     }
-
     auto &extendResourceInfo = iter->second;
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    if (manager == nullptr) {
-        APP_LOGE("failed, manager is nullptr");
+    BundleResourceParser parser;
+    if (parser.ParseIconResourceByPath(extendResourceInfo.filePath, extendResourceInfo.iconId, resourceInfo)) {
+        APP_LOGE("bundleName:%{public}s parse dynamicIcon failed, iconId:%{public}d",
+            innerBundleInfo.GetBundleName().c_str(), extendResourceInfo.iconId);
         return false;
     }
-
-    return manager->ParseIconResourceByPath(
-        extendResourceInfo.filePath, extendResourceInfo.iconId, icon);
+    return true;
 }
 
 bool BundleResourceProcess::InnerGetResourceInfo(
@@ -271,8 +268,8 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
-    std::string dynamicIcon;
-    bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicIcon);
+    ResourceInfo dynamicResourceInfo;
+    bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicResourceInfo);
     if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
         if (!hasDynamicIcon) {
             APP_LOGW("bundleName: %{public}s get bundle resource failed",
@@ -287,14 +284,16 @@ bool BundleResourceProcess::InnerGetResourceInfo(
         defaultResourceInfo.labelNeedParse_ = false;
         defaultResourceInfo.label_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.iconNeedParse_ = false;
-        defaultResourceInfo.icon_ = dynamicIcon;
+        defaultResourceInfo.icon_ = dynamicResourceInfo.icon_;
+        defaultResourceInfo.foreground_ = dynamicResourceInfo.foreground_;
+        defaultResourceInfo.background_ = dynamicResourceInfo.background_;
         resourceInfos.emplace_back(defaultResourceInfo);
     }
 
     if (hasDynamicIcon) {
         APP_LOGI("bundle %{public}s has dynamicIcon",
             innerBundleInfo.GetBundleName().c_str());
-        ChangeDynamicIcon(resourceInfos, dynamicIcon);
+        ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
 
     return true;
@@ -402,18 +401,16 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
         resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
     }
     // process overlay hap paths
-    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
-        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
-        size_t size = resourceInfos.size();
-        for (size_t index = 0; index < size; ++index) {
-            if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
-                resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
-                continue;
-            }
-            GetOverlayModuleHapPaths(resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
-                userId, resourceInfos[index].overlayHapPaths_);
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
+            resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
+            continue;
         }
+        GetOverlayModuleHapPaths(innerBundleInfo, resourceInfos[index].moduleName_,
+            userId, resourceInfos[index].overlayHapPaths_);
     }
+
     APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
         innerBundleInfo.GetBundleName().c_str());
     return !resourceInfos.empty();
@@ -442,37 +439,68 @@ bool BundleResourceProcess::CheckIsNeedProcessAbilityResource(const InnerBundleI
 }
 
 bool BundleResourceProcess::GetOverlayModuleHapPaths(
-    const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo,
     const std::string &moduleName,
     int32_t userId,
     std::vector<std::string> &overlayHapPaths)
 {
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    auto overlayDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetOverlayManagerProxy();
-    if (overlayDataMgr == nullptr) {
-        APP_LOGE("overlayDataMgr is nullptr");
+    auto innerModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(moduleName);
+    if (innerModuleInfo == std::nullopt) {
+        APP_LOGE("moduleName:%{public}s is not exist", moduleName.c_str());
         return false;
     }
-    std::vector<OverlayModuleInfo> overlayModuleInfos;
-    ErrCode ret = overlayDataMgr->GetOverlayModuleInfoForTarget(bundleName, moduleName, overlayModuleInfos, userId);
-    if (ret != ERR_OK) {
-        APP_LOGW("get failed, bundleName:%{public}s, moduleName:%{public}s, errcode:%{public}d",
-            bundleName.c_str(), moduleName.c_str(), ret);
+    if (innerModuleInfo->overlayModuleInfo.empty()) {
+        APP_LOGD("moduleName:%{public}s has no overlay module", moduleName.c_str());
         return false;
     }
+    std::string bundleName = innerBundleInfo.GetBundleName();
+    APP_LOGI("bundleName:%{public}s need add overlay hap path", bundleName.c_str());
+    auto overlayModuleInfos = innerModuleInfo->overlayModuleInfo;
+    for (auto &info : overlayModuleInfos) {
+        if (info.bundleName == bundleName) {
+            innerBundleInfo.GetOverlayModuleState(info.moduleName, userId, info.state);
+        } else {
+            GetExternalOverlayHapState(info.bundleName, info.moduleName, userId, info.state);
+        }
+    }
+    // sort by priority
     std::sort(overlayModuleInfos.begin(), overlayModuleInfos.end(),
         [](const OverlayModuleInfo &lhs, const OverlayModuleInfo &rhs) -> bool {
             return lhs.priority > rhs.priority;
         });
-    APP_LOGD("bundleName:%{public}s, overlayModuleInfos.size :%{public}zu",
-        bundleName.c_str(), overlayModuleInfos.size());
     for (const auto &info : overlayModuleInfos) {
         if (info.state == OverlayState::OVERLAY_ENABLE) {
             overlayHapPaths.emplace_back(info.hapPath);
         }
     }
-    APP_LOGD("bundleName:%{public}s, overlayHapPaths.size :%{public}zu",
-        bundleName.c_str(), overlayHapPaths.size());
+    if (overlayHapPaths.empty()) {
+        APP_LOGE("moduleName:%{public}s overlay hap path is empty", moduleName.c_str());
+        return false;
+    }
+    return true;
+#endif
+    return true;
+}
+
+bool BundleResourceProcess::GetExternalOverlayHapState(const std::string &bundleName,
+    const std::string &moduleName, const int32_t userId, int32_t &state)
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    APP_LOGD("bundleName:%{public}s, moduleName:%{public}s get overlay state", bundleName.c_str(), moduleName.c_str());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    InnerBundleInfo bundleInfo;
+    if (!dataMgr->QueryOverlayInnerBundleInfo(bundleName, bundleInfo)) {
+        return false;
+    }
+    if (!bundleInfo.GetOverlayModuleState(moduleName, userId, state)) {
+        return false;
+    }
+    return true;
 #endif
     return true;
 }
@@ -501,21 +529,37 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
         resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
     }
     // process overlay hap paths
-    if (innerBundleInfo.GetOverlayType() != OverlayType::NON_OVERLAY_TYPE) {
-        APP_LOGI("bundleName:%{public}s need add overlay hap path", innerBundleInfo.GetBundleName().c_str());
-        size_t size = resourceInfos.size();
-        for (size_t index = 0; index < size; ++index) {
-            if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
-                resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
-                continue;
-            }
-            GetOverlayModuleHapPaths(resourceInfos[index].bundleName_, resourceInfos[index].moduleName_,
-                userId, resourceInfos[index].overlayHapPaths_);
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        if ((index > 0) && (resourceInfos[index].moduleName_ == resourceInfos[index - 1].moduleName_)) {
+            resourceInfos[index].overlayHapPaths_ = resourceInfos[index - 1].overlayHapPaths_;
+            continue;
         }
+        GetOverlayModuleHapPaths(innerBundleInfo, resourceInfos[index].moduleName_,
+            userId, resourceInfos[index].overlayHapPaths_);
     }
+
     APP_LOGD("end get ability, size:%{public}zu, bundleName:%{public}s", resourceInfos.size(),
         innerBundleInfo.GetBundleName().c_str());
     return !resourceInfos.empty();
+}
+
+void BundleResourceProcess::GetTargetBundleName(const std::string &bundleName,
+    std::string &targetBundleName)
+{
+    targetBundleName = bundleName;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    InnerBundleInfo bundleInfo;
+    if (!dataMgr->QueryOverlayInnerBundleInfo(bundleName, bundleInfo)) {
+        return;
+    }
+    if (bundleInfo.GetOverlayType() == OverlayType::OVERLAY_EXTERNAL_BUNDLE) {
+        targetBundleName = bundleInfo.GetTargetBundleName();
+    }
 }
 } // AppExecFwk
 } // OHOS

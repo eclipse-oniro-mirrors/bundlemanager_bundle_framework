@@ -54,7 +54,7 @@ bool BundleMonitor::UnSubscribe()
 
 void BundleMonitor::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
 {
-    APP_LOGI("OnReceiveEvent common event onReceiveEvent called");
+    APP_LOGD("OnReceiveEvent common event onReceiveEvent called");
     Want want = eventData.GetWant();
     std::string action = want.GetAction();
     std::string bundleName = want.GetElement().GetBundleName();

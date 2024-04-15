@@ -25,7 +25,11 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_resource_helper.h"
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource/bundle_resource_manager.h"
+#include "bundle_resource/bundle_resource_parser.h"
+#include "bundle_resource/resource_info.h"
+#endif
 #include "bundle_util.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -116,6 +120,11 @@ ErrCode ExtendResourceManagerHostImpl::BeforeAddExtResource(
     if (filePaths.empty()) {
         APP_LOGE("fail to AddExtResource due to filePaths is empty.");
         return ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -318,11 +327,16 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
 
     if (moduleNames.empty()) {
         APP_LOGE("fail to RemoveExtResource due to moduleName is empty.");
-        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+        return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_INSTALL_BUNDLE, Constants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -362,7 +376,7 @@ ErrCode ExtendResourceManagerHostImpl::CheckModuleExist(
         auto iter = extendResourceInfos.find(moduleName);
         if (iter == extendResourceInfos.end()) {
             APP_LOGE("Module not exist %{public}s.", moduleName.c_str());
-            return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+            return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
         }
 
         collectorExtResourceInfos.emplace_back(iter->second);
@@ -378,8 +392,13 @@ ErrCode ExtendResourceManagerHostImpl::GetExtResource(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -416,6 +435,11 @@ ErrCode ExtendResourceManagerHostImpl::EnableDynamicIcon(
     if (moduleName.empty()) {
         APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty.");
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
@@ -460,24 +484,34 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
     const std::string &bundleName, const ExtendResourceInfo &extendResourceInfo)
 {
     APP_LOGI("ParseBundleResource %{public}s", bundleName.c_str());
-    std::string icon;
-    if (!BundleResourceHelper::ParseIconResourceByPath(
-        extendResourceInfo.filePath, extendResourceInfo.iconId, icon)) {
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    BundleResourceParser bundleResourceParser;
+    ResourceInfo info;
+    info.bundleName_ = bundleName;
+    info.iconId_ = extendResourceInfo.iconId;
+    if (!bundleResourceParser.ParseIconResourceByPath(extendResourceInfo.filePath,
+        extendResourceInfo.iconId, info)) {
         APP_LOGW("ParseIconResourceByPath failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
-    if (icon.empty()) {
+    if (info.icon_.empty()) {
         APP_LOGE("icon is empty, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
-    if (!BundleResourceHelper::UpdateBundleIcon(bundleName, icon)) {
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->UpdateBundleIcon(bundleName, info)) {
         APP_LOGE("UpdateBundleIcon failed, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
-
     return true;
+#else
+    APP_LOGI("bundle resource not support");
+    return false;
+#endif
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetExtendResourceInfo(const std::string &bundleName,
@@ -509,6 +543,12 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         APP_LOGE("fail to DisableDynamicIcon due to param is empty.");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_ACCESS_DYNAMIC_ICON)) {
         APP_LOGE("verify permission failed");
@@ -527,15 +567,39 @@ ErrCode ExtendResourceManagerHostImpl::DisableDynamicIcon(const std::string &bun
         return ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED;
     }
 
-    ResetBunldleResourceIcon(bundleName);
     SaveCurDynamicIcon(bundleName, "");
+    ResetBundleResourceIcon(bundleName);
     SendBroadcast(bundleName, false);
     return ERR_OK;
 }
 
-bool ExtendResourceManagerHostImpl::ResetBunldleResourceIcon(const std::string &bundleName)
+bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &bundleName)
 {
-    return BundleResourceHelper::ResetBunldleResourceIcon(bundleName);
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI("ResetBundleResourceIcon %{public}s", bundleName.c_str());
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+
+    // Delete dynamic icon resource
+    if (!manager->DeleteResourceInfo(bundleName)) {
+        APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    // Reset default icon
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!manager->GetLauncherAbilityResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfos)) {
+        APP_LOGD("No default icon, bundleName:%{public}s", bundleName.c_str());
+    }
+
+    return true;
+#else
+    return false;
+#endif
 }
 
 ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
@@ -546,8 +610,13 @@ ErrCode ExtendResourceManagerHostImpl::GetDynamicIcon(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
-        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
+        Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
@@ -574,6 +643,10 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
     if (fileName.empty()) {
         APP_LOGE("fail to CreateFd due to param is empty.");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
         Constants::PERMISSION_INSTALL_BUNDLE)) {

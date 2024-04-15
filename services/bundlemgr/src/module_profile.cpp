@@ -228,6 +228,7 @@ struct App {
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     bool gwpAsanEnabled = false;
     bool tsanEnabled = false;
+    std::vector<ApplicationEnvironment> appEnvironments;
 };
 
 struct Module {
@@ -262,6 +263,8 @@ struct Module {
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
+    std::string packageName;
+    std::string appStartup;
 };
 
 struct ModuleJson {
@@ -1203,6 +1206,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_ENVIRONMENTS,
+        app.appEnvironments,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1471,6 +1482,22 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PACKAGE_NAME,
+        module.packageName,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_APP_STARTUP,
+        module.appStartup,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1890,6 +1917,7 @@ bool ToApplicationInfo(
     applicationInfo.compileSdkType = app.compileSdkType;
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
+    applicationInfo.appEnvironments = app.appEnvironments;
     return true;
 }
 
@@ -2180,6 +2208,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.routerMap = moduleJson.module.routerMap;
     // abilities and fileContextMenu store in InnerBundleInfo
     innerModuleInfo.appEnvironments = moduleJson.module.appEnvironments;
+    innerModuleInfo.packageName = moduleJson.module.packageName;
+    innerModuleInfo.appStartup = moduleJson.module.appStartup;
     return true;
 }
 
@@ -2324,8 +2354,7 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertExtensionSkillInfo(key, extension.skills);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-    if (!findEntry && !transformParam.isPreInstallApp &&
-        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+    if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

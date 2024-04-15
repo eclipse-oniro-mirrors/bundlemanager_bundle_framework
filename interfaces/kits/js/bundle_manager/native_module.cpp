@@ -157,11 +157,12 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllPreinstalledApplicationInfo", GetAllPreinstalledApplicationInfos),
         DECLARE_NAPI_FUNCTION("getAllBundleInfoByDeveloperId", GetAllBundleInfoByDeveloperId),
         DECLARE_NAPI_FUNCTION("getDeveloperIds", GetDeveloperIds),
+        DECLARE_NAPI_FUNCTION("switchUninstallState", SwitchUninstallState),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     RegisterClearCacheListener();
-    APP_LOGI("init js bundle manager success.");
+    APP_LOGD("init js bundle manager success.");
     return exports;
 }
 

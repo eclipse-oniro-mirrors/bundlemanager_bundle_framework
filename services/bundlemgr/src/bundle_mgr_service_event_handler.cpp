@@ -949,7 +949,7 @@ void BMSEventHandler::AddTaskParallel(
         return;
     }
 
-    size_t threadsNum = installerHost->GetThreadsNum();
+    size_t threadsNum = static_cast<size_t>(installerHost->GetThreadsNum());
     APP_LOGI("priority: %{public}d, tasks: %{public}zu, userId: %{public}d, threadsNum: %{public}zu.",
         taskPriority, tasks.size(), userId, threadsNum);
     std::atomic_uint taskEndNum = 0;
@@ -1057,6 +1057,7 @@ void BMSEventHandler::ProcessRebootBundle()
     APP_LOGI("BMSEventHandler Process reboot bundle start");
     ProcessRebootDeleteAotPath();
     LoadAllPreInstallBundleInfos();
+    DeleteAllBundleResourceInfo();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -1485,7 +1486,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+        if (!OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
             SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -1838,30 +1839,10 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
             continue;
         }
-
-        // Check the installed module.
-        // If the corresponding Hap does not exist, it should be uninstalled.
-        for (auto moduleName : hasInstalledInfo.hapModuleNames) {
-            bool hasModuleHapExist = false;
-            for (auto parserInfoIter : listIter->second) {
-                auto parserModuleNames = parserInfoIter.second.GetModuleNameVec();
-                if (!parserModuleNames.empty() && moduleName == parserModuleNames[0]) {
-                    hasModuleHapExist = true;
-                    break;
-                }
-            }
-
-            if (!hasModuleHapExist) {
-                APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
-                    bundleName.c_str(), moduleName.c_str());
-                SystemBundleInstaller installer;
-                if (!installer.UninstallSystemBundle(bundleName, moduleName)) {
-                    APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
-                        bundleName.c_str(), moduleName.c_str());
-                }
-            }
+        // Check the installed module
+        if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second)) {
+            APP_LOGI("bundleName:%{public}s need delete module", bundleName.c_str());
         }
-
         // Check the preInstall path in Db.
         // If the corresponding Hap does not exist, it should be deleted.
         auto parserInfoMap = listIter->second;
@@ -1880,6 +1861,49 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
     }
 
     APP_LOGI("Reboot scan and OTA uninstall success");
+}
+
+bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    if (infos.empty()) {
+        APP_LOGI("bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
+        return false;
+    }
+    if (bundleInfo.versionCode > infos.begin()->second.GetVersionCode()) {
+        APP_LOGI("bundleName:%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
+        return false;
+    }
+    for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
+            return false;
+        }
+    }
+    bool needUninstallModule = false;
+    // Check the installed module.
+    // If the corresponding Hap does not exist, it should be uninstalled.
+    for (auto moduleName : bundleInfo.hapModuleNames) {
+        bool hasModuleHapExist = false;
+        for (auto parserInfoIter : infos) {
+            auto parserModuleNames = parserInfoIter.second.GetModuleNameVec();
+            if (!parserModuleNames.empty() && moduleName == parserModuleNames[0]) {
+                hasModuleHapExist = true;
+                break;
+            }
+        }
+
+        if (!hasModuleHapExist) {
+            APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
+                bundleInfo.name.c_str(), moduleName.c_str());
+            needUninstallModule = true;
+            SystemBundleInstaller installer;
+            if (!installer.UninstallSystemBundle(bundleInfo.name, moduleName)) {
+                APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
+                    bundleInfo.name.c_str(), moduleName.c_str());
+            }
+        }
+    }
+    return needUninstallModule;
 }
 
 void BMSEventHandler::DeletePreInfoInDb(
@@ -2009,6 +2033,34 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    return ret == ERR_OK;
+}
+
+bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
+    const std::vector<std::string> &filePaths,
+    const std::string &bundleName,
+    Constants::AppType appType,
+    bool removable)
+{
+    if (filePaths.empty()) {
+        APP_LOGE("File path is empty");
+        return false;
+    }
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
+    SystemBundleInstaller installer;
+    ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }
@@ -2595,6 +2647,15 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     eventInfo.errCode = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
+}
+
+void BMSEventHandler::DeleteAllBundleResourceInfo()
+{
+    APP_LOGI("delete all bundle resource when ota start");
+    if (!BundleResourceHelper::DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource failed");
+    }
+    APP_LOGI("delete all bundle resource when ota end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

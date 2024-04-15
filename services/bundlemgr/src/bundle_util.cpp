@@ -307,7 +307,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
 {
     std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
-        APP_LOGE("fail to access error:%{public}d", errno);
+        APP_LOGD("fail to access error:%{public}d", errno);
         if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
             APP_LOGE("make bundle dir error:%{public}d", errno);
             return;
@@ -605,7 +605,7 @@ bool BundleUtil::CopyFileFast(const std::string &sourcePath, const std::string &
 
     close(sourceFd);
     close(destFd);
-    APP_LOGI("sendfile success");
+    APP_LOGD("sendfile success");
     return true;
 }
 
@@ -804,7 +804,6 @@ std::string BundleUtil::GenerateUuid()
     } else {
         deviceUdid = std::string{ deviceId };
         deviceStr = GetHexHash(deviceUdid);
-        APP_LOGI("GenerateUuid deviceUdid is %{public}s", deviceUdid.c_str());
     }
 
     std::string uuid = timeStr + deviceStr;
@@ -813,7 +812,6 @@ std::string BundleUtil::GenerateUuid()
     for (int32_t index : SEPARATOR_POSITIONS) {
         uuid.insert(index, 1, UUID_SEPARATOR);
     }
-    APP_LOGI("GenerateUuid uuid is %{public}s", uuid.c_str());
     return uuid;
 }
 

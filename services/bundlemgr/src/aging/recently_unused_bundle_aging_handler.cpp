@@ -52,10 +52,10 @@ public:
         agingPromise_ = agingPromise;
     }
 
-    virtual void OnStatusNotify(const int progress) override
+    void OnStatusNotify(const int progress) override
     {}
 
-    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
+    void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
         std::lock_guard<std::mutex> lock(stateMutex_);
         isRunning_ = false;

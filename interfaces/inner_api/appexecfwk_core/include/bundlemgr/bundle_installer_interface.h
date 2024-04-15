@@ -126,6 +126,12 @@ public:
     {
         return true;
     }
+
+    virtual bool UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return true;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

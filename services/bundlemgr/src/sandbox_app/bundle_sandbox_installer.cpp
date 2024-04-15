@@ -40,12 +40,12 @@ using namespace OHOS::Security;
 
 BundleSandboxInstaller::BundleSandboxInstaller()
 {
-    APP_LOGI("bundle sandbox installer instance is created");
+    APP_LOGD("bundle sandbox installer instance is created");
 }
 
 BundleSandboxInstaller::~BundleSandboxInstaller()
 {
-    APP_LOGI("bundle sandbox installer instance is destroyed");
+    APP_LOGD("bundle sandbox installer instance is destroyed");
 }
 
 ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName, const int32_t &dlpType,
@@ -302,7 +302,7 @@ void BundleSandboxInstaller::SandboxAppRollBack(InnerBundleInfo &info, const int
 ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundleName, int32_t userId)
 {
     // All sandbox will be uninstalled when the original application is updated or uninstalled
-    APP_LOGI("UninstallAllSandboxApps begin");
+    APP_LOGI("begin");
     if (bundleName.empty()) {
         APP_LOGE("UninstallAllSandboxApps failed due to empty bundle name");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
@@ -338,7 +338,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
         }
     });
 
-    APP_LOGI("UninstallAllSandboxApps finish");
+    APP_LOGI("end");
     return ERR_OK;
 }
 

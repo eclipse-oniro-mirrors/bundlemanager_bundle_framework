@@ -78,6 +78,7 @@ const std::string OVERLAY_TYPE = "overlayType";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
 const std::string APP_IDENTIFIER = "appIdentifier";
 const std::string BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
+const std::string BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
 const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
@@ -349,6 +350,17 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < oldAppIdsSize; i++) {
         oldAppIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    int32_t routerArraySize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArraySize);
+    CONTAINER_SECURITY_VERIFY(parcel, routerArraySize, &routerArray);
+    for (int32_t i = 0; i < routerArraySize; ++i) {
+        std::unique_ptr<RouterItem> routerItem(parcel.ReadParcelable<RouterItem>());
+        if (!routerItem) {
+            APP_LOGE("ReadParcelable<RouterItem> failed");
+            return false;
+        }
+        routerArray.emplace_back(*routerItem);
+    }
     return true;
 }
 
@@ -462,6 +474,10 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, oldAppIds.size());
     for (auto &oldAppId : oldAppIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(oldAppId));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, routerArray.size());
+    for (auto &router : routerArray) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &router);
     }
     return true;
 }
@@ -667,7 +683,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_SIGNATURE_INFO, bundleInfo.signatureInfo},
         {OVERLAY_TYPE, bundleInfo.overlayType},
         {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos},
-        {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds}
+        {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds},
+        {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray}
     };
 }
 
@@ -1035,6 +1052,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<RouterItem>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_ROUTER_ARRAY,
+        bundleInfo.routerArray,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
     }

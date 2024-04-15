@@ -17,6 +17,8 @@
 
 #include <cerrno>
 #include <fcntl.h>
+#include <sys/sendfile.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
@@ -32,7 +34,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
-const int32_t DEFAULT_BUFFER_SIZE = 65536;
 } // namespace
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)
@@ -336,9 +337,33 @@ bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstaller
     return true;
 }
 
+bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel reply;
+    MessageParcel data;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
+    PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    PARCEL_WRITE(data, Parcelable, &installParam);
+    if (statusReceiver == nullptr) {
+        APP_LOGE("fail to uninstall quick fix, for statusReceiver is nullptr");
+        return false;
+    }
+    if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
+        APP_LOGE("write parcel failed");
+        return false;
+    }
+
+    return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER, data, reply, option);
+}
+
 ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bundleFilePaths,
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("stream install start");
     if (statusReceiver == nullptr) {
         APP_LOGE("stream install failed due to nullptr status receiver");
@@ -424,14 +449,31 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
         APP_LOGE("write file to stream failed due to open the hap file, errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    char buffer[DEFAULT_BUFFER_SIZE] = {0};
-    int offset = -1;
-    while ((offset = read(inputFd, buffer, sizeof(buffer))) > 0) {
-        if (write(outputFd, buffer, offset) < 0) {
-            close(inputFd);
-            APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
-            return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-        }
+
+    struct stat sourceStat;
+    if (fstat(inputFd, &sourceStat) == -1) {
+        APP_LOGE("fstat failed, errno : %{public}d", errno);
+        close(inputFd);
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
+    if (sourceStat.st_size < 0) {
+        APP_LOGE("invalid st_size");
+        close(inputFd);
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
+
+    size_t buffer = 524288; // 0.5M
+    size_t transferCount = 0;
+    ssize_t singleTransfer = 0;
+    while ((singleTransfer = sendfile(outputFd, inputFd, nullptr, buffer)) > 0) {
+        transferCount += static_cast<size_t>(singleTransfer);
+    }
+
+    if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
+        APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
+            errno, transferCount, static_cast<size_t>(sourceStat.st_size));
+        close(inputFd);
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
 
     close(inputFd);

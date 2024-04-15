@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "nlohmann/json.hpp"
@@ -66,7 +67,7 @@ DeployQuickFixResult *DeployQuickFixResult::Unmarshalling(Parcel &parcel)
 {
     DeployQuickFixResult *info = new (std::nothrow) DeployQuickFixResult();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
         delete info;
         info = nullptr;
     }
@@ -115,7 +116,7 @@ SwitchQuickFixResult *SwitchQuickFixResult::Unmarshalling(Parcel &parcel)
 {
     SwitchQuickFixResult *info = new (std::nothrow) SwitchQuickFixResult();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
         delete info;
         info = nullptr;
     }
@@ -159,7 +160,7 @@ DeleteQuickFixResult *DeleteQuickFixResult::Unmarshalling(Parcel &parcel)
 {
     DeleteQuickFixResult *info = new (std::nothrow) DeleteQuickFixResult();
     if ((info != nullptr) && (!info->ReadFromParcel(parcel))) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
         delete info;
         info = nullptr;
     }

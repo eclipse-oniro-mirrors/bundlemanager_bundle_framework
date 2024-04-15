@@ -29,16 +29,15 @@ const std::string ZIP_THREAD = "ZipThread";
 using namespace OHOS::AppExecFwk;
 
 std::shared_ptr<EventHandler> g_handler = nullptr;
+std::mutex mutex;
 void PostTask(const InnerEvent::Callback &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex);
     if (g_handler == nullptr) {
         auto runner = EventRunner::Create(ZIP_THREAD);
         g_handler = std::make_shared<EventHandler>(runner);
     }
-
-    if (g_handler != nullptr) {
-        g_handler->PostTask(callback);
-    }
+    g_handler->PostTask(callback);
 }
 
 struct tm *GetCurrentSystemTime(void)

@@ -47,10 +47,7 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -113,7 +110,6 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
       "ability_runtime:ability_manager",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
-      "device_info_manager:distributed_device_profile_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
       "power_manager:powermgr_client",
@@ -162,6 +158,14 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
+  }
+
+  if (bms_device_info_manager_part_enabled) {
+    external_deps += [
+      "device_info_manager:distributed_device_profile_common",
+      "device_info_manager:distributed_device_profile_sdk",
+    ]
+    defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 }
 

@@ -60,6 +60,7 @@ const std::string BUNDLE_NAME_DEMO = "com.example.demo.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hap";
 const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest3.hap";
 const std::string HQF_FILE_PATH1 = "/data/test/resource/bms/quick_fix/bmsAccessTokentest1.hqf";
+const std::string HAP_PATH_TEST_RAW_FILE = "/data/test/resource/bms/quick_fix/driver_feature_hap.hap";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string QUICK_FIX_ABI = "arms";
@@ -445,28 +446,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0002, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0003
- * Function: CheckAppQuickFixInfos
- * @tc.name: test QuickFixChecker
- * @tc.require: issueI5N7AD
- * @tc.desc: 1. check bundle version name not same
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0003, Function | SmallTest | Level0)
-{
-    std::unordered_map<std::string, AppQuickFix> infos;
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    infos.emplace("appQuickFix_1", appQuickFix);
-
-    appQuickFix.versionName = "2.0.0";
-    appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "feature";
-    infos.emplace("appQuickFix_2", appQuickFix);
-
-    QuickFixChecker checker;
-    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0004
  * Function: CheckAppQuickFixInfos
  * @tc.name: test QuickFixChecker
@@ -486,28 +465,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0004, Function | SmallTest
     QuickFixChecker checker;
     ErrCode ret = checker.CheckAppQuickFixInfos(infos);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_CODE_NOT_SAME);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0005
- * Function: CheckAppQuickFixInfos
- * @tc.name: test QuickFixChecker
- * @tc.require: issueI5N7AD
- * @tc.desc: 1. check patch version code not same
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0005, Function | SmallTest | Level0)
-{
-    std::unordered_map<std::string, AppQuickFix> infos;
-    AppQuickFix appQuickFix = CreateAppQuickFix();
-    infos.emplace("appQuickFix_1", appQuickFix);
-
-    appQuickFix.deployingAppqfInfo.versionName = "2.0.0";
-    appQuickFix.deployingAppqfInfo.hqfInfos[0].moduleName = "feature";
-    infos.emplace("appQuickFix_2", appQuickFix);
-
-    QuickFixChecker checker;
-    ErrCode ret = checker.CheckAppQuickFixInfos(infos);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PATCH_VERSION_NAME_NOT_SAME);
 }
 
 /**
@@ -2107,35 +2064,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0075, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0076
- * Function: CheckPatchWithInstalledBundle
- * @tc.name: test CheckPatchWithInstalledBundle
- * @tc.require: issueI5N7AD
- * @tc.desc: CheckPatchWithInstalledBundle
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0076, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME, PROVISION_TYPE_DEBUG);
-
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        AppQuickFix appQuickFix = CreateAppQuickFix();
-        appQuickFix.deployingAppqfInfo.versionCode = 2;
-        BundleInfo bundleInfo;
-        ErrCode ret = deployer->GetBundleInfo(appQuickFix.bundleName, bundleInfo);
-        EXPECT_EQ(ret, ERR_OK);
-        Security::Verify::ProvisionInfo provisionInfo;
-        bundleInfo.versionName = "3.0";
-        QuickFixChecker checker;
-        ret = checker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_VERSION_NAME_NOT_SAME);
-    }
-
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0077
  * Function: CheckAppQuickFixInfos
  * @tc.name: test CheckAppQuickFixInfos
@@ -3236,6 +3164,45 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0530, Function | SmallTest
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
     std::string patchPath = "data/test";
     auto ret = deployer->VerifyCodeSignatureForHqf(innerAppQuickFix, patchPath);
+    UninstallBundleInfo(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0540
+ * Function: ExtractQuickFixResFile
+ * @tc.name: test ExtractQuickFixResFile
+ * @tc.require: issueI9CPVJ
+ * @tc.desc: ExtractQuickFixResFile empty hqfInfos
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0540, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    std::vector<HqfInfo> hqfInfo;
+    appQuickFix.deployingAppqfInfo.hqfInfos = hqfInfo;
+    BundleInfo bundleInfo;
+    auto ret = deployer->ExtractQuickFixResFile(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0550
+ * Function: ExtractQuickFixResFile
+ * @tc.name: test ExtractQuickFixResFile
+ * @tc.require: issueI9CPVJ
+ * @tc.desc: ExtractQuickFixResFile ok
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0550, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    BundleInfo bundleInfo;
+    ErrCode ret = deployer->GetBundleInfo(BUNDLE_NAME, bundleInfo);
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    ret = deployer->ExtractQuickFixResFile(appQuickFix, bundleInfo);
     UninstallBundleInfo(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -4587,5 +4554,62 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0001, Function | SmallTest | Leve
     deployer->patchPaths_.push_back(path);
     ErrCode ret = deployer->DeployQuickFix();
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DeployQuickFix_0002
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0002, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths;
+        PatchParser patchParser;
+        bool hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_FALSE(hasResourceFile);
+        paths.emplace_back("");
+        paths.emplace_back(BUNDLE_NAME);
+        hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_FALSE(hasResourceFile);
+        paths.emplace_back(HAP_PATH_TEST_RAW_FILE);
+        hasResourceFile = patchParser.HasResourceFile(paths);
+        EXPECT_TRUE(hasResourceFile);
+    }
+}
+
+/**
+ * @tc.number: DeployQuickFix_0003
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> paths;
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.debug = true;
+        bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_DEBUG;
+        auto ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.applicationInfo.debug = false;
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        bundleInfo.applicationInfo.appProvisionType = Constants::APP_PROVISION_TYPE_RELEASE;
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_OK);
+
+        paths.emplace_back(HAP_PATH_TEST_RAW_FILE);
+        ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
+    }
 }
 } // OHOS

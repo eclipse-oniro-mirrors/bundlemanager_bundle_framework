@@ -187,5 +187,24 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_010, TestSize.Le
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
+
+/**
+ * @tc.number: BundleInstallerManagerTest_020
+ * @tc.name: test CreateUninstallAndRecoverTask
+ * @tc.desc: Verify function CreateUninstallAndRecoverTask is called,
+ * receiver->GetResultCode() return value is not ERR_OK
+ */
+HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_020, TestSize.Level1)
+{
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(receiver, nullptr);
+    InstallParam installParam;
+    installParam.userId = USERID;
+    std::string bundleName = EMPTY_STRING;
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>();
+    bundleInstallerManager->CreateUninstallAndRecoverTask(bundleName, installParam, receiver);
+    ErrCode result = receiver->GetResultCode();
+    EXPECT_NE(ERR_OK, result);
+}
 }  // AppExecFwk
 }  // OHOS

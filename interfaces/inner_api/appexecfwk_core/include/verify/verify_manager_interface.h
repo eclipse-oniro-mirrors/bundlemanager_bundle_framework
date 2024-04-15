@@ -28,8 +28,7 @@ class IVerifyManager : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.VerifyManager");
 
-    virtual ErrCode Verify(const std::vector<std::string> &abcPaths,
-        const std::vector<std::string> &abcNames, bool flag)
+    virtual ErrCode Verify(const std::vector<std::string> &abcPaths)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -37,16 +36,6 @@ public:
     virtual ErrCode RemoveFiles(const std::vector<std::string> &abcPaths)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
-    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
-    virtual ErrCode CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
-    {
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     virtual ErrCode DeleteAbc(const std::string &path)

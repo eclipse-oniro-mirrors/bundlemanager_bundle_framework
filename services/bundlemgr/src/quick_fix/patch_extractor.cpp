@@ -15,6 +15,7 @@
 
 #include "quick_fix/patch_extractor.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 
 namespace OHOS {
@@ -27,7 +28,7 @@ PatchExtractor::PatchExtractor(const std::string &source) : BaseExtractor(source
 
 bool PatchExtractor::ExtractPatchProfile(std::ostream &dest) const
 {
-    APP_LOGD("start to extract patch.json");
+    LOG_D(BMS_TAG_QUICK_FIX, "start to extract patch.json");
     return ExtractByName(PATCH_PROFILE_NAME, dest);
 }
 }  // namespace AppExecFwk

@@ -330,6 +330,28 @@ static bool ParseLauncherAbilityInfo(
     return true;
 }
 
+static void ConvertParameters(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : data) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nKey;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, "key", nKey));
+
+        napi_value nValue;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, "value", nValue));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
+    }
+}
+
 static void ConvertShortcutIntent(napi_env env, napi_value objShortcutInfo,
                                   const OHOS::AppExecFwk::ShortcutIntent &shortcutIntent)
 {
@@ -347,6 +369,11 @@ static void ConvertShortcutIntent(napi_env env, napi_value objShortcutInfo,
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "targetClass", nTargetClass));
+
+    napi_value nParameters;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nParameters));
+    ConvertParameters(env, shortcutIntent.parameters, nParameters);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objShortcutInfo, "parameters", nParameters));
 }
 
 static void ConvertShortcutInfo(
@@ -882,8 +909,8 @@ static bool InnerJSGetShortcutInfos(napi_env env, const std::string& bundleName,
         return false;
     }
     auto result = launcher->GetShortcutInfos(bundleName, shortcutInfos);
-    if (!result) {
-        APP_LOGE("GetShortcutInfos call error, bundleName is %{public}s", bundleName.c_str());
+    if (result != OHOS::ERR_OK) {
+        APP_LOGD("GetShortcutInfos call error, bundleName is %{public}s", bundleName.c_str());
         return false;
     }
     return true;

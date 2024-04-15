@@ -2589,8 +2589,7 @@ bool ToInnerBundleInfo(
         }
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     }
-    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp &&
-        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+    if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
@@ -2650,7 +2649,7 @@ ErrCode BundleProfile::TransformTo(
 
 ErrCode BundleProfile::TransformTo(const std::ostringstream &source, BundlePackInfo &bundlePackInfo)
 {
-    APP_LOGI("transform packinfo stream to bundle pack info");
+    APP_LOGD("transform packinfo stream to bundle pack info");
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");

@@ -125,6 +125,8 @@ public:
         const sptr<IStatusReceiver> &statusReceiver) override;
     bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) override;
+    bool UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver) override;
     void AddTask(const ThreadPoolTask &task, const std::string &taskName);
     size_t GetCurTaskNum();
     int32_t GetThreadsNum();
@@ -193,6 +195,7 @@ private:
 
     void HandleCreateStreamInstaller(MessageParcel &data, MessageParcel &reply);
     void HandleDestoryBundleStreamInstaller(MessageParcel &data, MessageParcel &reply);
+    void HandleUninstallAndRecoverMessage(MessageParcel &data);
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);

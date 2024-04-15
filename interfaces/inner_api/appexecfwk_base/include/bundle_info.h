@@ -152,6 +152,7 @@ struct BundleInfo : public Parcelable {
     int32_t overlayType = NON_OVERLAY_TYPE;
 
     SignatureInfo signatureInfo;
+    std::vector<RouterItem> routerArray;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

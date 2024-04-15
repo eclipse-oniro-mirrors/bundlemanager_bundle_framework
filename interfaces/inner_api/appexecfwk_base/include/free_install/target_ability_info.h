@@ -38,6 +38,7 @@ struct TargetInfo : public Parcelable {
     std::vector<std::string> callingBundleNames;
     std::vector<std::string> callingAppIds;
     std::vector<std::string> preloadModuleNames;
+    int32_t embedded = 0;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static TargetInfo *Unmarshalling(Parcel &parcel);

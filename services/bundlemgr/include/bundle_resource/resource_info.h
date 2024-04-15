@@ -48,6 +48,9 @@ public:
     std::string hapPath_;
     // used for parse overlay label and icon
     std::vector<std::string> overlayHapPaths_;
+    // used for layer icons
+    std::vector<uint8_t> foreground_;
+    std::vector<uint8_t> background_;
 };
 } // AppExecFwk
 } // OHOS

@@ -515,6 +515,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0300, Function | 
     sleep(1);
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: BundleDistributedManager_0400
  * @tc.name: Test ComparePcIdString
@@ -573,6 +574,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0600, Function | 
     EXPECT_EQ(ret, GET_DEVICE_PROFILE_FAILED);
     sleep(1);
 }
+#endif
 
 /**
  * @tc.number: BundleDistributedManager_0700
@@ -860,7 +862,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 #endif
     sleep(1);
 }
@@ -886,7 +888,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 #endif
     sleep(1);
 }
@@ -906,7 +908,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
 #ifdef USE_ARM64
     EXPECT_TRUE(ret);
 #else
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 #endif
     sleep(1);
 }

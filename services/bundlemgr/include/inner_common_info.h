@@ -125,6 +125,8 @@ struct InnerModuleInfo {
     std::vector<AppEnvironment> appEnvironments;
     bool asanEnabled = false;
     bool gwpAsanEnabled = false;
+    std::string packageName;
+    std::string appStartup;
 };
 
 struct SkillUri {
@@ -145,6 +147,7 @@ public:
     std::vector<std::string> actions;
     std::vector<std::string> entities;
     std::vector<SkillUri> uris;
+    bool domainVerify = false;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
@@ -159,6 +162,7 @@ private:
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
+    bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
     bool MatchUtd(const OHOS::AAFwk::Want &want);
     std::string GetOptParamUri(const std::string &uriString) const;
 };

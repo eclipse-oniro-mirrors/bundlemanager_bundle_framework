@@ -40,7 +40,7 @@ const std::string JSON_KEY_BUNDLE_INTENTS = "intents";
 const std::string JSON_KEY_BUNDLE_TARGET_BUNDLE = "targetBundle";
 const std::string JSON_KEY_BUNDLE_TARGET_MODULE = "targetModule";
 const std::string JSON_KEY_BUNDLE_TARGET_CLASS = "targetClass";
-const std::string JSON_KEY_BUNDLE_SHORTCUT_URI = "shortcutUri";
+const std::string JSON_KEY_BUNDLE_PARAMETERS = "parameters";
 const std::string JSON_KEY_ICON_ID = "iconId";
 const std::string JSON_KEY_LABEL_ID = "labelId";
 const std::string SHORTCUTS = "shortcuts";
@@ -74,7 +74,14 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
         shortcutIntent.targetBundle = Str16ToStr8(parcel.ReadString16()); // target bundle name
         shortcutIntent.targetModule = Str16ToStr8(parcel.ReadString16()); // target module name
         shortcutIntent.targetClass = Str16ToStr8(parcel.ReadString16()); // target class name
-        shortcutIntent.shortcutUri = Str16ToStr8(parcel.ReadString16()); // shortcut uri
+        int32_t parametersSize;
+        READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, parametersSize);
+        CONTAINER_SECURITY_VERIFY(parcel, parametersSize, &shortcutIntent.parameters);
+        for (int32_t i = 0; i < parametersSize; ++i) {
+            std::string key = Str16ToStr8(parcel.ReadString16());
+            std::string value = Str16ToStr8(parcel.ReadString16());
+            shortcutIntent.parameters.emplace(key, value);
+        }
         intents.emplace_back(shortcutIntent);
     }
     return true;
@@ -112,7 +119,11 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].targetBundle));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].targetModule));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].targetClass));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intents[i].shortcutUri));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(intents[i].parameters.size()));
+        for (const auto &dataItem : intents[i].parameters) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
+        }
     }
     return true;
 }
@@ -123,7 +134,7 @@ void to_json(nlohmann::json &jsonObject, const ShortcutIntent &shortcutIntent)
         {JSON_KEY_BUNDLE_TARGET_BUNDLE, shortcutIntent.targetBundle},
         {JSON_KEY_BUNDLE_TARGET_MODULE, shortcutIntent.targetModule},
         {JSON_KEY_BUNDLE_TARGET_CLASS, shortcutIntent.targetClass},
-        {JSON_KEY_BUNDLE_SHORTCUT_URI, shortcutIntent.shortcutUri},
+        {JSON_KEY_BUNDLE_PARAMETERS, shortcutIntent.parameters},
     };
 }
 
@@ -174,11 +185,11 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
+    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_BUNDLE_SHORTCUT_URI,
-        shortcutIntent.shortcutUri,
-        JsonType::STRING,
+        JSON_KEY_BUNDLE_PARAMETERS,
+        shortcutIntent.parameters,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -325,6 +336,14 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         Constants::ABILITY_NAME,
         shortcutWant.abilityName,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_PARAMETERS,
+        shortcutWant.parameters,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

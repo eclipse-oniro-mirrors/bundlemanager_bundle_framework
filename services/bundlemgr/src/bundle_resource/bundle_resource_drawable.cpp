@@ -14,6 +14,8 @@
  */
 
 #include "bundle_resource_drawable.h"
+
+#include "app_log_tag_wrapper.h"
 #include "bundle_resource_image_info.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -26,21 +28,48 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     const uint32_t iconId,
     const int32_t density,
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-    std::string &icon)
+    ResourceInfo &resourceInfo)
 {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     if (resourceManager == nullptr) {
-        return false;
-    }
-    OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
-    Global::Resource::RState state;
-    auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
-        iconId, resourceManager, state, drawableType, 0);
-    if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
+        LOG_E(BMS_TAG_DEFAULT, "resourceManager is nullptr");
         return false;
     }
     BundleResourceImageInfo info;
-    return info.ConvertToString(drawableDescriptor->GetPixelMap(), icon);
+    OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
+    std::string themeMask = resourceManager->GetThemeMask();
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> foregroundInfo;
+    std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
+    Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
+    if (state == Global::Resource::SUCCESS) {
+        LOG_D(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
+        // init foreground
+        resourceInfo.foreground_.resize(foregroundInfo.second);
+        for (size_t index = 0; index < foregroundInfo.second; ++index) {
+            resourceInfo.foreground_[index] = foregroundInfo.first[index];
+        }
+        // init background
+        resourceInfo.background_.resize(backgroundInfo.second);
+        for (size_t index = 0; index < backgroundInfo.second; ++index) {
+            resourceInfo.background_[index] = backgroundInfo.first[index];
+        }
+        auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
+            themeMask, drawableType, resourceManager);
+        if (drawableDescriptor == nullptr) {
+            LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr",
+                resourceInfo.bundleName_.c_str());
+            return false;
+        }
+        return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
+    }
+    auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
+        iconId, resourceManager, state, drawableType, 0);
+    if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr",
+            resourceInfo.bundleName_.c_str());
+        return false;
+    }
+    return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
 #else
     return false;
 #endif

@@ -32,17 +32,16 @@ namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
 const std::string ABCS_DIR = "abcs";
-
-bool IsFileNameValid(const std::string &fileName)
-{
-    if (fileName.find("..") != std::string::npos
-        || fileName.find("/") != std::string::npos
-        || fileName.find("\\") != std::string::npos
-        || fileName.find("%") != std::string::npos) {
-        return false;
-    }
-    return true;
-}
+const std::string ABCS_TEMP_DIR = "temp/";
+const std::string DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+const std::string DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+const std::string DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
+const std::string DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+const std::string DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+const std::string DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+const std::string DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+const std::string DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+const std::string DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 
 bool IsValidPath(const std::string &path)
 {
@@ -54,7 +53,87 @@ bool IsValidPath(const std::string &path)
     }
     return true;
 }
+
+std::string GetRootDir(const std::string &bundleName)
+{
+    std::string rootDir;
+    rootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(bundleName).append(Constants::PATH_SEPARATOR)
+        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR);
+    return rootDir;
 }
+
+std::string GetTempRootDir(const std::string &bundleName)
+{
+    std::string tempRootDir;
+    tempRootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(bundleName).append(Constants::PATH_SEPARATOR).append(ABCS_DIR)
+        .append(Constants::PATH_SEPARATOR).append(ABCS_TEMP_DIR);
+    return tempRootDir;
+}
+
+bool GetDataDir(const std::string &path, std::string &suffix, std::string &el, std::string &baseType)
+{
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL1_BASE.size());
+        el = Constants::DIR_EL1;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL1_DATABASE.size());
+        el = Constants::DIR_EL1;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL2_BASE.size());
+        el = Constants::DIR_EL2;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL2_DATABASE.size());
+        el = Constants::DIR_EL2;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL3_BASE.size());
+        el = Constants::DIR_EL3;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL3_DATABASE.size());
+        el = Constants::DIR_EL3;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_BASE)) {
+        suffix = path.substr(DATA_STORAGE_EL4_BASE.size());
+        el = Constants::DIR_EL4;
+        baseType = Constants::BASE;
+        return true;
+    }
+
+    if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_DATABASE)) {
+        suffix = path.substr(DATA_STORAGE_EL4_DATABASE.size());
+        el = Constants::DIR_EL4;
+        baseType = Constants::DATABASE;
+        return true;
+    }
+
+    return false;
+}
+}
+
 VerifyManagerHostImpl::VerifyManagerHostImpl()
 {
     APP_LOGI("create VerifyManagerHostImpl.");
@@ -65,52 +144,141 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
     APP_LOGI("destroy VerifyManagerHostImpl.");
 }
 
-ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths,
-    const std::vector<std::string> &abcNames, bool flag)
-{
-    ErrCode ret = InnerVerify(abcPaths, abcNames, flag);
-    RemoveTempFiles(abcPaths);
-    return ret;
-}
-
-ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPaths,
-    const std::vector<std::string> &abcNames, bool flag)
+ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
-        APP_LOGE("verify install permission failed.");
+        APP_LOGE("verify permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
 
-    if (!CheckFileParam(abcPaths, abcNames)) {
+    std::string bundleName;
+    int32_t userId = BundleUtil::GetUserIdByCallingUid();
+    if (!GetCallingBundleName(bundleName) || bundleName.empty()) {
+        APP_LOGE("GetCallingBundleName failed.");
+        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+    }
+
+    auto &mtx = GetBundleMutex(bundleName);
+    std::lock_guard lock {mtx};
+    if (!CheckFileParam(abcPaths)) {
         APP_LOGE("CheckFile failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
     }
 
+    if (!CopyFilesToTempDir(bundleName, userId, abcPaths)) {
+        APP_LOGE("Copy failed.");
+        RemoveTempFiles(bundleName);
+        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
+    }
+
+    ErrCode ret = InnerVerify(bundleName, abcPaths);
+    RemoveTempFiles(bundleName);
+    return ret;
+}
+
+bool VerifyManagerHostImpl::GetCallingBundleName(std::string &bundleName)
+{
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("verify failed, dataMgr is null");
-        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
+        return false;
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     InnerBundleInfo innerBundleInfo;
     if (dataMgr->GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
         APP_LOGE("verify failed, callingUid is %{public}d", callingUid);
-        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
+        return false;
     }
 
-    std::string rootDir;
-    rootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
-        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR);
-    if (!MoveAbc(abcPaths, abcNames, rootDir)) {
-        APP_LOGE("move abc failed.");
-        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
+    bundleName = innerBundleInfo.GetBundleName();
+    return true;
+}
+
+bool VerifyManagerHostImpl::CopyFilesToTempDir(
+    const std::string &bundleName,
+    int32_t userId,
+    const std::vector<std::string> &abcPaths)
+{
+    std::string tempRootDir = GetTempRootDir(bundleName);
+    ErrCode result = MkdirIfNotExist(tempRootDir);
+    if (result != ERR_OK) {
+        APP_LOGE("mkdir tempRootDir %{public}s faild %{public}d", tempRootDir.c_str(), result);
+        return false;
     }
 
-    if (!VerifyAbc(rootDir, abcNames)) {
+    for (size_t i = 0; i < abcPaths.size(); ++i) {
+        std::string tempCopyPath = tempRootDir + abcPaths[i];
+        std::string realPath = GetRealPath(bundleName, userId, abcPaths[i]);
+        if (realPath.empty()) {
+            APP_LOGE("abcPath %{public}s is illegal", abcPaths[i].c_str());
+            return false;
+        }
+
+        APP_LOGD("realPath is %{public}s.", realPath.c_str());
+        std::string fileDir;
+        if (!GetFileDir(tempCopyPath, fileDir)) {
+            APP_LOGE("GetFileDir failed %{public}s", realPath.c_str());
+            return false;
+        }
+
+        result = MkdirIfNotExist(fileDir);
+        if (result != ERR_OK) {
+            APP_LOGE("mkdir fileDir %{public}s faild %{public}d", fileDir.c_str(), result);
+            return false;
+        }
+
+        result = InstalldClient::GetInstance()->CopyFile(realPath, tempCopyPath, "");
+        if (result != ERR_OK) {
+            APP_LOGE("CopyFile tempDir %{public}s faild %{public}d", realPath.c_str(), result);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+std::string VerifyManagerHostImpl::GetRealPath(
+    const std::string &bundleName, int32_t userId, const std::string &relativePath)
+{
+    auto path = relativePath;
+    if (!BundleUtil::StartWith(path, Constants::PATH_SEPARATOR)) {
+        path = Constants::PATH_SEPARATOR + path;
+    }
+
+    std::string filePath;
+    if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
+        auto suffix = path.substr(DATA_STORAGE_BUNDLE.size());
+        filePath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+            .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
+        return filePath;
+    }
+
+    std::string suffix;
+    std::string el;
+    std::string baseType;
+    if (!GetDataDir(path, suffix, el, baseType)) {
+        APP_LOGW("The path %{public}s is illegal.", path.c_str());
+        return filePath;
+    }
+
+    filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(el)
+            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
+            .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
+    return filePath;
+}
+
+ErrCode VerifyManagerHostImpl::InnerVerify(
+    const std::string &bundleName,
+    const std::vector<std::string> &abcPaths)
+{
+    if (!VerifyAbc(GetTempRootDir(bundleName), abcPaths)) {
         APP_LOGE("verify abc failed.");
-        Rollback(rootDir, abcNames);
+        return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
+    }
+
+    if (!MoveAbc(bundleName, abcPaths)) {
+        APP_LOGE("move abc failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
     }
 
@@ -118,11 +286,10 @@ ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPa
     return ERR_OK;
 }
 
-bool VerifyManagerHostImpl::CheckFileParam(
-    const std::vector<std::string> &abcPaths, const std::vector<std::string> &abcNames)
+bool VerifyManagerHostImpl::CheckFileParam(const std::vector<std::string> &abcPaths)
 {
-    if (abcPaths.empty() || abcNames.empty()) {
-        APP_LOGE("CheckFile abcPath failed due to abcPaths or abcNames is empty");
+    if (abcPaths.empty()) {
+        APP_LOGE("CheckFile abcPath failed due to abcPaths is empty");
         return false;
     }
 
@@ -133,21 +300,6 @@ bool VerifyManagerHostImpl::CheckFileParam(
         }
         if (!BundleUtil::CheckFileType(abcPath, Constants::ABC_FILE_SUFFIX)) {
             APP_LOGE("CheckFile abcPath(%{public}s) failed due to not abc suffix.", abcPath.c_str());
-            return false;
-        }
-        if (!BundleUtil::StartWith(abcPath, Constants::HAP_COPY_PATH)) {
-            APP_LOGE("CheckFile abcPath(%{public}s) failed due to prefix error.", abcPath.c_str());
-            return false;
-        }
-    }
-
-    for (const auto abcName : abcNames) {
-        if (!IsValidPath(abcName)) {
-            APP_LOGE("CheckFile abcName(%{public}s) failed due to invalid path", abcName.c_str());
-            return false;
-        }
-        if (!BundleUtil::CheckFileType(abcName, Constants::ABC_FILE_SUFFIX)) {
-            APP_LOGE("CheckFile abcName(%{public}s) failed due to not abc suffix.", abcName.c_str());
             return false;
         }
     }
@@ -181,6 +333,13 @@ bool VerifyManagerHostImpl::VerifyAbc(const std::vector<std::string> &abcPaths)
     }
 
     return true;
+}
+
+void VerifyManagerHostImpl::RemoveTempFiles(const std::string &bundleName)
+{
+    APP_LOGI("RemoveTempFiles.");
+    auto tempRootDir = GetTempRootDir(bundleName);
+    InstalldClient::GetInstance()->RemoveDir(tempRootDir);
 }
 
 void VerifyManagerHostImpl::RemoveTempFiles(const std::vector<std::string> &paths)
@@ -236,19 +395,17 @@ ErrCode VerifyManagerHostImpl::MkdirIfNotExist(const std::string &dir)
     return result;
 }
 
-bool VerifyManagerHostImpl::MoveAbc(const std::vector<std::string> &abcPaths,
-    const std::vector<std::string> &abcNames, const std::string &rootDir)
+bool VerifyManagerHostImpl::MoveAbc(
+    const std::string &bundleName,
+    const std::vector<std::string> &abcPaths)
 {
-    if (abcPaths.size() != abcNames.size()) {
-        APP_LOGE("The number %{public}zu of abcPaths is different from that of abcNames",
-            abcPaths.size());
-        return false;
-    }
-
+    auto rootDir = GetRootDir(bundleName);
+    auto tempRootDir = GetTempRootDir(bundleName);
     std::vector<std::string> hasMovePaths;
     ErrCode result = ERR_OK;
     for (size_t i = 0; i < abcPaths.size(); ++i) {
-        std::string targetPath = rootDir + abcNames[i];
+        std::string tempPath = tempRootDir + abcPaths[i];
+        std::string targetPath = rootDir + abcPaths[i];
         std::string fileDir;
         if (!GetFileDir(targetPath, fileDir)) {
             APP_LOGE("GetFileDir failed %{public}s", targetPath.c_str());
@@ -263,7 +420,7 @@ bool VerifyManagerHostImpl::MoveAbc(const std::vector<std::string> &abcPaths,
             return false;
         }
 
-        result = InstalldClient::GetInstance()->MoveFile(abcPaths[i], targetPath);
+        result = InstalldClient::GetInstance()->MoveFile(tempPath, targetPath);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
             Rollback(hasMovePaths);
@@ -298,38 +455,6 @@ void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
     }
 }
 
-ErrCode VerifyManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
-{
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
-        APP_LOGE("verify install permission failed.");
-        return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
-    }
-
-    if (!BundleUtil::CheckFileType(fileName, Constants::ABC_FILE_SUFFIX)) {
-        APP_LOGE("not abc file.");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
-    }
-
-    if (!IsFileNameValid(fileName)) {
-        APP_LOGE("invalid fileName");
-        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
-    }
-
-    std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, DirType::ABC_FILE_DIR);
-    if (tmpDir.empty()) {
-        APP_LOGE("create tmp dir failed.");
-        return ERR_BUNDLE_MANAGER_VERIFY_CREATE_TARGET_DIR_FAILED;
-    }
-
-    path = tmpDir + fileName;
-    if ((fd = BundleUtil::CreateFileDescriptor(path, 0)) < 0) {
-        APP_LOGE("create file descriptor failed.");
-        BundleUtil::DeleteDir(tmpDir);
-        return ERR_BUNDLE_MANAGER_VERIFY_CREATE_FD_FAILED;
-    }
-    return ERR_OK;
-}
-
 ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RUN_DYN_CODE)) {
@@ -355,6 +480,9 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
         APP_LOGE("DeleteAbc failed due to get callingUid failed");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
     }
+
+    auto &mtx = GetBundleMutex(innerBundleInfo.GetBundleName());
+    std::lock_guard lock {mtx};
     std::string realPath;
     realPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
         .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
@@ -377,6 +505,19 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
         return ERR_BUNDLE_MANAGER_DELETE_ABC_FAILED;
     }
     return ERR_OK;
+}
+
+std::mutex &VerifyManagerHostImpl::GetBundleMutex(const std::string &bundleName)
+{
+    bundleMutex_.lock_shared();
+    auto it = bundleMutexMap_.find(bundleName);
+    if (it == bundleMutexMap_.end()) {
+        bundleMutex_.unlock_shared();
+        std::unique_lock lock {bundleMutex_};
+        return bundleMutexMap_[bundleName];
+    }
+    bundleMutex_.unlock_shared();
+    return it->second;
 }
 } // AppExecFwk
 } // namespace OHOS

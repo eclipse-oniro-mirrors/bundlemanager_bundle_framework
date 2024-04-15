@@ -15,6 +15,7 @@
 
 #include "service_center_status_callback_stub.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "free_install_params.h"
@@ -29,7 +30,7 @@ const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.opena
 
 ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
 {
-    APP_LOGI("ServiceCenterStatusCallbackStub is created");
+    LOG_I(BMS_TAG_FREE_INSTALL, "ServiceCenterStatusCallbackStub is created");
 }
 
 int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
@@ -37,12 +38,13 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
 {
     BundleMemoryGuard memoryGuard;
     if (data.ReadInterfaceToken() != SEEVICE_CENTER_CALLBACK_TOKEN) {
-        APP_LOGE("verify interface token failed");
+        LOG_E(BMS_TAG_FREE_INSTALL, "verify interface token failed");
         return -1;
     }
 
     auto result = data.ReadString16();
-    APP_LOGD("OnRemoteRequest:code:%{public}d, result:%{public}s", code, Str16ToStr8(result).c_str());
+    LOG_D(BMS_TAG_FREE_INSTALL, "OnRemoteRequest:code:%{public}d, result:%{public}s",
+        code, Str16ToStr8(result).c_str());
     return OnInstallFinished(Str16ToStr8(result));
 }
 }  // namespace AppExecFwk

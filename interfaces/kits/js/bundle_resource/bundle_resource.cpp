@@ -19,6 +19,7 @@
 #include "bundle_errors.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_resource_drawable_utils.h"
 #include "business_error.h"
 #include "common_func.h"
 #include "napi_arg.h"
@@ -35,6 +36,7 @@ constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* LABEL = "label";
 constexpr const char* ICON = "icon";
+constexpr const char* DRAWABLE_DESCRIPTOR = "drawableDescriptor";
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
@@ -47,6 +49,7 @@ constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
+constexpr const char* GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR = "GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR";
 
 static void ConvertBundleResourceInfo(
     napi_env env,
@@ -70,6 +73,15 @@ static void ConvertBundleResourceInfo(
         env, napi_create_string_utf8(env, bundleResourceInfo.icon.c_str(),
         NAPI_AUTO_LENGTH, &nIcon));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleResourceInfo, ICON, nIcon));
+
+    napi_value nDrawableDescriptor = BundleResourceDrawableUtils::ConvertToDrawableDescriptor(
+        env, bundleResourceInfo.foreground, bundleResourceInfo.background);
+    if (nDrawableDescriptor == nullptr) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nDrawableDescriptor));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleResourceInfo,
+        DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
+
     APP_LOGD("end");
 }
 
@@ -126,6 +138,15 @@ static void ConvertLauncherAbilityResourceInfo(
         NAPI_AUTO_LENGTH, &nIcon));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objLauncherAbilityResourceInfo,
         ICON, nIcon));
+
+    napi_value nDrawableDescriptor = BundleResourceDrawableUtils::ConvertToDrawableDescriptor(
+        env, launcherAbilityResourceInfo.foreground, launcherAbilityResourceInfo.background);
+    if (nDrawableDescriptor == nullptr) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nDrawableDescriptor));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objLauncherAbilityResourceInfo,
+        DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
+
     APP_LOGD("end");
 }
 
@@ -475,6 +496,12 @@ void CreateBundleResourceFlagObject(napi_env env, napi_value value)
         env, static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), &nGetSortByLabel));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
         GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL, nGetSortByLabel));
+
+    napi_value nGetDrawable;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), &nGetDrawable));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value,
+        GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR, nGetDrawable));
 }
 } // AppExecFwk
 } // OHOS

@@ -1670,4 +1670,34 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_25000, Funct
     ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_26000
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_26000, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, receiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_27000
+ * @tc.name: test UninstallAndRecover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallAndRecover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_27000, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS

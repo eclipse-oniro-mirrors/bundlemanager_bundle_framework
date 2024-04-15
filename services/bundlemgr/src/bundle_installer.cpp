@@ -188,7 +188,7 @@ void BundleInstaller::Uninstall(
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    APP_LOGI("UpdateInstallerState in bundleInstaller state %{public}d", state);
+    APP_LOGI("state: %{public}d", state);
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));
@@ -210,6 +210,46 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
         }
     }
     return userIds;
+}
+
+void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam)
+{
+    ErrCode resultCode = ERR_OK;
+    std::vector<ErrCode> errCode;
+    auto userInstallParam = installParam;
+    std::vector<int32_t> userIds;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr != nullptr) {
+        userIds = dataMgr->GetUserIds(bundleName);
+    }
+    for (auto userId : userIds) {
+        userInstallParam.userId = userId;
+        resultCode = UninstallBundle(bundleName, userInstallParam);
+        errCode.push_back(resultCode);
+        ResetInstallProperties();
+    }
+    for (auto userId : userIds) {
+        userInstallParam.userId = userId;
+        userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
+        resultCode = BaseBundleInstaller::Recover(bundleName, userInstallParam);
+        errCode.push_back(resultCode);
+        ResetInstallProperties();
+    }
+
+    if (std::find(errCode.begin(), errCode.end(), ERR_OK) != errCode.end()) {
+        for (const auto &err : errCode) {
+            if (err != ERR_OK) {
+                resultCode = err;
+                break;
+            }
+            resultCode = ERR_OK;
+        }
+    } else {
+        resultCode = (errCode.size() > 0) ? errCode[0] : ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

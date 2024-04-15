@@ -46,6 +46,7 @@ enum BundleInstallerInterfaceCode : uint32_t {
     UNINSTALL_SANDBOX_APP,
     CREATE_STREAM_INSTALLER,
     DESTORY_STREAM_INSTALLER,
+    UNINSTALL_AND_RECOVER,
 };
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }; // namespace
@@ -736,5 +737,26 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1100, Function | SmallTe
     BundleInstallerHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
     EXPECT_NE(res, 0);
+}
+
+/**
+ * @tc.number: OnRemoteRequestTest_1200
+ * @tc.name: test true function of OnRemoteRequest
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1200, Function | SmallTest | Level0)
+{
+    uint32_t code = BundleInstallerInterfaceCode::UNINSTALL_AND_RECOVER;
+    MessageParcel datas;
+    std::u16string descriptor = BundleInstallerHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    BundleInstallerHost installdHost;
+    int res = installdHost.OnRemoteRequest(code, datas, reply, option);
+    EXPECT_EQ(res, 0);
 }
 } // OHOS

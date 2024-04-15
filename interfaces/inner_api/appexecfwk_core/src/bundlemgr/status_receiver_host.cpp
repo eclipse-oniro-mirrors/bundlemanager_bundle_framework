@@ -25,18 +25,18 @@ namespace OHOS {
 namespace AppExecFwk {
 StatusReceiverHost::StatusReceiverHost()
 {
-    APP_LOGI("create status receiver host instance");
+    APP_LOGD("create status receiver host instance");
 }
 
 StatusReceiverHost::~StatusReceiverHost()
 {
-    APP_LOGI("destroy status receiver host instance");
+    APP_LOGD("destroy status receiver host instance");
 }
 
 int StatusReceiverHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGI("status receiver host onReceived message, the message code is %{public}u", code);
+    APP_LOGD("status receiver host onReceived message, the message code is %{public}u", code);
     std::u16string descripter = StatusReceiverHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {

@@ -135,6 +135,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "inst
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ACTIONS = "actions";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_ENTITIES = "entities";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_URIS = "uris";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_DOMAIN_VERIFY = "domainVerify";
 // sub BUNDLE_MODULE_PROFILE_KEY_URIS
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_SCHEME = "scheme";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_HOST = "host";
@@ -377,6 +378,7 @@ constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 constexpr const char* MODULE_QUERY_SCHEMES = "querySchemes";
+constexpr const char* MODULE_APP_STARTUP = "appStartup";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
@@ -497,6 +499,8 @@ constexpr const char* MODULE_ROUTER_MAP = "routerMap";
 
 //module appEnvironment
 constexpr const char* MODULE_APP_ENVIRONMENTS = "appEnvironments";
+//module packageName
+constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

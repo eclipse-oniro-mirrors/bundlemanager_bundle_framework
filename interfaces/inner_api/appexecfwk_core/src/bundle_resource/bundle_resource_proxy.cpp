@@ -79,7 +79,6 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
         APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     return GetParcelInfo<BundleResourceInfo>(
         BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO, data, bundleResourceInfo);
 }

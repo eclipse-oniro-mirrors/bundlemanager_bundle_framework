@@ -15,6 +15,7 @@
 
 #include "quick_fix_status_callback_proxy.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "ipc_types.h"
@@ -27,12 +28,12 @@ namespace AppExecFwk {
 QuickFixStatusCallbackProxy::QuickFixStatusCallbackProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IQuickFixStatusCallback>(object)
 {
-    APP_LOGI("create QuickFixStatusCallbackProxy.");
+    LOG_I(BMS_TAG_QUICK_FIX, "create QuickFixStatusCallbackProxy.");
 }
 
 QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
 {
-    APP_LOGI("destroy QuickFixStatusCallbackProxy.");
+    LOG_I(BMS_TAG_QUICK_FIX, "destroy QuickFixStatusCallbackProxy.");
 }
 
 void QuickFixStatusCallbackProxy::OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result)
@@ -42,7 +43,7 @@ void QuickFixStatusCallbackProxy::OnPatchDeployed(const std::shared_ptr<QuickFix
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED, data, reply)) {
-        APP_LOGE("fail to OnPatchDeployed due to transact command fail");
+        LOG_E(BMS_TAG_QUICK_FIX, "fail to OnPatchDeployed due to transact command fail");
     }
 }
 
@@ -53,7 +54,7 @@ void QuickFixStatusCallbackProxy::OnPatchSwitched(const std::shared_ptr<QuickFix
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED, data, reply)) {
-        APP_LOGE("fail to OnPatchSwitched due to transact command fail");
+        LOG_E(BMS_TAG_QUICK_FIX, "fail to OnPatchSwitched due to transact command fail");
     }
 }
 
@@ -64,7 +65,7 @@ void QuickFixStatusCallbackProxy::OnPatchDeleted(const std::shared_ptr<QuickFixR
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
     if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED, data, reply)) {
-        APP_LOGE("fail to OnPatchDeleted due to transact command fail");
+        LOG_E(BMS_TAG_QUICK_FIX, "fail to OnPatchDeleted due to transact command fail");
     }
 }
 
@@ -75,12 +76,12 @@ bool QuickFixStatusCallbackProxy::SendTransactCmd(
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        LOG_E(BMS_TAG_QUICK_FIX, "fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        LOG_E(BMS_TAG_QUICK_FIX, "receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

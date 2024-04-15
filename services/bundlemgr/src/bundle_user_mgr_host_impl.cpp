@@ -152,7 +152,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
-        installParam.concentrateSendEvent = true;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
@@ -169,7 +168,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         BMSEventHandler::ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     }
     IPCSkeleton::SetCallingIdentity(identity);
-    HandleNotifyBundleEventsAsync();
 }
 
 bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(

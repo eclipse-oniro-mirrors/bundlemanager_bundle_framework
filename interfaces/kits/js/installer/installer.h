@@ -36,7 +36,8 @@ enum class InstallOption {
     RECOVER = 1,
     UNINSTALL = 2,
     UPDATE_BUNDLE_FOR_SELF = 3,
-    UNKNOWN = 4
+    UNKNOWN = 4,
+    UNINSTALL_AND_RECOVER = 5,
 };
 
 struct AsyncInstallCallbackInfo {
@@ -84,6 +85,7 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
 napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info);
 napi_value AddExtResource(napi_env env, napi_callback_info info);
 napi_value RemoveExtResource(napi_env env, napi_callback_info info);
+napi_value UninstallAndRecover(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H

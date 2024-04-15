@@ -90,10 +90,12 @@ struct ProxyData : public Parcelable {
 
 struct RouterItem : public Parcelable {
     std::string name;
-    std::string pageModule;
     std::string pageSourceFile;
     std::string buildFunction;
     std::map<std::string, std::string> data;
+    std::string ohmurl;
+    std::string bundleName;
+    std::string moduleName;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -172,9 +174,11 @@ struct HapModuleInfo : public Parcelable {
     std::string routerMap;
     std::vector<RouterItem> routerArray;
     std::vector<AppEnvironment> appEnvironments;
+    std::string packageName;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);
+    std::string appStartup;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

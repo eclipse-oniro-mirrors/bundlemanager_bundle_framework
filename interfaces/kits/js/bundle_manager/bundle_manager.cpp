@@ -59,6 +59,7 @@ constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -94,6 +95,7 @@ const std::string CAN_OPEN_LINK = "CanOpenLink";
 const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
+const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -775,7 +777,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin to QueryAbilityInfos");
+    APP_LOGI("begin");
     NapiArg args(env, info);
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -824,7 +826,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
-    APP_LOGI("call QueryAbilityInfos done");
+    APP_LOGI("end");
     return promise;
 }
 
@@ -1680,14 +1682,7 @@ ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    std::vector<std::string> destFiles;
-    ErrCode ret = verifyManager->CopyFiles(abcPaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = verifyManager->Verify(destFiles, abcPaths, flag);
+    ErrCode ret = verifyManager->Verify(abcPaths);
     if (ret == ERR_OK && flag) {
         verifyManager->RemoveFiles(abcPaths);
     }
@@ -2656,6 +2651,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::EMBEDDED_UI), &nEmbeddedUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EMBEDDED_UI", nEmbeddedUI));
+	
+    napi_value nInsightIntentUI;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::INSIGHT_INTENT_UI), &nInsightIntentUI));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INSIGHT_INTENT_UI", nInsightIntentUI));
 
     napi_value nAuthorization;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
@@ -2824,7 +2824,7 @@ void CreateAppDistributionTypeObject(napi_env env, napi_value value)
 
     napi_value nCrowdTesting;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SIX, &nCrowdTesting));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWD_TESTING", nCrowdTesting));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CROWDTESTING", nCrowdTesting));
 
     napi_value nNone;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_SEVEN, &nNone));
@@ -3929,6 +3929,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
+            CHECK_STRING_EMPTY(env, asyncCallbackInfo->bundleName, std::string{ BUNDLE_NAME });
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -4098,10 +4099,10 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 }
 
 bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
-    int32_t& profileType, std::string& bundleName, std::string& moduleName)
+    int32_t& profileType, std::string& bundleName, std::string& moduleName, int32_t& userId)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return false;
@@ -4128,7 +4129,7 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
         napi_throw(env, businessError);
         return false;
     }
-    if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], moduleName)) {
             APP_LOGW("parse moduleName failed, try to get profile from entry module!");
         } else if (moduleName.empty()) {
@@ -4136,6 +4137,13 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
             napi_value businessError = BusinessError::CreateCommonError(
                 env, ERROR_MODULE_NOT_EXIST, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
             napi_throw(env, businessError);
+            return false;
+        }
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_FOUR) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], userId)) {
+            APP_LOGE("userId invalid");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
             return false;
         }
     }
@@ -4148,7 +4156,8 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     int32_t profileType = 0;
     std::string bundleName;
     std::string moduleName;
-    if (!ParamsProcessGetJsonProfile(env, info, profileType, bundleName, moduleName)) {
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (!ParamsProcessGetJsonProfile(env, info, profileType, bundleName, moduleName, userId)) {
         APP_LOGE("paramsProcess failed");
         return nullptr;
     }
@@ -4159,7 +4168,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     }
     std::string profile;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile));
+        iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile, userId));
     if (ret != SUCCESS) {
         APP_LOGE("GetJsonProfile call error, bundleName is %{public}s", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
@@ -4514,22 +4523,27 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
 {
     APP_LOGD("Called");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
         APP_LOGE("Param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    int32_t appDistributionTypeEnum = 0;
-    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], appDistributionTypeEnum)) {
-        APP_LOGE("parseInt failed");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
-        return nullptr;
+    std::string distributionType;
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        int32_t appDistributionTypeEnum = 0;
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], appDistributionTypeEnum)) {
+            APP_LOGE("parseInt failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_DISTRIBUTION_TYPE, TYPE_NUMBER);
+            return nullptr;
+        }
+        if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
+            APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
+            BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
+            return nullptr;
+        }
+        distributionType = std::string{ appDistributionTypeMap[appDistributionTypeEnum] };
     }
-    if (appDistributionTypeMap.find(appDistributionTypeEnum) == appDistributionTypeMap.end()) {
-        APP_LOGE("request error, type %{public}d is invalid", appDistributionTypeEnum);
-        BusinessError::ThrowEnumError(env, APP_DISTRIBUTION_TYPE, APP_DISTRIBUTION_TYPE_ENUM);
-        return nullptr;
-    }
+
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("Can not get iBundleMgr");
@@ -4539,9 +4553,9 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
     std::vector<std::string> developerIds;
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetDeveloperIds(appDistributionTypeMap[appDistributionTypeEnum], developerIds, userId));
+        iBundleMgr->GetDeveloperIds(distributionType, developerIds, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("Call failed, appDistributionType is %{public}d", appDistributionTypeEnum);
+        APP_LOGW("Call failed, appDistributionType is %{public}s", distributionType.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_DEVELOPER_IDS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
@@ -4552,6 +4566,47 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
     ProcessStringVec(env, nDeveloperIds, developerIds);
     APP_LOGD("Call done");
     return nDeveloperIds;
+}
+
+napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("NAPI SwitchUninstallState call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    bool state;
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], state)) {
+        APP_LOGE("Parse state failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, STATE, TYPE_BOOLEAN);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SwitchUninstallState(bundleName, state));
+    if (ret != NO_ERROR) {
+        APP_LOGE("SwitchUninstallState failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SWITCH_UNINSTALL_STATE, "");
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    APP_LOGD("call SwitchUninstallState done.");
+    return nRet;
 }
 }
 }

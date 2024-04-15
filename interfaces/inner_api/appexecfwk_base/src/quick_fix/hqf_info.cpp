@@ -15,6 +15,7 @@
 
 #include "hqf_info.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
@@ -96,7 +97,7 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_QUICK_FIX, "read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -126,7 +127,7 @@ HqfInfo *HqfInfo::Unmarshalling(Parcel &parcel)
 {
     HqfInfo *info = new (std::nothrow) HqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
         delete info;
         info = nullptr;
     }

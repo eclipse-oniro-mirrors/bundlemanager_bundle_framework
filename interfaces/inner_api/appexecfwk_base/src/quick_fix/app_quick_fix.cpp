@@ -15,6 +15,7 @@
 
 #include "app_quick_fix.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "json_util.h"
@@ -71,7 +72,7 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
         JsonType::OBJECT, false, parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module appQuickFix from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_QUICK_FIX, "read module appQuickFix from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -82,14 +83,14 @@ bool AppQuickFix::ReadFromParcel(Parcel &parcel)
     versionName = Str16ToStr8(parcel.ReadString16());
     std::unique_ptr<AppqfInfo> deployedAppqfInfoPtr(parcel.ReadParcelable<AppqfInfo>());
     if (!deployedAppqfInfoPtr) {
-        APP_LOGE("ReadParcelable<AppqfInfo> failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "ReadParcelable<AppqfInfo> failed");
         return false;
     }
     deployedAppqfInfo = *deployedAppqfInfoPtr;
 
     std::unique_ptr<AppqfInfo> deployingAppqfInfoPtr(parcel.ReadParcelable<AppqfInfo>());
     if (!deployingAppqfInfoPtr) {
-        APP_LOGE("ReadParcelable<AppqfInfo> failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "ReadParcelable<AppqfInfo> failed");
         return false;
     }
     deployingAppqfInfo = *deployingAppqfInfoPtr;
@@ -110,7 +111,7 @@ AppQuickFix *AppQuickFix::Unmarshalling(Parcel &parcel)
 {
     AppQuickFix *info = new (std::nothrow) AppQuickFix();
     if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGE("read from parcel failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
         delete info;
         info = nullptr;
     }

@@ -274,9 +274,6 @@ void PerfProfile::Dump() const
         (bundleUninstallEnd_ > bundleUninstallStart_) || (bundleParseEnd_ > bundleParseStart_) ||
         (abilityLoadEnd_ > abilityLoadStart_) || (bmsLoadEnd_ > bmsLoadStart_) || (amsLoadEnd_ > amsLoadStart_)) {
         APP_LOGI("start\n");
-
-        APP_LOGI("*************************\n");
-
         if (bmsLoadEnd_ > bmsLoadStart_) {
             APP_LOGI("BmsLoadTime: %{public}" PRId64 "(ms) \n", (bmsLoadEnd_ - bmsLoadStart_));
         }
@@ -297,11 +294,8 @@ void PerfProfile::Dump() const
         }
         if (abilityLoadEnd_ > abilityLoadStart_) {
             APP_LOGI("AbilityLoadTime: %{public}" PRId64 "(ms) \n", (abilityLoadEnd_ - abilityLoadStart_));
-            APP_LOGI("    AppForkTime: %{public}" PRId64 "(ms) \n", (appForkEnd_ - appForkStart_));
+            APP_LOGI("AppForkTime: %{public}" PRId64 "(ms) \n", (appForkEnd_ - appForkStart_));
         }
-
-        APP_LOGI("*************************\n");
-
         APP_LOGI("end\n");
     }
 }

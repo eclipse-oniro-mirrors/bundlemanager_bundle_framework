@@ -22,12 +22,12 @@ namespace OHOS {
 namespace AppExecFwk {
 SystemBundleInstaller::SystemBundleInstaller()
 {
-    APP_LOGI("system bundle installer instance is created");
+    APP_LOGD("system bundle installer instance is created");
 }
 
 SystemBundleInstaller::~SystemBundleInstaller()
 {
-    APP_LOGI("system bundle installer instance is destroyed");
+    APP_LOGD("system bundle installer instance is destroyed");
 }
 
 ErrCode SystemBundleInstaller::InstallSystemBundle(
@@ -72,6 +72,46 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
     ErrCode result = ERR_OK;
     for (auto allUserId : dataMgr->GetAllUser()) {
         installParam.userId = allUserId;
+        MarkPreBundleSyeEventBootTag(false);
+        otaInstall_ = true;
+        ErrCode errCode = InstallBundle(filePaths, installParam, appType);
+        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
+            APP_LOGE("install system bundle fail, error: %{public}d", errCode);
+            result = errCode;
+        }
+        ResetInstallProperties();
+    }
+
+    return result;
+}
+
+ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
+    const std::vector<std::string> &filePaths,
+    InstallParam &installParam,
+    const std::string &bundleName,
+    Constants::AppType appType)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    auto currentBundleUserIds = dataMgr->GetUserIds(bundleName);
+    std::set<int32_t> userIdSet;
+    for (auto userId : currentBundleUserIds) {
+        userIdSet.insert(userId);
+    }
+    if (userIdSet.empty() || (userIdSet.find(Constants::DEFAULT_USERID) != userIdSet.end())) {
+        // for singleton hap or no user
+        userIdSet = dataMgr->GetAllUser();
+    } else {
+        // for non-singleton hap
+        userIdSet.insert(Constants::DEFAULT_USERID);
+    }
+    ErrCode result = ERR_OK;
+    for (auto userId : userIdSet) {
+        installParam.userId = userId;
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);

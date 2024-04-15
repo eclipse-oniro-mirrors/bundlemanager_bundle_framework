@@ -31,6 +31,10 @@ public:
 
     ErrCode ParsePatchInfo(const std::vector<std::string> &filePaths,
         std::unordered_map<std::string, AppQuickFix> &appQuickFixes) const;
+
+    bool HasResourceFile(const std::string &filePath) const;
+
+    bool HasResourceFile(const std::vector<std::string> &filePaths) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -889,6 +889,7 @@ public:
         std::vector<BundleInfo> &bundleInfos, int32_t userId);
     ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId);
+    ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
 
 private:
     /**
@@ -1028,6 +1029,9 @@ private:
     void ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag) const;
     void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    void updateAppEnvironments(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    bool FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
+        std::vector<AbilityInfo> &abilityInfos, std::vector<AbilityInfo> &filteredAbilityInfos) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

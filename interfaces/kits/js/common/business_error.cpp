@@ -53,6 +53,8 @@ constexpr const char* ERR_MSG_INSTALL_DEPENDENT_MODULE_NOT_EXIST =
 constexpr const char* ERR_MSG_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED =
     "Failed to install because not allowed to share app library";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
+constexpr const char* ERR_MSG_BUNDLE_NOT_PREINSTALLED =
+    "Failed to uninstall updates because the HAP is not pre-installed.";
 constexpr const char* ERR_ZLIB_SRC_FILE_INVALID_MSG = "The Input source file is invalid.";
 constexpr const char* ERR_ZLIB_DEST_FILE_INVALID_MSG = "The Input destination file is invalid.";
 constexpr const char* ERR_MSG_PARAM_NUMBER_ERROR =
@@ -127,6 +129,10 @@ constexpr const char* ERR_MSG_INVALID_DEVELOPER_ID =
     "The specified developerId is invalid.";
 constexpr const char* ERR_MSG_ENUM_EROOR =
     "Parameter error. The value of $ is not a valid enum $.";
+constexpr const char* ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED =
+    "The specified application can not be uninstalled.";
+constexpr const char* ERR_MSG_START_SHORTCUT =
+    "Failed to start shortcut due to specified ability is not supported to be started.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -149,6 +155,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERR_MSG_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
     { ERROR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED, ERR_MSG_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED },
     { ERROR_UNINSTALL_PREINSTALL_APP_FAILED, ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED },
+    { ERROR_BUNDLE_NOT_PREINSTALLED, ERR_MSG_BUNDLE_NOT_PREINSTALLED },
     { ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION },
     { ERR_ZLIB_SRC_FILE_INVALID, ERR_ZLIB_SRC_FILE_INVALID_MSG },
     { ERR_ZLIB_DEST_FILE_INVALID, ERR_ZLIB_DEST_FILE_INVALID_MSG },
@@ -195,6 +202,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INVALID_LINK, ERR_MSG_INVALID_LINK },
     { ERROR_SCHEME_NOT_IN_QUERYSCHEMES, ERR_MSG_SCHEME_NOT_IN_QUERYSCHEMES },
     { ERROR_INVALID_DEVELOPERID, ERR_MSG_INVALID_DEVELOPER_ID },
+    { ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED },
+    { ERROR_START_SHORTCUT_ERROR, ERR_MSG_START_SHORTCUT },
 };
 } // namespace
 
