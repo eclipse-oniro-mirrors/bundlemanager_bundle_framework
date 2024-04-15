@@ -223,11 +223,6 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0300, Function | SmallTes
     std::vector<std::string> filePaths;
     auto ret = impl.ProcessAddExtResource(TEST_BUNDLE, filePaths);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
-    std::vector<std::string> filePaths,
-    filePaths.push_back(FILE_PATH);
-    std::vector<ExtendResourceInfo> extendResourceInfos;
-    impl.InnerSaveExtendResourceInfo(TEST_BUNDLE, filePaths, extendResourceInfos);
 }
 
 /**
@@ -248,7 +243,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0400, Function | SmallTes
 
     moduleNames.push_back(TEST_MODULE);
     ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
-    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     std::vector<ExtendResourceInfo> extResourceInfos;
     impl.InnerRemoveExtendResources(TEST_BUNDLE, moduleNames, extResourceInfos);
@@ -296,15 +291,15 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0700, Function | SmallTes
     ExtendResourceManagerHostImpl impl;
     std::vector<std::string> filePaths;
     auto ret = impl.BeforeAddExtResource(EMPTY_STRING, filePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
 
     filePaths.emplace_back(FILE_PATH);
     filePaths.emplace_back(INVALID_PATH);
     ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
 }
 
 /**
@@ -319,7 +314,7 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0800, Function | SmallTes
     filePaths.emplace_back(FILE_PATH);
     std::vector<ExtendResourceInfo> extendResourceInfos;
     auto ret = impl.ParseExtendResourceFile(BUNDLE_NAME, filePaths, extendResourceInfos);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
 }
 
 /**
@@ -331,16 +326,19 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0900, Function | SmallTes
 {
     ExtendResourceManagerHostImpl impl;
     auto ret = impl.MkdirIfNotExist(DIR_PATH_ONE);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     ret = impl.MkdirIfNotExist(DIR_PATH_TWO);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(TEST_MODULE);
+    ret = impl.RemoveExtResourcesDb(BUNDLE_NAME, moduleNames);
     EXPECT_EQ(ret, ERR_OK);
 
-    std::vector<ExtendResourceInfo> extendResourceInfos;
-    ret = impl.RemoveExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
-    EXPECT_EQ(ret, ERR_OK);
-
-    ret = impl.RollBack(FILE_PATH);
+    std::vector<std::string> filePaths;
+    filePaths.push_back(FILE_PATH);
+    impl.RollBack(filePaths);
 }
 
 /**
@@ -354,13 +352,13 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1000, Function | SmallTes
     std::vector<std::string> oldFilePaths;
     oldFilePaths.push_back(FILE_PATH);
     std::vector<std::string> newFilePaths;
-    newFilePaths.push_back(DIR_PATH_TWO)
-    auto ret = impl.CopyToTempDir(DIR_PATH_ONE);
-    EXPECT_EQ(ret, ERR_OK);
+    newFilePaths.push_back(DIR_PATH_TWO);
+    auto ret = impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 
     std::vector<ExtendResourceInfo> extendResourceInfos;
     ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
-    EXPECT_FASLE(ret);
+    EXPECT_EQ(ret, false);
 }
 
 /**
