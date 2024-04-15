@@ -217,8 +217,7 @@ ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleNam
     std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos, GetDependentBundleInfoFlag flag)
 {
     APP_LOGD("start GetBaseSharedBundleInfos, bundleName : %{public}s", bundleName.c_str());
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
