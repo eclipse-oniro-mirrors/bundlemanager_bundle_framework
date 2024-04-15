@@ -36,6 +36,7 @@ namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
+const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
