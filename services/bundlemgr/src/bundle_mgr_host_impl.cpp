@@ -2310,8 +2310,7 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-        Constants::PERMISSION_GET_BUNDLE_INFO}) &&
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify token type failed");
         return Constants::INVALID_UID;
