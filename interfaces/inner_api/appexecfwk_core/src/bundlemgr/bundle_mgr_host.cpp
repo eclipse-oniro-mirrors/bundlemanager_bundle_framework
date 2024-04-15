@@ -3258,6 +3258,18 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
     APP_LOGD("Called.");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    int32_t vectorSize = preinstalledApplicationInfos.size();
+    if (vectorSize > MAX_STATUS_VECTOR_NUM) {
+        APP_LOGE("PreinstallApplicationInfos vector is over size.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    const size_t  newDataCapacity = 409600; // 400k
+
+    if (vectorSize > 500 && !reply.SetDataCapacity(newDataCapacity)) {
+        APP_LOGE("SetDataCapacity failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
