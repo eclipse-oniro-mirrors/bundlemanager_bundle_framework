@@ -55,12 +55,11 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
         }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
             themeMask, drawableType, resourceManager);
-        if (drawableDescriptor == nullptr) {
-            LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr",
-                resourceInfo.bundleName_.c_str());
-            return false;
+        if (drawableDescriptor != nullptr) {
+            return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
         }
-        return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
+        LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, need create again",
+            resourceInfo.bundleName_.c_str());
     }
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
         iconId, resourceManager, state, drawableType, 0);
