@@ -10642,7 +10642,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0001, Funct
     appIndex = 1;
     ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
     EXPECT_FALSE(ret);
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     userInfo.cloneInfos["1"] = cloneInfo;
     ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
     EXPECT_TRUE(ret);
@@ -10679,7 +10679,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0002, Funct
  */
 HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0003, Function | SmallTest | Level1)
 {
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     cloneInfo.accessTokenId = 1;
     cloneInfo.accessTokenIdEx = 2;
     cloneInfo.enabled = false;
@@ -10716,7 +10716,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0001, Function |
     appIndex = 1;
     ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
     EXPECT_FALSE(ret);
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     userInfo.cloneInfos["1"] = cloneInfo;
     ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
     EXPECT_TRUE(ret);
@@ -10751,7 +10751,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0002, Function |
  */
 HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0003, Function | SmallTest | Level1)
 {
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     cloneInfo.enabled = false;
     cloneInfo.uid = 200;
     cloneInfo.appIndex = 1;
@@ -10776,7 +10776,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0003, Function |
  */
 HWTEST_F(BmsBundleKitServiceTest, GetUid_0001, Function | SmallTest | Level1)
 {
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     cloneInfo.enabled = false;
     cloneInfo.uid = 200;
     cloneInfo.appIndex = 1;

@@ -20,6 +20,7 @@
 
 #include "aot/aot_args.h"
 #include "inner_app_quick_fix.h"
+#include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_common_info.h"
 #include "property.h"
@@ -215,16 +216,8 @@ public:
         return innerBundleUserInfo.bundleUserInfo.enabled;
     }
 
-    ErrCode GetApplicationEnabledV9(int32_t userId, bool &isEnabled) const
-    {
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            APP_LOGD("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-        isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
-        return ERR_OK;
-    }
+    ErrCode GetApplicationEnabledV9(int32_t userId, bool &isEnabled,
+        int32_t appIndex = 0) const;
 
     ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
 
@@ -706,8 +699,10 @@ public:
         }
     }
 
-    bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const;
-    ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const;
+    bool IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId,
+        int32_t appIndex = 0) const;
+    ErrCode IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
+        int32_t userId, bool &isEnable, int32_t appIndex = 0) const;
 
     bool GetDependentModuleNames(const std::string &moduleName, std::vector<std::string> &dependentModuleNames) const;
     bool GetAllDependentModuleNames(const std::string &moduleName,
@@ -969,8 +964,7 @@ public:
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     
-    ErrCode AddCloneBundle(const int32_t userId, int32_t &appIndex,
-        Security::AccessToken::AccessTokenIDEx accessToken);
+    ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
     ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);

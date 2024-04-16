@@ -728,6 +728,7 @@ private:
 
     ErrCode HandleQueryAbilityInfoByContinueType(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryCloneAbilityInfo(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

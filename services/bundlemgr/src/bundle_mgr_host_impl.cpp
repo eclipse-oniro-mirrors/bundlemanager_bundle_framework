@@ -3573,5 +3573,41 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfoByContinueType(const std::string &bun
     }
     return dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
 }
+
+ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
+    int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    LOG_D(BMS_TAG_QUERY_ABILITY,
+        "flags : %{public}d, userId : %{public}d, bundleName: %{public}s, abilityName: %{public}s",
+        flags, userId, bundleName.c_str(), abilityName.c_str());
+
+    if (bundleName.empty() || abilityName.empty()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "invalid params");
+        return ERR_APPEXECFWK_CLONE_QUERY_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

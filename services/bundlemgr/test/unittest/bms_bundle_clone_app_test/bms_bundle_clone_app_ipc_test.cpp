@@ -110,10 +110,28 @@ sptr<IBundleInstaller> BmsBundleCloneAppIPCTest::GetInstallerProxy()
     return installerProxy;
 }
 
-HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest005, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest001, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
     }

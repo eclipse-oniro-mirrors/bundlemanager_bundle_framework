@@ -1358,6 +1358,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
+        int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

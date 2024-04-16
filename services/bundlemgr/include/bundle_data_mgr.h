@@ -39,6 +39,7 @@
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
 #include "ffrt.h"
+#include "inner_bundle_clone_info.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "module_info.h"
@@ -896,13 +897,14 @@ public:
         std::vector<std::string> &developerIdList, int32_t userId);
     ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
 
-    ErrCode AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
-        Security::AccessToken::AccessTokenIDEx accessToken);
+    ErrCode AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
     ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
     ErrCode GetBundleNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex) const;
 
+    ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+        int32_t appIndex, AbilityInfo &abilityInfo) const;
 private:
     /**
      * @brief Init transferStates.
@@ -989,7 +991,8 @@ private:
     bool QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
         const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
     ErrCode QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
-        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
+        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info,
+        int32_t appIndex = 0) const;
     bool ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const;
     ErrCode ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
@@ -1046,8 +1049,9 @@ private:
         std::vector<AbilityInfo> &abilityInfos, std::vector<AbilityInfo> &filteredAbilityInfos) const;
     void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
         const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
-    void ModifyApplicationInfoByCloneInfo(const BundleCloneInfo &cloneInfo, ApplicationInfo &applicationInfo) const;
-    void ModifyBundleInfoByCloneInfo(const BundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
+    void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
+        ApplicationInfo &applicationInfo) const;
+    void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
     void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId, int32_t flag,
         BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
     void GetCloneBundleInfosV9(const InnerBundleInfo& info, int32_t userId, int32_t flags,

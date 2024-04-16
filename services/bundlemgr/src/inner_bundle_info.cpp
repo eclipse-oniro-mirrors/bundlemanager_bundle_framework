@@ -914,6 +914,27 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->organization = applicationInfo.organization;
 }
 
+ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const
+{
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGD("can not find bundleUserInfo in userId: %{public}d when GetApplicationEnabled", userId);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (appIndex == 0) {
+        isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
+        return ERR_OK;
+    } else {
+        const std::map<std::string, InnerBundleCloneInfo> mpCloneInfos = innerBundleUserInfo.cloneInfos;
+        std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
+        if (mpCloneInfos.find(key) == mpCloneInfos.end()) {
+            return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
+        }
+        isEnabled = mpCloneInfos.at(key).enabled;
+        return ERR_OK;
+    }
+}
+
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
 {
     if (IsExistLauncherAbility()) {
@@ -1920,7 +1941,7 @@ void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
     infoItem->second.updateTime = time;
 }
 
-bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId) const
+bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
     if (userId == Constants::NOT_EXIST_USERID) {
@@ -1932,8 +1953,25 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
         APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
         return false;
     }
-    auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
-    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name) != disabledAbilities.end()) {
+
+    if (appIndex == 0) {
+        auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
+        if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+            != disabledAbilities.end()) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        return false;
+    }
+    auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
+    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+        != disabledAbilities.end()) {
         return false;
     } else {
         return true;
@@ -2036,7 +2074,8 @@ void InnerBundleInfo::ClearOverlayModuleStates(const std::string &moduleName)
     }
 }
 
-ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const
+ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
+    int32_t userId, bool &isEnable, int32_t appIndex) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
     if (userId == Constants::NOT_EXIST_USERID) {
@@ -2049,8 +2088,24 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int3
         APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
-    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name) != disabledAbilities.end()) {
+    if (appIndex == 0) {
+        auto disabledAbilities = infoItem->second.bundleUserInfo.disabledAbilities;
+        if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+            != disabledAbilities.end()) {
+            isEnable = false;
+        } else {
+            isEnable = true;
+        }
+        return ERR_OK;
+    }
+    const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = infoItem->second.cloneInfos;
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+        return ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP;
+    }
+    auto disabledAbilities = mpCloneInfos.at(appIndexKey).disabledAbilities;
+    if (std::find(disabledAbilities.begin(), disabledAbilities.end(), abilityInfo.name)
+        != disabledAbilities.end()) {
         isEnable = false;
     } else {
         isEnable = true;
@@ -3270,9 +3325,10 @@ void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
     uninstallState_ = uninstallState;
 }
 
-ErrCode InnerBundleInfo::AddCloneBundle(const int32_t userId, int32_t &appIndex,
-    Security::AccessToken::AccessTokenIDEx accessToken)
+ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
 {
+    int32_t userId = attr.userId;
+    int32_t appIndex = attr.appIndex;
     const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
     if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
         APP_LOGE("Add Clone Bundle Fail, userId: %{public}d not found in bundleName: %{public}s",
@@ -3280,7 +3336,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const int32_t userId, int32_t &appIndex,
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
-    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
     if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
@@ -3292,15 +3348,17 @@ ErrCode InnerBundleInfo::AddCloneBundle(const int32_t userId, int32_t &appIndex,
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
     }
     
-    BundleCloneInfo cloneInfo;
+    InnerBundleCloneInfo cloneInfo;
     cloneInfo.userId = userId;
     cloneInfo.appIndex = appIndex;
     // copy from user
     cloneInfo.enabled = userInfo.bundleUserInfo.enabled;
     cloneInfo.disabledAbilities = userInfo.bundleUserInfo.disabledAbilities;
     cloneInfo.overlayModulesState = userInfo.bundleUserInfo.overlayModulesState;
-    cloneInfo.accessTokenId = accessToken.tokenIdExStruct.tokenID;
-    cloneInfo.accessTokenIdEx = accessToken.tokenIDEx;
+    cloneInfo.accessTokenId = attr.accessTokenId;
+    cloneInfo.accessTokenIdEx = attr.accessTokenIdEx;
+    cloneInfo.uid = attr.uid;
+    cloneInfo.gids = attr.gids;
     int64_t now = BundleUtil::GetCurrentTime();
     cloneInfo.installTime = now;
     cloneInfo.updateTime = now;
@@ -3321,7 +3379,7 @@ ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t a
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
-    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
     if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
@@ -3345,7 +3403,7 @@ ErrCode InnerBundleInfo::GetAvailableCloneAppIndex(const int32_t userId, int32_t
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
-    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
     int32_t candidateAppIndex = 1;
     while (cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(candidateAppIndex)) != cloneInfos.end()) {
@@ -3362,7 +3420,7 @@ ErrCode InnerBundleInfo::IsCloneAppIndexExisted(const int32_t userId, const int3
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
-    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+    std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
     res = cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) != cloneInfos.end();
     return ERR_OK;
