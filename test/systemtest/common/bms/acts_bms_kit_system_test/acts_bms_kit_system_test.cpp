@@ -8644,5 +8644,135 @@ HWTEST_F(ActsBmsKitSystemTest, SwitchUninstallState_0002, Function | MediumTest 
 
     std::cout << "END SwitchUninstallState_0002" << std::endl;
 }
+
+/**
+ * @tc.number: QueryAbilityInfoByContinueType_0001
+ * @tc.name: test query ability information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get ability successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfoByContinueType_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string continueType = "BROWSER";
+    AbilityInfo abilityInfo;
+    auto getInfoResult = bundleMgrProxy->QueryAbilityInfoByContinueType(appName, continueType, abilityInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    EXPECT_EQ(abilityInfo.bundleName, appName);
+    EXPECT_EQ(abilityInfo.continueType[0], continueType);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END QueryAbilityInfoByContinueType_0001" << std::endl;
+}
+
+/**
+ * @tc.number: QueryAbilityInfoByContinueType_0002
+ * @tc.name: test query ability information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get ability failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0002, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfoByContinueType_0002" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string continueType = "BROWSER1";
+    AbilityInfo abilityInfo;
+    auto getInfoResult = bundleMgrProxy->QueryAbilityInfoByContinueType(appName, continueType, abilityInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END QueryAbilityInfoByContinueType_0002" << std::endl;
+}
+
+/**
+ * @tc.number: QueryAbilityInfoByContinueType_0003
+ * @tc.name: test query ability information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get ability failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0003, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfoByContinueType_0003" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string continueType = "BROWSER";
+    AbilityInfo abilityInfo;
+    auto getInfoResult = bundleMgrProxy->QueryAbilityInfoByContinueType(appName, continueType, abilityInfo, 110);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END QueryAbilityInfoByContinueType_0003" << std::endl;
+}
+
+/**
+ * @tc.number: QueryAbilityInfoByContinueType_0004
+ * @tc.name: test query ability information
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.get ability failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0004, Function | MediumTest | Level1)
+{
+    std::cout << "START QueryAbilityInfoByContinueType_0004" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string continueType = "BROWSER";
+    AbilityInfo abilityInfo;
+    auto getInfoResult = bundleMgrProxy->QueryAbilityInfoByContinueType("appName", continueType, abilityInfo, USERID);
+    EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END QueryAbilityInfoByContinueType_0004" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

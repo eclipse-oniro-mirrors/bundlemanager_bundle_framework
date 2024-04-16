@@ -726,6 +726,8 @@ private:
 
     ErrCode HandleSwitchUninstallState(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryAbilityInfoByContinueType(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

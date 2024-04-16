@@ -3546,5 +3546,28 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     distributionType = typeIter->second;
     info.SetAppDistributionType(distributionType);
 }
+
+ErrCode BundleMgrHostImpl::QueryAbilityInfoByContinueType(const std::string &bundleName,
+    const std::string &continueType, AbilityInfo &abilityInfo, int32_t userId)
+{
+    APP_LOGD("QueryAbilityInfoByContinueType, bundleName : %{public}s, continueType : %{public}s, userId: %{public}d",
+        bundleName.c_str(), continueType.c_str(), userId);
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED}) &&
+        !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to QueryAbilityInfoByContinueType");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -350,6 +350,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetDeveloperIds);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE),
         &BundleMgrHost::HandleSwitchUninstallState);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE),
+        &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3296,6 +3298,25 @@ ErrCode BundleMgrHost::HandleSwitchUninstallState(MessageParcel &data, MessagePa
     bool state = data.ReadBool();
     ErrCode ret = SwitchUninstallState(bundleName, state);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryAbilityInfoByContinueType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string continueType = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    AbilityInfo abilityInfo;
+    auto ret = QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&abilityInfo)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

@@ -25,7 +25,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 132;
+constexpr size_t MESSAGE_SIZE = 133;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;

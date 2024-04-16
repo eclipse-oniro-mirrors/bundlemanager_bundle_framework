@@ -6659,5 +6659,53 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
     }
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleName,
+    const std::string &continueType, AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    APP_LOGI("requestUserId: %{public}d", requestUserId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (appIndex == 0) {
+        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, 0, innerBundleInfo, requestUserId);
+        if (ret != ERR_OK) {
+            APP_LOGD("QueryAbilityInfoByContinueType failed, bundleName:%{public}s", bundleName.c_str());
+            return ret;
+        }
+    }
+    if (appIndex > 0) {
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGW("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGD("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d, bundleName:%{public}s",
+                ret, bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+    }
+    auto ability = innerBundleInfo.FindAbilityInfo(continueType, requestUserId);
+    if (!ability) {
+        APP_LOGW("ability not found, bundleName:%{public}s, coutinueType:%{public}s",
+            bundleName.c_str(), continueType.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    abilityInfo = (*ability);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        abilityInfo.uid = innerBundleUserInfo.uid;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

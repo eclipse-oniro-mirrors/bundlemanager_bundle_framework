@@ -164,6 +164,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID,
     GET_DEVELOPER_IDS,
     SWITCH_UNINSTALL_STATE,
+    QUERY_ABILITY_INFO_BY_CONTINUE_TYPE,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
