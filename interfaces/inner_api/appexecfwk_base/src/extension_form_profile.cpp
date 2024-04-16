@@ -389,7 +389,6 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
         supportShapeSet.emplace(formShape->second);
     }
 
-    APP_LOGE("get supportShapeSet");
     if (supportShapeSet.empty()) {
         supportShapeSet.emplace(DEFAULT_RECT_SHAPE);
     }
