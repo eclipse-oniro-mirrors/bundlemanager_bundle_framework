@@ -959,6 +959,11 @@ public:
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     
+    ErrCode AddCloneBundle(const int32_t userId, int32_t &appIndex,
+        Security::AccessToken::AccessTokenIDEx accessToken);
+    ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
+    ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
+    ErrCode IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res);
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

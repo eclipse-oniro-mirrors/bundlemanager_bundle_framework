@@ -893,6 +893,9 @@ public:
         std::vector<std::string> &developerIdList, int32_t userId);
     ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
 
+    ErrCode AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
+        Security::AccessToken::AccessTokenIDEx accessToken);
+    ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
 private:
     /**
      * @brief Init transferStates.

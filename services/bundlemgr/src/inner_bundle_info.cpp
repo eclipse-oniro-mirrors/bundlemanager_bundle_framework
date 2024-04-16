@@ -27,6 +27,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "distributed_module_info.h"
 #include "distributed_ability_info.h"
@@ -3264,6 +3265,104 @@ bool InnerBundleInfo::GetUninstallState() const
 void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
 {
     uninstallState_ = uninstallState;
+}
+
+ErrCode InnerBundleInfo::AddCloneBundle(const int32_t userId, int32_t &appIndex,
+    Security::AccessToken::AccessTokenIDEx accessToken)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("Add Clone Bundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (cloneInfos.find(appIndexKey) != cloneInfos.end()) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d had existed", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
+    }
+    
+    BundleCloneInfo cloneInfo;
+    cloneInfo.userId = userId;
+    cloneInfo.appIndex = appIndex;
+    // copy from user
+    cloneInfo.enabled = userInfo.bundleUserInfo.enabled;
+    cloneInfo.disabledAbilities = userInfo.bundleUserInfo.disabledAbilities;
+    cloneInfo.overlayModulesState = userInfo.bundleUserInfo.overlayModulesState;
+    cloneInfo.accessTokenId = accessToken.tokenIdExStruct.tokenID;
+    cloneInfo.accessTokenIdEx = accessToken.tokenIDEx;
+    int64_t now = BundleUtil::GetCurrentTime();
+    cloneInfo.installTime = now;
+    cloneInfo.updateTime = now;
+    cloneInfo.isRemovable = userInfo.isRemovable;
+
+    cloneInfos[appIndexKey] = cloneInfo;
+    APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t appIndex)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("Remove Clone Bundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (cloneInfos.find(appIndexKey) == cloneInfos.end()) {
+        APP_LOGD("appIndex: %{public}d not found", appIndex);
+        return ERR_OK;
+    }
+    cloneInfos.erase(appIndexKey);
+    APP_LOGD("Remove clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    int32_t candidateAppIndex = 1;
+    while (cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(candidateAppIndex)) != cloneInfos.end()) {
+        candidateAppIndex++;
+    }
+    appIndex = candidateAppIndex;
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    res = cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) != cloneInfos.end();
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
