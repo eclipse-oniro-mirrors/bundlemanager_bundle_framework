@@ -1316,6 +1316,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    result = DeleteShaderCache(bundleName);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to DeleteShaderCache, error is %{public}d", result);
+        return result;
+    }
+
     if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
         APP_LOGE("fail to remove asan log path, error is %{public}d", result);
         return result;
@@ -2466,6 +2472,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
             return result;
         }
     }
+
+    result = CreateShaderCache(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to create shader cache, error is %{public}d", result);
+        return result;
+    }
+
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
@@ -4859,6 +4872,32 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
     APP_LOGI("app domain verify is disabled");
     return;
 #endif
+}
+
+ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    bool isExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
+    if (result != ERR_OK) {
+        APP_LOGE("IsExistDir failed, error is %{public}d", result);
+        return result;
+    }
+    if (isExist) {
+        APP_LOGD("shaderCachePath is exist");
+        return ERR_OK;
+    }
+    APP_LOGI("CreateShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
+}
+
+ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
