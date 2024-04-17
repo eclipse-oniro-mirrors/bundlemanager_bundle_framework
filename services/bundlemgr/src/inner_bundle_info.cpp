@@ -765,7 +765,7 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
 std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(const std::string continueType, int32_t userId) const
 {
-    APP_LOGI("count: %{public}lu", baseAbilityInfos_.size());
+    APP_LOGI("count: %{public}d", static_cast<int32_t>(baseAbilityInfos_.size()));
     for (const auto &ability : baseAbilityInfos_) {
         AbilityInfo abilityInfo = ability.second;
         std::vector<std::string> continueTypes = abilityInfo.continueType;
