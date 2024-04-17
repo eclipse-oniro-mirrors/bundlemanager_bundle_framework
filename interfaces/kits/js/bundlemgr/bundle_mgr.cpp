@@ -2917,7 +2917,7 @@ napi_value CreateDisplayOrientationObject(napi_env env)
     return value;
 }
 
-void CreateOrientationRelatedToSensor(napi_env env, napi_value value);
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value)
 {
     napi_value nAutoRotation = nullptr;
     NAPI_CALL_RETURN_VOID(env,
