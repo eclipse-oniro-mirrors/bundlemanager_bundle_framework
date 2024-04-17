@@ -1201,7 +1201,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         for (auto preinstalledAppPath: preinstalledAppPaths) {
             if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
                 APP_LOGE("Get bundle archive info fail.");
-                return;
+                break;
             }
             preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconResource.id);
