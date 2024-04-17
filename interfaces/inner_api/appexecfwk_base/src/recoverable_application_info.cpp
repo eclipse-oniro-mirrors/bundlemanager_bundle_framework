@@ -28,6 +28,9 @@ const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
 const std::string JSON_KEY_MODULE_NAME = "moduleName";
 const std::string JSON_KEY_LABEL_ID = "labelId";
 const std::string JSON_KEY_ICON_ID = "iconId";
+const std::string JSON_KEY_SYSTEM_APP = "systemApp";
+const std::string JSON_KEY_BUNDLE_TYPE = "bundleType";
+const std::string JSON_KEY_CODE_PATHS = "codePaths";
 }
 
 bool RecoverableApplicationInfo::ReadFromParcel(Parcel &parcel)
@@ -36,7 +39,14 @@ bool RecoverableApplicationInfo::ReadFromParcel(Parcel &parcel)
     moduleName = Str16ToStr8(parcel.ReadString16());
     labelId = parcel.ReadInt32();
     iconId = parcel.ReadInt32();
-   
+    systemApp = parcel.ReadBool();
+    bundleType = static_cast<BundleType>(parcel.ReadInt32());
+    int32_t codePathsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, codePathsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, codePathsSize, &codePaths);
+    for (auto i = 0; i < codePathsSize; i++) {
+        codePaths.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -46,7 +56,12 @@ bool RecoverableApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
-
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, systemApp);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, codePaths.size());
+    for (auto &codePath : codePaths) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(codePath));
+    }
     return true;
 }
 
@@ -67,7 +82,10 @@ void to_json(nlohmann::json &jsonObject, const RecoverableApplicationInfo &recov
         {JSON_KEY_BUNDLE_NAME, recoverableApplicationInfo.bundleName},
         {JSON_KEY_MODULE_NAME, recoverableApplicationInfo.moduleName},
         {JSON_KEY_LABEL_ID, recoverableApplicationInfo.labelId},
-        {JSON_KEY_ICON_ID, recoverableApplicationInfo.iconId}
+        {JSON_KEY_ICON_ID, recoverableApplicationInfo.iconId},
+        {JSON_KEY_SYSTEM_APP, recoverableApplicationInfo.systemApp},
+        {JSON_KEY_BUNDLE_TYPE, recoverableApplicationInfo.bundleType},
+        {JSON_KEY_CODE_PATHS, recoverableApplicationInfo.codePaths},
     };
 }
 
@@ -75,38 +93,20 @@ void from_json(const nlohmann::json &jsonObject, RecoverableApplicationInfo &rec
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_BUNDLE_NAME,
-        recoverableApplicationInfo.bundleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_MODULE_NAME,
-        recoverableApplicationInfo.moduleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_LABEL_ID,
-        recoverableApplicationInfo.labelId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_ICON_ID,
-        recoverableApplicationInfo.iconId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_BUNDLE_NAME,
+        recoverableApplicationInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_MODULE_NAME,
+        recoverableApplicationInfo.moduleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, JSON_KEY_LABEL_ID,
+        recoverableApplicationInfo.labelId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, JSON_KEY_ICON_ID,
+        recoverableApplicationInfo.iconId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, JSON_KEY_SYSTEM_APP,
+        recoverableApplicationInfo.systemApp, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, JSON_KEY_BUNDLE_TYPE,
+        recoverableApplicationInfo.bundleType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, JSON_KEY_CODE_PATHS,
+        recoverableApplicationInfo.codePaths, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read RecoverableApplicationInfo error, error code : %{public}d", parseResult);
     }
