@@ -2909,46 +2909,55 @@ napi_value CreateDisplayOrientationObject(napi_env env)
         napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nPortraitInverted));
     NAPI_CALL(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nPortraitInverted));
 
-    napi_value nAutoRotation = nullptr;
-    NAPI_CALL(env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION", nAutoRotation));
-
-    napi_value nAutoRotationLandscape = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE), &nAutoRotationLandscape));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE", nAutoRotationLandscape));
-
-    napi_value nAutoRotationPortrait = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT), &nAutoRotationPortrait));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT", nAutoRotationPortrait));
-
-    napi_value nAutoRotationRestricted = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED), &nAutoRotationRestricted));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_RESTRICTED", nAutoRotationRestricted));
-
-    napi_value nAutoRotationLandscapeR = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED), &nAutoRotationLandscapeR));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE_RESTRICTED", nAutoRotationLandscapeR));
-
-    napi_value nAutoRotationPortraitR = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED), &nAutoRotationPortraitR));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED", nAutoRotationPortraitR));
-
     napi_value nLocked = nullptr;
     NAPI_CALL(env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
     NAPI_CALL(env, napi_set_named_property(env, value, "LOCKED", nLocked));
 
+    CreateOrientationRelatedToSensor(env, value);
+    return value;
+}
+
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value);
+{
+    napi_value nAutoRotation = nullptr;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION", nAutoRotation));
+
+    napi_value nAutoRotationLandscape = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE), &nAutoRotationLandscape));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE", nAutoRotationLandscape));
+
+    napi_value nAutoRotationPortrait = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT), &nAutoRotationPortrait));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT", nAutoRotationPortrait));
+
+    napi_value nAutoRotationRestricted = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_RESTRICTED), &nAutoRotationRestricted));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_RESTRICTED", nAutoRotationRestricted));
+
+    napi_value nAutoRotationLandscapeR = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED), &nAutoRotationLandscapeR));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_LANDSCAPE_RESTRICTED", nAutoRotationLandscapeR));
+
+    napi_value nAutoRotationPortraitR = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED), &nAutoRotationPortraitR));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED", nAutoRotationPortraitR));
+
     napi_value nAutoRotationUnspecified = nullptr;
-    NAPI_CALL(env,
+    NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_UNSPECIFIED),
             &nAutoRotationUnspecified));
-    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
-
-    return value;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
 }
 
 napi_value CreateLaunchModeObject(napi_env env)

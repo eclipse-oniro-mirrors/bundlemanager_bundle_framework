@@ -3748,6 +3748,15 @@ void CreateDisplayOrientationObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(
         env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nReversePortrait));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nReversePortrait));
+    napi_value nLocked;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
+    CreateOrientationRelatedToSensor(env, value);
+}
+
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value)
+{
     napi_value nAutoRotation;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
@@ -3780,10 +3789,6 @@ void CreateDisplayOrientationObject(napi_env env, napi_value value)
             &nAutoRotationPortraitRestricted));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED",
         nAutoRotationPortraitRestricted));
-    napi_value nLocked;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
     napi_value nAutoRotationUnspecified;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_UNSPECIFIED),
