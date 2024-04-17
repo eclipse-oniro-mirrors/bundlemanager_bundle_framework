@@ -107,7 +107,7 @@ const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MA
     {"auto_rotation_landscape_restricted", DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
     {"auto_rotation_portrait_restricted", DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
     {"locked", DisplayOrientation::LOCKED},
-    {"locked", DisplayOrientation::AUTO_ROTATION_UNSPECIFIED},
+    {"auto_rotation_unspecified", DisplayOrientation::AUTO_ROTATION_UNSPECIFIED},
 };
 const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"fullscreen", SupportWindowMode::FULLSCREEN},
