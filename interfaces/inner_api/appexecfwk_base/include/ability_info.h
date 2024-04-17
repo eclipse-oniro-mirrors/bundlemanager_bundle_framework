@@ -279,6 +279,7 @@ struct AbilityInfo : public Parcelable {
     int64_t installTime = 0;
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
+    std::vector<std::string> continueType;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

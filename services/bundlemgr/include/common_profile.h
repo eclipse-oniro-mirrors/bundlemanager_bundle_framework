@@ -52,6 +52,8 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundl
 constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_MULTI_APP_MODE = "multiAppMode";
+
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -239,6 +241,9 @@ constexpr const char* BUNDLE_INSTALL_MARK_STATUS = "installMarkStatus";
 constexpr const char* BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* BUNDLE_SANDBOX_PERSISTENT_APP_INDEX = "appIndex";
 constexpr const char* BUNDLE_SANDBOX_PERSISTENT_USER_ID = "userId";
+// sub BUNDLE_MULTI_APP
+constexpr const char* BUNDLE_MULTI_APP_MODE_PROFILE_KEY_TYPE = "type";
+constexpr const char* BUNDLE_MULTI_APP_MODE_PROFILE_KEY_MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
 
 const uint32_t VALUE_HOME_SCREEN = 1 << 0;
 // 000010 represents supporting search box
@@ -423,6 +428,7 @@ constexpr const char* ABILITY_EXCLUDEFROMDOCK_MISSION = "excludeFromDock";
 constexpr const char* ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION = "preferMultiWindowOrientation";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
+constexpr const char* ABILITY_CONTINUE_TYPE = "continueType";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";

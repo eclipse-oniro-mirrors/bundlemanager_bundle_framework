@@ -4550,5 +4550,31 @@ ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, cons
     }
     return reply.ReadInt32();
 }
+
+ErrCode BundleMgrProxy::QueryAbilityInfoByContinueType(const std::string &bundleName,
+    const std::string &continueType,  AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryAbilityInfoByContinueType due to write interfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to QueryAbilityInfoByContinueType due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(continueType)) {
+        APP_LOGE("fail to QueryAbilityInfoByContinueType due to write continueType fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryAbilityInfoByContinueType due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE, data, abilityInfo);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

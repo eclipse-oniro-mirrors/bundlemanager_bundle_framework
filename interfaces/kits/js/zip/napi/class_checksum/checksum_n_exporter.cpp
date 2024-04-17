@@ -266,7 +266,11 @@ napi_value ChecksumNExporter::Adler32Combine(napi_env env, napi_callback_info in
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
         }
+#ifdef Z_LARGE64
+        arg->adler = adler32_combine64(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<uInt>(len));
+#else
         arg->adler = adler32_combine(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<uInt>(len));
+#endif
         return NapiBusinessError(ERRNO_NOERR);
     };
 
@@ -415,7 +419,7 @@ napi_value ChecksumNExporter::Crc32Combine(napi_env env, napi_callback_info info
     }
 
     bool succ = false;
-    size_t len = 0;
+    int64_t len = 0;
     uLong adler1 = 0U;
     uLong adler2 = 0U;
     tie(succ, adler1, adler2, len) = CommonFunc::GetAdler32CombineArg(env, funcArg);
@@ -428,7 +432,12 @@ napi_value ChecksumNExporter::Crc32Combine(napi_env env, napi_callback_info info
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
         }
-        arg->adler = crc32_combine(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<uInt>(len));
+#ifdef Z_LARGE64
+        arg->adler =
+            crc32_combine64(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<z_off64_t>(len));
+#else
+        arg->adler = crc32_combine(static_cast<uLong>(adler1), static_cast<uLong>(adler2), static_cast<z_off_t>(len));
+#endif
         return NapiBusinessError(ERRNO_NOERR);
     };
 

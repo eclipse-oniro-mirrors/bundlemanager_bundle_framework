@@ -16,11 +16,16 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_VERIFY_MGR_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_VERIFY_MGR_H
 
+#include <unordered_map>
+
 #include "appexecfwk_errors.h"
 #include "interfaces/hap_verify.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+
+extern const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS;
+
 class BundleVerifyMgr {
 public:
     static ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);

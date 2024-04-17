@@ -753,6 +753,8 @@ public:
      */
     bool GetInnerBundleInfoWithFlags(const std::string &bundleName, const int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
@@ -890,6 +892,12 @@ public:
     ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId);
     ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state);
+
+    ErrCode AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
+        Security::AccessToken::AccessTokenIDEx accessToken);
+    ErrCode RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex);
+    ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex = 0) const;
 
 private:
     /**

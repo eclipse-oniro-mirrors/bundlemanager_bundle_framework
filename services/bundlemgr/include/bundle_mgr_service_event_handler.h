@@ -520,6 +520,8 @@ private:
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
     void ProcessRebootDeleteAotPath();
+    void ProcessRebootDeleteArkAp();
+    void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
