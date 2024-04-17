@@ -2942,6 +2942,12 @@ napi_value CreateDisplayOrientationObject(napi_env env)
     NAPI_CALL(env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
     NAPI_CALL(env, napi_set_named_property(env, value, "LOCKED", nLocked));
 
+    napi_value nAutoRotationUnspecified = nullptr;
+    NAPI_CALL(env,
+        napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_UNSPECIFIED),
+            &nAutoRotationUnspecified));
+    NAPI_CALL(env, napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
+
     return value;
 }
 
