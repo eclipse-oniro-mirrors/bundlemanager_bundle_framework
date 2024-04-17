@@ -63,6 +63,8 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
+const std::string SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
+const std::string SUPPORT_APP_TYPES_SEPARATOR = ",";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
@@ -1309,8 +1311,41 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     return ERR_OK;
 }
 
+bool BundleInstallChecker::CheckSupportAppTypes(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const
+{
+    APP_LOGD("CheckSupportAppTypes begin, supportAppTypes: %{public}s", supportAppTypes.c_str());
+    std::vector<std::string> appTypesVec;
+    OHOS::SplitStr(supportAppTypes, SUPPORT_APP_TYPES_SEPARATOR, appTypesVec);
+    if (find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_DEFAULT) != appTypesVec.end() &&
+        find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_PHONE) == appTypesVec.end()) {
+        appTypesVec.emplace_back(DEVICE_TYPE_OF_PHONE);
+    }
+    sort(appTypesVec.begin(), appTypesVec.end());
+    for (const auto &info : infos) {
+        std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
+        if (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end() &&
+            find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) == devVec.end()) {
+            devVec.emplace_back(DEVICE_TYPE_OF_PHONE);
+        }
+        sort(devVec.begin(), devVec.end());
+        std::vector<std::string> intersectionVec;
+        set_intersection(appTypesVec.begin(), appTypesVec.end(),
+            devVec.begin(), devVec.end(), back_inserter(intersectionVec));
+        if (intersectionVec.empty()) {
+            APP_LOGW("check supportAppTypes failed");
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
+    std::string supportAppTypes = OHOS::system::GetParameter(SUPPORT_APP_TYPES, "");
+    if (!supportAppTypes.empty() && CheckSupportAppTypes(infos, supportAppTypes)) {
+        return ERR_OK;
+    }
     std::string deviceType = GetDeviceType();
     APP_LOGD("deviceType is %{public}s", deviceType.c_str());
     for (const auto &info : infos) {
