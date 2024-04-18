@@ -297,6 +297,7 @@ void BMSEventHandler::BundleBootStartEvent()
 #endif
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     PerfProfile::GetInstance().Dump();
 }
 
