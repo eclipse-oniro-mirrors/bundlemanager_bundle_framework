@@ -66,6 +66,7 @@ const std::string JSON_KEY_IS_DYNAMIC = "isDynamic";
 const std::string JSON_KEY_TRANSPARENCY_ENABLED = "transparencyEnabled";
 const std::string JSON_KEY_PRIVACY_LEVEL = "privacyLevel";
 const std::string JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
+const std::string JSON_KEY_SUPPORT_SHAPES = "supportShapes";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -112,6 +113,9 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     isDynamic = formInfo.isDynamic;
     transparencyEnabled = formInfo.transparencyEnabled;
     fontScaleFollowSystem = formInfo.fontScaleFollowSystem;
+    for (const auto &shape : formInfo.supportShapes) {
+        supportShapes.push_back(shape);
+    }
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -199,6 +203,13 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     transparencyEnabled = parcel.ReadBool();
     privacyLevel = parcel.ReadInt32();
     fontScaleFollowSystem = parcel.ReadBool();
+
+    int32_t supportShapeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportShapeSize, &supportShapes);
+    for (int32_t i = 0; i < supportShapeSize; i++) {
+        supportShapes.emplace_back(parcel.ReadInt32());
+    }
     return true;
 }
 
@@ -272,6 +283,12 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, transparencyEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, privacyLevel);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, fontScaleFollowSystem);
+
+    const auto supportShapeSize = static_cast<int32_t>(supportShapes.size());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapeSize);
+    for (auto i = 0; i < supportShapeSize; i++) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapes[i]);
+    }
     return true;
 }
 
@@ -335,8 +352,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_IS_DYNAMIC, formInfo.isDynamic},
         {JSON_KEY_TRANSPARENCY_ENABLED, formInfo.transparencyEnabled},
         {JSON_KEY_PRIVACY_LEVEL, formInfo.privacyLevel},
-        {JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM, formInfo.fontScaleFollowSystem}
-        };
+        {JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM, formInfo.fontScaleFollowSystem},
+        {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes}
+    };
 }
 
 void from_json(const nlohmann::json &jsonObject, FormCustomizeData &customizeDatas)
@@ -673,6 +691,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_SHAPES,
+        formInfo.supportShapes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module formInfo from jsonObject error, error code : %{public}d", parseResult);
     }
