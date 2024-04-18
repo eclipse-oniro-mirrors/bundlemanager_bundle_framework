@@ -4811,15 +4811,16 @@ void BaseBundleInstaller::VerifyDomain()
 {
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     APP_LOGD("start to verify domain");
-    if (isAppExist_) {
-        APP_LOGI("app exist, need to clear old domain info");
-        ClearDomainVerifyStatus(appIdentifier_, bundleName_);
-    }
     InnerBundleInfo bundleInfo;
     bool isExist = false;
     if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
         APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
+    }
+    std::string appIdentifier = bundleInfo.GetAppIdentifier();
+    if (isAppExist_) {
+        APP_LOGI("app exist, need to clear old domain info");
+        ClearDomainVerifyStatus(appIdentifier, bundleName_);
     }
     std::vector<AppDomainVerify::SkillUri> skillUris;
     std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
@@ -4835,7 +4836,7 @@ void BaseBundleInstaller::VerifyDomain()
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
-        appIdentifier_, bundleName_, fingerprint, skillUris);
+        appIdentifier, bundleName_, fingerprint, skillUris);
     IPCSkeleton::SetCallingIdentity(identity);
 #else
     APP_LOGI("app domain verify is disabled");
