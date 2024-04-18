@@ -241,7 +241,7 @@ bool InstalldClient::GetInstalldProxy()
         return true;
     }
 
-    APP_LOGD("try to get installd proxy");
+    APP_LOGI("try to get installd proxy");
     if (!LoadInstalldService()) {
         APP_LOGE("load installd service failed");
         return false;
