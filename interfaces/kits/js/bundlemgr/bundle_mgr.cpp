@@ -2458,7 +2458,6 @@ void GetBundleGidsExecute(napi_env env, void *data)
     }
 
     bool ret = InnerGetBundleGids(env, asyncCallbackInfo->bundleName, asyncCallbackInfo->gids);
-
     if (!ret) {
         asyncCallbackInfo->err = NAPI_RETURN_FAILED;
     }
@@ -4607,7 +4606,6 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<AsyncAbilityLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value ret = GetAbilityLabelWrap(env, info, asyncCallbackInfo);
-
     if (ret == nullptr) {
         APP_LOGD("ret == nullptr");
         ret = WrapVoidToJS(env);
@@ -5030,7 +5028,6 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
     sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, installParam, callback);
-
     if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
         APP_LOGE("install param error");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
