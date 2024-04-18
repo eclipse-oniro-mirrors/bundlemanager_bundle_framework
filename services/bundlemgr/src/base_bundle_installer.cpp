@@ -210,9 +210,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
         OnSingletonChange(installParam.noSkipsKill);
     }
 
-    if (!bundleName_.empty()) {
+    if (!bundlePaths.empty()) {
         SendBundleSystemEvent(
-            bundleName_,
+            bundleName_.empty() ? bundlePaths[0] : bundleName_,
             ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
             installParam,
             sysEventInfo_.preBundleScene,
