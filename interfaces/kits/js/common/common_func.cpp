@@ -73,6 +73,9 @@ constexpr const char* CODE_PATH = "codePath";
 const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
 const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
+constexpr const char* SYSTEM_APP = "systemApp";
+constexpr const char* BUNDLE_TYPE = "bundleType";
+constexpr const char* CODE_PATHS = "codePaths";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -143,6 +146,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID, ERROR_INVALID_DEVELOPERID },
     { ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
     { ERR_APPEXECFWK_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+    { ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, ERROR_START_SHORTCUT_ERROR },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -1810,10 +1814,32 @@ void CommonFunc::ConvertShortcutIntent(napi_env env,
         env, napi_create_string_utf8(env, shortcutIntent.targetClass.c_str(), NAPI_AUTO_LENGTH, &nTargetClass));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "targetAbility", nTargetClass));
 
-    napi_value nShortcutUri;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, shortcutIntent.shortcutUri.c_str(), NAPI_AUTO_LENGTH, &nShortcutUri));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "shortcutUri", nShortcutUri));
+    napi_value nParameters;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nParameters));
+    ConvertParameters(env, shortcutIntent.parameters, nParameters);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "parameters", nParameters));
+}
+
+void CommonFunc::ConvertParameters(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : data) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nKey;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, KEY, nKey));
+
+        napi_value nValue;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, VALUE, nValue));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
+    }
 }
 
 void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value)
@@ -2055,6 +2081,25 @@ void CommonFunc::ConvertRecoverableApplicationInfo(
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, ICON_ID, nIconId));
+
+    napi_value nSystemApp;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, recoverableApplication.systemApp, &nSystemApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, SYSTEM_APP, nSystemApp));
+
+    napi_value nBundleType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(recoverableApplication.bundleType), &nBundleType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_TYPE, nBundleType));
+
+    napi_value nCodePaths;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nCodePaths));
+    for (size_t idx = 0; idx < recoverableApplication.codePaths.size(); idx++) {
+        napi_value nCodePath;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, recoverableApplication.codePaths[idx].c_str(),
+            NAPI_AUTO_LENGTH, &nCodePath));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nCodePaths, idx, nCodePath));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, CODE_PATHS, nCodePaths));
 }
 
 void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
@@ -2072,6 +2117,203 @@ void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value val
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
         index++;
     }
+}
+
+bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutIntent &shortcutIntent)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+
+    napi_value prop = nullptr;
+    // parse targetBundle
+    napi_get_named_property(env, param, "targetBundle", &prop);
+    std::string targetBundle;
+    if (!ParseString(env, prop, targetBundle)) {
+        return false;
+    }
+    shortcutIntent.targetBundle = targetBundle;
+
+    // parse targetModule
+    napi_get_named_property(env, param, "targetModule", &prop);
+    std::string targetModule;
+    if (!ParseString(env, prop, targetModule)) {
+        return false;
+    }
+    shortcutIntent.targetModule = targetModule;
+
+    // parse targetAbility
+    napi_get_named_property(env, param, "targetAbility", &prop);
+    std::string targetAbility;
+    if (!ParseString(env, prop, targetAbility)) {
+        return false;
+    }
+    shortcutIntent.targetClass = targetAbility;
+
+    // parse parameters
+    napi_get_named_property(env, param, "parameters", &prop);
+    std::map<std::string, std::string> parameters;
+    if (!ParseParameters(env, prop, parameters)) {
+        return false;
+    }
+    shortcutIntent.parameters = parameters;
+    return true;
+}
+
+bool CommonFunc::ParseShortcutWantArray(
+    napi_env env, napi_value args, std::vector<ShortcutIntent> &shortcutIntents)
+{
+    APP_LOGD("begin to ParseShortcutWantArray");
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
+    if (!isArray) {
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
+    APP_LOGD("length=%{public}ud", arrayLength);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        ShortcutIntent shortcutIntent;
+        napi_value value = nullptr;
+        NAPI_CALL_BASE(env, napi_get_element(env, args, j, &value), false);
+        if (!ParseShortcutWant(env, value, shortcutIntent)) {
+            return false;
+        }
+        shortcutIntents.push_back(shortcutIntent);
+    }
+    return true;
+}
+
+bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo &shortcutInfo)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+
+    napi_value prop = nullptr;
+    // parse id
+    napi_get_named_property(env, param, "id", &prop);
+    std::string id;
+    if (!ParseString(env, prop, id)) {
+        return false;
+    }
+    shortcutInfo.id = id;
+
+    // parse bundleName
+    napi_get_named_property(env, param, "bundleName", &prop);
+    std::string bundleName;
+    if (!ParseString(env, prop, bundleName)) {
+        return false;
+    }
+    shortcutInfo.bundleName = bundleName;
+
+    // parse moduleName
+    napi_get_named_property(env, param, "moduleName", &prop);
+    std::string moduleName;
+    if (!ParseString(env, prop, moduleName)) {
+        return false;
+    }
+    shortcutInfo.moduleName = moduleName;
+
+    // parse hostAbility
+    napi_get_named_property(env, param, "hostAbility", &prop);
+    std::string hostAbility;
+    if (!ParseString(env, prop, hostAbility)) {
+        return false;
+    }
+    shortcutInfo.hostAbility = hostAbility;
+
+    // parse icon
+    napi_get_named_property(env, param, "icon", &prop);
+    std::string icon;
+    if (!ParseString(env, prop, icon)) {
+        return false;
+    }
+    shortcutInfo.icon = icon;
+
+    // parse iconId
+    napi_get_named_property(env, param, "iconId", &prop);
+    int32_t iconId;
+    if (!ParseInt(env, prop, iconId)) {
+        return false;
+    }
+    shortcutInfo.iconId = iconId;
+
+    // parse label
+    napi_get_named_property(env, param, "label", &prop);
+    std::string label;
+    if (!ParseString(env, prop, label)) {
+        return false;
+    }
+    shortcutInfo.label = label;
+
+    // parse labelId
+    napi_get_named_property(env, param, "labelId", &prop);
+    int32_t labelId;
+    if (!ParseInt(env, prop, labelId)) {
+        return false;
+    }
+    shortcutInfo.labelId = labelId;
+
+    // parse labelId
+    napi_get_named_property(env, param, "wants", &prop);
+    std::vector<ShortcutIntent> intents;
+    if (!ParseShortcutWantArray(env, prop, intents)) {
+        return false;
+    }
+    shortcutInfo.intents = intents;
+    return true;
+}
+
+bool CommonFunc::ParseParameters(
+    napi_env env, napi_value args, std::map<std::string, std::string> &parameters)
+{
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, args, &isArray), false);
+    if (!isArray) {
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, args, &arrayLength), false);
+    APP_LOGD("length=%{public}ud", arrayLength);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        std::string nKey;
+        std::string nValue;
+        napi_value value = nullptr;
+        NAPI_CALL_BASE(env, napi_get_element(env, args, j, &value), false);
+        if (!ParseParameterItem(env, value, nKey, nValue)) {
+            return false;
+        }
+        parameters[nKey] = nValue;
+    }
+    return true;
+}
+
+bool CommonFunc::ParseParameterItem(napi_env env, napi_value param, std::string &key, std::string &value)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+
+    napi_value prop = nullptr;
+    // parse key
+    napi_get_named_property(env, param, "key", &prop);
+    if (!ParseString(env, prop, key)) {
+        return false;
+    }
+
+    // parse value
+    napi_get_named_property(env, param, "value", &prop);
+    if (!ParseString(env, prop, value)) {
+        return false;
+    }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

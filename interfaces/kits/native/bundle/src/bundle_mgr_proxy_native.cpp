@@ -16,6 +16,7 @@
 #include "bundle_mgr_proxy_native.h"
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
@@ -40,18 +41,18 @@ sptr<IRemoteObject> BundleMgrProxyNative::GetBmsProxy()
 
 bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGI("begin to get bundle info for self");
+    LOG_I(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info for self");
     MessageParcel data;
     if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
-        APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        APP_LOGE("fail to GetBundleInfoForSelf due to write flag fail");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write flag fail");
         return false;
     }
     if (!GetParcelableInfo<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
-        APP_LOGE("fail to GetBundleInfoForSelf from server");
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf from server");
         return false;
     }
     return true;

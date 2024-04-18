@@ -24,8 +24,10 @@
 #include "app_control_constants.h"
 #include "app_control_manager.h"
 #endif
+#include "app_log_tag_wrapper.h"
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "distributed_module_info.h"
 #include "distributed_ability_info.h"
@@ -761,6 +763,23 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     return abilitys;
 }
 
+std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfo(const std::string continueType, int32_t userId) const
+{
+    APP_LOGI("count: %{public}d", baseAbilityInfos_.size());
+    for (const auto &ability : baseAbilityInfos_) {
+        AbilityInfo abilityInfo = ability.second;
+        std::vector<std::string> continueTypes = abilityInfo.continueType;
+        auto item = std::find(continueTypes.begin(), continueTypes.end(), continueType);
+        if (item != continueTypes.end()) {
+            GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
+                ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
+                abilityInfo.applicationInfo);
+            return abilityInfo;
+        }
+    }
+    return std::nullopt;
+}
+
 std::optional<ExtensionAbilityInfo> InnerBundleInfo::FindExtensionInfo(
     const std::string &moduleName, const std::string &extensionName) const
 {
@@ -1253,12 +1272,12 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
 
     if (baseApplicationInfo_ == nullptr) {
-        APP_LOGE("baseApplicationInfo_ is nullptr");
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "baseApplicationInfo_ is nullptr");
         return;
     }
     appInfo = *baseApplicationInfo_;
@@ -1313,7 +1332,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -1369,7 +1388,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
             userId, GetBundleName().c_str());
         return false;
     }
@@ -1407,7 +1426,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            APP_LOGE("can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
@@ -1420,7 +1439,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo,
             bundleInfo.applicationInfo.accessTokenId, bundleInfo.applicationInfo.deviceId)) {
-            APP_LOGE("get request permission state failed");
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
@@ -1433,7 +1452,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo", userId);
+        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -1456,7 +1475,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            APP_LOGE("can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     ProcessBundleFlags(flags, userId, bundleInfo);
@@ -2888,7 +2907,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
         shortcutIntent.targetBundle = shortcutWant.bundleName;
         shortcutIntent.targetModule = shortcutWant.moduleName;
         shortcutIntent.targetClass = shortcutWant.abilityName;
-        shortcutIntent.shortcutUri = shortcutWant.shortcutUri;
+        shortcutIntent.parameters = shortcutWant.parameters;
         shortcutInfo.intents.emplace_back(shortcutIntent);
     }
 }
@@ -3263,6 +3282,104 @@ bool InnerBundleInfo::GetUninstallState() const
 void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
 {
     uninstallState_ = uninstallState;
+}
+
+ErrCode InnerBundleInfo::AddCloneBundle(const int32_t userId, int32_t &appIndex,
+    Security::AccessToken::AccessTokenIDEx accessToken)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("Add Clone Bundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (cloneInfos.find(appIndexKey) != cloneInfos.end()) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d had existed", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
+    }
+    
+    BundleCloneInfo cloneInfo;
+    cloneInfo.userId = userId;
+    cloneInfo.appIndex = appIndex;
+    // copy from user
+    cloneInfo.enabled = userInfo.bundleUserInfo.enabled;
+    cloneInfo.disabledAbilities = userInfo.bundleUserInfo.disabledAbilities;
+    cloneInfo.overlayModulesState = userInfo.bundleUserInfo.overlayModulesState;
+    cloneInfo.accessTokenId = accessToken.tokenIdExStruct.tokenID;
+    cloneInfo.accessTokenIdEx = accessToken.tokenIDEx;
+    int64_t now = BundleUtil::GetCurrentTime();
+    cloneInfo.installTime = now;
+    cloneInfo.updateTime = now;
+    cloneInfo.isRemovable = userInfo.isRemovable;
+
+    cloneInfos[appIndexKey] = cloneInfo;
+    APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t appIndex)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        APP_LOGE("Remove Clone Bundle Fail, userId: %{public}d not found in bundleName: %{public}s",
+            userId, GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+    if (cloneInfos.find(appIndexKey) == cloneInfos.end()) {
+        APP_LOGD("appIndex: %{public}d not found", appIndex);
+        return ERR_OK;
+    }
+    cloneInfos.erase(appIndexKey);
+    APP_LOGD("Remove clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
+        userId, appIndex, GetBundleName().c_str());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    int32_t candidateAppIndex = 1;
+    while (cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(candidateAppIndex)) != cloneInfos.end()) {
+        candidateAppIndex++;
+    }
+    appIndex = candidateAppIndex;
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::IsCloneAppIndexExisted(const int32_t userId, const int32_t appIndex, bool &res)
+{
+    const std::string key = NameAndUserIdToKey(GetBundleName(), userId);
+    if (innerBundleUserInfos_.find(key) == innerBundleUserInfos_.end()) {
+        return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
+    }
+    InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
+    std::map<std::string, BundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
+
+    res = cloneInfos.find(InnerBundleUserInfo::AppIndexToKey(appIndex)) != cloneInfos.end();
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

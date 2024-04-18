@@ -25,6 +25,7 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "shortcut_info.h"
+#include "start_options.h"
 #include "want.h"
 
 namespace OHOS {
@@ -49,11 +50,18 @@ struct GetShortcutInfoCallbackInfo : public BaseCallbackInfo {
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
 };
 
+struct StartShortcutCallbackInfo : public BaseCallbackInfo {
+    explicit StartShortcutCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    OHOS::AppExecFwk::ShortcutInfo shortcutInfo;
+    OHOS::AAFwk::StartOptions startOptions;
+};
+
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info);
+napi_value StartShortcut(napi_env env, napi_callback_info info);
 }
 }
 #endif

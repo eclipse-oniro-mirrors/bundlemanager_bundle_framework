@@ -393,6 +393,20 @@ private:
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
         bool removable);
+
+    /**
+     * @brief OTA Install system app and system vendor bundles.
+     * @param filePaths Indicates the filePaths.
+     * @param bundleName Indicates the bundleName.
+     * @param appType Indicates the bundle type.
+     * @param removable Indicates whether it can be removed.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool OTAInstallSystemBundleNeedCheckUser(
+        const std::vector<std::string> &filePaths,
+        const std::string &bundleName,
+        Constants::AppType appType,
+        bool removable);
     /**
      * @brief OTA Install system app and system vendor shared bundles.
      * @param filePaths Indicates the filePaths.
@@ -502,6 +516,8 @@ private:
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
     void ProcessRebootDeleteAotPath();
+    void ProcessRebootDeleteArkAp();
+    void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
@@ -521,6 +537,8 @@ private:
     void CheckALLResourceInfo();
     // Used to add bundle resource Info that does not exist in rdb when OTA.
     void static ProcessBundleResourceInfo();
+    // Used to delete all bundle resource Info
+    void DeleteAllBundleResourceInfo();
     // Used to send update failed event
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     // Used to save the information parsed by Hap in the scanned directory.

@@ -121,6 +121,7 @@ constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t ACCOUNT_UID = 3058;
 constexpr int32_t FOUNDATION_UID = 5523;
+constexpr int32_t DMS_UID = 5522;
 constexpr int32_t STORAGE_SERVICE_UID = 1090;
 constexpr int32_t BMS_GID = 1000;
 constexpr int32_t BASE_SYS_UID = 2100;
@@ -166,6 +167,7 @@ constexpr const char* PERMISSION_UNINSTALL_SANDBOX_BUNDLE = "ohos.permission.UNI
 constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
@@ -326,6 +328,10 @@ constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
 constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
+
+// clone application
+constexpr int32_t CLONE_APP_INDEX_MIN = 1;
+constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

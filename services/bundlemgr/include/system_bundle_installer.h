@@ -55,6 +55,19 @@ public:
         InstallParam &installParam,
         Constants::AppType appType);
     /**
+     * @brief OTA Install preinstall app.
+     * @param filePath Indicates the filePaths.
+     * @param installParam Indicates the installParam.
+     * @param bundleName Indicates the bundleName.
+     * @param appType Indicates the bundle type.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    ErrCode OTAInstallSystemBundleNeedCheckUser(
+        const std::vector<std::string> &filePaths,
+        InstallParam &installParam,
+        const std::string &bundleName,
+        Constants::AppType appType);
+    /**
      * @brief Uninstall preinstall app.
      * @param bundleName Indicates the bundle name.
      * @return Returns true if this function called successfully; returns false otherwise.

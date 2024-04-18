@@ -162,5 +162,23 @@ void BundleResourceHelper::SetOverlayEnabled(const std::string &bundleName, cons
     callback.OnOverlayStatusChanged(bundleName, isEnabled, userId);
 #endif
 }
+
+bool BundleResourceHelper::DeleteAllResourceInfo()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource failed");
+        return false;
+    }
+    return true;
+#else
+    return false;
+#endif
+}
 } // AppExecFwk
 } // OHOS

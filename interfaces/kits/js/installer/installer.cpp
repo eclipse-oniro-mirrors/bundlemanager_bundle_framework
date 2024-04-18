@@ -1491,6 +1491,10 @@ void UninstallAndRecoverExecuter(napi_env env, void *data)
     }
     const std::string bundleName = asyncCallbackInfo->bundleName;
     InstallResult &installResult = asyncCallbackInfo->installResult;
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
     auto iBundleInstaller = CommonFunc::GetBundleInstaller();
     if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
         APP_LOGE("can not get iBundleInstaller");
@@ -1530,7 +1534,6 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
-            CHECK_STRING_EMPTY(env, callbackPtr->bundleName, std::string{ BUNDLE_NAME });
         } else if (i == ARGS_POS_ONE) {
             if (valueType != napi_object || !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
                 APP_LOGE("Parse installParam failed");

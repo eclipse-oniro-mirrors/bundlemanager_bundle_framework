@@ -173,6 +173,7 @@ struct Ability {
     bool excludeFromDock = false;
     std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
+    std::vector<std::string> continueType;
 };
 
 struct Extension {
@@ -607,6 +608,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_CONTINUE_TYPE,
+        ability.continueType,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -2055,6 +2064,11 @@ bool ToAbilityInfo(
     abilityInfo.minWindowWidth = ability.minWindowWidth;
     abilityInfo.maxWindowHeight = ability.maxWindowHeight;
     abilityInfo.minWindowHeight = ability.minWindowHeight;
+    if (ability.continueType.empty()) {
+        abilityInfo.continueType.emplace_back(ability.name);
+    } else {
+        abilityInfo.continueType = ability.continueType;
+    }
     return true;
 }
 
@@ -2354,8 +2368,7 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertExtensionSkillInfo(key, extension.skills);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-    if (!findEntry && !transformParam.isPreInstallApp &&
-        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+    if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

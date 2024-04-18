@@ -27,21 +27,21 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixMgr::QuickFixMgr()
 {
-    LOG_I(BMSTag::QUICK_FIX, "create quick fixer async manager instance");
+    LOG_I(BMS_TAG_QUICK_FIX, "create quick fixer async manager instance");
 }
 
 QuickFixMgr::~QuickFixMgr()
 {
-    LOG_I(BMSTag::QUICK_FIX, "destory quick fixer async manager instance");
+    LOG_I(BMS_TAG_QUICK_FIX, "destory quick fixer async manager instance");
 }
 
 ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
 {
-    LOG_I(BMSTag::QUICK_FIX, "DeployQuickFix begin");
+    LOG_I(BMS_TAG_QUICK_FIX, "DeployQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "DeployQuickFix failed due to nullptr quick fixer");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to nullptr quick fixer");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
@@ -57,10 +57,10 @@ ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePa
 ErrCode QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    LOG_I(BMSTag::QUICK_FIX, "SwitchQuickFix begin");
+    LOG_I(BMS_TAG_QUICK_FIX, "SwitchQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "SwitchQuickFix failed due to nullptr quick fixer");
+        LOG_E(BMS_TAG_QUICK_FIX, "SwitchQuickFix failed due to nullptr quick fixer");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
@@ -76,10 +76,10 @@ ErrCode QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
 ErrCode QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
     const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    LOG_I(BMSTag::QUICK_FIX, "DeleteQuickFix begin");
+    LOG_I(BMS_TAG_QUICK_FIX, "DeleteQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
     if (quickFixer == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "DeleteQuickFix failed due to nullptr quick fixer");
+        LOG_E(BMS_TAG_QUICK_FIX, "DeleteQuickFix failed due to nullptr quick fixer");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 

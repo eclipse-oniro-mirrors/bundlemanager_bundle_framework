@@ -42,6 +42,7 @@ enum class GetAbilityInfoFlag {
     GET_ABILITY_INFO_WITH_DISABLE = 0x00000008,
     GET_ABILITY_INFO_ONLY_SYSTEM_APP = 0x00000010,
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000020,
+    GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040,
 };
 
 enum class AbilityType {
@@ -278,6 +279,7 @@ struct AbilityInfo : public Parcelable {
     int64_t installTime = 0;
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
+    std::vector<std::string> continueType;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

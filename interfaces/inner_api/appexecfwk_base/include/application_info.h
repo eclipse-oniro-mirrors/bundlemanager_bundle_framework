@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,6 +31,9 @@ namespace {
     constexpr const char* AVAILABLELEVEL_NORMAL = "normal";
     constexpr const char* DEFAULT_ENTITY_TYPE = "unspecified";
     constexpr const char* DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
+    constexpr const char* MULTI_APP_MODE_NOT_SUPPORT = "NOT_SUPPORT";
+    constexpr const char* MULTI_APP_MODE_MULTI_INSTANCE = "MULTI_INSTANCE";
+    constexpr const char* MULTI_APP_MODE_CLONE_APP = "CLONE_APP";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -68,6 +71,12 @@ enum class CompatiblePolicy {
 
 enum class ApplicationReservedFlag {
     ENCRYPTED_APPLICATION = 0x00000001,
+};
+
+enum class MultiAppMode {
+    NOT_SUPPORT = 0,
+    MULTI_INSTANCE = 1,
+    CLONE_APP = 2,
 };
 
 struct Metadata : public Parcelable {
@@ -272,6 +281,9 @@ struct ApplicationInfo : public Parcelable {
 
     std::string organization;
     std::vector<ApplicationEnvironment> appEnvironments;
+
+    std::string multiAppMode = MULTI_APP_MODE_NOT_SUPPORT;
+    int32_t maxInstanceNum = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

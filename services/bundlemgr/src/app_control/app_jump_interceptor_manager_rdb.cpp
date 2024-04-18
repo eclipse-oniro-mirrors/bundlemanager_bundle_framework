@@ -59,16 +59,16 @@ AppJumpInterceptorManagerRdb::~AppJumpInterceptorManagerRdb()
 bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
 {
     if (eventSubscriber_ != nullptr) {
-        LOG_I(BMSTag::APP_CONTROL, "subscribeCommonEvent already subscribed.");
+        LOG_I(BMS_TAG_APP_CONTROL, "subscribeCommonEvent already subscribed.");
         return true;
     }
     eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(shared_from_this());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->RegisterBundleEventCallback(eventSubscriber_)) {
-        LOG_E(BMSTag::APP_CONTROL, "subscribeCommonEvent subscribed failure.");
+        LOG_E(BMS_TAG_APP_CONTROL, "subscribeCommonEvent subscribed failure.");
         return false;
     };
-    LOG_I(BMSTag::APP_CONTROL, "subscribeCommonEvent subscribed success.");
+    LOG_I(BMS_TAG_APP_CONTROL, "subscribeCommonEvent subscribed success.");
     return true;
 }
 
@@ -102,11 +102,11 @@ ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<Ap
     int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
-        LOG_E(BMSTag::APP_CONTROL, "BatchInsert AddAppJumpControlRule failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "BatchInsert AddAppJumpControlRule failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
-        LOG_E(BMSTag::APP_CONTROL, "BatchInsert size not expected.");
+        LOG_E(BMS_TAG_APP_CONTROL, "BatchInsert size not expected.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -123,7 +123,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteAppJumpControlRule(const std::vector
         absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
         bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
         if (!ret) {
-            LOG_E(BMSTag::APP_CONTROL, "Delete failed caller:%{public}s target:%{public}s userId:%{public}d",
+            LOG_E(BMS_TAG_APP_CONTROL, "Delete failed caller:%{public}s target:%{public}s userId:%{public}d",
                 rule.callerPkg.c_str(), rule.targetPkg.c_str(), userId);
             result = false;
         }
@@ -138,7 +138,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByCallerBundleName(const std::st
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMSTag::APP_CONTROL, "DeleteRuleByCallerBundleName callerBundleName:%{public}s, failed.",
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteRuleByCallerBundleName callerBundleName:%{public}s, failed.",
             callerBundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -152,7 +152,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByTargetBundleName(const std::st
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMSTag::APP_CONTROL, "DeleteRuleByTargetBundleName targetBundleName:%{public}s, failed.",
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteRuleByTargetBundleName targetBundleName:%{public}s, failed.",
             targetBundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -169,40 +169,40 @@ ErrCode AppJumpInterceptorManagerRdb::GetAppJumpControlRule(const std::string &c
     absRdbPredicates.OrderByAsc(MODIFIED_TIME); // ascending
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        LOG_E(BMSTag::APP_CONTROL, "QueryData failed");
+        LOG_E(BMS_TAG_APP_CONTROL, "QueryData failed");
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "GetRowCount failed, ret: %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "GetRowCount failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     if (count == 0) {
-        LOG_E(BMSTag::APP_CONTROL, "GetAppRunningControlRuleResult size 0");
+        LOG_E(BMS_TAG_APP_CONTROL, "GetAppRunningControlRuleResult size 0");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_JUMP_INTERCPTOR;
     }
     ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "GoToFirstRow failed, ret: %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "GoToFirstRow failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     std::string callerPkg;
     if (absSharedResultSet->GetString(CALLER_PKG_INDEX, callerPkg) != NativeRdb::E_OK) {
-        LOG_E(BMSTag::APP_CONTROL, "GetString callerPkg failed, ret: %{public}d", ret);
+        LOG_E(BMS_TAG_APP_CONTROL, "GetString callerPkg failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     std::string targetPkg;
     ret = absSharedResultSet->GetString(TARGET_PKG_INDEX, targetPkg);
     if (ret != NativeRdb::E_OK) {
-        LOG_W(BMSTag::APP_CONTROL, "GetString targetPkg failed, ret: %{public}d", ret);
+        LOG_W(BMS_TAG_APP_CONTROL, "GetString targetPkg failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     int32_t selectStatus;
     ret = absSharedResultSet->GetInt(SELECT_STATUS_INDEX, selectStatus);
     if (ret != NativeRdb::E_OK) {
-        LOG_W(BMSTag::APP_CONTROL, "GetInt selectStatus failed, ret: %{public}d", ret);
+        LOG_W(BMS_TAG_APP_CONTROL, "GetInt selectStatus failed, ret: %{public}d", ret);
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
     controlRule.jumpMode = (AppExecFwk::AbilityJumpMode) selectStatus;

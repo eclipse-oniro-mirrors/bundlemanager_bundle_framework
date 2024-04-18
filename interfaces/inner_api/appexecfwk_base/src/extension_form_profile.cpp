@@ -88,6 +88,7 @@ struct ExtensionFormProfileInfo {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = false;
+    bool fontScaleFollowSystem = true;
     std::vector<std::string> supportShapes {};
 };
 
@@ -301,6 +302,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::FONT_SCALE_FOLLOW_SYSTEM,
+        extensionFormProfileInfo.fontScaleFollowSystem,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::SUPPORT_SHAPES,
@@ -449,6 +458,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.dataProxyEnabled = form.dataProxyEnabled;
     info.isDynamic = form.isDynamic;
     info.transparencyEnabled = form.transparencyEnabled;
+    info.fontScaleFollowSystem = form.fontScaleFollowSystem;
 
     if (!GetSupportShapes(form, info)) {
         return false;

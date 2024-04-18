@@ -96,6 +96,9 @@ constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_inst
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
+constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
+constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
+
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
 std::set<std::string> uninstallList_;
@@ -1054,7 +1057,9 @@ void BMSEventHandler::ProcessRebootBundle()
 {
     APP_LOGI("BMSEventHandler Process reboot bundle start");
     ProcessRebootDeleteAotPath();
+    ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
+    DeleteAllBundleResourceInfo();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -1064,6 +1069,50 @@ void BMSEventHandler::ProcessRebootBundle()
 #endif
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
+}
+
+void BMSEventHandler::ProcessRebootDeleteArkAp()
+{
+    APP_LOGI("DeleteArkAp start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            continue;
+        }
+        for (const auto &bundleInfo : bundleInfos) {
+            DeleteArkAp(bundleInfo, userId);
+        }
+    }
+    APP_LOGI("DeleteArkAp end");
+}
+
+void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleInfo.name).append(Constants::PATH_SEPARATOR);
+    for (const auto &moduleName : bundleInfo.moduleNames) {
+        std::string runtimeAp = arkProfilePath;
+        std::string mergedAp = arkProfilePath;
+        runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
+            .append(Constants::PGO_FILE_SUFFIX);
+        if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
+            APP_LOGE("delete aot dir %{public}s failed!", runtimeAp.c_str());
+            continue;
+        }
+        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(Constants::PGO_FILE_SUFFIX);
+        if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
+            APP_LOGE("delete aot dir %{public}s failed!", mergedAp.c_str());
+            continue;
+        }
+    }
 }
 
 void BMSEventHandler::ProcessRebootDeleteAotPath()
@@ -1433,7 +1482,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+        if (!OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
             SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -1980,6 +2029,34 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    return ret == ERR_OK;
+}
+
+bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
+    const std::vector<std::string> &filePaths,
+    const std::string &bundleName,
+    Constants::AppType appType,
+    bool removable)
+{
+    if (filePaths.empty()) {
+        APP_LOGE("File path is empty");
+        return false;
+    }
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
+    SystemBundleInstaller installer;
+    ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }
@@ -2566,6 +2643,15 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     eventInfo.errCode = ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
     eventInfo.isPreInstallApp = bundleInfo.isPreInstallApp;
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
+}
+
+void BMSEventHandler::DeleteAllBundleResourceInfo()
+{
+    APP_LOGI("delete all bundle resource when ota start");
+    if (!BundleResourceHelper::DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource failed");
+    }
+    APP_LOGI("delete all bundle resource when ota end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
