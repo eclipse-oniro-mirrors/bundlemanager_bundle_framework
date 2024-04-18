@@ -86,6 +86,7 @@ enum class DisplayOrientation {
     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
     AUTO_ROTATION_PORTRAIT_RESTRICTED,
     LOCKED,
+    AUTO_ROTATION_UNSPECIFIED,
 };
 
 enum class LaunchMode {
