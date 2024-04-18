@@ -347,7 +347,6 @@ void CreateInstallErrorCodeObject(napi_env env, napi_value value);
 napi_value CreateAbilityTypeObject(napi_env env);
 napi_value CreateAbilitySubTypeObject(napi_env env);
 napi_value CreateDisplayOrientationObject(napi_env env);
-void CreateOrientationRelatedToSensor(napi_env env, napi_value value);
 napi_value CreateLaunchModeObject(napi_env env);
 napi_value CreateColorModeObject(napi_env env);
 napi_value CreateGrantStatusObject(napi_env env);
