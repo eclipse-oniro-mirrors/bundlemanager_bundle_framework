@@ -859,6 +859,10 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
         // query all
         ImplicitQueryAllAbilityInfos(want, flags, requestUserId, abilityInfos, appIndex);
     }
+    std::vector<AbilityInfo> filteredAbilityInfos;
+    if (FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos)) {
+        abilityInfos = filteredAbilityInfos;
+    }
     // sort by priority, descending order.
     if (abilityInfos.size() > 1) {
         std::stable_sort(abilityInfos.begin(), abilityInfos.end(),
