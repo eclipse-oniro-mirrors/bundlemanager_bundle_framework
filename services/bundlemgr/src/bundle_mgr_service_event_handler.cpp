@@ -98,6 +98,9 @@ constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_inst
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
+constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
+constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
+
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
 std::set<std::string> uninstallList_;
@@ -1057,6 +1060,7 @@ void BMSEventHandler::ProcessRebootBundle()
 {
     APP_LOGI("BMSEventHandler Process reboot bundle start");
     ProcessRebootDeleteAotPath();
+    ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     DeleteAllBundleResourceInfo();
     ProcessRebootBundleInstall();
@@ -1069,6 +1073,50 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
+}
+
+void BMSEventHandler::ProcessRebootDeleteArkAp()
+{
+    APP_LOGI("DeleteArkAp start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            continue;
+        }
+        for (const auto &bundleInfo : bundleInfos) {
+            DeleteArkAp(bundleInfo, userId);
+        }
+    }
+    APP_LOGI("DeleteArkAp end");
+}
+
+void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleInfo.name).append(Constants::PATH_SEPARATOR);
+    for (const auto &moduleName : bundleInfo.moduleNames) {
+        std::string runtimeAp = arkProfilePath;
+        std::string mergedAp = arkProfilePath;
+        runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
+            .append(Constants::PGO_FILE_SUFFIX);
+        if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
+            APP_LOGE("delete aot dir %{public}s failed!", runtimeAp.c_str());
+            continue;
+        }
+        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(Constants::PGO_FILE_SUFFIX);
+        if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
+            APP_LOGE("delete aot dir %{public}s failed!", mergedAp.c_str());
+            continue;
+        }
+    }
 }
 
 void BMSEventHandler::ProcessRebootDeleteAotPath()

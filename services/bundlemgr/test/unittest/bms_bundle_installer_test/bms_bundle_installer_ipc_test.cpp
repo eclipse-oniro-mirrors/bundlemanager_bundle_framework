@@ -22,6 +22,7 @@
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "ipc/installd_host.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -758,5 +759,203 @@ HWTEST_F(BmsBundleInstallerIPCTest, OnRemoteRequestTest_1200, Function | SmallTe
     BundleInstallerHost installdHost;
     int res = installdHost.OnRemoteRequest(code, datas, reply, option);
     EXPECT_EQ(res, 0);
+}
+
+/**
+ * @tc.number: HandleExtractFiles_0100
+ * @tc.name: HandleExtractFiles
+ * @tc.desc: test HandleExtractFiles of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleExtractFiles(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandleExecuteAOT_0100
+ * @tc.name: HandleExecuteAOT
+ * @tc.desc: test HandleExecuteAOT of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleExecuteAOT_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleExecuteAOT(datas, reply);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleCreateBundleDataDirWithVector_0100
+ * @tc.name: HandleCreateBundleDataDirWithVector
+ * @tc.desc: test HandleCreateBundleDataDirWithVector of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleCreateBundleDataDirWithVector_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    MessageParcel reply;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    reply.WriteInt32(0);
+    bool res = host.HandleCreateBundleDataDirWithVector(datas, reply);
+    EXPECT_EQ(res, false);
+
+    reply.WriteInt32(Constants::MAX_PARCEL_CAPACITY + 1);
+    res = host.HandleCreateBundleDataDirWithVector(datas, reply);
+    EXPECT_EQ(res, false);
+
+    reply.WriteInt32(DATA_SIZE);
+    res = host.HandleCreateBundleDataDirWithVector(datas, reply);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleCleanBundleDataDirByName_0100
+ * @tc.name: HandleCleanBundleDataDirByName
+ * @tc.desc: test HandleCleanBundleDataDirByName of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleCleanBundleDataDirByName_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleCleanBundleDataDirByName(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandleGetAllBundleStats_0100
+ * @tc.name: HandleGetAllBundleStats
+ * @tc.desc: test HandleGetAllBundleStats of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleGetAllBundleStats_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    reply.WriteInt32(0);
+    bool res = host.HandleGetAllBundleStats(datas, reply);
+    EXPECT_EQ(res, true);
+
+    reply.WriteInt32(Constants::MAX_PARCEL_CAPACITY + 1);
+    res = host.HandleGetAllBundleStats(datas, reply);
+    EXPECT_EQ(res, false);
+
+    reply.WriteInt32(DATA_SIZE);
+    res = host.HandleGetAllBundleStats(datas, reply);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: HandleIsExistApFile_0100
+ * @tc.name: HandleIsExistApFile
+ * @tc.desc: test HandleIsExistApFile of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleIsExistApFile_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleIsExistApFile(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandGetNativeLibraryFileNames_0100
+ * @tc.name: HandGetNativeLibraryFileNames
+ * @tc.desc: test HandGetNativeLibraryFileNames of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandGetNativeLibraryFileNames_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandGetNativeLibraryFileNames(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandMoveFiles_0100
+ * @tc.name: HandMoveFiles
+ * @tc.desc: test HandMoveFiles of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandMoveFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandMoveFiles(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CreateSignatureFileStream_0100
+ * @tc.name: CreateSignatureFileStream
+ * @tc.desc: test CreateSignatureFileStream of BundleStreamInstallerHostImpl
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSignatureFileStream_0100, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+    auto res = impl.CreateSignatureFileStream("", HSPNAME);
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreateSignatureFileStream(HSPNAME, "");
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreateSignatureFileStream(HSPNAME, HSPNAME);
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: CreatePgoFileStream_0100
+ * @tc.name: CreatePgoFileStream
+ * @tc.desc: test CreatePgoFileStream of BundleStreamInstallerHostImpl
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, CreatePgoFileStream_0100, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+    auto res = impl.CreatePgoFileStream("", "");
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreatePgoFileStream(HSPNAME, "");
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
+
+    res = impl.CreatePgoFileStream("", HSPNAME);
+    EXPECT_EQ(res, Constants::DEFAULT_STREAM_FD);
 }
 } // OHOS

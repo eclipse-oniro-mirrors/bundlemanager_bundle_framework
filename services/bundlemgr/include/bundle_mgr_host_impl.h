@@ -892,6 +892,9 @@ public:
 
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
 
+    virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

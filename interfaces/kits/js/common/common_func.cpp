@@ -73,6 +73,9 @@ constexpr const char* CODE_PATH = "codePath";
 const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
 const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
 const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
+constexpr const char* SYSTEM_APP = "systemApp";
+constexpr const char* BUNDLE_TYPE = "bundleType";
+constexpr const char* CODE_PATHS = "codePaths";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -2078,6 +2081,25 @@ void CommonFunc::ConvertRecoverableApplicationInfo(
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.iconId, &nIconId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, ICON_ID, nIconId));
+
+    napi_value nSystemApp;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, recoverableApplication.systemApp, &nSystemApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, SYSTEM_APP, nSystemApp));
+
+    napi_value nBundleType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(recoverableApplication.bundleType), &nBundleType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_TYPE, nBundleType));
+
+    napi_value nCodePaths;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nCodePaths));
+    for (size_t idx = 0; idx < recoverableApplication.codePaths.size(); idx++) {
+        napi_value nCodePath;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, recoverableApplication.codePaths[idx].c_str(),
+            NAPI_AUTO_LENGTH, &nCodePath));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nCodePaths, idx, nCodePath));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, CODE_PATHS, nCodePaths));
 }
 
 void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value value,

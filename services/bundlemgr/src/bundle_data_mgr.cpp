@@ -94,7 +94,7 @@ constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 
-const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
+const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
     { ProfileType::ADDITION_PROFILE, ADDITION_PROFILE_PATH},
     { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
@@ -3003,6 +3003,18 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
         return false;
     }
     info = innerBundleInfo;
+    return true;
+}
+
+bool BundleDataMgr::GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName,
+    const int32_t flags, InnerBundleInfo &info, int32_t userId) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    bool res = GetInnerBundleInfoWithFlags(bundleName, flags, info, userId);
+    if (!res) {
+        APP_LOGD("GetInnerBundleInfoWithBundleFlagsAndLock: bundleName %{public}s not find", bundleName.c_str());
+        return res;
+    }
     return true;
 }
 
@@ -6601,6 +6613,99 @@ bool BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     APP_LOGI("AppDomainVerify is not enabled");
     return false;
 #endif
+}
+
+ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const int32_t userId, int32_t &appIndex,
+    Security::AccessToken::AccessTokenIDEx accessToken)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.AddCloneBundle(userId, appIndex, accessToken);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo addCloneBundleInfo fail");
+        return res;
+    }
+    APP_LOGD("update bundle info in memory for add clone, userId: %{public}d, appIndex: %{public}d", userId, appIndex);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    APP_LOGD("update bundle info in storage for add clone, userId: %{public}d, appIndex: %{public}d", userId, appIndex);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.RemoveCloneBundle(userId, appIndex);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo RemoveCloneBundle fail");
+        return res;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::QueryAbilityInfoByContinueType(const std::string &bundleName,
+    const std::string &continueType, AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    APP_LOGI("requestUserId: %{public}d", requestUserId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGW("bundleInfos_ data is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (appIndex == 0) {
+        ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, 0, innerBundleInfo, requestUserId);
+        if (ret != ERR_OK) {
+            APP_LOGD("QueryAbilityInfoByContinueType failed, bundleName:%{public}s", bundleName.c_str());
+            return ret;
+        }
+    }
+    if (appIndex > 0) {
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGW("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        auto ret = sandboxAppHelper_->GetSandboxAppInfo(bundleName, appIndex, requestUserId, innerBundleInfo);
+        if (ret != ERR_OK) {
+            APP_LOGD("obtain innerBundleInfo of sandbox app failed due to errCode %{public}d, bundleName:%{public}s",
+                ret, bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+    }
+    auto ability = innerBundleInfo.FindAbilityInfo(continueType, requestUserId);
+    if (!ability) {
+        APP_LOGW("ability not found, bundleName:%{public}s, coutinueType:%{public}s",
+            bundleName.c_str(), continueType.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    abilityInfo = (*ability);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        abilityInfo.uid = innerBundleUserInfo.uid;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

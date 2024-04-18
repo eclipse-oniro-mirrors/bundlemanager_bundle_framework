@@ -52,6 +52,11 @@ struct InnerBundleUserInfo {
 
         return false;
     }
+
+    static std::string AppIndexToKey(const int32_t appIndex)
+    {
+        return std::to_string(appIndex);
+    }
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& bundleUserInfo);

@@ -1673,17 +1673,17 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
 ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData)
 {
-    ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
-    if (result != ERR_OK) {
-        APP_LOGE("remove bundle dir failed");
-        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS);
-        return result;
-    }
-
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+
+    ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
+    if (result != ERR_OK) {
+        APP_LOGE("remove bundle dir failed");
+        return result;
+    }
+
     accessTokenId_ = info.GetAccessTokenId(userId_);
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -2856,18 +2856,20 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
 
 ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const
 {
-    // remove bundle dir
-    auto result = RemoveBundleCodeDir(info);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
-        return result;
-    }
+    ErrCode result = ERR_OK;
     if (!isKeepData) {
         result = RemoveBundleDataDir(info);
         if (result != ERR_OK) {
             APP_LOGE("fail to remove bundleData dir %{public}s, error is %{public}d",
                 info.GetBundleName().c_str(), result);
+            return result;
         }
+    }
+    // remove bundle dir
+    result = RemoveBundleCodeDir(info);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
+        return result;
     }
     return result;
 }
@@ -3668,6 +3670,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        APP_LOGE("update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
     ErrCode result = ERR_OK;
     if (!needRemoveData) {
         result = RemoveBundleDataDir(innerBundleInfo);
@@ -3693,13 +3702,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
-    }
-
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        APP_LOGE("update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     return ERR_OK;

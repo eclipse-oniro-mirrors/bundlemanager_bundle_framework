@@ -18,6 +18,7 @@
 
 #include <string>
 
+#include "application_info.h"
 #include "parcel.h"
 
 namespace OHOS {
@@ -27,6 +28,9 @@ struct RecoverableApplicationInfo : public Parcelable {
     std::string moduleName;
     int32_t labelId = 0;
     int32_t iconId = 0;
+    bool systemApp = false;
+    BundleType bundleType = BundleType::APP;
+    std::vector<std::string> codePaths;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
