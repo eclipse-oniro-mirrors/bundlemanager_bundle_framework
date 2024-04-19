@@ -1257,7 +1257,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!oldInfo.GetUninstallState()) {
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1414,7 +1415,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!oldInfo.GetUninstallState()) {
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
