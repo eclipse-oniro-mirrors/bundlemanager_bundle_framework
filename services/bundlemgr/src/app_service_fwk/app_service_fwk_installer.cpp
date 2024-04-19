@@ -254,7 +254,6 @@ void AppServiceFwkInstaller::GenerateOdid(
     }
     std::string odid;
     dataMgr_->GenerateOdid(developerId, odid);
-    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
 
     for (auto &item : infos) {
         item.second.UpdateOdid(developerId, odid);
