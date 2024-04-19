@@ -1593,11 +1593,11 @@ void InstallCloneAppExec(napi_env env, void *data)
 void InstallCloneAppComplete(napi_env env, napi_status status, void *data)
 {
     InstallCloneAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallCloneAppCallbackInfo *>(data);
-    std::unique_ptr<InstallCloneAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
+    std::unique_ptr<InstallCloneAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
     APP_LOGD("InstallCloneAppComplete err is %{public}d, appIndex is %{public}d",
         asyncCallbackInfo->err,
