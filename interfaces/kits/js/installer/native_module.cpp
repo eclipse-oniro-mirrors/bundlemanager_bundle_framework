@@ -43,6 +43,7 @@ static napi_value BundleInstallerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("addExtResource", AddExtResource),
         DECLARE_NAPI_FUNCTION("removeExtResource", RemoveExtResource),
         DECLARE_NAPI_FUNCTION("uninstallUpdates", UninstallAndRecover),
+        DECLARE_NAPI_FUNCTION("installCloneApp", InstallCloneApp),
     };
 
     NAPI_CALL(env,
