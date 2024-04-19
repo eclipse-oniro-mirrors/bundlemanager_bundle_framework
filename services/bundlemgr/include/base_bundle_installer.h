@@ -655,6 +655,8 @@ private:
 #endif
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
+    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    ErrCode DeleteShaderCache(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

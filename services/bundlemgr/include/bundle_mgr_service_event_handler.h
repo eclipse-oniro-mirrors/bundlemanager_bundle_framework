@@ -40,6 +40,7 @@ enum OTAFlag {
     CHECK_ELDIR = 0x00000001,
     CHECK_LOG_DIR = 0x00000010,
     CHECK_FILE_MANAGER_DIR = 0x00000100,
+    CHECK_SHADER_CAHCE_DIR = 0x00000200,
 };
 
 enum class ScanResultCode {
@@ -491,6 +492,8 @@ private:
     void InnerProcessCheckAppLogDir();
     void ProcessCheckAppFileManagerDir();
     void InnerProcessCheckAppFileManagerDir();
+    void ProcessCheckShaderCacheDir();
+    void InnerProcessCheckShaderCacheDir();
 
     bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
