@@ -28,19 +28,19 @@ public:
     bool Export() override;
     std::string GetClassName() override;
 
-    static napi_value Constructor(napi_env env, napi_callback_info cbinfo);
+    static napi_value Constructor(napi_env env, napi_callback_info info);
 
-    static napi_value Adler32(napi_env env, napi_callback_info cbinfo);
-    static napi_value Adler32Combine(napi_env env, napi_callback_info cbinfo);
-    static napi_value Adler32Combine64(napi_env env, napi_callback_info cbinfo);
+    static napi_value Adler32(napi_env env, napi_callback_info info);
+    static napi_value Adler32Combine(napi_env env, napi_callback_info info);
+    static napi_value Adler32Combine64(napi_env env, napi_callback_info info);
 
-    static napi_value Crc32(napi_env env, napi_callback_info cbinfo);
-    static napi_value Crc32Combine(napi_env env, napi_callback_info cbinfo);
-    static napi_value Crc32Combine64(napi_env env, napi_callback_info cbinfo);
+    static napi_value Crc32(napi_env env, napi_callback_info info);
+    static napi_value Crc32Combine(napi_env env, napi_callback_info info);
+    static napi_value Crc32Combine64(napi_env env, napi_callback_info info);
 
     static napi_value Crc64(napi_env env, napi_callback_info info);
 
-    static napi_value GetCrcTable(napi_env env, napi_callback_info cbinfo);
+    static napi_value GetCrcTable(napi_env env, napi_callback_info info);
     static napi_value GetCrc64Table(napi_env env, napi_callback_info info);
 
     ChecksumNExporter(napi_env env, napi_value exports);
