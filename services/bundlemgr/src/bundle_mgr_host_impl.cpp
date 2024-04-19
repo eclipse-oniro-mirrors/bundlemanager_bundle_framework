@@ -56,6 +56,7 @@ namespace {
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
+constexpr const char* EMPTY_ABILITY_NAME = "";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -3557,20 +3558,32 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfoByContinueType(const std::string &bun
         bundleName.c_str(), continueType.c_str(), userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_PERMISSION_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfoByContinueType");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_INTERNAL_ERROR, userId, continueType);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    ErrCode res = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    std::string abilityName;
+    if (res == ERR_OK) {
+        abilityName = abilityInfo.name;
+    }
+    EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, abilityName, res, userId, continueType);
+    return res;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

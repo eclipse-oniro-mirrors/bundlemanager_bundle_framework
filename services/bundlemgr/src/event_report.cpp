@@ -115,6 +115,18 @@ void EventReport::SendCleanCacheSysEvent(
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
 }
 
+void EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &bundleName,
+    const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.abilityName = abilityName;
+    eventInfo.errCode = errCode;
+    eventInfo.continueType = continueType;
+    eventInfo.userId = userId,
+    EventReport::SendSystemEvent(BMSEventType::QUERY_OF_CONTINUE_TYPE, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE
