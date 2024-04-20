@@ -1335,7 +1335,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 
     appInfo = *baseApplicationInfo_;
     if (!GetApplicationInfoAdaptBundleClone(innerBundleUserInfo, appIndex, appInfo)) {
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
 
     for (const auto &info : innerModuleInfos_) {
