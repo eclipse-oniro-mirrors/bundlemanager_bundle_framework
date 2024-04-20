@@ -2477,8 +2477,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 
     result = CreateShaderCache(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
     if (result != ERR_OK) {
-        APP_LOGE("fail to create shader cache, error is %{public}d", result);
-        return result;
+        APP_LOGW("fail to create shader cache, error is %{public}d", result);
     }
 
     // create asan log directory when asanEnabled is true
