@@ -125,9 +125,7 @@ const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
 void HandleCleanEnv(void *data)
 {
-    APP_LOGI("env change clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("env change clear bms cache locked");
     cache.clear();
 }
 
@@ -137,9 +135,7 @@ ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo 
 
 void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    APP_LOGI("clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("clear bms cache locked");
     cache.clear();
 }
 
