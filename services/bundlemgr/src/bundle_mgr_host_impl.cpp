@@ -275,12 +275,13 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
         LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    bool ret = dataMgr->GetBundleNameForUid(uid, bundleName);
-    if (!ret) {
+    int32_t appIndex = 0;
+    auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_QUERY_BUNDLE, "GetBundleNameForUid failed, uid is %{public}d", uid);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ret;
     }
-    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
 }
 
 ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName,

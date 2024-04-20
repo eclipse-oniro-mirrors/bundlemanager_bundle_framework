@@ -232,6 +232,7 @@ struct ApplicationInfo : public Parcelable {
     uint64_t accessTokenIdEx = 0;
     bool enabled = false;
     int32_t uid = -1;
+    int32_t appIndex = 0;
 
     // native so
     std::string nativeLibraryPath;
