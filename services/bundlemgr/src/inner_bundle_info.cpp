@@ -2377,7 +2377,7 @@ int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const
 int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
 {
     if (innerBundleUserInfos_.empty()) {
-        APP_LOGE("user map is empty.");
+        APP_LOGD("user map is empty.");
         return Constants::INVALID_USERID;
     }
 
