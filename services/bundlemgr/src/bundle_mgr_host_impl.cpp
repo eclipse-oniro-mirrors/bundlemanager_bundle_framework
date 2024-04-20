@@ -2315,21 +2315,15 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
         APP_LOGE("DataMgr is nullptr");
         return Constants::INVALID_UID;
     }
-    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
     int32_t uid = Constants::INVALID_UID;
-    bool ret = dataMgr->GetBundleInfos(GET_BUNDLE_DEFAULT, bundleInfos, userId);
-    if (ret) {
-        for (auto bundleInfo : bundleInfos) {
-            if (bundleInfo.name == bundleName) {
-                uid = bundleInfo.uid;
-                break;
-            }
-        }
-        APP_LOGD("get bundle uid success");
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    if (ret == ERR_OK) {
+        uid = bundleInfo.uid;
+        APP_LOGD("get bundle uid success, uid is %{public}d", uid);
     } else {
-        APP_LOGE("can not get bundleInfo's uid");
+        APP_LOGE("can not get bundleInfo uid");
     }
-    APP_LOGD("uid is %{public}d", uid);
     return uid;
 }
 
