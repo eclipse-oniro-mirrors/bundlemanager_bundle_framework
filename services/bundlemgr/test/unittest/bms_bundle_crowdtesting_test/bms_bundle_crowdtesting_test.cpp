@@ -188,7 +188,7 @@ ErrCode BmsBundleCrowdtestingTest::UpdateBundle(const std::string &bundlePath,
 ErrCode BmsBundleCrowdtestingTest::UpdateBundle(const std::string  &bundlePath,
     int32_t crowdtestDeadline, const std::string &specifiedDistributeType) const
 {
-  if (!bundleMgrService_) {
+    if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     auto installer = bundleMgrService_->GetBundleInstaller();
