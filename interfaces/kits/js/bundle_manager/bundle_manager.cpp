@@ -59,6 +59,7 @@ constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -93,6 +94,7 @@ const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
+const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -123,9 +125,7 @@ const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
 void HandleCleanEnv(void *data)
 {
-    APP_LOGI("env change clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("env change clear bms cache locked");
     cache.clear();
 }
 
@@ -135,9 +135,7 @@ ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo 
 
 void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    APP_LOGI("clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("clear bms cache locked");
     cache.clear();
 }
 
@@ -1679,14 +1677,7 @@ ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    std::vector<std::string> destFiles;
-    ErrCode ret = verifyManager->CopyFiles(abcPaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = verifyManager->Verify(destFiles, abcPaths, flag);
+    ErrCode ret = verifyManager->Verify(abcPaths);
     if (ret == ERR_OK && flag) {
         verifyManager->RemoveFiles(abcPaths);
     }
@@ -3179,6 +3170,12 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), &nGetBundleInfoWithRouterMap));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ROUTER_MAP",
         nGetBundleInfoWithRouterMap));
+
+    napi_value nGetBundleInfoWithCloneBundle;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE), &nGetBundleInfoWithCloneBundle));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_CLONE_BUNDLE",
+        nGetBundleInfoWithCloneBundle));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
@@ -3753,6 +3750,15 @@ void CreateDisplayOrientationObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(
         env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::PORTRAIT_INVERTED), &nReversePortrait));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PORTRAIT_INVERTED", nReversePortrait));
+    napi_value nLocked;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
+    CreateOrientationRelatedToSensor(env, value);
+}
+
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value)
+{
     napi_value nAutoRotation;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION), &nAutoRotation));
@@ -3785,10 +3791,12 @@ void CreateDisplayOrientationObject(napi_env env, napi_value value)
             &nAutoRotationPortraitRestricted));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "AUTO_ROTATION_PORTRAIT_RESTRICTED",
         nAutoRotationPortraitRestricted));
-    napi_value nLocked;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::LOCKED), &nLocked));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "LOCKED", nLocked));
+    napi_value nAutoRotationUnspecified;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::AUTO_ROTATION_UNSPECIFIED),
+            &nAutoRotationUnspecified));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
 }
 
 void CreateLaunchTypeObject(napi_env env, napi_value value)
@@ -4461,6 +4469,47 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info)
     ProcessStringVec(env, nDeveloperIds, developerIds);
     APP_LOGD("Call done");
     return nDeveloperIds;
+}
+
+napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("NAPI SwitchUninstallState call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    bool state;
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], state)) {
+        APP_LOGE("Parse state failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, STATE, TYPE_BOOLEAN);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SwitchUninstallState(bundleName, state));
+    if (ret != NO_ERROR) {
+        APP_LOGE("SwitchUninstallState failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SWITCH_UNINSTALL_STATE, "");
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    APP_LOGD("call SwitchUninstallState done.");
+    return nRet;
 }
 }
 }

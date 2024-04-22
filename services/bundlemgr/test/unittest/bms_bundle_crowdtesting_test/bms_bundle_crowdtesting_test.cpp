@@ -56,6 +56,8 @@ public:
     void TearDown();
     ErrCode InstallBundle(const std::string &bundlePath, int32_t crowdtestDeadline = 0) const;
     ErrCode InstallBundle(const std::vector<std::string> &bundlePath, int32_t crowdtestDeadline = 0) const;
+    ErrCode InstallBundle(const std::string  &bundlePath,
+        int32_t crowdtestDeadline, const std::string &specifiedDistributeType) const;
     ErrCode UpdateBundle(const std::string &bundlePath, int32_t crowdtestDeadline = 0) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
@@ -124,6 +126,34 @@ ErrCode BmsBundleCrowdtestingTest::InstallBundle(const std::vector<std::string> 
     installParam.userId = USERID;
     installParam.crowdtestDeadline = crowdtestDeadline;
     bool result = installer->Install(bundlePath, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleCrowdtestingTest::InstallBundle(const std::string &bundlePath,
+    int32_t crowdtestDeadline, const std::string &specifiedDistributeType) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = USERID;
+    installParam.crowdtestDeadline = crowdtestDeadline;
+    installParam.specifiedDistributionType = specifiedDistributeType;
+    std::vector<std::string> path;
+    path.emplace_back(bundlePath);
+    bool result = installer->Install(path, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
@@ -379,6 +409,32 @@ HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_007, Function | Sm
     EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleCrowdtestingTest_008
+ * Function: GetApplicationInfo
+ * @tc.name: test crowdtestDeadline, specifiedDistributionType is crowdtesting type
+ * @tc.desc: 1. system running normally
+ *           2. get crowdtestDeadline
+ */
+HWTEST_F(BmsBundleCrowdtestingTest, BmsBundleCrowdtestingTest_008, Function | SmallTest | Level1)
+{
+    std::string specifiedDistributeType = Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING;
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH + HAP_NAME_FIRST_RIGHT,
+        CROWDTEST_DEADLINE, specifiedDistributeType);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ApplicationInfo appInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_2, 0, USERID, appInfo);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(appInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+    EXPECT_EQ(appInfo.appProvisionType, Constants::APP_PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appInfo.crowdtestDeadline, CROWDTEST_DEADLINE);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_2);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS

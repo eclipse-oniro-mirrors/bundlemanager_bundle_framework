@@ -232,4 +232,140 @@ HWTEST_F(BmsBundleInstallDeviceTypeTest, DeviceTypeTest_0700, Function | SmallTe
     auto ret = checker.CheckDeviceType(infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
 }
+
+/**
+ * @tc.number: CheckSupportAppTypes_0100
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0100, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec;
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = "";
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0200
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0200, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_PHONE};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = "";
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0300
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0300, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec;
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_PHONE;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0400
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0400, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_PHONE};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_PHONE;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0500
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0500, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_PHONE};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_DEFAULT;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0600
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0600, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_DEFAULT};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_PHONE;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0700
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0700, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_DEFAULT};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_DEFAULT;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: CheckSupportAppTypes_0800
+ * @tc.name: test CheckSupportAppTypes function of BundleInstallChecker
+ * @tc.desc: 1. system run normally
+ *           2. test CheckSupportAppTypes
+ */
+HWTEST_F(BmsBundleInstallDeviceTypeTest, CheckSupportAppTypes_0800, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<std::string> vec = {DEVICE_TYPE_OF_CAR};
+    SetDeviceTypes(infos, vec);
+    std::string supportAppTypes = DEVICE_TYPE_OF_DEFAULT;
+    BundleInstallChecker checker;
+    bool ret = checker.CheckSupportAppTypes(infos, supportAppTypes);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

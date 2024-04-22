@@ -68,6 +68,7 @@ declare_args() {
   check_eldir_enabled = true
   udmf_enabled = true
   bms_device_info_manager_part_enabled = true
+  app_domain_verify_enabled = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -168,6 +169,11 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.deviceprofile_device_info_manager)) {
     bms_device_info_manager_part_enabled = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.bundlemanager_app_domain_verify)) {
+    app_domain_verify_enabled = false
   }
 }
 

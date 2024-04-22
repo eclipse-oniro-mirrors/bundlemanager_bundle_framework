@@ -932,7 +932,27 @@ public:
      */
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
+     * @brief Switch uninstall state of a specified application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param state Indicates whether the specified application can be uninstalled.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
 
+    /**
+     * @brief Query the AbilityInfo by continueType.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param continueType Indicates the continue type of the ability.
+     * @param abilityInfo Indicates the obtained AbilityInfo object.
+     * @param userId Indicates the information of the user.
+     * @return Returns true if the AbilityInfos is successfully obtained; returns false otherwise.
+     */
+    virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    
+    virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
+        int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

@@ -170,7 +170,6 @@ const std::string SHORTCUT_DISABLE_MESSAGE = "shortcutDisableMessage";
 const std::string SHORTCUT_INTENTS_TARGET_BUNDLE = "targetBundle";
 const std::string SHORTCUT_INTENTS_TARGET_MODULE = "targetModule";
 const std::string SHORTCUT_INTENTS_TARGET_CLASS = "targetClass";
-const std::string SHORTCUT_INTENTS_SHORTCUT_URI = "shortcutUri";
 const std::string COMMON_EVENT_NAME = ".MainAbililty";
 const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
@@ -226,6 +225,7 @@ const std::string SHORTCUTS_KEY = "shortcuts";
 const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
+const std::string BUNDLE_NAME_UNINSTALL_STATE = "bundleNameUninstallState";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -624,7 +624,6 @@ ShortcutInfo BmsBundleKitServiceTest::MockShortcutInfo(
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     shortcutInfos.intents.push_back(shortcutIntent);
     return shortcutInfos;
 }
@@ -635,7 +634,6 @@ ShortcutIntent BmsBundleKitServiceTest::MockShortcutIntent() const
     shortcutIntent.targetBundle = SHORTCUT_INTENTS_TARGET_BUNDLE;
     shortcutIntent.targetModule = SHORTCUT_INTENTS_TARGET_MODULE;
     shortcutIntent.targetClass = SHORTCUT_INTENTS_TARGET_CLASS;
-    shortcutIntent.shortcutUri = SHORTCUT_INTENTS_SHORTCUT_URI;
     return shortcutIntent;
 }
 
@@ -1120,7 +1118,6 @@ void BmsBundleKitServiceTest::CheckShortcutInfoTest(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -1160,7 +1157,6 @@ void BmsBundleKitServiceTest::CheckShortcutInfoDemo(std::vector<ShortcutInfo> &s
             EXPECT_EQ(shortcutIntent.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
             EXPECT_EQ(shortcutIntent.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
             EXPECT_EQ(shortcutIntent.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-            EXPECT_EQ(shortcutIntent.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
         }
     }
 }
@@ -8024,7 +8020,6 @@ HWTEST_F(BmsBundleKitServiceTest, ShortcutInfoBranchCover_002, Function | SmallT
     EXPECT_EQ(result.targetBundle, SHORTCUT_INTENTS_TARGET_BUNDLE);
     EXPECT_EQ(result.targetModule, SHORTCUT_INTENTS_TARGET_MODULE);
     EXPECT_EQ(result.targetClass, SHORTCUT_INTENTS_TARGET_CLASS);
-    EXPECT_EQ(result.shortcutUri, SHORTCUT_INTENTS_SHORTCUT_URI);
 }
 
 /**
@@ -9088,13 +9083,13 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 
-    innerBundleInfo.SetIsNewVersion(true);
-    innerBundleInfo.UpdateAppDetailAbilityAttrs();
-
-    innerBundleInfo.baseApplicationInfo_->iconId = 1;
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+
+    const auto abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
+    EXPECT_FALSE(abilityInfos.find(ABILITY_NAME) == abilityInfos.end());
+    EXPECT_TRUE(abilityInfos.find(BUNDLE_NAME) == abilityInfos.end());
 }
 
 /**
@@ -10578,5 +10573,261 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppServiceHspInfo_0001, Function | SmallTes
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME_TEST, innerModuleInfo_2);
     ret = innerBundleInfo.GetAppServiceHspInfo(info);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0001
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, false);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0002
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    info.SetRemovable(false);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
+}
+
+/**
+ * @tc.number: SwitchUninstallState_0003
+ * @tc.name: SwitchUninstallState
+ * @tc.desc: 1.system run normally
+ *           2.switch uninstallState successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, SwitchUninstallState_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME_UNINSTALL_STATE, info);
+    EXPECT_TRUE(info.uninstallState_);
+    ErrCode res = dataMgr->SwitchUninstallState(BUNDLE_NAME_UNINSTALL_STATE, true);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(info.uninstallState_);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME_UNINSTALL_STATE);
+}
+
+/**
+ * @tc.number: GetApplicationInfoAdaptBundleClone_0001
+ * @tc.name: test GetApplicationInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0001, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    int32_t appIndex = 0;
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
+    EXPECT_TRUE(ret);
+    appIndex = 1;
+    ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
+    EXPECT_FALSE(ret);
+    InnerBundleCloneInfo cloneInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetApplicationInfoAdaptBundleClone_0002
+ * @tc.name: test GetApplicationInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0002, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.accessTokenId = 1;
+    userInfo.accessTokenIdEx = 2;
+    userInfo.bundleUserInfo.enabled = false;
+    userInfo.uid = 200;
+
+    int32_t appIndex = 0;
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(applicationInfo.accessTokenId, userInfo.accessTokenId);
+    EXPECT_EQ(applicationInfo.accessTokenIdEx, userInfo.accessTokenIdEx);
+    EXPECT_EQ(applicationInfo.enabled, userInfo.bundleUserInfo.enabled);
+    EXPECT_EQ(applicationInfo.uid, userInfo.uid);
+}
+
+/**
+ * @tc.number: GetApplicationInfoAdaptBundleClone_0003
+ * @tc.name: test GetApplicationInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfoAdaptBundleClone_0003, Function | SmallTest | Level1)
+{
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.accessTokenId = 1;
+    cloneInfo.accessTokenIdEx = 2;
+    cloneInfo.enabled = false;
+    cloneInfo.uid = 200;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+
+    int32_t appIndex = 1;
+    ApplicationInfo applicationInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetApplicationInfoAdaptBundleClone(userInfo, appIndex, applicationInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(applicationInfo.accessTokenId, cloneInfo.accessTokenId);
+    EXPECT_EQ(applicationInfo.accessTokenIdEx, cloneInfo.accessTokenIdEx);
+    EXPECT_EQ(applicationInfo.enabled, cloneInfo.enabled);
+    EXPECT_EQ(applicationInfo.uid, cloneInfo.uid);
+    EXPECT_EQ(applicationInfo.appIndex, cloneInfo.appIndex);
+}
+
+/**
+ * @tc.number: GetBundleInfoAdaptBundleClone_0001
+ * @tc.name: test GetBundleInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0001, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    int32_t appIndex = 0;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
+    EXPECT_TRUE(ret);
+    appIndex = 1;
+    ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
+    EXPECT_FALSE(ret);
+    InnerBundleCloneInfo cloneInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetBundleInfoAdaptBundleClone_0002
+ * @tc.name: test GetBundleInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0002, Function | SmallTest | Level1)
+{
+    InnerBundleUserInfo userInfo;
+    userInfo.uid = 100;
+    userInfo.installTime = 200;
+    userInfo.updateTime = 300;
+
+    int32_t appIndex = 0;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleInfo.uid, userInfo.uid);
+    EXPECT_EQ(bundleInfo.installTime, userInfo.installTime);
+    EXPECT_EQ(bundleInfo.updateTime, userInfo.updateTime);
+}
+
+/**
+ * @tc.number: GetBundleInfoAdaptBundleClone_0003
+ * @tc.name: test GetBundleInfoAdaptBundleClone
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0003, Function | SmallTest | Level1)
+{
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.enabled = false;
+    cloneInfo.uid = 200;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+
+    int32_t appIndex = 1;
+    BundleInfo bundleInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.GetBundleInfoAdaptBundleClone(userInfo, appIndex, bundleInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(bundleInfo.uid, cloneInfo.uid);
+    EXPECT_EQ(bundleInfo.installTime, cloneInfo.installTime);
+    EXPECT_EQ(bundleInfo.updateTime, cloneInfo.updateTime);
+    EXPECT_EQ(bundleInfo.appIndex, cloneInfo.appIndex);
+}
+
+/**
+ * @tc.number: GetUid_0001
+ * @tc.name: test GetUid
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetUid_0001, Function | SmallTest | Level1)
+{
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.enabled = false;
+    cloneInfo.uid = 200;
+    cloneInfo.appIndex = 1;
+    InnerBundleUserInfo userInfo;
+    userInfo.cloneInfos["1"] = cloneInfo;
+    userInfo.uid = 101;
+    userInfo.bundleUserInfo.userId = 100;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t uid = innerBundleInfo.GetUid(101);
+    EXPECT_EQ(uid, INVALID_UID);
+
+    uid = innerBundleInfo.GetUid(userInfo.bundleUserInfo.userId);
+    EXPECT_EQ(uid, userInfo.uid);
+
+    int32_t appIndex = 1;
+    uid = innerBundleInfo.GetUid(userInfo.bundleUserInfo.userId, appIndex);
+    EXPECT_EQ(uid, cloneInfo.uid);
+
+    appIndex = 2;
+    uid = innerBundleInfo.GetUid(userInfo.bundleUserInfo.userId, appIndex);
+    EXPECT_EQ(uid, INVALID_UID);
+}
+
+/**
+ * @tc.number: GetBundleNameAndIndexByName_0001
+ * @tc.name: GetBundleNameAndIndexByName
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleNameAndIndexByName_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        std::string keyName = "com.ohos.example";
+        std::string bundleName;
+        int32_t appIndex = -1;
+        dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
+        EXPECT_EQ(keyName, bundleName);
+        EXPECT_EQ(appIndex, 0);
+
+        keyName = "com.ohos_example";
+        dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
+        EXPECT_EQ(keyName, bundleName);
+        EXPECT_EQ(appIndex, 0);
+
+        keyName = "1_com.ohos_example";
+        dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
+        EXPECT_EQ(bundleName, "com.ohos_example");
+        EXPECT_EQ(appIndex, 1);
+    }
 }
 }

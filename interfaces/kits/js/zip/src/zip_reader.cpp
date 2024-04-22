@@ -162,7 +162,6 @@ bool ZipReader::OpenCurrentEntryInZip()
 
     unz_file_info raw_file_info = {};
     char raw_file_name_in_zip[kZipMaxPath] = {};
-
     const int result = unzGetCurrentFileInfo(zipFile_,
         &raw_file_info,
         raw_file_name_in_zip,
@@ -171,7 +170,6 @@ bool ZipReader::OpenCurrentEntryInZip()
         0,     // extraFieldBufferSize.
         NULL,  // szComment.
         0);    // commentBufferSize.
-
     if (result != UNZ_OK) {
         return false;
     }

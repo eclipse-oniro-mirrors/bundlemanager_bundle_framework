@@ -1610,20 +1610,20 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0065, Function | SmallTest
  */
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0066, Function | SmallTest | Level0)
 {
-    std::string icon;
+    ResourceInfo info;
     BundleResourceParser parser;
-    bool ans = parser.ParseIconResourceByPath("", 0, icon);
+    bool ans = parser.ParseIconResourceByPath("", 0, info);
     EXPECT_FALSE(ans);
 
-    ans = parser.ParseIconResourceByPath(HAP_NOT_EXIST, 0, icon);
+    ans = parser.ParseIconResourceByPath(HAP_NOT_EXIST, 0, info);
     EXPECT_FALSE(ans);
 
-    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 0, icon);
+    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 0, info);
     EXPECT_FALSE(ans);
 
-    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 1, icon); // iconId not exist
+    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 1, info); // iconId not exist
     EXPECT_FALSE(ans);
-    EXPECT_EQ(icon, "");
+    EXPECT_EQ(info.icon_, "");
 }
 
 /**
@@ -1675,10 +1675,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0068, Function | SmallTest
         EXPECT_TRUE(ans);
         EXPECT_FALSE(label.empty());
 
-        std::string icon;
-        ans = parser.ParseIconResourceByPath(resourceInfos[0].hapPath_, resourceInfos[0].iconId_, icon);
+        ResourceInfo info;
+        ans = parser.ParseIconResourceByPath(resourceInfos[0].hapPath_, resourceInfos[0].iconId_, info);
         EXPECT_TRUE(ans);
-        EXPECT_FALSE(icon.empty());
+        EXPECT_FALSE(info.icon_.empty());
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3403,6 +3403,139 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0130, Function | SmallTest
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_LAYERED_IMAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0140
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateBundleIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0140, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        info.label_ = BUNDLE_NAME;
+        bool ret = manager->UpdateBundleIcon(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+
+        BundleResourceInfo bundleResourceInfo;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info.bundleName_, bundleResourceInfo.bundleName);
+        EXPECT_EQ(info.label_, bundleResourceInfo.label);
+        EXPECT_TRUE(bundleResourceInfo.icon.empty());
+
+        ret = manager->DeleteResourceInfo(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0141
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateBundleIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0141, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo oldBundleResourceInfo;
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, oldBundleResourceInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(oldBundleResourceInfo.bundleName, BUNDLE_NAME);
+
+        ResourceInfo resourceInfo;
+        resourceInfo.icon_ = "icon";
+        resourceInfo.foreground_.push_back(1);
+        resourceInfo.background_.push_back(1);
+        ret = manager->UpdateBundleIcon(BUNDLE_NAME, resourceInfo);
+        EXPECT_TRUE(ret);
+
+        BundleResourceInfo newBundleResourceInfo;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, newBundleResourceInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(newBundleResourceInfo.bundleName, oldBundleResourceInfo.bundleName);
+        EXPECT_EQ(newBundleResourceInfo.label, oldBundleResourceInfo.label);
+        EXPECT_EQ(newBundleResourceInfo.icon, resourceInfo.icon_);
+        EXPECT_EQ(newBundleResourceInfo.foreground.size(), resourceInfo.foreground_.size());
+        EXPECT_FALSE(newBundleResourceInfo.foreground.empty());
+        if (!newBundleResourceInfo.foreground.empty() && !resourceInfo.foreground_.empty()) {
+            EXPECT_EQ(newBundleResourceInfo.foreground[0], resourceInfo.foreground_[0]);
+        }
+        EXPECT_EQ(newBundleResourceInfo.background.size(), resourceInfo.background_.size());
+        EXPECT_FALSE(newBundleResourceInfo.background.empty());
+        if (!newBundleResourceInfo.background.empty() && !resourceInfo.background_.empty()) {
+            EXPECT_EQ(newBundleResourceInfo.background[0], resourceInfo.background_[0]);
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0142
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateBundleIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<LauncherAbilityResourceInfo> oldLauncherAbilityResourceInfos;
+        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 1, oldLauncherAbilityResourceInfos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(oldLauncherAbilityResourceInfos.empty());
+
+        ResourceInfo resourceInfo;
+        resourceInfo.icon_ = "icon";
+        resourceInfo.foreground_.push_back(1);
+        resourceInfo.background_.push_back(1);
+        ret = manager->UpdateBundleIcon(BUNDLE_NAME, resourceInfo);
+        EXPECT_TRUE(ret);
+
+        std::vector<LauncherAbilityResourceInfo> newLauncherAbilityResourceInfos;
+        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 1, newLauncherAbilityResourceInfos);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(newLauncherAbilityResourceInfos.empty());
+        if (!newLauncherAbilityResourceInfos.empty() && !oldLauncherAbilityResourceInfos.empty()) {
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].bundleName, oldLauncherAbilityResourceInfos[0].bundleName);
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].moduleName, oldLauncherAbilityResourceInfos[0].moduleName);
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].abilityName, oldLauncherAbilityResourceInfos[0].abilityName);
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].label, oldLauncherAbilityResourceInfos[0].label);
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].icon, resourceInfo.icon_);
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].foreground.size(), resourceInfo.foreground_.size());
+            EXPECT_FALSE(newLauncherAbilityResourceInfos[0].foreground.empty());
+            if (!newLauncherAbilityResourceInfos[0].foreground.empty() && !resourceInfo.foreground_.empty()) {
+                EXPECT_EQ(newLauncherAbilityResourceInfos[0].foreground[0], resourceInfo.foreground_[0]);
+            }
+            EXPECT_EQ(newLauncherAbilityResourceInfos[0].background.size(), resourceInfo.background_.size());
+            EXPECT_FALSE(newLauncherAbilityResourceInfos[0].background.empty());
+            if (!newLauncherAbilityResourceInfos[0].background.empty() && !resourceInfo.background_.empty()) {
+                EXPECT_EQ(newLauncherAbilityResourceInfos[0].background[0], resourceInfo.background_[0]);
+            }
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif

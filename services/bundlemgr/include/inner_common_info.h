@@ -147,6 +147,7 @@ public:
     std::vector<std::string> actions;
     std::vector<std::string> entities;
     std::vector<SkillUri> uris;
+    bool domainVerify = false;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;

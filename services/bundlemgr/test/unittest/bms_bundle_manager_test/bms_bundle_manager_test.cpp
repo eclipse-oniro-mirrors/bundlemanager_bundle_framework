@@ -38,6 +38,7 @@
 #include "inner_bundle_info.h"
 #include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
+#include "preinstall_data_storage_rdb.h"
 #include "scope_guard.h"
 #include "system_bundle_installer.h"
 #include "want.h"
@@ -80,6 +81,9 @@ const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
 const std::string EMPTY_STRING = "";
 const std::string MENU_VALUE = "value";
 const size_t NUMBER_ONE = 1;
+const uint32_t BUNDLE_BACKUP_VERSION = 1000000;
+const uint32_t BUNDLE_BACKUP_LABEL_ID = 16777216;
+const uint32_t BUNDLE_BACKUP_ICON_ID = 16777220;
 }  // namespace
 
 class BmsBundleManagerTest : public testing::Test {
@@ -4735,7 +4739,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0100, Function | SmallTest |
     int32_t flags = 0;
     BundleInfo info;
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -5753,5 +5757,42 @@ HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0001, Function | MediumTes
     ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
         GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetRecoverableApplicationInfo_0100
+ * @tc.name: test GetRecoverableApplicationInfo proxy
+ * @tc.desc: 1.query recoverable application infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetRecoverableApplicationInfo_0100, Function | MediumTest | Level1)
+{
+    std::unique_ptr<IPreInstallDataStorage> preInstallDataStorage =
+        std::make_unique<PreInstallDataStorageRdb>();
+    PreInstallBundleInfo preInstallBundleInfo;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    preInstallBundleInfo.SetBundleName(BUNDLE_BACKUP_NAME);
+    preInstallBundleInfo.SetVersionCode(BUNDLE_BACKUP_VERSION);
+    preInstallBundleInfo.AddBundlePath(bundlePath);
+    preInstallBundleInfo.SetRemovable(true);
+    bool ret = preInstallDataStorage->SavePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_TRUE(ret);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<RecoverableApplicationInfo> recoverableApplications;
+    ErrCode retCode = hostImpl->GetRecoverableApplicationInfo(recoverableApplications);
+    EXPECT_EQ(retCode, ERR_OK);
+    EXPECT_EQ(recoverableApplications.empty(), false);
+    if (!recoverableApplications.empty()) {
+        RecoverableApplicationInfo info = recoverableApplications[0];
+        EXPECT_EQ(info.bundleName, BUNDLE_BACKUP_NAME);
+        EXPECT_EQ(info.moduleName, MODULE_NAME);
+        EXPECT_EQ(info.labelId, BUNDLE_BACKUP_LABEL_ID);
+        EXPECT_EQ(info.iconId, BUNDLE_BACKUP_ICON_ID);
+        EXPECT_EQ(info.systemApp, true);
+        EXPECT_EQ(info.bundleType, BundleType::APP);
+        EXPECT_EQ(info.codePaths[0], bundlePath);
+    }
+    ret = preInstallDataStorage->DeletePreInstallStorageBundleInfo(preInstallBundleInfo);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

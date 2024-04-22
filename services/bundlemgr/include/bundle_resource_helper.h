@@ -40,19 +40,14 @@ public:
 
     static bool DeleteResourceInfo(const std::string &key, const int32_t userId = Constants::UNSPECIFIED_USERID);
 
+    static bool DeleteAllResourceInfo();
+
     static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId);
 
     static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, bool enabled, const int32_t userId);
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
-
-    static bool ParseIconResourceByPath(const std::string &filePath, const int32_t iconId, std::string &icon);
-
-    static bool UpdateBundleIcon(const std::string &bundleName, const std::string &icon);
-
-    // Delete dynamic icon resource and reset default icon
-    static bool ResetBunldleResourceIcon(const std::string &bundleName);
 
     static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId);

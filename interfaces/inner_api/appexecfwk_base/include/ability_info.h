@@ -42,6 +42,7 @@ enum class GetAbilityInfoFlag {
     GET_ABILITY_INFO_WITH_DISABLE = 0x00000008,
     GET_ABILITY_INFO_ONLY_SYSTEM_APP = 0x00000010,
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000020,
+    GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040,
 };
 
 enum class AbilityType {
@@ -85,6 +86,7 @@ enum class DisplayOrientation {
     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
     AUTO_ROTATION_PORTRAIT_RESTRICTED,
     LOCKED,
+    AUTO_ROTATION_UNSPECIFIED,
 };
 
 enum class LaunchMode {
@@ -256,6 +258,7 @@ struct AbilityInfo : public Parcelable {
     // for NAPI, save self query cache
     int32_t uid = -1;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
+    int32_t appIndex = 0;
 
     // unused
     std::string originalBundleName;
@@ -278,6 +281,7 @@ struct AbilityInfo : public Parcelable {
     int64_t installTime = 0;
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
+    std::vector<std::string> continueType;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

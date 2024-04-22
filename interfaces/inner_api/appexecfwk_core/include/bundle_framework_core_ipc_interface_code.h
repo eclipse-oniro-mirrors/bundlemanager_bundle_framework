@@ -163,6 +163,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_EXTEND_RESOURCE_MANAGER,
     GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID,
     GET_DEVELOPER_IDS,
+    SWITCH_UNINSTALL_STATE,
+    QUERY_ABILITY_INFO_BY_CONTINUE_TYPE,
+    GET_CLONE_ABILITY_INFO,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -208,6 +211,7 @@ enum class BundleInstallerInterfaceCode : uint32_t {
     CREATE_STREAM_INSTALLER,
     DESTORY_STREAM_INSTALLER,
     UNINSTALL_AND_RECOVER,
+    INSTALL_CLONE_APP,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

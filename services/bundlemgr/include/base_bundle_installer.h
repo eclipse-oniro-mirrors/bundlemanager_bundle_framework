@@ -31,6 +31,10 @@
 #include "quick_fix/appqf_info.h"
 #include "shared_bundle_installer.h"
 
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+#include "app_domain_verify_mgr_client.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 class BaseBundleInstaller {
@@ -113,6 +117,7 @@ protected:
      * @param uninstallParam Indicates the input of uninstallParam.
      * @return Returns ERR_OK if the application uninstall successfully; returns error code otherwise.
      */
+    ErrCode CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName);
     ErrCode UninstallBundleByUninstallParam(const UninstallParam &uninstallParam);
     /**
      * @brief Update the installer state.
@@ -594,6 +599,8 @@ private:
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void RemoveOldHapIfOTA(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo) const;
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
@@ -643,6 +650,13 @@ private:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ForceWriteToDisk() const;
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
+#endif
+    void VerifyDomain();
+    void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
+    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    ErrCode DeleteShaderCache(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

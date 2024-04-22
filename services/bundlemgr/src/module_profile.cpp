@@ -97,6 +97,7 @@ const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MA
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
+    {"follow_recent", DisplayOrientation::FOLLOWRECENT},
     {"landscape_inverted", DisplayOrientation::LANDSCAPE_INVERTED},
     {"portrait_inverted", DisplayOrientation::PORTRAIT_INVERTED},
     {"auto_rotation", DisplayOrientation::AUTO_ROTATION},
@@ -105,7 +106,8 @@ const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MA
     {"auto_rotation_restricted", DisplayOrientation::AUTO_ROTATION_RESTRICTED},
     {"auto_rotation_landscape_restricted", DisplayOrientation::AUTO_ROTATION_LANDSCAPE_RESTRICTED},
     {"auto_rotation_portrait_restricted", DisplayOrientation::AUTO_ROTATION_PORTRAIT_RESTRICTED},
-    {"locked", DisplayOrientation::LOCKED}
+    {"locked", DisplayOrientation::LOCKED},
+    {"auto_rotation_unspecified", DisplayOrientation::AUTO_ROTATION_UNSPECIFIED},
 };
 const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"fullscreen", SupportWindowMode::FULLSCREEN},
@@ -173,6 +175,7 @@ struct Ability {
     bool excludeFromDock = false;
     std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
+    std::vector<std::string> continueType;
 };
 
 struct Extension {
@@ -607,6 +610,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_CONTINUE_TYPE,
+        ability.continueType,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -2055,6 +2066,11 @@ bool ToAbilityInfo(
     abilityInfo.minWindowWidth = ability.minWindowWidth;
     abilityInfo.maxWindowHeight = ability.maxWindowHeight;
     abilityInfo.minWindowHeight = ability.minWindowHeight;
+    if (ability.continueType.empty()) {
+        abilityInfo.continueType.emplace_back(ability.name);
+    } else {
+        abilityInfo.continueType = ability.continueType;
+    }
     return true;
 }
 
@@ -2354,8 +2370,7 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertExtensionSkillInfo(key, extension.skills);
         innerBundleInfo.InsertExtensionInfo(key, extensionInfo);
     }
-    if (!findEntry && !transformParam.isPreInstallApp &&
-        innerModuleInfo.distro.moduleType != Profile::MODULE_TYPE_SHARED) {
+    if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
         if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;

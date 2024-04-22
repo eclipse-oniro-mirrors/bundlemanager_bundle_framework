@@ -27,13 +27,13 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixStatusCallbackHost::QuickFixStatusCallbackHost()
 {
-    LOG_I(BMSTag::QUICK_FIX, "create QuickFixStatusCallbackHost.");
+    LOG_I(BMS_TAG_QUICK_FIX, "create QuickFixStatusCallbackHost.");
     Init();
 }
 
 QuickFixStatusCallbackHost::~QuickFixStatusCallbackHost()
 {
-    LOG_I(BMSTag::QUICK_FIX, "destroy QuickFixStatusCallbackHost.");
+    LOG_I(BMS_TAG_QUICK_FIX, "destroy QuickFixStatusCallbackHost.");
 }
 
 void QuickFixStatusCallbackHost::Init()
@@ -50,29 +50,29 @@ int QuickFixStatusCallbackHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    LOG_D(BMSTag::QUICK_FIX, "QuickFixStatusCallbackHost onReceived message, the message code is %{public}u", code);
+    LOG_D(BMS_TAG_QUICK_FIX, "QuickFixStatusCallbackHost onReceived message, the message code is %{public}u", code);
     std::u16string descripter = QuickFixStatusCallbackHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        LOG_E(BMSTag::QUICK_FIX, "fail to write reply message in clean cache host due to the reply is nullptr");
+        LOG_E(BMS_TAG_QUICK_FIX, "fail to write reply message in clean cache host due to the reply is nullptr");
         return OBJECT_NULL;
     }
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         (this->*funcMap_[code])(data, reply);
     } else {
-        LOG_W(BMSTag::QUICK_FIX, "quickfix callback host receives unknown code, code = %{public}u", code);
+        LOG_W(BMS_TAG_QUICK_FIX, "quickfix callback host receives unknown code, code = %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    LOG_D(BMSTag::QUICK_FIX, "quickfix callback host finish to process message");
+    LOG_D(BMS_TAG_QUICK_FIX, "quickfix callback host finish to process message");
     return NO_ERROR;
 }
 
 void QuickFixStatusCallbackHost::HandleOnPatchDeployed(MessageParcel &data, MessageParcel &reply)
 {
-    LOG_I(BMSTag::QUICK_FIX, "start to process deployed patch callback message");
+    LOG_I(BMS_TAG_QUICK_FIX, "start to process deployed patch callback message");
     std::shared_ptr<QuickFixResult> resPtr(data.ReadParcelable<DeployQuickFixResult>());
     if (resPtr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "read DeployQuickFixResult failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read DeployQuickFixResult failed");
         std::shared_ptr<QuickFixResult> deployRes = std::make_shared<DeployQuickFixResult>();
         deployRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
         OnPatchDeployed(deployRes);
@@ -84,10 +84,10 @@ void QuickFixStatusCallbackHost::HandleOnPatchDeployed(MessageParcel &data, Mess
 
 void QuickFixStatusCallbackHost::HandleOnPatchSwitched(MessageParcel &data, MessageParcel &reply)
 {
-    LOG_I(BMSTag::QUICK_FIX, "start to process switched patch callback message");
+    LOG_I(BMS_TAG_QUICK_FIX, "start to process switched patch callback message");
     std::shared_ptr<QuickFixResult> resPtr(data.ReadParcelable<SwitchQuickFixResult>());
     if (resPtr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "read SwitchQuickFixResult failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read SwitchQuickFixResult failed");
         std::shared_ptr<QuickFixResult> switchRes = std::make_shared<SwitchQuickFixResult>();
         switchRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
         OnPatchSwitched(switchRes);
@@ -99,10 +99,10 @@ void QuickFixStatusCallbackHost::HandleOnPatchSwitched(MessageParcel &data, Mess
 
 void QuickFixStatusCallbackHost::HandleOnPatchDeleted(MessageParcel &data, MessageParcel &reply)
 {
-    LOG_I(BMSTag::QUICK_FIX, "start to process deleted patch callback message");
+    LOG_I(BMS_TAG_QUICK_FIX, "start to process deleted patch callback message");
     std::shared_ptr<DeleteQuickFixResult> resPtr(data.ReadParcelable<DeleteQuickFixResult>());
     if (resPtr == nullptr) {
-        LOG_E(BMSTag::QUICK_FIX, "read DeleteQuickFixResult failed");
+        LOG_E(BMS_TAG_QUICK_FIX, "read DeleteQuickFixResult failed");
         std::shared_ptr<QuickFixResult> deleteRes = std::make_shared<DeleteQuickFixResult>();
         deleteRes->SetResCode(ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
         OnPatchDeleted(deleteRes);

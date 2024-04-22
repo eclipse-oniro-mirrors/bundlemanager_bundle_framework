@@ -24,6 +24,7 @@ config("bundlemgr_common_config") {
     "include/bundlemgr",
     "include/bms_extension",
     "include/bundle_resource",
+    "include/clone",
     "include/common",
     "include/default_app",
     "include/free_install",
@@ -258,7 +259,7 @@ ohos_shared_library("libbms") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
-    "ipc:ipc_core",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
@@ -425,6 +426,14 @@ ohos_shared_library("libbms") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (app_domain_verify_enabled) {
+    external_deps += [
+      "app_domain_verify:app_domain_verify_common",
+      "app_domain_verify:app_domain_verify_mgr_client",
+    ]
+    defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
 
   subsystem_name = "bundlemanager"

@@ -63,22 +63,14 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
+const std::string SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
+const std::string SUPPORT_APP_TYPES_SEPARATOR = ",";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
-
-const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
-    { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
-    { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-    { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-    { Security::Verify::AppDistType::ENTERPRISE_NORMAL, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
-    { Security::Verify::AppDistType::ENTERPRISE_MDM, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
-    { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-    { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-};
 
 const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivilegeCapability)>
         PRIVILEGE_MAP = {
@@ -406,7 +398,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 #ifdef USE_PRE_BUNDLE_PROFILE
         GetPrivilegeCapability(checkParam, newInfo);
 #endif
-        if (provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) {
+        if ((provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) ||
+            (checkParam.specifiedDistributionType == Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING)) {
             newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
         } else {
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
@@ -873,9 +866,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     APP_LOGD("Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
-    std::string vendor = (infos.begin()->second).GetVendor();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
-    std::string versionName = (infos.begin()->second).GetVersionName();
     uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
     uint32_t target = (infos.begin()->second).GetTargetVersion();
     std::string releaseType = (infos.begin()->second).GetReleaseType();
@@ -902,16 +893,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             if (versionCode != info.second.GetVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
-            if (versionName != info.second.GetVersionName()) {
-                return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-            }
             if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
             }
-        }
-        // check vendor
-        if (vendor != info.second.GetVendor()) {
-            return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
         }
         // check release type
         if (target != info.second.GetTargetVersion()) {
@@ -1327,8 +1311,41 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     return ERR_OK;
 }
 
+bool BundleInstallChecker::CheckSupportAppTypes(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const
+{
+    APP_LOGD("CheckSupportAppTypes begin, supportAppTypes: %{public}s", supportAppTypes.c_str());
+    std::vector<std::string> appTypesVec;
+    OHOS::SplitStr(supportAppTypes, SUPPORT_APP_TYPES_SEPARATOR, appTypesVec);
+    if (find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_DEFAULT) != appTypesVec.end() &&
+        find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_PHONE) == appTypesVec.end()) {
+        appTypesVec.emplace_back(DEVICE_TYPE_OF_PHONE);
+    }
+    sort(appTypesVec.begin(), appTypesVec.end());
+    for (const auto &info : infos) {
+        std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
+        if (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end() &&
+            find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) == devVec.end()) {
+            devVec.emplace_back(DEVICE_TYPE_OF_PHONE);
+        }
+        sort(devVec.begin(), devVec.end());
+        std::vector<std::string> intersectionVec;
+        set_intersection(appTypesVec.begin(), appTypesVec.end(),
+            devVec.begin(), devVec.end(), back_inserter(intersectionVec));
+        if (intersectionVec.empty()) {
+            APP_LOGW("check supportAppTypes failed");
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
+    std::string supportAppTypes = OHOS::system::GetParameter(SUPPORT_APP_TYPES, "");
+    if (!supportAppTypes.empty() && CheckSupportAppTypes(infos, supportAppTypes)) {
+        return ERR_OK;
+    }
     std::string deviceType = GetDeviceType();
     APP_LOGD("deviceType is %{public}s", deviceType.c_str());
     for (const auto &info : infos) {

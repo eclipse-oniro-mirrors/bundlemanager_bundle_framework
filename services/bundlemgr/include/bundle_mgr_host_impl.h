@@ -883,6 +883,14 @@ public:
     virtual ErrCode GetDeveloperIds(const std::string &appDistributionType,
         std::vector<std::string> &developerIdList, int32_t userId) override;
 
+    virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+
+    virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
+        AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
+        int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -915,6 +923,7 @@ private:
     ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId);
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
+    void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
 
     bool isBrokerServiceExisted_ = false;
 };

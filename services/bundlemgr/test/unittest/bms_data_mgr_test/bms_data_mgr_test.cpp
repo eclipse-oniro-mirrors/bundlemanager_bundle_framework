@@ -1643,14 +1643,10 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0007, Function | SmallTest | 
     if (dataMgr) {
         AbilityInfo abilityInfo;
         abilityInfo.iconId = 0;
-        InnerBundleInfo innerBundleInfo;
 
         ApplicationInfo applicationInfo;
-        applicationInfo.bundleName = "ohos.global.systemres";
         applicationInfo.iconId = 222;
-        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-
-        dataMgr->bundleInfos_["ohos.global.systemres"] = innerBundleInfo;
+        abilityInfo.applicationInfo = applicationInfo;
 
         dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
         EXPECT_EQ(abilityInfo.iconId, applicationInfo.iconId);

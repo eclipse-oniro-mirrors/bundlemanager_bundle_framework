@@ -27,6 +27,7 @@ const std::string INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
 const std::string INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
 const std::string INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
 const std::string INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
+const std::string INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -41,6 +42,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_UPDATE_TIME, innerBundleUserInfo.updateTime},
         {INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO, innerBundleUserInfo.bundleUserInfo},
         {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
+        {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
     };
 }
 
@@ -48,78 +50,27 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_UID,
-        innerBundleUserInfo.uid,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_GIDS,
-        innerBundleUserInfo.gids,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::NUMBER);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID,
-        innerBundleUserInfo.accessTokenId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint64_t>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX,
-        innerBundleUserInfo.accessTokenIdEx,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_BUNDLE_NAME,
-        innerBundleUserInfo.bundleName,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int64_t>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_INSTALL_TIME,
-        innerBundleUserInfo.installTime,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int64_t>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_UPDATE_TIME,
-        innerBundleUserInfo.updateTime,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<BundleUserInfo>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO,
-        innerBundleUserInfo.bundleUserInfo,
-        JsonType::OBJECT,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
-        innerBundleUserInfo.isRemovable,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_UID,
+        innerBundleUserInfo.uid, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_GIDS,
+        innerBundleUserInfo.gids, JsonType::ARRAY, false, parseResult, ArrayType::NUMBER);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID,
+        innerBundleUserInfo.accessTokenId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_ACCESS_TOKEN_ID_EX,
+        innerBundleUserInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_NAME,
+        innerBundleUserInfo.bundleName, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_INSTALL_TIME,
+        innerBundleUserInfo.installTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_UPDATE_TIME,
+        innerBundleUserInfo.updateTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleUserInfo>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO,
+        innerBundleUserInfo.bundleUserInfo, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
+        innerBundleUserInfo.isRemovable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
+        INNER_BUNDLE_USER_INFO_CLONE_INFOS,
+        innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -33,10 +33,10 @@ namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
 
-tuple<bool, unsigned long, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
+tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
-    uint64_t adler = 0U;
+    int64_t adler = 0U;
 
     // The first argument
     NapiValue adlerNVal(env, funcArg[ArgumentPosition::FIRST]);
@@ -59,10 +59,10 @@ tuple<bool, unsigned long, void *, size_t> CommonFunc::GetAdler32Arg(napi_env en
     return {true, adler, buf, bufLen};
 }
 
-tuple<bool, uint64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
+tuple<bool, int64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
-    uint64_t crc64 = 0U;
+    int64_t crc64 = 0U;
 
     // The first argument
     NapiValue crc64NVal(env, funcArg[ArgumentPosition::FIRST]);
@@ -85,13 +85,13 @@ tuple<bool, uint64_t, void *, size_t> CommonFunc::GetCrc64Arg(napi_env env, cons
     return {true, crc64, buf, bufLen};
 }
 
-tuple<bool, unsigned long, unsigned long, size_t> CommonFunc::GetAdler32CombineArg(
+tuple<bool, unsigned long, unsigned long, int64_t> CommonFunc::GetAdler32CombineArg(
     napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;
     uint64_t adler1 = 0U;
     uint64_t adler2 = 0U;
-    size_t len = 0;
+    int64_t len = 0;
 
     NapiValue adler1NVal(env, funcArg[ArgumentPosition::FIRST]);
     tie(succ, adler1) = adler1NVal.ToInt64();
@@ -109,7 +109,7 @@ tuple<bool, unsigned long, unsigned long, size_t> CommonFunc::GetAdler32CombineA
 
     NapiValue bufLenNVal(env, funcArg[ArgumentPosition::THIRD]);
     tie(succ, len) = bufLenNVal.ToInt64();
-    if (!succ) {
+    if (!succ || len < 0) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, 0, 0};
     }

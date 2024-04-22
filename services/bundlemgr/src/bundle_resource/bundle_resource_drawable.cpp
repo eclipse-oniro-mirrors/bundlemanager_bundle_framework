@@ -14,6 +14,8 @@
  */
 
 #include "bundle_resource_drawable.h"
+
+#include "app_log_tag_wrapper.h"
 #include "bundle_resource_image_info.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -30,6 +32,7 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
 {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     if (resourceManager == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "resourceManager is nullptr");
         return false;
     }
     BundleResourceImageInfo info;
@@ -39,6 +42,7 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
     Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
     if (state == Global::Resource::SUCCESS) {
+        LOG_D(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
         // init foreground
         resourceInfo.foreground_.resize(foregroundInfo.second);
         for (size_t index = 0; index < foregroundInfo.second; ++index) {
@@ -51,14 +55,17 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
         }
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
             themeMask, drawableType, resourceManager);
-        if (drawableDescriptor == nullptr) {
-            return false;
+        if (drawableDescriptor != nullptr) {
+            return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
         }
-        return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
+        LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, need create again",
+            resourceInfo.bundleName_.c_str());
     }
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
         iconId, resourceManager, state, drawableType, 0);
     if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr",
+            resourceInfo.bundleName_.c_str());
         return false;
     }
     return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);

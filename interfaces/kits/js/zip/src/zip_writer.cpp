@@ -191,11 +191,9 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
         return true;
     }
     while (pendingEntries_.size() >= g_MaxPendingEntriesCount || (force && !pendingEntries_.empty())) {
-
         size_t entry_count = std::min(pendingEntries_.size(), g_MaxPendingEntriesCount);
         std::vector<FilePath> relativePaths;
         std::vector<FilePath> absolutePaths;
-
         relativePaths.insert(relativePaths.begin(), pendingEntries_.begin(), pendingEntries_.begin() + entry_count);
         for (auto iter = pendingEntries_.begin(); iter != pendingEntries_.begin() + entry_count; ++iter) {
             // The FileAccessor requires absolute paths.

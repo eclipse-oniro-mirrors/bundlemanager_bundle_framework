@@ -193,7 +193,8 @@ struct QueryHash  {
     size_t operator()(const Query &query) const
     {
         return std::hash<std::string>()(query.bundleName_) ^ std::hash<std::string>()(query.interfaceType_) ^
-            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_);
+            std::hash<int32_t>()(query.flags_) ^ std::hash<int32_t>()(query.userId_) ^
+            std::hash<napi_env>()(query.env_);
     }
 };
 
@@ -278,6 +279,7 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value CanOpenLink(napi_env env, napi_callback_info info);
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
+napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
@@ -286,6 +288,7 @@ void CreateBundleFlagObject(napi_env env, napi_value value);
 void CreatePermissionGrantStateObject(napi_env env, napi_value value);
 void CreateAbilityTypeObject(napi_env env, napi_value value);
 void CreateDisplayOrientationObject(napi_env env, napi_value value);
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value);
 void CreateLaunchTypeObject(napi_env env, napi_value value);
 void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);

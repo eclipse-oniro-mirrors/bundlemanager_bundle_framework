@@ -105,6 +105,8 @@ const std::string JSON_KEY_RECOVERABLE = "recoverable";
 const std::string JSON_KEY_SUPPORT_EXT_NAMES = "supportExtNames";
 const std::string JSON_KEY_SUPPORT_MIME_TYPES = "supportMimeTypes";
 const std::string JSON_KEY_ISOLATION_PROCESS = "isolationProcess";
+const std::string JSON_KEY_CONTINUE_TYPE = "continueType";
+const std::string JSON_KEY_APP_INDEX = "appIndex";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -292,6 +294,13 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     unclearableMission = parcel.ReadBool();
     excludeFromDock = parcel.ReadBool();
     preferMultiWindowOrientation = Str16ToStr8(parcel.ReadString16());
+    int32_t continueTypeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, continueTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, continueTypeSize, &continueType);
+    for (auto i = 0; i < continueTypeSize; i++) {
+        continueType.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    appIndex = parcel.ReadInt32();
     return true;
 }
 
@@ -451,6 +460,11 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, unclearableMission);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, excludeFromDock);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(preferMultiWindowOrientation));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, continueType.size());
+    for (auto &continueTypeItem : continueType) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(continueTypeItem));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;
 }
 
@@ -580,6 +594,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_SUPPORT_EXT_NAMES, abilityInfo.supportExtNames},
         {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
         {JSON_KEY_ISOLATION_PROCESS, abilityInfo.isolationProcess},
+        {JSON_KEY_CONTINUE_TYPE, abilityInfo.continueType},
+        {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1250,6 +1266,22 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         JSON_KEY_ISOLATION_PROCESS,
         abilityInfo.isolationProcess,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CONTINUE_TYPE,
+        abilityInfo.continueType,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_APP_INDEX,
+        abilityInfo.appIndex,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

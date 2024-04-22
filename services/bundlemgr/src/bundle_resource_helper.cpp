@@ -27,38 +27,8 @@
 #include "resource_manager.h"
 #endif
 
-
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-void ConvertToResourceInfo(
-    const std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
-    const std::string &icon, std::vector<ResourceInfo> &resourceInfos)
-{
-    for (const auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
-        ResourceInfo resourceInfo;
-        resourceInfo.bundleName_ = launcherAbilityResourceInfo.bundleName;
-        resourceInfo.abilityName_ = launcherAbilityResourceInfo.abilityName;
-        resourceInfo.moduleName_ = launcherAbilityResourceInfo.moduleName;
-        resourceInfo.label_ = launcherAbilityResourceInfo.label;
-        resourceInfo.icon_ = icon;
-        resourceInfos.emplace_back(resourceInfo);
-    }
-}
-
-void ConvertToResourceInfo(
-    const BundleResourceInfo &bundleResourceInfo,
-    const std::string &icon, std::vector<ResourceInfo> &resourceInfos)
-{
-    ResourceInfo resourceInfo;
-    resourceInfo.bundleName_ = bundleResourceInfo.bundleName;
-    resourceInfo.label_ = bundleResourceInfo.label;
-    resourceInfo.icon_ = icon;
-    resourceInfos.emplace_back(resourceInfo);
-}
-#endif
-}
 void BundleResourceHelper::BundleSystemStateInit()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -193,95 +163,19 @@ void BundleResourceHelper::SetOverlayEnabled(const std::string &bundleName, cons
 #endif
 }
 
-bool BundleResourceHelper::ParseIconResourceByPath(
-    const std::string &filePath, const int32_t iconId, std::string &icon)
+bool BundleResourceHelper::DeleteAllResourceInfo()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    BundleResourceParser bundleResourceParser;
-    ResourceInfo info;
-    info.iconId_ = iconId;
-    return bundleResourceParser.ParseIconResourceByPath(filePath, iconId, icon);
-#else
-    return false;
-#endif
-}
-
-bool BundleResourceHelper::ResetBunldleResourceIcon(const std::string &bundleName)
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGI("ResetBunldleResourceIcon %{public}s", bundleName.c_str());
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
         return false;
     }
-
-    // Delete dynamic icon resource
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGE("DeleteResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+    if (!manager->DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource failed");
         return false;
     }
-
-    // Reset default icon
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    if (!manager->GetLauncherAbilityResourceInfo(bundleName,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfos)) {
-        APP_LOGD("No default icon, bundleName:%{public}s", bundleName.c_str());
-    }
-
     return true;
-#else
-    return false;
-#endif
-}
-
-bool BundleResourceHelper::UpdateBundleIcon(const std::string &bundleName, const std::string &icon)
-{
-    if (bundleName.empty() || icon.empty()) {
-        APP_LOGE("param is empty");
-        return false;
-    }
-
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    if (manager == nullptr) {
-        APP_LOGE("failed, manager is nullptr");
-        return false;
-    }
-
-    std::vector<ResourceInfo> resourceInfos;
-    BundleResourceInfo bundleResourceInfo;
-    if (!manager->GetBundleResourceInfo(bundleName,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
-        bundleResourceInfo)) {
-        APP_LOGW("GetBundleResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
-    } else {
-        ConvertToResourceInfo(bundleResourceInfo, icon, resourceInfos);
-    }
-
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    if (!manager->GetLauncherAbilityResourceInfo(bundleName,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL),
-        launcherAbilityResourceInfos)) {
-        APP_LOGW("GetLauncherAbilityResourceInfo failed, bundleName:%{public}s",
-            bundleName.c_str());
-    } else {
-        ConvertToResourceInfo(launcherAbilityResourceInfos, icon, resourceInfos);
-    }
-
-    if (resourceInfos.empty()) {
-        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
-            bundleName.c_str());
-        ResourceInfo resourceInfo;
-        resourceInfo.bundleName_ = bundleName;
-        resourceInfo.label_ = bundleName;
-        resourceInfo.icon_ = icon;
-        resourceInfos.emplace_back(resourceInfo);
-    }
-
-    APP_LOGI("UpdateBundleIcon %{public}s, size: %{public}zu",
-        bundleName.c_str(), resourceInfos.size());
-    return manager->SaveResourceInfos(resourceInfos);
 #else
     return false;
 #endif

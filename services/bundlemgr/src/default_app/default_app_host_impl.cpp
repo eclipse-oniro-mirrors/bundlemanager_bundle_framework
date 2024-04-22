@@ -31,47 +31,47 @@ namespace AppExecFwk {
 ErrCode DefaultAppHostImpl::IsDefaultApplication(const std::string& type, bool& isDefaultApp)
 {
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    LOG_D(BMSTag::DEFAULT_APP, "IsDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
+    LOG_D(BMS_TAG_DEFAULT_APP, "IsDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
     return DefaultAppMgr::GetInstance().IsDefaultApplication(userId, type, isDefaultApp);
 }
 
 ErrCode DefaultAppHostImpl::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMSTag::DEFAULT_APP, "GetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
+    LOG_D(BMS_TAG_DEFAULT_APP, "GetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
     return DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
 }
 
 ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
-    LOG_D(BMSTag::DEFAULT_APP, "SetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
+    LOG_D(BMS_TAG_DEFAULT_APP, "SetDefaultApplication userId:%{public}d type:%{public}s", userId, type.c_str());
     const ElementName& elementName = want.GetElement();
     const std::string& bundleName = elementName.GetBundleName();
     const std::string& moduleName = elementName.GetModuleName();
     const std::string& abilityName = elementName.GetAbilityName();
-    LOG_D(BMSTag::DEFAULT_APP, "ElementName bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+    LOG_D(BMS_TAG_DEFAULT_APP, "ElementName bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     // case1 : ElementName is empty.
     bool isEmpty = bundleName.empty() && moduleName.empty() && abilityName.empty();
     if (isEmpty) {
-        LOG_D(BMSTag::DEFAULT_APP, "ElementName is empty.");
+        LOG_D(BMS_TAG_DEFAULT_APP, "ElementName is empty.");
         Element element;
         return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
     }
     // case2 : ElementName is valid ability or valid extension.
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMSTag::DEFAULT_APP, "DataMgr is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT_APP, "DataMgr is nullptr.");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!dataMgr->HasUserId(userId)) {
-        LOG_E(BMSTag::DEFAULT_APP, "userId not exist.");
+        LOG_E(BMS_TAG_DEFAULT_APP, "userId not exist.");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     Element element;
     bool ret = dataMgr->GetElement(userId, elementName, element);
     if (!ret) {
-        LOG_E(BMSTag::DEFAULT_APP, "GetElement failed.");
+        LOG_E(BMS_TAG_DEFAULT_APP, "GetElement failed.");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
@@ -79,7 +79,7 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
 
 ErrCode DefaultAppHostImpl::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
-    LOG_D(BMSTag::DEFAULT_APP, "begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s",
+    LOG_D(BMS_TAG_DEFAULT_APP, "begin to ResetDefaultApplication, userId : %{public}d, type : %{public}s",
         userId, type.c_str());
     return DefaultAppMgr::GetInstance().ResetDefaultApplication(userId, type);
 }

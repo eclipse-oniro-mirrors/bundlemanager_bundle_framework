@@ -80,6 +80,7 @@ const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+const std::string SKILL_URI_SCHEME_HTTPS = "https";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -209,9 +210,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
         OnSingletonChange(installParam.noSkipsKill);
     }
 
-    if (!bundleName_.empty()) {
+    if (!bundlePaths.empty()) {
         SendBundleSystemEvent(
-            bundleName_,
+            bundleName_.empty() ? bundlePaths[0] : bundleName_,
             ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
             installParam,
             sysEventInfo_.preBundleScene,
@@ -343,6 +344,25 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     return result;
 }
 
+
+ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
+{
+    if (!info.GetRemovable()) {
+        APP_LOGE("uninstall system app");
+        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
+    }
+    if (!info.GetUninstallState()) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), info.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
+        APP_LOGE("uninstall bundle is not shared library");
+        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
     APP_LOGI("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
@@ -366,13 +386,10 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (!info.GetRemovable()) {
-        APP_LOGE("uninstall system app");
-        return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
-    }
-    if (info.GetApplicationBundleType() != BundleType::SHARED) {
-        APP_LOGE("uninstall bundle is not shared library");
-        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
+    ErrCode ret = CheckUninstallInnerBundleInfo(info, bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGW("CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
+        return ret;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
         APP_LOGE("uninstall shared library is relied");
@@ -1080,12 +1097,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
+    RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     RemoveOldGroupDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
+    VerifyDomain();
     ForceWriteToDisk();
     return result;
 }
@@ -1238,6 +1257,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+
     if (!UninstallAppControl(oldInfo.GetAppId(), userId_)) {
         APP_LOGE("bundleName: %{public}s is not allow uninstall", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1291,6 +1317,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return result;
     }
 
+    result = DeleteShaderCache(bundleName);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to DeleteShaderCache, error is %{public}d", result);
+        return result;
+    }
+
     if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
         APP_LOGE("fail to remove asan log path, error is %{public}d", result);
         return result;
@@ -1325,6 +1357,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     BundleResourceHelper::DeleteResourceInfo(bundleName);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
+    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
     return ERR_OK;
 }
 
@@ -1382,6 +1415,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+        APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
+            bundleName.c_str(), oldInfo.GetUninstallState());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
+    }
+
     bool isModuleExist = oldInfo.FindModule(modulePackage);
     if (!isModuleExist) {
         APP_LOGE("uninstall bundle info missing");
@@ -1430,6 +1470,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
             // remove profile from code signature
             RemoveProfileFromCodeSign(bundleName);
+
+            ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
 
             result = DeleteOldArkNativeFile(oldInfo);
             if (result != ERR_OK) {
@@ -1623,17 +1665,17 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
 ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData)
 {
-    ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
-    if (result != ERR_OK) {
-        APP_LOGE("remove bundle dir failed");
-        dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS);
-        return result;
-    }
-
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+
+    ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
+    if (result != ERR_OK) {
+        APP_LOGE("remove bundle dir failed");
+        return result;
+    }
+
     accessTokenId_ = info.GetAccessTokenId(userId_);
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -2432,6 +2474,12 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
             return result;
         }
     }
+
+    result = CreateShaderCache(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+    if (result != ERR_OK) {
+        APP_LOGW("fail to create shader cache, error is %{public}d", result);
+    }
+
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
@@ -2806,18 +2854,20 @@ ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldIn
 
 ErrCode BaseBundleInstaller::RemoveBundleAndDataDir(const InnerBundleInfo &info, bool isKeepData) const
 {
-    // remove bundle dir
-    auto result = RemoveBundleCodeDir(info);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
-        return result;
-    }
+    ErrCode result = ERR_OK;
     if (!isKeepData) {
         result = RemoveBundleDataDir(info);
         if (result != ERR_OK) {
             APP_LOGE("fail to remove bundleData dir %{public}s, error is %{public}d",
                 info.GetBundleName().c_str(), result);
+            return result;
         }
+    }
+    // remove bundle dir
+    result = RemoveBundleCodeDir(info);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to remove bundle dir %{public}s, error is %{public}d", info.GetAppCodePath().c_str(), result);
+        return result;
     }
     return result;
 }
@@ -2980,6 +3030,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     InstallCheckParam checkParam;
     checkParam.isPreInstallApp = installParam.isPreInstallApp;
     checkParam.crowdtestDeadline = installParam.crowdtestDeadline;
+    checkParam.specifiedDistributionType = installParam.specifiedDistributionType;
     checkParam.appType = appType;
     checkParam.removable = installParam.removable;
     ErrCode ret = bundleInstallChecker_->ParseHapFiles(
@@ -3028,7 +3079,6 @@ void BaseBundleInstaller::GenerateOdid(
     std::string odid;
     dataMgr->GenerateOdid(developerId, odid);
 
-    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
     for (auto &item : infos) {
         item.second.UpdateOdid(developerId, odid);
     }
@@ -3541,14 +3591,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 {
     // check app label for inheritance installation
     APP_LOGD("CheckAppLabel begin");
-    if (oldInfo.GetVersionName() != newInfo.GetVersionName()) {
-        return ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME;
-    }
     if (oldInfo.GetMinCompatibleVersionCode() != newInfo.GetMinCompatibleVersionCode()) {
         return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-    }
-    if (oldInfo.GetVendor() != newInfo.GetVendor()) {
-        return ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME;
     }
     if (oldInfo.GetTargetVersion()!= newInfo.GetTargetVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
@@ -3623,6 +3667,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        APP_LOGE("update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
     ErrCode result = ERR_OK;
     if (!needRemoveData) {
         result = RemoveBundleDataDir(innerBundleInfo);
@@ -3648,13 +3699,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         APP_LOGE("delete accessToken failed");
-    }
-
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        APP_LOGE("update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     return ERR_OK;
@@ -4234,6 +4278,23 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
+void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
+{
+    if (!isOTA) {
+        return;
+    }
+    for (const auto &info : newInfos) {
+        std::string oldHapPath = oldInfo.GetModuleHapPath(info.second.GetCurrentModulePackage());
+        if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
+            continue;
+        }
+        if (!InstalldClient::GetInstance()->RemoveDir(oldHapPath)) {
+            APP_LOGW("remove old hap failed, errno: %{public}d", errno);
+        }
+    }
+}
+
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
     std::vector<std::string> &bundlePaths)
 {
@@ -4731,6 +4792,113 @@ void BaseBundleInstaller::ForceWriteToDisk() const
         APP_LOGI("sync end");
     };
     std::thread(task).detach();
+}
+
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+void BaseBundleInstaller::PrepareSkillUri(const std::vector<Skill> &skills,
+    std::vector<AppDomainVerify::SkillUri> &skillUris) const
+{
+    for (const auto &skill : skills) {
+        if (!skill.domainVerify) {
+            continue;
+        }
+        for (const auto &uri : skill.uris) {
+            if (uri.scheme != SKILL_URI_SCHEME_HTTPS) {
+                continue;
+            }
+            AppDomainVerify::SkillUri skillUri;
+            skillUri.scheme = uri.scheme;
+            skillUri.host = uri.host;
+            skillUri.port = uri.port;
+            skillUri.path = uri.path;
+            skillUri.pathStartWith = uri.pathStartWith;
+            skillUri.pathRegex = uri.pathRegex;
+            skillUri.type = uri.type;
+            skillUris.push_back(skillUri);
+        }
+    }
+}
+#endif
+
+void BaseBundleInstaller::VerifyDomain()
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGD("start to verify domain");
+    InnerBundleInfo bundleInfo;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return;
+    }
+    std::string appIdentifier = bundleInfo.GetAppIdentifier();
+    if (isAppExist_) {
+        APP_LOGI("app exist, need to clear old domain info");
+        ClearDomainVerifyStatus(appIdentifier, bundleName_);
+    }
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+    std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
+    for (const auto &skillInfo : skillInfos) {
+        PrepareSkillUri(skillInfo.second, skillUris);
+    }
+    if (skillUris.empty()) {
+        APP_LOGI("no skill uri need to verify domain");
+        return;
+    }
+    std::string fingerprint = bundleInfo.GetCertificateFingerprint();
+    APP_LOGI("start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    // call VerifyDomain
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
+        appIdentifier, bundleName_, fingerprint, skillUris);
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
+}
+
+void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifier,
+    const std::string &bundleName) const
+{
+#ifdef APP_DOMAIN_VERIFY_ENABLED
+    APP_LOGI("start to clear domain verify status");
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    // call ClearDomainVerifyStatus
+    if (!DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->ClearDomainVerifyStatus(
+        appIdentifier, bundleName)) {
+        APP_LOGW("ClearDomainVerifyStatus failed");
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+#else
+    APP_LOGI("app domain verify is disabled");
+    return;
+#endif
+}
+
+ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    bool isExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
+    if (result != ERR_OK) {
+        APP_LOGE("IsExistDir failed, error is %{public}d", result);
+        return result;
+    }
+    if (isExist) {
+        APP_LOGD("shaderCachePath is exist");
+        return ERR_OK;
+    }
+    APP_LOGI("CreateShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
+}
+
+ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

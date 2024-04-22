@@ -28,6 +28,7 @@ int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
 const int32_t MAX_FORM_NAME = 127;
+const int32_t DEFAULT_RECT_SHAPE = 1;
 const std::map<std::string, FormsColorMode> formColorModeMap = {
     {"auto",  FormsColorMode::AUTO_MODE},
     {"dark",  FormsColorMode::DARK_MODE},
@@ -41,6 +42,10 @@ const std::map<std::string, int32_t> dimensionMap = {
     {"2*1", 5},
     {"1*1", 6},
     {"6*4", 7}
+};
+const std::map<std::string, int32_t> shapeMap = {
+    {"rect", 1},
+    {"circle", 2}
 };
 const std::map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
@@ -83,6 +88,8 @@ struct ExtensionFormProfileInfo {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = false;
+    bool fontScaleFollowSystem = true;
+    std::vector<std::string> supportShapes {};
 };
 
 struct ExtensionFormProfileInfoStruct {
@@ -295,6 +302,22 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::FONT_SCALE_FOLLOW_SYSTEM,
+        extensionFormProfileInfo.fontScaleFollowSystem,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::SUPPORT_SHAPES,
+        extensionFormProfileInfo.supportShapes,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
@@ -362,6 +385,29 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
     return true;
 }
 
+bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
+{
+    std::set<int32_t> supportShapeSet {};
+    for (const auto &shape: form.supportShapes) {
+        auto formShape = std::find_if(std::begin(shapeMap), std::end(shapeMap),
+            [&shape](const auto &item) { return item.first == shape; });
+        if (formShape == shapeMap.end()) {
+            APP_LOGW("shape is invalid, form name is %{public}s", form.name.c_str());
+            continue;
+        }
+        supportShapeSet.emplace(formShape->second);
+    }
+
+    if (supportShapeSet.empty()) {
+        supportShapeSet.emplace(DEFAULT_RECT_SHAPE);
+    }
+
+    for (const auto &shape: supportShapeSet) {
+        info.supportShapes.emplace_back(shape);
+    }
+    return true;
+}
+
 bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     if (!CheckFormNameIsValid(form.name)) {
@@ -412,6 +458,11 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.dataProxyEnabled = form.dataProxyEnabled;
     info.isDynamic = form.isDynamic;
     info.transparencyEnabled = form.transparencyEnabled;
+    info.fontScaleFollowSystem = form.fontScaleFollowSystem;
+
+    if (!GetSupportShapes(form, info)) {
+        return false;
+    }
     return true;
 }
 

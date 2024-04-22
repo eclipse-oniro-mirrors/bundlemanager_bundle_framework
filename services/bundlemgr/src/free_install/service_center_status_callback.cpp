@@ -21,15 +21,15 @@ namespace AppExecFwk {
 ServiceCenterStatusCallback::ServiceCenterStatusCallback(const std::weak_ptr<BundleConnectAbilityMgr> &server)
     : server_(server)
 {
-    LOG_I(BMSTag::FREE_INSTALL, "%{public}s", __func__);
+    LOG_I(BMS_TAG_FREE_INSTALL, "%{public}s", __func__);
 }
 
 int32_t ServiceCenterStatusCallback::OnInstallFinished(std::string installResult)
 {
-    LOG_I(BMSTag::FREE_INSTALL, "%{public}s", __func__);
+    LOG_I(BMS_TAG_FREE_INSTALL, "%{public}s", __func__);
     auto server = server_.lock();
     if (server == nullptr) {
-        LOG_E(BMSTag::FREE_INSTALL, "pointer is nullptr.");
+        LOG_E(BMS_TAG_FREE_INSTALL, "pointer is nullptr.");
         return ERR_INVALID_VALUE;
     }
     server->OnServiceCenterCall(installResult);

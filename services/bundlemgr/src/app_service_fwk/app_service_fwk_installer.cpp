@@ -66,6 +66,7 @@ void BuildCheckParam(
     checkParam.installEtpMdmBundlePermissionStatus = installParam.installEtpMdmBundlePermissionStatus;
     checkParam.isCallByShell = installParam.isCallByShell;
     checkParam.needSendEvent = installParam.needSendEvent;
+    checkParam.specifiedDistributionType = installParam.specifiedDistributionType;
 };
 }
 
@@ -253,7 +254,6 @@ void AppServiceFwkInstaller::GenerateOdid(
     }
     std::string odid;
     dataMgr_->GenerateOdid(developerId, odid);
-    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
 
     for (auto &item : infos) {
         item.second.UpdateOdid(developerId, odid);

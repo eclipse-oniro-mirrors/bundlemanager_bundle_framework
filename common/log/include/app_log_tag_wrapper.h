@@ -20,6 +20,74 @@
 
 #include "hilog/log.h"
 
+#ifndef BMS_TAG_DEFAULT
+#define BMS_TAG_DEFAULT std::make_pair(0xD001100, "BMS")
+#endif
+
+#ifndef BMS_TAG_INSTALLER
+#define BMS_TAG_INSTALLER std::make_pair(0xD001101, "BMSInstaller")
+#endif
+
+#ifndef BMS_TAG_START
+#define BMS_TAG_START std::make_pair(0xD001110, "BMSStart")
+#endif
+
+#ifndef BMS_TAG_QUERY
+#define BMS_TAG_QUERY std::make_pair(0xD001120, "BMSQuery")
+#endif
+
+#ifndef BMS_TAG_QUERY_BUNDLE
+#define BMS_TAG_QUERY_BUNDLE std::make_pair(0xD001121, "BMSQueryBundle")
+#endif
+
+#ifndef BMS_TAG_QUERY_APPLICATION
+#define BMS_TAG_QUERY_APPLICATION std::make_pair(0xD001122, "BMSQueryApplication")
+#endif
+
+#ifndef BMS_TAG_QUERY_ABILITY
+#define BMS_TAG_QUERY_ABILITY std::make_pair(0xD001123, "BMSQueryAbility")
+#endif
+
+#ifndef BMS_TAG_QUERY_EXTENSION
+#define BMS_TAG_QUERY_EXTENSION std::make_pair(0xD001124, "BMSQueryExtension")
+#endif
+
+#ifndef BMS_TAG_MULTI_USER
+#define BMS_TAG_MULTI_USER std::make_pair(0xD001180, "BMSMultiUser")
+#endif
+
+#ifndef BMS_TAG_APP_CONTROL
+#define BMS_TAG_APP_CONTROL std::make_pair(0xD001188, "BMSAppControl")
+#endif
+
+#ifndef BMS_TAG_FREE_INSTALL
+#define BMS_TAG_FREE_INSTALL std::make_pair(0xD001190, "BMSFreeInstall")
+#endif
+
+#ifndef BMS_TAG_DEFAULT_APP
+#define BMS_TAG_DEFAULT_APP std::make_pair(0xD0011A0, "BMSDefaultApp")
+#endif
+
+#ifndef BMS_TAG_SECURE
+#define BMS_TAG_SECURE std::make_pair(0xD0011B0, "BMSSecure")
+#endif
+
+#ifndef BMS_TAG_QUICK_FIX
+#define BMS_TAG_QUICK_FIX std::make_pair(0xD0011C0, "BMSQuickFix")
+#endif
+
+#ifndef BMS_TAG_INSTALLD
+#define BMS_TAG_INSTALLD std::make_pair(0xD0011D0, "BMSInstalld")
+#endif
+
+#ifndef BMS_TAG_DBMS
+#define BMS_TAG_DBMS std::make_pair(0xD0011E0, "DBMS")
+#endif
+
+#ifndef BMS_TAG_COMMON
+#define BMS_TAG_COMMON std::make_pair(0xD0011F0, "BMSCommon")
+#endif
+
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "[%{public}s(%{public}s:%{public}d)]"
 #endif
@@ -32,75 +100,14 @@
 #define APPEXECFWK_FUNC_INFO APPEXECFWK_FILE_NAME, __FUNCTION__, __LINE__
 #endif
 
+#define APPEXECFWK_PRINT_LOG(level, label, fmt, ...)                                    \
+        ((void)HILOG_IMPL(LOG_CORE, level, label.first,                                 \
+        label.second, APPEXECFWK_FUNC_FMT fmt, APPEXECFWK_FUNC_INFO, ##__VA_ARGS__))
 
-namespace OHOS::AppExecFwk {
-enum class AppExecFwkLogTag : uint32_t {
-    DEFAULT = 0xD001100,               // 0XD001100
-    INSTALLER,
-
-    START = DEFAULT + 0x10,            // 0xD001110
-
-    QUERY = DEFAULT + 0x20,            // 0xD001120
-
-    MULTI_USER = DEFAULT + 0x80,       // 0xD001180
-
-    APP_CONTROL = DEFAULT + 0x88,      // 0xD001180
-
-    FREE_INSTALL = DEFAULT + 0x90,     // 0xD001190
-
-    DEFAULT_APP = DEFAULT + 0xA0,      // 0xD0011A0
-
-    SECURE = DEFAULT + 0xB0,           // 0xD0011B0
-
-    QUICK_FIX = DEFAULT + 0xC0,        // 0xD0011C0
-
-    INSTALLD = DEFAULT + 0xD0,         // 0xD0011D0
-
-    DBMS = DEFAULT + 0xE0,             // 0xD0011E0
-
-    COMMON = DEFAULT + 0xF0,           // 0xD0011F0
-};
-
-const inline std::map<AppExecFwkLogTag, const char*> DOMAIN_MAP = {
-    { AppExecFwkLogTag::DEFAULT, "BMS" },
-    { AppExecFwkLogTag::INSTALLER, "BMSInstaller" },
-    { AppExecFwkLogTag::START, "BMSStart" },
-    { AppExecFwkLogTag::QUERY, "BMSQuery" },
-    { AppExecFwkLogTag::MULTI_USER, "BMSMultiUser" },
-    { AppExecFwkLogTag::APP_CONTROL, "BMSAppControl" },
-    { AppExecFwkLogTag::FREE_INSTALL, "BMSFreeInstall"},
-    { AppExecFwkLogTag::DEFAULT_APP, "BMSDefaultApp" },
-    { AppExecFwkLogTag::SECURE, "BMSSecure" },
-    { AppExecFwkLogTag::QUICK_FIX, "BMSQuickFix" },
-    { AppExecFwkLogTag::INSTALLD, "BMSInstalld" },
-    { AppExecFwkLogTag::DBMS, "DBMS" },
-    { AppExecFwkLogTag::COMMON, "BMSCommon" },
-};
-
-static inline const char* GetTagInfoFromDomainId(AppExecFwkLogTag tag)
-{
-    if (DOMAIN_MAP.find(tag) == DOMAIN_MAP.end()) {
-        tag = AppExecFwkLogTag::DEFAULT;
-    }
-    return DOMAIN_MAP.at(tag);
-}
-
-} // OHOS::AppExecFwk
-
-using BMSTag = OHOS::AppExecFwk::AppExecFwkLogTag;
-
-#define APPEXECFWK_PRINT_LOG(level, tag, fmt, ...)                                                              \
-    do {                                                                                                        \
-        BMSTag logTag = tag;                                                                                    \
-        ((void)HILOG_IMPL(LOG_CORE, level, static_cast<uint32_t>(logTag),                                       \
-        OHOS::AppExecFwk::GetTagInfoFromDomainId(logTag), APPEXECFWK_FUNC_FMT fmt, APPEXECFWK_FUNC_INFO,        \
-            ##__VA_ARGS__));                                                                                    \
-    } while (0)
-
-#define LOG_D(tag, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_DEBUG, tag, fmt, ##__VA_ARGS__)
-#define LOG_I(tag, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_INFO,  tag, fmt, ##__VA_ARGS__)
-#define LOG_W(tag, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_WARN,  tag, fmt, ##__VA_ARGS__)
-#define LOG_E(tag, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_ERROR, tag, fmt, ##__VA_ARGS__)
-#define LOG_F(tag, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_FATAL, tag, fmt, ##__VA_ARGS__)
+#define LOG_D(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_DEBUG, label, fmt, ##__VA_ARGS__)
+#define LOG_I(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_INFO,  label, fmt, ##__VA_ARGS__)
+#define LOG_W(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_WARN,  label, fmt, ##__VA_ARGS__)
+#define LOG_E(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_ERROR, label, fmt, ##__VA_ARGS__)
+#define LOG_F(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_FATAL, label, fmt, ##__VA_ARGS__)
 
 #endif  // OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H

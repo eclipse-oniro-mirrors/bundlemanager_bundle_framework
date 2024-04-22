@@ -76,10 +76,10 @@ private:
         int32_t userId, std::vector<std::string> &overlayHapPaths);
 
     static void ChangeDynamicIcon(
-        std::vector<ResourceInfo> &resourceInfos, const std::string &icon);
+        std::vector<ResourceInfo> &resourceInfos, const ResourceInfo &resourceInfo);
 
     static bool GetDynamicIcon(
-        const InnerBundleInfo &innerBundleInfo, std::string &icon);
+        const InnerBundleInfo &innerBundleInfo, ResourceInfo &resourceInfo);
 
     static bool GetExternalOverlayHapState(const std::string &bundleName,
         const std::string &moduleName, const int32_t userId, int32_t &state);
