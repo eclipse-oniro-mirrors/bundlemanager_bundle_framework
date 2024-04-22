@@ -561,7 +561,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
+        if (newInfo.GetAppCrowdtestDeadline() != Constants::INHERIT_CROWDTEST_DEADLINE) {
+            oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
+        }
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         // clear apply quick fix frequency
         oldInfo.ResetApplyQuickFixFrequency();
