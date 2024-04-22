@@ -42,6 +42,7 @@ namespace {
     constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
     constexpr const char* PARSE_START_OPTIONS = "ParseStartOptions";
     constexpr const char* START_SHORTCUT = "StartShortcut";
+    const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
         {ERR_OK, ERR_OK},
@@ -457,21 +458,25 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<StartShortcutCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
-        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
-            return nullptr;
-        }
-        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-            if (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_ONE], asyncCallbackInfo->startOptions)) {
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, args[i], &valueType));
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if ((valueType == napi_object) &&
+                (!AppExecFwk::UnwrapStartOptions(env, args[ARGS_POS_ONE], asyncCallbackInfo->startOptions))) {
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_START_OPTIONS);
                 return nullptr;
             }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
         }
-    } else {
-        APP_LOGE("parameters error");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<StartShortcutCallbackInfo>(
         env, asyncCallbackInfo, "StartShortcut", StartShortcutExec, StartShortcutComplete);
