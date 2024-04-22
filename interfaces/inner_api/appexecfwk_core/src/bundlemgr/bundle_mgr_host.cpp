@@ -362,6 +362,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO),
         &BundleMgrHost::HandleQueryCloneAbilityInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetCloneBundleInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3455,6 +3457,27 @@ ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageP
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    BundleInfo bundleInfo;
+    auto ret = GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfo)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

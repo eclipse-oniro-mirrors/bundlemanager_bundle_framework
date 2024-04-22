@@ -3720,5 +3720,36 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
+    int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
+{
+    APP_LOGI("start bundleName: %{public}s with user: %{public}d, appIndex: %{public}d, flag: %{public}d",
+        bundleName.c_str(), userId, appIndex, flags);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    if (res != ERR_OK) {
+        APP_LOGE(
+            "finish name: %{public}s user: %{public}d, appIndex: %{public}d, flag: %{public}d, err: %{public}d",
+            bundleName.c_str(), userId, appIndex, flags, res);
+        return res;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

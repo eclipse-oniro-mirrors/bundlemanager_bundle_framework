@@ -4689,5 +4689,36 @@ ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
     return GetParcelableInfoWithErrCode<AbilityInfo>(
         BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO, data, abilityInfo);
 }
+
+ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
+    BundleInfo &bundleInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetCloneBundleInfo of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetCloneBundleInfo due to write InterfaceToken fail");
+        return false;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetCloneBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetCloneBundleInfo due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetCloneBundleInfo due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetCloneBundleInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
