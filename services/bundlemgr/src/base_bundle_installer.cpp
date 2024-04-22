@@ -211,9 +211,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
         OnSingletonChange(installParam.noSkipsKill);
     }
 
-    if (!bundleName_.empty()) {
+    if (!bundlePaths.empty()) {
         SendBundleSystemEvent(
-            bundleName_,
+            bundleName_.empty() ? bundlePaths[0] : bundleName_,
             ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
             installParam,
             sysEventInfo_.preBundleScene,
@@ -1270,7 +1270,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!oldInfo.GetUninstallState()) {
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -1326,6 +1327,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
+    }
+
+    result = DeleteShaderCache(bundleName);
+    if (result != ERR_OK) {
+        APP_LOGE("fail to DeleteShaderCache, error is %{public}d", result);
         return result;
     }
 
@@ -1421,7 +1428,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
 
-    if (!oldInfo.GetUninstallState()) {
+    if (!installParam.forceExecuted &&
+        !oldInfo.GetUninstallState() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         APP_LOGE("bundle : %{public}s can not be uninstalled, uninstallState : %{public}d",
             bundleName.c_str(), oldInfo.GetUninstallState());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
@@ -2479,6 +2487,12 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
             return result;
         }
     }
+
+    result = CreateShaderCache(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+    if (result != ERR_OK) {
+        APP_LOGW("fail to create shader cache, error is %{public}d", result);
+    }
+
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
@@ -3078,7 +3092,6 @@ void BaseBundleInstaller::GenerateOdid(
     std::string odid;
     dataMgr->GenerateOdid(developerId, odid);
 
-    APP_LOGI("GenerateOdid, developerId %{public}s odid %{private}s", developerId.c_str(), odid.c_str());
     for (auto &item : infos) {
         item.second.UpdateOdid(developerId, odid);
     }
@@ -4824,15 +4837,16 @@ void BaseBundleInstaller::VerifyDomain()
 {
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     APP_LOGD("start to verify domain");
-    if (isAppExist_) {
-        APP_LOGI("app exist, need to clear old domain info");
-        ClearDomainVerifyStatus(appIdentifier_, bundleName_);
-    }
     InnerBundleInfo bundleInfo;
     bool isExist = false;
     if (!GetInnerBundleInfo(bundleInfo, isExist) || !isExist) {
         APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return;
+    }
+    std::string appIdentifier = bundleInfo.GetAppIdentifier();
+    if (isAppExist_) {
+        APP_LOGI("app exist, need to clear old domain info");
+        ClearDomainVerifyStatus(appIdentifier, bundleName_);
     }
     std::vector<AppDomainVerify::SkillUri> skillUris;
     std::map<std::string, std::vector<Skill>> skillInfos = bundleInfo.GetInnerSkillInfos();
@@ -4848,7 +4862,7 @@ void BaseBundleInstaller::VerifyDomain()
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
-        appIdentifier_, bundleName_, fingerprint, skillUris);
+        appIdentifier, bundleName_, fingerprint, skillUris);
     IPCSkeleton::SetCallingIdentity(identity);
 #else
     APP_LOGI("app domain verify is disabled");
@@ -4872,6 +4886,32 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
     APP_LOGI("app domain verify is disabled");
     return;
 #endif
+}
+
+ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    bool isExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
+    if (result != ERR_OK) {
+        APP_LOGE("IsExistDir failed, error is %{public}d", result);
+        return result;
+    }
+    if (isExist) {
+        APP_LOGD("shaderCachePath is exist");
+        return ERR_OK;
+    }
+    APP_LOGI("CreateShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
+}
+
+ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
+{
+    std::string shaderCachePath;
+    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
+    return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

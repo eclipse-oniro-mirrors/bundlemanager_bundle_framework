@@ -301,6 +301,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
+    UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1073,6 +1074,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
+    ProcessCheckShaderCacheDir();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1318,6 +1320,41 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
         return;
     }
     UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::DEFAULT_USERID);
+}
+
+void BMSEventHandler::ProcessCheckShaderCacheDir()
+{
+    bool checkShaderCache = false;
+    CheckOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR, checkShaderCache);
+    if (checkShaderCache) {
+        APP_LOGI("Not need to check shader cache dir due to has checked.");
+        return;
+    }
+    APP_LOGI("Need to check shader cache dir.");
+    InnerProcessCheckShaderCacheDir();
+    UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckShaderCacheDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::ALL_USERID)) {
+        APP_LOGE("GetAllBundleInfos failed");
+        return;
+    }
+    for (const auto &bundleInfo : bundleInfos) {
+        std::string shaderCachePath;
+        shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleInfo.name);
+        ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
+        if (res != ERR_OK) {
+            APP_LOGI("create shader cache failed: %{public}s ", shaderCachePath.c_str());
+        }
+    }
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()

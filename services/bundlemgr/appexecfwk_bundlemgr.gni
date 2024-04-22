@@ -51,6 +51,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",
   "${services_path}/bundlemgr/src/driver/driver_installer.cpp",
   "${services_path}/bundlemgr/src/event_report.cpp",
+  "${services_path}/bundlemgr/src/inner_bundle_clone_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
   "${services_path}/bundlemgr/src/inner_common_info.cpp",

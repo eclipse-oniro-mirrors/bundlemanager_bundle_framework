@@ -474,14 +474,14 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
     bool ret = true;
     DIR *dir = opendir(path.c_str());
     if (dir == nullptr) {
-        APP_LOGE("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
+        APP_LOGD("fail to opendir:%{public}s, errno:%{public}d", path.c_str(), errno);
         return false;
     }
 
     while (true) {
         struct dirent *ptr = readdir(dir);
         if (ptr == nullptr) {
-            APP_LOGE("fail to readdir errno:%{public}d", errno);
+            APP_LOGD("fail to readdir errno:%{public}d", errno);
             break;
         }
 
@@ -497,7 +497,7 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
 
         if (access(subPath.c_str(), F_OK) == 0) {
             if (!ChangeFileAttr(subPath, uid, gid)) {
-                APP_LOGE("Failed to ChangeFileAttr %{public}s, uid=%{public}d", subPath.c_str(), uid);
+                APP_LOGD("Failed to ChangeFileAttr %{public}s, uid=%{public}d", subPath.c_str(), uid);
                 closedir(dir);
                 return false;
             }
@@ -508,7 +508,7 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
     std::string currentPath = OHOS::ExcludeTrailingPathDelimiter(path);
     if (access(currentPath.c_str(), F_OK) == 0) {
         if (!ChangeFileAttr(currentPath, uid, gid)) {
-            APP_LOGE("Failed to ChangeFileAttr %{public}s, uid=%{public}d", currentPath.c_str(), uid);
+            APP_LOGD("Failed to ChangeFileAttr %{public}s, uid=%{public}d", currentPath.c_str(), uid);
             return false;
         }
     }
@@ -741,7 +741,11 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
         APP_LOGE("chmod path:%{public}s mode:%{public}d failed, errno:%{public}d", path.c_str(), mode, errno);
         return false;
     }
-    return ChangeDirOwnerRecursively(path, uid, gid);
+    if (!ChangeDirOwnerRecursively(path, uid, gid)) {
+        APP_LOGE("ChangeDirOwnerRecursively failed, errno: %{public}d", errno);
+        return false;
+    }
+    return true;
 }
 
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)

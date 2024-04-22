@@ -59,6 +59,8 @@ struct FormInfo : public Parcelable {
     bool isDynamic = true;
     bool transparencyEnabled = false;
     int32_t privacyLevel = 0;
+    bool fontScaleFollowSystem = true;
+    std::vector<int32_t> supportShapes;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);

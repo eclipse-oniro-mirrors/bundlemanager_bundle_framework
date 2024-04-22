@@ -33,6 +33,8 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
+const std::string DIR_PATH_ONE = "/data/service/el1";
+const std::string DIR_PATH_TWO = "/data/test/test";
 const std::string FILE_PATH = "/data/service/el1/public/bms/bundle_manager_service/a.hsp";
 const std::string INVALID_PATH = "/data/service/el1/public/bms/bundle_manager_service/../../a.hsp";
 const std::string INVALID_SUFFIX = "/data/service/el1/public/bms/bundle_manager_service/a.hap";
@@ -44,6 +46,7 @@ const std::string ERR_FILE_PATH = "data";
 const std::string BUNDLE_NAME2 = "com.ohos.mms";
 const std::string TEST_BUNDLE = "com.test.ext.resource";
 const std::string TEST_MODULE = "testModule";
+const std::string EMPTY_STRING = "";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t USER_ID = 100;
 }  // namespace
@@ -237,6 +240,13 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0400, Function | SmallTes
 
     ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
     EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED);
+
+    moduleNames.push_back(TEST_MODULE);
+    ret = impl.RemoveExtResource(TEST_BUNDLE, moduleNames);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    std::vector<ExtendResourceInfo> extResourceInfos;
+    impl.InnerRemoveExtendResources(TEST_BUNDLE, moduleNames, extResourceInfos);
 }
 
 /**
@@ -280,9 +290,75 @@ HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0700, Function | SmallTes
 {
     ExtendResourceManagerHostImpl impl;
     std::vector<std::string> filePaths;
+    auto ret = impl.BeforeAddExtResource(EMPTY_STRING, filePaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
+
     filePaths.emplace_back(FILE_PATH);
-    auto ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
+    filePaths.emplace_back(INVALID_PATH);
+    ret = impl.BeforeAddExtResource(BUNDLE_NAME, filePaths);
+    EXPECT_EQ(ret, ERR_EXT_RESOURCE_MANAGER_INVALID_PATH_FAILED);
+}
+
+/**
+ * @tc.number: ExtResourceTest_0700
+ * @tc.name: test ExtResourceTest_0700
+ * @tc.desc: 1.BeforeAddExtResource test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0800, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> filePaths;
+    filePaths.emplace_back(FILE_PATH);
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    auto ret = impl.ParseExtendResourceFile(BUNDLE_NAME, filePaths, extendResourceInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+}
+
+/**
+ * @tc.number: ExtResourceTest_0700
+ * @tc.name: test ExtResourceTest_0700
+ * @tc.desc: 1.BeforeAddExtResource test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_0900, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    auto ret = impl.MkdirIfNotExist(DIR_PATH_ONE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    ret = impl.MkdirIfNotExist(DIR_PATH_TWO);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    std::vector<std::string> moduleNames;
+    moduleNames.push_back(TEST_MODULE);
+    ret = impl.RemoveExtResourcesDb(BUNDLE_NAME, moduleNames);
     EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<std::string> filePaths;
+    filePaths.push_back(FILE_PATH);
+    impl.RollBack(filePaths);
+}
+
+/**
+ * @tc.number: ExtResourceTest_0700
+ * @tc.name: test ExtResourceTest_0700
+ * @tc.desc: 1.BeforeAddExtResource test
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ExtResourceTest_1000, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::vector<std::string> oldFilePaths;
+    oldFilePaths.push_back(FILE_PATH);
+    std::vector<std::string> newFilePaths;
+    newFilePaths.push_back(DIR_PATH_TWO);
+    auto ret = impl.CopyToTempDir(BUNDLE_NAME, oldFilePaths, newFilePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    ret = impl.UpateExtResourcesDb(BUNDLE_NAME, extendResourceInfos);
+    EXPECT_EQ(ret, false);
 }
 
 /**

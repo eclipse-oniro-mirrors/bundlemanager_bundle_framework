@@ -76,6 +76,7 @@ const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
 constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
+constexpr const char* APP_INDEX = "appIndex";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -147,6 +148,12 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
     { ERR_APPEXECFWK_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
     { ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, ERROR_START_SHORTCUT_ERROR },
+    { ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
+    { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
+    { ERR_APPEXECFWK_CLONE_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, ERROR_BUNDLE_NOT_EXIST },
+    { ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
+    { ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
+    { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED, ERROR_INVALID_APPINDEX },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -965,6 +972,9 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindowSize));
     ConvertWindowSize(env, abilityInfo, nWindowSize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "windowSize", nWindowSize));
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APP_INDEX, nAppIndex));
 }
 
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
@@ -1318,6 +1328,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, externalNativeLibraryPath.c_str(), NAPI_AUTO_LENGTH,
         &nativeLibraryPath));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "nativeLibraryPath", nativeLibraryPath));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, APP_INDEX, nAppIndex));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)

@@ -20,8 +20,8 @@
 #include "application_info.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#include "bundle_clone_info.h"
 #include "bundle_info.h"
+#include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_bundle_info.h"
 #include "json_constants.h"
@@ -110,7 +110,7 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0002
  */
 HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001, Function | SmallTest | Level1)
 {
-    BundleCloneInfo bundleCloneInfo;
+    InnerBundleCloneInfo bundleCloneInfo;
     bundleCloneInfo.accessTokenId = 10;
     bundleCloneInfo.accessTokenIdEx = 12;
     bundleCloneInfo.appIndex = 1;
@@ -125,7 +125,7 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001
     nlohmann::json bundleCloneInfoJson;
     to_json(bundleCloneInfoJson, bundleCloneInfo);
 
-    BundleCloneInfo bundleCloneInfo2;
+    InnerBundleCloneInfo bundleCloneInfo2;
     from_json(bundleCloneInfoJson, bundleCloneInfo2);
 
     EXPECT_EQ(bundleCloneInfo.accessTokenId, bundleCloneInfo2.accessTokenId);
@@ -157,7 +157,7 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     const int32_t appIndex = 1;
     const std::string strAppIndex = "1";
     InnerBundleUserInfo userInfo;
-    BundleCloneInfo bundleCloneInfo;
+    InnerBundleCloneInfo bundleCloneInfo;
     bundleCloneInfo.accessTokenId = 10;
     bundleCloneInfo.accessTokenIdEx = 12;
     bundleCloneInfo.appIndex = appIndex;

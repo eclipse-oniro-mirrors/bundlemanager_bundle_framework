@@ -356,6 +356,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleSwitchUninstallState);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE),
         &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO),
+        &BundleMgrHost::HandleQueryCloneAbilityInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3353,6 +3355,33 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoByContinueType(MessageParcel &data,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    std::unique_ptr<ElementName> elementNamePtr(data.ReadParcelable<ElementName>());
+    if (!elementNamePtr) {
+        APP_LOGE("ReadParcelable<ElementName> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t flags = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+
+    AbilityInfo abilityInfo;
+    auto ret = QueryCloneAbilityInfo(*elementNamePtr, flags, appIndex, abilityInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -126,7 +126,6 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     tmpUserInfo.bundleUserInfo.userId = userId;
     dataMgr->GenerateUidAndGid(tmpUserInfo);
     int32_t uid = tmpUserInfo.uid;
-    int32_t gid = uid;
 
     // 4. generate the accesstoken id and inherit original permissions
     info.SetAppIndex(appIndex);
@@ -139,7 +138,15 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         BundlePermissionMgr::DeleteAccessTokenId(newTokenIdEx.tokenIdExStruct.tokenID);
     });
 
-    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, userId, appIndex, newTokenIdEx);
+    InnerBundleCloneInfo attr = {
+        .userId = userId,
+        .appIndex = appIndex,
+        .uid = uid,
+        .gids = tmpUserInfo.gids,
+        .accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID,
+        .accessTokenIdEx = newTokenIdEx.tokenIDEx,
+    };
+    ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
     if (addRes != ERR_OK) {
         APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);

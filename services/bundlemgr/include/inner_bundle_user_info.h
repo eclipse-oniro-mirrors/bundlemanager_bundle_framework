@@ -16,8 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_USER_INFO_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_USER_INFO_H
 
-#include "bundle_clone_info.h"
 #include "bundle_user_info.h"
+#include "inner_bundle_clone_info.h"
 #include "json_util.h"
 
 namespace OHOS {
@@ -42,7 +42,7 @@ struct InnerBundleUserInfo {
     bool isRemovable = true;
 
     // appIndex -> cloneInfo
-    std::map<std::string, BundleCloneInfo> cloneInfos;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
 
     bool operator() (const InnerBundleUserInfo& info) const
     {

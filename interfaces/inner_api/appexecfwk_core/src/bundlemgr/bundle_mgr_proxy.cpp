@@ -4576,5 +4576,33 @@ ErrCode BundleMgrProxy::QueryAbilityInfoByContinueType(const std::string &bundle
         BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE, data, abilityInfo);
 }
 
+ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
+    int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&element)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write element fail");
+        return false;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO, data, abilityInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

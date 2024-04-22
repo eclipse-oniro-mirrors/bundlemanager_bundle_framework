@@ -295,6 +295,7 @@ void CreateBundleFlagObject(napi_env env, napi_value value);
 void CreatePermissionGrantStateObject(napi_env env, napi_value value);
 void CreateAbilityTypeObject(napi_env env, napi_value value);
 void CreateDisplayOrientationObject(napi_env env, napi_value value);
+void CreateOrientationRelatedToSensor(napi_env env, napi_value value);
 void CreateLaunchTypeObject(napi_env env, napi_value value);
 void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);

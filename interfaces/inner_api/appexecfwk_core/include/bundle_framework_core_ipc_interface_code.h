@@ -1,4 +1,4 @@
-/*
++/*
  * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -165,6 +165,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_DEVELOPER_IDS,
     SWITCH_UNINSTALL_STATE,
     QUERY_ABILITY_INFO_BY_CONTINUE_TYPE,
+    GET_CLONE_ABILITY_INFO,
     GET_PREINSTALLED_APPLICATION_INFO,
 };
 

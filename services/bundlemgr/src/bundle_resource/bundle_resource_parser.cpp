@@ -254,7 +254,8 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
     // density 0
     BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
-        APP_LOGE("parse layered-image failed iconId:%{public}d", resourceInfo.iconId_);
+        APP_LOGE("key:%{public}s parse image failed iconId:%{public}d, ", resourceInfo.GetKey().c_str(),
+            resourceInfo.iconId_);
         return false;
     }
     if (!resourceInfo.foreground_.empty() && !resourceInfo.background_.empty()) {

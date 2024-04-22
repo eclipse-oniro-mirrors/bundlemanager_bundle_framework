@@ -50,6 +50,8 @@ constexpr const char* DATA_PROXY_ENABLED = "dataProxyEnabled";
 constexpr const char* IS_DYNAMIC = "isDynamic";
 constexpr const char* TRANSPARENCY_ENABLED = "transparencyEnabled";
 constexpr const char* PRIVACY_LEVEL = "privacyLevel";
+constexpr const char* FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
+constexpr const char* SUPPORT_SHAPES = "supportShapes";
 }
 
 class ExtensionFormProfile {

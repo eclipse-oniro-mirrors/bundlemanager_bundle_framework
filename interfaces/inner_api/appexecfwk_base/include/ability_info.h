@@ -86,6 +86,7 @@ enum class DisplayOrientation {
     AUTO_ROTATION_LANDSCAPE_RESTRICTED,
     AUTO_ROTATION_PORTRAIT_RESTRICTED,
     LOCKED,
+    AUTO_ROTATION_UNSPECIFIED,
 };
 
 enum class LaunchMode {
@@ -257,6 +258,7 @@ struct AbilityInfo : public Parcelable {
     // for NAPI, save self query cache
     int32_t uid = -1;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
+    int32_t appIndex = 0;
 
     // unused
     std::string originalBundleName;

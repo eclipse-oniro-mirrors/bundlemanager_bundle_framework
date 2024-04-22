@@ -837,7 +837,8 @@ protected:
                     "supportExtNames": [],
                     "supportMimeTypes": [],
                     "isolationProcess": false,
-                    "continueType": []
+                    "continueType": [],
+                    "appIndex": 0
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
@@ -1121,7 +1122,8 @@ protected:
                 "organization": "",
                 "appEnvironments": [],
                 "multiAppMode":"CLONE_APP",
-                "maxInstanceNum":1
+                "maxInstanceNum":1,
+                "appIndex":0
             },
             "baseBundleInfo": {
                 "abilityInfos": [
