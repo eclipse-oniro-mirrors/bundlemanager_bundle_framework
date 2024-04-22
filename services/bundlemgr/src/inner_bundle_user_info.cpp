@@ -68,7 +68,7 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         innerBundleUserInfo.bundleUserInfo, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
         innerBundleUserInfo.isRemovable, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, BundleCloneInfo>>(jsonObject, jsonObjectEnd,
+    GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
 }

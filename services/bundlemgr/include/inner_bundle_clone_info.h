@@ -13,23 +13,23 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CLONE_INFO_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CLONE_INFO_H
+#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_CLONE_INFO_H
+#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_CLONE_INFO_H
 
-#include <vector>
-
-#include "parcel.h"
-#include "bundle_constants.h"
+#include "bundle_user_info.h"
+#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-struct BundleCloneInfo : public Parcelable {
+struct InnerBundleCloneInfo {
     int32_t userId = Constants::INVALID_USERID;
 
     // indicates whether the appIndex of clone app
     int32_t appIndex = 0;
 
     int32_t uid = 0;
+
+    std::vector<int32_t> gids;
 
     // Indicates whether the bundle is disabled.
     bool enabled = true;
@@ -55,13 +55,10 @@ struct BundleCloneInfo : public Parcelable {
 
     // app install control
     bool isRemovable = true;
-
-    bool IsInitialState() const;
-    void Reset();
-    bool ReadFromParcel(Parcel &parcel);
-    virtual bool Marshalling(Parcel &parcel) const override;
-    static BundleCloneInfo *Unmarshalling(Parcel &parcel);
 };
+
+void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleCloneInfo);
+void to_json(nlohmann::json& jsonObject, const InnerBundleCloneInfo& bundleCloneInfo);
 } // namespace AppExecFwk
 } // namespace OHOS
-#endif // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_CLONE_INFO_H
+#endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_CLONE_INFO_H
