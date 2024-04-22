@@ -172,18 +172,16 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
 
     bool isEntryFlag = false;
     for (const auto &innerBundleInfo : newInfos) {
-        for (const auto &info : innerBundleInfo.second.GetInnerModuleInfos()) {
-            preInstallBundleInfo.SetLabelId(info.second.labelId);
-            preInstallBundleInfo.SetIconId(info.second.iconId);
-            preInstallBundleInfo.SetModuleName(info.second.moduleName);
-            if (info.second.isEntry) {
-                isEntryFlag = true;
-                break;
-            }
-        }
-        if (isEntryFlag) {
+        auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+        auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+        preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+        preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+        if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
             break;
         }
+        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
     }
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");

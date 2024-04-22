@@ -417,16 +417,16 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
 #else
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
-    for (const auto &info : newBundleInfo_.GetInnerModuleInfos()) {
-        preInstallBundleInfo.SetLabelId(info.second.labelId);
-        preInstallBundleInfo.SetIconId(info.second.iconId);
-        preInstallBundleInfo.SetModuleName(info.second.moduleName);
-        if (info.second.isEntry) {
-            break;
-        }
+    auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
+    auto bundleInfo = newBundleInfo_.GetBaseBundleInfo();
+    preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+    preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+    if (!bundleInfo.hapModuleInfos.empty() &&
+        bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
-    dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
-
+    preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
     return ERR_OK;
 }
 

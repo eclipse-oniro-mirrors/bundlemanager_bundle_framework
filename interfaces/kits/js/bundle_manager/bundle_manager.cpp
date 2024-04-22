@@ -59,6 +59,8 @@ constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* ICON_ID = "iconId";
+constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -4358,21 +4360,21 @@ void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicat
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, preinstalledApplicationInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, "bundleName", nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, BUNDLE_NAME, nBundleName));
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, preinstalledApplicationInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objPreinstalledApplicationInfo, "moduleName", nModuleName));
+        napi_set_named_property(env, objPreinstalledApplicationInfo, MODULE_NAME, nModuleName));
 
     napi_value nLabelId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.labelId, &nLabelId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, "labelId", nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, LABEL_ID, nLabelId));
 
     napi_value nIconId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.iconId, &nIconId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, "iconId", nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, ICON_ID, nIconId));
 }
 
 
