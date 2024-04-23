@@ -1239,7 +1239,8 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &preInstallBundleInfo : preInstallBundleInfos) {
         BundleInfo bundleInfo;
-        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(), BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
+            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
             preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconResource.id);
             preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
             preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.labelResource.moduleName);
