@@ -62,18 +62,7 @@ config("overlay_installation_config") {
   include_dirs = [ "include/overlay" ]
 }
 
-config("bundlemgr_parse_config") {
-  include_dirs = [
-    "//third_party/json/include",
-    "//third_party/zlib/contrib/minizip",
-    "//third_party/zlib",
-  ]
-}
-
-bundlemgr_parser_common_config = [
-  ":bundlemgr_common_config",
-  ":bundlemgr_parse_config",
-]
+bundlemgr_parser_common_config = [ ":bundlemgr_common_config" ]
 
 ohos_source_set("parser_common") {
   branch_protector_ret = "pac_ret"
@@ -88,12 +77,17 @@ ohos_source_set("parser_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "zlib:shared_libz",
+  ]
+
+  public_external_deps = [
+    "json:nlohmann_json_static",
+    "zlib:libz",
   ]
 
   part_name = "bundle_framework"
@@ -160,6 +154,11 @@ ohos_source_set("bundle_parser") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+  ]
+
+  public_external_deps = [
+    "json:nlohmann_json_static",
+    "zlib:libz",
   ]
 
   defines = []
@@ -238,7 +237,6 @@ ohos_shared_library("libbms") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/zlib:shared_libz",
   ]
 
   version_script = "libbms.map"
@@ -258,6 +256,7 @@ ohos_shared_library("libbms") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
+    "zlib:shared_libz",
   ]
 
   if (bundle_framework_power_mgr_enable) {

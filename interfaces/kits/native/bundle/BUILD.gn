@@ -25,7 +25,6 @@ ohos_shared_library("bundle_ndk") {
     "${inner_api_path}/appexecfwk_base/include",
     "${inner_api_path}/appexecfwk_base/include/quick_fix",
     "${inner_api_path}/appexecfwk_base/include/overlay",
-    "//third_party/json/include",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -56,6 +55,8 @@ ohos_shared_library("bundle_ndk") {
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
+
+  public_external_deps = [ "json:nlohmann_json_static" ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
