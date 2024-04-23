@@ -62,14 +62,7 @@ config("overlay_installation_config") {
   include_dirs = [ "include/overlay" ]
 }
 
-config("bundlemgr_parse_config") {
-  include_dirs = [ "//third_party/zlib/contrib/minizip" ]
-}
-
-bundlemgr_parser_common_config = [
-  ":bundlemgr_common_config",
-  ":bundlemgr_parse_config",
-]
+bundlemgr_parser_common_config = [ ":bundlemgr_common_config" ]
 
 ohos_source_set("parser_common") {
   branch_protector_ret = "pac_ret"
