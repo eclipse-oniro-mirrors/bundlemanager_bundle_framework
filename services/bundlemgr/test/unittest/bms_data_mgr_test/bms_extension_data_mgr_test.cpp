@@ -611,4 +611,17 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0010, Function | SmallTest | Leve
     ErrCode res = bundleMgrExtTest.GetBundleNameByUid(TEST_UID, bundleName);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
+
+/**
+ * @tc.number: BundleMgrExt_0011
+ * @tc.name: VerifyActivationLock
+ * @tc.desc: VerifyActivationLock
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0011, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool pass = false;
+    ErrCode res = bundleMgrExtTest.VerifyActivationLock(pass);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
 } // OHOS
