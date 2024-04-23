@@ -3797,6 +3797,11 @@ void CreateOrientationRelatedToSensor(napi_env env, napi_value value)
             &nAutoRotationUnspecified));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
+    napi_value nFollowDesktop;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::FOLLOW_DESKTOP), &nFollowDesktop));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "FOLLOW_DESKTOP", nFollowDesktop));
 }
 
 void CreateLaunchTypeObject(napi_env env, napi_value value)
