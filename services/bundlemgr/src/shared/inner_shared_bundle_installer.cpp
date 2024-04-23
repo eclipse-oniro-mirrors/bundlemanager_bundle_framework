@@ -418,7 +418,6 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
-    auto bundleInfo = newBundleInfo_.GetBaseBundleInfo();
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
