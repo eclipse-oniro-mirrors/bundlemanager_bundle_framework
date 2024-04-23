@@ -32,6 +32,7 @@ enum AbilityInfoFlag {
     GET_ABILITY_INFO_SYSTEMAPP_ONLY = 0x00000080,
     GET_ABILITY_INFO_WITH_DISABLE = 0x00000100,
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000200,
+    GET_ABILITY_INFO_WITH_SKILL = 0x00000400
 };
 
 enum class GetAbilityInfoFlag {
@@ -43,6 +44,7 @@ enum class GetAbilityInfoFlag {
     GET_ABILITY_INFO_ONLY_SYSTEM_APP = 0x00000010,
     GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000020,
     GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040,
+    GET_ABILITY_INFO_WITH_SKILL = 0x00000080
 };
 
 enum class AbilityType {
@@ -215,6 +217,7 @@ struct AbilityInfo : public Parcelable {
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;
+    std::vector<Skill> skills;
 
     // set when install
     std::string package;  // the "module.package" in config.json

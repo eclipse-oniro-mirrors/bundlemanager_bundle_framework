@@ -143,6 +143,7 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
   deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",

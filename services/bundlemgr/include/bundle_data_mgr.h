@@ -171,6 +171,16 @@ public:
     ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
+     * @brief Query a AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfo of list.
+     * @return Returns ERR_OK if the AbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode BatchQueryAbilityInfosV9(
+        const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    /**
      * @brief Query Launcher AbilityInfo of list by the given Want.
      * @param want Indicates the information of the ability.
      * @param userId Indicates the user ID.
@@ -297,6 +307,16 @@ public:
      */
     ErrCode GetBundleInfoV9(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
+    /**
+     * @brief Batch obtains the BundleInfos based on a given bundle name list.
+     * @param bundleNames Indicates the application bundle name list to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfos Indicates the obtained BundleInfo list object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
@@ -949,6 +969,7 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     ErrCode ImplicitQueryAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+    bool CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     void AddSkillUrisInfo(const std::vector<Skill> &skills, std::vector<SkillUriForAbilityAndExtension> &skillUris,

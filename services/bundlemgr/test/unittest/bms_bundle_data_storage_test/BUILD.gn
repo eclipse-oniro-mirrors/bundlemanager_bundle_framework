@@ -39,7 +39,6 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
     "${services_path}/bundlemgr/src/inner_common_info.cpp",
-    "${services_path}/bundlemgr/src/mime_type_mgr.cpp",
   ]
 
   sources += [ "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp" ]

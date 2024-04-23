@@ -395,6 +395,60 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<Want> &wants, int32_t flags,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    std::vector<std::string> bundleNames;
+    for (size_t i = 0; i < wants.size(); i++) {
+        bundleNames.push_back(wants[i].GetElement().GetBundleName());
+    }
+    return BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+}
+
+ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to batch get bundle info, bundle name count=%{public}u", bundleNames.size());
+    if (bundleNames.empty()) {
+        APP_LOGE("fail to BatchGetBundleInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
+        if (bundleNames[i].empty()) {
+            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}u empty", i);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(bundleNames.size())) {
+        APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        if (!data.WriteString(bundleNames[i])) {
+            APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}u fail", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to BatchGetBundleInfo due to write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to BatchGetBundleInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::BATCH_GET_BUNDLE_INFO, data, bundleInfos);
+}
+
 ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1113,6 +1167,37 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
         BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
+}
+
+ErrCode BundleMgrProxy::BatchQueryAbilityInfosV9(
+    const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(wants.size())) {
+        APP_LOGE("write wants count failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (size_t i = 0; i < wants.size(); i++) {
+        if (!data.WriteParcelable(&wants[i])) {
+            APP_LOGE("write want %{public}d failed", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("write flags failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS_V9, data, abilityInfos);
 }
 
 ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(

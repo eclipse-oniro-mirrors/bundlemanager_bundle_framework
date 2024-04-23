@@ -92,6 +92,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
         DECLARE_NAPI_FUNCTION("getBundleNameByUidSync", GetBundleNameByUidSync),
         DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("queryAbilityInfos", BatchQueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("queryAbilityInfoSync", QueryAbilityInfosSync),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfoSync", QueryExtensionInfosSync),
