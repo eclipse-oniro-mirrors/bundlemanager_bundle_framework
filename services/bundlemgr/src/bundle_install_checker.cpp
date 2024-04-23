@@ -17,6 +17,7 @@
 
 #include <regex>
 
+#include "app_log_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
@@ -545,6 +546,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                     info.second.GetVersionCode());
                 if (!isModuleExist) {
                     APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
+                    this->checkResultMsg = "The dependent module: " + dependency.moduleName + " does not exist.";
                     return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
                 }
             }
@@ -1054,7 +1056,7 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
 }
 
 ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     std::set<std::string> moduleSet;
     for (const auto &info : infos) {
@@ -1063,12 +1065,13 @@ ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
             APP_LOGE("moduleName vector is empty");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
+        if (moduleSet.count(moduleVec[0])) {
+            APP_LOGE("someone moduleName is not unique in the haps");
+            this->checkResultMsg = "moduleName: " + moduleVec[0] + "is not unique in the haps";
+            APP_LOGE("BundleInstallChecker->checkResultMsg : %{public}s ", this->checkResultMsg.c_str());
+            return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
+        }
         moduleSet.insert(moduleVec[0]);
-    }
-
-    if (moduleSet.size() != infos.size()) {
-        APP_LOGE("someone moduleName is not unique in the haps");
-        return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
     }
     return ERR_OK;
 }

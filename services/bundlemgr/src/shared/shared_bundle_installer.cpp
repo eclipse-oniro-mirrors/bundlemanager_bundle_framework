@@ -99,6 +99,8 @@ bool SharedBundleInstaller::CheckDependency(const InnerBundleInfo &innerBundleIn
         }
 
         APP_LOGE("dependency not found: %{public}s", GetJsonStrFromInfo(dependency).c_str());
+        std::string checkResultMsg = "dependency not found: %{public}s" + GetJsonStrFromInfo(dependency);
+        iter->second->setCheckResultMsg(checkResultMsg);
         return false;
     }
 

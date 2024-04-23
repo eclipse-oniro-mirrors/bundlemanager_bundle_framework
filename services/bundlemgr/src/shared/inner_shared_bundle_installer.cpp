@@ -212,6 +212,11 @@ void InnerSharedBundleInstaller::RollBack()
     }
 }
 
+void InnerSharedBundleInstaller::setCheckResultMsg(const std::string resultMsg)
+{
+    bundleInstallChecker_->checkResultMsg = resultMsg;
+}
+
 bool InnerSharedBundleInstaller::CheckDependency(const Dependency &dependency) const
 {
     if (dependency.bundleName != bundleName_) {

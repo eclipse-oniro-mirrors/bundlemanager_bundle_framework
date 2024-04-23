@@ -4900,5 +4900,15 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
+
+std::string BaseBundleInstaller::getCheckResultMsg() const
+{
+    return bundleInstallChecker_->checkResultMsg;
+}
+
+void BaseBundleInstaller::setCheckResultMsg(std::string resultMsg)
+{
+    bundleInstallChecker_->checkResultMsg = resultMsg;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

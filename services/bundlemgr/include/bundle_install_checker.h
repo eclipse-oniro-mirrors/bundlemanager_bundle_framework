@@ -146,7 +146,7 @@ public:
     bool VaildEnterpriseInstallPermissionForShare(const InstallCheckParam &checkParam,
         const Security::Verify::ProvisionInfo &provisionInfo);
 
-    ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     bool IsExistedDistroModule(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
@@ -169,6 +169,8 @@ public:
     bool CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
     bool CheckSupportAppTypes(
         const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const;
+
+    std::string checkResultMsg = "";
 
 private:
 
