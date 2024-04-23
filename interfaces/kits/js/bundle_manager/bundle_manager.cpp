@@ -819,6 +819,14 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin");
     NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (IsArray(env, args[0])) {
+        return BatchQueryAbilityInfos(env, info);
+    }
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -826,11 +834,6 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<AbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
