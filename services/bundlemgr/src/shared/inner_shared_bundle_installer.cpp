@@ -421,12 +421,8 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     auto bundleInfo = newBundleInfo_.GetBaseBundleInfo();
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
-    if (!bundleInfo.hapModuleInfos.empty() &&
-        bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
-        dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
-    }
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+    dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     return ERR_OK;
 }
 

@@ -735,15 +735,14 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #endif
         for (const auto &innerBundleInfo : newInfos) {
             auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
-            auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
             if (!bundleInfo.hapModuleInfos.empty() &&
                 bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-                preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
                 break;
             }
-            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
         }
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
