@@ -1967,29 +1967,30 @@ ErrCode InstalldOperator::MigrateData(const std::vector<std::string> &sourcePath
     const std::string &destinationPath)
 {
     APP_LOGD("migrate data start");
-    std::string destPath = "";
-    if (!PathToRealPath(destinationPath, destPath)) {
-        APP_LOGE("file(%{private}s) is not real path", destinationPath.c_str());
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
-    }
-    if (access(destPath.c_str(), F_OK) != 0) {
-        APP_LOGE("destPath:%{private}s can not access errno:%{public}d", destPath.c_str(), errno);
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_NO_PERMISSION_ACCESS_DATA;
-    }
     ErrCode ret = ERR_OK;
+    std::vector<std::string> realSourcePaths;
+    bool existValidPath = false;
     for (const auto &sourcePath : sourcePaths) {
-        std::string realPath = "";
+        std::string realPath;
         if (!PathToRealPath(sourcePath, realPath)) {
             APP_LOGW("file(%{private}s) is not real path", sourcePath.c_str());
             ret = ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
             continue;
         }
-        if (access(realPath.c_str(), F_OK) == 0) {
-            APP_LOGW("fail to access file %{private}s errno:%{public}d", realPath.c_str(), errno);
-            ret = ERR_BUNDLE_MANAGER_MIGRATE_DATA_NO_PERMISSION_ACCESS_DATA;
-            continue;
-        }
-        if (!InnerMigrateData(realPath, destPath)) {
+        realSourcePaths.push_back(realPath);
+        existValidPath = true;
+    }
+    // all sourcePaths are invalid, need return error
+    if (!existValidPath) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    std::string destPath;
+    if (!PathToRealPath(destinationPath, destPath)) {
+        APP_LOGE("file(%{private}s) is not real path", destinationPath.c_str());
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    for (const auto &sourcePath : realSourcePaths) {
+        if (!InnerMigrateData(sourcePath, destPath)) {
             APP_LOGW("file(%{private}s) migrate data failed, errno:%{public}d", sourcePath.c_str(), errno);
             ret = ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
         }
