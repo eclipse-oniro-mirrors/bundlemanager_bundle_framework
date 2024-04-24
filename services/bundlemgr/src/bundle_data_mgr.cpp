@@ -716,7 +716,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::BatchQueryAbilityInfosV9(
+ErrCode BundleDataMgr::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
     int32_t requestUserId = GetUserId(userId);

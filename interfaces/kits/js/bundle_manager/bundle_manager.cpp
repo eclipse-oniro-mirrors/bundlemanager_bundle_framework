@@ -583,8 +583,8 @@ static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> 
         APP_LOGE("iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = iBundleMgr->BatchQueryAbilityInfosV9(wants, flags, userId, abilityInfos);
-    APP_LOGD("BatchQueryAbilityInfosV9 ErrCode : %{public}d", ret);
+    ErrCode ret = iBundleMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
+    APP_LOGD("BatchQueryAbilityInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 

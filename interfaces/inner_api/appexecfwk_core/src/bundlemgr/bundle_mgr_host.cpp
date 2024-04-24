@@ -118,8 +118,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9),
         &BundleMgrHost::HandleQueryAbilityInfosV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS_V9),
-        &BundleMgrHost::HandleBatchQueryAbilityInfosV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS),
+        &BundleMgrHost::HandleBatchQueryAbilityInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO),
         &BundleMgrHost::HandleQueryLauncherAbilityInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS),
@@ -995,7 +995,7 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleBatchQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleBatchQueryAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t wantCount = data.ReadInt32();
@@ -1012,7 +1012,7 @@ ErrCode BundleMgrHost::HandleBatchQueryAbilityInfosV9(MessageParcel &data, Messa
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode ret = BatchQueryAbilityInfosV9(wants, flags, userId, abilityInfos);
+    ErrCode ret = BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

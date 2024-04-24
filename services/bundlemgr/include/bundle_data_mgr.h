@@ -178,7 +178,7 @@ public:
      * @param abilityInfos Indicates the obtained AbilityInfo of list.
      * @return Returns ERR_OK if the AbilityInfo is successfully obtained; returns errCode otherwise.
      */
-    ErrCode BatchQueryAbilityInfosV9(
+    ErrCode BatchQueryAbilityInfos(
         const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     /**
      * @brief Query Launcher AbilityInfo of list by the given Want.

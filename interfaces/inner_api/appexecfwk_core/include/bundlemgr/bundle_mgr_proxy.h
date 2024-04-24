@@ -363,7 +363,7 @@ public:
      * @param abilityInfos Indicates the obtained AbilityInfos object.
      * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
      */
-    virtual ErrCode BatchQueryAbilityInfosV9(const std::vector<Want> &wants, int32_t flags, int32_t userId,
+    virtual ErrCode BatchQueryAbilityInfos(const std::vector<Want> &wants, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos) override;
     /**
      * @brief Query the launcher AbilityInfo of list by the given Want.

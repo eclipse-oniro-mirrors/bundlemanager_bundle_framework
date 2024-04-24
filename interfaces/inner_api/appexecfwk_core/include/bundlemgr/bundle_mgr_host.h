@@ -271,12 +271,12 @@ private:
      */
     ErrCode HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply);
     /**
-     * @brief Handles the BatchQueryAbilityInfosV9 function called from a IBundleMgr proxy object.
+     * @brief Handles the BatchQueryAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    ErrCode HandleBatchQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleBatchQueryAbilityInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleQueryLauncherAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

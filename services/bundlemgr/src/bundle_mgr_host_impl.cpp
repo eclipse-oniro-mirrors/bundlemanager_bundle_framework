@@ -820,10 +820,10 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     return res;
 }
 
-ErrCode BundleMgrHostImpl::BatchQueryAbilityInfosV9(
+ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    APP_LOGD("start BatchQueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    APP_LOGD("start BatchQueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -837,13 +837,13 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfosV9(
             return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
         }
     }
-    APP_LOGD("verify permission success, begin to BatchQueryAbilityInfosV9");
+    APP_LOGD("verify permission success, begin to BatchQueryAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto res = dataMgr->BatchQueryAbilityInfosV9(wants, flags, userId, abilityInfos);
+    auto res = dataMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     if (isBrokerServiceExisted_ &&
         bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, true) == ERR_OK) {

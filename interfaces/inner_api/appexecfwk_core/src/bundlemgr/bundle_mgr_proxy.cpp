@@ -1169,7 +1169,7 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
         BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
 }
 
-ErrCode BundleMgrProxy::BatchQueryAbilityInfosV9(
+ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1197,7 +1197,7 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfosV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
-        BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS_V9, data, abilityInfos);
+        BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS, data, abilityInfos);
 }
 
 ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
