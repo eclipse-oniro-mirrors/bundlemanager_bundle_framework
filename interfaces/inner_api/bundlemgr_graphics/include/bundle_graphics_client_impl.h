@@ -40,6 +40,7 @@ private:
     int32_t CreateFileDescriptor(const std::string &filePath);
 
     OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
+    std::mutex mutex_;
 };
 } // AppExecFwk
 } // OHOS
