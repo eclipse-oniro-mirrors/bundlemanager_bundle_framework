@@ -43,7 +43,8 @@ enum class BMSEventType {
     BUNDLE_STATE_CHANGE,
     BUNDLE_CLEAN_CACHE,
     BMS_USER_EVENT,
-    APPLY_QUICK_FIX
+    APPLY_QUICK_FIX,
+    QUERY_OF_CONTINUE_TYPE
 };
 
 enum class BundleEventType {
@@ -119,6 +120,9 @@ struct EventInfo {
     // for quick fix
     int32_t applyQuickFixFrequency = 0;
 
+    //for query of continue type
+    std::string continueType;
+
     void Reset()
     {
         userId = Constants::INVALID_USERID;
@@ -143,6 +147,7 @@ struct EventInfo {
         hideDesktopIcon = false;
         appDistributionType.clear();
         applyQuickFixFrequency = 0;
+        continueType.clear();
     }
 };
 
@@ -190,6 +195,15 @@ public:
      * @param userId Indicates the userId.
      */
     static void SendUserSysEvent(UserEventType userEventType, int32_t userId);
+    /**
+     * @brief Send query abilityInfos by continueType system events.
+     * @param bundleName Indicates the bundleName.
+     * @param abilityName Indicates the abilityName.
+     * @param errCode code of result.
+     * @param continueType Indicates the continueType.
+     */
+    static void SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &bundleName,
+        const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

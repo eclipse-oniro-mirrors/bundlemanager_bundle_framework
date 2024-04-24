@@ -39,6 +39,7 @@ const std::string BUNDLE_STATE_CHANGE = "BUNDLE_STATE_CHANGE";
 const std::string BUNDLE_CLEAN_CACHE = "BUNDLE_CLEAN_CACHE";
 const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
 const std::string BUNDLE_QUICK_FIX = "BUNDLE_QUICK_FIX";
+const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 
 // event params
 const std::string EVENT_PARAM_USERID = "USERID";
@@ -62,6 +63,7 @@ const std::string EVENT_PARAM_FILE_PATH = "FILE_PATH";
 const std::string EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const std::string EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
 const std::string EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
+const std::string EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -199,6 +201,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::APPLY_QUICK_FIX,
             [](const EventInfo& eventInfo) {
                 InnerSendQuickFixEvent(eventInfo);
+            } },
+        { BMSEventType::QUERY_OF_CONTINUE_TYPE,
+            [](const EventInfo& eventInfo) {
+                InnerSendQueryOfContinueTypeEvent(eventInfo);
             } }
     };
 
@@ -418,6 +424,18 @@ void InnerEventReport::InnerSendQuickFixEvent(const EventInfo& eventInfo)
         EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY, eventInfo.applyQuickFixFrequency,
         EVENT_PARAM_FILE_PATH, eventInfo.filePath,
         EVENT_PARAM_HASH_VALUE, eventInfo.hashValue);
+}
+
+void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        QUERY_OF_CONTINUE_TYPE,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CONTINUE_TYPE, eventInfo.continueType);
 }
 
 template<typename... Types>
