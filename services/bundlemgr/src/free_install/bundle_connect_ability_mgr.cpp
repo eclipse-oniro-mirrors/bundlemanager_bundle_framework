@@ -839,7 +839,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    if (IPCSkeleton::GetCallingUid() == Constants::DMS_UID) {
+    if (callingUid == Constants::DMS_UID) {
         callingAppids.push_back(want.GetStringParam(PARAM_FREEINSTALL_APPID));
         callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
     } else {
