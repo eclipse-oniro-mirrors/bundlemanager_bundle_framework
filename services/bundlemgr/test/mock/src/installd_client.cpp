@@ -394,6 +394,18 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
 }
 
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
+}
+
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();

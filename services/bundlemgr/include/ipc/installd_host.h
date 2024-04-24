@@ -185,6 +185,8 @@ private:
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleMigrateData(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

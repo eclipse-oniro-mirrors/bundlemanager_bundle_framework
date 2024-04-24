@@ -690,6 +690,27 @@ ErrCode InstalldProxy::RemoveSignProfile(const std::string &bundleName)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, static_cast<int32_t>(sourcePaths.size()));
+    for (auto &path : sourcePaths) {
+        INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+    }
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(destinationPath));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::MIGRATE_DATA, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

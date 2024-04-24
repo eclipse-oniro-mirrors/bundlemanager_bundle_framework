@@ -3303,6 +3303,35 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
     return dataMgr->CreateBundleDataDir(userId);
 }
 
+ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    APP_LOGD("MigrateData start");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MIGRATE_DATA)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (sourcePaths.empty()) {
+        APP_LOGE("source paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destination paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+
+    auto ret = InstalldClient::GetInstance()->MigrateData(sourcePaths, destinationPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("migrate data filed, errcode:%{public}d", ret);
+    }
+    return ret;
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

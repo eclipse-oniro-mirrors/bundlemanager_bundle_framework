@@ -756,7 +756,7 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bund
     }
     int64_t totalFileSize = 0;
     int64_t totalDataSize = 0;
-    for (int32_t index = 0; index < bundleNames.size(); ++index) {
+    for (size_t index = 0; index < bundleNames.size(); ++index) {
         const auto &bundleName = bundleNames[index];
         const auto &uid = uids[index];
         std::vector<std::string> bundlePath;
@@ -1306,6 +1306,23 @@ bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string
         return false;
     }
     return true;
+}
+
+ErrCode InstalldHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    for (const auto &path : sourcePaths) {
+        if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
+            return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+        }
+    }
+    if (destinationPath.empty() || (destinationPath.find(Constants::RELATIVE_PATH) != std::string::npos)) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return InstalldOperator::MigrateData(sourcePaths, destinationPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

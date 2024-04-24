@@ -473,5 +473,15 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
     }
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
 }
+
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty() || destinationPath.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

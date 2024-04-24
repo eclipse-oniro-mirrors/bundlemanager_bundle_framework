@@ -267,8 +267,11 @@ public:
 
     static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
+    static ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath);
 
 private:
+    static bool InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath);
+
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
