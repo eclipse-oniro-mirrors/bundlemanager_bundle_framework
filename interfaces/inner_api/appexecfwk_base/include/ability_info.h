@@ -101,6 +101,11 @@ enum class SupportWindowMode {
     FLOATING,
 };
 
+enum class LinkType {
+    DEEP_LINK = 0,
+    APP_LINK,
+};
+
 struct AbilityInfo;
 
 /*
@@ -282,6 +287,7 @@ struct AbilityInfo : public Parcelable {
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
     std::vector<std::string> continueType;
+    LinkType linkType = LinkType::DEEP_LINK;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

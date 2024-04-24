@@ -4342,9 +4342,8 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0010, Function | S
     want.SetUri(TEST_URI_HTTPS);
     int32_t flags = GET_ABILITY_INFO_WITH_APP_LINKING;
     std::vector<AbilityInfo> abilityInfos;
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
-    EXPECT_FALSE(res);
+    GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), 0);
 }
 
 /**
@@ -4360,9 +4359,8 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0020, Function | S
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     abilityInfos.emplace_back(abilityInfo);
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
-    EXPECT_FALSE(res);
+    GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), 1);
 }
 
 /**
@@ -4378,9 +4376,8 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0030, Function | S
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     abilityInfos.emplace_back(abilityInfo);
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
-    EXPECT_FALSE(res);
+    GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), 0);
 }
 
 /**
@@ -4396,8 +4393,7 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0040, Function | S
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     abilityInfos.emplace_back(abilityInfo);
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    bool res = GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos);
-    EXPECT_TRUE(res);
+    GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), 0);
 }
 }
