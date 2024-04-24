@@ -2515,6 +2515,9 @@ void BMSEventHandler::HandleSceneBoard() const
     dataMgr->SetApplicationEnabled(Constants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
+        if (userId == 0) {
+            return;
+        }
         dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
         dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });

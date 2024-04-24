@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -70,6 +70,11 @@ public:
     virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs)
     {
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+
+    virtual ErrCode StopAOT()
+    {
+        return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
     }
     /**
      * @brief Rename the module directory from temporaily path to the real path.

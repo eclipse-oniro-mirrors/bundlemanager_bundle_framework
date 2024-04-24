@@ -165,6 +165,16 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
     return ret;
 }
 
+ErrCode InstalldHostImpl::StopAOT()
+{
+    APP_LOGI("StopAOT begin");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("verify permission failed");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    return AOTExecutor::GetInstance().StopAOT();
+}
+
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     APP_LOGD("rename %{public}s to %{public}s", oldPath.c_str(), newPath.c_str());

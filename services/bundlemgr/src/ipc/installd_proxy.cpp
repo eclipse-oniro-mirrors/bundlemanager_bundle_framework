@@ -92,6 +92,16 @@ ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
     return TransactInstalldCmd(InstalldInterfaceCode::EXECUTE_AOT, data, reply, option);
 }
 
+ErrCode InstalldProxy::StopAOT()
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::STOP_AOT, data, reply, option);
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;

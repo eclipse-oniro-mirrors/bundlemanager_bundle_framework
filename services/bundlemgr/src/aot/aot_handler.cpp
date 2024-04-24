@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,8 +21,8 @@
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#include "bundle_mgr_service.h"
 #include "bundle_util.h"
+#include "scope_guard.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -30,15 +30,56 @@
 #ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
 #include "display_power_mgr_client.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE
+#include "user_status_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // ark compile option parameter key
-constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
-constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
+constexpr const char* IDLE_COMPILE_MODE = "persist.bm.idle.arkopt";
+constexpr const char* OTA_COMPILE_MODE = "persist.bm.ota.arkopt";
+
 constexpr const char* COMPILE_OPTCODE_RANGE_KEY = "ark.optcode.range";
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+
+constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
+const std::string UPDATE_TYPE_MANUAL = "manual";
+const std::string UPDATE_TYPE_NIGHT = "night";
+
+constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
+constexpr const char* OTA_COMPILE_SWITCH_DEFAULT = "off";
+const std::string OTA_COMPILE_SWITCH_ON = "on";
+
+constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
+constexpr int32_t OTA_COMPILE_TIME_DEFAULT = 5 * 60; // 5min
+constexpr int32_t GAP_SECONDS = 10;
+
+constexpr const char* OTA_COMPILE_COUNT_MANUAL = "persist.bms.optimizing_apps.counts.manual";
+constexpr int32_t OTA_COMPILE_COUNT_MANUAL_DEFAULT = 20;
+constexpr const char* OTA_COMPILE_COUNT_NIGHT = "persist.bms.optimizing_apps.counts.night";
+constexpr int32_t OTA_COMPILE_COUNT_NIGHT_DEFAULT = 30;
+
+constexpr const char* OTA_COMPILE_STATUS = "bms.optimizing_apps.status";
+constexpr const char* OTA_COMPILE_STATUS_BEGIN = "0";
+constexpr const char* OTA_COMPILE_STATUS_END = "1";
+
+const std::string QUEUE_NAME = "OTAQueue";
+const std::string TASK_NAME = "OTACompileTimer";
+
+constexpr uint32_t CONVERSION_FACTOR = 1000; // s to ms
+
+const std::string FAILURE_REASON_TIME_OUT = "timeout";
+const std::string FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
+const std::string FAILURE_REASON_NOT_STAGE_MODEL = "not stage model";
+const std::string FAILURE_REASON_COMPILE_FAILED = "compile failed";
+}
+
+AOTHandler::AOTHandler()
+{
+    serialQueue_ = std::make_shared<SerialQueue>(QUEUE_NAME);
 }
 
 AOTHandler& AOTHandler::GetInstance()
@@ -137,11 +178,11 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     return aotArgs;
 }
 
-void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const
+ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const
 {
     if (!aotArgs) {
         APP_LOGI("aotArgs empty");
-        return;
+        return ERR_APPEXECFWK_AOT_ARGS_EMPTY;
     }
     ErrCode ret = ERR_OK;
     {
@@ -153,16 +194,17 @@ void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCod
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
-        return;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     AOTCompileStatus status = ret == ERR_OK ? AOTCompileStatus::COMPILE_SUCCESS : AOTCompileStatus::COMPILE_FAILED;
     dataMgr->SetAOTCompileStatus(aotArgs->bundleName, aotArgs->moduleName, status, versionCode);
+    return ret;
 }
 
 void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const
 {
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode);
-    AOTInternal(aotArgs, info.GetVersionCode());
+    (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
 void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
@@ -177,10 +219,10 @@ void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundle
             APP_LOGD("current device doesn't support arm64, no need to AOT");
             return;
         }
-        std::string compileMode = system::GetParameter(COMPILE_INSTALL_PARAM_KEY, Constants::COMPILE_NONE);
-        APP_LOGD("%{public}s = %{public}s", COMPILE_INSTALL_PARAM_KEY, compileMode.c_str());
+        std::string compileMode = system::GetParameter(INSTALL_COMPILE_MODE, Constants::COMPILE_NONE);
+        APP_LOGD("%{public}s = %{public}s", INSTALL_COMPILE_MODE, compileMode.c_str());
         if (compileMode == Constants::COMPILE_NONE) {
-            APP_LOGD("%{public}s = none, no need to AOT", COMPILE_INSTALL_PARAM_KEY);
+            APP_LOGD("%{public}s = none, no need to AOT", INSTALL_COMPILE_MODE);
             return;
         }
         std::for_each(infos.cbegin(), infos.cend(), [this, compileMode](const auto &item) {
@@ -238,12 +280,207 @@ void AOTHandler::ResetAOTFlags() const
     dataMgr->ResetAOTFlags();
 }
 
-void AOTHandler::HandleOTA() const
+void AOTHandler::HandleOTA()
 {
     APP_LOGI("HandleOTA begin");
     ClearArkCacheDir();
     ResetAOTFlags();
-    APP_LOGI("HandleOTA end");
+    HandleOTACompile();
+}
+
+void AOTHandler::HandleOTACompile()
+{
+    if (!IsOTACompileSwitchOn()) {
+        APP_LOGI("OTACompileSwitch off, no need to compile");
+        return;
+    }
+    BeforeOTACompile();
+    OTACompile();
+}
+
+bool AOTHandler::IsOTACompileSwitchOn() const
+{
+    std::string OTACompileSwitch = system::GetParameter(OTA_COMPILE_SWITCH, OTA_COMPILE_SWITCH_DEFAULT);
+    APP_LOGI("OTACompileSwitch %{public}s", OTACompileSwitch.c_str());
+    return OTACompileSwitch == OTA_COMPILE_SWITCH_ON;
+}
+
+void AOTHandler::BeforeOTACompile()
+{
+    OTACompileDeadline_ = false;
+    int32_t limitSeconds = system::GetIntParameter<int32_t>(OTA_COMPILE_TIME, OTA_COMPILE_TIME_DEFAULT);
+    APP_LOGI("OTA compile time limit seconds : %{public}d", limitSeconds);
+    auto task = [this]() {
+        APP_LOGI("compile timer end");
+        OTACompileDeadline_ = true;
+        ErrCode ret = InstalldClient::GetInstance()->StopAOT();
+        APP_LOGI("StopAOT ret : %{public}d", ret);
+    };
+    int32_t delayTimeSeconds = limitSeconds - GAP_SECONDS;
+    if (delayTimeSeconds < 0) {
+        delayTimeSeconds = 0;
+    }
+    serialQueue_->ScheduleDelayTask(TASK_NAME, delayTimeSeconds * CONVERSION_FACTOR, task);
+}
+
+void AOTHandler::OTACompile() const
+{
+    auto OTACompileTask = [this]() {
+        OTACompileInternal();
+    };
+    std::thread(OTACompileTask).detach();
+}
+
+void AOTHandler::OTACompileInternal() const
+{
+    APP_LOGI("OTACompileInternal begin");
+    system::SetParameter(OTA_COMPILE_STATUS, OTA_COMPILE_STATUS_BEGIN);
+    ScopeGuard guard([this] {
+        APP_LOGI("set OTA compile status to end");
+        system::SetParameter(OTA_COMPILE_STATUS, OTA_COMPILE_STATUS_END);
+        serialQueue_->CancelDelayTask(TASK_NAME);
+    });
+
+    if (!IsSupportARM64()) {
+        APP_LOGI("current device doesn't support arm64, no need to AOT");
+        return;
+    }
+
+    std::string compileMode = system::GetParameter(OTA_COMPILE_MODE, Constants::COMPILE_NONE);
+    APP_LOGI("%{public}s = %{public}s", OTA_COMPILE_MODE, compileMode.c_str());
+    if (compileMode == Constants::COMPILE_NONE) {
+        APP_LOGI("%{public}s = none, no need to AOT", OTA_COMPILE_MODE);
+        return;
+    }
+
+    std::vector<std::string> bundleNames;
+    if (!GetOTACompileList(bundleNames)) {
+        APP_LOGE("get OTA compile list failed");
+        return;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+
+    std::map<std::string, EventInfo> sysEventMap;
+    for (const std::string &bundleName : bundleNames) {
+        EventInfo eventInfo = HandleCompileWithBundle(bundleName, compileMode, dataMgr);
+        sysEventMap.emplace(bundleName, eventInfo);
+    }
+    ReportSysEvent(sysEventMap);
+    APP_LOGI("OTACompileInternal end");
+}
+
+bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
+{
+    std::string updateType = system::GetParameter(UPDATE_TYPE, "");
+    APP_LOGI("updateType : %{public}s", updateType.c_str());
+    int32_t size = 0;
+    if (updateType == UPDATE_TYPE_MANUAL) {
+        size = system::GetIntParameter<int32_t>(OTA_COMPILE_COUNT_MANUAL, OTA_COMPILE_COUNT_MANUAL_DEFAULT);
+    } else if (updateType == UPDATE_TYPE_NIGHT) {
+        size = system::GetIntParameter<int32_t>(OTA_COMPILE_COUNT_NIGHT, OTA_COMPILE_COUNT_NIGHT_DEFAULT);
+    } else {
+        APP_LOGE("invalid updateType");
+        return false;
+    }
+    return GetUserBehaviourAppList(bundleNames, size);
+}
+
+bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const
+{
+    APP_LOGI("GetUserBehaviourAppList begin, size : %{public}d", size);
+#ifdef BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE
+    std::vector<std::string> interestedApps;
+    ErrCode ret = OHOS::Msdp::UserStatusAwareness::UserStatusClient::GetInstance().GetUserPreferenceApp(
+        OHOS::Msdp::UserStatusAwareness::UserPreferenceAppType::TOP_N, size, interestedApps, bundleNames);
+    APP_LOGI("GetUserPreferenceApp ret : %{public}d, bundleNames size : %{public}zu", ret, bundleNames.size());
+    return ret == ERR_OK;
+#else
+    APP_LOGI("user status awareness not exist");
+    return false;
+#endif
+}
+
+EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
+    std::shared_ptr<BundleDataMgr> dataMgr) const
+{
+    APP_LOGI("handle compile bundle : %{public}s", bundleName.c_str());
+    EventInfo eventInfo;
+    eventInfo.timeStamp = BundleUtil::GetCurrentTime();
+    eventInfo.bundleName = bundleName;
+    eventInfo.compileMode = compileMode;
+    eventInfo.compileResult = false;
+
+    if (OTACompileDeadline_) {
+        APP_LOGI("reach OTA deadline, stop compile bundle");
+        eventInfo.failureReason = FAILURE_REASON_TIME_OUT;
+        return eventInfo;
+    }
+
+    InnerBundleInfo info;
+    if (!dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("QueryInnerBundleInfo failed");
+        eventInfo.failureReason = FAILURE_REASON_BUNDLE_NOT_EXIST;
+        return eventInfo;
+    }
+    if (!info.GetIsNewVersion()) {
+        APP_LOGI("not stage model, no need to AOT");
+        eventInfo.failureReason = FAILURE_REASON_NOT_STAGE_MODEL;
+        return eventInfo;
+    }
+
+    int64_t beginTimeSeconds = BundleUtil::GetCurrentTime();
+    bool compileRet = true;
+
+    std::vector<std::string> moduleNames;
+    info.GetModuleNames(moduleNames);
+    for (const std::string &moduleName : moduleNames) {
+        if (OTACompileDeadline_) {
+            APP_LOGI("reach OTA deadline, stop compile module");
+            eventInfo.failureReason = FAILURE_REASON_TIME_OUT;
+            eventInfo.costTimeSeconds = BundleUtil::GetCurrentTime() - beginTimeSeconds;
+            return eventInfo;
+        }
+        ErrCode ret = HandleCompileWithSingleHap(info, moduleName, compileMode);
+        APP_LOGI("moduleName : %{public}s, ret : %{public}d", moduleName.c_str(), ret);
+        if (ret != ERR_OK) {
+            compileRet = false;
+        }
+    }
+
+    if (compileRet) {
+        eventInfo.compileResult = true;
+        eventInfo.failureReason.clear();
+    } else {
+        eventInfo.compileResult = false;
+        eventInfo.failureReason = FAILURE_REASON_COMPILE_FAILED;
+    }
+    eventInfo.costTimeSeconds = BundleUtil::GetCurrentTime() - beginTimeSeconds;
+    return eventInfo;
+}
+
+void AOTHandler::ReportSysEvent(const std::map<std::string, EventInfo> &sysEventMap) const
+{
+    auto task = [sysEventMap]() {
+        APP_LOGI("begin to report AOT sysEvent");
+        EventInfo summaryInfo;
+        summaryInfo.timeStamp = BundleUtil::GetCurrentTime();
+        for (const auto &item : sysEventMap) {
+            summaryInfo.totalBundleNames.emplace_back(item.first);
+            if (item.second.compileResult) {
+                summaryInfo.successCnt++;
+            }
+            summaryInfo.costTimeSeconds += item.second.costTimeSeconds;
+            EventReport::SendSystemEvent(BMSEventType::AOT_COMPILE_RECORD, item.second);
+        }
+        EventReport::SendSystemEvent(BMSEventType::AOT_COMPILE_SUMMARY, summaryInfo);
+        APP_LOGI("report AOT sysEvent done");
+    };
+    std::thread(task).detach();
 }
 
 void AOTHandler::HandleIdleWithSingleHap(
@@ -255,15 +492,15 @@ void AOTHandler::HandleIdleWithSingleHap(
         return;
     }
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
-    AOTInternal(aotArgs, info.GetVersionCode());
+    (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
-void AOTHandler::HandleCompileWithSingleHap(
+ErrCode AOTHandler::HandleCompileWithSingleHap(
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
 {
-    APP_LOGD("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
+    APP_LOGI("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
-    AOTInternal(aotArgs, info.GetVersionCode());
+    return AOTInternal(aotArgs, info.GetVersionCode());
 }
 
 bool AOTHandler::CheckDeviceState() const
@@ -294,10 +531,10 @@ void AOTHandler::HandleIdle() const
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;
     }
-    std::string compileMode = system::GetParameter(COMPILE_IDLE_PARA_KEY, Constants::COMPILE_PARTIAL);
-    APP_LOGI("%{public}s = %{public}s", COMPILE_IDLE_PARA_KEY, compileMode.c_str());
+    std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, Constants::COMPILE_PARTIAL);
+    APP_LOGI("%{public}s = %{public}s", IDLE_COMPILE_MODE, compileMode.c_str());
     if (compileMode == Constants::COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", COMPILE_IDLE_PARA_KEY);
+        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }
     if (!CheckDeviceState()) {
@@ -343,7 +580,7 @@ void AOTHandler::HandleCompile(const std::string &bundleName, const std::string 
         return;
     }
     if (compileMode == Constants::COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", COMPILE_IDLE_PARA_KEY);
+        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -372,7 +609,7 @@ void AOTHandler::HandleCompile(const std::string &bundleName, const std::string 
         info.GetModuleNames(moduleNames);
         std::for_each(moduleNames.cbegin(), moduleNames.cend(),
             [this, &info, &compileMode](const auto &moduleName) {
-            HandleCompileWithSingleHap(info, moduleName, compileMode);
+            (void)HandleCompileWithSingleHap(info, moduleName, compileMode);
         });
     });
     APP_LOGI("HandleCompile end");
