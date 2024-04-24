@@ -49,6 +49,7 @@ public:
     ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId);
     ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
     ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
+    ErrCode VerifyActivationLock(bool &res);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

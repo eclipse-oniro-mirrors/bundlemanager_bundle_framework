@@ -961,6 +961,14 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    // washing machine judge
+    for (const auto &infoIter: newInfos) {
+        if (!infoIter.second.IsSystemApp() && !VerifyActivationLock()) {
+            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+            break;
+        }
+    }
+    CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
     result = CheckInstallCondition(hapVerifyResults, newInfos);
@@ -4899,6 +4907,19 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
     APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
+}
+
+bool BaseBundleInstaller::VerifyActivationLock() const
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool pass = false;
+    ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
+    if ((res == ERR_OK) && !pass) {
+        APP_LOGE("machine be controlled, not allow to install app");
+        return false;
+    }
+    // otherwise, pass
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
