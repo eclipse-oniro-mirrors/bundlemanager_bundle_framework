@@ -1282,8 +1282,7 @@ static napi_value ParseStringArray(napi_env env, std::vector<std::string> &strin
     }
     // create result code
     napi_value result;
-    napi_status status;
-    status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
+    napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
     NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
     return result;
 }
@@ -1579,7 +1578,6 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 
 static napi_value ParseString(napi_env env, std::string &param, napi_value args)
 {
-    napi_status status;
     napi_valuetype valuetype;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "Wrong argument type. String expected.");
@@ -1587,7 +1585,7 @@ static napi_value ParseString(napi_env env, std::string &param, napi_value args)
     APP_LOGD("param=%{public}s.", param.c_str());
     // create result code
     napi_value result;
-    status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
+    napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
     NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
     return result;
 }
