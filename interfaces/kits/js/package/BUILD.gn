@@ -15,10 +15,6 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("package") {
-  include_dirs = [
-    "//third_party/node/src",
-    "//third_party/libuv/include",
-  ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -43,7 +39,10 @@ ohos_shared_library("package") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-
+  public_external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
+  ]
   relative_install_dir = "module"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

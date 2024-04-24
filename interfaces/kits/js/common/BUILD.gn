@@ -14,8 +14,13 @@
 import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
+config("bundle_napi_common_config") {
+  include_dirs = [
+    "./",
+    "${kits_path}/js/bundlemgr",
+  ]
+}
 ohos_shared_library("bundle_napi_common") {
-  include_dirs = [ "//third_party/node/src" ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -33,6 +38,8 @@ ohos_shared_library("bundle_napi_common") {
     "${core_path}:appexecfwk_core",
   ]
 
+  public_configs = [ ":bundle_napi_common_config" ]
+
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
@@ -42,6 +49,8 @@ ohos_shared_library("bundle_napi_common") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  public_external_deps = [ "node:node_header_notice" ]
 
   subsystem_name = "bundlemanager"
   innerapi_tags = [ "platformsdk" ]

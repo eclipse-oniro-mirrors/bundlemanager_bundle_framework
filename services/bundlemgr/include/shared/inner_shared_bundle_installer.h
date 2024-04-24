@@ -73,7 +73,7 @@ public:
      */
     bool CheckDependency(const Dependency &dependency) const;
 
-    void setCheckResultMsg(const std::string checkResultMsg);
+    void SetCheckResultMsg(const std::string checkResultMsg) const;
 
     /**
      * @brief Send bundle system event.

@@ -888,6 +888,9 @@ public:
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
+        int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

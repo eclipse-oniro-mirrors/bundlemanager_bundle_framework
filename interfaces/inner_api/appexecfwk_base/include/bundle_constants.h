@@ -272,6 +272,7 @@ constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
+constexpr int64_t INHERIT_CROWDTEST_DEADLINE = -2;
 
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";

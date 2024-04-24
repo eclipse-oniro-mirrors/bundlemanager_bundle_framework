@@ -1628,7 +1628,6 @@ napi_value InstallCloneApp(napi_env env, napi_callback_info info)
         return nullptr;
     }
     size_t argc = args.GetMaxArgc();
-    APP_LOGD("args.GetMaxArgc() = %{public}d.", argc);
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);

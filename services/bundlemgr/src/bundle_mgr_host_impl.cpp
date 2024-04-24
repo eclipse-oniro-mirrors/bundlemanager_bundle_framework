@@ -56,6 +56,7 @@ namespace {
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
+constexpr const char* EMPTY_ABILITY_NAME = "";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -275,12 +276,13 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
         LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    bool ret = dataMgr->GetBundleNameForUid(uid, bundleName);
-    if (!ret) {
+    int32_t appIndex = 0;
+    auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
+    if (ret != ERR_OK) {
         LOG_E(BMS_TAG_QUERY_BUNDLE, "GetBundleNameForUid failed, uid is %{public}d", uid);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ret;
     }
-    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
 }
 
 ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName,
@@ -2315,21 +2317,15 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
         APP_LOGE("DataMgr is nullptr");
         return Constants::INVALID_UID;
     }
-    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
     int32_t uid = Constants::INVALID_UID;
-    bool ret = dataMgr->GetBundleInfos(GET_BUNDLE_DEFAULT, bundleInfos, userId);
-    if (ret) {
-        for (auto bundleInfo : bundleInfos) {
-            if (bundleInfo.name == bundleName) {
-                uid = bundleInfo.uid;
-                break;
-            }
-        }
-        APP_LOGD("get bundle uid success");
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    if (ret == ERR_OK) {
+        uid = bundleInfo.uid;
+        APP_LOGD("get bundle uid success, uid is %{public}d", uid);
     } else {
-        APP_LOGE("can not get bundleInfo's uid");
+        APP_LOGE("can not get bundleInfo uid");
     }
-    APP_LOGD("uid is %{public}d", uid);
     return uid;
 }
 
@@ -3557,20 +3553,68 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfoByContinueType(const std::string &bun
         bundleName.c_str(), continueType.c_str(), userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_PERMISSION_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfoByContinueType");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_INTERNAL_ERROR, userId, continueType);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    ErrCode res = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    std::string abilityName;
+    if (res == ERR_OK) {
+        abilityName = abilityInfo.name;
+    }
+    EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, abilityName, res, userId, continueType);
+    return res;
+}
+
+ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
+    int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    LOG_D(BMS_TAG_QUERY_ABILITY,
+        "flags : %{public}d, userId : %{public}d, bundleName: %{public}s, abilityName: %{public}s",
+        flags, userId, bundleName.c_str(), abilityName.c_str());
+
+    if (bundleName.empty() || abilityName.empty()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "invalid params");
+        return ERR_APPEXECFWK_CLONE_QUERY_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

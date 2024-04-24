@@ -16,7 +16,6 @@ import("../../../../appexecfwk.gni")
 
 ohos_shared_library("bundleresourcemanager") {
   include_dirs = [
-    "//third_party/node/src",
     "${inner_api_path}/bundlemgr_resource/include",
     "${kits_path}/js/common",
   ]
@@ -39,6 +38,8 @@ ohos_shared_library("bundleresourcemanager") {
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
+
+  public_external_deps = [ "node:node_header_notice" ]
 
   defines = []
 

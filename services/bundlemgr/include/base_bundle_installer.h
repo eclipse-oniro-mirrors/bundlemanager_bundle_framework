@@ -173,9 +173,9 @@ protected:
 
     bool NotifyAllBundleStatus();
 
-    std::string getCheckResultMsg() const;
+    std::string GetCheckResultMsg() const;
 
-    void setCheckResultMsg(const std::string CheckResultMsg);
+    void SetCheckResultMsg(const std::string checkResultMsg) const;
 
 private:
     /**
@@ -661,6 +661,7 @@ private:
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    bool VerifyActivationLock() const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

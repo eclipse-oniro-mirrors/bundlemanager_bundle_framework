@@ -170,7 +170,9 @@ public:
     bool CheckSupportAppTypes(
         const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const;
 
-    std::string checkResultMsg = "";
+    std::string GetCheckResultMsg() const;
+
+    void SetCheckResultMsg(const std::string checkResultMsg);
 
 private:
 
@@ -238,6 +240,8 @@ private:
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    std::string checkResultMsg_ = "";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

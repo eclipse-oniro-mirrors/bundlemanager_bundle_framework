@@ -99,8 +99,10 @@ bool SharedBundleInstaller::CheckDependency(const InnerBundleInfo &innerBundleIn
         }
 
         APP_LOGE("dependency not found: %{public}s", GetJsonStrFromInfo(dependency).c_str());
-        std::string checkResultMsg = "dependency not found: %{public}s" + GetJsonStrFromInfo(dependency);
-        iter->second->setCheckResultMsg(checkResultMsg);
+        if (iter != innerInstallers_.end()) {
+            std::string checkResultMsg = "the dependent module: " + dependency.moduleName + " does not exist.";
+            iter->second->SetCheckResultMsg(checkResultMsg);
+        }
         return false;
     }
 

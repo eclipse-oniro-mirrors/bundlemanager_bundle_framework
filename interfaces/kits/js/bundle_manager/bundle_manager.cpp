@@ -125,9 +125,7 @@ const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
 void HandleCleanEnv(void *data)
 {
-    APP_LOGI("env change clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("env change clear bms cache locked");
     cache.clear();
 }
 
@@ -137,9 +135,7 @@ ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo 
 
 void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    APP_LOGI("clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("clear bms cache locked");
     cache.clear();
 }
 
@@ -3174,6 +3170,12 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ROUTER_MAP), &nGetBundleInfoWithRouterMap));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ROUTER_MAP",
         nGetBundleInfoWithRouterMap));
+
+    napi_value nGetBundleInfoWithCloneBundle;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE), &nGetBundleInfoWithCloneBundle));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_CLONE_BUNDLE",
+        nGetBundleInfoWithCloneBundle));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,

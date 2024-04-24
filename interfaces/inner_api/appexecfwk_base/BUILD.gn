@@ -23,7 +23,6 @@ config("appexecfwk_base_sdk_config") {
     "include/overlay",
     "include/quick_fix",
     "include/shared",
-    "//third_party/json/include",
   ]
 }
 
@@ -42,7 +41,6 @@ ohos_shared_library("appexecfwk_base") {
     "src/app_running_control_rule.cpp",
     "src/app_running_control_rule_result.cpp",
     "src/application_info.cpp",
-    "src/bundle_clone_info.cpp",
     "src/bundle_constants.cpp",
     "src/bundle_info.cpp",
     "src/bundle_pack_info.cpp",
@@ -104,6 +102,8 @@ ohos_shared_library("appexecfwk_base") {
     "hilog:libhilog",
     "ipc:ipc_single",
   ]
+
+  public_external_deps = [ "json:nlohmann_json_static" ]
 
   subsystem_name = "bundlemanager"
   innerapi_tags = [

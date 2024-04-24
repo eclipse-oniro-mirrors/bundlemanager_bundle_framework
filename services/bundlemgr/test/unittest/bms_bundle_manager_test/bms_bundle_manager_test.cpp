@@ -4739,7 +4739,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0100, Function | SmallTest |
     int32_t flags = 0;
     BundleInfo info;
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**

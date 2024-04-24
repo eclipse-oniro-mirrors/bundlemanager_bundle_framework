@@ -212,11 +212,6 @@ void InnerSharedBundleInstaller::RollBack()
     }
 }
 
-void InnerSharedBundleInstaller::setCheckResultMsg(const std::string resultMsg)
-{
-    bundleInstallChecker_->checkResultMsg = resultMsg;
-}
-
 bool InnerSharedBundleInstaller::CheckDependency(const Dependency &dependency) const
 {
     if (dependency.bundleName != bundleName_) {
@@ -743,6 +738,11 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
     return ERR_OK;
+}
+
+void InnerSharedBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) const
+{
+    bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

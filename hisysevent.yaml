@@ -175,3 +175,11 @@ BUNDLE_QUICK_FIX:
   APPLY_QUICK_FIX_FREQUENCY: {type: INT32, desc: apply quick fix frequency}
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hqf file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hqf file}
+
+QUERY_OF_CONTINUE_TYPE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: query abilityInfo by continuetype and bundleName}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  ABILITY_NAME: {type: STRING, desc: abilityName}
+  CONTINUE_TYPE: {type: STRING, desc: continueType}
+  ERROR_CODE: {type: INT32, desc: apply quick fix frequency}
+  USERID: {type: INT32, desc: userId of the bundle}

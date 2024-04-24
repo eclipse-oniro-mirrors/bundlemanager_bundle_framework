@@ -15,11 +15,7 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("innerbundlemanager") {
-  include_dirs = [
-    "//third_party/libuv/include",
-    "//third_party/node/src",
-    "${kits_path}/js/common",
-  ]
+  include_dirs = [ "${kits_path}/js/common" ]
 
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -40,7 +36,10 @@ ohos_shared_library("innerbundlemanager") {
     "hilog:libhilog",
     "napi:ace_napi",
   ]
-
+  public_external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
+  ]
   if (bundle_framework_launcher) {
     defines += [ "BUNDLE_FRAMEWORK_LAUNCHER" ]
     sources += [
