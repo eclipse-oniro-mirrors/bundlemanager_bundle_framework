@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,6 +64,7 @@ enum class InstalldInterfaceCode : uint32_t {
     CLEAN_BUNDLE_DATA_DIR_BY_NAME,
     CREATE_BUNDLE_DATA_DIR_WITH_VECTOR,
     GET_ALL_BUNDLE_STATS,
+    STOP_AOT,
 };
 
 } // namespace AppExecFwk

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,7 +44,9 @@ enum class BMSEventType {
     BUNDLE_CLEAN_CACHE,
     BMS_USER_EVENT,
     APPLY_QUICK_FIX,
-    QUERY_OF_CONTINUE_TYPE
+    QUERY_OF_CONTINUE_TYPE,
+    AOT_COMPILE_SUMMARY,
+    AOT_COMPILE_RECORD,
 };
 
 enum class BundleEventType {
@@ -122,6 +124,13 @@ struct EventInfo {
 
     //for query of continue type
     std::string continueType;
+    // AOT
+    std::vector<std::string> totalBundleNames;
+    uint32_t successCnt = 0;
+    std::string compileMode;
+    bool compileResult = false;
+    std::string failureReason;
+    int64_t costTimeSeconds = 0;
 
     void Reset()
     {
@@ -148,6 +157,12 @@ struct EventInfo {
         appDistributionType.clear();
         applyQuickFixFrequency = 0;
         continueType.clear();
+        totalBundleNames.clear();
+        successCnt = 0;
+        compileMode.clear();
+        compileResult = false;
+        failureReason.clear();
+        costTimeSeconds = 0;
     }
 };
 

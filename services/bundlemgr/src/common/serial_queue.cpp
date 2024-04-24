@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,7 +28,7 @@ constexpr uint32_t CONVERSION_FACTOR = 1000; // ms to us
 
 SerialQueue::SerialQueue(const std::string &queueName)
 {
-    APP_LOGD("create SerialQueue, queueName : %{public}s", queueName.c_str());
+    APP_LOGI("create SerialQueue, queueName : %{public}s", queueName.c_str());
     queue_ = std::make_shared<queue>(queueName.c_str());
 }
 
@@ -39,7 +39,7 @@ SerialQueue::~SerialQueue()
 
 void SerialQueue::ScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func)
 {
-    APP_LOGD("begin to ScheduleDelayTask, taskName : %{public}s", taskName.c_str());
+    APP_LOGI("begin to ScheduleDelayTask, taskName : %{public}s", taskName.c_str());
     if (ms > std::numeric_limits<uint64_t>::max() / CONVERSION_FACTOR) {
         APP_LOGE("invalid ms, ScheduleDelayTask failed");
         return;
@@ -51,12 +51,12 @@ void SerialQueue::ScheduleDelayTask(const std::string &taskName, uint64_t ms, st
         return;
     }
     taskMap_[taskName] = std::move(task_handle);
-    APP_LOGD("ScheduleDelayTask success");
+    APP_LOGI("ScheduleDelayTask success");
 }
 
 void SerialQueue::CancelDelayTask(const std::string &taskName)
 {
-    APP_LOGD("begin to CancelDelayTask, taskName : %{public}s", taskName.c_str());
+    APP_LOGI("begin to CancelDelayTask, taskName : %{public}s", taskName.c_str());
     std::unique_lock<std::shared_mutex> lock(mutex_);
     auto item = taskMap_.find(taskName);
     if (item == taskMap_.end()) {
@@ -70,7 +70,7 @@ void SerialQueue::CancelDelayTask(const std::string &taskName)
         }
     }
     taskMap_.erase(taskName);
-    APP_LOGD("CancelDelayTask success");
+    APP_LOGI("CancelDelayTask success");
 }
 }  // namespace AppExecFwk
-}  // namespace OHOS
+}  // namespace OHOS

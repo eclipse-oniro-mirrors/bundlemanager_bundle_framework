@@ -263,6 +263,11 @@ ohos_shared_library("libbms") {
     external_deps += aot_external_deps
   }
 
+  if (bundle_framework_user_status_awareness_enable) {
+    external_deps += user_status_external_deps
+    defines += [ "BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE" ]
+  }
+
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]

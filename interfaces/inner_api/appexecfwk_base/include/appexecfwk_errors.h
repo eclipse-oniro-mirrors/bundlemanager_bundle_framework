@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -221,6 +221,8 @@ enum {
     ERR_APPEXECFWK_PERMISSION_DENIED = 8519925,
     ERR_APPEXECFWK_INPUT_WRONG_TYPE_FILE = 8519926,
     ERR_APPEXECFWK_ENCODE_BASE64_FILE_FAILED = 8519927,
+    ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED = 8519928,
+    ERR_APPEXECFWK_AOT_ARGS_EMPTY = 8519929,
 
     ERR_APPEXECFWK_RECOVER_GET_BUNDLEPATH_ERROR = APPEXECFWK_BUNDLEMGR_ERR_OFFSET + 0x0201, // 8520193
     ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME = 8520194,

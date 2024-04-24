@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -64,6 +64,8 @@ const std::string EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const std::string EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
 const std::string EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
 const std::string EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
+const std::string AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
+const std::string AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -85,6 +87,14 @@ const std::string CREATE_START = "CreateUserStart";
 const std::string CREATE_END = "CreateUserEnd";
 const std::string REMOVE_START = "RemoveUserStart";
 const std::string REMOVE_END = "RemoveUserEnd";
+// AOT
+const std::string TOTAL_BUNDLE_NAMES = "totalBundleNames";
+const std::string TOTAL_SIZE = "totalSize";
+const std::string SUCCESS_SIZE = "successSize";
+const std::string COST_TIME_SECONDS = "costTimeSeconds";
+const std::string COMPILE_MODE = "compileMode";
+const std::string COMPILE_RESULT = "compileResult";
+const std::string FAILURE_REASON = "failureReason";
 
 const std::unordered_map<InstallScene, std::string> INSTALL_SCENE_STR_MAP = {
     { InstallScene::NORMAL, NORMAL_SCENE },
@@ -205,7 +215,15 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
         { BMSEventType::QUERY_OF_CONTINUE_TYPE,
             [](const EventInfo& eventInfo) {
                 InnerSendQueryOfContinueTypeEvent(eventInfo);
-            } }
+            } },
+        { BMSEventType::AOT_COMPILE_SUMMARY,
+            [](const EventInfo& eventInfo) {
+                InnerSendAOTSummaryEvent(eventInfo);
+            } },
+        { BMSEventType::AOT_COMPILE_RECORD,
+            [](const EventInfo& eventInfo) {
+                InnerSendAOTRecordEvent(eventInfo);
+            } },
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -436,6 +454,31 @@ void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventI
         EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_CONTINUE_TYPE, eventInfo.continueType);
+}
+
+void InnerEventReport::InnerSendAOTSummaryEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        AOT_COMPILE_SUMMARY,
+        HiSysEventType::BEHAVIOR,
+        TOTAL_BUNDLE_NAMES, eventInfo.totalBundleNames,
+        TOTAL_SIZE, eventInfo.totalBundleNames.size(),
+        SUCCESS_SIZE, eventInfo.successCnt,
+        COST_TIME_SECONDS, eventInfo.costTimeSeconds,
+        EVENT_PARAM_TIME, eventInfo.timeStamp);
+}
+
+void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
+{
+    InnerEventWrite(
+        AOT_COMPILE_RECORD,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        COMPILE_RESULT, eventInfo.compileResult,
+        FAILURE_REASON, eventInfo.failureReason,
+        COST_TIME_SECONDS, eventInfo.costTimeSeconds,
+        COMPILE_MODE, eventInfo.compileMode,
+        EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
 template<typename... Types>

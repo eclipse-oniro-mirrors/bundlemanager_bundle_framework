@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "aot/aot_executor.h"
 
 #include <cerrno>
+#include <csignal>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -30,6 +31,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
+#include "installd/installd_operator.h"
 #include <nlohmann/json.hpp>
 
 namespace OHOS {
@@ -180,11 +182,19 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     exit(-1);
 }
 
-void AOTExecutor::ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const
+void AOTExecutor::ExecuteInParentProcess(const AOTArgs &aotArgs, pid_t childPid, ErrCode &ret)
 {
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        InitState(aotArgs, childPid);
+    }
+
     int status;
-    waitpid(childPid, &status, 0);
-    if (WIFEXITED(status)) {
+    int waitRet = waitpid(childPid, &status, 0);
+    if (waitRet == -1) {
+        APP_LOGE("waitpid failed");
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else if (WIFEXITED(status)) {
         int exit_status = WEXITSTATUS(status);
         APP_LOGI("child process exited with status: %{public}d", exit_status);
         ret = exit_status == 0 ? ERR_OK : ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -192,19 +202,43 @@ void AOTExecutor::ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const
         int signal_number = WTERMSIG(status);
         APP_LOGW("child process terminated by signal: %{public}d", signal_number);
         ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else if (WIFSTOPPED(status)) {
+        int signal_number = WSTOPSIG(status);
+        APP_LOGW("child process was stopped by signal: %{public}d", signal_number);
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else if (WIFCONTINUED(status)) {
+        APP_LOGW("child process was resumed");
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else {
+        APP_LOGW("unknown");
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        ResetState();
     }
 }
 
-void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret) const
+void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
 {
+    APP_LOGI("begin to execute AOT");
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        if (state_.running) {
+            APP_LOGI("AOT is running, ignore");
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+            return;
+        }
+    }
+
     AOTArgs completeArgs;
     ret = PrepareArgs(aotArgs, completeArgs);
     if (ret != ERR_OK) {
         APP_LOGE("PrepareArgs failed");
         return;
     }
-    std::lock_guard<std::mutex> lock(mutex_);
-    APP_LOGD("begin to fork");
+    APP_LOGI("begin to fork");
     pid_t pid = fork();
     if (pid == -1) {
         APP_LOGE("fork process failed : %{public}s", strerror(errno));
@@ -212,8 +246,41 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret) const
     } else if (pid == 0) {
         ExecuteInChildProcess(completeArgs);
     } else {
-        ExecuteInParentProcess(pid, ret);
+        ExecuteInParentProcess(aotArgs, pid, ret);
     }
+}
+
+ErrCode AOTExecutor::StopAOT()
+{
+    APP_LOGI("begin to stop AOT");
+    std::lock_guard<std::mutex> lock(stateMutex_);
+    if (!state_.running) {
+        APP_LOGI("AOT not running, return directly");
+        return ERR_OK;
+    }
+    if (state_.childPid <= 0) {
+        APP_LOGE("invalid child pid");
+        return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
+    }
+    APP_LOGI("begin to kill child process : %{public}d", state_.childPid);
+    (void)kill(state_.childPid, SIGKILL);
+    (void)InstalldOperator::DeleteDir(state_.outputPath);
+    ResetState();
+    return ERR_OK;
+}
+
+void AOTExecutor::InitState(const AOTArgs &aotArgs, pid_t childPid)
+{
+    state_.running = true;
+    state_.childPid = childPid;
+    state_.outputPath = aotArgs.outputPath;
+}
+
+void AOTExecutor::ResetState()
+{
+    state_.running = false;
+    state_.childPid = -1;
+    state_.outputPath.clear();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
