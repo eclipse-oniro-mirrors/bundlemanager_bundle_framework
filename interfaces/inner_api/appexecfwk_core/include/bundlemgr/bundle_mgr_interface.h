@@ -1319,6 +1319,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     /**
      * @brief Check whether the link can be opened.
      * @param link link Indicates the link to be opened.

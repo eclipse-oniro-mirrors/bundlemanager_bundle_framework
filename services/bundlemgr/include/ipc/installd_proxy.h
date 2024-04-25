@@ -189,6 +189,9 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
+        const std::string &destinationPath) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

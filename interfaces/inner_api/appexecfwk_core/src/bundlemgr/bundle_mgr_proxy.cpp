@@ -3997,6 +3997,33 @@ ErrCode BundleMgrProxy::CreateBundleDataDir(int32_t userId)
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("MigrateData Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(sourcePaths)) {
+        APP_LOGE("fail to MigrateData due to write sourcePaths fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(destinationPath)) {
+        APP_LOGE("fail to MigrateData due to write destinationPath fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::MIGRATE_DATA, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::GetOdid(std::string &odid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

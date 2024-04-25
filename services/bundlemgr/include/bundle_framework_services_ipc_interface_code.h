@@ -65,6 +65,7 @@ enum class InstalldInterfaceCode : uint32_t {
     CREATE_BUNDLE_DATA_DIR_WITH_VECTOR,
     GET_ALL_BUNDLE_STATS,
     STOP_AOT,
+    MIGRATE_DATA,
 };
 
 } // namespace AppExecFwk
