@@ -42,6 +42,7 @@ constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr int32_t PARAM3 = 3;
 constexpr int32_t PARAM2 = 2;
 const char* WRONG_PARAM = "wrong param type";
+const char* SRC_FILE = "inFile";
 const std::string GET_ORIGINAL_SIZE = "GetOriginalSize";
 }
 
@@ -777,23 +778,13 @@ napi_value GetOriginalSize(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGI("parameters init failed");
-        asyncCallbackInfo->err = ERROR_PARAM_CHECK_ERROR;
-        auto promise = CommonFunc::AsyncCallNativeMethod<OriginalSizeCallbackInfo>(env,
-            asyncCallbackInfo, GET_ORIGINAL_SIZE, GetOriginalSizeExec, GetOriginalSizeComplete);
-        callbackPtr.release();
-        return promise;
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
     }
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->srcFile)) {
         APP_LOGI("srcFile parse failed");
-        asyncCallbackInfo->err = ERROR_PARAM_CHECK_ERROR;
-    }
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[ARGS_POS_ONE], &valueType);
-        if (valueType == napi_function) {
-            NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
-            NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-        }
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SRC_FILE, TYPE_STRING);
+        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<OriginalSizeCallbackInfo>(env,
         asyncCallbackInfo, GET_ORIGINAL_SIZE, GetOriginalSizeExec, GetOriginalSizeComplete);
