@@ -364,6 +364,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryCloneAbilityInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO),
         &BundleMgrHost::HandleGetCloneBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COPY_AP),
+        &BundleMgrHost::HandleCopyAp);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1517,6 +1519,25 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
     ErrCode ret = CompileReset(bundleName, isAllBundle);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCopyAp(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    bool isAllBundle = data.ReadBool();
+    std::vector<std::string> results;
+    ErrCode ret = CopyAp(bundleName, isAllBundle, results);
+    APP_LOGI("ret is %{public}d", ret);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleCopyAp write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteStringVector(results)) {
+        APP_LOGE("write HandleCopyAp results failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

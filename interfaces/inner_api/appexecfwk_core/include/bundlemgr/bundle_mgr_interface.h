@@ -787,6 +787,17 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief copy ap file to /data/local/pgo
+     * @param bundleName Indicates the bundle name if needed.
+     * @param isAllBundle Does it represent all bundlenames.
+     * @param results Indicates the copy ap information result.
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    virtual ErrCode CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Checks whether a specified application is enabled.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Indicates the application status is enabled.
