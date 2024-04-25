@@ -40,6 +40,8 @@ const std::string BUNDLE_CLEAN_CACHE = "BUNDLE_CLEAN_CACHE";
 const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
 const std::string BUNDLE_QUICK_FIX = "BUNDLE_QUICK_FIX";
 const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
+const std::string CPU_SCENE_ENTRY = "CPU_SCENE_ENTRY";
+const std::string ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 
 // event params
 const std::string EVENT_PARAM_USERID = "USERID";
@@ -66,6 +68,9 @@ const std::string EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQU
 const std::string EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
 const std::string AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
 const std::string AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
+const std::string EVENT_PARAM_PACKAGE_NAME = "PACKAGE_NAME";
+const std::string EVENT_PARAM_SCENE_ID = "SCENE_ID";
+const std::string EVENT_PARAM_HAPPEN_TIME = "HAPPEN_TIME";
 
 const std::string FREE_INSTALL_TYPE = "FreeInstall";
 const std::string PRE_BUNDLE_INSTALL_TYPE = "PreBundleInstall";
@@ -224,6 +229,10 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendAOTRecordEvent(eventInfo);
             } },
+        { BMSEventType::CPU_SCENE_ENTRY,
+            [](const EventInfo& eventInfo) {
+                InnerSendCpuSceneEvent(eventInfo);
+            } }
     };
 
 void InnerEventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
@@ -479,6 +488,17 @@ void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
         COST_TIME_SECONDS, eventInfo.costTimeSeconds,
         COMPILE_MODE, eventInfo.compileMode,
         EVENT_PARAM_TIME, eventInfo.timeStamp);
+}
+
+void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
+{
+    int32_t id = 1 << 1; // second scene
+    InnerEventWrite(
+        CPU_SCENE_ENTRY,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PACKAGE_NAME, ACCESSTOKEN_PROCESS_NAME,
+        EVENT_PARAM_SCENE_ID, std::to_string(id).c_str(),
+        EVENT_PARAM_HAPPEN_TIME, eventInfo.timeStamp);
 }
 
 template<typename... Types>

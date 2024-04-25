@@ -47,6 +47,7 @@ enum class BMSEventType {
     QUERY_OF_CONTINUE_TYPE,
     AOT_COMPILE_SUMMARY,
     AOT_COMPILE_RECORD,
+    CPU_SCENE_ENTRY
 };
 
 enum class BundleEventType {
