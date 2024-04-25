@@ -168,6 +168,7 @@ constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INS
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
 constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
+constexpr const char* PERMISSION_MIGRATE_DATA = "ohos.permission.MIGRATE_DATA";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
@@ -243,6 +244,7 @@ const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
+constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M

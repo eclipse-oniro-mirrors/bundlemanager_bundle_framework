@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,11 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
 }
 
 ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::StopAOT()
 {
     return 0;
 }
@@ -240,6 +245,18 @@ ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32
 
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 {
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

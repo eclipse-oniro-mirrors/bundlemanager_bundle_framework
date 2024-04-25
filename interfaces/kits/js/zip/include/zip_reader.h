@@ -200,7 +200,7 @@ public:
     explicit FilePathWriterDelegate(const FilePath &outputFilePath);
     ~FilePathWriterDelegate() override;
 
-    // WriterDelegate methods:
+    // WriterDelegate methods.
     // Creates the output file and any necessary intermediate directories.
     bool PrepareOutput() override;
 

@@ -22,6 +22,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "preinstalled_application_info.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -168,6 +169,18 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.AddBundlePath(item.first);
     }
     preInstallBundleInfo.SetRemovable(false);
+
+    for (const auto &innerBundleInfo : newInfos) {
+        auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+        preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+        preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+        preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+        if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            break;
+        }
+    }
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
         APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
     }

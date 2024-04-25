@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -107,10 +107,16 @@ public:
     BMS_DEFINE_PROPERTY(BundleName, bundleName_, std::string);
     BMS_DEFINE_PROPERTY(VersionCode, versionCode_, uint32_t);
     BMS_DEFINE_PROPERTY_GET(BundlePaths, bundlePaths_, std::vector<std::string>);
+    BMS_DEFINE_PROPERTY(ModuleName, moduleName_, std::string);
+    BMS_DEFINE_PROPERTY(LabelId, labelId_, int32_t);
+    BMS_DEFINE_PROPERTY(IconId, iconId_, int32_t);
 private:
     std::string bundleName_;
+    std::string moduleName_;
     int64_t hapTotalSize_ = 0;
     uint32_t versionCode_;
+    int32_t labelId_ = 0;
+    int32_t iconId_ = 0;
     std::vector<std::string> bundlePaths_;
     bool removable_ = true;
     bool isUninstalled_ = false;

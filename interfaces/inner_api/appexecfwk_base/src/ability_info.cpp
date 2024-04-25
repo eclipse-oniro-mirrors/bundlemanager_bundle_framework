@@ -302,6 +302,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         continueType.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     appIndex = parcel.ReadInt32();
+    linkType = static_cast<LinkType>(parcel.ReadInt32());
 
     int32_t skillsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
@@ -478,6 +479,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(continueTypeItem));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(linkType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
     for (auto &skill : skills) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);

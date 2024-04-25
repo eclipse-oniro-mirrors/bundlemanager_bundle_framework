@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "inner_bundle_clone_info.h"
 #include "inner_bundle_user_info.h"
 #include "inner_common_info.h"
+#include "preinstalled_application_info.h"
 #include "property.h"
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"

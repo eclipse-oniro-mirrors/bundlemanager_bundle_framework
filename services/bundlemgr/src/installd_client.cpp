@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -62,6 +62,11 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
 ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
 {
     return CallService(&IInstalld::ExecuteAOT, aotArgs);
+}
+
+ErrCode InstalldClient::StopAOT()
+{
+    return CallService(&IInstalld::StopAOT);
 }
 
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
@@ -467,6 +472,20 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
+}
+
+ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        APP_LOGE("sourcePaths param is invalid");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destinationPath param is invalid");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+    return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

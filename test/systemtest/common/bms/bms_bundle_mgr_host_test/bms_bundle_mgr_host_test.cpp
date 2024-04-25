@@ -1890,6 +1890,21 @@ HWTEST_F(BmsBundleMgrHostTest, HandleCreateBundleDataDir_0100, Function | Medium
 }
 
 /**
+ * @tc.number: HandleGetAllPreinstalledApplicationInfos
+ * @tc.name: test the HandleGetAllPreinstalledApplicationInfos
+ * @tc.desc: 1. system running normally
+ *           2. test HandleGetAllPreinstalledApplicationInfos
+ */
+HWTEST_F(BmsBundleMgrHostTest, HandleGetAllPreinstalledApplicationInfos_0100, Function | MediumTest | Level1)
+{
+    BundleMgrHost bundleMgrHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = bundleMgrHost.HandleCreateBundleDataDir(data, reply);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: HandleCanOpenLink
  * @tc.name: test the HandleCanOpenLink
  * @tc.desc: 1. system running normally

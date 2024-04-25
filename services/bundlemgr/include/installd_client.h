@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,6 +110,9 @@ public:
     ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);
 
+    ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
+        const std::string &destinationPath);
+
     /**
      * @brief Reset the installd proxy object when installd service died.
      * @return
@@ -173,6 +176,8 @@ public:
         std::vector<std::string> &fileNames);
 
     ErrCode ExecuteAOT(const AOTArgs &aotArgs);
+
+    ErrCode StopAOT();
 
     ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 

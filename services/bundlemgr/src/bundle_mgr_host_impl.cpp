@@ -3379,6 +3379,35 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
     return dataMgr->CreateBundleDataDir(userId);
 }
 
+ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    APP_LOGD("MigrateData start");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MIGRATE_DATA)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (sourcePaths.empty()) {
+        APP_LOGE("source paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destination paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+
+    auto ret = InstalldClient::GetInstance()->MigrateData(sourcePaths, destinationPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("migrate data filed, errcode:%{public}d", ret);
+    }
+    return ret;
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -3531,6 +3560,34 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetOdid(odid);
+}
+
+ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo: preInstallBundleInfos) {
+        PreinstalledApplicationInfo preinstalledApplicationInfo;
+        preinstalledApplicationInfo.bundleName = preInstallBundleInfo.GetBundleName();
+        preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
+        preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
+        preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
+        preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
+    }
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::GetAllBundleInfoByDeveloperId(const std::string &developerId,

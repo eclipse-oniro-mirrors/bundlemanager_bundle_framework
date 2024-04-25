@@ -68,9 +68,8 @@ NapiValue NapiAsyncWorkPromise::Schedule(string procedureName, NContextCBExec cb
     ctx_->cbExec_ = move(cbExec);
     ctx_->cbComplete_ = move(cbComplete);
 
-    napi_status status;
     napi_value result = nullptr;
-    status = napi_create_promise(env_, &ctx_->deferred_, &result);
+    napi_status status = napi_create_promise(env_, &ctx_->deferred_, &result);
     if (status != napi_ok) {
         APP_LOGE("INNER BUG. Cannot create promise for %{public}d", status);
         return NapiValue();

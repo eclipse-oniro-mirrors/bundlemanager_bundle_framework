@@ -28,6 +28,7 @@
 #include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
 #include "bundle_install_checker.h"
+#include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
@@ -48,6 +49,7 @@
 #include "installd_client.h"
 #include "parameter.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
@@ -298,6 +300,7 @@ void BMSEventHandler::BundleBootStartEvent()
 #endif
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     PerfProfile::GetInstance().Dump();
 }
@@ -1070,6 +1073,7 @@ void BMSEventHandler::ProcessRebootBundle()
 #endif
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
+    ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
 }
 
@@ -1209,6 +1213,57 @@ void BMSEventHandler::InnerProcessCheckAppDataDir()
             userId, bundleInfos, Constants::DIR_EL3);
         UpdateAppDataMgr::ProcessUpdateAppDataDir(
             userId, bundleInfos, Constants::DIR_EL4);
+    }
+}
+
+void BMSEventHandler::ProcessCheckPreinstallData()
+{
+    bool checkPreinstallData = false;
+    CheckOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA, checkPreinstallData);
+    if (checkPreinstallData) {
+        APP_LOGI("Not need to check preinstall app data due to has checked.");
+        return;
+    }
+    APP_LOGI("Need to check preinstall data.");
+    InnerProcessCheckPreinstallData();
+    UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
+}
+
+void BMSEventHandler::InnerProcessCheckPreinstallData()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        BundleInfo bundleInfo;
+        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
+            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            preInstallBundleInfo.SetIconId(bundleInfo.applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetLabelId(bundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetModuleName(bundleInfo.applicationInfo.labelResource.moduleName);
+            dataMgr->SavePreInstallBundleInfo(bundleInfo.name, preInstallBundleInfo);
+            continue;
+        }
+        BundleMgrHostImpl impl;
+        BundleInfo resultBundleInfo;
+        auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
+        for (auto preinstalledAppPath: preinstalledAppPaths) {
+            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+                APP_LOGE("Get bundle archive info fail.");
+                break;
+            }
+            preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(resultBundleInfo.applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(resultBundleInfo.applicationInfo.labelResource.moduleName);
+            if (!bundleInfo.hapModuleInfos.empty() &&
+                resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                break;
+            }
+        }
+        dataMgr->SavePreInstallBundleInfo(resultBundleInfo.name, preInstallBundleInfo);
     }
 }
 
@@ -2515,6 +2570,9 @@ void BMSEventHandler::HandleSceneBoard() const
     dataMgr->SetApplicationEnabled(Constants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
+        if (userId == 0) {
+            return;
+        }
         dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
         dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });

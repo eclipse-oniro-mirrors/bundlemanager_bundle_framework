@@ -21,6 +21,7 @@
 
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
+#include "bundle_mgr_host_impl.h"
 #include "pre_scan_info.h"
 
 namespace OHOS {
@@ -41,6 +42,7 @@ enum OTAFlag {
     CHECK_LOG_DIR = 0x00000010,
     CHECK_FILE_MANAGER_DIR = 0x00000100,
     CHECK_SHADER_CAHCE_DIR = 0x00000200,
+    CHECK_PREINSTALL_DATA = 0x00000400,
 };
 
 enum class ScanResultCode {
@@ -492,6 +494,8 @@ private:
     void InnerProcessCheckAppLogDir();
     void ProcessCheckAppFileManagerDir();
     void InnerProcessCheckAppFileManagerDir();
+    void ProcessCheckPreinstallData();
+    void InnerProcessCheckPreinstallData();
     void ProcessCheckShaderCacheDir();
     void InnerProcessCheckShaderCacheDir();
 

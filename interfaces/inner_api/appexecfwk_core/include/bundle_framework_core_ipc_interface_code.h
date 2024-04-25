@@ -168,6 +168,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     SWITCH_UNINSTALL_STATE,
     QUERY_ABILITY_INFO_BY_CONTINUE_TYPE,
     GET_CLONE_ABILITY_INFO,
+    MIGRATE_DATA,
+    GET_PREINSTALLED_APPLICATION_INFO,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

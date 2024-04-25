@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,6 +54,8 @@ public:
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
 
     virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs) override;
+
+    virtual ErrCode StopAOT() override;
     /**
      * @brief Rename the module directory from temporaily path to the real path through a proxy object.
      * @param oldPath Indicates the old path name.
@@ -186,6 +188,9 @@ public:
         const unsigned char *profileBlock) override;
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
+
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
+        const std::string &destinationPath) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

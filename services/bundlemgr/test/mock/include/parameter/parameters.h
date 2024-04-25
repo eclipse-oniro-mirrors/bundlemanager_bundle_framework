@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,17 +20,16 @@
 
 namespace OHOS {
 namespace system {
+std::string GetDeviceType();
+
 bool GetBoolParameter(const std::string& key, bool def);
 
 template<typename T>
-T GetIntParameter(const std::string& key, T def)
-{
-    return def;
-}
+T GetIntParameter(const std::string& key, T def);
 
 std::string GetParameter(const std::string& key, const std::string& def);
 
-std::string GetDeviceType();
+bool SetParameter(const std::string& key, const std::string& val);
 } // namespace system
 } // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H

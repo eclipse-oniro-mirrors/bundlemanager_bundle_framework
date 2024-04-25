@@ -84,7 +84,6 @@ static bool ParseBundleStatusCallback(napi_env env,
     OHOS::sptr<BundleStatusCallback>& bundleStatusCallback, napi_value args)
 {
     APP_LOGD("parse bundleStatusCallback begin");
-    napi_status status;
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
@@ -95,7 +94,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     // parse added callback
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
-    status = napi_get_named_property(env, args, "add", &addValue);
+    napi_status status = napi_get_named_property(env, args, "add", &addValue);
     NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {

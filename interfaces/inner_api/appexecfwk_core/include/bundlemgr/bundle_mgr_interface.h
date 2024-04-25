@@ -41,6 +41,7 @@
 #include "form_info.h"
 #include "hap_module_info.h"
 #include "permission_define.h"
+#include "preinstalled_application_info.h"
 #include "recoverable_application_info.h"
 #include "shared/base_shared_bundle_info.h"
 #include "shared/shared_bundle_info.h"
@@ -1354,6 +1355,22 @@ public:
     }
 
     virtual ErrCode CreateBundleDataDir(int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    /**
+     * @brief Get preinstalled application infos.
+     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

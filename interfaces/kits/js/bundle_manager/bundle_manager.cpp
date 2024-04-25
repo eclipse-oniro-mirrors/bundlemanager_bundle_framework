@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -59,6 +59,8 @@ constexpr const char* LINK = "link";
 constexpr const char* DEVELOPER_ID = "developerId";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
+constexpr const char* ICON_ID = "iconId";
+constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -93,6 +95,7 @@ const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 const std::string CAN_OPEN_LINK = "CanOpenLink";
+const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicationInfos";
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
@@ -3989,6 +3992,11 @@ void CreateOrientationRelatedToSensor(napi_env env, napi_value value)
             &nAutoRotationUnspecified));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "AUTO_ROTATION_UNSPECIFIED", nAutoRotationUnspecified));
+    napi_value nFollowDesktop;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(DisplayOrientation::FOLLOW_DESKTOP), &nFollowDesktop));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "FOLLOW_DESKTOP", nFollowDesktop));
 }
 
 void CreateLaunchTypeObject(napi_env env, napi_value value)
@@ -4554,6 +4562,115 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
     APP_LOGD("call CanOpenLink done.");
     return nRet;
+}
+
+void ConvertPreinstalledApplicationInfo(napi_env env, const PreinstalledApplicationInfo &preinstalledApplicationInfo,
+    napi_value objPreinstalledApplicationInfo)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, preinstalledApplicationInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, BUNDLE_NAME, nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, preinstalledApplicationInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objPreinstalledApplicationInfo, MODULE_NAME, nModuleName));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, LABEL_ID, nLabelId));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, preinstalledApplicationInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objPreinstalledApplicationInfo, ICON_ID, nIconId));
+}
+
+
+static void ProcessPreinstalledApplicationInfos(
+    napi_env env, napi_value result, const std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    if (preinstalledApplicationInfos.size() == 0) {
+        APP_LOGD("PreinstalledApplicationInfos is null.");
+        return;
+    }
+    size_t index = 0;
+    napi_value objPreinstalledApplicationInfo;
+    for (const auto &item : preinstalledApplicationInfos) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objPreinstalledApplicationInfo));
+        ConvertPreinstalledApplicationInfo(env, item, objPreinstalledApplicationInfo);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index, objPreinstalledApplicationInfo));
+        index++;
+    }
+}
+
+void GetAllPreinstalledApplicationInfosComplete(napi_env env, napi_status status, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null.");
+        return;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        ProcessPreinstalledApplicationInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->preinstalledApplicationInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_PREINSTALLED_APP_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<PreinstalledApplicationInfosCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+static ErrCode InnerGetAllPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("IBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetAllPreinstalledApplicationInfosExec(napi_env env, void *data)
+{
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null.");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetAllPreinstalledApplicationInfos(asyncCallbackInfo->preinstalledApplicationInfos);
+}
+
+napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) PreinstalledApplicationInfosCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("AsyncCallbackInfo is null.");
+        return nullptr;
+    }
+    std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
+        APP_LOGE("Param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<PreinstalledApplicationInfosCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_PREINSTALLED_APP_INFOS, GetAllPreinstalledApplicationInfosExec,
+        GetAllPreinstalledApplicationInfosComplete);
+    callbackPtr.release();
+    return promise;
 }
 
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info)

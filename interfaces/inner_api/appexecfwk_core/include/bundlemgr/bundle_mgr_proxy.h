@@ -25,6 +25,7 @@
 #include "clean_cache_callback_interface.h"
 #include "element_name.h"
 #include "iremote_proxy.h"
+#include "preinstalled_application_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -930,6 +931,9 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
+    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
+        const std::string &destinationPath) override;
+
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.
@@ -968,6 +972,14 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
+
+    /**
+     * @brief Get preinstalled application infos.
+     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
 
     /**
      * @brief Query the AbilityInfo by continueType.

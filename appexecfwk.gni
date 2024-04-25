@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -40,6 +40,7 @@ extension_path =
 
 declare_args() {
   bundle_framework_power_mgr_enable = true
+  bundle_framework_user_status_awareness_enable = true
   bundle_framework_graphics = true
   bundle_framework_free_install = true
   bundle_framework_default_app = true
@@ -123,6 +124,11 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
+      !defined(global_parts_info.msdp_user_status_awareness)) {
+    bundle_framework_user_status_awareness_enable = false
+  }
+
+  if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_hisysevent)) {
     hisysevent_enable = false
   }
@@ -179,6 +185,8 @@ declare_args() {
 
 print("bundle_framework_power_mgr_enable = " +
       "$bundle_framework_power_mgr_enable")
+print("bundle_framework_user_status_awareness_enable = " +
+      "$bundle_framework_user_status_awareness_enable")
 print("bundle_framework_graphics = " + "$bundle_framework_graphics")
 print("bundle_framework_free_install = " + "$bundle_framework_free_install")
 print("bundle_framework_default_app = " + "$bundle_framework_default_app")

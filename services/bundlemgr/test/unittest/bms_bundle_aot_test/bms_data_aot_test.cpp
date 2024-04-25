@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -29,6 +29,7 @@
 #include "bundle_mgr_service.h"
 #include "json_constants.h"
 #include "json_serializer.h"
+#include "parameters.h"
 #include "parcel.h"
 
 using namespace testing::ext;
@@ -50,6 +51,12 @@ const int32_t USERID_TWO = -1;
 constexpr uint32_t VERSION_CODE = 3;
 constexpr uint32_t OFFSET = 1001;
 constexpr uint32_t LENGTH = 2002;
+constexpr uint32_t SLEEP_INTERVAL_MILLI_SECONDS = 100;
+constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
+
+constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
+constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
+constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -264,6 +271,74 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0800, Function | SmallTest | Level0)
 
     AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTExecutor_0900
+ * @tc.name: test StopAOT
+ * @tc.desc: 1. ResetState
+ *           2. call StopAOT
+ *           3. return ERR_OK
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_0900, Function | SmallTest | Level0)
+{
+    AOTExecutor::GetInstance().ResetState();
+    ErrCode ret = AOTExecutor::GetInstance().StopAOT();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTExecutor_1000
+ * @tc.name: test StopAOT
+ * @tc.desc: 1. InitState with child pid -1
+ *           2. call StopAOT
+ *           3. return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    AOTExecutor::GetInstance().InitState(aotArgs, -1);
+    ErrCode ret = AOTExecutor::GetInstance().StopAOT();
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED);
+    AOTExecutor::GetInstance().ResetState();
+}
+
+/**
+ * @tc.number: AOTExecutor_1100
+ * @tc.name: test StopAOT
+ * @tc.desc: 1. InitState with child pid VIRTUAL_CHILD_PID
+ *           2. call StopAOT
+ *           3. return ERR_OK
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    AOTExecutor::GetInstance().InitState(aotArgs, VIRTUAL_CHILD_PID);
+    ErrCode ret = AOTExecutor::GetInstance().StopAOT();
+    EXPECT_EQ(ret, ERR_OK);
+    AOTExecutor::GetInstance().ResetState();
+}
+
+/**
+ * @tc.number: AOTExecutor_1200
+ * @tc.name: test InitState and ResetState
+ * @tc.desc: 1. call InitState, expect get set value
+ *           1. call ResetState, expect get default value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    aotArgs.outputPath = OUT_PUT_PATH;
+
+    AOTExecutor::GetInstance().InitState(aotArgs, VIRTUAL_CHILD_PID);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.running, true);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, OUT_PUT_PATH);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.childPid, VIRTUAL_CHILD_PID);
+
+    AOTExecutor::GetInstance().ResetState();
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.running, false);
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, "");
+    EXPECT_EQ(AOTExecutor::GetInstance().state_.childPid, -1);
 }
 
 /**
@@ -507,7 +582,27 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_1100
+ * @tc.number: AOTHandler_1200
+ * @tc.name: test AOTHandler
+ * @tc.desc: bundle not exist, return std::nullopt
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
+{
+    std::string bundleName = "";
+    ClearDataMgr();
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_NONE, true);
+    EXPECT_EQ(bundleName, "");
+    ResetDataMgr();
+
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true);
+    EXPECT_EQ(bundleName, "");
+
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false);
+    EXPECT_EQ(bundleName, "");
+}
+
+/**
+ * @tc.number: AOTHandler_1300
  * @tc.name: test AOTHandler
  * @tc.desc: bundle not exist, return std::nullopt
  */
@@ -527,23 +622,47 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1300, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: AOTHandler_1100
- * @tc.name: test AOTHandler
- * @tc.desc: bundle not exist, return std::nullopt
+ * @tc.number: AOTHandler_1400
+ * @tc.name: test IsOTACompileSwitchOn
+ * @tc.desc: expect return set val
  */
-HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1400, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
-    ClearDataMgr();
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_NONE, true);
-    EXPECT_EQ(bundleName, "");
-    ResetDataMgr();
+    system::SetParameter(OTA_COMPILE_SWITCH, "on");
+    bool ret = AOTHandler::GetInstance().IsOTACompileSwitchOn();
+    EXPECT_EQ(ret, true);
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true);
-    EXPECT_EQ(bundleName, "");
+    system::SetParameter(OTA_COMPILE_SWITCH, "off");
+    ret = AOTHandler::GetInstance().IsOTACompileSwitchOn();
+    EXPECT_EQ(ret, false);
+}
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false);
-    EXPECT_EQ(bundleName, "");
+/**
+ * @tc.number: AOTHandler_1500
+ * @tc.name: test BeforeOTACompile
+ * @tc.desc: 1.set time to 10, expect OTACompileDeadline_ = true
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1500, Function | SmallTest | Level0)
+{
+    std::string compileTimeSeconds = "10";
+    system::SetParameter(OTA_COMPILE_TIME, compileTimeSeconds);
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+    AOTHandler::GetInstance().BeforeOTACompile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(SLEEP_INTERVAL_MILLI_SECONDS));
+    EXPECT_EQ(AOTHandler::GetInstance().OTACompileDeadline_, true);
+}
+
+/**
+ * @tc.number: AOTHandler_1600
+ * @tc.name: test GetOTACompileList
+ * @tc.desc: 1.expect return false;
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1600, Function | SmallTest | Level0)
+{
+    system::SetParameter(UPDATE_TYPE, "");
+    std::vector<std::string> bundleNames;
+    bool ret = AOTHandler::GetInstance().GetOTACompileList(bundleNames);
+    EXPECT_EQ(ret, false);
 }
 
 /**

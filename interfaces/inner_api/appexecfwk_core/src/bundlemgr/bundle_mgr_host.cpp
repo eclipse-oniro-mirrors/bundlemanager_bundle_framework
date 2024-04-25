@@ -27,6 +27,7 @@
 #include "datetime_ex.h"
 #include "ipc_types.h"
 #include "json_util.h"
+#include "preinstalled_application_info.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -35,6 +36,7 @@ namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
+const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -346,6 +348,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCanOpenLink);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
         &BundleMgrHost::HandleGetOdid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO),
+        &BundleMgrHost::HandleGetAllPreinstalledApplicationInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER),
         &BundleMgrHost::HandleGetExtendResourceManager);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID),
@@ -358,6 +362,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO),
         &BundleMgrHost::HandleQueryCloneAbilityInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::MIGRATE_DATA),
+        &BundleMgrHost::HandleMigrateData);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3153,6 +3159,24 @@ ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessagePar
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("HandleMigrateData called");
+    std::vector<std::string> sourcePaths;
+    if (!data.ReadStringVector(&sourcePaths)) {
+        APP_LOGE("fail to HandleMigrateData from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::string destinationPath = data.ReadString();
+    ErrCode ret = MigrateData(sourcePaths, destinationPath);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 bool BundleMgrHost::WriteParcelableIntoAshmem(
     T &parcelable, const char *ashmemName, MessageParcel &reply)
@@ -3321,6 +3345,36 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     APP_LOGD("odid is %{private}s", odid.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called.");
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    int32_t vectorSize = preinstalledApplicationInfos.size();
+    if (vectorSize > MAX_STATUS_VECTOR_NUM) {
+        APP_LOGE("PreinstallApplicationInfos vector is over size.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    constexpr int32_t VECTOR_SIZE_UNDER_DEFAULT_DATA = 500;
+    if (vectorSize > VECTOR_SIZE_UNDER_DEFAULT_DATA &&
+        !reply.SetDataCapacity(Constants::PREINSTALL_PARCEL_CAPACITY)) {
+        APP_LOGE("SetDataCapacity failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(preinstalledApplicationInfos, reply)) {
+        APP_LOGE("Write preinstalled app infos failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     return ERR_OK;
 }
 

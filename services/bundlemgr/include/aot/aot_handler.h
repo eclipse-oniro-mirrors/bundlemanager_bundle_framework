@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,8 +22,11 @@
 #include <unordered_map>
 
 #include "aot/aot_args.h"
+#include "bundle_mgr_service.h"
+#include "event_report.h"
 #include "inner_bundle_info.h"
 #include "nocopyable.h"
+#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -31,12 +34,12 @@ class AOTHandler final {
 public:
     static AOTHandler& GetInstance();
     void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    void HandleOTA() const;
+    void HandleOTA();
     void HandleIdle() const;
     void HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const;
     void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
 private:
-    AOTHandler() = default;
+    AOTHandler();
     ~AOTHandler() = default;
     DISALLOW_COPY_AND_MOVE(AOTHandler);
 
@@ -45,18 +48,30 @@ private:
     std::optional<AOTArgs> BuildAOTArgs(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
-    void HandleCompileWithSingleHap(
+    ErrCode HandleCompileWithSingleHap(
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
+    EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
+        std::shared_ptr<BundleDataMgr> dataMgr) const;
     void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
-    void AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
+    ErrCode AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
+    void HandleOTACompile();
+    void BeforeOTACompile();
+    void OTACompile() const;
+    void OTACompileInternal() const;
+    bool GetOTACompileList(std::vector<std::string> &bundleNames) const;
+    bool GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const;
+    bool IsOTACompileSwitchOn() const;
+    void ReportSysEvent(const std::map<std::string, EventInfo> &sysEventMap) const;
 private:
     mutable std::mutex executeMutex_;
     mutable std::mutex idleMutex_;
     mutable std::mutex compileMutex_;
+    std::atomic<bool> OTACompileDeadline_ { false };
+    std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
