@@ -2696,7 +2696,7 @@ void BMSEventHandler::DeleteAllBundleResourceInfo()
     APP_LOGI("delete all bundle resource when ota end");
 }
 
-bool BMSEventHandler::IsQuickfixFlagExsit(const Bundleinfo &bundleInfo)
+bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
 {
     // check the quickfix flag.
     for (auto const &hapModuleInfo : bundleInfo.hapModuleInfos) {

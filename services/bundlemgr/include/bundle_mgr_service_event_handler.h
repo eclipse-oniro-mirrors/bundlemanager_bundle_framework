@@ -523,7 +523,7 @@ private:
     void ProcessRebootDeleteAotPath();
     void ProcessRebootDeleteArkAp();
     void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
-    static bool IsQuickfixFlagExsit(const Bundleinfo &bundleInfo);
+    static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
