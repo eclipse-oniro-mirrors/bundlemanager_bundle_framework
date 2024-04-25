@@ -880,6 +880,13 @@ public:
 
     virtual ErrCode GetOdid(std::string &odid) override;
 
+    /**
+     * @brief Get preinstalled application infos.
+     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
     virtual ErrCode GetAllBundleInfoByDeveloperId(const std::string &developerId,
         std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
 

@@ -3486,6 +3486,34 @@ ErrCode BundleMgrHostImpl::GetOdid(std::string &odid)
     return dataMgr->GetOdid(odid);
 }
 
+ErrCode BundleMgrHostImpl::GetAllPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo: preInstallBundleInfos) {
+        PreinstalledApplicationInfo preinstalledApplicationInfo;
+        preinstalledApplicationInfo.bundleName = preInstallBundleInfo.GetBundleName();
+        preinstalledApplicationInfo.moduleName = preInstallBundleInfo.GetModuleName();
+        preinstalledApplicationInfo.labelId = preInstallBundleInfo.GetLabelId();
+        preinstalledApplicationInfo.iconId = preInstallBundleInfo.GetIconId();
+        preinstalledApplicationInfos.emplace_back(preinstalledApplicationInfo);
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::GetAllBundleInfoByDeveloperId(const std::string &developerId,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {

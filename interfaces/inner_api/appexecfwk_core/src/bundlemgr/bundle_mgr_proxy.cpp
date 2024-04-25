@@ -4539,6 +4539,20 @@ ErrCode BundleMgrProxy::CanOpenLink(
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
+    std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Fail to reset due to WriteInterfaceToken fail.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<PreinstalledApplicationInfo>(
+        BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO, data, preinstalledApplicationInfos);
+}
+
 ErrCode BundleMgrProxy::SwitchUninstallState(const std::string &bundleName, const bool &state)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

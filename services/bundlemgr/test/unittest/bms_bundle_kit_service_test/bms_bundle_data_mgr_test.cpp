@@ -4131,6 +4131,20 @@ HWTEST_F(BmsBundleDataMgrTest, QueryLauncherAbility_0001, Function | MediumTest 
 }
 
 /**
+ * @tc.number: GetAllPreinstalledApplicationInfos_0100
+ * @tc.name: GetAllPreinstalledApplicationInfos
+ * @tc.desc: test GetAllPreinstalledApplicationInfos.
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllPreinstalledApplicationInfos_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+    ErrCode ret = bundleMgrProxy->GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: ImplicitQueryAbilityInfos_0001
  * @tc.name: test BmsExtensionClient::ImplicitQueryAbilityInfos
  * @tc.desc: 1. system run normally

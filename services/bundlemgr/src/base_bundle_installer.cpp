@@ -56,6 +56,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
+#include "preinstalled_application_info.h"
 #include "scope_guard.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -732,6 +733,17 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #else
         preInstallBundleInfo.SetRemovable(newInfos.begin()->second.GetRemovable());
 #endif
+        for (const auto &innerBundleInfo : newInfos) {
+            auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+            if (!bundleInfo.hapModuleInfos.empty() &&
+                bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                break;
+            }
+        }
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -32,6 +32,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
+#include "preinstalled_application_info.h"
 #include "recoverable_application_info.h"
 #include "shared/shared_bundle_info.h"
 #include "want.h"
@@ -237,6 +238,11 @@ struct RecoverableApplicationCallbackInfo : public BaseCallbackInfo {
     std::vector<RecoverableApplicationInfo> recoverableApplicationInfos;
 };
 
+struct PreinstalledApplicationInfosCallbackInfo : public BaseCallbackInfo {
+    explicit PreinstalledApplicationInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -277,6 +283,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 napi_value SetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value CanOpenLink(napi_env env, napi_callback_info info);
+napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info info);
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);

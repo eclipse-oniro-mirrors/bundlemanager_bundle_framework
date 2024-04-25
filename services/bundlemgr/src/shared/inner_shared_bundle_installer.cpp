@@ -20,6 +20,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "preinstalled_application_info.h"
 #include "shared/base_shared_bundle_info.h"
 
 namespace OHOS {
@@ -416,8 +417,11 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
 #else
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
+    auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
+    preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+    preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+    preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
     dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
-
     return ERR_OK;
 }
 
