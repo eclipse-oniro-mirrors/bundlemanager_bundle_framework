@@ -861,10 +861,7 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
         // query all
         ImplicitQueryAllAbilityInfos(want, flags, requestUserId, abilityInfos, appIndex);
     }
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    if (FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos)) {
-        abilityInfos = filteredAbilityInfos;
-    }
+    FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
     // sort by priority, descending order.
     if (abilityInfos.size() > 1) {
         std::stable_sort(abilityInfos.begin(), abilityInfos.end(),
@@ -907,10 +904,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
         // query all
         ImplicitQueryAllAbilityInfosV9(want, flags, requestUserId, abilityInfos, appIndex);
     }
-    std::vector<AbilityInfo> filteredAbilityInfos;
-    if (FilterAbilityInfosByAppLinking(want, flags, abilityInfos, filteredAbilityInfos)) {
-        abilityInfos = filteredAbilityInfos;
-    }
+    FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
     // sort by priority, descending order.
     if (abilityInfos.size() > 1) {
         std::stable_sort(abilityInfos.begin(), abilityInfos.end(),
@@ -6720,25 +6714,16 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
     return ERR_OK;
 }
 
-bool BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<AbilityInfo> &filteredAbilityInfos) const
+void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
+    std::vector<AbilityInfo> &abilityInfos) const
 {
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     APP_LOGD("FilterAbility start");
     if (abilityInfos.empty()) {
         APP_LOGD("abilityInfos is empty");
-        return false;
+        return;
     }
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) !=
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
-        APP_LOGD("flags does not contain GET_ABILITY_INFO_WITH_APP_LINKING");
-        return false;
-    }
-    if (want.GetUriString().rfind("https", 0) != 0) {
-        APP_LOGD("scheme is not https");
-        return false;
-    }
+    std::vector<AbilityInfo> filteredAbilityInfos;
     // call FiltedAbilityInfos
     APP_LOGI("call FilterAbilities");
     std::string identity = IPCSkeleton::ResetCallingIdentity();
@@ -6747,10 +6732,28 @@ bool BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
         APP_LOGE("FilterAbilities failed");
     }
     IPCSkeleton::SetCallingIdentity(identity);
-    return true;
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGD("return filteredAbilityInfos");
+        abilityInfos = filteredAbilityInfos;
+        for (auto &abilityInfo : abilityInfos) {
+            abilityInfo.linkType = LinkType::APP_LINK;
+        }
+        return;
+    }
+    for (auto &filteredAbilityInfo : filteredAbilityInfos) {
+        for (auto &abilityInfo : abilityInfos) {
+            if (filteredAbilityInfo.name == abilityInfo.name) {
+                abilityInfo.linkType = LinkType::APP_LINK;
+                break;
+            }
+        }
+    }
+    return;
 #else
     APP_LOGI("AppDomainVerify is not enabled");
-    return false;
+    return;
 #endif
 }
 
