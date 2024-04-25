@@ -1863,7 +1863,8 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
     }
 
-    if (bundleInstallChecker_->IsContainModuleName(newInfo, oldInfo)) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) &&
+        bundleInstallChecker_->IsContainModuleName(newInfo, oldInfo)) {
         APP_LOGE("moduleName is already existed");
         return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
     }
@@ -1940,7 +1941,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         }
     }
 
-    if (!bundleInstallChecker_->IsExistedDistroModule(newInfo, oldInfo)) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) &&
+        !bundleInstallChecker_->IsExistedDistroModule(newInfo, oldInfo)) {
         APP_LOGE("moduleName is inconsistent in the updating hap");
         return ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME;
     }
