@@ -95,6 +95,8 @@ public:
 
     static void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
 
+    static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
+
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
         Constants::AppType appType,
@@ -521,6 +523,7 @@ private:
     void ProcessRebootDeleteAotPath();
     void ProcessRebootDeleteArkAp();
     void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
+    static bool IsQuickfixFlagExsit(const Bundleinfo &bundleInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();

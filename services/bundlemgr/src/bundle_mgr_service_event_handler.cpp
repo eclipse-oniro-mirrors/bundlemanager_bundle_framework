@@ -95,6 +95,8 @@ constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json"
 constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
+constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
+constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
 constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
 constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
@@ -317,6 +319,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     } else {
         HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
+        ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         CheckALLResourceInfo();
     }
 
@@ -824,6 +827,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
         InnerProcessBootSystemHspInstall();
         InnerProcessBootPreBundleProFileInstall(userId);
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
+        ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         return;
     }
 #else
@@ -1064,6 +1068,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
+    ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
@@ -2689,6 +2694,68 @@ void BMSEventHandler::DeleteAllBundleResourceInfo()
         APP_LOGE("delete all bundle resource failed");
     }
     APP_LOGI("delete all bundle resource when ota end");
+}
+
+bool BMSEventHandler::IsQuickfixFlagExsit(const Bundleinfo &bundleInfo)
+{
+    // check the quickfix flag.
+    for (auto const &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (auto const &metadata : hapModuleInfo.metadata) {
+            if (metadata.name.compare("ohos.app.quickfix") == 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string &path)
+{
+    APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover start");
+    if (!BundleUtil::IsExistFile(QUICK_FIX_APP_RECOVER_FILE)) {
+        APP_LOGE("end, reinstall json file is empty");
+        return;
+    }
+    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("installer is nullptr");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+    sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
+    if (innerReceiverImpl == nullptr) {
+        APP_LOGE("innerReceiverImpl is nullptr");
+        return;
+    }
+    nlohmann::json jsonObject;
+    if (!BundleParser::ReadFileIntoJson(QUICK_FIX_APP_RECOVER_FILE, jsonObject)) {
+        APP_LOGE("get jsonObject from path failed or is discarded");
+        return;
+    }
+    std::vector<std::string> bundleNameList = jsonObject[RESTOR_BUNDLE_NAME_LIST].get<std::vector<std::string>>();
+    for (const std::string &bundleName : bundleNameList) {
+        BundleInfo hasInstalledInfo;
+        auto hasBundleInstalled =
+            dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
+        if (!hasBundleInstalled) {
+            APP_LOGW("obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
+            continue;
+        }
+        if (IsQuickfixFlagExsit(hasInstalledInfo)) {
+            // If metadata name has quickfix flag, it should be uninstall and recover.
+            InstallParam installParam;
+            installParam.isUninstallAndRecover = true;
+            installParam.noSkipsKill = false;
+            installParam.needSendEvent = false;
+            installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
+            continue;
+        }
+    }
+    APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

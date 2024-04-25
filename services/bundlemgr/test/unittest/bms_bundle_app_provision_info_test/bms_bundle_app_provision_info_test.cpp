@@ -1521,4 +1521,30 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0005,
     }
 }
 
+/**
+ * @tc.number: ProcessRebootQuickFixUnInstallAndRecover_0001
+ * @tc.name: test the start function of ProcessRebootQuickFixUnInstallAndRecover
+ * @tc.desc: 1. test ProcessRebootQuickFixUnInstallAndRecover
+ *           2. path not exist, result filed
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixUnInstallAndRecover_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        BundleInfo oldInfo;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, oldInfo, USERID);
+        EXPECT_TRUE(result);
+        uint32_t oldVersionCode = oldInfo.versionCode;
+        handler->ProcessRebootQuickFixUnInstallAndRecover(NOT_EXIST_PATH);
+        BundleInfo newInfo;
+        result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(oldVersionCode, newInfo.versionCode);
+    }
+}
 } // OHOS
