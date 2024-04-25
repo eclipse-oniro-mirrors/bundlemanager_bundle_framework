@@ -22,6 +22,7 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "pre_scan_info.h"
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -524,6 +525,7 @@ private:
     void ProcessRebootDeleteArkAp();
     void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
     static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
+    static bool GetValueFromJson(nlohmann::json &jsonObject);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();

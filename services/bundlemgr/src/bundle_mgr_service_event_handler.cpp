@@ -58,6 +58,7 @@
 #endif
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
+#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -107,6 +108,7 @@ std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
 bool hasLoadPreInstallProFile_ = false;
+std::vector<std::string> bundleNameList_;
 
 void MoveTempPath(const std::vector<std::string> &fromPaths,
     const std::string &bundleName, std::vector<std::string> &toPaths)
@@ -2709,6 +2711,25 @@ bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
     return false;
 }
 
+bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        RESTOR_BUNDLE_NAME_LIST,
+        bundleNameList_,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read bundleNameList from json file error, error code : %{public}d", parseResult);
+        return false;
+    }
+    return true;
+}
+
 void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string &path)
 {
     APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover start");
@@ -2732,12 +2753,12 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         return;
     }
     nlohmann::json jsonObject;
-    if (!BundleParser::ReadFileIntoJson(QUICK_FIX_APP_RECOVER_FILE, jsonObject)) {
-        APP_LOGE("get jsonObject from path failed or is discarded");
+    if (!BundleParser::ReadFileIntoJson(QUICK_FIX_APP_RECOVER_FILE, jsonObject) || !jsonObject.is_object() ||
+        !GetValueFromJson(jsonObject)) {
+        APP_LOGE("get jsonObject from path failed or get value failed");
         return;
     }
-    std::vector<std::string> bundleNameList = jsonObject[RESTOR_BUNDLE_NAME_LIST].get<std::vector<std::string>>();
-    for (const std::string &bundleName : bundleNameList) {
+    for (const std::string &bundleName : bundleNameList_) {
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled =
             dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
@@ -2752,7 +2773,6 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             installParam.noSkipsKill = false;
             installParam.needSendEvent = false;
             installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
-            continue;
         }
     }
     APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover end");
