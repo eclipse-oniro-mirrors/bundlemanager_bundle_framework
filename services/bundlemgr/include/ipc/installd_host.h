@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,6 +58,8 @@ private:
     bool HandleExtractFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandleExecuteAOT(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleStopAOT(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RenameModuleDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -182,6 +184,8 @@ private:
     bool HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply);
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleMigrateData(MessageParcel &data, MessageParcel &reply);
 
     void AddCloseInstalldTask();
 

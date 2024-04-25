@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -43,7 +43,10 @@ enum class BMSEventType {
     BUNDLE_STATE_CHANGE,
     BUNDLE_CLEAN_CACHE,
     BMS_USER_EVENT,
-    APPLY_QUICK_FIX
+    APPLY_QUICK_FIX,
+    QUERY_OF_CONTINUE_TYPE,
+    AOT_COMPILE_SUMMARY,
+    AOT_COMPILE_RECORD,
 };
 
 enum class BundleEventType {
@@ -119,6 +122,16 @@ struct EventInfo {
     // for quick fix
     int32_t applyQuickFixFrequency = 0;
 
+    //for query of continue type
+    std::string continueType;
+    // AOT
+    std::vector<std::string> totalBundleNames;
+    uint32_t successCnt = 0;
+    std::string compileMode;
+    bool compileResult = false;
+    std::string failureReason;
+    int64_t costTimeSeconds = 0;
+
     void Reset()
     {
         userId = Constants::INVALID_USERID;
@@ -143,6 +156,13 @@ struct EventInfo {
         hideDesktopIcon = false;
         appDistributionType.clear();
         applyQuickFixFrequency = 0;
+        continueType.clear();
+        totalBundleNames.clear();
+        successCnt = 0;
+        compileMode.clear();
+        compileResult = false;
+        failureReason.clear();
+        costTimeSeconds = 0;
     }
 };
 
@@ -190,6 +210,15 @@ public:
      * @param userId Indicates the userId.
      */
     static void SendUserSysEvent(UserEventType userEventType, int32_t userId);
+    /**
+     * @brief Send query abilityInfos by continueType system events.
+     * @param bundleName Indicates the bundleName.
+     * @param abilityName Indicates the abilityName.
+     * @param errCode code of result.
+     * @param continueType Indicates the continueType.
+     */
+    static void SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &bundleName,
+        const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

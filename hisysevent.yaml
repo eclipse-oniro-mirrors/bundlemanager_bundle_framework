@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -175,3 +175,28 @@ BUNDLE_QUICK_FIX:
   APPLY_QUICK_FIX_FREQUENCY: {type: INT32, desc: apply quick fix frequency}
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hqf file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hqf file}
+
+QUERY_OF_CONTINUE_TYPE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: query abilityInfo by continuetype and bundleName}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  ABILITY_NAME: {type: STRING, desc: abilityName}
+  CONTINUE_TYPE: {type: STRING, desc: continueType}
+  ERROR_CODE: {type: INT32, desc: apply quick fix frequency}
+  USERID: {type: INT32, desc: userId of the bundle}
+
+AOT_COMPILE_SUMMARY:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: AOT compile summary result in OTA scene}
+  TOTAL_BUNDLE_NAMES: {type: STRING, arrsize: 99, desc: bundle names from msdp}
+  TOTAL_SIZE: {type: UINT32, desc: compile total bundle size}
+  SUCCESS_SIZE: {type: UINT32, desc: compile success bundle size}
+  COST_TIME_SECONDS: {type: INT64, desc: total compile cost time}
+  TIME_STAMP: {type: INT64, desc: time stamp}
+
+AOT_COMPILE_RECORD:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: AOT compile record result in OTA scene}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  COMPILE_RESULT: {type: BOOL, desc: compile result}
+  FAILURE_REASON: {type: STRING, desc: compile bundle failure reason}
+  COST_TIME_SECONDS: {type: INT64, desc: compile cost time}
+  COMPILE_MODE: {type: STRING, desc: compile mode}
+  TIME_STAMP: {type: INT64, desc: time stamp}

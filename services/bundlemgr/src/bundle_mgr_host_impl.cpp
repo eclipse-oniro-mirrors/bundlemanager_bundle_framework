@@ -56,6 +56,7 @@ namespace {
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* APP_LINKING = "applinking";
+constexpr const char* EMPTY_ABILITY_NAME = "";
 }
 
 bool BundleMgrHostImpl::GetApplicationInfo(
@@ -3302,6 +3303,35 @@ ErrCode BundleMgrHostImpl::CreateBundleDataDir(int32_t userId)
     return dataMgr->CreateBundleDataDir(userId);
 }
 
+ErrCode BundleMgrHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    APP_LOGD("MigrateData start");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MIGRATE_DATA)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (sourcePaths.empty()) {
+        APP_LOGE("source paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        APP_LOGE("destination paths is empty");
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
+
+    auto ret = InstalldClient::GetInstance()->MigrateData(sourcePaths, destinationPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("migrate data filed, errcode:%{public}d", ret);
+    }
+    return ret;
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -3580,20 +3610,32 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfoByContinueType(const std::string &bun
         bundleName.c_str(), continueType.c_str(), userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_PERMISSION_DENIED, userId, continueType);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfoByContinueType");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, EMPTY_ABILITY_NAME,
+            ERR_BUNDLE_MANAGER_INTERNAL_ERROR, userId, continueType);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    ErrCode res = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId);
+    std::string abilityName;
+    if (res == ERR_OK) {
+        abilityName = abilityInfo.name;
+    }
+    EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(bundleName, abilityName, res, userId, continueType);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,

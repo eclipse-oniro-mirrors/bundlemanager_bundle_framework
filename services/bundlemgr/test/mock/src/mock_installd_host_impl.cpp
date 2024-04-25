@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -188,6 +188,11 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::StopAOT()
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
 {
@@ -234,6 +239,18 @@ ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int
 
 ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
 {
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
+    const std::string &destinationPath)
+{
+    if (sourcePaths.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
+    }
+    if (destinationPath.empty()) {
+        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

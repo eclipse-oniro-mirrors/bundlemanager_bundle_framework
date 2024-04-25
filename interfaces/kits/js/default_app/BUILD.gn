@@ -15,11 +15,7 @@ import("//build/ohos.gni")
 import("../../../../appexecfwk.gni")
 
 ohos_shared_library("defaultappmanager") {
-  include_dirs = [
-    "//third_party/node/src",
-    "//third_party/libuv/include",
-    "${kits_path}/js/common",
-  ]
+  include_dirs = [ "${kits_path}/js/common" ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
@@ -41,7 +37,10 @@ ohos_shared_library("defaultappmanager") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-
+  public_external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
+  ]
   if (bundle_framework_default_app) {
     sources += [ "js_default_app.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]

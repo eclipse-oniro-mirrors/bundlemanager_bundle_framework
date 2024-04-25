@@ -79,6 +79,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode VerifyActivationLock(bool &res)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

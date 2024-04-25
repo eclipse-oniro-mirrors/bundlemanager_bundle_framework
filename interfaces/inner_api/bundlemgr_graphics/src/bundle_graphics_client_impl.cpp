@@ -31,6 +31,7 @@ namespace OHOS {
 namespace AppExecFwk {
 sptr<IBundleMgr> BundleGraphicsClientImpl::GetBundleMgr()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleMgr_ == nullptr) {
         auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (systemAbilityManager == nullptr) {

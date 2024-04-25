@@ -184,9 +184,8 @@ tuple<bool, uint64_t, bool> NapiValue::ToUint64() const
 
 tuple<bool, vector<string>, uint32_t> NapiValue::ToStringArray()
 {
-    napi_status status;
     uint32_t size;
-    status = napi_get_array_length(env_, val_, &size);
+    napi_status status = napi_get_array_length(env_, val_, &size);
     vector<string> stringArray;
     napi_value result;
     for (uint32_t i = 0; i < size; i++) {

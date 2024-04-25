@@ -70,6 +70,7 @@
                 "selinux_adapter",
                 "syscap_codec",
                 "storage_service",
+                "user_status_awareness",
                 "window_manager",
                 "distributed_bundle_framework",
                 "relational_store",
@@ -78,13 +79,13 @@
                 "code_signature",
                 "udmf",
                 "ace_engine",
-                "code_crypto_metadata_process"
+                "code_crypto_metadata_process",
+                "json",
+                "zlib"
             ],
             "third_party": [
-                "json",
                 "libuv",
                 "node",
-                "zlib",
                 "jsoncpp"
             ]
         },

@@ -561,7 +561,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
-        oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
+        if (newInfo.GetAppCrowdtestDeadline() != Constants::INHERIT_CROWDTEST_DEADLINE) {
+            oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
+        }
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         // clear apply quick fix frequency
         oldInfo.ResetApplyQuickFixFrequency();
@@ -1454,7 +1456,8 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
     for (const auto &item : bundleUserInfo.cloneInfos) {
         APP_LOGD("bundleName:%{public}s appIndex:%{public}d start", info.GetBundleName().c_str(), item.second.appIndex);
         AbilityInfo cloneAbilityInfo = abilityInfo;
-        ModifyApplicationInfoByCloneInfo(item.second, cloneAbilityInfo.applicationInfo);
+        info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+            bundleUserInfo.bundleUserInfo.userId, cloneAbilityInfo.applicationInfo);
         cloneAbilityInfo.installTime = item.second.installTime;
         cloneAbilityInfo.uid =  item.second.uid;
         cloneAbilityInfo.appIndex = item.second.appIndex;

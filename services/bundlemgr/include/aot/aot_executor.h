@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,10 +25,17 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct AOTState {
+    bool running = false;
+    pid_t childPid = -1;
+    std::string outputPath;
+};
+
 class AOTExecutor final {
 public:
     static AOTExecutor& GetInstance();
-    void ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret) const;
+    void ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret);
+    ErrCode StopAOT();
 private:
     AOTExecutor() = default;
     ~AOTExecutor() = default;
@@ -40,9 +47,12 @@ private:
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
     void ExecuteInChildProcess(const AOTArgs &aotArgs) const;
-    void ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const;
+    void ExecuteInParentProcess(const AOTArgs &aotArgs, pid_t childPid, ErrCode &ret);
+    void InitState(const AOTArgs &aotArgs, pid_t childPid);
+    void ResetState();
 private:
-    mutable std::mutex mutex_;
+    mutable std::mutex stateMutex_;
+    AOTState state_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

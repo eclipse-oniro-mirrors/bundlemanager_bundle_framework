@@ -163,6 +163,10 @@ if (bundle_framework_power_mgr_enable) {
   ]
 }
 
+if (bundle_framework_user_status_awareness_enable) {
+  user_status_external_deps = [ "user_status_awareness:user_status_client" ]
+}
+
 bundle_mgr_source = [
   "${services_path}/bundlemgr/src/account_helper.cpp",
   "${services_path}/bundlemgr/src/aot/charge_idle_listener.cpp",

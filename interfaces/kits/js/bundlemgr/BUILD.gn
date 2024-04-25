@@ -17,8 +17,6 @@ import("../../../../appexecfwk.gni")
 ohos_shared_library("bundle") {
   include_dirs = [
     "${kits_path}/js/common",
-    "//third_party/node/src",
-    "//third_party/libuv/include",
     "${inner_api_path}/bundlemgr_graphics/include",
   ]
   defines = [
@@ -49,7 +47,10 @@ ohos_shared_library("bundle") {
     "napi:ace_napi",
     "samgr:samgr_proxy",
   ]
-
+  public_external_deps = [
+    "libuv:uv",
+    "node:node_header_notice",
+  ]
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     deps += [ "${inner_api_path}/bundlemgr_graphics:bundlemgr_graphics" ]

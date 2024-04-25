@@ -394,10 +394,12 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     // copy sig file to bms service
     if (!realPaths.empty() && !installParam.verifyCodeParams.empty() &&
         (realPaths.size() != installParam.verifyCodeParams.size())) {
+        DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
         APP_LOGE("size of hapFiles is not same with size of verifyCodeParams");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     if ((res = CopySignatureFileToService(streamInstaller, installParam)) != ERR_OK) {
+        DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
         APP_LOGE("CopySignatureFileToService failed due to %{public}d", res);
         return res;
     }
@@ -413,6 +415,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         std::vector<std::string> sharedBundleDir = {installParam.sharedBundleDirPaths[i]};
         if (!BundleFileUtil::CheckFilePath(sharedBundleDir, realPaths)) {
             APP_LOGE("stream install failed due to check shared package files failed");
+            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         for (const auto &path : realPaths) {

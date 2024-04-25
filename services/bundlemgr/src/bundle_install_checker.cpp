@@ -400,7 +400,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 #endif
         if ((provisionInfo.distributionType == Security::Verify::AppDistType::CROWDTESTING) ||
             (checkParam.specifiedDistributionType == Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING)) {
-            newInfo.SetAppCrowdtestDeadline(checkParam.crowdtestDeadline);
+            newInfo.SetAppCrowdtestDeadline((checkParam.crowdtestDeadline >= 0) ? checkParam.crowdtestDeadline :
+                Constants::INHERIT_CROWDTEST_DEADLINE);
         } else {
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
         }
