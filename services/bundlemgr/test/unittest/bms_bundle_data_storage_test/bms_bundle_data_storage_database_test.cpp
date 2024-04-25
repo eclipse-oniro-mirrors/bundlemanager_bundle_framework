@@ -1123,7 +1123,8 @@ protected:
                 "appEnvironments": [],
                 "multiAppMode":"CLONE_APP",
                 "maxInstanceNum":1,
-                "appIndex":0
+                "appIndex":0,
+                "maxChildProcess": 0
             },
             "baseBundleInfo": {
                 "abilityInfos": [

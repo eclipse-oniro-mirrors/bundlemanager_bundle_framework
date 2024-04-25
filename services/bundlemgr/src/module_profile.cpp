@@ -25,6 +25,7 @@
 #include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -234,6 +235,7 @@ struct App {
     bool gwpAsanEnabled = false;
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
+    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 0);
 };
 
 struct Module {
@@ -1235,6 +1237,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_MAX_CHILD_PROCESS,
+        app.maxChildProcess,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1939,6 +1949,7 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
+    applicationInfo.maxChildProcess = app.maxChildProcess;
     return true;
 }
 

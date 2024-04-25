@@ -93,6 +93,7 @@ constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+const std::string ENTRY = "entry";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -330,6 +331,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         updateTsanEnabled(newInfo, oldInfo);
         ProcessAllowedAcls(newInfo, oldInfo);
         updateAppEnvironments(newInfo, oldInfo);
+        updateMaxChildProcess(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -534,6 +536,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
         updateAppEnvironments(newInfo, oldInfo);
+        updateMaxChildProcess(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -6693,12 +6696,26 @@ void BundleDataMgr::updateAppEnvironments(const InnerBundleInfo &newInfo, InnerB
     const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
     bool flag = true;
     for (const auto &innerModuleInfo : oldInfo.GetInnerModuleInfos()) {
-        if (innerModuleInfo.second.distro.moduleType == "entry") {
+        if (innerModuleInfo.second.distro.moduleType == ENTRY) {
             flag = false;
         }
     }
     if (flag || (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
         oldInfo.SetAppEnvironments(newInfo.GetAppEnvironments());
+    }
+}
+
+void BundleDataMgr::updateMaxChildProcess(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
+    bool flag = true;
+    for (const auto &innerModuleInfo : oldInfo.GetInnerModuleInfos()) {
+        if (innerModuleInfo.second.distro.moduleType == ENTRY) {
+            flag = false;
+        }
+    }
+    if (flag || (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
+        oldInfo.SetMaxChildProcess(newInfo.GetMaxChildProcess());
     }
 }
 
