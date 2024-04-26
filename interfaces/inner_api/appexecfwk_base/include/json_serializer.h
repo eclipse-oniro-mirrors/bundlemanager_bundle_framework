@@ -51,6 +51,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo);
 void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo);
 void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionInfo);
 void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extensionInfo);
+void to_json(nlohmann::json &jsonObject, const MultiAppModeData &multiAppMode);
+void from_json(const nlohmann::json &jsonObject, MultiAppModeData &multiAppMode);
 void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo);
 void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInfo);
 void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo);

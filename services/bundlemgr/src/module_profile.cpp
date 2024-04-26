@@ -202,6 +202,11 @@ struct Extension {
     std::vector<std::string> dataGroupIds;
 };
 
+struct MultiAppMode {
+    std::string type;
+    int32_t maxAdditionalNumber;
+};
+
 struct App {
     std::string bundleName;
     bool debug = false;
@@ -235,6 +240,7 @@ struct App {
     bool gwpAsanEnabled = false;
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
+    MultiAppMode multiAppMode;
     int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 0);
 };
 
@@ -874,6 +880,28 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
     }
 }
 
+void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
+{
+    // these are required fields.
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MULTI_APP_MODE_TYPE,
+        multiAppMode.type,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
+        multiAppMode.maxAdditionalNumber,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
 void from_json(const nlohmann::json &jsonObject, App &app)
 {
     APP_LOGD("read app tag from module.json");
@@ -1237,6 +1265,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<MultiAppMode>(jsonObject,
+        jsonObjectEnd,
+        APP_MULTI_APP_MODE,
+        app.multiAppMode,
+        JsonType::OBJECT,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         APP_MAX_CHILD_PROCESS,
@@ -1846,6 +1882,16 @@ bool ParserArkNativeFilePath(
     return false;
 }
 
+MultiAppModeType ToMultiAppModeType(const std::string &type)
+{
+    if (type == MULTI_APP_MODE_CLONE_APP) {
+        return MultiAppModeType::CLONE_APP;
+    } else if (type == MULTI_APP_MODE_MULTI_INSTANCE) {
+        return MultiAppModeType::MULTI_INSTANCE;
+    }
+    return MultiAppModeType::NOT_SUPPORT;
+}
+
 bool ToApplicationInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -1949,6 +1995,9 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
+
+    applicationInfo.multiAppMode.type = ToMultiAppModeType(app.multiAppMode.type);
+    applicationInfo.multiAppMode.maxAdditionalNumber = app.multiAppMode.maxAdditionalNumber;
     applicationInfo.maxChildProcess = app.maxChildProcess;
     return true;
 }

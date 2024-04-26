@@ -73,10 +73,18 @@ enum class ApplicationReservedFlag {
     ENCRYPTED_APPLICATION = 0x00000001,
 };
 
-enum class MultiAppMode {
+enum class MultiAppModeType {
     NOT_SUPPORT = 0,
     MULTI_INSTANCE = 1,
     CLONE_APP = 2,
+};
+
+struct MultiAppModeData : public Parcelable {
+    MultiAppModeType type = MultiAppModeType::NOT_SUPPORT;
+    int32_t maxAdditionalNumber = 0;
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static MultiAppModeData *Unmarshalling(Parcel &parcel);
 };
 
 struct Metadata : public Parcelable {
@@ -283,8 +291,7 @@ struct ApplicationInfo : public Parcelable {
     std::string organization;
     std::vector<ApplicationEnvironment> appEnvironments;
 
-    std::string multiAppMode = MULTI_APP_MODE_NOT_SUPPORT;
-    int32_t maxInstanceNum = 0;
+    MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;
 
     bool ReadFromParcel(Parcel &parcel);

@@ -62,8 +62,10 @@ void BmsBundleCloneAppDataStructTest::TearDown()
 
 const nlohmann::json APPLICATION_JSON = R"(
 {
-    "multiAppMode": "CLONE_APP",
-    "maxInstanceNum": 5
+    "multiAppMode": {
+        "type": 1,
+        "maxAdditionalNumber": 5
+    }
 })"_json;
 
 /**
@@ -76,8 +78,8 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0001
 {
     ApplicationInfo applicationInfo;
     from_json(APPLICATION_JSON, applicationInfo);
-    EXPECT_EQ(applicationInfo.multiAppMode, "CLONE_APP");
-    EXPECT_EQ(applicationInfo.maxInstanceNum, 5);
+    EXPECT_EQ(applicationInfo.multiAppMode.type, MultiAppModeType::MULTI_INSTANCE);
+    EXPECT_EQ(applicationInfo.multiAppMode.maxAdditionalNumber, 5);
 }
 
 /**
@@ -90,16 +92,16 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_ApplicationInfoJsonSerializer_0002
 {
     ApplicationInfo applicationInfo;
     from_json(APPLICATION_JSON, applicationInfo);
-    EXPECT_EQ(applicationInfo.multiAppMode, "CLONE_APP");
-    EXPECT_EQ(applicationInfo.maxInstanceNum, 5);
+    EXPECT_EQ(applicationInfo.multiAppMode.type, MultiAppModeType::MULTI_INSTANCE);
+    EXPECT_EQ(applicationInfo.multiAppMode.maxAdditionalNumber, 5);
 
     nlohmann::json applicationInfoJson;
     to_json(applicationInfoJson, applicationInfo);
 
     ApplicationInfo applicationInfo2;
     from_json(APPLICATION_JSON, applicationInfo2);
-    EXPECT_EQ(applicationInfo.multiAppMode, applicationInfo2.multiAppMode);
-    EXPECT_EQ(applicationInfo.maxInstanceNum, applicationInfo2.maxInstanceNum);
+    EXPECT_EQ(applicationInfo.multiAppMode.type, applicationInfo2.multiAppMode.type);
+    EXPECT_EQ(applicationInfo.multiAppMode.maxAdditionalNumber, applicationInfo2.multiAppMode.maxAdditionalNumber);
 }
 
 /**
