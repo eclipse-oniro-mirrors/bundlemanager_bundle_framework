@@ -200,3 +200,9 @@ AOT_COMPILE_RECORD:
   COST_TIME_SECONDS: {type: INT64, desc: compile cost time}
   COMPILE_MODE: {type: STRING, desc: compile mode}
   TIME_STAMP: {type: INT64, desc: time stamp}
+
+CPU_SCENE_ENTRY:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: CPU Scenario Code, preserve: true}
+  PACKAGE_NAME: {type: STRING, desc: package name}
+  SCENE_ID: {type: STRING, desc: customized application scenario id}
+  HAPPEN_TIME: {type: UINT16, desc: timestamp}
