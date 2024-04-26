@@ -1392,7 +1392,9 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0001, Function | SmallTest
     innerBundleUserInfo.bundleUserInfo = userInfo;
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
 
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);

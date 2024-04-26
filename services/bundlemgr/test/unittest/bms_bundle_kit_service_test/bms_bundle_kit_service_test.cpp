@@ -458,7 +458,9 @@ void BmsBundleKitServiceTest::MockInstallBundle(
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(keyName, skills);
@@ -477,7 +479,9 @@ void BmsBundleKitServiceTest::MockInstallExtension(const std::string &bundleName
     innerBundleInfo.InsertExtensionInfo(keyName, extensionInfo);
     innerBundleInfo.InsertExtensionInfo(keyName02, extensionInfo02);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertExtensionSkillInfo(keyName, skills);
@@ -564,7 +568,9 @@ void BmsBundleKitServiceTest::MockInstallBundle(
         AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
         innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
         innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-        Skill skill {{ACTION}, {ENTITY}};
+        Skill skill;
+        skill.actions = {ACTION};
+        skill.entities = {ENTITY};
         std::vector<Skill> skills;
         skills.emplace_back(skill);
         innerBundleInfo.InsertSkillInfo(keyName, skills);
@@ -8969,7 +8975,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0003, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
@@ -9006,7 +9014,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0005, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
@@ -9028,7 +9038,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);

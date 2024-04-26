@@ -1628,6 +1628,11 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
             abilityInfo.metaData.customizeData.clear();
             abilityInfo.metadata.clear();
         }
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
+            abilityInfo.skills.clear();
+        }
+
         hapModuleInfo.abilityInfos.emplace_back(abilityInfo);
     }
 }
@@ -1651,6 +1656,10 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModule
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
             info.metadata.clear();
         }
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL)) {
+            info.skills.clear();
+        }
         hapModuleInfo.extensionInfos.emplace_back(info);
     }
 }
@@ -1671,6 +1680,9 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
             }
             AbilityInfo abilityInfo = ability.second;
             abilityInfo.enabled = isEnabled;
+            if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
+                abilityInfo.skills.clear();
+            }
             bundleInfo.abilityInfos.emplace_back(abilityInfo);
         }
     }
@@ -1685,6 +1697,9 @@ void InnerBundleInfo::GetBundleWithExtension(int32_t flags, BundleInfo &bundleIn
                 continue;
             }
             ExtensionAbilityInfo info = extensionInfo.second;
+            if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
+                info.skills.clear();
+            }
             bundleInfo.extensionInfos.emplace_back(info);
         }
     }

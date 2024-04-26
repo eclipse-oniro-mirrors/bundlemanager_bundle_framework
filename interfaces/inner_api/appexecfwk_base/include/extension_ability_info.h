@@ -18,9 +18,9 @@
 
 #include <map>
 #include <string>
-
 #include "application_info.h"
 #include "parcel.h"
+#include "skill.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,6 +30,7 @@ enum ExtensionAbilityInfoFlag {
     GET_EXTENSION_INFO_WITH_APPLICATION = 0x00000004,
     GET_EXTENSION_INFO_WITH_METADATA = 0x00000020,
     GET_EXTENSION_INFO_WITH_SKILL_URI = 0x00000200,
+    GET_EXTENSION_INFO_WITH_SKILL = 0x00000400,
 };
 
 enum class GetExtensionAbilityInfoFlag {
@@ -38,6 +39,7 @@ enum class GetExtensionAbilityInfoFlag {
     GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION = 0x00000002,
     GET_EXTENSION_ABILITY_INFO_WITH_METADATA = 0x00000004,
     GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI = 0x00000008,
+    GET_EXTENSION_ABILITY_INFO_WITH_SKILL = 0x00000010,
 };
 
 enum class ExtensionAbilityType {
@@ -156,6 +158,7 @@ struct ExtensionAbilityInfo : public Parcelable {
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;
+    std::vector<Skill> skills;
 
     bool needCreateSandbox = false;
     // key:userId, value:dirPath
@@ -167,6 +170,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
     void UpdateNeedCreateSandbox();
+    bool MarshallingSkillUri(Parcel &parcel, SkillUriForAbilityAndExtension uri) const;
 };
 
 ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);

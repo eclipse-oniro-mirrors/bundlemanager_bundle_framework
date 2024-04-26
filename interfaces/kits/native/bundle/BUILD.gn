@@ -37,19 +37,22 @@ ohos_shared_library("bundle_ndk") {
     "${inner_api_path}/appexecfwk_base/src/compatible_application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/extension_ability_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/hap_module_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/mime_type_mgr.cpp",
     "${inner_api_path}/appexecfwk_base/src/module_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/overlay/overlay_bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/overlay/overlay_module_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/quick_fix/app_quick_fix.cpp",
     "${inner_api_path}/appexecfwk_base/src/quick_fix/appqf_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/quick_fix/hqf_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/skill.cpp",
     "src/bundle_mgr_proxy_native.cpp",
     "src/native_interface_bundle.cpp",
   ]
-
+  use_exceptions = true
   deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
+    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",

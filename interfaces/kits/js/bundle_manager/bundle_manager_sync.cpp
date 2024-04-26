@@ -79,6 +79,46 @@ bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+bool IsArray(napi_env env, napi_value value)
+{
+    bool result = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, value, &result), false);
+    return result;
+}
+
+bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<Want> &wants)
+{
+    if (!IsArray(env, args)) {
+        return false;
+    }
+
+    uint32_t length = 0;
+    napi_get_array_length(env, args, &length);
+
+    for (uint32_t i = 0; i < length; i++) {
+        napi_value array;
+        Want want;
+        napi_get_element(env, args, i, &array);
+        if (!UnwrapWant(env, array, want)) {
+            APP_LOGW("parse want failed");
+            return false;
+        }
+        bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
+        if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
+            want.GetUriString().empty() && want.GetType().empty()) {
+            APP_LOGW("implicit params all empty of want %{public}d", i);
+            continue;
+        }
+        wants.push_back(want);
+    }
+
+    if (wants.empty()) {
+        return false;
+    }
+
+    return true;
+}
+
 napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI SetApplicationEnabledSync called");

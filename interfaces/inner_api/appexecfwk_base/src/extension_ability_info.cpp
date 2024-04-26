@@ -28,6 +28,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+const std::string JSON_KEY_SKILLS = "skills";
 namespace {
 const std::string NAME = "name";
 const std::string SRC_ENTRANCE = "srcEntrance";
@@ -57,6 +58,7 @@ const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
 const std::string EXTENSION_SANDBOX_PATH = "sandboxPath";
 const std::string DATA_GROUP_IDS = "dataGroupIds";
 const std::string JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
+const std::string SKILLS = "skills";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -242,6 +244,18 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < validDataGroupIdsSize; i++) {
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    int32_t skillsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillsSize, &skills);
+    for (auto i = 0; i < skillsSize; i++) {
+        std::unique_ptr<Skill> extensionSkillPtr(parcel.ReadParcelable<Skill>());
+        if (!extensionSkillPtr) {
+            APP_LOGE("ReadParcelable<SkillForExtension> failed");
+            return false;
+        }
+        skills.emplace_back(*extensionSkillPtr);
+    }
+
     return true;
 }
 
@@ -254,6 +268,22 @@ ExtensionAbilityInfo *ExtensionAbilityInfo::Unmarshalling(Parcel &parcel)
         info = nullptr;
     }
     return info;
+}
+
+bool ExtensionAbilityInfo::MarshallingSkillUri(Parcel &parcel, SkillUriForAbilityAndExtension uri) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.scheme));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.host));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.port));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.path));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathStartWith));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.utd));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.linkFeature));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, uri.isMatch);
+    return true;
 }
 
 bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
@@ -293,17 +323,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUri.size());
     for (auto &uri : skillUri) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.scheme));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.host));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.port));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.path));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathStartWith));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.utd));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.linkFeature));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, uri.isMatch);
+        MarshallingSkillUri(parcel, uri);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionProcessMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
@@ -314,11 +334,15 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, validDataGroupIds.size());
     for (auto &dataGroupId : validDataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
+    for (auto &skill : skills) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
     return true;
 }
@@ -357,6 +381,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {EXTENSION_SANDBOX_PATH, extensionInfo.sandboxPath},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
         {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
+        {JSON_KEY_SKILLS, extensionInfo.skills},
     };
 }
 
@@ -605,6 +630,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<Skill>>(jsonObject,
+        jsonObjectEnd,
+        SKILLS,
+        extensionInfo.skills,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
     }

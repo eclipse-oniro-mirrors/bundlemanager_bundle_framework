@@ -34,6 +34,9 @@ public:
     ErrCode QueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false) const;
 
+    ErrCode BatchQueryAbilityInfos(const std::vector<Want> &wants, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false) const;
+
     ErrCode QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, bool isNewVersion = false) const;
 
@@ -42,6 +45,9 @@ public:
 
     ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags,
         BundleInfo &bundleInfo, int32_t userId, bool isNewVersion = false) const;
+
+    ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+        std::vector<BundleInfo> &bundleInfo, int32_t userId, bool isNewVersion = false) const;
 
     ErrCode ImplicitQueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos,

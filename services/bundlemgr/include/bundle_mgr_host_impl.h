@@ -127,6 +127,16 @@ public:
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
+     * @brief Batch obtains the BundleInfos based on a given bundle name list.
+     * @param bundleNames Indicates the application bundle name list to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfos Indicates the obtained BundleInfos object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames,
+        int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) override;
+    /**
      * @brief Obtains the BundleInfo based on a given bundle name.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
      * @param bundleInfo Indicates the obtained BundleInfo object.
@@ -335,6 +345,16 @@ public:
      */
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+    /**
+     * @brief Batch query the AbilityInfo of list by the given Wants.
+     * @param wants Indicates the information of the abilities.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode BatchQueryAbilityInfos(
+        const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
     /**
      * @brief Query the launcher AbilityInfo of list by the given Want.
      * @param want Indicates the information of the ability.

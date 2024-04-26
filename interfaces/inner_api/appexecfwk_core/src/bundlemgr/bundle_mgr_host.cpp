@@ -86,6 +86,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_INFO),
+        &BundleMgrHost::HandleBatchGetBundleInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO),
         &BundleMgrHost::HandleGetBundlePackInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS),
@@ -118,6 +120,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9),
         &BundleMgrHost::HandleQueryAbilityInfosV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS),
+        &BundleMgrHost::HandleBatchQueryAbilityInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO),
         &BundleMgrHost::HandleQueryLauncherAbilityInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS),
@@ -611,6 +615,42 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, Me
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t bundleNameCount = data.ReadInt32();
+    if (bundleNameCount <= 0) {
+        APP_LOGE("bundleName count is error");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<std::string> bundleNames;
+    for (int i = 0; i < bundleNameCount; i++) {
+        std::string bundleName = data.ReadString();
+        if (bundleName.empty()) {
+            APP_LOGE("bundleName %{public}d is empty", i);
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        bundleNames.push_back(bundleName);
+    }
+
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<BundleInfo> bundleInfos;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(bundleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleGetBundlePackInfo(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -948,6 +988,37 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
     ErrCode ret = QueryAbilityInfosV9(*want, flags, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleBatchQueryAbilityInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t wantCount = data.ReadInt32();
+    std::vector<Want> wants;
+    for (int i = 0; i < wantCount; i++) {
+        std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+        if (want == nullptr) {
+            APP_LOGE("ReadParcelable<want> failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        wants.push_back(*want);
+    }
+
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

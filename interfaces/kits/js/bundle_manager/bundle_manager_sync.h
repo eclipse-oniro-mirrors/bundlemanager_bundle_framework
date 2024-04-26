@@ -48,6 +48,8 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info);
 napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info);
 
 bool ParseWantWithParameter(napi_env env, napi_value args, OHOS::AAFwk::Want &want);
+bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<OHOS::AAFwk::Want> &wants);
+bool IsArray(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_SYNC_H
