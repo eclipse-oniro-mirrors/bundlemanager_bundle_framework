@@ -1084,6 +1084,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CreateDataGroupDirs(newInfos, oldInfo);
     CHECK_RESULT_WITH_ROLLBACK(result, "create data group dirs failed with result %{public}d", newInfos, oldInfo);
 
+    GetExtensionDirsChange(newInfos, oldInfo);
+    CreateNewExtensionDirs(newInfos);
+    ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
+
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
@@ -1120,7 +1124,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
+    extensionDirGuard.Dismiss();
     RemoveOldGroupDirs();
+    RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
@@ -1300,6 +1306,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
     CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
+    RemoveBundleExtensionDir(oldInfo.GetBundleName());
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
@@ -3069,7 +3076,298 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
+    UpdateExtensionSandboxInfo(infos, hapVerifyRes);
     return ret;
+}
+
+void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (newInfos.empty() || hapVerifyRes.empty()) {
+        APP_LOGE("innerBundleInfo map or hapVerifyRes is empty");
+        return;
+    }
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
+    auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+    for (auto &item : newInfos) {
+        auto innerBundleInfo = item.second;
+        auto extensionInfoMap = innerBundleInfo.GetInnerExtensionInfos();
+        for (auto iter = extensionInfoMap.begin(); iter != extensionInfoMap.end(); iter++) {
+            if (!iter->second.needCreateSandbox) {
+                continue;
+            }
+            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                            + Constants::DATA_EXTENSION_PATH
+                            + iter->second.bundleName + Constants::PATH_SEPARATOR
+                            + iter->second.moduleName + Constants::PATH_SEPARATOR
+                            + iter->second.name;
+            std::string key = iter->second.bundleName + "." + iter->second.moduleName + "." +  iter->second.name;
+
+            std::vector<std::string> validGroupIds;
+            GetValidDataGroupIds(iter->second.dataGroupIds, dataGroupGids, validGroupIds);
+            APP_LOGI("extension %{public}s need to create dir on user %{public}d", iter->second.name.c_str(), userId_);
+            item.second.UpdateExtensionDirInfo(key, userId_, dir, validGroupIds);
+        }
+    }
+}
+
+void BaseBundleInstaller::GetValidDataGroupIds(const std::vector<std::string> &extensionDataGroupIds,
+    const std::vector<std::string> &bundleDataGroupIds, std::vector<std::string> &validGroupIds) const
+{
+    for (const std::string &dataGroupId : extensionDataGroupIds) {
+        if (std::find(bundleDataGroupIds.begin(), bundleDataGroupIds.end(), dataGroupId) != bundleDataGroupIds.end()) {
+            validGroupIds.emplace_back(dataGroupId);
+        }
+        APP_LOGI("dataGroupId %{public}s is invalid", dataGroupId.c_str());
+    }
+}
+
+void BaseBundleInstaller::GetExtensionDirsChange(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo)
+{
+    GetCreateExtensionDirs(newInfos);
+    GetRemoveExtensionDirs(newInfos, oldInfo);
+    CheckRemoveExtensionModuleDir(newInfos, oldInfo);
+    CheckRemoveExtensionBundleDir(newInfos, oldInfo);
+}
+
+void BaseBundleInstaller::GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    for (auto &item : newInfos) {
+        auto innerBundleInfo = item.second;
+        auto moduleName = innerBundleInfo.GetCurModuleName();
+        auto extensionDirSet = innerBundleInfo.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_);
+        for (const std::string &dir : extensionDirSet) {
+            newExtensionDirs_.emplace_back(dir);
+            bool dirExist = false;
+            auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+            if (result != ERR_OK || !dirExist) {
+                APP_LOGI("dir: %{public}s need to be created.", dir.c_str());
+                createExtensionDirs_.emplace_back(dir);
+            }
+        }
+    }
+}
+
+void BaseBundleInstaller::GetRemoveExtensionDirs(
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    if (!isAppExist_) {
+        // Install it for the first time
+        return;
+    }
+    std::vector<std::string> oldModuleNames;
+    oldInfo.GetModuleNames(oldModuleNames);
+    std::vector<std::string> oldExtensionDirs;
+    for (const std::string &oldModuleName : oldModuleNames) {
+        auto dirSet = oldInfo.GetAllExtensionDirsInSpecifiedModule(oldModuleName, userId_);
+        std::copy(dirSet.begin(), dirSet.end(), std::back_inserter(oldExtensionDirs));
+    }
+    if (isFeatureNeedUninstall_) {
+        std::set<std::string> newModules;
+        for (const auto &item : newInfos) {
+            std::vector<std::string> curModules;
+            item.second.GetModuleNames(curModules);
+            newModules.insert(curModules.begin(), curModules.end());
+        }
+        for (const std::string &oldModuleName : oldModuleNames) {
+            if (newModules.find(oldModuleName) == newModules.end()) {
+                std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                            + Constants::DATA_EXTENSION_PATH
+                            + oldInfo.GetBundleName() + Constants::PATH_SEPARATOR
+                            + oldModuleName;
+                APP_LOGI("dir %{public}s need to be removed", dir.c_str());
+                removeExtensionDirs_.emplace_back(dir);
+            }
+        }
+    }
+    std::set<std::string> newModuleNameSet;
+    for (const auto& item : newInfos) {
+        std::string modulePackage = item.second.GetCurrentModulePackage();
+        if (!oldInfo.FindModule(modulePackage)) {
+            // install a new module
+            continue;
+        }
+        // update a existed module
+        auto oldDirSet = oldInfo.GetAllExtensionDirsInSpecifiedModule(
+            oldInfo.GetModuleNameByPackage(modulePackage), userId_);
+        for (const std::string &oldDir : oldDirSet) {
+            if (std::find(newExtensionDirs_.begin(), newExtensionDirs_.end(), oldDir) == newExtensionDirs_.end()) {
+                APP_LOGI("dir %{public}s need to be removed", oldDir.c_str());
+                removeExtensionDirs_.emplace_back(oldDir);
+            }
+        }
+    }
+}
+
+void BaseBundleInstaller::CreateNewExtensionDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    if (createExtensionDirs_.empty()) {
+        APP_LOGD("no need to create extension sandbox dir");
+        return;
+    }
+    if (infos.empty()) {
+        APP_LOGE("innerBundleInfo infos is empty");
+        return;
+    }
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    if (!infos.begin()->second.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+        APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+            infos.begin()->second.GetBundleName().c_str(), userId_);
+        return;
+    }
+    for (const std::string &dir : createExtensionDirs_) {
+        APP_LOGI("create dir %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->Mkdir(
+            dir, DATA_GROUP_DIR_MODE, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+        if (result != ERR_OK) {
+            APP_LOGW("create extension sandbox dir %{public}s failed.", dir.c_str());
+            continue;
+        }
+    }
+}
+
+void BaseBundleInstaller::RemoveOldExtensionDirs() const
+{
+    if (removeExtensionDirs_.empty()) {
+        APP_LOGD("no need to remove old extension sandbox dir");
+        return;
+    }
+    for (const std::string &dir : removeExtensionDirs_) {
+        APP_LOGI("remove dir %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        if (result != ERR_OK) {
+            APP_LOGW("remove old extension sandbox dir %{public}s failed.", dir.c_str());
+            continue;
+        }
+    }
+}
+
+void BaseBundleInstaller::CheckRemoveExtensionBundleDir(
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    if (!isAppExist_ || !newExtensionDirs_.empty()) {
+        APP_LOGD("no need to remove extension dir for bundle");
+        return;
+    }
+    std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName();
+    if (isFeatureNeedUninstall_) {
+        if (!oldInfo.GetAllExtensionDirs(userId_).empty()) {
+            removeExtensionDirs_.clear();
+            APP_LOGI("need to remove extension dir for bundle, dir is %{public}s", dir.c_str());
+            removeExtensionDirs_.emplace_back(dir);
+        }
+        return;
+    }
+
+    std::vector<std::string> oldModuleNames;
+    oldInfo.GetModuleNames(oldModuleNames);
+    std::set<std::string> curModules;
+    for (const auto &item : newInfos) {
+        curModules.insert(item.second.GetModuleNameByPackage(item.second.GetCurrentModulePackage()));
+    }
+    for (const std::string &moduleName : oldModuleNames) {
+        if (curModules.find(moduleName) == curModules.end() &&
+            !oldInfo.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_).empty()) {
+            return;
+        }
+    }
+    removeExtensionDirs_.clear();
+    APP_LOGI("need to remove extension dir for bundle, dir is %{public}s", dir.c_str());
+    removeExtensionDirs_.emplace_back(dir);
+}
+
+void BaseBundleInstaller::CheckRemoveExtensionModuleDir(
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    if (!isAppExist_) {
+        APP_LOGD("no need to remove extension dir for module");
+        return;
+    }
+    std::vector<std::string> oldModuleNames;
+    oldInfo.GetModuleNames(oldModuleNames);
+    if (isFeatureNeedUninstall_) {
+        CheckRemoveExtensionModuleDirWhenUpgrade(oldModuleNames, newInfos, oldInfo);
+        return;
+    }
+    // version same, only folders created by currently installed modules will be affected
+    for (const auto &item : newInfos) {
+        std::string curModuleName = item.second.GetModuleNameByPackage(item.second.GetCurrentModulePackage());
+        if (!item.second.GetAllExtensionDirsInSpecifiedModule(curModuleName, userId_).empty()) {
+            continue;
+        }
+        // current module need not to create extension dir
+        if (!oldInfo.GetAllExtensionDirsInSpecifiedModule(curModuleName, userId_).empty()) {
+            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                    + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName()
+                    + curModuleName;
+            APP_LOGI("need to remove extension dir for module, dir is %{public}s", dir.c_str());
+            removeExtensionDirs_.emplace_back(dir);
+        }
+    }
+}
+
+void BaseBundleInstaller::CheckRemoveExtensionModuleDirWhenUpgrade(const std::vector<std::string> &oldModules,
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    // version update, folders created by other modules may be affected
+    if (!isFeatureNeedUninstall_ || oldInfo.GetAllExtensionDirs(userId_).empty()) {
+        return;
+    }
+    std::set<std::string> curModules;
+    std::set<std::string> withExtensionModules;
+    for (const auto &item : newInfos) {
+        std::string moduleName = item.second.GetModuleNameByPackage(item.second.GetCurrentModulePackage());
+        curModules.insert(moduleName);
+        if (!item.second.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_).empty()) {
+            withExtensionModules.insert(moduleName);
+        }
+    }
+    for (const std::string &moduleName : oldModules) {
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                    + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName()
+                    + moduleName;
+        if (oldInfo.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_).empty()) {
+            APP_LOGI("dir %{public}s not existed", dir.c_str());
+            continue;
+        }
+        if (curModules.find(moduleName) == curModules.end() ||
+            withExtensionModules.find(moduleName) == withExtensionModules.end()) {
+            // after version upgrade： 1. without this module 2. this module need not to create sandbox dir
+            APP_LOGI("need to remove extension dir for module, dir is %{public}s", dir.c_str());
+            removeExtensionDirs_.emplace_back(dir);
+        }
+    }
+}
+
+void BaseBundleInstaller::RemoveCreatedExtensionDirsForException() const
+{
+    if (createExtensionDirs_.empty()) {
+        APP_LOGI("no need to remove extension sandbox dir");
+        return;
+    }
+    for (const std::string &dir : createExtensionDirs_) {
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        if (result != ERR_OK) {
+            APP_LOGW("remove created extension sandbox dir %{public}s failed.", dir.c_str());
+            continue;
+        }
+    }
+}
+
+void BaseBundleInstaller::RemoveBundleExtensionDir(const std::string &bundleName) const
+{
+    if (bundleName.empty()) {
+        APP_LOGW("bundleName is empty");
+        return;
+    }
+    std::string dir =  Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        + Constants::DATA_EXTENSION_PATH + bundleName;
+    auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+    if (result != ERR_OK) {
+        APP_LOGW("remove extension dir %{public}s failed", dir.c_str());
+    }
 }
 
 void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos)

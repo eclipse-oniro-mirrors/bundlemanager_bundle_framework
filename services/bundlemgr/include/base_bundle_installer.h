@@ -658,6 +658,25 @@ private:
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
     bool VerifyActivationLock() const;
+    void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+    void GetValidDataGroupIds(const std::vector<std::string> &extensionDataGroupIds,
+        const std::vector<std::string> &bundleDataGroupIds, std::vector<std::string> &validGroupIds) const;
+    void GetExtensionDirsChange(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo);
+    void GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    void GetRemoveExtensionDirs(
+        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    void CheckRemoveExtensionBundleDir(
+        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    void CheckRemoveExtensionModuleDir(
+        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    void CheckRemoveExtensionModuleDirWhenUpgrade(const std::vector<std::string> &oldModules,
+        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    void CreateNewExtensionDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void RemoveCreatedExtensionDirsForException() const;
+    void RemoveOldExtensionDirs() const;
+    void RemoveBundleExtensionDir(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -712,6 +731,12 @@ private:
     std::map<std::string, std::string> targetSoPathMap_;
     bool copyHapToInstallPath_ = false;
     std::string appDistributionType_;
+    // indicates sandboxd dirs need to create by extension
+    std::vector<std::string> newExtensionDirs_;
+    // indicates sandboxd dirs need to create by extension
+    std::vector<std::string> createExtensionDirs_;
+    // indicates sandboxd dirs need to remove by extension
+    std::vector<std::string> removeExtensionDirs_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

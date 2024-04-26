@@ -883,6 +883,11 @@ public:
         baseApplicationInfo_->applicationReservedFlag &= ~flag;
     }
 
+    std::set<std::string> GetAllExtensionDirsInSpecifiedModule(
+        const std::string &moduleName, int32_t userId) const;
+    std::set<std::string> GetAllExtensionDirs(int32_t userId) const;
+    void UpdateExtensionDirInfo(const std::string &key,
+        int32_t userId, const std::string &sandBoxPath, const std::vector<std::string>& dataGroupIds);
     void SetAppDistributionType(const std::string &appDistributionType);
     std::string GetAppDistributionType() const;
     void SetAppProvisionType(const std::string &appProvisionType);
@@ -964,7 +969,6 @@ public:
     bool IsGwpAsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
-    
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
@@ -973,6 +977,7 @@ public:
         ApplicationInfo &appInfo) const;
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         BundleInfo &bundleInfo) const;
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
