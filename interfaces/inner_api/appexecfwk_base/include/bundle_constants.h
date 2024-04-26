@@ -337,6 +337,7 @@ constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
+extern const std::string CLONE_BUNDLE_PREFIX;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

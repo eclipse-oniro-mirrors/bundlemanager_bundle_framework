@@ -34,6 +34,7 @@ namespace Constants {
         {X86, "x86"},
         {X86_64, "x86_64"},
     };
+    const std::string CLONE_BUNDLE_PREFIX = "clone_";
 }
 }
 }

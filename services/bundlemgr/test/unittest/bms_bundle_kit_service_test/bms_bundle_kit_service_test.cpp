@@ -10819,12 +10819,17 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameAndIndexByName_0001, Function | S
         EXPECT_EQ(keyName, bundleName);
         EXPECT_EQ(appIndex, 0);
 
-        keyName = "com.ohos_example";
+        keyName = "clone_com.ohos_example";
         dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
         EXPECT_EQ(keyName, bundleName);
         EXPECT_EQ(appIndex, 0);
 
-        keyName = "1_com.ohos_example";
+        keyName = "cclone_com.ohos_example";
+        dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
+        EXPECT_EQ(keyName, bundleName);
+        EXPECT_EQ(appIndex, 0);
+
+        keyName = "1clone_com.ohos_example";
         dataMgr->GetBundleNameAndIndexByName(keyName, bundleName, appIndex);
         EXPECT_EQ(bundleName, "com.ohos_example");
         EXPECT_EQ(appIndex, 1);
