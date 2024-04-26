@@ -1320,11 +1320,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     /**
      * @brief Get preinstalled application infos.
      * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.

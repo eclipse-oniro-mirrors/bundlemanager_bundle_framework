@@ -91,7 +91,6 @@ const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
 const int32_t PERMS_INDEX_SIX = 6;
-const int32_t PERMS_INDEX_SEV = 7;
 const size_t ODID_LENGTH = 36;
 }  // namespace
 
@@ -293,7 +292,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 8;
+    const int32_t permsNum = 7;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -303,7 +302,6 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
     perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
     perms[PERMS_INDEX_SIX] = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
-    perms[PERMS_INDEX_SEV] = "ohos.permission.MIGRATE_DATA";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -8775,101 +8773,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0004, Function | M
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
     std::cout << "END QueryAbilityInfoByContinueType_0004" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0001
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, param empty
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0001, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0001" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        std::string destPath;
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID);
-        sourcePaths.push_back("aaa");
-        ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
-    }
-    std::cout << "END MigrateData_0001" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0002
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, path not exist
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0002, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0002" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(THIRD_BUNDLE_PATH);
-        std::string destPath = "../bbb";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID);
-    }
-    std::cout << "END MigrateData_0002" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0003
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData failed, path can not access
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0003, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0003" << std::endl;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(THIRD_BUNDLE_PATH);
-        std::string destPath = "/data/update";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED);
-    }
-    std::cout << "END MigrateData_0003" << std::endl;
-}
-
-/**
- * @tc.number: MigrateData_0004
- * @tc.name: test MigrateData
- * @tc.desc: 1.MigrateData succeed
- */
-HWTEST_F(ActsBmsKitSystemTest, MigrateData_0004, Function | MediumTest | Level1)
-{
-    std::cout << "START MigrateData_0002" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    if (bundleMgrProxy != nullptr) {
-        std::vector<std::string> sourcePaths;
-        sourcePaths.push_back(BUNDLE_DATA_ROOT_PATH + appName + "/files");
-        std::string destPath = BUNDLE_DATA_ROOT_PATH + appName + "/haps";
-        ErrCode ret = bundleMgrProxy->MigrateData(sourcePaths, destPath);
-        EXPECT_EQ(ret, ERR_OK);
-    }
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END MigrateData_0002" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

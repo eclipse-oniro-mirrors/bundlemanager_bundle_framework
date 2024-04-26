@@ -1308,18 +1308,4 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500
     bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
     EXPECT_EQ(ret, false);
 }
-
-/**
- * @tc.number: MigrateData_0100
- * @tc.name: test MigrateData
- * @tc.desc: 1. system running normally
- *           2. MigrateData false by not system api.
- */
-HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, MigrateData_0100, Function | SmallTest | Level1)
-{
-    std::vector<std::string> sourcePaths;
-    std::string destPath;
-    ErrCode ret = bundleMgrHostImpl_->MigrateData(sourcePaths, destPath);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
-}
 } // OHOS

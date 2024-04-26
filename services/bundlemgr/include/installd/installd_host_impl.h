@@ -191,9 +191,6 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
-    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
-        const std::string &destinationPath) override;
-
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);

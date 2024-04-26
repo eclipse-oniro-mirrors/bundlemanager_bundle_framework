@@ -1008,15 +1008,13 @@ bool InstalldOperator::CopyFile(
 
     std::ifstream in(sourceFile);
     if (!in.is_open()) {
-        APP_LOGE("Copy file failed due to open sourceFile %{private}s failed errno:%{public}d",
-            sourceFile.c_str(), errno);
+        APP_LOGE("Copy file failed due to open sourceFile failed errno:%{public}d", errno);
         return false;
     }
 
     std::ofstream out(destinationFile);
     if (!out.is_open()) {
-        APP_LOGE("Copy file failed due to open destinationFile %{private}s failed errno:%{public}d",
-            destinationFile.c_str(), errno);
+        APP_LOGE("Copy file failed due to open destinationFile failed errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -1962,91 +1960,5 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     return ret;
 }
 #endif
-
-ErrCode InstalldOperator::MigrateData(const std::vector<std::string> &sourcePaths,
-    const std::string &destinationPath)
-{
-    APP_LOGD("migrate data start");
-    ErrCode ret = ERR_OK;
-    std::vector<std::string> realSourcePaths;
-    bool existValidPath = false;
-    for (const auto &sourcePath : sourcePaths) {
-        std::string realPath;
-        if (!PathToRealPath(sourcePath, realPath)) {
-            APP_LOGW("file(%{private}s) is not real path", sourcePath.c_str());
-            ret = ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
-            continue;
-        }
-        realSourcePaths.push_back(realPath);
-        existValidPath = true;
-    }
-    // all sourcePaths are invalid, need return error
-    if (!existValidPath) {
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
-    }
-    std::string destPath;
-    if (!PathToRealPath(destinationPath, destPath)) {
-        APP_LOGE("file(%{private}s) is not real path", destinationPath.c_str());
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
-    }
-    for (const auto &sourcePath : realSourcePaths) {
-        if (!InnerMigrateData(sourcePath, destPath)) {
-            APP_LOGW("file(%{private}s) migrate data failed, errno:%{public}d", sourcePath.c_str(), errno);
-            ret = ERR_BUNDLE_MANAGER_MIGRATE_DATA_OTHER_REASON_FAILED;
-        }
-    }
-    APP_LOGD("migrate data end");
-    return ret;
-}
-
-bool InstalldOperator::InnerMigrateData(const std::string &sourcePaths, const std::string &destinationPath)
-{
-    struct stat buf = {};
-    if (stat(sourcePaths.c_str(), &buf) != 0) {
-        APP_LOGE("fail to stat errno:%{public}d", errno);
-        return false;
-    }
-    if (!S_ISDIR(buf.st_mode)) {
-        std::string fileName = sourcePaths;
-        auto pos = sourcePaths.rfind(Constants::PATH_SEPARATOR);
-        if (pos != std::string::npos) {
-            fileName = sourcePaths.substr(pos + 1);
-        }
-        std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + fileName;
-        return CopyFile(sourcePaths, destPath);
-    }
-    // create dir if not exist
-    if (!IsExistDir(destinationPath)) {
-        if (!MkRecursiveDir(destinationPath, true)) {
-            APP_LOGE("create targetPath %{public}s failed", destinationPath.c_str());
-            return false;
-        }
-    }
-    DIR *dir = opendir(sourcePaths.c_str());
-    if (dir == nullptr) {
-        APP_LOGE("fail to opendir:%{private}s, errno:%{public}d", sourcePaths.c_str(), errno);
-        return false;
-    }
-    bool ret = true;
-    struct dirent *ptr = nullptr;
-    while ((ptr = readdir(dir)) != nullptr) {
-        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
-            continue;
-        }
-        std::string subPath = OHOS::IncludeTrailingPathDelimiter(sourcePaths) + std::string(ptr->d_name);
-        std::string destPath = OHOS::IncludeTrailingPathDelimiter(destinationPath) + std::string(ptr->d_name);
-        if (ptr->d_type == DT_DIR) {
-            ret = InnerMigrateData(subPath, destPath);
-            continue;
-        }
-        if (!CopyFile(subPath, destPath)) {
-            APP_LOGE("migrate data source:%{private}s to destination %{public}s failed",
-                subPath.c_str(), destPath.c_str());
-            ret = false;
-        }
-    }
-    closedir(dir);
-    return ret;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

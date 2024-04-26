@@ -346,11 +346,6 @@ public:
     {
         return ERR_OK;
     }
-
-    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths, const std::string &destinationPath)
-    {
-        return ERR_OK;
-    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

@@ -110,8 +110,6 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR),
         &InstalldHost::HandleCreateBundleDataDirWithVector);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::STOP_AOT), &InstalldHost::HandleStopAOT);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MIGRATE_DATA),
-        &InstalldHost::HandleMigrateData);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -640,22 +638,6 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    return true;
-}
-
-bool InstalldHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t size = data.ReadInt32();
-    std::vector<std::string> sourcePaths;
-    CONTAINER_SECURITY_VERIFY(data, size, &sourcePaths);
-    for (int32_t index = 0; index < size; ++index) {
-        std::string path = Str16ToStr8(data.ReadString16());
-        sourcePaths.emplace_back(path);
-    }
-    std::string destinationPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = MigrateData(sourcePaths, destinationPath);
-
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
