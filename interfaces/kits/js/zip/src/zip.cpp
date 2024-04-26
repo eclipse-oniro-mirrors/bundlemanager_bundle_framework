@@ -374,6 +374,72 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
     PostTask(innerTask);
     return true;
 }
+
+bool ZipFileIsValid(const std::string &srcFile)
+{
+    if (srcFile.size() == 0) {
+        APP_LOGE("srcFile len is 0.");
+        return false;
+    }
+    if (!FilePathCheckValid(srcFile)) {
+        APP_LOGE("FilePathCheckValid return false.");
+        return false;
+    }
+    FilePath srcFileDir(srcFile);
+    if (!FilePath::PathIsValid(srcFileDir)) {
+        APP_LOGE("PathIsValid return false.");
+        return false;
+    }
+    if (!FilePath::PathIsReadable(srcFileDir)) {
+        APP_LOGE("PathIsReadable return false.");
+        return false;
+    }
+    return true;
+}
+
+ErrCode GetOriginalSize(PlatformFile zipFd, int64_t &originalSize)
+{
+    ZipReader reader;
+    if (!reader.OpenFromPlatformFile(zipFd)) {
+        APP_LOGE("Failed to open, not ZIP format or damaged.");
+        return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
+    }
+    int64_t totalSize = 0;
+    while (reader.HasMore()) {
+        if (!reader.OpenCurrentEntryInZip()) {
+            APP_LOGE("Failed to open the current file in zip.");
+            return ERR_ZLIB_SERVICE_DISABLED;
+        }
+        const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
+        FilePath entryPath = constEntryPath;
+        if (reader.CurrentEntryInfo()->IsUnsafe()) {
+            APP_LOGE("Found an unsafe file in zip.");
+            return ERR_ZLIB_SERVICE_DISABLED;
+        }
+        totalSize += reader.CurrentEntryInfo()->GetOriginalSize();
+        if (!reader.AdvanceToNextEntry()) {
+            APP_LOGE("Failed to advance to the next file.");
+            return ERR_ZLIB_SERVICE_DISABLED;
+        }
+    }
+    originalSize = totalSize;
+    return ERR_OK;
+}
+
+ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize)
+{
+    if (!ZipFileIsValid(srcFile)) {
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    }
+    PlatformFile zipFd = open(srcFile.c_str(), S_IREAD, O_CREAT);
+    if (zipFd == kInvalidPlatformFile) {
+        APP_LOGE("Failed to open file, errno: %{public}d, %{public}s", errno, strerror(errno));
+        return ERR_ZLIB_SRC_FILE_DISABLED;
+    }
+    ErrCode ret = GetOriginalSize(zipFd, originalSize);
+    close(zipFd);
+    return ret;
+}
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS

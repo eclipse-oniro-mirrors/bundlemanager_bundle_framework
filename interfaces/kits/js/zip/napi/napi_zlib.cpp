@@ -42,6 +42,8 @@ constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr int32_t PARAM3 = 3;
 constexpr int32_t PARAM2 = 2;
 const char* WRONG_PARAM = "wrong param type";
+const char* SRC_FILE = "inFile";
+const std::string GET_ORIGINAL_SIZE = "GetOriginalSize";
 }
 
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
@@ -258,6 +260,7 @@ napi_value ZlibInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("unzipFile", NAPI_UnzipFile),
         DECLARE_NAPI_FUNCTION("compressFile", CompressFile),
         DECLARE_NAPI_FUNCTION("decompressFile", DecompressFile),
+        DECLARE_NAPI_FUNCTION("getOriginalSize", GetOriginalSize),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
@@ -722,6 +725,69 @@ napi_value DecompressFile(napi_env env, napi_callback_info info)
     return promise;
 }
 
+void GetOriginalSizeExec(napi_env env, void *data)
+{
+    APP_LOGD("NAPI begin GetOriginalSizeExec");
+    OriginalSizeCallbackInfo *asyncCallbackInfo = reinterpret_cast<OriginalSizeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err =
+        GetOriginalSize(asyncCallbackInfo->srcFile, asyncCallbackInfo->originalSize);
+    APP_LOGD("GetOriginalSizeExec end");
+}
+
+void GetOriginalSizeComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin GetOriginalSizeComplete");
+    OriginalSizeCallbackInfo *asyncCallbackInfo = reinterpret_cast<OriginalSizeCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<OriginalSizeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err != ERR_OK) {
+        ErrCode errCode = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+        APP_LOGD("ErrCode is %{public}d - %{public}d", errCode, asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateCommonError(env, errCode, GET_ORIGINAL_SIZE);
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, ERR_OK, "");
+        NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, asyncCallbackInfo->originalSize, &result[1]));
+    }
+    CommonFunc::NapiReturnDeferred<OriginalSizeCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    APP_LOGD("GetOriginalSizeComplete end");
+}
+
+napi_value GetOriginalSize(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI begin GetOriginalSize");
+    OriginalSizeCallbackInfo *asyncCallbackInfo = new (std::nothrow) OriginalSizeCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<OriginalSizeCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = ERR_OK;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("parameters init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->srcFile)) {
+        APP_LOGE("srcFile parse failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SRC_FILE, TYPE_STRING);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<OriginalSizeCallbackInfo>(env,
+        asyncCallbackInfo, GET_ORIGINAL_SIZE, GetOriginalSizeExec, GetOriginalSizeComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI end");
+    return promise;
+}
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS

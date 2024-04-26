@@ -18,6 +18,7 @@
 #include <uv.h>
 
 #include "appexecfwk_errors.h"
+#include "base_cb_info.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "napi/native_common.h"
@@ -59,6 +60,12 @@ struct AsyncCallbackInfo {
     bool isCallBack = false;
     ErrCode callbackResult;
     bool deliverErrcode = false;
+};
+
+struct OriginalSizeCallbackInfo : public BaseCallbackInfo {
+    explicit OriginalSizeCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string srcFile = "";
+    int64_t originalSize = 0;
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

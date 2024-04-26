@@ -160,6 +160,7 @@ bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZip
 
 napi_value CompressFile(napi_env env, napi_callback_info info);
 napi_value DecompressFile(napi_env env, napi_callback_info info);
+napi_value GetOriginalSize(napi_env env, napi_callback_info info);
 
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

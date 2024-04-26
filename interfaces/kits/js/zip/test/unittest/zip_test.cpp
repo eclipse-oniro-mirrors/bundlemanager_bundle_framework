@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,8 @@ using namespace testing::ext;
 namespace {
 const std::string BASE_PATH = "/data/app/el2/100/base/";
 const std::string APP_PATH = "com.example.zlib/com.example.zlib/com.example.zlib.MainAbility/files/";
+const std::string TEST_ZIP_OK = "/data/test/resource/bms/test_zip/resourceManagerTest.hap";
+const std::string TEST_ZIP_DMAGED = "/data/test/resource/bms/test_zip/ohos_test.xml";
 }  // namespac
 class ZipTest : public testing::Test {
 public:
@@ -312,6 +314,67 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0800, Function | MediumTest | Level
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
     auto ret = Unzip(src, dest, options, zlibCallbackInfo);
     EXPECT_FALSE(ret);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GetOriginalSize_0100
+ * @tc.name: GetOriginalSize_0100
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0100, Function | MediumTest | Level1)
+{
+    std::string src = "";
+    int64_t originalSize = 0;
+
+    auto ret = GetOriginalSize(src, originalSize);
+    EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_DISABLED);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GetOriginalSize_0200
+ * @tc.name: GetOriginalSize_0200
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0200, Function | MediumTest | Level1)
+{
+    std::string src = BASE_PATH + APP_PATH + "result/8file.zip";
+    int64_t originalSize = 0;
+
+    auto ret = GetOriginalSize(src, originalSize);
+    EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_DISABLED);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GetOriginalSize_0300
+ * @tc.name: GetOriginalSize_0300
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0300, Function | MediumTest | Level1)
+{
+    std::string src = TEST_ZIP_DMAGED;
+    int64_t originalSize = 0;
+
+    auto ret = GetOriginalSize(src, originalSize);
+    EXPECT_EQ(ret, ERR_ZLIB_SRC_FILE_FORMAT_ERROR);
+    std::this_thread::sleep_for(std::chrono::milliseconds(5000));
+}
+
+/**
+ * @tc.number: APPEXECFWK_LIBZIP_GetOriginalSize_0400
+ * @tc.name: GetOriginalSize_0400
+ * @tc.desc:
+ */
+HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_GetOriginalSize_0400, Function | MediumTest | Level1)
+{
+    std::string src = TEST_ZIP_OK;
+    int64_t originalSize = 0;
+
+    auto ret = GetOriginalSize(src, originalSize);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(originalSize, 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
 }  // namespace LIBZIP
