@@ -1311,11 +1311,6 @@ bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string
 ErrCode InstalldHostImpl::MigrateData(const std::vector<std::string> &sourcePaths,
     const std::string &destinationPath)
 {
-    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
-        APP_LOGE("installd permission denied, only used for foundation process");
-        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
-    }
-
     if (sourcePaths.empty()) {
         return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
     }
