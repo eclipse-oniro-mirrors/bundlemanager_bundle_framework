@@ -31,6 +31,7 @@ using OHOS::DelayedSingleton;
 namespace OHOS {
 namespace {
 const std::string TEST_MODULE_NAME = "testModuleName";
+const std::string TEST_MODULE_NAME_ONE = "TEST_MODULE_NAME";
 const std::string TEST_MODULE_NAME_SECOND = "testModuleNameSecond";
 const std::string TARGET_MODULE_NAME = "targetModuleName";
 const std::string OTHER_TARGET_MODULE_NAME = "targetModuleNameTest";
@@ -52,6 +53,7 @@ const int32_t TEST_VERSION_CODE = 1000000;
 const int32_t LOWER_TEST_VERSION_CODE = 999999;
 const int32_t HIGHER_TEST_VERSION_CODE = 1000001;
 const int32_t USERID = 100;
+const int32_t FILE_UNDERLINE_NUM = 2;
 const int32_t NOT_EXIST_USERID = -5;
 const int32_t FOUR = 4;
 const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
@@ -66,13 +68,14 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    void AddInnerBundleInfo();
+    void AddInnerBundleInfo(InnerBundleInfo innerBundleInfo, InnerBundleInfo oldInfo);
     void UninstallBundleInfo();
     void BuildInternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
     void RemoveOverlayBundleInfo(const std::string &targetBundleName, InnerBundleInfo &targetInnerBundleInfo);
     void AddOverlayModuleStates(const InnerBundleInfo &innerBundleInfo, InnerBundleUserInfo &userInfo);
     void ClearDataMgr();
     void ResetDataMgr();
+    void AddInnerBundleInfoNoModuleInfo();
 
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleOverlayInstallChecker> GetBundleOverlayChecker() const;
@@ -142,10 +145,9 @@ void BmsBundleOverlayCheckerTest::ResetDataMgr()
 void BmsBundleOverlayCheckerTest::TearDown()
 {}
 
-void BmsBundleOverlayCheckerTest::AddInnerBundleInfo()
+void BmsBundleOverlayCheckerTest::AddInnerBundleInfo(InnerBundleInfo innerBundleInfo, InnerBundleInfo oldInfo)
 {
     // construct innerBundleInfo
-    InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TARGET_MODULE_NAME;
@@ -161,7 +163,6 @@ void BmsBundleOverlayCheckerTest::AddInnerBundleInfo()
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
-    InnerBundleInfo oldInfo;
     InnerModuleInfo targetModuleInfo;
     targetModuleInfo.name = TARGET_MODULE_NAME;
     targetModuleInfo.targetModuleName = OTHER_TARGET_MODULE_NAME;
@@ -170,6 +171,30 @@ void BmsBundleOverlayCheckerTest::AddInnerBundleInfo()
     targetApplicationInfo.bundleName = TEST_BUNDLE_NAME;
 
     oldInfo.InsertInnerModuleInfo(TARGET_MODULE_NAME, targetModuleInfo);
+    oldInfo.SetBaseApplicationInfo(targetApplicationInfo);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, oldInfo);
+}
+
+void BmsBundleOverlayCheckerTest::AddInnerBundleInfoNoModuleInfo()
+{
+    // construct innerBundleInfo
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo.targetBundleName = TEST_BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    // construct target module
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    InnerBundleInfo oldInfo;
+    ApplicationInfo targetApplicationInfo;
+    targetApplicationInfo.bundleName = TEST_BUNDLE_NAME;
+    oldInfo.overlayType_ = OVERLAY_INTERNAL_BUNDLE;
+
     oldInfo.SetBaseApplicationInfo(targetApplicationInfo);
     dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
     dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, oldInfo);
@@ -854,10 +879,10 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0400, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0500, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     InnerBundleInfo targetInnerBundleInfo;
+    AddInnerBundleInfo(newInfo, oldInfo);
 
     OverlayDataMgr overlayDataMgr;
     ErrCode res = overlayDataMgr.UpdateExternalOverlayInfo(newInfo, oldInfo, targetInnerBundleInfo);
@@ -1077,7 +1102,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1700, Function | SmallTest 
     ErrCode res = overlayDataMgr.GetAllOverlayModuleInfo("", overlayModuleInfos, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
     res = overlayDataMgr.GetAllOverlayModuleInfo(
         TEST_BUNDLE_NAME, overlayModuleInfos, Constants::NOT_EXIST_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
@@ -1111,7 +1138,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1800, Function | SmallTest 
     ErrCode res = overlayDataMgr.GetOverlayModuleInfo("", "", overlayModuleInfos, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
     res = overlayDataMgr.GetOverlayModuleInfo(
         TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
@@ -1135,7 +1164,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1900, Function | SmallTest 
     ErrCode res = overlayDataMgr.GetOverlayBundleInfoForTarget("", overlayBundleInfo, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
     res = overlayDataMgr.GetOverlayBundleInfoForTarget(
         TEST_BUNDLE_NAME, overlayBundleInfo, Constants::NOT_EXIST_USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1157,7 +1188,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1900, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2000, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
     OverlayDataMgr overlayDataMgr;
     std::vector<OverlayModuleInfo> overlayModuleInfos;
     ErrCode res = overlayDataMgr.GetOverlayModuleInfoForTarget(
@@ -1197,7 +1230,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2100, Function | SmallTest 
     ErrCode res = overlayDataMgr.SetOverlayEnabled(TEST_BUNDLE_NAME, "", isEnabled, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
     res = overlayDataMgr.SetOverlayEnabled(
         TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, Constants::INVALID_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
@@ -1205,6 +1240,23 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2100, Function | SmallTest 
     res = overlayDataMgr.SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
+    res = overlayDataMgr.SetOverlayEnabled(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
+
+    UninstallBundleInfo();
+
+    AddInnerBundleInfoNoModuleInfo();
+    res = overlayDataMgr.SetOverlayEnabled(
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE);
+    UninstallBundleInfo();
+
+    oldInnerBundleInfo.overlayType_ = OVERLAY_INTERNAL_BUNDLE;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
+    res = overlayDataMgr.SetOverlayEnabled(
+        TEST_BUNDLE_NAME, TARGET_MODULE_NAME, isEnabled, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(res, ERR_OK);
     UninstallBundleInfo();
 }
 
@@ -1252,7 +1304,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2300, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2400, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
+    InnerBundleInfo curInnerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(curInnerBundleInfo, oldInnerBundleInfo);
     OverlayDataMgr overlayDataMgr;
     InnerBundleInfo innerBundleInfo;
     InnerBundleUserInfo userInfo;
@@ -1399,7 +1453,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
 
     OverlayDataMgr overlayDataMgr;
     InnerBundleInfo oldInfo;
@@ -1489,10 +1545,10 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3100, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3200, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
-
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
+    AddInnerBundleInfo(newInfo, oldInfo);
+
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -1558,11 +1614,17 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3300, Function | SmallTest 
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3400, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo();
+    AddInnerBundleInfoNoModuleInfo();
     OverlayDataMgr overlayDataMgr;
     bool res = overlayDataMgr.IsExistedNonOverlayHap(TEST_BUNDLE_NAME);
     EXPECT_EQ(res, false);
+    UninstallBundleInfo();
 
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInnerBundleInfo;
+    AddInnerBundleInfo(innerBundleInfo, oldInnerBundleInfo);
+    res = overlayDataMgr.IsExistedNonOverlayHap(TEST_BUNDLE_NAME);
+    EXPECT_EQ(res, false);
     UninstallBundleInfo();
 }
 
@@ -2350,6 +2412,16 @@ HWTEST_F(BmsBundleOverlayCheckerTest, TestOverlayByDataMgrFalse_0400, Function |
     userInfo.bundleUserInfo.overlayModulesState.clear();
     std::map<std::string, int32_t> statesMap;
     std::map<std::string, int32_t> res = overlayDataMgr.GetModulesStateFromUserInfo(userInfo);
+    EXPECT_EQ(res, statesMap);
+
+    userInfo.bundleUserInfo.overlayModulesState.push_back(TEST_MODULE_NAME);
+    res = overlayDataMgr.GetModulesStateFromUserInfo(userInfo);
+    EXPECT_EQ(res, statesMap);
+
+    userInfo.bundleUserInfo.overlayModulesState.clear();
+    userInfo.bundleUserInfo.overlayModulesState.push_back(TEST_MODULE_NAME_ONE);
+    res = overlayDataMgr.GetModulesStateFromUserInfo(userInfo);
+    statesMap["TEST"] = FILE_UNDERLINE_NUM;
     EXPECT_EQ(res, statesMap);
 }
 
