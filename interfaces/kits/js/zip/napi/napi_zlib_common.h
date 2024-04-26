@@ -34,6 +34,7 @@ namespace LIBZIP {
 
 struct CallZipUnzipParam {
     std::string src;
+    std::vector<std::string> srcFiles;
     std::string dest;
     OPTIONS options;
 };

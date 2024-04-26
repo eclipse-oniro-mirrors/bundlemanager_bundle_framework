@@ -159,6 +159,7 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info);
 bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZipFile);
 
 napi_value CompressFile(napi_env env, napi_callback_info info);
+napi_value CompressFiles(napi_env env, napi_callback_info info);
 napi_value DecompressFile(napi_env env, napi_callback_info info);
 napi_value GetOriginalSize(napi_env env, napi_callback_info info);
 
