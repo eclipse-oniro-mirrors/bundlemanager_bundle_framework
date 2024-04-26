@@ -1057,6 +1057,9 @@ private:
     void GetCloneBundleInfosV9(const InnerBundleInfo& info, int32_t userId, int32_t flags,
         BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
+    std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const;
+    void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos, const std::string &bundleName,
+        const ElementName &element, int32_t flags, int32_t userId) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

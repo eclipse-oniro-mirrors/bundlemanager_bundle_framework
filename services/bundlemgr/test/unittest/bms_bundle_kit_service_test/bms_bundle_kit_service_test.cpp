@@ -211,6 +211,7 @@ const int32_t ALL_USERID = -3;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
+const int32_t TEST_APP_INDEX1 = 1;
 const std::string BUNDLE_NAME = "bundleName";
 const std::string LAUNCHER_BUNDLE_NAME = "launcherBundleName";
 const std::string MODULE_NAME = "moduleName";
@@ -303,6 +304,8 @@ public:
         bool userDataClearable, bool isSystemApp) const;
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
     void ClearBundleInfo(const std::string &bundleName);
+    void AddCloneInfo(InnerBundleInfo &bundleInfoTest, std::string bundleName, int32_t userId);
+    void ClearCloneInfo(InnerBundleInfo &bundleInfoTest, std::string bundleName, int32_t userId);
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -1176,6 +1179,40 @@ void BmsBundleKitServiceTest::ClearBundleInfo(const std::string &bundleName)
     if (iterator != GetBundleDataMgr()->bundleInfos_.end()) {
         GetBundleDataMgr()->bundleInfos_.erase(iterator);
     }
+}
+
+void BmsBundleKitServiceTest::AddCloneInfo(InnerBundleInfo &bundleInfoTest, std::string bundleName, int32_t userId)
+{
+    auto bundleInfoMapIter = GetBundleDataMgr()->bundleInfos_.find(bundleName);
+    EXPECT_NE(bundleInfoMapIter, GetBundleDataMgr()->bundleInfos_.end());
+    bundleInfoTest = bundleInfoMapIter->second;
+    InnerBundleUserInfo bundleUserInfoTest;
+    bool getBundleUserInfoRes = bundleInfoTest.GetInnerBundleUserInfo(userId, bundleUserInfoTest);
+    EXPECT_TRUE(getBundleUserInfoRes);
+
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    innerBundleCloneInfo.userId = userId;
+    innerBundleCloneInfo.appIndex = TEST_APP_INDEX1;
+    innerBundleCloneInfo.uid = TEST_UID;
+    std::string appIndexKey = bundleUserInfoTest.AppIndexToKey(innerBundleCloneInfo.appIndex);
+    std::map<std::string, InnerBundleCloneInfo> testCloneInfos;
+    testCloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
+    bundleUserInfoTest.cloneInfos = testCloneInfos;
+
+    std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+    bundleInfoTest.innerBundleUserInfos_[key] = bundleUserInfoTest;
+}
+
+void BmsBundleKitServiceTest::ClearCloneInfo(InnerBundleInfo &bundleInfoTest, std::string bundleName, int32_t userId)
+{
+    InnerBundleUserInfo bundleUserInfoTest;
+    bool getBundleUserInfoRes = bundleInfoTest.GetInnerBundleUserInfo(userId, bundleUserInfoTest);
+    EXPECT_TRUE(getBundleUserInfoRes);
+
+    std::map<std::string, InnerBundleCloneInfo> emptyCloneInfos;
+    bundleUserInfoTest.cloneInfos = emptyCloneInfos;
+    std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+    bundleInfoTest.innerBundleUserInfos_[key] = bundleUserInfoTest;
 }
 
 /**
@@ -2270,6 +2307,29 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0800, Function | SmallTest |
         EXPECT_EQ(MODULE_NAME_TEST_1, result[0].moduleName);
     }
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_0900
+ * @tc.name: test can get the ability info by want with implicit query
+ * @tc.desc: 1.system run normally
+ *           2.get cloneApp's abilityInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0900, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    InnerBundleInfo bundleInfoTest;
+    AddCloneInfo(bundleInfoTest, BUNDLE_NAME_TEST, DEFAULT_USERID);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> result;
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USERID, result);
+    EXPECT_EQ(true, testRet);
+    EXPECT_FALSE(result.empty());
+    EXPECT_EQ(result[0].appIndex, TEST_APP_INDEX1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ClearCloneInfo(bundleInfoTest, BUNDLE_NAME_TEST, DEFAULT_USERID);
 }
 
 /**
@@ -6606,6 +6666,32 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0700, Function | SmallTest
     EXPECT_NE(ret, ERR_OK);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("QueryAbilityInfosV9_0700 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0800
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.explicit query cur bundle, get ability info. 2.get cloneApp's abilityInfos
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0800, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_0800");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    InnerBundleInfo bundleInfoTest;
+    AddCloneInfo(bundleInfoTest, BUNDLE_NAME_TEST, DEFAULT_USERID);
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    EXPECT_FALSE(abilityInfos.empty());
+    EXPECT_EQ(abilityInfos[0].appIndex, TEST_APP_INDEX1);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ClearCloneInfo(bundleInfoTest, BUNDLE_NAME_TEST, DEFAULT_USERID);
+    APP_LOGI("QueryAbilityInfosV9_0800 finish");
 }
 
 /**

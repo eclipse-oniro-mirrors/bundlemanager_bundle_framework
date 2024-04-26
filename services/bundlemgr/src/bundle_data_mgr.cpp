@@ -636,6 +636,26 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     return true;
 }
 
+void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos, const std::string &bundleName,
+    const ElementName &element, int32_t flags, int32_t userId) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return;
+    }
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, requestUserId);
+    if (cloneAppIndexes.empty()) {
+        return;
+    }
+    for (int32_t appIndex: cloneAppIndexes) {
+        AbilityInfo cloneAbilityInfo;
+        auto ret = QueryCloneAbilityInfo(element, flags, userId, appIndex, cloneAbilityInfo);
+        if (ret == ERR_OK) {
+            abilityInfos.emplace_back(cloneAbilityInfo);
+        }
+    }
+}
+
 bool BundleDataMgr::QueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
@@ -659,6 +679,8 @@ bool BundleDataMgr::QueryAbilityInfos(
             return false;
         }
         abilityInfos.emplace_back(abilityInfo);
+        // get cloneApp's abilityInfos
+        GetCloneAbilityInfos(abilityInfos, bundleName, element, flags, userId);
         return true;
     }
     // implicit query
@@ -699,6 +721,8 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
             return ret;
         }
         abilityInfos.emplace_back(abilityInfo);
+        // get cloneApp's abilityInfos
+        GetCloneAbilityInfos(abilityInfos, bundleName, element, flags, userId);
         return ERR_OK;
     }
     // implicit query
@@ -991,6 +1015,9 @@ ErrCode BundleDataMgr::QueryAbilityInfoWithFlagsV9(const std::optional<AbilityIn
             std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
             if (innerBundleUserInfo.cloneInfos.find(appIndexKey) != innerBundleUserInfo.cloneInfos.end()) {
                 info.uid = innerBundleUserInfo.cloneInfos.at(appIndexKey).uid;
+                info.appIndex = innerBundleUserInfo.cloneInfos.at(appIndexKey).appIndex;
+            } else {
+                return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
             }
         }
     }
@@ -1536,6 +1563,31 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         return;
     }
     bundleName = keyName.substr(pos + 1);
+}
+
+std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const
+{
+    std::vector<int32_t> cloneAppIndexes;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "no bundleName %{public}s found", bundleName.c_str());
+        return cloneAppIndexes;
+    }
+    const InnerBundleInfo &bundleInfo = infoItem->second;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!bundleInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
+        return cloneAppIndexes;
+    }
+    const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = innerBundleUserInfo.cloneInfos;
+    if (cloneInfos.empty()) {
+        return cloneAppIndexes;
+    }
+    for (const auto &cloneInfo : cloneInfos) {
+        LOG_I(BMS_TAG_QUERY_ABILITY, "get cloneAppIndexes: %{public}d", cloneInfo.second.appIndex);
+        cloneAppIndexes.emplace_back(cloneInfo.second.appIndex);
+    }
+    return cloneAppIndexes;
 }
 
 void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
