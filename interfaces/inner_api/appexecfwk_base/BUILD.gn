@@ -66,6 +66,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/free_install/target_ability_info.cpp",
     "src/hap_module_info.cpp",
     "src/install_param.cpp",
+    "src/mime_type_mgr.cpp",
     "src/module_info.cpp",
     "src/overlay/overlay_bundle_info.cpp",
     "src/overlay/overlay_module_info.cpp",
@@ -81,6 +82,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/shared/shared_bundle_info.cpp",
     "src/shared/shared_module_info.cpp",
     "src/shortcut_info.cpp",
+    "src/skill.cpp",
   ]
 
   public_configs = [ ":appexecfwk_base_sdk_config" ]
@@ -92,6 +94,7 @@ ohos_shared_library("appexecfwk_base") {
     "LOG_DOMAIN = 0xD001120",
   ]
   cflags = []
+  use_exceptions = true
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

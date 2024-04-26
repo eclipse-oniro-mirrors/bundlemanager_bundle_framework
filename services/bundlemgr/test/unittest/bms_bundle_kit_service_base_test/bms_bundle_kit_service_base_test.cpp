@@ -166,7 +166,9 @@ void BmsBundleKitServiceBaseTest::MockInstallBundle(
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
-    Skill skill {{ACTION}, {ENTITY}};
+    Skill skill;
+    skill.actions = {ACTION};
+    skill.entities = {ENTITY};
     std::vector<Skill> skills;
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(keyName, skills);

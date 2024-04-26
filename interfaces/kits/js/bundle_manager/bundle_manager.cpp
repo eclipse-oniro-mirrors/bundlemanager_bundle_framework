@@ -65,6 +65,7 @@ constexpr const char* STATE = "state";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
+const std::string BATCH_QUERY_ABILITY_INFOS = "BatchQueryAbilityInfos";
 const std::string QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
 const std::string QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
@@ -577,6 +578,19 @@ static ErrCode InnerQueryAbilityInfos(const Want &want,
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> &wants,
+    int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
+    APP_LOGD("BatchQueryAbilityInfos ErrCode : %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
@@ -716,6 +730,37 @@ static void CheckAbilityInfoCache(
     CheckAbilityInfoCache(env, query, info->want, info->abilityInfos, jsObject);
 }
 
+static void CheckBatchAbilityInfoCache(napi_env env, const Query &query,
+    const std::vector<OHOS::AAFwk::Want> &wants, std::vector<AbilityInfo> abilityInfos,  napi_value jsObject)
+{
+    for (size_t i = 0; i < wants.size(); i++) {
+        ElementName element = wants[i].GetElement();
+        if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+            return;
+        }
+    }
+
+    uint32_t explicitQueryResultLen = 1;
+    if (abilityInfos.size() != explicitQueryResultLen ||
+        (abilityInfos.size() > 0 && abilityInfos[0].uid != IPCSkeleton::GetCallingUid())) {
+        return;
+    }
+
+    napi_ref cacheAbilityInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    cache[query] = cacheAbilityInfo;
+}
+
+static void CheckBatchAbilityInfoCache(
+    napi_env env, const Query &query, const BatchAbilityCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+    CheckBatchAbilityInfoCache(env, query, info->wants, info->abilityInfos, jsObject);
+}
+
 void QueryAbilityInfosExec(napi_env env, void *data)
 {
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
@@ -777,6 +822,14 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin");
     NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (IsArray(env, args[0])) {
+        return BatchQueryAbilityInfos(env, info);
+    }
     AbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -784,11 +837,6 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     }
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<AbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
@@ -825,6 +873,130 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
     APP_LOGI("end");
+    return promise;
+}
+
+void BatchQueryAbilityInfosExec(napi_env env, void *data)
+{
+    BatchAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<BatchAbilityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        std::string bundleNames = "[";
+        for (uint32_t i = 0; i < asyncCallbackInfo->wants.size(); i++) {
+            bundleNames += ((i > 0) ? "," : "");
+            bundleNames += asyncCallbackInfo->wants[i].ToString();
+        }
+        bundleNames += "]";
+        auto item = cache.find(Query(bundleNames,
+            BATCH_QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+        if (item != cache.end()) {
+            asyncCallbackInfo->isSavedInCache = true;
+            APP_LOGE("has cache, no need to query from host.");
+            return;
+        }
+    }
+    asyncCallbackInfo->err = InnerBatchQueryAbilityInfos(asyncCallbackInfo->wants, asyncCallbackInfo->flags,
+        asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
+}
+
+void BatchQueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
+{
+    BatchAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<BatchAbilityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<BatchAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[2] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+        if (asyncCallbackInfo->isSavedInCache) {
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+            std::string bundleNames = "[";
+            for (uint32_t i = 0; i < asyncCallbackInfo->wants.size(); i++) {
+                bundleNames += ((i > 0) ? "," : "");
+                bundleNames += asyncCallbackInfo->wants[i].ToString();
+            }
+            bundleNames += "]";
+            auto item = cache.find(Query(bundleNames,
+                BATCH_QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            if (item == cache.end()) {
+                APP_LOGE("cannot find result in cache in %{public}s", __func__);
+                return;
+            }
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
+            CommonFunc::ConvertAbilityInfos(env, asyncCallbackInfo->abilityInfos, result[1]);
+            std::string bundleNames = "[";
+            for (uint32_t i = 0; i < asyncCallbackInfo->wants.size(); i++) {
+                bundleNames += ((i > 0) ? "," : "");
+                bundleNames += asyncCallbackInfo->wants[i].ToString();
+            }
+            bundleNames += "]";
+            Query query(bundleNames,
+                BATCH_QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
+            CheckBatchAbilityInfoCache(env, query, asyncCallbackInfo, result[1]);
+        }
+    } else {
+        result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            BATCH_QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
+    }
+    APP_LOGI("before return");
+    CommonFunc::NapiReturnDeferred<BatchAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value BatchQueryAbilityInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to BatchQueryAbilityInfos");
+    NapiArg args(env, info);
+    BatchAbilityCallbackInfo *asyncCallbackInfo = new (std::nothrow) BatchAbilityCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    std::unique_ptr<BatchAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
+            // parse want with parameter
+            if (!ParseWantListWithParameter(env, args[i], asyncCallbackInfo->wants)) {
+                APP_LOGE("invalid wants");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
+            CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<BatchAbilityCallbackInfo>(
+        env, asyncCallbackInfo, BATCH_QUERY_ABILITY_INFOS, BatchQueryAbilityInfosExec, BatchQueryAbilityInfosComplete);
+    callbackPtr.release();
+    APP_LOGI("call BatchQueryAbilityInfos done");
     return promise;
 }
 
@@ -1117,6 +1289,12 @@ void CreateAbilityFlagObject(napi_env env, napi_value value)
         GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP), &nGetAbilityInfOnlySystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_ONLY_SYSTEM_APP",
         nGetAbilityInfOnlySystemApp));
+
+    napi_value nGetAbilityInfoWithSkill;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL), &nGetAbilityInfoWithSkill));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_SKILL",
+        nGetAbilityInfoWithSkill));
 }
 
 void GetAbilityLabelExec(napi_env env, void *data)
@@ -2553,6 +2731,14 @@ void CreateExtensionAbilityFlagObject(napi_env env, napi_value value)
             &nGetExtensionAbilityInfoWithMetadata));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_WITH_METADATA",
         nGetExtensionAbilityInfoWithMetadata));
+
+    napi_value nGetExtensionAbilityInfoWithSkill;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(
+            GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL),
+            &nGetExtensionAbilityInfoWithSkill));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_EXTENSION_ABILITY_INFO_WITH_SKILL",
+        nGetExtensionAbilityInfoWithSkill));
 }
 
 void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
@@ -3179,6 +3365,12 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE), &nGetBundleInfoWithCloneBundle));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_CLONE_BUNDLE",
         nGetBundleInfoWithCloneBundle));
+
+    napi_value nGetBundleInfoWithSkill;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL), &nGetBundleInfoWithSkill));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SKILL",
+        nGetBundleInfoWithSkill));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,

@@ -77,6 +77,7 @@ constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
 constexpr const char* APP_INDEX = "appIndex";
+constexpr const char* SKILLS = "skills";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -828,6 +829,108 @@ void CommonFunc::ConvertAbilityInfos(napi_env env, const std::vector<AbilityInfo
     }
 }
 
+void CommonFunc::ConvertAbilitySkillUri(napi_env env, const SkillUri &skillUri, napi_value value, bool isExtension)
+{
+    napi_value nScheme;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.scheme.c_str(), NAPI_AUTO_LENGTH, &nScheme));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "scheme", nScheme));
+
+    napi_value nHost;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.host.c_str(), NAPI_AUTO_LENGTH, &nHost));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "host", nHost));
+
+    napi_value nPort;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.port.c_str(), NAPI_AUTO_LENGTH, &nPort));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "port", nPort));
+
+    napi_value nPathStartWith;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.pathStartWith.c_str(), NAPI_AUTO_LENGTH,
+        &nPathStartWith));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "pathStartWith", nPathStartWith));
+
+    napi_value nPath;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.path.c_str(), NAPI_AUTO_LENGTH, &nPath));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "path", nPath));
+
+    napi_value nPathRegex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.pathRegex.c_str(), NAPI_AUTO_LENGTH,
+        &nPathRegex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "pathRegex", nPathRegex));
+
+    napi_value nType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.type.c_str(), NAPI_AUTO_LENGTH, &nType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "type", nType));
+
+    napi_value nUtd;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.utd.c_str(), NAPI_AUTO_LENGTH, &nUtd));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "utd", nUtd));
+
+    napi_value nMaxFileSupported;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, skillUri.maxFileSupported, &nMaxFileSupported));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "maxFileSupported", nMaxFileSupported));
+
+    if (!isExtension) {
+        napi_value nLinkFeature;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, skillUri.linkFeature.c_str(), NAPI_AUTO_LENGTH,
+            &nLinkFeature));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "linkFeature", nLinkFeature));
+    }
+}
+
+void CommonFunc::ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value value, bool isExtension)
+{
+    napi_value nActions;
+    size_t size = skill.actions.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nActions));
+    for (size_t idx = 0; idx < size; ++idx) {
+        napi_value nAction;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, skill.actions[idx].c_str(), NAPI_AUTO_LENGTH, &nAction));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nActions, idx, nAction));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "actions", nActions));
+
+    napi_value nEntities;
+    size = skill.entities.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nEntities));
+    for (size_t idx = 0; idx < size; ++idx) {
+        napi_value nEntity;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, skill.entities[idx].c_str(), NAPI_AUTO_LENGTH, &nEntity));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nEntities, idx, nEntity));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "entities", nEntities));
+
+    napi_value nUris;
+    size = skill.uris.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nUris));
+    for (size_t idx = 0; idx < size; ++idx) {
+        napi_value nUri;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nUri));
+        ConvertAbilitySkillUri(env, skill.uris[idx], nUri, isExtension);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nUris, idx, nUri));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "uris", nUris));
+
+    if (!isExtension) {
+        napi_value nDomainVerify;
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, skill.domainVerify, &nDomainVerify));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "domainVerify", nDomainVerify));
+    }
+
+    napi_value nPermissions;
+    size = skill.permissions.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermissions));
+    for (size_t idx = 0; idx < size; ++idx) {
+        napi_value nPermission;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, skill.permissions[idx].c_str(), NAPI_AUTO_LENGTH, &nPermission));
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "permissions", nPermissions));
+}
+
+
 void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo, napi_value objAbilityInfo)
 {
     napi_value nBundleName;
@@ -975,6 +1078,16 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     napi_value nAppIndex;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.appIndex, &nAppIndex));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APP_INDEX, nAppIndex));
+    napi_value nSkills;
+    size = abilityInfo.skills.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSkills));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nSkill;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSkill));
+        ConvertAbilitySkill(env, abilityInfo.skills[index], nSkill, false);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSkills, index, nSkill));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, SKILLS, nSkills));
 }
 
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
@@ -1167,6 +1280,17 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, extensionInfo.writePermission.c_str(), NAPI_AUTO_LENGTH, &nWritePermission));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, WRITE_PERMISSION, nWritePermission));
+
+    napi_value nSkills;
+    size = extensionInfo.skills.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSkills));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nSkill;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nSkill));
+        ConvertAbilitySkill(env, extensionInfo.skills[index], nSkill, true);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSkills, index, nSkill));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, SKILLS, nSkills));
 }
 
 

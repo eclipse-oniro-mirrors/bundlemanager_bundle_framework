@@ -107,6 +107,7 @@ const std::string JSON_KEY_SUPPORT_MIME_TYPES = "supportMimeTypes";
 const std::string JSON_KEY_ISOLATION_PROCESS = "isolationProcess";
 const std::string JSON_KEY_CONTINUE_TYPE = "continueType";
 const std::string JSON_KEY_APP_INDEX = "appIndex";
+const std::string JSON_KEY_SKILLS = "skills";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -302,6 +303,18 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     }
     appIndex = parcel.ReadInt32();
     linkType = static_cast<LinkType>(parcel.ReadInt32());
+
+    int32_t skillsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillsSize, &skills);
+    for (auto i = 0; i < skillsSize; i++) {
+        std::unique_ptr<Skill> abilitySkillPtr(parcel.ReadParcelable<Skill>());
+        if (!abilitySkillPtr) {
+            APP_LOGE("ReadParcelable<SkillForAbility> failed");
+            return false;
+        }
+        skills.emplace_back(*abilitySkillPtr);
+    }
     return true;
 }
 
@@ -467,6 +480,10 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(linkType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
+    for (auto &skill : skills) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
+    }
     return true;
 }
 
@@ -598,6 +615,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_ISOLATION_PROCESS, abilityInfo.isolationProcess},
         {JSON_KEY_CONTINUE_TYPE, abilityInfo.continueType},
         {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
+        {JSON_KEY_SKILLS, abilityInfo.skills}
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1287,6 +1305,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<Skill>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SKILLS,
+        abilityInfo.skills,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("AbilityInfo from_json error, error code : %{public}d", parseResult);
     }

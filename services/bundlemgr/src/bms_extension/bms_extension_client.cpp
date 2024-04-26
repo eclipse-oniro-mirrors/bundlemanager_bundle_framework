@@ -106,6 +106,52 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     return ERR_OK;
 }
 
+ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &wants, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
+{
+    APP_LOGD("start to query abilityInfos from bms extension");
+    auto dataMgr = GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = dataMgr->GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
+
+    for (int i = 0; i < wants.size(); i++) {
+        std::vector<AbilityInfo> tmpAbilityInfos;
+        std::string bundleName = wants[i].GetElement().GetBundleName();
+        InnerBundleInfo info;
+        if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
+            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
+                bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+
+        if (bmsExtensionImpl_ == nullptr) {
+            APP_LOGW("bmsExtensionImpl_ is nullptr");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(wants[i], flags, userId, tmpAbilityInfos,
+            isNewVersion);
+        if (res != ERR_OK) {
+            APP_LOGD("query ability infos failed due to error code %{public}d", res);
+            return res;
+        }
+        abilityInfos.insert(abilityInfos.end(), tmpAbilityInfos.begin(), tmpAbilityInfos.end());
+    }
+
+    if (abilityInfos.empty()) {
+        APP_LOGD("no ability info can be found from bms extension");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BmsExtensionClient::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, bool isNewVersion) const
 {
@@ -183,6 +229,44 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     if (res != ERR_OK) {
         LOG_D(BMS_TAG_QUERY_BUNDLE, "query bundle info failed due to error code %{public}d", res);
         return res;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BmsExtensionClient::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+    std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
+{
+    APP_LOGD("start to batch query bundle info from bms extension");
+    auto dataMgr = GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = dataMgr->GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
+    for (size_t i = 0; i < bundleNames.size(); i++) {
+        InnerBundleInfo innerBundleInfo;
+        BundleInfo bundleInfo;
+        if (dataMgr->QueryInnerBundleInfo(bundleNames[i], innerBundleInfo)) {
+            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
+                bundleNames[i].c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        if (bmsExtensionImpl_ == nullptr) {
+            APP_LOGW("bmsExtensionImpl_ is nullptr");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        ErrCode res = bmsExtensionImpl_->GetBundleInfo(bundleNames[i], flags, userId, bundleInfo, isNewVersion);
+        if (res != ERR_OK) {
+            APP_LOGD("query bundle info failed due to error code %{public}d", res);
+            return res;
+        }
+        bundleInfos.push_back(bundleInfo);
     }
 
     return ERR_OK;

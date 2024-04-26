@@ -182,6 +182,32 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the BundleInfos by the given want list through the proxy object.
+     * @param wants Indicates the imformation of the abilities to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfos Indicates the obtained BundleInfo list object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode BatchGetBundleInfo(const std::vector<Want> &wants, int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Batch obtains the BundleInfos based on a given bundle name list.
+     * @param bundleNames Indicates the application bundle name list to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfos Indicates the obtained BundleInfo list object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains the BundleInfo for the calling app.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
@@ -466,6 +492,19 @@ public:
      */
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Query the AbilityInfo of list by the given Wants.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode BatchQueryAbilityInfos(
+        const std::vector<Want> &wants, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

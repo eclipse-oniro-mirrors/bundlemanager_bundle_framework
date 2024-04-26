@@ -127,6 +127,13 @@ private:
      */
     ErrCode HandleGetBundleInfoWithIntFlagsV9(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the BatchGetBundleInfo function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleBatchGetBundleInfo(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -263,6 +270,13 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleQueryAbilityInfosV9(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the BatchQueryAbilityInfos function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleBatchQueryAbilityInfos(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the HandleQueryLauncherAbilityInfos function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.

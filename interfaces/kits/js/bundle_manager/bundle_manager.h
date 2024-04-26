@@ -68,6 +68,16 @@ struct AbilityCallbackInfo : public BaseCallbackInfo {
     std::vector<AbilityInfo> abilityInfos;
 };
 
+struct BatchAbilityCallbackInfo : public BaseCallbackInfo {
+    explicit BatchAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+
+    std::vector<OHOS::AAFwk::Want> wants;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool isSavedInCache = false;
+    std::vector<AbilityInfo> abilityInfos;
+};
+
 struct ExtensionCallbackInfo : public BaseCallbackInfo {
     explicit ExtensionCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -217,6 +227,16 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     BundleInfo bundleInfo;
 };
 
+struct BatchBundleInfoCallbackInfo : public BaseCallbackInfo {
+    explicit BatchBundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::vector<std::string> bundleNames;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    bool isSavedInCache = false;
+    int32_t uid = 0;
+    std::vector<BundleInfo> bundleInfos;
+};
+
 struct SharedBundleCallbackInfo : public BaseCallbackInfo {
     explicit SharedBundleCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
@@ -250,6 +270,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+napi_value BatchQueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);

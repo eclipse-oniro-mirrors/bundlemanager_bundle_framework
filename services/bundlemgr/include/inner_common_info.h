@@ -129,44 +129,6 @@ struct InnerModuleInfo {
     std::string appStartup;
 };
 
-struct SkillUri {
-    std::string scheme;
-    std::string host;
-    std::string port;
-    std::string path;
-    std::string pathStartWith;
-    std::string pathRegex;
-    std::string type;
-    std::string utd;
-    int32_t maxFileSupported = 0;
-    std::string linkFeature;
-};
-
-struct Skill {
-public:
-    std::vector<std::string> actions;
-    std::vector<std::string> entities;
-    std::vector<SkillUri> uris;
-    bool domainVerify = false;
-    bool Match(const OHOS::AAFwk::Want &want) const;
-    bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
-    bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
-    bool MatchType(const std::string &type, const std::string &skillUriType) const;
-    bool MatchUtd(const std::string &utd, int32_t count) const;
-private:
-    bool MatchAction(const std::string &action) const;
-    bool MatchEntities(const std::vector<std::string> &paramEntities) const;
-    bool MatchActionAndEntities(const OHOS::AAFwk::Want &want) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
-    bool MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
-    bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
-    bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
-    bool MatchMimeType(const std::string &uriString) const;
-    bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
-    bool MatchUtd(const OHOS::AAFwk::Want &want);
-    std::string GetOptParamUri(const std::string &uriString) const;
-};
-
 enum InstallExceptionStatus : int32_t {
     INSTALL_START = 1,
     INSTALL_FINISH,
@@ -185,8 +147,6 @@ struct InstallMark {
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
-void from_json(const nlohmann::json &jsonObject, SkillUri &uri);
-void from_json(const nlohmann::json &jsonObject, Skill &skill);
 void from_json(const nlohmann::json &jsonObject, Distro &distro);
 void from_json(const nlohmann::json &jsonObject, InstallMark &installMark);
 void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermission);
@@ -196,8 +156,6 @@ void to_json(nlohmann::json &jsonObject, const Distro &distro);
 void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermission);
 void to_json(nlohmann::json &jsonObject, const Dependency &dependency);
 void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info);
-void to_json(nlohmann::json &jsonObject, const SkillUri &uri);
-void to_json(nlohmann::json &jsonObject, const Skill &skill);
 void to_json(nlohmann::json &jsonObject, const InstallMark &installMark);
 }  // namespace AppExecFwk
 }  // namespace OHOS
