@@ -730,11 +730,7 @@ void GetOriginalSizeExec(napi_env env, void *data)
     APP_LOGD("NAPI begin GetOriginalSizeExec");
     OriginalSizeCallbackInfo *asyncCallbackInfo = reinterpret_cast<OriginalSizeCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGI("asyncCallbackInfo is null");
-        return;
-    }
-    if (asyncCallbackInfo->err != ERR_OK) {
-        APP_LOGI("asyncCallbackInfo->err is not ERR_OK, but %{public}d", asyncCallbackInfo->err);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     asyncCallbackInfo->err =
@@ -747,7 +743,7 @@ void GetOriginalSizeComplete(napi_env env, napi_status status, void *data)
     APP_LOGD("NAPI begin GetOriginalSizeComplete");
     OriginalSizeCallbackInfo *asyncCallbackInfo = reinterpret_cast<OriginalSizeCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGI("asyncCallbackInfo is null");
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<OriginalSizeCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -770,19 +766,19 @@ napi_value GetOriginalSize(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI begin GetOriginalSize");
     OriginalSizeCallbackInfo *asyncCallbackInfo = new (std::nothrow) OriginalSizeCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGI("asyncCallbackInfo is null");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<OriginalSizeCallbackInfo> callbackPtr {asyncCallbackInfo};
     asyncCallbackInfo->err = ERR_OK;
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGI("parameters init failed");
+        APP_LOGE("parameters init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->srcFile)) {
-        APP_LOGI("srcFile parse failed");
+        APP_LOGE("srcFile parse failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, SRC_FILE, TYPE_STRING);
         return nullptr;
     }
