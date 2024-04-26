@@ -176,7 +176,11 @@ bool ZipReader::OpenCurrentEntryInZip()
     if (raw_file_name_in_zip[0] == '\0') {
         return false;
     }
-    currentEntryInfo_.reset(new (std::nothrow) EntryInfo(std::string(raw_file_name_in_zip), raw_file_info));
+    EntryInfo *entryInfo = new (std::nothrow) EntryInfo(std::string(raw_file_name_in_zip), raw_file_info);
+    if (entryInfo == nullptr) {
+        return false;
+    }
+    currentEntryInfo_.reset(entryInfo);
     return true;
 }
 

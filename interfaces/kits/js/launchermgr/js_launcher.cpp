@@ -551,6 +551,7 @@ static napi_value JSLauncherServiceOn(napi_env env, napi_callback_info info)
     napi_create_async_work(
         env, nullptr, resource,
         [](napi_env env, void* data) {
+            APP_LOGI("JSLauncherServiceOn asyn work done");
         },
         [](napi_env env, napi_status status, void* data) {
             AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext *>(data);
@@ -686,7 +687,10 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JSLauncherServiceOn", NAPI_AUTO_LENGTH, &resource);
     napi_create_async_work(
-        env, nullptr, resource, [](napi_env env, void* data) {}, LauncherServiceOffComplete,
+        env, nullptr, resource,
+        [](napi_env env, void* data) {
+            APP_LOGI("JSLauncherServiceOn asyn work done");
+        }, LauncherServiceOffComplete,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
     return promise;
@@ -820,6 +824,10 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     NAPI_ASSERT(env, argc >= requireArgc, "requires 2 parameter");
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("failed to get callback info");
+        return nullptr;
+    }
     asyncCallbackInfo->env = env;
 
     for (size_t i = 0; i < argc; ++i) {
@@ -865,15 +873,13 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
             if (asyncCallbackInfo->err) {
                 napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
                 napi_get_undefined(env, &result[INDEX_ONE]);
+            } else if (asyncCallbackInfo->ret) {
+                napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
+                napi_create_array(env, &result[INDEX_ONE]);
+                ParseLauncherAbilityInfo(env, result[INDEX_ONE], asyncCallbackInfo->launcherAbilityInfos);
             } else {
-                if (asyncCallbackInfo->ret) {
-                  napi_create_uint32(env, OPERATION_SUCESS, &result[0]);
-                  napi_create_array(env, &result[INDEX_ONE]);
-                  ParseLauncherAbilityInfo(env, result[INDEX_ONE], asyncCallbackInfo->launcherAbilityInfos);
-                } else {
-                  napi_create_uint32(env, OPERATION_FAILED, &result[0]);
-                  napi_get_undefined(env, &result[INDEX_ONE]);
-                }
+                napi_create_uint32(env, OPERATION_FAILED, &result[0]);
+                napi_get_undefined(env, &result[INDEX_ONE]);
             }
             // return callback or promise
             if (asyncCallbackInfo->deferred) {
@@ -926,6 +932,10 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
     AsyncHandleBundleContext *asyncCallbackInfo = new (std::nothrow) AsyncHandleBundleContext();
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("failed to get callback info");
+        return nullptr;
+    }
     asyncCallbackInfo->env = env;
 
     for (size_t i = 0; i < argc; ++i) {
@@ -998,7 +1008,6 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
         },
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
     napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
-
     return promise;
 }
 

@@ -88,6 +88,10 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
+    if (jsonObject.find(CHARACTER_OS_SYSCAP) == jsonObject.end()) {
+        APP_LOGE("ossyscap no exist ");
+        return ErrorCode::DECODE_SYS_CAP_FAILED;
+    }
     std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
     std::string pcId;
     for (int value : values) {
