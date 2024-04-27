@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H
 
+#include <map>
 #include <string>
 #include "application_info.h"
 #include "parcel.h"
@@ -159,9 +160,16 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::vector<SkillUriForAbilityAndExtension> skillUri;
     std::vector<Skill> skills;
 
+    bool needCreateSandbox = false;
+    // key:userId, value:dirPath
+    std::map<std::string, std::string> sandboxPath;
+    std::vector<std::string> dataGroupIds;
+    std::vector<std::string> validDataGroupIds;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
+    void UpdateNeedCreateSandbox();
     bool MarshallingSkillUri(Parcel &parcel, SkillUriForAbilityAndExtension uri) const;
 };
 

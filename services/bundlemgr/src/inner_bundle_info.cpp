@@ -3339,6 +3339,53 @@ void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
     uninstallState_ = uninstallState;
 }
 
+std::set<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(
+    const std::string &moduleName, int32_t userId) const
+{
+    std::set<std::string> dirSet;
+    auto extensionInfoMap = GetInnerExtensionInfos();
+    for (auto item : extensionInfoMap) {
+        if (item.second.moduleName != moduleName || !item.second.needCreateSandbox) {
+            continue;
+        }
+        auto iter = item.second.sandboxPath.find(std::to_string(userId));
+        if (iter == item.second.sandboxPath.end()) {
+            continue;
+        }
+        dirSet.emplace(iter->second);
+    }
+    return dirSet;
+}
+
+std::set<std::string> InnerBundleInfo::GetAllExtensionDirs(int32_t userId) const
+{
+    std::set<std::string> dirSet;
+    auto extensionInfoMap = GetInnerExtensionInfos();
+    for (auto item : extensionInfoMap) {
+        if (!item.second.needCreateSandbox) {
+            continue;
+        }
+        auto iter = item.second.sandboxPath.find(std::to_string(userId));
+        if (iter == item.second.sandboxPath.end()) {
+            continue;
+        }
+        dirSet.emplace(iter->second);
+    }
+    return dirSet;
+}
+
+void InnerBundleInfo::UpdateExtensionDirInfo(const std::string &key,
+    int32_t userId, const std::string &sandBoxPath, const std::vector<std::string>& dataGroupIds)
+{
+    auto it = baseExtensionInfos_.find(key);
+    if (it == baseExtensionInfos_.end()) {
+        APP_LOGW("UpdateExtensionSandboxPath not find key: %{public}s", key.c_str());
+        return;
+    }
+    it->second.validDataGroupIds = dataGroupIds;
+    it->second.sandboxPath[std::to_string(userId)] = sandBoxPath;
+}
+
 ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
 {
     int32_t userId = attr.userId;
@@ -3361,7 +3408,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d had existed", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
     }
-    
+
     InnerBundleCloneInfo cloneInfo;
     cloneInfo.userId = userId;
     cloneInfo.appIndex = appIndex;

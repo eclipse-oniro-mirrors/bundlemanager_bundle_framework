@@ -198,6 +198,7 @@ struct Extension {
     std::vector<Skill> skills;
     std::vector<Metadata> metadata;
     std::string extensionProcessMode;
+    std::vector<std::string> dataGroupIds;
 };
 
 struct App {
@@ -790,6 +791,14 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        DATA_GROUP_IDS,
+        extension.dataGroupIds,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::STRING);
 }
 
 void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
@@ -2128,6 +2137,10 @@ bool ToExtensionInfo(
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     extensionInfo.extensionProcessMode = ConvertToExtensionProcessMode(extension.extensionProcessMode);
+    extensionInfo.UpdateNeedCreateSandbox();
+    for (const std::string &dataGroup : extension.dataGroupIds) {
+        extensionInfo.dataGroupIds.emplace_back(dataGroup);
+    }
 
     return true;
 }

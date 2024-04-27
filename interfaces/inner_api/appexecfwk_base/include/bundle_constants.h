@@ -49,6 +49,7 @@ constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bm
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* DATA_GROUP_PATH = "/group/";
+constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";

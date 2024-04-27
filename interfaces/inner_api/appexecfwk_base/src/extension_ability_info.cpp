@@ -16,6 +16,7 @@
 #include "extension_ability_info.h"
 
 #include <fcntl.h>
+#include <set>
 #include <string>
 #include <unistd.h>
 
@@ -53,6 +54,10 @@ const std::string COMPILE_MODE = "compileMode";
 const std::string UID = "uid";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
+const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
+const std::string EXTENSION_SANDBOX_PATH = "sandboxPath";
+const std::string DATA_GROUP_IDS = "dataGroupIds";
+const std::string JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
 const std::string SKILLS = "skills";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
@@ -109,6 +114,19 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "vpn", ExtensionAbilityType::VPN },
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN }
+};
+
+// the new extension type does not need to be added here
+const std::set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
+    "form", "workScheduler", "service", "accessibility", "dataShare", "fileShare", "staticSubscriber", "wallpaper",
+    "backup", "window", "enterpriseAdmin", "fileAccess", "thumbnail", "preview", "print", "share", "push", "driver",
+    "action", "adsService", "embeddedUI", "insightIntentUI", "statusBarView", "autoFill/password",
+    "appAccountAuthorization", "ui", "remoteNotification", "remoteLocation", "voip", "accountLogout",
+    "sysDialog/userAuth", "sysDialog/common", "sysPicker/mediaControl", "sysDialog/atomicServicePanel",
+    "sysDialog/power", "sysPicker/share", "hms/account", "ads", "sysDialog/meetimeCall",
+    "sysDialog/meetimeContact", "sysDialog/meetimeMessage", "sysDialog/print", "sysPicker/meetimeContact",
+    "sysPicker/meetimeCallLog", "sysPicker/photoPicker", "sysPicker/camera", "sysPicker/navigation",
+    "sysPicker/appSelector", "sys/commonUI", "vpn", "autoFill/smart", "liveViewLockScreen"
 };
 
 const std::unordered_map<std::string, ExtensionProcessMode> EXTENSION_PROCESS_MODE_MAP = {
@@ -205,6 +223,27 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     extensionProcessMode = static_cast<ExtensionProcessMode>(parcel.ReadInt32());
+    needCreateSandbox = parcel.ReadBool();
+    int32_t sandboxPathMapSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sandboxPathMapSize);
+    CONTAINER_SECURITY_VERIFY(parcel, sandboxPathMapSize, &sandboxPath);
+    for (auto i = 0; i < sandboxPathMapSize; i++) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        std::string sanBoxPaths = Str16ToStr8(parcel.ReadString16());
+        sandboxPath[key] = sanBoxPaths;
+    }
+    int32_t dataGroupIdsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, dataGroupIdsSize, &dataGroupIds);
+    for (auto i = 0; i < dataGroupIdsSize; i++) {
+        dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    int32_t validDataGroupIdsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, validDataGroupIdsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, validDataGroupIdsSize, &validDataGroupIds);
+    for (auto i = 0; i < validDataGroupIdsSize; i++) {
+        dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     int32_t skillsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
     CONTAINER_SECURITY_VERIFY(parcel, skillsSize, &skills);
@@ -287,6 +326,20 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         MarshallingSkillUri(parcel, uri);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionProcessMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sandboxPath.size());
+    for (auto &item : sandboxPath) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel,  Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.second));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
+    for (auto &dataGroupId : dataGroupIds) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, validDataGroupIds.size());
+    for (auto &dataGroupId : validDataGroupIds) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
     for (auto &skill : skills) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
@@ -324,6 +377,10 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {COMPILE_MODE, extensionInfo.compileMode},
         {UID, extensionInfo.uid},
         {EXTENSION_PROCESS_MODE, extensionInfo.extensionProcessMode},
+        {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
+        {EXTENSION_SANDBOX_PATH, extensionInfo.sandboxPath},
+        {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
+        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
         {JSON_KEY_SKILLS, extensionInfo.skills},
     };
 }
@@ -541,6 +598,38 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        NEED_CREATE_SANDBOX,
+        extensionInfo.needCreateSandbox,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        EXTENSION_SANDBOX_PATH,
+        extensionInfo.sandboxPath,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        DATA_GROUP_IDS,
+        extensionInfo.dataGroupIds,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_VALID_DATA_GROUP_IDS,
+        extensionInfo.validDataGroupIds,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
         SKILLS,
@@ -581,6 +670,11 @@ ExtensionProcessMode ConvertToExtensionProcessMode(const std::string &extensionP
     }
 
     return ExtensionProcessMode::UNDEFINED;
+}
+
+void ExtensionAbilityInfo::UpdateNeedCreateSandbox()
+{
+    needCreateSandbox = (NOT_NEED_CREATE_SANBOX_MODE.find(extensionTypeName) == NOT_NEED_CREATE_SANBOX_MODE.end());
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
