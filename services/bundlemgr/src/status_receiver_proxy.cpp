@@ -622,6 +622,9 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     APP_LOGI("result from service is %{public}d, %{public}s", resultCode, resultMsg.c_str());
     // transform service error code to client error code.
     TransformResult(resultCode);
+    if (!resultMsg.empty()) {
+        resultMsg_ = resultMsg;
+    }
     CloseStreamInstaller(streamInstallerId_);
     MessageParcel data;
     MessageParcel reply;

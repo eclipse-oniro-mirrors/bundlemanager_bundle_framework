@@ -73,6 +73,8 @@ public:
      */
     bool CheckDependency(const Dependency &dependency) const;
 
+    void SetCheckResultMsg(const std::string checkResultMsg) const;
+
     /**
      * @brief Send bundle system event.
      * @param eventTemplate Indicates the template of EventInfo to send after installation.

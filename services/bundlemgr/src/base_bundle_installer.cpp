@@ -5221,6 +5221,16 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
+std::string BaseBundleInstaller::GetCheckResultMsg() const
+{
+    return bundleInstallChecker_->GetCheckResultMsg();
+}
+
+void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) const
+{
+    bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
+}
+
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;

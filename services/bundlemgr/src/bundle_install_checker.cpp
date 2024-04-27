@@ -546,6 +546,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                     info.second.GetVersionCode());
                 if (!isModuleExist) {
                     APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
+                    SetCheckResultMsg("The dependent module: " + dependency.moduleName + " does not exist.");
                     return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
                 }
             }
@@ -1055,7 +1056,7 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
 }
 
 ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     std::set<std::string> moduleSet;
     for (const auto &info : infos) {
@@ -1064,12 +1065,12 @@ ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
             APP_LOGE("moduleName vector is empty");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
+        if (moduleSet.count(moduleVec[0])) {
+            APP_LOGE("the moduleName: %{public}s is not unique in the haps", moduleVec[0].c_str());
+            SetCheckResultMsg("the moduleName: " + moduleVec[0] + " is not unique in the haps");
+            return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
+        }
         moduleSet.insert(moduleVec[0]);
-    }
-
-    if (moduleSet.size() != infos.size()) {
-        APP_LOGE("someone moduleName is not unique in the haps");
-        return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
     }
     return ERR_OK;
 }
@@ -1566,6 +1567,16 @@ bool BundleInstallChecker::CheckEnterpriseBundle(Security::Verify::HapVerifyResu
         return true;
     }
     return false;
+}
+
+std::string BundleInstallChecker::GetCheckResultMsg() const
+{
+    return checkResultMsg_;
+}
+
+void BundleInstallChecker::SetCheckResultMsg(const std::string checkResultMsg)
+{
+    checkResultMsg_ = checkResultMsg;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

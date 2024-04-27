@@ -173,6 +173,10 @@ protected:
 
     bool NotifyAllBundleStatus();
 
+    std::string GetCheckResultMsg() const;
+
+    void SetCheckResultMsg(const std::string checkResultMsg) const;
+
 private:
     /**
      * @brief The real procedure for system and normal bundle install.

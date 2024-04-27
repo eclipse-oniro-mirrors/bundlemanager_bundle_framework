@@ -743,5 +743,10 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
     }
     return ERR_OK;
 }
+
+void InnerSharedBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) const
+{
+    bundleInstallChecker_->SetCheckResultMsg(checkResultMsg);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

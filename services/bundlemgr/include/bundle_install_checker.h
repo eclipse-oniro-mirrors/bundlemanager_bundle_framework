@@ -146,7 +146,7 @@ public:
     bool VaildEnterpriseInstallPermissionForShare(const InstallCheckParam &checkParam,
         const Security::Verify::ProvisionInfo &provisionInfo);
 
-    ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     bool IsExistedDistroModule(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
@@ -169,6 +169,10 @@ public:
     bool CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
     bool CheckSupportAppTypes(
         const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const;
+
+    std::string GetCheckResultMsg() const;
+
+    void SetCheckResultMsg(const std::string checkResultMsg);
 
 private:
 
@@ -236,6 +240,8 @@ private:
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    std::string checkResultMsg_ = "";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

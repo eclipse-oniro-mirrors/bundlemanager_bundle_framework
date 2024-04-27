@@ -52,9 +52,10 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
-
+    std::string resultMsg = GetCheckResultMsg();
+    SetCheckResultMsg("");
     if (statusReceiver_ != nullptr) {
-        statusReceiver_->OnFinished(resultCode, "");
+        statusReceiver_->OnFinished(resultCode, resultMsg);
     }
 }
 
@@ -96,8 +97,10 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
     }
+    std::string resultMsg = GetCheckResultMsg();
+    SetCheckResultMsg("");
     if (statusReceiver_ != nullptr) {
-        statusReceiver_->OnFinished(resultCode, "");
+        statusReceiver_->OnFinished(resultCode, resultMsg);
     }
 }
 
