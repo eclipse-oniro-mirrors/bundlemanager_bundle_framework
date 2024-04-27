@@ -3430,20 +3430,26 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
         BundleInfo bundleInfo;
-        if (GetPreferableBundleInfoFromHapPaths(
+        if (!GetPreferableBundleInfoFromHapPaths(
             recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
-            RecoverableApplicationInfo recoverableApplication;
-            recoverableApplication.bundleName = bundleInfo.name;
-            recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
-            recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
-            recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
-            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
-            recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
-            if (!bundleInfo.hapModuleInfos.empty()) {
-                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
-            }
-            recoverableApplicaitons.emplace_back(recoverableApplication);
+            continue;
         }
+        RecoverableApplicationInfo recoverableApplication;
+        recoverableApplication.bundleName = bundleInfo.name;
+        recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
+        recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
+        recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+        recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
+        if (!bundleInfo.hapModuleInfos.empty()) {
+            recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
+        }
+        if (bundleInfo.isNewVersion) {
+            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
+        } else if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].installationFree) {
+            recoverableApplication.bundleType = BundleType::ATOMIC_SERVICE;
+        }
+        recoverableApplicaitons.emplace_back(recoverableApplication);
     }
     return ERR_OK;
 }

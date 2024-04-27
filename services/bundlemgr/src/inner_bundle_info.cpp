@@ -1411,6 +1411,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         return false;
     }
     bundleInfo.overlayType = overlayType_;
+    bundleInfo.isNewVersion = isNewVersion_;
 
     GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
         bundleInfo.applicationInfo, appIndex);
@@ -1471,6 +1472,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     bundleInfo.overlayType = overlayType_;
+    bundleInfo.isNewVersion = isNewVersion_;
 
     for (const auto &info : innerModuleInfos_) {
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);

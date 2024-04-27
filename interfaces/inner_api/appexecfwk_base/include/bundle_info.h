@@ -102,6 +102,7 @@ struct SignatureInfo : public Parcelable {
 struct BundleInfo : public Parcelable {
     std::string name;
 
+    bool isNewVersion = false;
     uint32_t versionCode = 0;
     std::string versionName;
     uint32_t minCompatibleVersionCode = 0;
