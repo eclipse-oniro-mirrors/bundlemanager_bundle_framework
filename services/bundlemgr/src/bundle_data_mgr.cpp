@@ -1597,8 +1597,9 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
 {
     bundleName = keyName;
     appIndex = 0;
-    auto pos = keyName.find(Constants::FILE_UNDERLINE);
-    if (pos == std::string::npos) {
+    // for clone bundle name
+    auto pos = keyName.find(Constants::CLONE_BUNDLE_PREFIX);
+    if ((pos == std::string::npos) || (pos == 0)) {
         return;
     }
     std::string index = keyName.substr(0, pos);
@@ -1606,7 +1607,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         appIndex = 0;
         return;
     }
-    bundleName = keyName.substr(pos + 1);
+    bundleName = keyName.substr(pos + Constants::CLONE_BUNDLE_PREFIX.size());
 }
 
 void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
