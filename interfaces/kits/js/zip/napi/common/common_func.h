@@ -36,6 +36,17 @@ struct HasZStreamMember {
     bool hasAdler = false;
 };
 
+struct HasGZFileMember {
+    bool hasHave = false;
+    bool hasNext = false;
+    bool hasPos = false;
+};
+
+struct NapiParam {
+    napi_valuetype type;
+    std::string val;
+};
+
 struct CommonFunc {
     static bool SetZStreamValue(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, int64_t, void *, size_t> GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg);
@@ -70,6 +81,32 @@ struct CommonFunc {
     static std::tuple<bool, int32_t, int32_t, int32_t, int32_t> UnwrapDeflateTuneParams(
         napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, void *, size_t> UnwrapArrayBufferParams(napi_env env, const NapiFuncArg &funcArg);
+
+    static std::tuple<bool, void *, size_t> GzipUnwrapArrayBufferParams(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> GetGZOpenArg(
+        napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, int32_t, std::unique_ptr<char[]>> GetGZDOpenArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, uint32_t> GetGZBufferArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> GetGZOpenWArg(
+        napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, gzFile_s, HasGZFileMember> GetGZFileArg(napi_env env, napi_value argGZFile);
+    static std::tuple<bool, void *, uint32_t> GetGZReadArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, void *, int64_t, int64_t> GetGZFReadArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, void *, int64_t> GetGZWriteArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, void *, int64_t, int64_t> GetGZFWriteArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, int32_t> GetGZPutCArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, std::unique_ptr<char[]>> GetGZPutSArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, int32_t, int32_t> GetGzSetParamsArg(napi_env env, const NapiFuncArg &funcArg);
+    static void GetLogContent(std::string& formatStr, std::vector<NapiParam>& params, std::string& ret, uint32_t& pos);
+    static void ParseLogContent(std::string& formatStr, std::vector<NapiParam>& params, std::string& logContent);
+    static void ParseNapiValue(napi_env env, napi_value element, std::vector<NapiParam>& params);
+    static bool ParseNapiValueFromArray(napi_env env, std::vector<NapiParam>& params, const NapiFuncArg& funcArg);
+    static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> GetGZPrintFArg(
+        napi_env env, const NapiFuncArg& funcArg);
+    static std::tuple<bool, void *, size_t> GetGZGetSArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, int64_t, int32_t> GetGZSeekArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, int32_t> GetGZUnGetCArg(napi_env env, const NapiFuncArg &funcArg);
+    static std::tuple<bool, uint32_t> SetGZFlushArg(napi_env env, const NapiFuncArg &funcArg);
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

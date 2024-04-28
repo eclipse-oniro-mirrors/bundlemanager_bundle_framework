@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "app_log_wrapper.h"
+#include "gzip_entity.h"
 #include "napi_class.h"
 #include "napi_business_error.h"
 #include "zip_entity.h"
@@ -33,6 +34,10 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
+
+static constexpr int MIN_NUMBER = 1;
+static constexpr int MIN_ASCII = 0;
+static constexpr int MAX_ASCII = 255;
 
 tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {
@@ -986,6 +991,532 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::UnwrapTwoIntParams(napi_env env, 
 
     return {true, oneInt, twoInt};
 }
+
+std::tuple<bool, void *, size_t> CommonFunc::GzipUnwrapArrayBufferParams(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buf = nullptr;
+    size_t bufLen = 0;
+    NapiValue bufNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, buf, bufLen) = bufNVal.ToArrayBuffer();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0};
+    }
+
+    return {true, buf, bufLen};
+}
+
+std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::GetGZOpenArg(
+    napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> path = nullptr;
+    size_t bufferLen = 0;
+    NapiValue pathNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, path, bufferLen) = pathNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, nullptr};
+    }
+
+    std::unique_ptr<char[]> mode = nullptr;
+    bufferLen = 0;
+    NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, nullptr};
+    }
+    return {true, std::move(path), std::move(mode)};
+}
+
+std::tuple<bool, int32_t, std::unique_ptr<char[]>> CommonFunc::GetGZDOpenArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    int32_t fd = -1;
+    NapiValue fdNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, fd) = fdNVal.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, -1, nullptr};
+    }
+
+    std::unique_ptr<char[]> mode = nullptr;
+    size_t bufferLen = 0;
+    NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, -1, nullptr};
+    }
+    return {true, fd, std::move(mode)};
+}
+
+std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env env, napi_value argGZFile)
+{
+    gzFile_s gzs = {};
+    bool succ = false;
+    NapiValue gzFileNVal(env, argGZFile);
+    HasGZFileMember hasGZFileMember = {};
+
+    if (gzFileNVal.HasProp("have") && !gzFileNVal.GetProp("have").TypeIs(napi_undefined)) {
+        uint32_t have = 0;
+        tie(succ, have) = gzFileNVal.GetProp("have").ToUint32();
+        if (!succ) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return {false, {}, {}};
+        }
+        gzs.have = have;
+        hasGZFileMember.hasHave = true;
+    }
+
+    if (gzFileNVal.HasProp("next") && !gzFileNVal.GetProp("next").TypeIs(napi_undefined)) {
+        void *buf = nullptr;
+        size_t bufLen = 0;
+        tie(succ, buf, bufLen) = gzFileNVal.GetProp("next").ToArrayBuffer();
+        if (!succ) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return {false, {}, {}};
+        }
+        gzs.next = reinterpret_cast<Bytef *>(buf);
+        hasGZFileMember.hasNext = true;
+    }
+
+    if (gzFileNVal.HasProp("pos") && !gzFileNVal.GetProp("pos").TypeIs(napi_undefined)) {
+        uint64_t pos = 0U;
+        tie(succ, pos) = gzFileNVal.GetProp("pos").ToInt64();
+        if (!succ) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return {false, {}, {}};
+        }
+        gzs.pos = pos;
+        hasGZFileMember.hasPos = true;
+    }
+    return {true, gzs, hasGZFileMember};
+}
+
+std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::GetGZOpenWArg(
+    napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> path = nullptr;
+    size_t bufferLen = 0;
+    NapiValue pathNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, path, bufferLen) = pathNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, nullptr};
+    }
+
+    std::unique_ptr<char[]> mode = nullptr;
+    bufferLen = 0;
+    NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, nullptr};
+    }
+    return {true, std::move(path), std::move(mode)};
+}
+
+std::tuple<bool, uint32_t> CommonFunc::GetGZBufferArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    uint32_t size = 0;
+    NapiValue sizeNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, size) = sizeNVal.ToUint32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    return {true, size};
+}
+
+std::tuple<bool, void *, uint32_t> CommonFunc::GetGZReadArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buf = nullptr;
+    size_t len = 0;
+    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    if (!succ || len == 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0};
+    }
+    return {true, buf, len};
+}
+
+std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFReadArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buf = nullptr;
+    size_t len = 0;
+    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    if (!succ || len == 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+
+    int64_t size = 0;
+    NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, size) = sizeNVal.ToInt64();
+    if (!succ || size < 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+
+    int64_t nitems = 0;
+    NapiValue nitemsNVal(env, funcArg[ArgumentPosition::THIRD]);
+    tie(succ, nitems) = nitemsNVal.ToInt64();
+    if (!succ || nitems < 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+    return {true, buf, size, nitems};
+}
+
+std::tuple<bool, void *, int64_t> CommonFunc::GetGZWriteArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buf = nullptr;
+    size_t bufLen = 0;
+    tie(succ, buf, bufLen) = GzipUnwrapArrayBufferParams(env, funcArg);
+    if (!succ || bufLen == 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0};
+    }
+    int64_t len = 0;
+    NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, len) = sizeNVal.ToInt64();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0};
+    }
+    return {true, buf, len};
+}
+
+std::tuple<bool, void *, int64_t, int64_t> CommonFunc::GetGZFWriteArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buf = nullptr;
+    size_t len = 0;
+    tie(succ, buf, len) = GzipUnwrapArrayBufferParams(env, funcArg);
+    if (!succ || len == 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+
+    int64_t size = 0;
+    NapiValue sizeNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, size) = sizeNVal.ToInt64();
+    if (!succ || size < 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+
+    int64_t nitems = 0;
+    NapiValue nitemsNVal(env, funcArg[ArgumentPosition::THIRD]);
+    tie(succ, nitems) = nitemsNVal.ToInt64();
+    if (!succ || nitems < 0) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0, 0};
+    }
+    return {true, buf, size, nitems};
+}
+
+std::tuple<bool, int32_t> CommonFunc::GetGZPutCArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    int32_t c = 0;
+    NapiValue cNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, c) = cNVal.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    if (c < MIN_ASCII || c > MAX_ASCII) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    return {true, c};
+}
+
+std::tuple<bool, std::unique_ptr<char[]>> CommonFunc::GetGZPutSArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> s = nullptr;
+    size_t len = 0;
+    NapiValue sNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, s, len) = sNVal.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr};
+    }
+    return {true, std::move(s)};
+}
+
+std::tuple<bool, int32_t, int32_t> CommonFunc::GetGzSetParamsArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    int32_t level = 0;
+    NapiValue levelNapiValue(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, level) = levelNapiValue.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, -1, -1};
+    }
+
+    int32_t strategy = 0;
+    NapiValue strategyNapiValue(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, strategy) = strategyNapiValue.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, -1, -1};
+    }
+    return {true, level, strategy};
+}
+
+void CommonFunc::GetLogContent(string &formatStr, vector<NapiParam> &params, string &ret, uint32_t &pos)
+{
+    uint32_t count = 0;
+    for (; pos < formatStr.size(); ++pos) {
+        if (count >= params.size()) {
+            break;
+        }
+        if (formatStr[pos] != '%') {
+            ret += formatStr[pos];
+            continue;
+        }
+        if (pos + 1 >= formatStr.size()) {
+            break;
+        }
+        switch (formatStr[pos + 1]) {
+            case 'd':
+            case 'i':
+                if (params[count].type == napi_number || params[count].type == napi_bigint) {
+                    ret += params[count].val;
+                }
+                count++;
+                ++pos;
+                break;
+            case 's':
+                if (params[count].type == napi_string || params[count].type == napi_undefined ||
+                    params[count].type == napi_boolean || params[count].type == napi_null) {
+                    ret += params[count].val;
+                }
+                count++;
+                ++pos;
+                break;
+            case 'O':
+            case 'o':
+                if (params[count].type == napi_object) {
+                    ret += params[count].val;
+                }
+                count++;
+                ++pos;
+                break;
+            case '%':
+                ret += formatStr[pos];
+                ++pos;
+                break;
+            default:
+                ret += formatStr[pos];
+                break;
+        }
+    }
+    return;
+}
+
+void CommonFunc::ParseLogContent(string &formatStr, vector<NapiParam> &params, string &printContent)
+{
+    std::string &ret = printContent;
+    if (params.empty()) {
+        ret += formatStr;
+        return;
+    }
+    auto len = formatStr.size();
+    uint32_t pos = 0;
+    GetLogContent(formatStr, params, ret, pos);
+    if (pos < len) {
+        ret += formatStr.substr(pos, len - pos);
+    }
+    return;
+}
+
+void CommonFunc::ParseNapiValue(napi_env env, napi_value element, vector<NapiParam> &params)
+{
+    bool succ = false;
+    napi_valuetype type;
+    NapiParam res = {napi_null, ""};
+    napi_status typeStatus = napi_typeof(env, element, &type);
+    unique_ptr<char[]> name;
+    size_t len = 0;
+    if (typeStatus != napi_ok) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return;
+    }
+    if (type == napi_number || type == napi_bigint || type == napi_object || type == napi_undefined ||
+        type == napi_boolean || type == napi_null) {
+        napi_value elmString;
+        napi_status objectStatus = napi_coerce_to_string(env, element, &elmString);
+        if (objectStatus != napi_ok) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return;
+        }
+        NapiValue elmNVal(env, elmString);
+        tie(succ, name, len) = elmNVal.ToUTF8String();
+        if (!succ) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return;
+        }
+    } else if (type == napi_string) {
+        NapiValue elmNVal(env, element);
+        tie(succ, name, len) = elmNVal.ToUTF8String();
+        if (!succ) {
+            NapiBusinessError().ThrowErr(env, EINVAL);
+            return;
+        }
+    } else {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+    }
+    res.type = type;
+    if (name != nullptr) {
+        res.val = name.get();
+    }
+    params.emplace_back(res);
+    return;
+}
+
+bool CommonFunc::ParseNapiValueFromArray(napi_env env, vector<NapiParam> &params, const NapiFuncArg &funcArg)
+{
+    napi_value array = funcArg[ArgumentPosition::SECOND];
+    if (funcArg.GetArgc() != MIN_NUMBER + 1) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return false;
+    }
+    uint32_t length;
+    napi_status lengthStatus = napi_get_array_length(env, array, &length);
+    if (lengthStatus != napi_ok) {
+        return false;
+    }
+    uint32_t i;
+    for (i = 0; i < length; i++) {
+        napi_value element;
+        napi_status eleStatus = napi_get_element(env, array, i, &element);
+        if (eleStatus != napi_ok) {
+            return false;
+        }
+        ParseNapiValue(env, element, params);
+    }
+    return true;
+}
+
+std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::GetGZPrintFArg(
+    napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    std::unique_ptr<char[]> fmtChar = nullptr;
+    size_t len = 0;
+    NapiValue formatNapiValue(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, fmtChar, len) = formatNapiValue.ToUTF8String();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, nullptr};
+    }
+    std::string fmtString = fmtChar.get();
+
+    bool res = false;
+    napi_value array = funcArg[ArgumentPosition::SECOND];
+    napi_is_array(env, array, &res);
+    std::string printContent;
+    vector<NapiParam> params;
+    if (!res) {
+        for (size_t i = MIN_NUMBER; i < funcArg.GetArgc(); i++) {
+            napi_value argsVal = funcArg[i];
+            ParseNapiValue(env, argsVal, params);
+        }
+    } else {
+        bool isSuccess = ParseNapiValueFromArray(env, params, funcArg);
+        if (!isSuccess) {
+            return {false, nullptr, nullptr};
+        }
+    }
+    ParseLogContent(fmtString, params, printContent);
+
+    std::unique_ptr<char[]> formatChar = nullptr;
+    NapiValue formatNVal = NapiValue::CreateUTF8String(env, "%s");
+    tie(succ, formatChar, len) = formatNVal.ToUTF8String();
+    std::unique_ptr<char[]> argsChar = nullptr;
+    NapiValue printNVal = NapiValue::CreateUTF8String(env, printContent);
+    tie(succ, argsChar, len) = printNVal.ToUTF8String();
+    return {true, std::move(formatChar), std::move(argsChar)};
+}
+
+std::tuple<bool, void *, size_t> CommonFunc::GetGZGetSArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    void *buffer = nullptr;
+    size_t bufferLen = 0;
+    NapiValue bufferNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, buffer, bufferLen) = bufferNVal.ToArrayBuffer();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, nullptr, 0};
+    }
+    return {true, buffer, bufferLen};
+}
+
+std::tuple<bool, int64_t, int32_t> CommonFunc::GetGZSeekArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    int64_t offset = 0;
+    NapiValue offsetNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, offset) = offsetNVal.ToInt64();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0, 0};
+    }
+
+    int32_t whence = 0;
+    NapiValue whenceNVal(env, funcArg[ArgumentPosition::SECOND]);
+    tie(succ, whence) = whenceNVal.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0, 0};
+    }
+    return {true, offset, whence};
+}
+
+std::tuple<bool, int32_t> CommonFunc::GetGZUnGetCArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    int32_t c = 0;
+    NapiValue cNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, c) = cNVal.ToInt32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    if (c < MIN_ASCII || c > MAX_ASCII) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    return {true, c};
+}
+
+std::tuple<bool, uint32_t> CommonFunc::SetGZFlushArg(napi_env env, const NapiFuncArg &funcArg)
+{
+    bool succ = false;
+    uint32_t flush = 0;
+    NapiValue sizeNVal(env, funcArg[ArgumentPosition::FIRST]);
+    tie(succ, flush) = sizeNVal.ToUint32();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return {false, 0};
+    }
+    return {true, flush};
+}
+
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
