@@ -25,6 +25,7 @@ if (vendor_config_exist) {
   bundle_mgr_impl_include_dirs = []
 }
 
+arkui_path = "//foundation/arkui"
 bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
 ecological_rule_mgr_path = "//foundation/bundlemanager/ecological_rule_mgr/interfaces/innerkits/include"
 common_path = "${bundle_framework_path}/common"
