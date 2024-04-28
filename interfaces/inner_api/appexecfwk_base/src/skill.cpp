@@ -41,6 +41,7 @@ const std::string JSON_KEY_UTD = "utd";
 const std::string JSON_KEY_MAXFILESUPPORTED = "maxFileSupported";
 const std::string JSON_KEY_LINKFEATURE =  "linkFeature";
 const std::string JSON_KEY_DOMAINVERIFY = "domainVerify";
+const std::string BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
 namespace {
 const std::string PARAM_SEPARATOR = "?";
 const std::string PORT_SEPARATOR = ":";
@@ -577,6 +578,8 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.path, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PATHSTARTWITH,
         uri.pathStartWith, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BUNDLE_MODULE_PROFILE_KEY_PATHREGX,
+        uri.pathRegex, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_PATHREGEX,
         uri.pathRegex, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, JSON_KEY_TYPE,

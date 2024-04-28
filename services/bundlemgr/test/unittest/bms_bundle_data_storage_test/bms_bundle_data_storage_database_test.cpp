@@ -821,6 +821,7 @@ protected:
                     "readPermission": "",
                     "resourcePath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher/assets/phone/resources.index",
                     "hapPath" : "",
+                    "skills" : [],
                     "srcEntrance": "",
                     "srcLanguage": "ets",
                     "srcPath": "MainAbility",
