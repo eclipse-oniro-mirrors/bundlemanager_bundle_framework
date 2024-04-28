@@ -727,6 +727,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0021, Function | Sma
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0022, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    ASSERT_NE(connectAbilityMgr, nullptr);
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
