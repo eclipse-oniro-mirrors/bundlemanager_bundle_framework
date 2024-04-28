@@ -247,17 +247,5 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 {
     return ERR_OK;
 }
-
-ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
-    const std::string &destinationPath)
-{
-    if (sourcePaths.empty()) {
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
-    }
-    if (destinationPath.empty()) {
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
-    }
-    return ERR_OK;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

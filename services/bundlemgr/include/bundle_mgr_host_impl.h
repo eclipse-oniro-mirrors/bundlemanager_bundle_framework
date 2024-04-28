@@ -886,9 +886,6 @@ public:
 
     virtual ErrCode CreateBundleDataDir(int32_t userId) override;
 
-    virtual ErrCode MigrateData(const std::vector<std::string> &sourcePaths,
-        const std::string &destinationPath) override;
-
     /**
      * @brief Check whether the link can be opened.
      * @param link Indicates the link to be opened.

@@ -473,19 +473,5 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
     }
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
 }
-
-ErrCode InstalldClient::MigrateData(const std::vector<std::string> &sourcePaths,
-    const std::string &destinationPath)
-{
-    if (sourcePaths.empty()) {
-        APP_LOGE("sourcePaths param is invalid");
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_SOURCE_PATH_INVALID;
-    }
-    if (destinationPath.empty()) {
-        APP_LOGE("destinationPath param is invalid");
-        return ERR_BUNDLE_MANAGER_MIGRATE_DATA_DESTINATION_PATH_INVALID;
-    }
-    return CallService(&IInstalld::MigrateData, sourcePaths, destinationPath);
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -362,8 +362,6 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO),
         &BundleMgrHost::HandleQueryCloneAbilityInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::MIGRATE_DATA),
-        &BundleMgrHost::HandleMigrateData);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3152,24 +3150,6 @@ ErrCode BundleMgrHost::HandleCreateBundleDataDir(MessageParcel &data, MessagePar
     APP_LOGI("CreateBundleDataDir called");
     int32_t userId = data.ReadInt32();
     ErrCode ret = CreateBundleDataDir(userId);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("Write reply failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleMigrateData(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("HandleMigrateData called");
-    std::vector<std::string> sourcePaths;
-    if (!data.ReadStringVector(&sourcePaths)) {
-        APP_LOGE("fail to HandleMigrateData from reply");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    std::string destinationPath = data.ReadString();
-    ErrCode ret = MigrateData(sourcePaths, destinationPath);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
