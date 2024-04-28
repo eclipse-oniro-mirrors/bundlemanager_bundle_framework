@@ -110,6 +110,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/camera", ExtensionAbilityType::SYSPICKER_CAMERA },
     { "sysPicker/navigation", ExtensionAbilityType::SYSPICKER_NAVIGATION },
     { "sysPicker/appSelector", ExtensionAbilityType::SYSPICKER_APPSELECTOR },
+    { "sysPicker/filePicker", ExtensionAbilityType::SYSPICKER_FILEPICKER },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
     { "vpn", ExtensionAbilityType::VPN },
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
