@@ -46,6 +46,20 @@ const char* SRC_FILE = "inFile";
 const std::string GET_ORIGINAL_SIZE = "GetOriginalSize";
 }
 
+enum CompressFlushMode {
+    NO_FLUSH = 0,
+    PARTIAL_FLUSH,
+    SYNC_FLUSH,
+    FULL_FLUSH,
+    FINISH,
+    BLOCK,
+    TREES
+};
+
+enum CompressMethod {
+    DEFLATED = 8
+};
+
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
     if (!(level == COMPRESS_LEVEL_NO_COMPRESSION || level == COMPRESS_LEVEL_DEFAULT_COMPRESSION || \
             level == COMPRESS_LEVEL_BEST_SPEED || level == COMPRESS_LEVEL_BEST_COMPRESSION)) {     \
@@ -136,6 +150,56 @@ napi_value CompressLevelInit(napi_env env, napi_value exports)
 
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("CompressLevel", compressLevel),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+/**
+ * @brief CompressFlushMode data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value CompressFlushModeInit(napi_env env, napi_value exports)
+{
+    APP_LOGD("%{public}s called.", __func__);
+
+    napi_value CompressFlushMode = nullptr;
+    napi_create_object(env, &CompressFlushMode);
+    SetNamedProperty(env, CompressFlushMode, "NO_FLUSH", NO_FLUSH);
+    SetNamedProperty(env, CompressFlushMode, "PARTIAL_FLUSH", PARTIAL_FLUSH);
+    SetNamedProperty(env, CompressFlushMode, "SYNC_FLUSH", SYNC_FLUSH);
+    SetNamedProperty(env, CompressFlushMode, "FULL_FLUSH", FULL_FLUSH);
+    SetNamedProperty(env, CompressFlushMode, "FINISH", FINISH);
+    SetNamedProperty(env, CompressFlushMode, "BLOCK", BLOCK);
+    SetNamedProperty(env, CompressFlushMode, "TREES", TREES);
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("CompressFlushMode", CompressFlushMode),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+/**
+ * @brief CompressMethodInit data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value CompressMethodInit(napi_env env, napi_value exports)
+{
+    APP_LOGD("%{public}s called.", __func__);
+
+    napi_value CompressMethod = nullptr;
+    napi_create_object(env, &CompressMethod);
+    SetNamedProperty(env, CompressMethod, "DEFLATED", DEFLATED);
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("CompressMethod", CompressMethod),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
 

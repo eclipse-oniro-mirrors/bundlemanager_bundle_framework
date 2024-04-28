@@ -66,6 +66,7 @@ public:
     static NapiValue CreateInt64(napi_env env, int64_t val);
     static NapiValue CreateUint64(napi_env env, uint64_t val);
     static NapiValue CreateInt32(napi_env env, int32_t val);
+    static NapiValue CreateUint32(napi_env env, uint32_t val);
     static NapiValue CreateObject(napi_env env);
     static NapiValue CreateBool(napi_env env, bool val);
     static NapiValue CreateUTF8String(napi_env env, const std::string &str);

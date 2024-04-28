@@ -45,6 +45,26 @@ napi_value FlushTypeInit(napi_env env, napi_value exports);
 napi_value CompressLevelInit(napi_env env, napi_value exports);
 
 /**
+ * @brief CompressFlushModeInit data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value CompressFlushModeInit(napi_env env, napi_value exports);
+
+/**
+ * @brief CompressMethodInit data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value CompressMethodInit(napi_env env, napi_value exports);
+
+/**
  * @brief CompressStrategy data initialization.
  *
  * @param env The environment that the Node-API call is invoked under.

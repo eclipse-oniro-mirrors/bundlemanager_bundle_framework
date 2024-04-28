@@ -310,6 +310,13 @@ NapiValue NapiValue::CreateInt32(napi_env env, int32_t val)
     return {env, res};
 }
 
+NapiValue NapiValue::CreateUint32(napi_env env, uint32_t val)
+{
+    napi_value res = nullptr;
+    napi_create_uint32(env, val, &res);
+    return {env, res};
+}
+
 NapiValue NapiValue::CreateObject(napi_env env)
 {
     napi_value res = nullptr;
