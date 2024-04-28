@@ -327,6 +327,8 @@ public:
     BMS_DEFINE_PROPERTY_MEMBER_FILED(IconId, baseApplicationInfo_, iconId, int32_t);
     BMS_DEFINE_PROPERTY_MEMBER_FILED(
         AppEnvironments, baseApplicationInfo_, appEnvironments, std::vector<ApplicationEnvironment>);
+    BMS_DEFINE_PROPERTY_MEMBER_FILED(
+        MaxChildProcess, baseApplicationInfo_, maxChildProcess, int32_t);
 
     void SetInstallMark(const std::string &bundleName, const std::string &packageName,
         const InstallExceptionStatus &status)

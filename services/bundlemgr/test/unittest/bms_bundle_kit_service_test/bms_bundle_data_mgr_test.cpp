@@ -65,6 +65,7 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
 const std::string MODULE_NAME_TEST = "com.example.bundlekit.test.entry";
+const std::string MODULE_NAME_TEST1 = "com.example.bundlekit.test.entry1";
 const std::string ABILITY_NAME_TEST = ".Reading";
 const std::string BUNDLE_TEST1 = "bundleName1";
 const std::string BUNDLE_TEST2 = "bundleName2";
@@ -211,7 +212,14 @@ const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
 const int32_t GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040;
 const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
+const std::string ENTRY = "entry";
+const std::string FEATURE = "feature";
 }  // namespace
+
+struct Param {
+    std::string moduleType;
+    int32_t maxChildProcess = 0;
+};
 
 class BmsBundleDataMgrTest : public testing::Test {
 public:
@@ -229,6 +237,8 @@ public:
     void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::vector<Dependency> &dependencies,
         InnerBundleInfo &innerBundleInfo) const;
+    void MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, Param param, InnerBundleInfo &innerBundleInfo) const;
     void MockInstallBundle(
         const std::string &bundleName, const std::string &moduleName, const std::string &abilityName,
         bool userDataClearable = true, bool isSystemApp = false) const;
@@ -732,6 +742,27 @@ void BmsBundleDataMgrTest::MockInnerBundleInfo(const std::string &bundleName, co
     moduleInfo.moduleName = moduleName;
     moduleInfo.description = BUNDLE_DESCRIPTION;
     moduleInfo.dependencies = dependencies;
+    innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
+    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    std::string keyName = bundleName + "." + moduleName + "." + abilityName;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+}
+
+void BmsBundleDataMgrTest::MockInnerBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, Param param, InnerBundleInfo &innerBundleInfo) const
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = bundleName;
+    appInfo.maxChildProcess = param.maxChildProcess;
+    BundleInfo bundleInfo;
+    bundleInfo.name = bundleName;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = moduleName;
+    moduleInfo.moduleName = moduleName;
+    moduleInfo.description = BUNDLE_DESCRIPTION;
+    moduleInfo.distro.moduleType = param.moduleType;
     innerBundleInfo.InsertInnerModuleInfo(moduleName, moduleInfo);
     AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
@@ -4415,5 +4446,68 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0040, Function | S
     abilityInfos.emplace_back(abilityInfo);
     GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
     EXPECT_EQ(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: UpdateMaxChildProcess_0010
+ * @tc.name: UpdateMaxChildProcess
+ * @tc.desc: test UpdateMaxChildProcess.
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0010, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    Param param;
+    param.moduleType = ENTRY;
+    param.maxChildProcess = 10;
+    Param param1;
+    param1.moduleType = FEATURE;
+    param1.maxChildProcess = 5;
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
+    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
+    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 10);
+}
+
+/**
+ * @tc.number: UpdateMaxChildProcess_0020
+ * @tc.name: UpdateMaxChildProcess
+ * @tc.desc: test UpdateMaxChildProcess.
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0020, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    Param param;
+    param.moduleType = FEATURE;
+    param.maxChildProcess = 10;
+    Param param1;
+    param1.moduleType = FEATURE;
+    param1.maxChildProcess = 5;
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
+    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
+    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 5);
+}
+
+/**
+ * @tc.number: UpdateMaxChildProcess_0030
+ * @tc.name: UpdateMaxChildProcess
+ * @tc.desc: test UpdateMaxChildProcess.
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0030, Function | SmallTest | Level1)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    Param param;
+    param.moduleType = FEATURE;
+    param.maxChildProcess = 10;
+    Param param1;
+    param1.moduleType = ENTRY;
+    param1.maxChildProcess = 5;
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
+    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
+    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
+    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 5);
 }
 }

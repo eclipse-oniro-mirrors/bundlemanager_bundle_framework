@@ -356,6 +356,8 @@ constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* APP_MAX_CHILD_PROCESS = "maxChildProcess";
+constexpr const char* MAX_CHILD_PROCESS = "const.bms.maxChildProcess";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";

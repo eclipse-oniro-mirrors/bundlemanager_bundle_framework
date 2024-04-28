@@ -285,6 +285,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string multiAppMode = MULTI_APP_MODE_NOT_SUPPORT;
     int32_t maxInstanceNum = 0;
+    int32_t maxChildProcess = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

@@ -1066,6 +1066,7 @@ private:
     void updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void updateAppEnvironments(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    void updateMaxChildProcess(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
     void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
