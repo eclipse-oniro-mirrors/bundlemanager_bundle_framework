@@ -1430,6 +1430,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4600, Function | Sma
 {
     auto impl = std::make_shared<AppControlManagerHostImpl>();
     auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
     DisposedRule rule;
     ErrCode res = appControlManager->GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1444,6 +1445,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4700, Function | Sma
 {
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
         = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
     auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
     EXPECT_TRUE(res);
 
