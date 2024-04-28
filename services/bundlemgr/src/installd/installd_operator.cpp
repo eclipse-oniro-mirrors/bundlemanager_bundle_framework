@@ -55,7 +55,6 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
-static const std::string SO_SUFFIX_REGEX = "\\.so\\.[0-9][0-9]*$";
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
 static const std::string PROC_MOUNTS_PATH = "/proc/mounts";
@@ -94,10 +93,6 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     }
     if (sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length())) {
         return true;
-    }
-    if (targetSuffix == Constants::SO_SUFFIX) {
-        std::regex soRegex(SO_SUFFIX_REGEX);
-        return std::regex_search(sourceString, soRegex);
     }
     return false;
 }
@@ -283,7 +278,8 @@ bool InstalldOperator::IsNativeFile(
         }
     }
 
-    if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE) {
+    if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
+        && extractParam.extractFileType != ExtractFileType::SO) {
         APP_LOGD("file type error.");
         return false;
     }
@@ -299,10 +295,6 @@ bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::strin
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
-        return false;
-    }
-    if (!EndsWith(entryName, Constants::SO_SUFFIX)) {
-        APP_LOGD("file name not so format.");
         return false;
     }
     APP_LOGD("find native so, entryName : %{public}s", entryName.c_str());
@@ -412,7 +404,6 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
 {
     switch (extractFileType) {
         case ExtractFileType::SO: {
-            suffixes.emplace_back(Constants::SO_SUFFIX);
             break;
         }
         case ExtractFileType::AN: {
@@ -1286,7 +1277,7 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     for (const auto &entryName : entryNames) {
-        if (StartsWith(entryName, prefix) && EndsWith(entryName, Constants::SO_SUFFIX)) {
+        if (StartsWith(entryName, prefix)) {
             fileNames.push_back(entryName.substr(prefix.length(), entryName.length()));
         }
     }

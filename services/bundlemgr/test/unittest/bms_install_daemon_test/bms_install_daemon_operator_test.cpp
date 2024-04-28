@@ -44,7 +44,7 @@ const std::string TEST_PATH = "/test/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_SO_X = "libs/arm64/test.so.9";
 const std::string TEST_LIB_SO_XX = "libs/arm64/test.so.11";
-const std::string TEST_LIB_SO_ERROR = "libs/arm64/test.so.a";
+const std::string TEST_LIB_SO_CUSTOM = "libs/arm64/test.so.a";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_LIB_AP = "ap/test.ap";
 const std::string TEST_RES_FILE = "resources/resfile/test.txt";
@@ -234,13 +234,13 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_01000, Function | Sm
  * @tc.number: InstalldOperatorTest_1100
  * @tc.name: test function of InstalldOperator
  * @tc.desc: 1. calling IsNativeSo of InstalldOperator
- *           2. entryName does not contain .so suffix and return false
+ *           2. entryName does not contain .so suffix and return true
  * @tc.require: issueI5T6P3
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1100, Function | SmallTest | Level0)
 {
     auto ret = InstalldOperator::IsNativeSo(TEST_ERROR_LIB_STRING, TEST_CPU_ABI);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -475,8 +475,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
     EXPECT_TRUE(ret);
     ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_XX, extractParam);
     EXPECT_TRUE(ret);
-    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_ERROR, extractParam);
-    EXPECT_FALSE(ret);
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_SO_CUSTOM, extractParam);
+    EXPECT_TRUE(ret);
 
     extractParam.extractFileType = ExtractFileType::PATCH;
     ret = InstalldOperator::IsNativeFile(TEST_LIB_SO, extractParam);
