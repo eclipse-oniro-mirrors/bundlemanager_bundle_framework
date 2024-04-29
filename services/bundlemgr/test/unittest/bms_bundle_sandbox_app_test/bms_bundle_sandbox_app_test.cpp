@@ -54,8 +54,8 @@ int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
 int32_t DLP_TYPE_3 = 3;
 int32_t INVALID_APP_INDEX = 0;
-int32_t APP_INDEX_1 = 1;
-int32_t APP_INDEX_2 = 2;
+int32_t APP_INDEX_1 = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
+int32_t APP_INDEX_2 = Constants::INITIAL_SANDBOX_APP_INDEX + 2;
 const int32_t USERID = 100;
 const int32_t INVALID_USERID = 300;
 const int32_t TEST_UID = 20010039;
@@ -1756,7 +1756,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0100, Function | SmallTest |
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
@@ -1783,10 +1783,10 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0200, Function | SmallTest |
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
     ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_NE(testRet, ERR_OK);
-    appIndex = Constants::MAX_APP_INDEX + 1;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX + 1;
     testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_NE(testRet, ERR_OK);
 }
@@ -1802,9 +1802,9 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0300, Function | SmallTest |
 {
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
 
-    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, Constants::INITIAL_APP_INDEX, info);
+    ErrCode testRet = GetSandboxHapModuleInfo(abilityInfo, appIndex, Constants::INITIAL_SANDBOX_APP_INDEX, info);
     EXPECT_NE(testRet, ERR_OK);
 }
 
@@ -1823,7 +1823,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0400, Function | SmallTest |
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    int32_t appIndex = Constants::MAX_APP_INDEX - 1;
+    int32_t appIndex = Constants::MAX_SANDBOX_APP_INDEX - 1;
     auto ret = InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_1, USERID, appIndex);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(appIndex, APP_INDEX_1);
@@ -1856,7 +1856,7 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxHapModuleInfo_0500, Function | SmallTest |
     auto installRes = InstallBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
 
-    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = BUNDLE_NAME;
 
@@ -1965,7 +1965,7 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest |
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
 
     res = testRet->GenerateSandboxAppIndex(BUNDLE_NAME);
-    EXPECT_EQ(res, Constants::INITIAL_APP_INDEX);
+    EXPECT_EQ(res, Constants::INITIAL_SANDBOX_APP_INDEX);
 
     res = testRet->DeleteSandboxAppIndex(BUNDLE_NAME, APP_INDEX_1);
     EXPECT_EQ(res, false);
@@ -2034,10 +2034,10 @@ HWTEST_F(BmsSandboxAppTest, GenerateSandboxAppIndex_0100, Function | SmallTest |
     EXPECT_EQ(ret, ERR_OK);
 
     int32_t ret1 = GenerateSandboxAppIndex(BUNDLE_NAME);
-    EXPECT_NE(ret1, Constants::INITIAL_APP_INDEX);
+    EXPECT_NE(ret1, Constants::INITIAL_SANDBOX_APP_INDEX);
 
     ret1 = GenerateSandboxAppIndex("");
-    EXPECT_EQ(ret1, Constants::INITIAL_APP_INDEX);
+    EXPECT_EQ(ret1, Constants::INITIAL_SANDBOX_APP_INDEX);
 
     auto uninstallRes = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(uninstallRes, ERR_OK);

@@ -231,7 +231,7 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_0900, Functi
  */
 HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1000, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     Want want;
     AbilityInfo info;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
@@ -246,7 +246,7 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1000, Functi
  */
 HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1100, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
@@ -261,7 +261,7 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1100, Functi
  */
 HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1200, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     AbilityInfo abilityInfo;
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);

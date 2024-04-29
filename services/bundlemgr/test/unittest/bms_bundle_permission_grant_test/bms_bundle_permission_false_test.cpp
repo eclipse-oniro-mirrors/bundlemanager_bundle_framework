@@ -893,7 +893,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5800, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     BundleInfo info;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxBundleInfo(BUNDLE_NAME, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
@@ -934,7 +934,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6100, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     Want want;
     AbilityInfo info;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
@@ -949,7 +949,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
@@ -1219,7 +1219,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8200, Functi
     ret = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    appIndex = 101;
+    appIndex = 1 + Constants::MAX_SANDBOX_APP_INDEX;
     ret = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
@@ -1262,7 +1262,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8700, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     AbilityInfo abilityInfo;
     HapModuleInfo info;
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);

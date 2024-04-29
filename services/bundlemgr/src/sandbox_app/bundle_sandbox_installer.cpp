@@ -96,7 +96,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     auto newAppIndex = sandboxDataMgr_->GenerateSandboxAppIndex(bundleName_);
-    if (newAppIndex == Constants::INITIAL_APP_INDEX) {
+    if (newAppIndex == Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("invalid app index generated");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
@@ -322,7 +322,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
         auto pos = info.first.find(bundleName);
         if (pos != std::string::npos && pos > 1) {
             std::string appIndexStr = info.first.substr(0, pos - 1);
-            int32_t appIndex = Constants::INITIAL_APP_INDEX;
+            int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
             if (!StrToInt(appIndexStr, appIndex)) {
                 APP_LOGE("UninstallAllSandboxApps obtain appIndex failed");
                 return;

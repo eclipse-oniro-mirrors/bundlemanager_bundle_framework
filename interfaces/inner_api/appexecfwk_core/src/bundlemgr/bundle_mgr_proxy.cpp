@@ -2783,7 +2783,7 @@ ErrCode BundleMgrProxy::GetSandboxBundleInfo(const std::string &bundleName, int3
     BundleInfo &info)
 {
     APP_LOGD("begin to GetSandboxBundleInfo");
-    if (bundleName.empty() || appIndex <= Constants::INITIAL_APP_INDEX) {
+    if (bundleName.empty() || appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxBundleInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -3131,7 +3131,7 @@ ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex
 {
     APP_LOGD("begin to GetSandboxAbilityInfo");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxAbilityInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -3166,7 +3166,7 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
 {
     APP_LOGD("begin to GetSandboxExtAbilityInfos");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxExtAbilityInfos params are invalid");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -3201,7 +3201,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
 {
     APP_LOGD("begin to GetSandboxHapModuleInfo");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxHapModuleInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }

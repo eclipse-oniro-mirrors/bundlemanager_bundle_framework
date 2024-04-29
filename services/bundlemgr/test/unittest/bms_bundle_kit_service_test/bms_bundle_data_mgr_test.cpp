@@ -2502,7 +2502,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllDependentModuleNames_0100, Function | Mediu
  */
 HWTEST_F(BmsBundleDataMgrTest, GetSandboxBundleInfo_0100, Function | MediumTest | Level1)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     BundleInfo info;
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
@@ -2547,7 +2547,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level
  */
 HWTEST_F(BmsBundleDataMgrTest, GetSandboxHapModuleInfo_0100, Function | MediumTest | Level1)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     HapModuleInfo hapModuleInfo;
     AbilityInfo info;
     GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
@@ -2562,7 +2562,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetSandboxHapModuleInfo_0100, Function | MediumTe
  */
 HWTEST_F(BmsBundleDataMgrTest, GetSandboxHapModuleInfo_0200, Function | MediumTest | Level1)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     HapModuleInfo hapModuleInfo;
     AbilityInfo info;
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);

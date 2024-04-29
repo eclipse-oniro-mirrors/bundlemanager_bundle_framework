@@ -2159,10 +2159,10 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_006, TestSize.Level1)
         bundleName, dlpType, userId, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
     bundleName = BUNDLE_NAME;
-    appIndex = Constants::INITIAL_APP_INDEX - 1;
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX - 1;
     ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX;
     ret = impl.UninstallSandboxApp(bundleName, appIndex, userId);
     EXPECT_NE(ret, ERR_OK);
     impl.OnDeath();
@@ -2182,15 +2182,15 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_007, TestSize.Level1)
     OHOS::AAFwk::Want want;
     AbilityInfo abilityInfo;
     int32_t flags = 0;
-    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX - 1;
     ErrCode ret = impl.GetSandboxAbilityInfo(
         want, appIndex, flags, DEFAULT_USERID, abilityInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX + 1;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX + 1;
     ret = impl.GetSandboxAbilityInfo(
         want, appIndex, flags, DEFAULT_USERID, abilityInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX;
     ret = impl.GetSandboxAbilityInfo(
         want, appIndex, flags, DEFAULT_USERID, abilityInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
@@ -2211,15 +2211,15 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_008, TestSize.Level1)
     OHOS::AAFwk::Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     int32_t flags = 0;
-    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX - 1;
     ErrCode ret = impl.GetSandboxExtAbilityInfos(
         want, appIndex, flags, DEFAULT_USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX + 1;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX + 1;
     ret = impl.GetSandboxExtAbilityInfos(
         want, appIndex, flags, DEFAULT_USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX;
     ret = impl.GetSandboxExtAbilityInfos(
         want, appIndex, flags, DEFAULT_USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
@@ -2239,15 +2239,15 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_009, TestSize.Level1)
     impl.Connect();
     AbilityInfo abilityInfo;
     HapModuleInfo hapModuleInfo;
-    int32_t appIndex = Constants::INITIAL_APP_INDEX - 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX - 1;
     ErrCode ret = impl.GetSandboxHapModuleInfo(
         abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX + 1;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX + 1;
     ret = impl.GetSandboxHapModuleInfo(
         abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
-    appIndex = Constants::MAX_APP_INDEX;
+    appIndex = Constants::MAX_SANDBOX_APP_INDEX;
     ret = impl.GetSandboxHapModuleInfo(
         abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);

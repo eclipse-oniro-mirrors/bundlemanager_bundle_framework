@@ -73,12 +73,12 @@ int32_t BundleSandboxAppHelper::GenerateSandboxAppIndex(const std::string &bundl
     APP_LOGD("enter GenerateSandboxAppIndex");
     if (sandboxDataMgr_ == nullptr) {
         APP_LOGE("sandboxDataMgr_ is nullptr");
-        return Constants::INITIAL_APP_INDEX;
+        return Constants::INITIAL_SANDBOX_APP_INDEX;
     }
     return sandboxDataMgr_->GenerateSandboxAppIndex(bundleName);
 #else
     APP_LOGD("sandbox app not supported");
-    return Constants::INITIAL_APP_INDEX;
+    return Constants::INITIAL_SANDBOX_APP_INDEX;
 #endif
 }
 
