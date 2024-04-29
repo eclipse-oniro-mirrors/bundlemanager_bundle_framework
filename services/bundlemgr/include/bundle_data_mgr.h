@@ -780,7 +780,7 @@ public:
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
-        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -925,6 +925,8 @@ public:
 
     ErrCode QueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
         int32_t appIndex, AbilityInfo &abilityInfo) const;
+    ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
+        BundleInfo &bundleInfo, int32_t userId) const;
 private:
     /**
      * @brief Init transferStates.
@@ -1082,7 +1084,6 @@ private:
     std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos, const std::string &bundleName,
         const ElementName &element, int32_t flags, int32_t userId) const;
-
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;

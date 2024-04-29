@@ -55,7 +55,7 @@ public:
     void UpdateModuleInfo(const InnerBundleInfo &newInfo);
     void RemoveModuleInfo(const std::string &modulePackage);
     std::optional<HapModuleInfo> FindHapModuleInfo(
-        const std::string &modulePackage, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        const std::string &modulePackage, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     void GetModuleWithHashValue(
         int32_t flags, const std::string &modulePackage, HapModuleInfo &hapModuleInfo) const;
     std::optional<AbilityInfo> FindAbilityInfo(
@@ -987,10 +987,14 @@ private:
     void GetBundleWithExtension(
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void RemoveDuplicateName(std::vector<std::string> &name) const;
-    void GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
-    void ProcessBundleFlags(int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex = 0) const;
-    void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
-    void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
+    void GetBundleWithReqPermissionsV9(
+        int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex = 0) const;
+    void ProcessBundleFlags(
+        int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex = 0) const;
+    void ProcessBundleWithHapModuleInfoFlag(
+        int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex = 0) const;
+    void GetBundleWithAbilitiesV9(
+        int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId, int32_t appIndex = 0) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();

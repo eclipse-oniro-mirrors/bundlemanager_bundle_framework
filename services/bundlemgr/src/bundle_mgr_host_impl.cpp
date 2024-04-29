@@ -3430,20 +3430,26 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
         BundleInfo bundleInfo;
-        if (GetPreferableBundleInfoFromHapPaths(
+        if (!GetPreferableBundleInfoFromHapPaths(
             recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
-            RecoverableApplicationInfo recoverableApplication;
-            recoverableApplication.bundleName = bundleInfo.name;
-            recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
-            recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
-            recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
-            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
-            recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
-            if (!bundleInfo.hapModuleInfos.empty()) {
-                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
-            }
-            recoverableApplicaitons.emplace_back(recoverableApplication);
+            continue;
         }
+        RecoverableApplicationInfo recoverableApplication;
+        recoverableApplication.bundleName = bundleInfo.name;
+        recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
+        recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
+        recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+        recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
+        if (!bundleInfo.hapModuleInfos.empty()) {
+            recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
+        }
+        if (bundleInfo.isNewVersion) {
+            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
+        } else if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].installationFree) {
+            recoverableApplication.bundleType = BundleType::ATOMIC_SERVICE;
+        }
+        recoverableApplicaitons.emplace_back(recoverableApplication);
     }
     return ERR_OK;
 }
@@ -3716,6 +3722,37 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
     auto res = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
+    int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
+{
+    APP_LOGI("start bundleName: %{public}s with user: %{public}d, appIndex: %{public}d, flag: %{public}d",
+        bundleName.c_str(), userId, appIndex, flags);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)
+        && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    if (res != ERR_OK) {
+        APP_LOGE(
+            "finish name: %{public}s user: %{public}d, appIndex: %{public}d, flag: %{public}d, err: %{public}d",
+            bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
     return ERR_OK;

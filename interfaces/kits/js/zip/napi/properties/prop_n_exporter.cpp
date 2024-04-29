@@ -23,6 +23,7 @@
 
 #include "common/common_func.h"
 #include "create_checksum.h"
+#include "create_gzip.h"
 #include "create_zip.h"
 
 namespace OHOS {
@@ -37,6 +38,8 @@ bool PropNExporter::Export()
         NapiValue::DeclareNapiFunction("createChecksumSync", CreateChecksum::Sync),
         NapiValue::DeclareNapiFunction("createZip", CreateZip::Async),
         NapiValue::DeclareNapiFunction("createZipSync", CreateZip::Sync),
+        NapiValue::DeclareNapiFunction("createGZip", CreateGZip::Async),
+        NapiValue::DeclareNapiFunction("createGZipSync", CreateGZip::Sync),
     });
 }
 

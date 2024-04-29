@@ -1204,7 +1204,8 @@ protected:
                 "versionCode": 1000000,
                 "versionName": "1.0.0",
                 "oldAppIds":[],
-                "routerArray": []
+                "routerArray": [],
+                "isNewVersion": false
             },
             "baseExtensionInfos_": {
             },

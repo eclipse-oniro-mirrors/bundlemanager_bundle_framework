@@ -265,6 +265,31 @@ napi_value MemLevelInit(napi_env env, napi_value exports)
 
     return exports;
 }
+
+/**
+ * @brief OffsetReferencePointInit data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value OffsetReferencePointInit(napi_env env, napi_value exports)
+{
+    APP_LOGD("%{public}s called.", __func__);
+
+    napi_value OffsetReferencePoint = nullptr;
+    napi_create_object(env, &OffsetReferencePoint);
+    SetNamedProperty(env, OffsetReferencePoint, "SEEK_SET", SEEK_SET);
+    SetNamedProperty(env, OffsetReferencePoint, "SEEK_CUR", SEEK_CUR);
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("OffsetReferencePoint", OffsetReferencePoint),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+
 /**
  * @brief Errorcode data initialization.
  *

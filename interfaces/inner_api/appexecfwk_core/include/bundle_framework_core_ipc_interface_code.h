@@ -169,6 +169,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_PREINSTALLED_APPLICATION_INFO,
     BATCH_QUERY_ABILITY_INFOS,
     BATCH_GET_BUNDLE_INFO,
+    GET_CLONE_BUNDLE_INFO,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
