@@ -1689,6 +1689,1026 @@ napi_value ZipNExporter::InflateSync(napi_env env, napi_callback_info info)
     return NapiValue::CreateUndefined(env).val_;
 }
 
+napi_value ZipNExporter::Inflate(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t flush = 0;
+    tie(succ, flush) = CommonFunc::GetInflateArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, flush](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflate(zipEntity->zs.get(), flush);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateEnd(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateEnd(zipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateSetDictionary(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    void *buf = nullptr;
+    size_t bufLen = 0;
+    tie(succ, buf, bufLen) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, buf, bufLen](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateSetDictionary(zipEntity->zs.get(), static_cast<Bytef *>(buf), static_cast<uInt>(bufLen));
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateGetDictionary(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!arg ||!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    void *buf = nullptr;
+    tie(succ, buf, arg->dictLength) = CommonFunc::GetInflateSetDictionaryArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto cbExec = [arg, zipEntity, buf](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateGetDictionary(zipEntity->zs.get(), static_cast<Bytef *>(buf), &arg->dictLength);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        NapiValue obj = DictionaryOutputInfo(env, arg);
+        return {obj};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateResetKeep(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateResetKeep(zipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateReset2(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t flush = 0;
+    tie(succ, flush) = CommonFunc::GetInflateReset2Arg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, flush](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateReset2(zipEntity->zs.get(), flush);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateReset(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateReset(zipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateBackInit(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::THREE, ArgumentCount::FOUR)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t windowBits = 0;
+    void *windowBuf = nullptr;
+    size_t bufLen = 0;
+    tie(succ, windowBits, windowBuf, bufLen) = CommonFunc::GetInflateBackInitArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, windowBits, windowBuf](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateBackInit(zipEntity->zs.get(), windowBits, static_cast<Bytef *>(windowBuf));
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::THREE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+static unsigned InFunc(void *inDesc, unsigned char **buf)
+{
+    InOutDesc *in = static_cast<InOutDesc *>(inDesc);
+    if (!in) {
+        APP_LOGE("The in function callback is nullptr");
+        return 0;
+    }
+
+    NapiReference cb(NapiValue(in->env, in->func));
+    if (!cb || !cb.Deref(in->env).TypeIs(napi_function)) {
+        NapiBusinessError().ThrowErr(in->env, EINVAL);
+        return 0;
+    }
+    napi_value callback = cb.Deref(in->env).val_;
+    napi_value argv[ArgumentCount::ONE] = {in->desc};
+    napi_value globalObj = nullptr;
+    napi_status status = napi_get_global(in->env, &globalObj);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(in->env, EINVAL);
+        return 0;
+    }
+    napi_value return_val = nullptr;
+    status = napi_call_function(in->env, globalObj, callback, ArgumentCount::ONE, argv, &return_val);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(in->env, EINVAL);
+        return 0;
+    }
+
+    NapiValue bufNVal(in->env, return_val);
+    void *buffer = nullptr;
+    size_t bufLen = 0;
+    bool succ = false;
+    tie(succ, buffer, bufLen) = bufNVal.ToArrayBuffer();
+    if (!succ) {
+        NapiBusinessError().ThrowErr(in->env, EINVAL);
+        return 0;
+    }
+    *buf = static_cast<unsigned char *>(buffer);
+
+    return bufLen;
+}
+
+static int32_t OutFunc(void *outDesc, unsigned char *buf, unsigned len)
+{
+    InOutDesc *out = static_cast<InOutDesc *>(outDesc);
+    if (!out) {
+        APP_LOGE("The out function callback is nullptr");
+        return -1;
+    }
+
+    NapiReference cb(NapiValue(out->env, out->func));
+    if (!cb || !cb.Deref(out->env).TypeIs(napi_function)) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    napi_value callback = cb.Deref(out->env).val_;
+    void *data = nullptr;
+    napi_value buffer = nullptr;
+    napi_status status = napi_create_arraybuffer(out->env, len, &data, &buffer);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    if (memcpy_s(data, len, buf, len) != EOK) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    napi_value bufferLen = nullptr;
+    status = napi_create_int32(out->env, len, &bufferLen);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    napi_value argv[ArgumentCount::THREE] = {out->desc, buffer, bufferLen};
+    napi_value globalObj = nullptr;
+    status = napi_get_global(out->env, &globalObj);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    napi_value return_val = nullptr;
+    status = napi_call_function(out->env, globalObj, callback, ArgumentCount::THREE, argv, &return_val);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    int32_t result = 0;
+    status = napi_get_value_int32(out->env, return_val, &result);
+    if (status != napi_ok) {
+        NapiBusinessError().ThrowErr(out->env, EINVAL);
+        return -1;
+    }
+    return result;
+}
+
+napi_value ZipNExporter::InflateBack(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::FIVE, ArgumentCount::SIX)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!arg || !zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto inDesc = make_shared<InOutDesc>(env, funcArg[ArgumentPosition::SECOND], funcArg[ArgumentPosition::THIRD]);
+    auto outDesc = make_shared<InOutDesc>(env, funcArg[ArgumentPosition::FOURTH], funcArg[ArgumentPosition::FIFTH]);
+    arg->errCode = inflateBack(zipEntity->zs.get(), InFunc, inDesc.get(), OutFunc, outDesc.get());
+    auto cbExec = [arg](napi_env env) -> NapiBusinessError {
+        if (!arg) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::FIVE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateBackEnd(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateBackEnd(zipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateCodesUsed(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateCodesUsed(zipEntity->zs.get());
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateUint32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflatePrime(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::THREE, ArgumentCount::FOUR)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t bits = 0;
+    int32_t value = 0;
+    tie(succ, bits, value) = CommonFunc::GetInflatePrimeArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, bits, value](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflatePrime(zipEntity->zs.get(), bits, value);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::THREE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateMark(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateMark(zipEntity->zs.get());
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateValidate(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t check = 0;
+    tie(succ, check) = CommonFunc::GetInflateValidateArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, check](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateValidate(zipEntity->zs.get(), check);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateUndermine(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    int32_t subvert = 0;
+    tie(succ, subvert) = CommonFunc::GetInflateUndermineArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, subvert](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateUndermine(zipEntity->zs.get(), subvert);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateSyncPoint(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateSyncPoint(zipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateCopy(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::ONE, ArgumentCount::TWO)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    auto srcZipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg[ArgumentPosition::FIRST]);
+    if (!srcZipEntity) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, srcZipEntity](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !srcZipEntity) {
+            return NapiBusinessError(EFAULT, true);
+        }
+
+        if (!zipEntity->zs) {
+            std::unique_ptr<z_stream> zs = std::make_unique<z_stream>();
+            zipEntity->zs.swap(zs);
+        }
+        arg->errCode = inflateCopy(zipEntity->zs.get(), srcZipEntity->zs.get());
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::ONE) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
+napi_value ZipNExporter::InflateGetHeader(napi_env env, napi_callback_info info)
+{
+    NapiFuncArg funcArg(env, info);
+    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
+    }
+
+    /* To get entity */
+    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
+    if (!zipEntity) {
+        NapiBusinessError().ThrowErr(env, EFAULT);
+        return nullptr;
+    }
+
+    bool succ = false;
+    gz_header gzHeader = {};
+    tie(succ, gzHeader) = CommonFunc::GetInflateGetHeaderArg(env, funcArg);
+    if (!succ) {
+        return nullptr;
+    }
+
+    auto arg = make_shared<AsyncZipArg>();
+    auto cbExec = [arg, zipEntity, gzHeader](napi_env env) -> NapiBusinessError {
+        if (!arg || !zipEntity || !zipEntity->zs) {
+            return NapiBusinessError(EFAULT, true);
+        }
+        arg->errCode = inflateGetHeader(zipEntity->zs.get(), const_cast<gz_headerp>(&gzHeader));
+        if (arg->errCode < 0) {
+            return NapiBusinessError(arg->errCode, true);
+        }
+        return NapiBusinessError(ERRNO_NOERR);
+    };
+
+    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
+        if (err) {
+            return {env, err.GetNapiErr(env)};
+        }
+        if (!arg) {
+            return {NapiValue::CreateUndefined(env)};
+        }
+        return {NapiValue::CreateInt32(env, arg->errCode)};
+    };
+
+    NapiValue thisVar(env, funcArg.GetThisVar());
+    if (funcArg.GetArgc() == ArgumentCount::TWO) {
+        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
+    }
+
+    return NapiValue::CreateUndefined(env).val_;
+}
+
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
