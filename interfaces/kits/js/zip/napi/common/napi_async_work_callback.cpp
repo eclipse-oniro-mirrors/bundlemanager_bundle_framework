@@ -27,6 +27,14 @@ NapiAsyncWorkCallback::NapiAsyncWorkCallback(napi_env env, NapiValue thisPtr, Na
     ctx_ = new NAsyncContextCallback(thisPtr, cb);
 }
 
+NapiAsyncWorkCallback::~NapiAsyncWorkCallback()
+{
+    if (ctx_ != nullptr) {
+        delete ctx_;
+        ctx_ = nullptr;
+    }
+}
+
 static void CallbackExecute(napi_env env, void *data)
 {
     auto ctx = static_cast<NAsyncContextCallback *>(data);

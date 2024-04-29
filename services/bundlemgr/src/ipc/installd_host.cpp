@@ -623,7 +623,12 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
-    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(data.ReadRawData(profileBlockLength));
+    auto dataInfo = data.ReadRawData(profileBlockLength);
+    if (!dataInfo) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(dataInfo);
     if (profileBlock == nullptr) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;

@@ -26,7 +26,7 @@ public:
     NapiAsyncWorkCallback(const NapiAsyncWorkCallback &) = delete;
     NapiAsyncWorkCallback &operator=(const NapiAsyncWorkCallback &) = delete;
     NapiAsyncWorkCallback(napi_env env, NapiValue thisPtr, NapiValue cb);
-    ~NapiAsyncWorkCallback() override = default;
+    ~NapiAsyncWorkCallback() override;
 
     NapiValue Schedule(std::string procedureName, NContextCBExec cbExec, NContextCBComplete cbComplete) final;
 

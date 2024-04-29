@@ -45,7 +45,7 @@ BundleStatusCallback::~BundleStatusCallback()
     }
     work->data = reinterpret_cast<void*>(delRefCallbackInfo);
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) { APP_LOGI("~BundleStatusCallback asyn work done"); },
         [](uv_work_t* work, int status) {
             // JS Thread
             DelRefCallbackInfo* delRefCallbackInfo = reinterpret_cast<DelRefCallbackInfo*>(work->data);

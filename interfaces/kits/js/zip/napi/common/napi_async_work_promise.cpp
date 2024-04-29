@@ -27,6 +27,14 @@ NapiAsyncWorkPromise::NapiAsyncWorkPromise(napi_env env, NapiValue thisPtr) : Na
     ctx_ = new NAsyncContextPromise(thisPtr);
 }
 
+NapiAsyncWorkPromise::~NapiAsyncWorkPromise()
+{
+    if (ctx_ != nullptr) {
+        delete ctx_;
+        ctx_ = nullptr;
+    }
+}
+
 static void PromiseOnExec(napi_env env, void *data)
 {
     auto ctx = static_cast<NAsyncContextPromise *>(data);

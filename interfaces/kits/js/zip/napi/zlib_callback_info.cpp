@@ -34,7 +34,9 @@ ZlibCallbackInfo::~ZlibCallbackInfo() {}
 int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 {
     int32_t ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) {
+            APP_LOGI("ExcuteWork asyn work done");
+        },
         [](uv_work_t* work, int status) {
             if (work == nullptr) {
                 return;

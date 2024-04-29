@@ -308,11 +308,14 @@ bool BundleResourceParser::ParseIconIdFromJson(
     }
     auto pos = layerImage.foreground.find(CHAR_COLON);
     if (pos != std::string::npos) {
-        foregroundId = atoi(layerImage.foreground.substr(pos + 1, layerImage.foreground.length() - pos - 1).c_str());
+        int32_t foregroundLength = static_cast<int32_t>(layerImage.foreground.length());
+        foregroundId = atoi(layerImage.foreground.substr(pos + 1, foregroundLength - pos - 1).c_str());
     }
     pos = layerImage.background.find(CHAR_COLON);
     if (pos != std::string::npos) {
-        backgroundId = atoi(layerImage.background.substr(pos + 1, layerImage.background.length() - pos - 1).c_str());
+        int32_t backgroundLength = static_cast<int32_t>(layerImage.background.length());
+        backgroundId = atoi(layerImage.background.substr(pos + 1,
+            backgroundLength - pos - 1).c_str());
     }
     APP_LOGD("succeed, foregroundId:%{public}u, backgroundId:%{public}u", foregroundId, backgroundId);
     return true;

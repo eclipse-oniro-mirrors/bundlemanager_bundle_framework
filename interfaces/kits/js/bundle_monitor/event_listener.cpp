@@ -107,7 +107,7 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
     int ret = uv_queue_work(
-        loop, work, [](uv_work_t* work) {},
+        loop, work, [](uv_work_t* work) { APP_LOGI("EmitOnUV asyn work done"); },
         [](uv_work_t* work, int status) {
             AsyncCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncCallbackInfo*>(work->data);
             if (asyncCallbackInfo == nullptr) {
