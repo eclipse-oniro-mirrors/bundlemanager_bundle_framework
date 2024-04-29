@@ -23,6 +23,7 @@
 
 #include "common/common_func.h"
 #include "create_checksum.h"
+#include "create_gzip.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -34,6 +35,8 @@ bool PropNExporter::Export()
     return exports_.AddProp({
         NapiValue::DeclareNapiFunction("createChecksum", CreateChecksum::Async),
         NapiValue::DeclareNapiFunction("createChecksumSync", CreateChecksum::Sync),
+        NapiValue::DeclareNapiFunction("createGZip", CreateGZip::Async),
+        NapiValue::DeclareNapiFunction("createGZipSync", CreateGZip::Sync),
     });
 }
 

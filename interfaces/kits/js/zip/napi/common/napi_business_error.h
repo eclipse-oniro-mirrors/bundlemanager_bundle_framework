@@ -24,6 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
+constexpr int32_t EARCH = 100;
+constexpr int32_t EZSTREAM_ERROR = -2;
 constexpr int32_t ERRNO_NOERR = 0;
 constexpr int32_t ZLIB_SYS_CAP_TAG = 17800000;
 const std::string ZLIB_TAG_ERR_CODE = "code";
@@ -51,6 +53,7 @@ enum ErrCodeSuffix {
     E_2BIG,
     E_BADF,
     E_MEMORY,
+    E_ARCH,
 };
 
 const std::unordered_map<int32_t, std::pair<int32_t, std::string>> errCodeTable{
@@ -62,7 +65,10 @@ const std::unordered_map<int32_t, std::pair<int32_t, std::string>> errCodeTable{
     {-4, {ZLIB_SYS_CAP_TAG + E_NXIO, "Memory allocation failed"}},
     {-5, {ZLIB_SYS_CAP_TAG + E_2BIG, "Buffer error"}},
     {-6, {ZLIB_SYS_CAP_TAG + E_BADF, "Version error"}},
-    {ENOSTR, {ZLIB_SYS_CAP_TAG + E_MEMORY, "Internal structure error"}}};
+    {ENOSTR, {ZLIB_SYS_CAP_TAG + E_MEMORY, "Internal structure error"}},
+    {EARCH, {ZLIB_SYS_CAP_TAG + E_ARCH, "System architecture error, compiling with _WIN32"}},
+    {ENOENT, {ZLIB_SYS_CAP_TAG + E_NOENT, "No such file or directory"}},
+};
 
 class NapiBusinessError {
 public:
