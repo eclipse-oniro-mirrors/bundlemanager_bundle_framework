@@ -582,7 +582,8 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
     return parseResult;
 }
 
-std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::string &modulePackage, int32_t userId) const
+std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
+    const std::string &modulePackage, int32_t userId, int32_t appIndex) const
 {
     auto it = innerModuleInfos_.find(modulePackage);
     if (it == innerModuleInfos_.end()) {
@@ -651,7 +652,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
             auto &abilityInfo = hapInfo.abilityInfos.emplace_back(ability.second);
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION |
                 ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                abilityInfo.applicationInfo);
+                abilityInfo.applicationInfo, appIndex);
         }
     }
     hapInfo.dependencies = it->second.dependencies;
@@ -1476,7 +1477,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 
     for (const auto &info : innerModuleInfos_) {
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
-        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
+        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
         if (hapmoduleinfo) {
             bundleInfo.moduleNames.emplace_back(info.second.moduleName);
             bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
@@ -1486,7 +1487,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
-    ProcessBundleFlags(flags, userId, bundleInfo);
+    ProcessBundleFlags(flags, userId, bundleInfo, appIndex);
     return ERR_OK;
 }
 
@@ -1512,8 +1513,8 @@ void InnerBundleInfo::ProcessBundleFlags(
                 bundleInfo.applicationInfo, appIndex);
         }
     }
-    GetBundleWithReqPermissionsV9(flags, userId, bundleInfo);
-    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId);
+    GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
+    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId, appIndex);
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
@@ -1521,7 +1522,8 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(
+    int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
@@ -1549,6 +1551,18 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userI
     }
     uint32_t tokenId = innerBundleUserInfo.accessTokenId;
     std::string deviceId = baseApplicationInfo_->deviceId;
+    if (appIndex != 0) {
+        // clone app
+        const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = innerBundleUserInfo.cloneInfos;
+        std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+        if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
+            LOG_E(BMS_TAG_QUERY_APPLICATION,
+                "can not find userId %{public}d, appIndex %{public}d when get applicationInfo", userId, appIndex);
+            return;
+        }
+        const InnerBundleCloneInfo &cloneInfo = mpCloneInfos.at(appIndexKey);
+        tokenId = cloneInfo.accessTokenId;
+    }
     if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo, tokenId, deviceId)) {
         APP_LOGE("get request permission state failed");
     }
@@ -1571,7 +1585,8 @@ void InnerBundleInfo::GetModuleWithHashValue(
     hapModuleInfo.hashValue = it->second.hashValue;
 }
 
-void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
+    int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
@@ -1579,7 +1594,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
         return;
     }
     for (const auto &info : innerModuleInfos_) {
-        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId);
+        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
         if (hapmoduleinfo) {
             HapModuleInfo hapModuleInfo = *hapmoduleinfo;
             auto it = innerModuleInfos_.find(info.second.modulePackage);
@@ -1596,14 +1611,15 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleIn
                 hapModuleInfo.metadata.clear();
             }
 
-            GetBundleWithAbilitiesV9(flags, hapModuleInfo, userId);
+            GetBundleWithAbilitiesV9(flags, hapModuleInfo, userId, appIndex);
             GetBundleWithExtensionAbilitiesV9(flags, hapModuleInfo);
             bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
         }
     }
 }
 
-void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const
+void InnerBundleInfo::GetBundleWithAbilitiesV9(
+    int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId, int32_t appIndex) const
 {
     hapModuleInfo.abilityInfos.clear();
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY))
@@ -1616,7 +1632,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hap
             (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
             continue;
         }
-        bool isEnabled = IsAbilityEnabled(ability.second, userId);
+        bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
             APP_LOGW("%{public}s is disabled,", ability.second.name.c_str());

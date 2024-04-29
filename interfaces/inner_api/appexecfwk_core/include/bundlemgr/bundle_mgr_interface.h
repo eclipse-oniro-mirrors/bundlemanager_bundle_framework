@@ -1415,6 +1415,12 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flag, int32_t appIndex,
+        BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

@@ -918,6 +918,8 @@ public:
     virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
         int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
 
+    virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
+        BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
