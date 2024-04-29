@@ -766,7 +766,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_1000, Function | MediumTest | Level
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
         ROUTER_INDEX_ONE_BUILD_FUNCTION);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), PERMS_INDEX_TWO);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), 31);
     resvec.clear();
     Uninstall(ROUTER_MAP_TEST_BUNDLE_NAME, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1325,7 +1325,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0024, Function | MediumTest | Lev
         ROUTER_INDEX_ZERO_PATH);
     EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].buildFunction,
         ROUTER_INDEX_ONE_BUILD_FUNCTION);
-    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), PERMS_INDEX_TWO);
+    EXPECT_EQ(bundleInfo.hapModuleInfos[PERMS_INDEX_ZERO].routerArray[PERMS_INDEX_ONE].data.size(), 31);
     resvec.clear();
     Uninstall(ROUTER_MAP_TEST_BUNDLE_NAME, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);

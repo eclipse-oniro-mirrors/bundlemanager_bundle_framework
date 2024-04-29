@@ -305,14 +305,7 @@ bool RouterItem::ReadFromParcel(Parcel &parcel)
     pageSourceFile = Str16ToStr8(parcel.ReadString16());
     buildFunction = Str16ToStr8(parcel.ReadString16());
 
-    int32_t dataSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
-    CONTAINER_SECURITY_VERIFY(parcel, dataSize, &data);
-    for (int32_t i = 0; i < dataSize; ++i) {
-        std::string key = Str16ToStr8(parcel.ReadString16());
-        std::string value = Str16ToStr8(parcel.ReadString16());
-        data.emplace(key, value);
-    }
+    data = Str16ToStr8(parcel.ReadString16());
     ohmurl = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
@@ -335,12 +328,7 @@ bool RouterItem::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageSourceFile));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildFunction));
-
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(data.size()));
-    for (const auto &dataItem : data) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
-    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(data));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(ohmurl));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
@@ -386,14 +374,6 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         routerItem.buildFunction,
         JsonType::STRING,
         true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
-        jsonObjectEnd,
-        ROUTER_ITEM_KEY_DATA,
-        routerItem.data,
-        JsonType::OBJECT,
-        false,
         parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
