@@ -79,6 +79,7 @@ const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
 const std::string APP_IDENTIFIER = "appIdentifier";
 const std::string BUNDLE_INFO_OLD_APPIDS = "oldAppIds";
 const std::string BUNDLE_INFO_ROUTER_ARRAY = "routerArray";
+const std::string BUNDLE_INFO_IS_NEW_VERSION = "isNewVersion";
 const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
@@ -361,6 +362,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
         }
         routerArray.emplace_back(*routerItem);
     }
+    isNewVersion = parcel.ReadBool();
     return true;
 }
 
@@ -479,6 +481,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     for (auto &router : routerArray) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &router);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isNewVersion);
     return true;
 }
 
@@ -639,12 +642,9 @@ void from_json(const nlohmann::json &jsonObject, SignatureInfo &signatureInfo)
 void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
 {
     jsonObject = nlohmann::json {
-        {BUNDLE_INFO_NAME, bundleInfo.name},
-        {BUNDLE_INFO_LABEL, bundleInfo.label},
-        {BUNDLE_INFO_DESCRIPTION, bundleInfo.description},
-        {BUNDLE_INFO_VENDOR, bundleInfo.vendor},
-        {BUNDLE_INFO_IS_KEEP_ALIVE, bundleInfo.isKeepAlive},
-        {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
+        {BUNDLE_INFO_NAME, bundleInfo.name}, {BUNDLE_INFO_LABEL, bundleInfo.label},
+        {BUNDLE_INFO_DESCRIPTION, bundleInfo.description}, {BUNDLE_INFO_VENDOR, bundleInfo.vendor},
+        {BUNDLE_INFO_IS_KEEP_ALIVE, bundleInfo.isKeepAlive}, {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
         {BUNDLE_INFO_IS_PREINSTALL_APP, bundleInfo.isPreInstallApp},
         {BUNDLE_INFO_IS_DIFFERENT_NAME, bundleInfo.isDifferentName},
         {BUNDLE_INFO_ABILITY_INFOS, bundleInfo.abilityInfos},
@@ -684,7 +684,8 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {OVERLAY_TYPE, bundleInfo.overlayType},
         {OVERLAY_BUNDLE_INFO, bundleInfo.overlayBundleInfos},
         {BUNDLE_INFO_OLD_APPIDS, bundleInfo.oldAppIds},
-        {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray}
+        {BUNDLE_INFO_ROUTER_ARRAY, bundleInfo.routerArray},
+        {BUNDLE_INFO_IS_NEW_VERSION, bundleInfo.isNewVersion}
     };
 }
 
@@ -1060,6 +1061,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_IS_NEW_VERSION,
+        bundleInfo.isNewVersion,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
     }
