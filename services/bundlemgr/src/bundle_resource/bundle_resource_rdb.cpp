@@ -24,9 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string IMAGE_PNG = "data:image/png";
-}
 BundleResourceRdb::BundleResourceRdb()
 {
     APP_LOGI("create");
@@ -170,14 +167,14 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
             continue;
         }
         // icon is invalid, need add again
-        std::string icon;
-        ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, icon);
+        std::vector<uint8_t> foreground;
+        ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND, foreground);
         if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString icon failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+            APP_LOGE("GetString foreground failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
-        if ((icon.substr(0, IMAGE_PNG.size()) != IMAGE_PNG) || icon.empty()) {
-            APP_LOGW("keyName:%{public}s icon is invalid, need add again", name.c_str());
+        if (foreground.empty()) {
+            APP_LOGW("keyName:%{public}s foreground is invalid, need add again", name.c_str());
             continue;
         }
         // label is invalid, need add again
