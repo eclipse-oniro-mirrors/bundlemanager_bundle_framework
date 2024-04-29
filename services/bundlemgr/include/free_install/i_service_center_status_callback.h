@@ -33,6 +33,12 @@ public:
      * @param installResult the json of InstallResult
      */
     virtual int32_t OnInstallFinished(std::string installResult) = 0;
+
+    /**
+     * @brief Will be execute when delayed heartbeat of free install.
+     * @param installResult the json of InstallResult
+     */
+    virtual int32_t OnDelayedHeartbeat(std::string installResult) = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

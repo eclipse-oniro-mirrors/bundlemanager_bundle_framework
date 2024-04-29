@@ -38,6 +38,12 @@ public:
      */
     int32_t OnInstallFinished(std::string installResult);
 
+    /**
+     * @brief delayed_heartbeat process of free install.
+     * @param installResult Install result
+     */
+    int32_t OnDelayedHeartbeat(std::string installResult);
+
 private:
     std::weak_ptr<BundleConnectAbilityMgr> server_;
 };

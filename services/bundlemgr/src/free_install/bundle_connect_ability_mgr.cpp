@@ -638,6 +638,28 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     LOG_I(BMS_TAG_FREE_INSTALL, "OnServiceCenterCall end");
 }
 
+void BundleConnectAbilityMgr::OnDelayedHeartbeat(std::string installResultStr)
+{
+    LOG_I(BMS_TAG_FREE_INSTALL, "OnDelayedHeartbeat start, installResultStr = %{public}s", installResultStr.c_str());
+    InstallResult installResult;
+    if (!ParseInfoFromJsonStr(installResultStr.c_str(), installResult)) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "Parse info from json fail");
+        return;
+    }
+    LOG_I(BMS_TAG_FREE_INSTALL, "OnDelayedHeartbeat, retCode = %{public}d", installResult.result.retCode);
+    FreeInstallParams freeInstallParams;
+    std::unique_lock<std::mutex> lock(mapMutex_);
+    auto node = freeInstallParamsMap_.find(installResult.result.transactId);
+    if (node == freeInstallParamsMap_.end()) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "Can not find node in %{public}s function", __func__);
+        return;
+    }
+    serialQueue_->CancelDelayTask(installResult.result.transactId);
+    lock.unlock();
+    OutTimeMonitor(installResult.result.transactId);
+    LOG_I(BMS_TAG_FREE_INSTALL, "OnDelayedHeartbeat end");
+}
+
 void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     LOG_I(BMS_TAG_FREE_INSTALL, "BundleConnectAbilityMgr::OutTimeMonitor");

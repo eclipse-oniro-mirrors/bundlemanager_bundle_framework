@@ -45,6 +45,9 @@ int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
     auto result = data.ReadString16();
     LOG_D(BMS_TAG_FREE_INSTALL, "OnRemoteRequest:code:%{public}d, result:%{public}s",
         code, Str16ToStr8(result).c_str());
+    if (code == ServiceCenterFunction::CONNECT_DELAYED_HEARTBEAT) {
+        return OnDelayedHeartbeat(Str16ToStr8(result));
+    }
     return OnInstallFinished(Str16ToStr8(result));
 }
 }  // namespace AppExecFwk

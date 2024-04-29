@@ -69,6 +69,11 @@ public:
      * @param installResult The json string of InstallResult
      */
     void OnServiceCenterCall(std::string installResult);
+    /**
+     * @brief Executed when a service callback is delayed heartbeat
+     * @param installResult The json string of InstallResult
+     */
+    void OnDelayedHeartbeat(std::string installResult);
 
     /**
      * @brief SendCallback to ability manager service for death recipient

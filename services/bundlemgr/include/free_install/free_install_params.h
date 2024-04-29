@@ -44,6 +44,7 @@ enum ServiceCenterFunction {
     CONNECT_UPGRADE_INSTALL = 4,
     CONNECT_QUERY_RPCID = 5,
     CONNECT_PRELOAD_INSTALL = 6,
+    CONNECT_DELAYED_HEARTBEAT = 8,
 };
 
 enum ServiceCenterResultCode {
