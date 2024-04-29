@@ -191,7 +191,11 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
                 "userDataClearable":true,
                 "vendor":"",
                 "versionCode":0,
-                "versionName":""
+                "versionName":"",
+                "multiAppMode": {
+                    "type":2,
+                    "maxAdditionalNumber":5
+                }
             },
             "applicationName":"com.example.myapplication",
             "backgroundModes":0,
@@ -389,7 +393,11 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "vendor":"example",
         "versionCode":1000000,
         "versionName":"1.0.0",
-        "resourcesApply":[]
+        "resourcesApply":[],
+        "multiAppMode": {
+            "type":2,
+            "maxAdditionalNumber":5
+        }
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -503,7 +511,11 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "vendor":"",
             "versionCode":0,
             "versionName":"",
-            "resourcesApply":[]
+            "resourcesApply":[],
+            "multiAppMode": {
+                "type":2,
+                "maxAdditionalNumber":5
+            }
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1122,8 +1134,10 @@ protected:
                 "tsanEnabled": false,
                 "organization": "",
                 "appEnvironments": [],
-                "multiAppMode":"CLONE_APP",
-                "maxInstanceNum":1,
+                "multiAppMode": {
+                    "type":2,
+                    "maxAdditionalNumber":5
+                },
                 "appIndex":0,
                 "maxChildProcess": 0
             },
@@ -1591,6 +1605,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Functi
     BundleInfo fromJsonInfo = sourceInfoJson;
     // serialize fromJsonInfo to json
     nlohmann::json toJsonObject = fromJsonInfo;
+
     EXPECT_TRUE(toJsonObject.dump() == sourceInfoJson.dump());
 }
 

@@ -52,7 +52,6 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundl
 constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TSAN_ENABLED = "tsanEnabled";
-constexpr const char* BUNDLE_APP_PROFILE_KEY_MULTI_APP_MODE = "multiAppMode";
 
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
@@ -242,8 +241,6 @@ constexpr const char* BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID = "accessTokenId
 constexpr const char* BUNDLE_SANDBOX_PERSISTENT_APP_INDEX = "appIndex";
 constexpr const char* BUNDLE_SANDBOX_PERSISTENT_USER_ID = "userId";
 // sub BUNDLE_MULTI_APP
-constexpr const char* BUNDLE_MULTI_APP_MODE_PROFILE_KEY_TYPE = "type";
-constexpr const char* BUNDLE_MULTI_APP_MODE_PROFILE_KEY_MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
 
 const uint32_t VALUE_HOME_SCREEN = 1 << 0;
 // 000010 represents supporting search box
@@ -356,6 +353,10 @@ constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";
+// multiappmode
+constexpr const char* MULTI_APP_MODE_TYPE = "type";
+constexpr const char* MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
 constexpr const char* APP_MAX_CHILD_PROCESS = "maxChildProcess";
 constexpr const char* MAX_CHILD_PROCESS = "const.bms.maxChildProcess";
 // module

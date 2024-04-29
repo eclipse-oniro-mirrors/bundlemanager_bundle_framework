@@ -122,11 +122,37 @@ const std::string APPLICATION_TSAN_ENABLED = "tsanEnabled";
 const std::string APPLICATION_ORGANIZATION = "organization";
 const std::string APPLICATION_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APPLICATION_MULTI_APP_MODE = "multiAppMode";
-const std::string APPLICATION_MAX_INSTANCE_NUM = "maxInstanceNum";
+const std::string APPLICATION_MULTI_APP_MODE_TYPE = "type";
+const std::string APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string APPLICATION_APP_INDEX = "appIndex";
 const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
+}
+
+bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
+{
+    type = static_cast<MultiAppModeType>(parcel.ReadInt32());
+    maxAdditionalNumber = parcel.ReadInt32();
+    return true;
+}
+
+bool MultiAppModeData::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxAdditionalNumber);
+    return true;
+}
+
+MultiAppModeData *MultiAppModeData::Unmarshalling(Parcel &parcel)
+{
+    MultiAppModeData *multiAppMode = new (std::nothrow) MultiAppModeData;
+    if (multiAppMode && !multiAppMode->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete multiAppMode;
+        multiAppMode = nullptr;
+    }
+    return multiAppMode;
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -497,8 +523,14 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         }
         appEnvironments.emplace_back(*applicationEnvironment);
     }
-    multiAppMode = Str16ToStr8(parcel.ReadString16());
-    maxInstanceNum = parcel.ReadInt32();
+
+    std::unique_ptr<MultiAppModeData> multiAppModePtr(parcel.ReadParcelable<MultiAppModeData>());
+    if (!multiAppModePtr) {
+        APP_LOGE("icon ReadParcelable<MultiAppMode> failed");
+        return false;
+    }
+    multiAppMode = *multiAppModePtr;
+
     appIndex = parcel.ReadInt32();
     maxChildProcess = parcel.ReadInt32();
     return true;
@@ -658,8 +690,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(multiAppMode));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxInstanceNum);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &multiAppMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxChildProcess);
     return true;
@@ -764,6 +795,27 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
     }
 }
 
+void to_json(nlohmann::json &jsonObject, const MultiAppModeData &multiAppMode)
+{
+    jsonObject = nlohmann::json {
+        {APPLICATION_MULTI_APP_MODE_TYPE, multiAppMode.type},
+        {APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER, multiAppMode.maxAdditionalNumber},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, MultiAppModeData &multiAppMode)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<MultiAppModeType>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE_TYPE,
+        multiAppMode.type, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
+        multiAppMode.maxAdditionalNumber, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("from_json error, error code : %{public}d", parseResult);
+    }
+}
+
 void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 {
     jsonObject = nlohmann::json {
@@ -854,7 +906,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ORGANIZATION, applicationInfo.organization},
         {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
-        {APPLICATION_MAX_INSTANCE_NUM, applicationInfo.maxInstanceNum},
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess}
     };
@@ -1039,10 +1090,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::vector<ApplicationEnvironment>>(jsonObject, jsonObjectEnd,
         APPLICATION_APP_ENVIRONMENTS,
         applicationInfo.appEnvironments, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
-    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE,
-        applicationInfo.multiAppMode, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MAX_INSTANCE_NUM,
-        applicationInfo.maxInstanceNum, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<MultiAppModeData>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE,
+        applicationInfo.multiAppMode, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_APP_INDEX,
         applicationInfo.appIndex, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MAX_CHILD_PROCESS,
