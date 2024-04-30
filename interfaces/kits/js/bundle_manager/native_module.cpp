@@ -86,6 +86,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nAppDistributionType));
     CreateAppDistributionTypeObject(env, nAppDistributionType);
 
+    napi_value nMultiAppModeType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nMultiAppModeType));
+    CreateMultiAppModeTypeObject(env, nMultiAppModeType);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -158,6 +162,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllBundleInfoByDeveloperId", GetAllBundleInfoByDeveloperId),
         DECLARE_NAPI_FUNCTION("getDeveloperIds", GetDeveloperIds),
         DECLARE_NAPI_FUNCTION("switchUninstallState", SwitchUninstallState),
+        DECLARE_NAPI_PROPERTY("MultiAppModeType", nMultiAppModeType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

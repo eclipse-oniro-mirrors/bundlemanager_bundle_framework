@@ -4826,5 +4826,23 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
     APP_LOGD("call SwitchUninstallState done.");
     return nRet;
 }
+
+void CreateMultiAppModeTypeObject(napi_env env, napi_value value)
+{
+    napi_value nUnspecified;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::NOT_SUPPORT),
+        &nUnspecified));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
+
+    napi_value nMultiInstance;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::MULTI_INSTANCE),
+        &nMultiInstance));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MULTI_INSTANCE", nMultiInstance));
+
+        napi_value nCloneApp;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::CLONE_APP),
+        &nCloneApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "CLONE_APP", nCloneApp));
+}
 }
 }

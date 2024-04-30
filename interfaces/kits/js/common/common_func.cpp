@@ -78,6 +78,8 @@ constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* SKILLS = "skills";
+constexpr const char* MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
+constexpr const char* MULTI_APP_MODE = "multiAppMode";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1456,6 +1458,21 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nAppIndex;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.appIndex, &nAppIndex));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, APP_INDEX, nAppIndex));
+
+    // add multiAppMode object
+    napi_value nMultiAppMode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nMultiAppMode));
+
+    napi_value nMultiAppModeType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.multiAppMode.type),
+        &nMultiAppModeType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, TYPE, nMultiAppModeType));
+
+    napi_value nMaxNumber;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.multiAppMode.maxAdditionalNumber, &nMaxNumber));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMultiAppModeType));
+
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, MULTI_APP_MODE, nMultiAppMode));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
@@ -1868,6 +1885,10 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nRouterMap, idx, nRouterItem));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, ROUTER_MAP, nRouterMap));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleInfo, APP_INDEX, nAppIndex));
 }
 
 void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
