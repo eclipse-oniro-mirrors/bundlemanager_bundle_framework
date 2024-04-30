@@ -4238,6 +4238,22 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryAbilityInfos_0002, Function | Medium
 }
 
 /**
+ * @tc.number: GetUidByBundleName_0001
+ * @tc.name: test BmsExtensionClient::GetUidByBundleName
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetUidByBundleName_0001, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ASSERT_NE(bmsExtensionClient, nullptr);
+    int32_t userId = USERID;
+    int32_t uid = TEST_UID;
+    ErrCode ret = bmsExtensionClient->GetUidByBundleName(BUNDLE_NAME_TEST, userId, uid);
+    EXPECT_NE(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: QueryAbilityInfos_0100
  * @tc.name: QueryAbilityInfos
  * @tc.desc: test QueryAbilityInfos of BmsExtensionClient

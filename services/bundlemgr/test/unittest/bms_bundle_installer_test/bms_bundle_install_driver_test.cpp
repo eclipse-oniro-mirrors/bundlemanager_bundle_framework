@@ -1801,6 +1801,16 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6700, Function | SmallTest | 
     info.baseExtensionInfos_.emplace("3", extensionAbilityInfo);
     driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
 
+    extensionAbilityInfo.type = ExtensionAbilityType::DRIVER;
+    info.baseExtensionInfos_.emplace("4", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+
+    extensionAbilityInfo.moduleName = MODULE_NAME_FEATURE6;
+    info.baseExtensionInfos_.emplace("5", extensionAbilityInfo);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE10, false);
+    driverInstaller->RemoveDriverSoFile(info, MODULE_NAME_FEATURE6, false);
+    driverInstaller->RemoveDriverSoFile(info, EMPTY_STRING, false);
+
     Metadata meta;
     std::unordered_multimap<std::string, std::string> dirMap;
     bool isModuleExisted = false;

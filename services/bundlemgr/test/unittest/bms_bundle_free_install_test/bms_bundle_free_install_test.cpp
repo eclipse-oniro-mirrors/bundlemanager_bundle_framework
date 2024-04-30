@@ -727,11 +727,18 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0021, Function | Sma
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0022, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    ASSERT_NE(connectAbilityMgr, nullptr);
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr->SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
+    bool res = connectAbilityMgr->SendRequestToServiceCenter(
+        flag, targetAbilityInfo, want, USERID, freeInstallParams);
+    EXPECT_FALSE(res);
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    res = connectAbilityMgr->SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
     EXPECT_FALSE(res);
 }
 
@@ -1907,5 +1914,27 @@ HWTEST_F(BmsBundleFreeInstallTest, GetEcologicalCallerInfo_0002, Function | Smal
     connectAbilityMgr->GetEcologicalCallerInfo(want, callerInfo, USERID);
     ASSERT_NE(bundleDataMgr_, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = bundleDataMgr_;
+}
+
+/**
+ * @tc.number: GetEcologicalCallerInfo_0002
+ * Function: GetEcologicalCallerInfo
+ * @tc.name: test GetEcologicalCallerInfo
+ * @tc.desc: test GetEcologicalCallerInfo success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, ProcessPreloadRequestToServiceCenter_0002, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    ASSERT_NE(connectAbilityMgr, nullptr);
+
+    TargetAbilityInfo targetAbilityInfo;
+    auto bundleDataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = bundleDataMgr_;
+    connectAbilityMgr->ProcessPreloadRequestToServiceCenter(
+        ServiceCenterFunction::CONNECT_PRELOAD_INSTALL, targetAbilityInfo);
+    ASSERT_NE(bundleDataMgr_, nullptr);
+
+    connectAbilityMgr->PreloadRequest(ServiceCenterFunction::CONNECT_PRELOAD_INSTALL, targetAbilityInfo);
+    connectAbilityMgr->LoadDownloadService();
 }
 } // OHOS

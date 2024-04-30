@@ -1420,4 +1420,38 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4500, Function | Sma
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_EQ(disposedRules.empty(), true);
 }
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2800
+ * @tc.name: test SetDisposedRule by AppControlManager
+ * @tc.desc: 1.SetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4600, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    DisposedRule rule;
+    ErrCode res = appControlManager->GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4700
+ * @tc.name: test SetDisposedRule by AppControlManager
+ * @tc.desc: 1.SetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4700, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb
+        = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ASSERT_NE(appJumpInterceptorManagerDb, nullptr);
+    auto res = appJumpInterceptorManagerDb->SubscribeCommonEvent();
+    EXPECT_TRUE(res);
+
+    AppJumpInterceptorEventSubscriber subscriber = AppJumpInterceptorEventSubscriber(appJumpInterceptorManagerDb);
+    AAFwk::Want want;
+    EventFwk::CommonEventData eventData {want};
+    subscriber.OnReceiveEvent(eventData);
+}
 } // OHOS

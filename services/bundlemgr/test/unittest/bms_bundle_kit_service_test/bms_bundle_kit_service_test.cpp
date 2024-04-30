@@ -7270,6 +7270,25 @@ HWTEST_F(BmsBundleKitServiceTest, Hidump_001, Function | SmallTest | Level1)
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
+ * @tc.number: QueryBundleStatsInfoByInterval_0100
+ * @tc.name: test Request
+ * @tc.desc: 1.test Request of AgingRequest
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryBundleStatsInfoByInterval_0100, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+
+    bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_EQ(ret, false);
+
+    AppExecFwk::BundleAgingMgr::AgingTriggertype type =
+        AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
+    ret = bundleAgingMgr.CheckPrerequisite(type);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: AginTest_0004
  * @tc.name: test InitAgingtTimer
  * @tc.desc: agingTimerInterval is false

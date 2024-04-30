@@ -338,4 +338,23 @@ HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1100, Function | SmallTes
     auto ret1 = impl.GetRealPath(BUNDLE_NAME, USERID, DATA_STORAGE);
     EXPECT_TRUE(ret1.empty());
 }
+
+/**
+ * @tc.number: GetRealPath
+ * @tc.name: test GetRealPath
+ * @tc.desc: 1.GetRealPath test
+ */
+HWTEST_F(BmsBundleVerifyManagerTest, VerifyManagerTest_1200, Function | SmallTest | Level1)
+{
+    VerifyManagerHostImpl impl;
+    std::string bundleName;
+    auto ret = impl.GetCallingBundleName(bundleName);
+    EXPECT_FALSE(ret);
+
+    int32_t userId = USERID;
+    std::vector<std::string> abcPaths;
+    abcPaths.push_back(DATA_STORAGE);
+    auto ret1 = impl.CopyFilesToTempDir(BUNDLE_NAME, userId, abcPaths);
+    EXPECT_FALSE(ret1);
+}
 } // OHOS
