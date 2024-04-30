@@ -37,6 +37,7 @@ ohos_shared_library("zlib") {
   sources = [
     "napi/class_checksum/checksum_n_exporter.cpp",
     "napi/class_gzip/gzip_n_exporter.cpp",
+    "napi/class_zip/zip_n_exporter.cpp",
     "napi/common/common_func.cpp",
     "napi/common/napi_async_work_callback.cpp",
     "napi/common/napi_async_work_promise.cpp",
@@ -50,6 +51,7 @@ ohos_shared_library("zlib") {
     "napi/native_module.cpp",
     "napi/properties/create_checksum.cpp",
     "napi/properties/create_gzip.cpp",
+    "napi/properties/create_zip.cpp",
     "napi/properties/prop_n_exporter.cpp",
     "napi/zlib_callback_info.cpp",
     "src/file_path.cpp",

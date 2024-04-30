@@ -304,9 +304,9 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
 static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzHeader)
 {
     bool succ = false;
-    if (gzHeaderNVal.HasProp("text") && !gzHeaderNVal.GetProp("text").TypeIs(napi_undefined)) {
-        int32_t text = 0;
-        tie(succ, text) = gzHeaderNVal.GetProp("text").ToInt32();
+    if (gzHeaderNVal.HasProp("isText") && !gzHeaderNVal.GetProp("isText").TypeIs(napi_undefined)) {
+        bool text = false;
+        tie(succ, text) = gzHeaderNVal.GetProp("isText").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -361,8 +361,8 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
     }
 
     if (gzHeaderNVal.HasProp("done") && !gzHeaderNVal.GetProp("done").TypeIs(napi_undefined)) {
-        int32_t done = 0;
-        tie(succ, done) = gzHeaderNVal.GetProp("done").ToInt32();
+        bool done = false;
+        tie(succ, done) = gzHeaderNVal.GetProp("done").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;
@@ -371,8 +371,8 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
     }
 
     if (gzHeaderNVal.HasProp("hcrc") && !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_undefined)) {
-        int32_t hcrc = 0;
-        tie(succ, hcrc) = gzHeaderNVal.GetProp("hcrc").ToInt32();
+        bool hcrc = false;
+        tie(succ, hcrc) = gzHeaderNVal.GetProp("hcrc").ToBool();
         if (!succ) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return false;

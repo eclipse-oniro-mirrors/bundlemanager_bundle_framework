@@ -22,6 +22,7 @@
 #include "napi_zlib.h"
 #include "class_checksum/checksum_n_exporter.h"
 #include "class_gzip/gzip_n_exporter.h"
+#include "class_zip/zip_n_exporter.h"
 #include "properties/prop_n_exporter.h"
 namespace OHOS {
 namespace AppExecFwk {
@@ -35,6 +36,8 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     FlushTypeInit(env, exports);
     CompressLevelInit(env, exports);
+    CompressFlushModeInit(env, exports);
+    CompressMethodInit(env, exports);
     CompressStrategyInit(env, exports);
     MemLevelInit(env, exports);
     OffsetReferencePointInit(env, exports);
@@ -43,6 +46,7 @@ static napi_value Init(napi_env env, napi_value exports)
     std::vector<std::unique_ptr<NapiExporter>> products;
     products.emplace_back(std::make_unique<PropNExporter>(env, exports));
     products.emplace_back(std::make_unique<ChecksumNExporter>(env, exports));
+    products.emplace_back(std::make_unique<ZipNExporter>(env, exports));
     products.emplace_back(std::make_unique<GZipNExporter>(env, exports));
     for (auto &&product : products) {
 #ifdef WIN_PLATFORM
