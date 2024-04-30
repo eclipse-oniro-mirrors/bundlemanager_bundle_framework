@@ -1295,6 +1295,12 @@ void CreateAbilityFlagObject(napi_env env, napi_value value)
         GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_SKILL), &nGetAbilityInfoWithSkill));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_SKILL",
         nGetAbilityInfoWithSkill));
+
+    napi_value nGetAbilityInfoWithAppLinking;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING), &nGetAbilityInfoWithAppLinking));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_ABILITY_INFO_WITH_APP_LINKING",
+        nGetAbilityInfoWithAppLinking));
 }
 
 void GetAbilityLabelExec(napi_env env, void *data)
