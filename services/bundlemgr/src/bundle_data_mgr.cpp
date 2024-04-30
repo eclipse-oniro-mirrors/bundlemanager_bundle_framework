@@ -1553,7 +1553,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
         APP_LOGD("bundleName:%{public}s appIndex:%{public}d start", info.GetBundleName().c_str(), item.second.appIndex);
         AbilityInfo cloneAbilityInfo = abilityInfo;
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
-            bundleUserInfo.bundleUserInfo.userId, cloneAbilityInfo.applicationInfo);
+            bundleUserInfo.bundleUserInfo.userId, cloneAbilityInfo.applicationInfo, item.second.appIndex);
         cloneAbilityInfo.installTime = item.second.installTime;
         cloneAbilityInfo.uid =  item.second.uid;
         cloneAbilityInfo.appIndex = item.second.appIndex;
