@@ -810,7 +810,8 @@ int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
         APP_LOGE("Failed to get quotactl, errno: %{public}d", errno);
         return 0;
     }
-    APP_LOGD("get disk usage from quota, uid: %{public}d, usage: %{public}llu", uid, dq.dqb_curspace);
+    APP_LOGD("get disk usage from quota, uid: %{public}d, usage: %{public}llu",
+        uid, static_cast<unsigned long long>(dq.dqb_curspace));
     return dq.dqb_curspace;
 }
 
