@@ -912,6 +912,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
 #endif
     UpdateDebug(applicationInfo.debug, isEntry);
     baseApplicationInfo_->organization = applicationInfo.organization;
+    baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const
