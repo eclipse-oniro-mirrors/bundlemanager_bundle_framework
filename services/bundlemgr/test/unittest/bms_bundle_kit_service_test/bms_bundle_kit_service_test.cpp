@@ -1193,7 +1193,7 @@ void BmsBundleKitServiceTest::AddCloneInfo(const std::string &bundleName, int32_
 {
     auto bundleInfoMapIter = GetBundleDataMgr()->bundleInfos_.find(bundleName);
     EXPECT_NE(bundleInfoMapIter, GetBundleDataMgr()->bundleInfos_.end());
-    InnerBundleInfo &bundleInfoTest = bundleInfoMapIter->second;    
+    InnerBundleInfo &bundleInfoTest = bundleInfoMapIter->second;
     InnerBundleUserInfo bundleUserInfoTest;
     bool getBundleUserInfoRes = bundleInfoTest.GetInnerBundleUserInfo(userId, bundleUserInfoTest);
     EXPECT_TRUE(getBundleUserInfoRes);
