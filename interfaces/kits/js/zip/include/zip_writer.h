@@ -38,13 +38,13 @@ public:
     static zipFile InitZipFileWithFd(PlatformFile zipFilefd);
     static zipFile InitZipFileWithFile(const FilePath &zip_file_path);
     ~ZipWriter();
-    ZipWriter(zipFile zip_file, const FilePath &rootDir);
+    explicit ZipWriter(zipFile zip_file);
 
     // Writes the files at |paths| to the ZIP file and closes this Zip file.
     // Note that the the FilePaths must be relative to |rootDir| specified in the
     // Create method.
     // Returns true if all entries were written successfuly.
-    bool WriteEntries(const std::vector<FilePath> &paths, const OPTIONS &options);
+    bool WriteEntries(const std::vector<std::pair<FilePath, FilePath>> &paths, const OPTIONS &options);
 
 private:
 
@@ -57,7 +57,7 @@ private:
 
     // Adds the files at |paths| to the ZIP file. These FilePaths must be relative
     // to |rootDir| specified in the Create method.
-    bool AddEntries(const std::vector<FilePath> &paths, const OPTIONS &options);
+    bool AddEntries(const std::vector<std::pair<FilePath, FilePath>> &paths, const OPTIONS &options);
 
     // Closes the ZIP file.
     // Returns true if successful, false otherwise (typically if an entry failed
@@ -65,13 +65,10 @@ private:
     bool Close(const OPTIONS &options);
 
     // The entries that have been added but not yet written to the ZIP file.
-    std::vector<FilePath> pendingEntries_;
+    std::vector<std::pair<FilePath, FilePath>> pendingEntries_;
 
     // The actual zip file.
     zipFile zipFile_;
-
-    // Path to the directory entry paths are relative to.
-    FilePath rootDir_;
 
     DISALLOW_COPY_AND_ASSIGN(ZipWriter);
 };

@@ -155,7 +155,7 @@ zipFile ZipWriter::InitZipFileWithFile(const FilePath &zip_file_path)
     return zip_file;
 }
 
-ZipWriter::ZipWriter(zipFile zip_file, const FilePath &rootDir) : zipFile_(zip_file), rootDir_(rootDir)
+ZipWriter::ZipWriter(zipFile zip_file) : zipFile_(zip_file)
 {}
 
 ZipWriter::~ZipWriter()
@@ -163,13 +163,13 @@ ZipWriter::~ZipWriter()
     pendingEntries_.clear();
 }
 
-bool ZipWriter::WriteEntries(const std::vector<FilePath> &paths, const OPTIONS &options)
+bool ZipWriter::WriteEntries(const std::vector<std::pair<FilePath, FilePath>> &paths, const OPTIONS &options)
 {
     APP_LOGD("%{public}s called", __func__);
     return AddEntries(paths, options) && Close(options);
 }
 
-bool ZipWriter::AddEntries(const std::vector<FilePath> &paths, const OPTIONS &options)
+bool ZipWriter::AddEntries(const std::vector<std::pair<FilePath, FilePath>> &paths, const OPTIONS &options)
 {
     if (!zipFile_) {
         return false;
@@ -192,21 +192,12 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
     }
     while (pendingEntries_.size() >= g_MaxPendingEntriesCount || (force && !pendingEntries_.empty())) {
         size_t entry_count = std::min(pendingEntries_.size(), g_MaxPendingEntriesCount);
-        std::vector<FilePath> relativePaths;
-        std::vector<FilePath> absolutePaths;
+        std::vector<std::pair<FilePath, FilePath>> relativePaths;
         relativePaths.insert(relativePaths.begin(), pendingEntries_.begin(), pendingEntries_.begin() + entry_count);
-        for (auto iter = pendingEntries_.begin(); iter != pendingEntries_.begin() + entry_count; ++iter) {
-            // The FileAccessor requires absolute paths.
-            if (FilePath::IsDir(rootDir_)) {
-                absolutePaths.push_back(FilePath(rootDir_.Value() + iter->Value()));
-            } else {
-                absolutePaths.push_back(FilePath(rootDir_.Value()));
-            }
-        }
         pendingEntries_.erase(pendingEntries_.begin(), pendingEntries_.begin() + entry_count);
-        for (size_t i = 0; i < absolutePaths.size(); i++) {
-            FilePath &relativePath = relativePaths[i];
-            FilePath &absolutePath = absolutePaths[i];
+        for (size_t i = 0; i < relativePaths.size(); i++) {
+            FilePath &relativePath = relativePaths[i].first;
+            FilePath &absolutePath = relativePaths[i].second;
             bool isValid = FilePath::PathIsValid(absolutePath);
             bool isDir = FilePath::IsDir(absolutePath);
             if (isValid && !isDir) {

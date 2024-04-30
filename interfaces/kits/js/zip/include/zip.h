@@ -47,10 +47,10 @@ public:
 
 class ZipParams {
 public:
-    ZipParams(const FilePath &srcDir, const FilePath &destFile);
+    ZipParams(const std::vector<FilePath> &srcDir, const FilePath &destFile);
 
     // Does not take ownership of |destFd|.
-    ZipParams(const FilePath &srcDir, int destFd);
+    ZipParams(const std::vector<FilePath> &srcDir, int destFd);
     virtual ~ZipParams()
     {}
     int DestFd() const
@@ -58,7 +58,7 @@ public:
         return destFd_;
     }
 
-    const FilePath &SrcDir() const
+    const std::vector<FilePath> &SrcDir() const
     {
         return srcDir_;
     }
@@ -72,11 +72,11 @@ public:
     // |srcRelativePaths|. They must be relative to the |srcDir| passed in the
     // constructor and will be used as the file names in the created zip file. All
     // source paths must be under |srcDir| in the file system hierarchy.
-    void SetFilesTozip(const std::vector<FilePath> &srcRelativePaths)
+    void SetFilesTozip(const std::vector<std::pair<FilePath, FilePath>> &srcRelativePaths)
     {
         srcFiles_ = srcRelativePaths;
     }
-    const std::vector<FilePath> &GetFilesTozip() const
+    const std::vector<std::pair<FilePath, FilePath>> &GetFilesTozip() const
     {
         return srcFiles_;
     }
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    FilePath srcDir_;
+    std::vector<FilePath> srcDir_;
 
     FilePath destFile_;
 
@@ -122,7 +122,7 @@ private:
 
     // The relative paths to the files that should be included in the zip file. If
     // this is empty, all files in |srcDir_| are included.
-    std::vector<FilePath> srcFiles_;
+    std::vector<std::pair<FilePath, FilePath>> srcFiles_;
 
     // Filter used to exclude files from the ZIP file. Only effective when
     // |srcFiles_| is empty.
@@ -148,6 +148,16 @@ private:
 // destFile = /ziptest/hapresult/singlefile.zip
 // options is default value.
 bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
+    bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
+
+// Convenience method for callers who don't need to set up the filter callback.
+// If |includeHiddenFiles| is true, files starting with "." are included.
+// Otherwise they are omitted.
+// example
+// srcFiles = [/ziptest/zipdata/zip1-1.txt, /ziptest/zipdata/zip1-2.txt]
+// destFile = /ziptest/hapresult/hapfourfile.zip
+// options is default value.
+bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath, const OPTIONS &options,
     bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 // Unzip the contents of zipFile into destDir.

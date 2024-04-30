@@ -348,6 +348,7 @@ napi_value ZlibInit(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("zipFile", NAPI_ZipFile),
         DECLARE_NAPI_FUNCTION("unzipFile", NAPI_UnzipFile),
         DECLARE_NAPI_FUNCTION("compressFile", CompressFile),
+        DECLARE_NAPI_FUNCTION("compressFiles", CompressFiles),
         DECLARE_NAPI_FUNCTION("decompressFile", DecompressFile),
         DECLARE_NAPI_FUNCTION("getOriginalSize", GetOriginalSize),
     };
@@ -415,6 +416,57 @@ napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
     str = std::string(buf.data());
 
     napi_value result;
+    NAPI_CALL(env, napi_create_int32(env, 1, &result));
+    return result;
+}
+
+napi_value UnwrapStringArrayParam(std::vector<std::string> &stringArray, napi_env env, napi_value argv)
+{
+    APP_LOGD("%{public}s,called", __func__);
+    // unwrap the param[0]
+    napi_valuetype valueType = napi_valuetype::napi_undefined;
+    napi_status rev = napi_typeof(env, argv, &valueType);
+    if (rev != napi_ok) {
+        return nullptr;
+    }
+
+    bool isArray = false;
+    if (napi_is_array(env, argv, &isArray) != napi_ok || !isArray) {
+        APP_LOGI("%{public}s called, Parameter type does not match", __func__);
+        return nullptr;
+    }
+
+    uint32_t size = 0U;
+    napi_status status = napi_get_array_length(env, argv, &size);
+    if (status != napi_ok || size == 0U) {
+        APP_LOGI("%{public}s called, Get string array length failed", __func__);
+        return nullptr;
+    }
+
+    napi_value result = nullptr;
+    for (uint32_t i = 0; i < size; i++) {
+        status = napi_get_element(env, argv, i, &result);
+        if (status != napi_ok) {
+            APP_LOGI("%{public}s called, Get locale tag element failed", __func__);
+            return nullptr;
+        }
+        size_t strLen = 0;
+        napi_status status = napi_get_value_string_utf8(env, result, nullptr, 0, &strLen);
+        if (status != napi_ok) {
+            APP_LOGI("%{public}s called, Get locale tag length failed", __func__);
+            return nullptr;
+        }
+
+        std::vector<char> buf(strLen + 1);
+        status = napi_get_value_string_utf8(env, result, buf.data(), strLen + 1, &strLen);
+        if (status != napi_ok) {
+            APP_LOGI("%{public}s called, Get locale tag failed", __func__);
+            return nullptr;
+        }
+        stringArray.push_back(std::string(buf.data()));
+    }
+
+    result = nullptr;
     NAPI_CALL(env, napi_create_int32(env, 1, &result));
     return result;
 }
@@ -671,7 +723,8 @@ bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZip
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (UnwrapStringParam(param.src, env, args[i]) == nullptr) {
+            if (UnwrapStringParam(param.src, env, args[i]) == nullptr &&
+                UnwrapStringArrayParam(param.srcFiles, env, args[i]) == nullptr) {
                 return false;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -705,8 +758,19 @@ void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
         return;
     }
 
-    Zip(asyncZipCallbackInfo->param.src, asyncZipCallbackInfo->param.dest, asyncZipCallbackInfo->param.options,
-        false, asyncZipCallbackInfo->zlibCallbackInfo);
+    if (asyncZipCallbackInfo->param.srcFiles.size() > 0) {
+        Zips(asyncZipCallbackInfo->param.srcFiles,
+            asyncZipCallbackInfo->param.dest,
+            asyncZipCallbackInfo->param.options,
+            false,
+            asyncZipCallbackInfo->zlibCallbackInfo);
+    } else {
+        Zip(asyncZipCallbackInfo->param.src,
+            asyncZipCallbackInfo->param.dest,
+            asyncZipCallbackInfo->param.options,
+            false,
+            asyncZipCallbackInfo->zlibCallbackInfo);
+    }
 }
 
 napi_value CompressFile(napi_env env, napi_callback_info info)
@@ -753,6 +817,11 @@ napi_value CompressFile(napi_env env, napi_callback_info info)
     CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
     return promise;
+}
+
+napi_value CompressFiles(napi_env env, napi_callback_info info)
+{
+    return CompressFile(env, info);
 }
 
 void DecompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
