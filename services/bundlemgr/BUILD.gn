@@ -434,6 +434,11 @@ ohos_shared_library("libbms") {
     defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
 
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
+  
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
