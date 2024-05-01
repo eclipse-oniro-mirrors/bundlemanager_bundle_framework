@@ -6284,6 +6284,38 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: GetAllBundleInfoByDeveloperId_0001
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.get information failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleInfoByDeveloperId_0001, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string developerId = "testDev";
+    std::vector<BundleInfo> bundleInfos;
+    auto res = bundleMgrProxy->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, USERID);
+    EXPECT_NE(res, ERR_OK);
+    EXPECT_TRUE(bundleInfos.empty());
+}
+
+/**
+ * @tc.number: GetDeveloperIds_0001
+ * @tc.name: test query bundle information
+ * @tc.desc: 1.get information failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDeveloperIds_0001, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string appDistributionType = "none";
+    std::vector<std::string> developerIdList;
+    auto res = bundleMgrProxy->GetDeveloperIds(appDistributionType, developerIdList, USERID);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(developerIdList.empty());
+}
+
+/**
  * @tc.number: GetBundleUserMgr_0100
  * @tc.name: test GetBundleUserMgr proxy
  * @tc.desc: 1.system run normally
