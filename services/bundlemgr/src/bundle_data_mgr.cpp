@@ -1502,7 +1502,7 @@ bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wan
     return false;
 }
 
-bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const
+bool BundleDataMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     APP_LOGD("mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
