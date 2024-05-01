@@ -1467,11 +1467,11 @@ bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t
             continue;
         }
         if (!skillUri.utd.empty()) {
-            if (MimeTypeMgr::MatchUtd(skillUri.utd, utd)) {
+            if (MatchUtd(skillUri.utd, utd)) {
                 return true;
             }
         } else {
-            if (MimeTypeMgr::MatchTypeWithUtd(skillUri.type, utd)) {
+            if (MatchTypeWithUtd(skillUri.type, utd)) {
                 return true;
             }
         }
