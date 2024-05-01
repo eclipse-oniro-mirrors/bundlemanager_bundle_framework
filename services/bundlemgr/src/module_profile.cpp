@@ -124,6 +124,11 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 50;
 
+const std::map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
+    {"multiInstance", MultiAppModeType::MULTI_INSTANCE},
+    {"appClone", MultiAppModeType::APP_CLONE}
+};
+
 struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
@@ -1884,12 +1889,11 @@ bool ParserArkNativeFilePath(
 
 MultiAppModeType ToMultiAppModeType(const std::string &type)
 {
-    if (type == MULTI_APP_MODE_CLONE_APP) {
-        return MultiAppModeType::CLONE_APP;
-    } else if (type == MULTI_APP_MODE_MULTI_INSTANCE) {
-        return MultiAppModeType::MULTI_INSTANCE;
+    auto iter = Profile::MULTI_APP_MODE_MAP.find(type);
+    if (iter != Profile::MULTI_APP_MODE_MAP.end()) {
+        return iter->second;
     }
-    return MultiAppModeType::NOT_SUPPORT;
+    return MultiAppModeType::UNSPECIFIED;
 }
 
 bool ToApplicationInfo(

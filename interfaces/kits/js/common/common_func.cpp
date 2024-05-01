@@ -1470,7 +1470,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
 
     napi_value nMaxNumber;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.multiAppMode.maxAdditionalNumber, &nMaxNumber));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMultiAppModeType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMaxNumber));
 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, MULTI_APP_MODE, nMultiAppMode));
 }
