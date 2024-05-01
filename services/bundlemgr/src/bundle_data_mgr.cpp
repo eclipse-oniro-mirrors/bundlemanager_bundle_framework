@@ -1482,14 +1482,17 @@ bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t
 bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    LOG_W(BMS_TAG_QUERY_ABILITY, "skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
     std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
     auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
     if (ret != ERR_OK || wantTypeDescriptor == nullptr) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetTypeDescriptor failed");
         return false;
     }
     bool matchRet = false;
     ret = wantTypeDescriptor->BelongsTo(skillUtd, matchRet);
     if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetTypeDescriptor failed");
         return false;
     }
     return matchRet;
@@ -1500,9 +1503,11 @@ bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wan
 bool BundleDataMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    LOG_W(BMS_TAG_QUERY_ABILITY, "mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
     std::string typeUtd;
     auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
     if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetUniformDataTypeByMIMEType failed");
         return false;
     }
     return MatchUtd(typeUtd, wantUtd);
