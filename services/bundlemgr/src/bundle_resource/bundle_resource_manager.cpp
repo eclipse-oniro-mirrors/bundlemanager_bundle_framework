@@ -136,6 +136,10 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
             // default ability label and icon
             resourceInfo.label_ = resourceInfo.label_.empty() ? bundleResourceInfo.label : resourceInfo.label_;
             resourceInfo.icon_ = resourceInfo.icon_.empty() ? bundleResourceInfo.icon : resourceInfo.icon_;
+            resourceInfo.foreground_ = resourceInfo.foreground_.empty() ? bundleResourceInfo.foreground :
+                resourceInfo.foreground_;
+            resourceInfo.background_ = resourceInfo.background_.empty() ? bundleResourceInfo.background :
+                resourceInfo.background_;
         }
         ProcessResourceInfoWhenParseFailed(resourceInfo);
     }

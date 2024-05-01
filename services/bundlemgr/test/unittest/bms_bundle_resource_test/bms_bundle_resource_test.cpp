@@ -434,6 +434,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0007, Function | SmallTest
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
     resourceInfo.label_ = "xxx";
+    resourceInfo.foreground_.push_back(1);
 
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -679,6 +680,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
     resourceInfo.label_ = "xxxx";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -1038,6 +1040,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0025, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
     resourceInfo.label_ = "$string";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -1066,6 +1069,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0026, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
     resourceInfo.label_ = "bundleName";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -1094,6 +1098,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0027, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
     resourceInfo.label_ = "";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
@@ -1123,6 +1128,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0028, Function | SmallTest
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = "bundleName/moduleName/abilityName";
     resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
     resourceInfo.label_ = "xxxx";
     bool ans = resourceRdb.AddResourceInfo(resourceInfo);
     EXPECT_TRUE(ans);
