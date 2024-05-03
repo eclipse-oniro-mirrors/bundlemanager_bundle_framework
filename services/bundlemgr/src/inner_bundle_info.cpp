@@ -913,6 +913,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     UpdateDebug(applicationInfo.debug, isEntry);
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
+    baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const

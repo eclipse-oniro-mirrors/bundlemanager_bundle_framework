@@ -31,7 +31,6 @@ namespace {
     constexpr const char* AVAILABLELEVEL_NORMAL = "normal";
     constexpr const char* DEFAULT_ENTITY_TYPE = "unspecified";
     constexpr const char* DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
-    constexpr const char* MULTI_APP_MODE_NOT_SUPPORT = "NOT_SUPPORT";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,

@@ -1290,6 +1290,50 @@ HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0005, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: UpdateInnerBundleInfo_0006
+ * @tc.name: UpdateInnerBundleInfo
+ * @tc.desc: 1. add info to the data manager
+ *           2. UpdateInnerBundleInfo
+ */
+HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0006, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.name = BUNDLE_NAME;
+        bundleInfo.applicationInfo.name = APP_NAME;
+        ApplicationInfo applicationInfo;
+        applicationInfo.name = BUNDLE_NAME;
+        applicationInfo.deviceId = DEVICE_ID;
+        applicationInfo.bundleName = BUNDLE_NAME;
+        InnerBundleInfo info;
+        info.SetBaseBundleInfo(bundleInfo);
+        info.SetBaseApplicationInfo(applicationInfo);
+        bool ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
+        EXPECT_TRUE(ret);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+        EXPECT_TRUE(ret);
+        InnerBundleInfo newInfo = info;
+        newInfo.baseApplicationInfo_->multiAppMode.type = MultiAppModeType::MULTI_INSTANCE;
+        newInfo.baseApplicationInfo_->multiAppMode.maxAdditionalNumber = 100;
+        newInfo.baseApplicationInfo_->multiProjects = true;
+        ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, newInfo, info);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.type, newInfo.baseApplicationInfo_->multiAppMode.type);
+        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.maxAdditionalNumber,
+            newInfo.baseApplicationInfo_->multiAppMode.maxAdditionalNumber);
+        EXPECT_EQ(info.baseApplicationInfo_->multiProjects, newInfo.baseApplicationInfo_->multiProjects);
+        ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
  * @tc.number: AddInnerBundleInfo_0001
  * @tc.name: AddInnerBundleInfo
  * @tc.desc: AddInnerBundleInfo, needAppDetail is true
