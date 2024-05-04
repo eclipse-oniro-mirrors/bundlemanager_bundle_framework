@@ -417,42 +417,5 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
                 [](unsigned char c) { return std::tolower(c); });
     return true;
 }
-
-bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd)
-{
-#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    APP_LOGD("skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
-    std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
-
-    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
-    if (ret != ERR_OK || wantTypeDescriptor == nullptr) {
-        APP_LOGE("GetTypeDescriptor failed");
-        return false;
-    }
-    bool matchRet = false;
-    ret = wantTypeDescriptor->BelongsTo(skillUtd, matchRet);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetTypeDescriptor failed");
-        return false;
-    }
-    return matchRet;
-#endif
-    return false;
-}
-
-bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd)
-{
-#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    APP_LOGD("mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
-    std::string typeUtd;
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetUniformDataTypeByMIMEType failed");
-        return false;
-    }
-    return MatchUtd(typeUtd, wantUtd);
-#endif
-    return false;
-}
 }
 }

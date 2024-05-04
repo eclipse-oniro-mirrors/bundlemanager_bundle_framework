@@ -64,6 +64,11 @@
 #include "app_domain_verify_mgr_client.h"
 #endif
 
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+#include "type_descriptor.h"
+#include "utd_client.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -1442,7 +1447,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
         }
         bool match = false;
         for (const auto &skill : shareActionSkills) {
-            if (skill.MatchUtd(utd, count)) {
+            if (MatchUtd(skill, utd, count)) {
                 match = true;
                 break;
             }
@@ -1453,6 +1458,61 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
         }
     }
     return true;
+}
+
+bool BundleDataMgr::MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const
+{
+    for (const SkillUri &skillUri : skill.uris) {
+        if (skillUri.maxFileSupported < count) {
+            continue;
+        }
+        if (!skillUri.utd.empty()) {
+            if (MatchUtd(skillUri.utd, utd)) {
+                return true;
+            }
+        } else {
+            if (MatchTypeWithUtd(skillUri.type, utd)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool BundleDataMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    LOG_W(BMS_TAG_QUERY_ABILITY, "skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
+    std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
+    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
+    if (ret != ERR_OK || wantTypeDescriptor == nullptr) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetTypeDescriptor failed");
+        return false;
+    }
+    bool matchRet = false;
+    ret = wantTypeDescriptor->BelongsTo(skillUtd, matchRet);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetTypeDescriptor failed");
+        return false;
+    }
+    return matchRet;
+#endif
+    return false;
+}
+
+bool BundleDataMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    LOG_W(BMS_TAG_QUERY_ABILITY, "mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
+    std::string typeUtd;
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "GetUniformDataTypeByMIMEType failed");
+        return false;
+    }
+    return MatchUtd(typeUtd, wantUtd);
+#endif
+    return false;
 }
 
 std::vector<Skill> BundleDataMgr::FindSkillsContainShareAction(const std::vector<Skill> &skills) const

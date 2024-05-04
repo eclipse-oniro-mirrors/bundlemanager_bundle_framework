@@ -429,26 +429,6 @@ bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) 
     return false;
 }
 
-bool Skill::MatchUtd(const std::string &utd, int32_t count) const
-{
-    for (const SkillUri &skillUri : uris) {
-        if (skillUri.maxFileSupported < count) {
-            APP_LOGD("exceeds limit");
-            continue;
-        }
-        if (!skillUri.utd.empty()) {
-            if (MimeTypeMgr::MatchUtd(skillUri.utd, utd)) {
-                return true;
-            }
-        } else {
-            if (MimeTypeMgr::MatchTypeWithUtd(skillUri.type, utd)) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 bool Skill::ReadFromParcel(Parcel &parcel)
 {
     int32_t actionsSize;

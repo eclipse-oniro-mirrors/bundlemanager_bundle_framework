@@ -49,7 +49,6 @@ public:
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
-    bool MatchUtd(const std::string &utd, int32_t count) const;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static Skill *Unmarshalling(Parcel &parcel);
@@ -68,7 +67,6 @@ private:
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
-    bool MatchUtd(const OHOS::AAFwk::Want &want);
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 }  // namespace AppExecFwk
