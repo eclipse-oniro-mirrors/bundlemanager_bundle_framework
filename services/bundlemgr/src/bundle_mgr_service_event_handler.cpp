@@ -1489,6 +1489,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
                     SavePreInstallException(scanPathIter);
                 }
+            } else {
+                UpdatePreinstallDBForUninstalledBundle(bundleName, infos);
             }
             continue;
         }
@@ -2834,6 +2836,46 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         }
     }
     APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover end");
+}
+
+void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
+    const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
+{
+    if (innerBundleInfos.empty()) {
+        APP_LOGW("innerBundleInfos is empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("dataMgr is nullptr");
+        return;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGW("get preinstalled bundle info failed :%{public}s", bundleName.c_str());
+        return;
+    }
+    if (innerBundleInfos.begin()->second.GetBaseBundleInfo().versionCode <= preInstallBundleInfo.GetVersionCode()) {
+        APP_LOGI("bundle no change");
+        return;
+    }
+    preInstallBundleInfo.ClearBundlePath();
+    bool findEntry = false;
+    for (const auto &item : innerBundleInfos) {
+        preInstallBundleInfo.AddBundlePath(item.first);
+        if (!findEntry) {
+            auto applicationInfo = item.second.GetBaseApplicationInfo();
+            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        }
+        auto bundleInfo = item.second.GetBaseBundleInfo();
+        if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            findEntry = true;
+        }
+    }
+    dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

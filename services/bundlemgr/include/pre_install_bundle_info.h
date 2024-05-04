@@ -75,6 +75,14 @@ public:
         }
     }
     /**
+     * @brief clear bundle path.
+     * @param bundlePath bundle path.
+     */
+    void ClearBundlePath()
+    {
+        bundlePaths_.clear();
+    }
+    /**
      * @brief Has bundle path.
      * @param bundlePath bundle path.
      */
