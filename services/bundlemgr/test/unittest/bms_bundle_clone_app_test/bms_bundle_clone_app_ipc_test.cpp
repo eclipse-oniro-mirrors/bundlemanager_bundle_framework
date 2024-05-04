@@ -110,30 +110,206 @@ sptr<IBundleInstaller> BmsBundleCloneAppIPCTest::GetInstallerProxy()
     return installerProxy;
 }
 
-HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
     }
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
 }
 
-HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest002_UserNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 200; // ensure userId 200 not in system
+    int32_t appIndex = 1;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 100;
+    int32_t appIndex = 0;
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_BundleNameEmpty, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "";
+    const int32_t userId = 100;
+    int32_t appIndex = 0;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest001_UserNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
     }
+
+    const std::string bundleName = "ohos.samples.etsclock";
+    const std::string abilityName = "MainAbility";
+    const int32_t userId = 200;
+    int32_t appIndex = 1;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(abilityName);
+
+    AbilityInfo abilityInfo;
+    auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
+        GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, abilityInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
+    }
 }
 
-HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest002_AppNotFound, Function | SmallTest | Level0)
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
         APP_LOGE("get bundle installer Failure.");
         return;
+    }
+
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const std::string abilityName = "MainAbility";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(abilityName);
+
+    AbilityInfo abilityInfo;
+    auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
+        GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
+    EXPECT_NE(result, ERR_OK);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, abilityInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, QueryCloneAppAbilityTest003_AppIndexNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+
+    const std::string bundleName = "ohos.samples.notfoundapp";
+    const std::string abilityName = "MainAbility";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetAbilityName(abilityName);
+
+    AbilityInfo abilityInfo;
+    auto result = bundleMgrProxy->QueryCloneAbilityInfo(element,
+        GET_ABILITY_INFO_DEFAULT, appIndex, abilityInfo, userId);
+    EXPECT_NE(result, ERR_OK);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, abilityInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest001_AppNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    BundleInfo bundleInfo;
+    auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, bundleInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest002_UserNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 200;
+    int32_t appIndex = 1;
+    BundleInfo bundleInfo;
+    auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, bundleInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
+    }
+}
+
+HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 100;
+    int32_t appIndex = 10;
+    BundleInfo bundleInfo;
+    auto result = bundleMgrProxy->GetCloneBundleInfo(bundleName, 0, appIndex, bundleInfo, userId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP);
+    if (result == ERR_OK) {
+        nlohmann::json userInfoJson;
+        to_json(userInfoJson, bundleInfo);
+        std::string res = userInfoJson.dump();
+        std::cout << "ability: " << res << std::endl;
     }
 }
 } // OHOS
