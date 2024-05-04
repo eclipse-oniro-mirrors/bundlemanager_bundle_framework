@@ -4399,6 +4399,43 @@ HWTEST_F(BmsBundleDataMgrTest, ModifyLauncherAbilityInfoTest, Function | MediumT
 }
 
 /**
+ * @tc.number: GetCloneBundleInfos_0001
+ * @tc.name: GetCloneBundleInfos
+ * @tc.desc: test GetCloneBundleInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetCloneBundleInfos_0001, Function | MediumTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_DEMO;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME_DEMO;
+    bundleInfo.applicationInfo.bundleName = BUNDLE_NAME_DEMO;
+    std::vector<BundleInfo> bundleInfos;
+    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, USERID, bundleInfo, bundleInfos);
+    EXPECT_TRUE(bundleInfos.empty());
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_NAME_DEMO;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    InnerBundleCloneInfo cloneInfo;
+    cloneInfo.userId = USERID;
+    cloneInfo.uid = 1001;
+    cloneInfo.appIndex = 1;
+    cloneInfo.accessTokenId = 20000;
+    innerBundleInfo.AddCloneBundle(cloneInfo);
+    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, USERID, bundleInfo, bundleInfos);
+    EXPECT_FALSE(bundleInfos.empty());
+
+    if (!bundleInfos.empty()) {
+        EXPECT_EQ(bundleInfos[0].appIndex, cloneInfo.appIndex);
+        EXPECT_EQ(bundleInfos[0].uid, cloneInfo.uid);
+        EXPECT_EQ(bundleInfos[0].applicationInfo.accessTokenId, cloneInfo.accessTokenId);
+        EXPECT_EQ(bundleInfos[0].applicationInfo.appIndex, cloneInfo.appIndex);
+    }
+}
+
+/**
  * @tc.number: FilterAbilityInfosByAppLinking_0010
  * @tc.name: FilterAbilityInfosByAppLinkingEmptyAbilityInfos
  * @tc.desc: test FilterAbilityInfosByAppLinking with empty abilityInfos.

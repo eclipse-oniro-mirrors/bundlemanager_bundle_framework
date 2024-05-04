@@ -106,6 +106,9 @@ constexpr int32_t ENUM_FOUR = 4;
 constexpr int32_t ENUM_FIVE = 5;
 constexpr int32_t ENUM_SIX = 6;
 constexpr int32_t ENUM_SEVEN = 7;
+constexpr const char* UNSPECIFIED = "UNSPECIFIED";
+constexpr const char* MULTI_INSTANCE = "MULTI_INSTANCE";
+constexpr const char* APP_CLONE = "APP_CLONE";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3366,12 +3369,6 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_ROUTER_MAP",
         nGetBundleInfoWithRouterMap));
 
-    napi_value nGetBundleInfoWithCloneBundle;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
-        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE), &nGetBundleInfoWithCloneBundle));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_CLONE_BUNDLE",
-        nGetBundleInfoWithCloneBundle));
-
     napi_value nGetBundleInfoWithSkill;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL), &nGetBundleInfoWithSkill));
@@ -4825,6 +4822,24 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     APP_LOGD("call SwitchUninstallState done.");
     return nRet;
+}
+
+void CreateMultiAppModeTypeObject(napi_env env, napi_value value)
+{
+    napi_value nUnspecified;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::UNSPECIFIED),
+        &nUnspecified));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, UNSPECIFIED, nUnspecified));
+
+    napi_value nMultiInstance;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::MULTI_INSTANCE),
+        &nMultiInstance));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MULTI_INSTANCE, nMultiInstance));
+
+    napi_value nAppClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(MultiAppModeType::APP_CLONE),
+        &nAppClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, APP_CLONE, nAppClone));
 }
 }
 }

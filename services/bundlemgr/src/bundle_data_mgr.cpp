@@ -1649,37 +1649,20 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     }
 }
 
-void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId, int32_t flags,
+void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId,
     BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const
 {
-    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(BundleFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE)) ==
-        static_cast<uint32_t>(BundleFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "app %{public}s start get bundle clone info",
-            info.GetBundleName().c_str());
-        // get clone bundle info
-        InnerBundleUserInfo bundleUserInfo;
-        (void)info.GetInnerBundleUserInfo(userId, bundleUserInfo);
-        for (const auto &item : bundleUserInfo.cloneInfos) {
-            ModifyBundleInfoByCloneInfo(item.second, bundleInfo);
-            bundleInfos.emplace_back(bundleInfo);
-        }
+    // get clone bundle info
+    InnerBundleUserInfo bundleUserInfo;
+    (void)info.GetInnerBundleUserInfo(userId, bundleUserInfo);
+    if (bundleUserInfo.cloneInfos.empty()) {
+        return;
     }
-}
-
-void BundleDataMgr::GetCloneBundleInfosV9(const InnerBundleInfo& info, int32_t userId, int32_t flags,
-    BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const
-{
-    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE)) ==
-        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_CLONE_BUNDLE)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "app %{public}s start get bundle clone info",
-            info.GetBundleName().c_str());
-        // get clone bundle info
-        InnerBundleUserInfo bundleUserInfo;
-        (void)info.GetInnerBundleUserInfo(userId, bundleUserInfo);
-        for (const auto &item : bundleUserInfo.cloneInfos) {
-            ModifyBundleInfoByCloneInfo(item.second, bundleInfo);
-            bundleInfos.emplace_back(bundleInfo);
-        }
+    LOG_D(BMS_TAG_QUERY_BUNDLE, "app %{public}s start get bundle clone info",
+        info.GetBundleName().c_str());
+    for (const auto &item : bundleUserInfo.cloneInfos) {
+        ModifyBundleInfoByCloneInfo(item.second, bundleInfo);
+        bundleInfos.emplace_back(bundleInfo);
     }
 }
 
@@ -2603,7 +2586,7 @@ bool BundleDataMgr::GetBundleInfos(
         bundleInfos.emplace_back(bundleInfo);
         find = true;
         // add clone bundle info
-        GetCloneBundleInfos(innerBundleInfo, responseUserId, flags, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(innerBundleInfo, responseUserId, bundleInfo, bundleInfos);
     }
 
     LOG_D(BMS_TAG_QUERY_BUNDLE, "get bundleInfos result(%{public}d) in user(%{public}d).", find, userId);
@@ -2657,7 +2640,7 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
         bundleInfos.emplace_back(bundleInfo);
         find = true;
         // add clone bundle info
-        GetCloneBundleInfos(info, Constants::ALL_USERID, flags, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(info, Constants::ALL_USERID, bundleInfo, bundleInfos);
     }
 
     APP_LOGD("get all bundleInfos result(%{public}d).", find);
@@ -2707,7 +2690,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         ProcessBundleRouterMap(bundleInfo, flags);
         bundleInfos.emplace_back(bundleInfo);
         // add clone bundle info
-        GetCloneBundleInfosV9(innerBundleInfo, responseUserId, flags, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(innerBundleInfo, responseUserId, bundleInfo, bundleInfos);
     }
     if (bundleInfos.empty()) {
         LOG_W(BMS_TAG_QUERY_BUNDLE, "bundleInfos is empty");
@@ -2739,7 +2722,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         if (ret == ERR_OK) {
             bundleInfos.emplace_back(bundleInfo);
             // add clone bundle info
-            GetCloneBundleInfosV9(info, Constants::ALL_USERID, flags, bundleInfo, bundleInfos);
+            GetCloneBundleInfos(info, Constants::ALL_USERID, bundleInfo, bundleInfos);
         }
     }
     if (bundleInfos.empty()) {

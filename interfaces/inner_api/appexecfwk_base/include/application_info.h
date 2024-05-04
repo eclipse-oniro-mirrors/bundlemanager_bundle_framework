@@ -31,9 +31,6 @@ namespace {
     constexpr const char* AVAILABLELEVEL_NORMAL = "normal";
     constexpr const char* DEFAULT_ENTITY_TYPE = "unspecified";
     constexpr const char* DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
-    constexpr const char* MULTI_APP_MODE_NOT_SUPPORT = "NOT_SUPPORT";
-    constexpr const char* MULTI_APP_MODE_MULTI_INSTANCE = "MULTI_INSTANCE";
-    constexpr const char* MULTI_APP_MODE_CLONE_APP = "CLONE_APP";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -74,13 +71,13 @@ enum class ApplicationReservedFlag {
 };
 
 enum class MultiAppModeType {
-    NOT_SUPPORT = 0,
+    UNSPECIFIED = 0,
     MULTI_INSTANCE = 1,
-    CLONE_APP = 2,
+    APP_CLONE = 2,
 };
 
 struct MultiAppModeData : public Parcelable {
-    MultiAppModeType type = MultiAppModeType::NOT_SUPPORT;
+    MultiAppModeType type = MultiAppModeType::UNSPECIFIED;
     int32_t maxAdditionalNumber = 0;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
