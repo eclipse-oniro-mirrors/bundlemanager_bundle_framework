@@ -667,7 +667,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 int32_t BundlePermissionMgr::UpdateHapToken(
     Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("start bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    APP_LOGI("start, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
     updateHapInfoParams.appIDDesc = innerBundleInfo.GetAppId();
     updateHapInfoParams.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
@@ -682,6 +682,7 @@ int32_t BundlePermissionMgr::UpdateHapToken(
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
+    APP_LOGI("end, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk
