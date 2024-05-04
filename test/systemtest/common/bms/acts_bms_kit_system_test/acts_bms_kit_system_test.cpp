@@ -92,6 +92,7 @@ const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
 const int32_t PERMS_INDEX_SIX = 6;
 const size_t ODID_LENGTH = 36;
+const int32_t TEST_INSTALLER_UID = 100;
 }  // namespace
 
 namespace OHOS {
@@ -6313,6 +6314,182 @@ HWTEST_F(ActsBmsKitSystemTest, GetDeveloperIds_0001, Function | MediumTest | Lev
     auto res = bundleMgrProxy->GetDeveloperIds(appDistributionType, developerIdList, USERID);
     EXPECT_EQ(res, ERR_OK);
     EXPECT_TRUE(developerIdList.empty());
+}
+
+/**
+ * @tc.number: GetExtendResourceManager_0100
+ * @tc.name: test GetExtendResourceManager proxy
+ * @tc.desc: GetExtendResourceManager success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetExtendResourceManager_0100, Function | MediumTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IExtendResourceManager> extendResourceManagerProxy = bundleMgrProxy->GetExtendResourceManager();
+    EXPECT_NE(extendResourceManagerProxy, nullptr);
+}
+
+/**
+ * @tc.number: QueryCloneAbilityInfo_0100
+ * @tc.name: test QueryCloneAbilityInfo proxy
+ * @tc.desc: QueryCloneAbilityInfo param error
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryCloneAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    const ElementName element;
+    int32_t flags = 0;
+    int32_t appIndex  = 0;
+    AbilityInfo abilityInfo;
+    int32_t userId = Constants::START_USERID;
+    ErrCode res = bundleMgrProxy->QueryCloneAbilityInfo(element, flags, appIndex, abilityInfo, userId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_QUERY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: UninstallAndRecover_0100
+ * @tc.name: test UninstallAndRecover proxy
+ * @tc.desc: UninstallAndRecover return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, UninstallAndRecover_0100, Function | MediumTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = TEST_INSTALLER_UID;
+    std::string bundleName = BASE_BUNDLE_NAME;
+    sptr<IStatusReceiver> statusReceiver = nullptr;
+    bool res = installerProxy->UninstallAndRecover(bundleName, installParam, statusReceiver);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UninstallAndRecover_0200
+ * @tc.name: test UninstallAndRecover proxy
+ * @tc.desc: UninstallAndRecover return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, UninstallAndRecover_0200, Function | MediumTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = TEST_INSTALLER_UID;
+    std::string bundleName = BASE_BUNDLE_NAME;
+    sptr<IStatusReceiver> statusReceiver;
+    bool res = installerProxy->UninstallAndRecover(bundleName, installParam, statusReceiver);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstallCloneApp_0100
+ * @tc.name: test InstallCloneApp proxy
+ * @tc.desc: InstallCloneApp param error
+ */
+HWTEST_F(ActsBmsKitSystemTest, InstallCloneApp_0100, Function | MediumTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    std::string bundleName = "";
+    int32_t appIndex = 1;
+    ErrCode ret = installerProxy->InstallCloneApp(bundleName, TEST_INSTALLER_UID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BatchGetBundleInfo_0100
+ * @tc.name: test BatchGetBundleInfo proxy
+ * @tc.desc: BatchGetBundleInfo bundlenames
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetBundleInfo_0100, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(appName);
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flag = static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode res = bundleMgrProxy->BatchGetBundleInfo(bundleNames, flag, bundleInfos, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: BatchGetBundleInfo_0200
+ * @tc.name: test BatchGetBundleInfo proxy
+ * @tc.desc: BatchGetBundleInfo wants
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchGetBundleInfo_0200, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    Want want;
+    ElementName name;
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<Want> wants;
+    wants.push_back(want);
+    std::vector<BundleInfo> bundleInfos;
+    int32_t flag = static_cast<int32_t>(BundleFlag::GET_BUNDLE_DEFAULT);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ErrCode res = bundleMgrProxy->BatchGetBundleInfo(wants, flag, bundleInfos, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: BatchQueryAbilityInfos_0100
+ * @tc.name: test BatchQueryAbilityInfos proxy
+ * @tc.desc: BatchGetBundleInfo wants
+ */
+HWTEST_F(ActsBmsKitSystemTest, BatchQueryAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    std::string abilityName = BASE_ABILITY_NAME;
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<Want> wants;
+    wants.push_back(want);
+    std::vector<AbilityInfo> AbilityInfo;
+    auto ret = bundleMgrProxy->BatchQueryAbilityInfos(wants, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, AbilityInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
 
 /**
