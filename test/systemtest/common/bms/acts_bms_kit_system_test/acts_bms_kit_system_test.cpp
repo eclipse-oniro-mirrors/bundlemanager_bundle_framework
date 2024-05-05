@@ -6493,6 +6493,19 @@ HWTEST_F(ActsBmsKitSystemTest, BatchQueryAbilityInfos_0100, Function | MediumTes
 }
 
 /**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test GetAllBundleStats proxy
+ * @tc.desc: get bundle stats
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleStats_0100, Function | MediumTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<int64_t> bundleStats;
+    ErrCode res = bundleMgrProxy->GetAllBundleStats(USERID, bundleStats);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: GetBundleUserMgr_0100
  * @tc.name: test GetBundleUserMgr proxy
  * @tc.desc: 1.system run normally
