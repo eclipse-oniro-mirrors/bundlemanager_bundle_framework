@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum class ResourceFlag {
-    // Used to obtain the all resource info
+    // Used to obtain the icon and label resource info
     GET_RESOURCE_INFO_ALL = 0x00000001,
     // Used to obtained the label resource info
     GET_RESOURCE_INFO_WITH_LABEL = 0x00000002,
