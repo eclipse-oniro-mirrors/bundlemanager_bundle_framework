@@ -410,7 +410,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
 
     bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
-    if (getAll || getDrawable) {
+    if (getDrawable) {
         ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND, bundleResourceInfo.foreground);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");
 
@@ -455,7 +455,7 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
 
     bool getDrawable = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
-    if (getAll || getDrawable) {
+    if (getDrawable) {
         ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND,
             launcherAbilityResourceInfo.foreground);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetBlob foreground, ret: %{public}d");

@@ -3081,7 +3081,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0120, Function | SmallTest
 
     BundleResourceInfo info;
     ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+        info);
     EXPECT_TRUE(ans);
     EXPECT_EQ(info.bundleName, resourceInfo.bundleName_);
     EXPECT_EQ(info.icon, resourceInfo.icon_);
@@ -3167,7 +3169,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0122, Function | SmallTest
 
     std::vector<LauncherAbilityResourceInfo> infos;
     ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), infos);
     EXPECT_TRUE(ans);
     EXPECT_TRUE(infos.size() == 1);
     if (!infos.empty()) {
@@ -3458,7 +3461,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0141, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         BundleResourceInfo oldBundleResourceInfo;
-        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, oldBundleResourceInfo);
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            oldBundleResourceInfo);
         EXPECT_TRUE(ret);
         EXPECT_EQ(oldBundleResourceInfo.bundleName, BUNDLE_NAME);
 
@@ -3470,7 +3476,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0141, Function | SmallTest
         EXPECT_TRUE(ret);
 
         BundleResourceInfo newBundleResourceInfo;
-        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 1, newBundleResourceInfo);
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            newBundleResourceInfo);
         EXPECT_TRUE(ret);
         EXPECT_EQ(newBundleResourceInfo.bundleName, oldBundleResourceInfo.bundleName);
         EXPECT_EQ(newBundleResourceInfo.label, oldBundleResourceInfo.label);
@@ -3507,7 +3516,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::vector<LauncherAbilityResourceInfo> oldLauncherAbilityResourceInfos;
-        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 1, oldLauncherAbilityResourceInfos);
+        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            oldLauncherAbilityResourceInfos);
         EXPECT_TRUE(ret);
         EXPECT_FALSE(oldLauncherAbilityResourceInfos.empty());
 
@@ -3519,7 +3531,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest
         EXPECT_TRUE(ret);
 
         std::vector<LauncherAbilityResourceInfo> newLauncherAbilityResourceInfos;
-        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 1, newLauncherAbilityResourceInfos);
+        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            newLauncherAbilityResourceInfos);
         EXPECT_TRUE(ret);
         EXPECT_FALSE(newLauncherAbilityResourceInfos.empty());
         if (!newLauncherAbilityResourceInfos.empty() && !oldLauncherAbilityResourceInfos.empty()) {
