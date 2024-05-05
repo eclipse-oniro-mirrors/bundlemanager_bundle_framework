@@ -97,6 +97,9 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     std::u16string arkProfilePathVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, arkProfilePathVal);
     arkProfilePath = Str16ToStr8(arkProfilePathVal);
+    std::u16string anFileNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, anFileNameVal);
+    anFileName = Str16ToStr8(anFileNameVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
     uint32_t hspVectorSize = 0;
@@ -110,7 +113,8 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
         }
         hspVector.emplace_back(*hspInfoPtr);
     }
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleUid);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleGid);
     std::u16string appIdentifilerVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, appIdentifilerVal);
     appIdentifier = Str16ToStr8(appIdentifilerVal);
@@ -131,13 +135,15 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(coreLibPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(outputPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkProfilePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(anFileName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, hspVector.size());
     for (const auto &hspInfo : hspVector) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hspInfo);
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleUid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleGid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(optBCRangeList));
@@ -165,9 +171,11 @@ std::string AOTArgs::ToString() const
         + ", coreLibPath = " + coreLibPath
         + ", outputPath = " + outputPath
         + ", arkProfilePath = " + arkProfilePath
+        + ", anFileName = " + anFileName
         + ", offset = " + std::to_string(offset)
         + ", length = " + std::to_string(length)
         + ", bundleUid = " + std::to_string(bundleUid)
+        + ", bundleGid = " + std::to_string(bundleGid)
         + ", appIdentifier = " + appIdentifier
         + ", isEncryptedBundle = " + std::to_string(isEncryptedBundle)
         + ", optBCRangeList = " + optBCRangeList

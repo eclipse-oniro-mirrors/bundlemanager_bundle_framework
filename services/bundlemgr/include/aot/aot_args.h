@@ -42,10 +42,12 @@ struct AOTArgs : public Parcelable {
     std::string coreLibPath;
     std::string outputPath;
     std::string arkProfilePath;
+    std::string anFileName;
     uint32_t offset = 0;
     uint32_t length = 0;
     std::vector<HspInfo> hspVector;
-    uint32_t bundleUid = 0;
+    int32_t bundleUid = -1;
+    int32_t bundleGid = -1;
     std::string appIdentifier;
     uint32_t isEncryptedBundle = 0;
     std::string optBCRangeList;

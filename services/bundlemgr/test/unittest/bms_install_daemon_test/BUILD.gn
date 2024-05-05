@@ -52,6 +52,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -67,6 +68,10 @@ ohos_unittest("BmsInstallDaemonTest") {
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (code_signature_enable) {
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
@@ -119,6 +124,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -134,6 +140,12 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs = [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
@@ -188,6 +200,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -203,6 +216,12 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs = [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
@@ -250,6 +269,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "ets_runtime:libcompiler_service",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
@@ -259,6 +279,12 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
+  }
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs = [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]

@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <nlohmann/json.hpp>
+#include <unordered_map>
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
@@ -27,7 +28,6 @@ namespace OHOS {
 namespace AppExecFwk {
 struct AOTState {
     bool running = false;
-    pid_t childPid = -1;
     std::string outputPath;
 };
 
@@ -46,9 +46,10 @@ private:
     bool GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
-    void ExecuteInChildProcess(const AOTArgs &aotArgs) const;
-    void ExecuteInParentProcess(const AOTArgs &aotArgs, pid_t childPid, ErrCode &ret);
-    void InitState(const AOTArgs &aotArgs, pid_t childPid);
+    void MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
+    ErrCode EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<int16_t> &sigData) const;
+    ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_t> &sigData);
+    void InitState(const AOTArgs &aotArgs);
     void ResetState();
 private:
     mutable std::mutex stateMutex_;

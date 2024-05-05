@@ -83,6 +83,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -93,6 +94,12 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -236,6 +243,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -245,6 +253,12 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -387,6 +401,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -396,6 +411,12 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -544,6 +565,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -557,6 +579,12 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "BUNDLE_PERMISSION_DEF_LIST",
     "BUNDLE_PERMISSION_START_FULL_FALSE",
   ]
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -700,6 +728,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -709,6 +738,12 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -854,6 +889,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -863,6 +899,12 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -999,6 +1041,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -1014,6 +1057,12 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "BUNDLE_PERMISSION_DEF_TRUE",
   ]
 
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

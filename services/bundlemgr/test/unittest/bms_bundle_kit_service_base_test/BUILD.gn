@@ -67,6 +67,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -79,6 +80,12 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     external_deps += [ "image_framework:image_native" ]
   }
   defines = []
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (current_cpu == "arm64") {
     defines += [ "USE_ARM64" ]
   }
