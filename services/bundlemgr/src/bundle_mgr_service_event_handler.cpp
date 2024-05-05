@@ -2859,6 +2859,7 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
         APP_LOGI("bundle no change");
         return;
     }
+    APP_LOGI("begin update preinstall DB for %{public}s", bundleName.c_str());
     preInstallBundleInfo.ClearBundlePath();
     bool findEntry = false;
     for (const auto &item : innerBundleInfos) {
