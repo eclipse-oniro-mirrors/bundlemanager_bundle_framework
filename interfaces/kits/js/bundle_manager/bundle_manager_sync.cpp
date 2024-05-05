@@ -66,6 +66,28 @@ const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
 
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGW("args not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, BUNDLE_NAME, &prop);
+    std::string bundleName = CommonFunc::GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MODULE_NAME, &prop);
+    std::string moduleName = CommonFunc::GetStringFromNAPI(env, prop);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, ABILITY_NAME, &prop);
+    std::string abilityName = CommonFunc::GetStringFromNAPI(env, prop);
+    if (!bundleName.empty() && !abilityName.empty()) {
+        ElementName elementName("", bundleName, abilityName, moduleName);
+        want.SetElement(elementName);
+        return true;
+    }
     if (!UnwrapWant(env, args, want)) {
         APP_LOGW("parse want failed");
         return false;
