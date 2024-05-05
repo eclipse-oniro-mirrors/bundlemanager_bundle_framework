@@ -625,6 +625,7 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
     }
     auto dataInfo = data.ReadRawData(profileBlockLength);
     if (!dataInfo) {
+        APP_LOGE("readRawData failed");
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
