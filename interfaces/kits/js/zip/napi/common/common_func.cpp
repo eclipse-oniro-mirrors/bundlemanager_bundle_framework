@@ -592,7 +592,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetCompressArg(nap
     if (funcArg.GetArgc() == ArgumentCount::THREE) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::THIRD]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64();
+        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return { false, nullptr, 0, nullptr, 0 };
@@ -636,7 +636,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
     if (funcArg.GetArgc() == ArgumentCount::FOUR) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::FOURTH]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64();
+        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, nullptr, 0, nullptr, 0, 0};
@@ -671,7 +671,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetUnCompressArg(n
     if (funcArg.GetArgc() == ArgumentCount::THREE) {
         int64_t sourceLenIn = 0;
         NapiValue sourceLenNVal(env, funcArg[ArgumentPosition::THIRD]);
-        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64();
+        tie(succ, sourceLenIn) = sourceLenNVal.ToInt64(sourceLen);
         if (!succ || sourceLenIn < 0) {
             NapiBusinessError().ThrowErr(env, EINVAL);
             return { false, nullptr, 0, nullptr, 0 };
