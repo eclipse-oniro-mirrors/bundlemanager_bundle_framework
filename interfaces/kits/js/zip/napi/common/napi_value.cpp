@@ -154,7 +154,7 @@ tuple<bool, int64_t> NapiValue::ToInt64() const
 
 tuple<bool, int64_t> NapiValue::ToInt64(int64_t defaultValue) const
 {
-    if (TypeIs(napi_undefined) || TypeIs(napi_function)) {
+    if (TypeIs(napi_undefined) || TypeIs(napi_function) || TypeIs(napi_null)) {
         return make_tuple(true, defaultValue);
     }
     return ToInt64();
