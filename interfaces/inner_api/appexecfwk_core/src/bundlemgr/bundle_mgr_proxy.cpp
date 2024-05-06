@@ -4135,7 +4135,7 @@ ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetDeveloperIds due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appDistributionType)) {
         APP_LOGE("failed to GetDeveloperIds due to write appDistributionType fail");
