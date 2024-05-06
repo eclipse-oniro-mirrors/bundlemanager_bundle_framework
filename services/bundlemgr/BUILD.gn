@@ -465,6 +465,7 @@ ohos_shared_library("installs") {
   ]
 
   external_deps = [
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

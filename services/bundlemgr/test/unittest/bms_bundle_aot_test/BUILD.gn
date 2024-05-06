@@ -34,8 +34,10 @@ ohos_unittest("BmsAOTMgrTest") {
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
     "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
@@ -65,6 +67,7 @@ ohos_unittest("BmsAOTMgrTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -74,6 +77,12 @@ ohos_unittest("BmsAOTMgrTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

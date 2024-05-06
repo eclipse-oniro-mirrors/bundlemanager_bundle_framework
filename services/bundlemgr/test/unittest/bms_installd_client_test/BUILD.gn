@@ -42,6 +42,7 @@ ohos_unittest("BmsInstalldClientTest") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
+    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -54,6 +55,10 @@ ohos_unittest("BmsInstalldClientTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (code_signature_enable) {
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]

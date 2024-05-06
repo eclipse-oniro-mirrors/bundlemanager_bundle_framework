@@ -24,15 +24,21 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
+#include "aot_compiler_client.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
+#if defined(CODE_SIGNATURE_ENABLE)
+#include "code_sign_utils.h"
+#endif
 #include "installd/installd_operator.h"
-#include <nlohmann/json.hpp>
+#include "installd/installd_host_impl.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -139,9 +145,9 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
     return subject;
 }
 
-void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
+void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
 {
-    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
+    APP_LOGI("ExecuteInCompilerServiceProcess, args : %{public}s", aotArgs.ToString().c_str());
     nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();
@@ -155,73 +161,77 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
         object[ABC_SIZE] = DecToHex(hspInfo.length);
         objectArray.push_back(object);
     }
+    argsMap.emplace("target-compiler-mode", aotArgs.compileMode);
+    argsMap.emplace("aot-file", aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName);
+    argsMap.emplace("compiler-pkg-info", subject.dump());
+    argsMap.emplace("compiler-external-pkg-info", objectArray.dump());
+    argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
+    argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
+    argsMap.emplace("ABC-Path", aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
+    argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
+    argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
+    argsMap.emplace("anFileName", aotArgs.anFileName);
+    argsMap.emplace("appIdentifier", aotArgs.appIdentifier);
 
-    std::vector<std::string> tmpVector = {
-        "/system/bin/ark_aot_compiler",
-        "--target-compiler-mode=" + aotArgs.compileMode,
-        "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
-        "--compiler-pkg-info=" + subject.dump(),
-        "--compiler-external-pkg-info=" + objectArray.dump(),
-        "--compiler-opt-bc-range=" + aotArgs.optBCRangeList,
-        "--compiler-device-state=" + std::to_string(aotArgs.isScreenOff)
-    };
-    tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
-
-    std::vector<const char*> argv;
-    argv.reserve(tmpVector.size() + 1);
-    for (const auto &arg : tmpVector) {
-        argv.emplace_back(arg.c_str());
+    for (const auto &arg : argsMap) {
+        APP_LOGI("%{public}s: %{public}s", arg.first.c_str(), arg.second.c_str());
     }
-    argv.emplace_back(nullptr);
-    APP_LOGD("argv size : %{public}zu", argv.size());
-    for (const auto &arg : argv) {
-        APP_LOGD("%{public}s", arg);
-    }
-    execv(argv[0], const_cast<char* const*>(argv.data()));
-    APP_LOGE("execv failed : %{public}s", strerror(errno));
-    exit(-1);
 }
 
-void AOTExecutor::ExecuteInParentProcess(const AOTArgs &aotArgs, pid_t childPid, ErrCode &ret)
+ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<int16_t> &sigData) const
 {
-    {
-        std::lock_guard<std::mutex> lock(stateMutex_);
-        InitState(aotArgs, childPid);
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (sigData.empty()) {
+        APP_LOGI("not enforce code sign if no aot file save");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
+    uint32_t byteSize = static_cast<uint32_t>(sigData.size());
+    std::vector<uint8_t> byteData;
+    for (uint32_t i = 0; i < byteSize; ++i) {
+        byteData.emplace_back(static_cast<uint8_t>(sigData[i]));
+    }
+    Security::CodeSign::ByteBuffer sigBuffer;
+    if (!sigBuffer.CopyFrom(byteData.data(), byteSize)) {
+        APP_LOGE("fail to receive code signature ByteBuffer");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+    if (Security::CodeSign::CodeSignUtils::EnforceCodeSignForFile(aotArgs.anFileName, sigBuffer)
+        != CommonErrCode::CS_SUCCESS) {
+        APP_LOGE("fail to enable code signature for the aot file");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+    APP_LOGI("sign aot file success");
+    return ERR_OK;
+#else
+    APP_LOGI("code_signature_enable is 0, ignore");
+    return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+#endif
+}
 
-    int status;
-    int waitRet = waitpid(childPid, &status, 0);
-    if (waitRet == -1) {
-        APP_LOGE("waitpid failed");
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else if (WIFEXITED(status)) {
-        int exit_status = WEXITSTATUS(status);
-        APP_LOGI("child process exited with status: %{public}d", exit_status);
-        ret = exit_status == 0 ? ERR_OK : ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else if (WIFSIGNALED(status)) {
-        int signal_number = WTERMSIG(status);
-        APP_LOGW("child process terminated by signal: %{public}d", signal_number);
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else if (WIFSTOPPED(status)) {
-        int signal_number = WSTOPSIG(status);
-        APP_LOGW("child process was stopped by signal: %{public}d", signal_number);
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else if (WIFCONTINUED(status)) {
-        APP_LOGW("child process was resumed");
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else {
-        APP_LOGW("unknown");
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_t> &sigData)
+{
+    std::unordered_map<std::string, std::string> argsMap;
+    MapArgs(aotArgs, argsMap);
+    std::string aotFilePath = Constants::ARK_CACHE_PATH + aotArgs.bundleName;
+    int32_t ret = InstalldHostImpl().Mkdir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
+        aotArgs.bundleUid, aotArgs.bundleGid);
+    if (ret != ERR_OK) {
+        APP_LOGE("make aot file output directory fail");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
-
-    {
-        std::lock_guard<std::mutex> lock(stateMutex_);
-        ResetState();
+    APP_LOGI("start to aot compiler");
+    ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, sigData);
+    if (ret != ERR_OK) {
+        APP_LOGE("aot compiler fail");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
+    APP_LOGI("aot compiler success");
+    return ERR_OK;
 }
 
 void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
 {
+#if defined(CODE_SIGNATURE_ENABLE)
     APP_LOGI("begin to execute AOT");
     {
         std::lock_guard<std::mutex> lock(stateMutex_);
@@ -231,23 +241,31 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
             return;
         }
     }
-
     AOTArgs completeArgs;
     ret = PrepareArgs(aotArgs, completeArgs);
     if (ret != ERR_OK) {
-        APP_LOGE("PrepareArgs failed");
+        APP_LOGE("prepareArgs fail");
         return;
     }
-    APP_LOGI("begin to fork");
-    pid_t pid = fork();
-    if (pid == -1) {
-        APP_LOGE("fork process failed : %{public}s", strerror(errno));
-        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
-    } else if (pid == 0) {
-        ExecuteInChildProcess(completeArgs);
-    } else {
-        ExecuteInParentProcess(aotArgs, pid, ret);
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        InitState(aotArgs);
     }
+    APP_LOGI("begin to call aot compiler");
+    std::vector<int16_t> fileData;
+    ret = StartAOTCompiler(completeArgs, fileData);
+    if (ret == ERR_OK) {
+        ret = EnforceCodeSign(completeArgs, fileData);
+    }
+    APP_LOGI("aot compiler finish");
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        ResetState();
+    }
+#else
+    APP_LOGI("code_signature_enable is 0, ignore");
+    ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+#endif
 }
 
 ErrCode AOTExecutor::StopAOT()
@@ -258,28 +276,25 @@ ErrCode AOTExecutor::StopAOT()
         APP_LOGI("AOT not running, return directly");
         return ERR_OK;
     }
-    if (state_.childPid <= 0) {
-        APP_LOGE("invalid child pid");
+    int32_t ret = ArkCompiler::AotCompilerClient::GetInstance().StopAotCompiler();
+    if (ret != ERR_OK) {
+        APP_LOGE("stop aot compiler fail");
         return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
     }
-    APP_LOGI("begin to kill child process : %{public}d", state_.childPid);
-    (void)kill(state_.childPid, SIGKILL);
     (void)InstalldOperator::DeleteDir(state_.outputPath);
     ResetState();
     return ERR_OK;
 }
 
-void AOTExecutor::InitState(const AOTArgs &aotArgs, pid_t childPid)
+void AOTExecutor::InitState(const AOTArgs &aotArgs)
 {
     state_.running = true;
-    state_.childPid = childPid;
     state_.outputPath = aotArgs.outputPath;
 }
 
 void AOTExecutor::ResetState()
 {
     state_.running = false;
-    state_.childPid = -1;
     state_.outputPath.clear();
 }
 }  // namespace AppExecFwk

@@ -18,6 +18,7 @@
 #include <thread>
 #include <vector>
 
+#include "account_helper.h"
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -157,15 +158,22 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
 
     InnerBundleUserInfo newInnerBundleUserInfo;
-    if (!installedInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, newInnerBundleUserInfo)) {
-        APP_LOGE("bundle(%{public}s) get user (%{public}d) failed.",
-            installedInfo.GetBundleName().c_str(), Constants::ALL_USERID);
+    int32_t activeUserId = AccountHelper::GetCurrentActiveUserId();
+    if (activeUserId <= 0) {
+        APP_LOGE("activeUserId is invalid");
         return std::nullopt;
     }
-    aotArgs.bundleUid = static_cast<uint32_t>(newInnerBundleUserInfo.uid);
+    if (!installedInfo.GetInnerBundleUserInfo(activeUserId, newInnerBundleUserInfo)) {
+        APP_LOGE("bundle(%{public}s) get user (%{public}d) failed",
+            installedInfo.GetBundleName().c_str(), activeUserId);
+        return std::nullopt;
+    }
+    aotArgs.bundleUid = newInnerBundleUserInfo.uid;
+    aotArgs.bundleGid = installedInfo.GetGid(activeUserId);
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
+    aotArgs.anFileName = aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName + Constants::AN_SUFFIX;
 
     // key rule is start:end,start:end......
     std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");

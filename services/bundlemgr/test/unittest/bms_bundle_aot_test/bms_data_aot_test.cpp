@@ -290,14 +290,14 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0900, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTExecutor_1000
  * @tc.name: test StopAOT
- * @tc.desc: 1. InitState with child pid -1
+ * @tc.desc: 1. InitState
  *           2. call StopAOT
- *           3. return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED
+ *           3. return ERR_OK
  */
 HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
-    AOTExecutor::GetInstance().InitState(aotArgs, -1);
+    AOTExecutor::GetInstance().InitState(aotArgs);
     ErrCode ret = AOTExecutor::GetInstance().StopAOT();
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED);
     AOTExecutor::GetInstance().ResetState();
@@ -305,40 +305,22 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_1000, Function | SmallTest | Level0)
 
 /**
  * @tc.number: AOTExecutor_1100
- * @tc.name: test StopAOT
- * @tc.desc: 1. InitState with child pid VIRTUAL_CHILD_PID
- *           2. call StopAOT
- *           3. return ERR_OK
- */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level0)
-{
-    AOTArgs aotArgs;
-    AOTExecutor::GetInstance().InitState(aotArgs, VIRTUAL_CHILD_PID);
-    ErrCode ret = AOTExecutor::GetInstance().StopAOT();
-    EXPECT_EQ(ret, ERR_OK);
-    AOTExecutor::GetInstance().ResetState();
-}
-
-/**
- * @tc.number: AOTExecutor_1200
  * @tc.name: test InitState and ResetState
  * @tc.desc: 1. call InitState, expect get set value
  *           1. call ResetState, expect get default value
  */
-HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level0)
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1100, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     aotArgs.outputPath = OUT_PUT_PATH;
 
-    AOTExecutor::GetInstance().InitState(aotArgs, VIRTUAL_CHILD_PID);
+    AOTExecutor::GetInstance().InitState(aotArgs);
     EXPECT_EQ(AOTExecutor::GetInstance().state_.running, true);
     EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, OUT_PUT_PATH);
-    EXPECT_EQ(AOTExecutor::GetInstance().state_.childPid, VIRTUAL_CHILD_PID);
 
     AOTExecutor::GetInstance().ResetState();
     EXPECT_EQ(AOTExecutor::GetInstance().state_.running, false);
     EXPECT_EQ(AOTExecutor::GetInstance().state_.outputPath, "");
-    EXPECT_EQ(AOTExecutor::GetInstance().state_.childPid, -1);
 }
 
 /**
