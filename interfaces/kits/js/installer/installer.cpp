@@ -81,7 +81,7 @@ const std::string PGO_FILE_PATH = "pgoFilePath";
 const std::string HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const std::string INSTALL_PARAM = "installParam";
-const std::string INSTALL_CLONE_APP = "InstallCloneApp";
+const std::string CREATE_APP_TWIN = "createAppTwin";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -1557,7 +1557,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerInstallCloneApp(std::string &bundleName, int32_t userId, int32_t &appIndex)
+static ErrCode InnerCreateAppTwin(std::string &bundleName, int32_t userId, int32_t &appIndex)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -1574,32 +1574,32 @@ static ErrCode InnerInstallCloneApp(std::string &bundleName, int32_t userId, int
     return result;
 }
 
-void InstallCloneAppExec(napi_env env, void *data)
+void CreateAppTwinExec(napi_env env, void *data)
 {
-    InstallCloneAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallCloneAppCallbackInfo *>(data);
+    CreateAppTwinCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppTwinCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
         asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
-    APP_LOGD("InstallCloneAppExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
+    APP_LOGD("CreateAppTwinExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId,
         asyncCallbackInfo->appIndex);
     asyncCallbackInfo->err =
-        InnerInstallCloneApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+        InnerCreateAppTwin(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
 }
 
-void InstallCloneAppComplete(napi_env env, napi_status status, void *data)
+void CreateAppTwinComplete(napi_env env, napi_status status, void *data)
 {
-    InstallCloneAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallCloneAppCallbackInfo *>(data);
+    CreateAppTwinCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppTwinCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    std::unique_ptr<InstallCloneAppCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::unique_ptr<CreateAppTwinCallbackInfo> callbackPtr {asyncCallbackInfo};
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
-    APP_LOGD("InstallCloneAppComplete err is %{public}d, appIndex is %{public}d",
+    APP_LOGD("CreateAppTwinComplete err is %{public}d, appIndex is %{public}d",
         asyncCallbackInfo->err,
         asyncCallbackInfo->appIndex);
     napi_value result[ARGS_SIZE_TWO] = {0};
@@ -1608,16 +1608,16 @@ void InstallCloneAppComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->appIndex, &result[SECOND_PARAM]));
     } else {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            INSTALL_CLONE_APP, Constants::PERMISSION_INSTALL_BUNDLE);
+            CREATE_APP_TWIN, Constants::PERMISSION_INSTALL_BUNDLE);
     }
-    CommonFunc::NapiReturnDeferred<InstallCloneAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    CommonFunc::NapiReturnDeferred<CreateAppTwinCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
-napi_value InstallCloneApp(napi_env env, napi_callback_info info)
+napi_value CreateAppTwin(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin to InstallCloneApp");
+    APP_LOGI("begin to createAppTwin");
     NapiArg args(env, info);
-    std::unique_ptr<InstallCloneAppCallbackInfo> asyncCallbackInfo = std::make_unique<InstallCloneAppCallbackInfo>(env);
+    std::unique_ptr<CreateAppTwinCallbackInfo> asyncCallbackInfo = std::make_unique<CreateAppTwinCallbackInfo>(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("asyncCallbackInfo is null");
         return nullptr;
@@ -1655,10 +1655,10 @@ napi_value InstallCloneApp(napi_env env, napi_callback_info info)
     } else if (argc == ARGS_SIZE_TWO) {
         asyncCallbackInfo->appIndex = 0;
     }
-    auto promise = CommonFunc::AsyncCallNativeMethod<InstallCloneAppCallbackInfo>(
-        env, asyncCallbackInfo.get(), INSTALL_CLONE_APP, InstallCloneAppExec, InstallCloneAppComplete);
+    auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppTwinCallbackInfo>(
+        env, asyncCallbackInfo.get(), CREATE_APP_TWIN, CreateAppTwinExec, CreateAppTwinComplete);
     asyncCallbackInfo.release();
-    APP_LOGI("call napi InstallCloneApp done.");
+    APP_LOGI("call napi createAppTwin done.");
     return promise;
 }
 } // AppExecFwk

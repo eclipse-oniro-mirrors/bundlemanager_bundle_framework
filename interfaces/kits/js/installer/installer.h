@@ -76,8 +76,8 @@ struct ExtResourceCallbackInfo : public BaseCallbackInfo {
     std::vector<std::string> filePaths;
 };
 
-struct InstallCloneAppCallbackInfo : public BaseCallbackInfo {
-    explicit InstallCloneAppCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+struct CreateAppTwinCallbackInfo : public BaseCallbackInfo {
+    explicit CreateAppTwinCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     int32_t userId = 0;
     int32_t appIndex = 0;
@@ -93,7 +93,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info);
 napi_value AddExtResource(napi_env env, napi_callback_info info);
 napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 napi_value UninstallAndRecover(napi_env env, napi_callback_info info);
-napi_value InstallCloneApp(napi_env env, napi_callback_info info);
+napi_value CreateAppTwin(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
