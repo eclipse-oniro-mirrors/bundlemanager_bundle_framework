@@ -3675,6 +3675,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    std::vector<std::string> disallowList;
+    disallowList.push_back(BUNDLE_NAME_TEST);
+    bundleUserMgrHostImpl_->CreateNewUser(USERID, disallowList);
     bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
@@ -3695,6 +3698,48 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0001
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level0)
+{
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
+    bundleUserMgrHostImpl_->RemoveUser(USERID);
+
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
+    bundleUserMgrHostImpl_->RemoveUser(USERID);
+
+    ASSERT_NE(bundleInstaller, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0001
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest | Level0)
+{
+    const std::vector<std::string> disallowList;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    auto res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, preInstallBundleInfos);
+    EXPECT_TRUE(res);
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, preInstallBundleInfos);
+    EXPECT_FALSE(res);
+    bundleUserMgrHostImpl_->HandleNotifyBundleEvents();
 }
 
 /**

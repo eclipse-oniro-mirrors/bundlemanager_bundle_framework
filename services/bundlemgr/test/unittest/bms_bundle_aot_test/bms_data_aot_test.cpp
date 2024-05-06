@@ -31,6 +31,7 @@
 #include "json_serializer.h"
 #include "parameters.h"
 #include "parcel.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -46,6 +47,7 @@ const std::string AOT_BUNDLE_NAME = "aotBundleName";
 const std::string AOT_MODULE_NAME = "aotModuleName";
 const std::string STRING_TYPE_ONE = "string1";
 const std::string STRING_TYPE_TWO = "string2";
+const std::string STRING_EMPTY = "";
 const int32_t USERID_ONE = 100;
 const int32_t USERID_TWO = -1;
 constexpr uint32_t VERSION_CODE = 3;
@@ -724,5 +726,27 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
         CheckHspInfo(aotArgsPtr->hspVector[i], aotArgs.hspVector[i]);
     }
     APP_LOGI("AOTArgs_0200 end");
+}
+
+/**
+ * @tc.number: AOTHandler_1300
+ * @tc.name: test AOTHandler
+ * @tc.desc: bundle not exist, return std::nullopt
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    AOTHandler::GetInstance().ResetAOTFlags();
+
+    AOTHandler::GetInstance().OTACompileInternal();
+
+    std::string compileMode;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    auto res = AOTHandler::GetInstance().HandleCompileWithBundle(STRING_EMPTY, compileMode, dataMgr);
+    EXPECT_EQ(res.bundleName, STRING_EMPTY);
+
+    std::map<std::string, EventInfo> sysEventMap;
+    AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
 }
 } // OHOS
