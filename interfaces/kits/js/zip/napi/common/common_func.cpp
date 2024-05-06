@@ -1096,30 +1096,6 @@ std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env en
     return {true, gzs, hasGZFileMember};
 }
 
-std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> CommonFunc::GetGZOpenWArg(
-    napi_env env, const NapiFuncArg &funcArg)
-{
-    bool succ = false;
-    std::unique_ptr<char[]> path = nullptr;
-    size_t bufferLen = 0;
-    NapiValue pathNVal(env, funcArg[ArgumentPosition::FIRST]);
-    tie(succ, path, bufferLen) = pathNVal.ToUTF8String();
-    if (!succ) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return {false, nullptr, nullptr};
-    }
-
-    std::unique_ptr<char[]> mode = nullptr;
-    bufferLen = 0;
-    NapiValue modeNVal(env, funcArg[ArgumentPosition::SECOND]);
-    tie(succ, mode, bufferLen) = modeNVal.ToUTF8String();
-    if (!succ) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return {false, nullptr, nullptr};
-    }
-    return {true, std::move(path), std::move(mode)};
-}
-
 std::tuple<bool, uint32_t> CommonFunc::GetGZBufferArg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = false;

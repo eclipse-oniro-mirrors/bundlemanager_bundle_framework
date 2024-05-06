@@ -33,7 +33,6 @@ public:
     static napi_value GZDopen(napi_env env, napi_callback_info info);
     static napi_value GZOpen(napi_env env, napi_callback_info info);
     static napi_value GZClose(napi_env env, napi_callback_info info);
-    static napi_value GZOpenW(napi_env env, napi_callback_info info);
     static napi_value GZCloseW(napi_env env, napi_callback_info info);
     static napi_value GZBuffer(napi_env env, napi_callback_info info);
 
