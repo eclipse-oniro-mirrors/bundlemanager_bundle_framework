@@ -15,6 +15,7 @@
 
 #include "aot/aot_handler.h"
 
+#include <sys/stat.h>
 #include <thread>
 #include <vector>
 
@@ -76,6 +77,10 @@ const std::string FAILURE_REASON_TIME_OUT = "timeout";
 const std::string FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
 const std::string FAILURE_REASON_NOT_STAGE_MODEL = "not stage model";
 const std::string FAILURE_REASON_COMPILE_FAILED = "compile failed";
+
+constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
+constexpr const char* PGO_RT_AP_PREFIX = "rt_";
+constexpr const char* COPY_AP_DEST_PATH  = "/data/local/pgo/";
 }
 
 AOTHandler::AOTHandler()
@@ -110,18 +115,20 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
         APP_LOGE("dataMgr is null");
         return Constants::EMPTY_STRING;
     }
-    std::vector<int32_t> userIds = dataMgr->GetUserIds(bundleName);
-    for (int32_t userId : userIds) {
-        std::string path;
-        path.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
-            .append(Constants::PATH_SEPARATOR).append(bundleName)
-            .append(Constants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
-        APP_LOGD("path : %{public}s", path.c_str());
-        bool isExistFile = false;
-        (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
-        if (isExistFile) {
-            return path;
-        }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return Constants::EMPTY_STRING;
+    }
+    std::string path;
+    path.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName)
+        .append(Constants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
+    APP_LOGD("path : %{public}s", path.c_str());
+    bool isExistFile = false;
+    (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
+    if (isExistFile) {
+        return path;
     }
     APP_LOGD("GetArkProfilePath failed");
     return Constants::EMPTY_STRING;
@@ -276,6 +283,122 @@ void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle)
         APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
         dataMgr->ResetAOTFlagsCommand(bundleToReset);
     });
+}
+
+ErrCode AOTHandler::MkApDestDirIfNotExist() const
+{
+    ErrCode errCode;
+    bool isDirExist = false;
+    errCode = InstalldClient::GetInstance()->IsExistDir(COPY_AP_DEST_PATH, isDirExist);
+    if (errCode != ERR_OK) {
+        APP_LOGE("check if dir exist failed, error is %{public}d", errCode);
+    }
+    if (isDirExist) {
+        APP_LOGI("Copy ap path is exist");
+        return ERR_OK;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP;
+    errCode = InstalldClient::GetInstance()->Mkdir(
+        COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, Constants::SHELL_UID);
+    if (errCode != ERR_OK) {
+        APP_LOGE("fail to create dir, error is %{public}d", errCode);
+        return errCode;
+    }
+    APP_LOGI("MkApDestDir path success");
+    return ERR_OK;
+}
+
+ErrCode AOTHandler::HandleCopyAp(const std::string &bundleName, bool isAllBundle,
+    std::vector<std::string> &results) const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    std::vector<std::string> bundleNames;
+    if (isAllBundle) {
+        bundleNames = dataMgr->GetAllBundleName();
+    } else {
+        bundleNames = {bundleName};
+    }
+    ErrCode errCode = MkApDestDirIfNotExist();
+    if (errCode != ERR_OK) {
+        return errCode;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId <= 0) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    for (const auto &bundleName : bundleNames) {
+        BundleInfo bundleInfo;
+        if (!dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
+            std::string errInfo = bundleName + " GetBundleInfo failed";
+            APP_LOGW("%{public}s", errInfo.c_str());
+            results.emplace_back(errInfo);
+            continue;
+        }
+        CopyApWithBundle(bundleName, bundleInfo, userId, results);
+    };
+    return ERR_OK;
+}
+
+std::string AOTHandler::GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const
+{
+    ErrCode errCode;
+    bool isMergedApExist = false;
+    bool isRtApExist = false;
+    errCode = InstalldClient::GetInstance()->IsExistFile(mergedAp, isMergedApExist);
+    if (errCode != ERR_OK) {
+        APP_LOGE("CopyAp mergedAp %{public}s failed due to call IsExistFile failed %{public}d",
+            mergedAp.c_str(), errCode);
+        return Constants::EMPTY_STRING;
+    }
+    if (isMergedApExist) {
+        return mergedAp;
+    }
+    errCode = InstalldClient::GetInstance()->IsExistFile(rtAp, isRtApExist);
+    if (errCode != ERR_OK) {
+        APP_LOGE("CopyAp rtAp %{public}s failed due to call IsExistFile failed %{public}d",
+            rtAp.c_str(), errCode);
+        return Constants::EMPTY_STRING;
+    }
+    if (isRtApExist) {
+        return rtAp;
+    }
+    APP_LOGE("Source ap is not exist");
+    return Constants::EMPTY_STRING;
+}
+
+void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
+    const int32_t userId, std::vector<std::string> &results) const
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName).append(Constants::PATH_SEPARATOR);
+    ErrCode errCode;
+    for (const auto &moduleName : bundleInfo.moduleNames) {
+        std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + Constants::AP_SUFFIX;
+        std::string rtAp = arkProfilePath + PGO_RT_AP_PREFIX + moduleName + Constants::AP_SUFFIX;
+        std::string sourceAp = GetSouceAp(mergedAp, rtAp);
+        std::string result;
+        if (sourceAp.empty()) {
+            result.append(bundleName).append(" ").append(moduleName).append(" get source ap failed!");
+            results.emplace_back(result);
+            continue;
+        }
+        std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + Constants::AP_SUFFIX;
+        result.append(sourceAp);
+        errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
+        if (errCode != ERR_OK) {
+            APP_LOGE("Copy ap dir %{public}s failed! error is %{public}d", sourceAp.c_str(), errCode);
+            result.append(" copy ap failed!");
+            continue;
+        }
+        result.append(" copy ap success!");
+        results.emplace_back(result);
+    }
 }
 
 void AOTHandler::ResetAOTFlags() const

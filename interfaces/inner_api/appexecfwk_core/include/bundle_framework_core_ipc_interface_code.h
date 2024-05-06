@@ -170,6 +170,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     BATCH_QUERY_ABILITY_INFOS,
     BATCH_GET_BUNDLE_INFO,
     GET_CLONE_BUNDLE_INFO,
+    COPY_AP,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

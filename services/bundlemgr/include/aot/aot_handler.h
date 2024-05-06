@@ -38,11 +38,16 @@ public:
     void HandleIdle() const;
     void HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const;
     void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
+    ErrCode HandleCopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) const;
 private:
     AOTHandler();
     ~AOTHandler() = default;
     DISALLOW_COPY_AND_MOVE(AOTHandler);
 
+    ErrCode MkApDestDirIfNotExist() const;
+    void CopyApWithBundle(const std::string &bundleName, const BundleInfo &bundleInfo,
+        const int32_t userId, std::vector<std::string> &results) const;
+    std::string GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const;
     bool IsSupportARM64() const;
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(

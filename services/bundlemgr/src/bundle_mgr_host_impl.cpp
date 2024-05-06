@@ -1537,6 +1537,15 @@ ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAl
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return AOTHandler::GetInstance().HandleCopyAp(bundleName, isAllBundle, results);
+}
+
 bool BundleMgrHostImpl::DumpInfos(
     const DumpFlag flag, const std::string &bundleName, int32_t userId, std::string &result)
 {

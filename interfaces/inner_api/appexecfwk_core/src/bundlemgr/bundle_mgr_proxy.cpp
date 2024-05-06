@@ -4569,6 +4569,42 @@ ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBu
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::CopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to CopyAp");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to CopyAp due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to CopyAp due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isAllBundle)) {
+        APP_LOGE("fail to CopyAp due to write isAllBundle fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::COPY_AP, data, reply)) {
+        APP_LOGE("fail to CopyAp from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", res);
+        return res;
+    }
+    if (!reply.ReadStringVector(&results)) {
+        APP_LOGE("fail to CopyAp from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("end to CopyAp");
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::CanOpenLink(
     const std::string &link, bool &canOpen)
 {
