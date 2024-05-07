@@ -743,6 +743,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
 
     std::string compileMode;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
     auto res = AOTHandler::GetInstance().HandleCompileWithBundle(STRING_EMPTY, compileMode, dataMgr);
     EXPECT_EQ(res.bundleName, STRING_EMPTY);
 
