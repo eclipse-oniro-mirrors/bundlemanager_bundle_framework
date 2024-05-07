@@ -21,8 +21,6 @@ ohos_shared_library("cj_bundle_manager") {
     debug = false
   }
 
-  configs = [ "${arkui_path}/napi:ace_napi_config" ]
-
   include_dirs = [
     "src",
     "${base_path}/include",
@@ -53,6 +51,7 @@ ohos_shared_library("cj_bundle_manager") {
       "c_utils:utils",
       "hilog:libhilog",
       "ipc:ipc_core",
+      "napi:ace_napi",
       "napi:cj_bind_ffi",
     ]
   } else {
