@@ -62,6 +62,7 @@ struct NotifyBundleEvents {
     std::string appIdentifier;
     bool isModuleUpdate = false;
     std::string appDistributionType;
+    int32_t appIndex = 0;
 };
 
 class BundleCommonEventMgr {

@@ -65,6 +65,57 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     APP_LOGD("InstallCloneApp %{public}s begin", bundleName.c_str());
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+
+    ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
+    NotifyBundleEvents installRes = {
+        .bundleName = bundleName,
+        .resultCode = result,
+        .type = NotifyType::INSTALL,
+        .uid = uid_,
+        .accessTokenId = accessTokenId_,
+        .appIndex = appIndex,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+
+    ResetInstallProperties();
+    PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
+    return result;
+}
+
+ErrCode BundleCloneInstaller::UninstallCloneApp(
+    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
+
+    PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+
+    // 1. check userId
+    if (GetDataMgr() != ERR_OK) {
+            APP_LOGE("Get dataMgr shared_ptr nullptr");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
+{
+    // All clone will be uninstalled when the original application is updated or uninstalled
+    APP_LOGI("begin");
+    if (bundleName.empty()) {
+        APP_LOGE("UninstallAllCloneApps failed due to empty bundle name");
+        return ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR;
+    }
+
+    APP_LOGI("end");
+    return ERR_OK;
+}
+
+ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundleName,
+    const int32_t userId, int32_t &appIndex)
+{
     if (bundleName.empty()) {
         APP_LOGE("the bundle name is empty");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
@@ -143,6 +194,8 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
         .accessTokenId = newTokenIdEx.tokenIdExStruct.tokenID,
         .accessTokenIdEx = newTokenIdEx.tokenIDEx,
     };
+    uid_ = uid;
+    accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
     if (addRes != ERR_OK) {
         APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
@@ -162,38 +215,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
-
-    PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     APP_LOGD("InstallCloneApp %{public}s succesfully", bundleName.c_str());
-    return ERR_OK;
-}
-
-ErrCode BundleCloneInstaller::UninstallCloneApp(
-    const std::string &bundleName, const int32_t userId, const int32_t appIndex)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
-
-    PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
-
-    // 1. check userId
-    if (GetDataMgr() != ERR_OK) {
-            APP_LOGE("Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
-{
-    // All clone will be uninstalled when the original application is updated or uninstalled
-    APP_LOGI("begin");
-    if (bundleName.empty()) {
-        APP_LOGE("UninstallAllCloneApps failed due to empty bundle name");
-        return ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR;
-    }
-
-    APP_LOGI("end");
     return ERR_OK;
 }
 
@@ -239,6 +261,12 @@ ErrCode BundleCloneInstaller::GetDataMgr()
         }
     }
     return ERR_OK;
+}
+
+void BundleCloneInstaller::ResetInstallProperties()
+{
+    uid_ = 0;
+    accessTokenId_ = 0;
 }
 } // AppExecFwk
 } // OHOS
