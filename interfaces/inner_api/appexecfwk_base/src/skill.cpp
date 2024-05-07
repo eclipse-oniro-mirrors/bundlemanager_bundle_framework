@@ -25,30 +25,30 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::string JSON_KEY_TYPE = "type";
-const std::string JSON_KEY_PERMISSIONS = "permissions";
-const std::string JSON_KEY_ACTIONS = "actions";
-const std::string JSON_KEY_ENTITIES = "entities";
-const std::string JSON_KEY_URIS = "uris";
-const std::string JSON_KEY_SKILLS = "skills";
-const std::string JSON_KEY_SCHEME = "scheme";
-const std::string JSON_KEY_HOST = "host";
-const std::string JSON_KEY_PORT = "port";
-const std::string JSON_KEY_PATH = "path";
-const std::string JSON_KEY_PATHSTARTWITH = "pathStartWith";
-const std::string JSON_KEY_PATHREGEX = "pathRegex";
-const std::string JSON_KEY_UTD = "utd";
-const std::string JSON_KEY_MAXFILESUPPORTED = "maxFileSupported";
-const std::string JSON_KEY_LINKFEATURE =  "linkFeature";
-const std::string JSON_KEY_DOMAINVERIFY = "domainVerify";
-const std::string BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
 namespace {
-const std::string PARAM_SEPARATOR = "?";
-const std::string PORT_SEPARATOR = ":";
-const std::string SCHEME_SEPARATOR = "://";
-const std::string PATH_SEPARATOR = "/";
-const std::string TYPE_WILDCARD = "*/*";
+constexpr const char* JSON_KEY_TYPE = "type";
+constexpr const char* JSON_KEY_PERMISSIONS = "permissions";
+constexpr const char* JSON_KEY_ACTIONS = "actions";
+constexpr const char* JSON_KEY_ENTITIES = "entities";
+constexpr const char* JSON_KEY_URIS = "uris";
+constexpr const char* JSON_KEY_SCHEME = "scheme";
+constexpr const char* JSON_KEY_HOST = "host";
+constexpr const char* JSON_KEY_PORT = "port";
+constexpr const char* JSON_KEY_PATH = "path";
+constexpr const char* JSON_KEY_PATHSTARTWITH = "pathStartWith";
+constexpr const char* JSON_KEY_PATHREGEX = "pathRegex";
+constexpr const char* JSON_KEY_UTD = "utd";
+constexpr const char* JSON_KEY_MAXFILESUPPORTED = "maxFileSupported";
+constexpr const char* JSON_KEY_LINKFEATURE =  "linkFeature";
+constexpr const char* JSON_KEY_DOMAINVERIFY = "domainVerify";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
+constexpr const char* PARAM_SEPARATOR = "?";
+constexpr const char* PORT_SEPARATOR = ":";
+constexpr const char* SCHEME_SEPARATOR = "://";
+constexpr const char* PATH_SEPARATOR = "/";
+constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -366,7 +366,7 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
         return false;
     }
     // only match */*
-    if (type == Constants::TYPE_ONLY_MATCH_WILDCARD) {
+    if (type == TYPE_ONLY_MATCH_WILDCARD) {
         return skillUriType == TYPE_WILDCARD;
     }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {

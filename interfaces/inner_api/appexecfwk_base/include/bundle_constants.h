@@ -23,8 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
-constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
-const std::string EMPTY_STRING = "";
+constexpr const char* EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
@@ -33,13 +32,8 @@ constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* BUNDLE_RESOURCE = "/data/service/el1/public/bms/bundle_resources";
-constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
-constexpr const char* ASSETS_DIR = "assets";
-constexpr const char* RESOURCES_INDEX = "resources.index";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
-constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
 constexpr const char* DATABASE = "/database/";
@@ -49,7 +43,6 @@ constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bm
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* DATA_GROUP_PATH = "/group/";
-constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
@@ -68,20 +61,14 @@ constexpr int ALL_USERID = -3;
 constexpr int ANY_USERID = -4;
 constexpr int NOT_EXIST_USERID = -5;
 constexpr int PATH_MAX_SIZE = 256;
-constexpr int SIGNATURE_MATCHED = 0;
-constexpr int SIGNATURE_NOT_MATCHED = 1;
-constexpr int SIGNATURE_UNKNOWN_BUNDLE = 2;
 constexpr int PERMISSION_GRANTED = 0;
 constexpr int PERMISSION_NOT_GRANTED = -1;
 constexpr int DEFAULT_STREAM_FD = -1;
 constexpr int DUMP_INDENT = 4;
-constexpr unsigned int INSTALLD_UMASK = 0000;
 constexpr int32_t INVALID_API_VERSION = -1;
-constexpr int32_t API_VERSION_EIGHT = 8;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
-constexpr int32_t DEFAULT_INSTALLERID = -1;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 
 // native so
@@ -91,55 +78,33 @@ constexpr const char* MODULE_NAME_SEPARATOR = ",";
 constexpr const char* ARM_EABI = "armeabi";
 constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";
-constexpr const char* X86 = "x86";
-constexpr const char* X86_64 = "x86_64";
 constexpr const char* ARM64 = "arm64";
 extern const std::string LIBS;
 extern const std::string AN;
-extern const std::string AP;
-constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
-constexpr const char* ARM = "arm";
 extern const std::map<std::string, std::string> ABI_MAP;
-constexpr const char* DOT = ".";
-constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
-constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
-constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
 extern const std::string RES_FILE_PATH;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
-constexpr int32_t INVALID_GID = -1;
-constexpr int32_t INVALID_BUNDLEID = -1;
-constexpr int32_t INVALID_ACCESS_TOKEN_ID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BMS_UID = 1000;
 constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t ACCOUNT_UID = 3058;
 constexpr int32_t FOUNDATION_UID = 5523;
-constexpr int32_t DMS_UID = 5522;
-constexpr int32_t STORAGE_SERVICE_UID = 1090;
 constexpr int32_t BMS_GID = 1000;
-constexpr int32_t BASE_SYS_UID = 2100;
-constexpr int32_t MAX_SYS_UID = 2899;
-constexpr int32_t BASE_SYS_VEN_UID = 5000;
-constexpr int32_t MAX_SYS_VEN_UID = 5999;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
-constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
-constexpr int32_t U_VALUE = 100000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
 constexpr int32_t LOG_DIR_GID = 1007;
-constexpr const char* PROFILE_KEY_UID_SIZE = "size";
-constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
-constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
+
 // for render process
 constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
 constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
@@ -169,8 +134,6 @@ constexpr const char* PERMISSION_INSTALL_QUICK_FIX_BUNDLE = "ohos.permission.INS
 constexpr const char* PERMISSION_UNINSTALL_QUICK_FIX_BUNDLE = "ohos.permission.UNINSTALL_QUICK_FIX_BUNDLE";
 constexpr const char* PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
 constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
-// install list permissions file
-constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
 enum class AppType {
     SYSTEM_APP = 0,
@@ -178,36 +141,18 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
-constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";
 constexpr const char* FLAG_HOME_INTENT_FROM_SYSTEM = "flag.home.intent.from.system";
 
-// the ability file folder name.
-constexpr const char* LIB_FOLDER_NAME = "libs";
-constexpr const char* RES_FOLDER_NAME = "resources";
-
-constexpr uint8_t MAX_LABLE_LEN = 30;
 constexpr uint8_t MAX_BUNDLE_NAME = 128;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
-constexpr uint8_t MAX_VENDOR = 255;
-constexpr uint8_t EQUAL_ZERO = 0;
-constexpr uint8_t MAX_MODULE_PACKAGE = 127;
-constexpr uint8_t MAX_MODULE_NAME = 31;
-constexpr uint8_t MAX_MODULE_ABILITIES_READPERMISSION = 255;
-constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
-constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
-constexpr uint8_t MAX_MODULE_LABEL = 63;
 constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
 constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
-constexpr uint16_t MAX_JSON_STRING_LENGTH = 4096;
+
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
-
-// single max hap size
-constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
-constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 
 constexpr const char* UID = "uid";
 constexpr const char* USER_ID = "userId";
@@ -215,42 +160,22 @@ constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* HAP_PATH = "hapPath";
-constexpr const char* APP_ID = "appId";
 constexpr int32_t MAX_LIMIT_SIZE = 4;
 
 constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";
-const char DATA_ABILITY_URI_SEPARATOR = '/';
-
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr const char* URI_SEPARATOR = "://";
-constexpr const char* SEPARATOR = "/";
-
-constexpr int MAX_DIMENSION_SIZE = 10;
-constexpr int MAX_DEVICETYPE_SIZE = 50;
 
 // appFeature
-constexpr const char* HOS_NORMAL_APP = "hos_normal_app";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
 
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
-constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
-constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
-constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
-constexpr const char* SAND_BOX_RDB_TABLE_NAME = "sandbox";
-const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
-constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
-constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
-constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
-
-// file size
-constexpr int32_t INVALID_FILE_SIZE = -1;
 
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
@@ -286,14 +211,11 @@ constexpr const char* APP_DETAIL_ABILITY = "AppDetailAbility";
 constexpr int32_t DEFAULT_OVERLAY_ENABLE_STATUS = 1;
 constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
-constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 
 // ark compile mode
-constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_PARTIAL = "partial";
-constexpr const char* COMPILE_FULL = "full";
 
 constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
@@ -306,23 +228,15 @@ constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 
 //pgo file
 constexpr const char* PGO_FILE_SUFFIX = ".ap";
-constexpr const char* PGO_FILE_PATH = "pgo_files";
-
-//abc file
-constexpr const char* ABC_FILE_SUFFIX = ".abc";
-constexpr const char* ABC_FILE_PATH = "abc_files";
 
 // system param
-extern const std::string ALLOW_ENTERPRISE_BUNDLE;
-extern const std::string IS_ENTERPRISE_DEVICE;
-extern const std::string DEVELOPERMODE_STATE;
+constexpr const char* ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
+constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
+constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
 
 //extResource
-constexpr const char* EXT_RESOURCE_FILE_SUFFIX = ".hsp";
 constexpr const char* EXT_RESOURCE_FILE_PATH = "ext_resource";
 
-// sa id
-constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 // hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
@@ -331,10 +245,6 @@ constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
 constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
-
-// clone application
-constexpr int32_t CLONE_APP_INDEX_MIN = 1;
-constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 extern const std::string CLONE_BUNDLE_PREFIX;

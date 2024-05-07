@@ -51,6 +51,7 @@ const std::string WORD = "WORD";
 const std::string EXCEL = "EXCEL";
 const std::string PPT = "PPT";
 const std::string EMAIL = "EMAIL";
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const std::map<std::string, std::set<std::string>> APP_TYPES = {
     {IMAGE, {"image/*"}},
     {AUDIO, {"audio/*"}},
@@ -308,7 +309,7 @@ void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
 
 bool DefaultAppMgr::IsBrowserWant(const Want& want) const
 {
-    bool matchAction = want.GetAction() == Constants::ACTION_VIEW_DATA;
+    bool matchAction = want.GetAction() == ACTION_VIEW_DATA;
     if (!matchAction) {
         LOG_D(BMS_TAG_DEFAULT_APP, "Action does not match, not browser want");
         return false;
@@ -348,7 +349,7 @@ std::string DefaultAppMgr::GetType(const Want& want) const
     if (IsEmailWant(want)) {
         return EMAIL;
     }
-    if (want.GetAction() == Constants::ACTION_VIEW_DATA) {
+    if (want.GetAction() == ACTION_VIEW_DATA) {
         std::string type = want.GetType();
         if (!type.empty()) {
             return type;
@@ -559,7 +560,7 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
         return false;
     }
     for (const std::string& mimeType : item->second) {
-        if (MatchActionAndType(Constants::ACTION_VIEW_DATA, mimeType, skills)) {
+        if (MatchActionAndType(ACTION_VIEW_DATA, mimeType, skills)) {
             return true;
         }
     }
@@ -570,12 +571,12 @@ bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
     LOG_D(BMS_TAG_DEFAULT_APP, "begin to verify browser skills.");
     Want httpWant;
-    httpWant.SetAction(Constants::ACTION_VIEW_DATA);
+    httpWant.SetAction(ACTION_VIEW_DATA);
     httpWant.AddEntity(ENTITY_BROWSER);
     httpWant.SetUri(HTTP);
 
     Want httpsWant;
-    httpsWant.SetAction(Constants::ACTION_VIEW_DATA);
+    httpsWant.SetAction(ACTION_VIEW_DATA);
     httpsWant.AddEntity(ENTITY_BROWSER);
     httpsWant.SetUri(HTTPS);
     for (const Skill& skill : skills) {
@@ -608,7 +609,7 @@ bool DefaultAppMgr::IsEmailSkillsValid(const std::vector<Skill>& skills) const
 bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Skill>& skills) const
 {
     LOG_D(BMS_TAG_DEFAULT_APP, "type : %{public}s", type.c_str());
-    if (MatchActionAndType(Constants::ACTION_VIEW_DATA, type, skills)) {
+    if (MatchActionAndType(ACTION_VIEW_DATA, type, skills)) {
         return true;
     }
     LOG_E(BMS_TAG_DEFAULT_APP, "MatchFileType failed");

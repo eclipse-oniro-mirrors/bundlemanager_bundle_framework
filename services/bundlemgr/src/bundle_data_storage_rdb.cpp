@@ -20,12 +20,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
+}
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
     APP_LOGI("BundleDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = Constants::BUNDLE_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }

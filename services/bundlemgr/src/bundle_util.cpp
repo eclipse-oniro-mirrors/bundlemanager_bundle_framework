@@ -53,6 +53,11 @@ static std::string g_deviceUdid;
 static std::mutex g_mutex;
 // hmdfs and sharefs config
 constexpr const char* BUNDLE_ID_FILE = "appid";
+// single max hap size
+constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
+constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
+constexpr const char* ABC_FILE_PATH = "abc_files";
+constexpr const char* PGO_FILE_PATH = "pgo_files";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -78,8 +83,8 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         APP_LOGE("can not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
-    if (!CheckFileSize(realPath, Constants::MAX_HAP_SIZE)) {
-        APP_LOGE("file size is larger than max hap size Max size is: %{public}" PRId64, Constants::MAX_HAP_SIZE);
+    if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
+        APP_LOGE("file size is larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_SIZE;
     }
     return ERR_OK;
@@ -374,9 +379,9 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     } else if (type == DirType::SIG_FILE_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     } else if (type == DirType::PGO_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::PGO_FILE_PATH;
+        tempDir += Constants::PATH_SEPARATOR + PGO_FILE_PATH;
     } else if (type == DirType::ABC_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::ABC_FILE_PATH;
+        tempDir += Constants::PATH_SEPARATOR + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::EXT_RESOURCE_FILE_PATH;
     } else {

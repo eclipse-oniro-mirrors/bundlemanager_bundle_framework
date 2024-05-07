@@ -37,6 +37,9 @@ const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 const int32_t MAX_STATUS_VECTOR_NUM = 1000;
+constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
+constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
+constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -704,7 +707,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfos(MessageParcel &data, MessageParcel &
     int userId = data.ReadInt32();
 
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(Constants::MAX_CAPACITY_BUNDLES);
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfos(flag, infos, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -726,7 +729,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlags(MessageParcel &data, Mes
     int userId = data.ReadInt32();
 
     std::vector<BundleInfo> infos;
-    reply.SetDataCapacity(Constants::MAX_CAPACITY_BUNDLES);
+    reply.SetDataCapacity(MAX_CAPACITY_BUNDLES);
     bool ret = GetBundleInfos(flags, infos, userId);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
@@ -3255,7 +3258,7 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
 {
     auto size = sizeof(reply);
     APP_LOGD("reply size is %{public}lu", static_cast<unsigned long>(size));
-    bool useAshMem = size > Constants::ASHMEM_THRESHOLD;
+    bool useAshMem = size > ASHMEM_THRESHOLD;
     if (!reply.WriteBool(useAshMem)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3365,7 +3368,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
 
     constexpr int32_t VECTOR_SIZE_UNDER_DEFAULT_DATA = 500;
     if (vectorSize > VECTOR_SIZE_UNDER_DEFAULT_DATA &&
-        !reply.SetDataCapacity(Constants::PREINSTALL_PARCEL_CAPACITY)) {
+        !reply.SetDataCapacity(PREINSTALL_PARCEL_CAPACITY)) {
         APP_LOGE("SetDataCapacity failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

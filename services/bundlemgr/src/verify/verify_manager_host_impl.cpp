@@ -42,6 +42,7 @@ const std::string DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
 const std::string DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
 const std::string DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
 const std::string DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
+constexpr const char* ABC_FILE_SUFFIX = ".abc";
 
 bool IsValidPath(const std::string &path)
 {
@@ -298,7 +299,7 @@ bool VerifyManagerHostImpl::CheckFileParam(const std::vector<std::string> &abcPa
             APP_LOGE("CheckFile abcPath(%{public}s) failed due to invalid path", abcPath.c_str());
             return false;
         }
-        if (!BundleUtil::CheckFileType(abcPath, Constants::ABC_FILE_SUFFIX)) {
+        if (!BundleUtil::CheckFileType(abcPath, ABC_FILE_SUFFIX)) {
             APP_LOGE("CheckFile abcPath(%{public}s) failed due to not abc suffix.", abcPath.c_str());
             return false;
         }
@@ -465,7 +466,7 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
         APP_LOGE("DeleteAbc failed due to invalid path");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
     }
-    if (!BundleUtil::CheckFileType(path, Constants::ABC_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(path, ABC_FILE_SUFFIX)) {
         APP_LOGE("DeleteAbc failed due to not abc file.");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
     }

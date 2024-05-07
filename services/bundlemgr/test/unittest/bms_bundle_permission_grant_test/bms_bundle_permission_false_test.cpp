@@ -53,6 +53,7 @@ const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
+constexpr int PERMISSION_NOT_GRANTED = -1;
 }  // namespace
 
 class BmsBundlePermissionFalseTest : public testing::Test {
@@ -1236,7 +1237,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8300, Functi
     int32_t installedUid = 100;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     int ret = impl.CreateStream(BUNDLE_NAME);
-    EXPECT_EQ(ret, Constants::PERMISSION_NOT_GRANTED);
+    EXPECT_EQ(ret, PERMISSION_NOT_GRANTED);
 }
 
 /**
@@ -1251,7 +1252,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8400, Functi
     int32_t installedUid = 100;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     int ret = impl.CreateSharedBundleStream(BUNDLE_NAME, UID);
-    EXPECT_EQ(ret, Constants::PERMISSION_NOT_GRANTED);
+    EXPECT_EQ(ret, PERMISSION_NOT_GRANTED);
 }
 
 /**

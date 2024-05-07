@@ -57,6 +57,8 @@ constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
 constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
+constexpr const char* COMPILE_NONE = "none";
+constexpr const char* COMPILE_FULL = "full";
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -227,7 +229,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0600, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    aotArgs.compileMode = Constants::COMPILE_FULL;
+    aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = NOHAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
@@ -245,7 +247,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0700, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    aotArgs.compileMode = Constants::COMPILE_FULL;
+    aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = HAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
@@ -264,7 +266,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0800, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    aotArgs.compileMode = Constants::COMPILE_FULL;
+    aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = HAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
@@ -572,7 +574,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
 {
     std::string bundleName = "";
     ClearDataMgr();
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_NONE, true);
+    AOTHandler::GetInstance().HandleCompile(bundleName, COMPILE_NONE, true);
     EXPECT_EQ(bundleName, "");
     ResetDataMgr();
 

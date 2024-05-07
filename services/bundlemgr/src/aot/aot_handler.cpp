@@ -81,6 +81,7 @@ const std::string FAILURE_REASON_COMPILE_FAILED = "compile failed";
 constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* PGO_RT_AP_PREFIX = "rt_";
 constexpr const char* COPY_AP_DEST_PATH  = "/data/local/pgo/";
+constexpr const char* COMPILE_NONE = "none";
 }
 
 AOTHandler::AOTHandler()
@@ -234,9 +235,9 @@ void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundle
             APP_LOGD("current device doesn't support arm64, no need to AOT");
             return;
         }
-        std::string compileMode = system::GetParameter(INSTALL_COMPILE_MODE, Constants::COMPILE_NONE);
+        std::string compileMode = system::GetParameter(INSTALL_COMPILE_MODE, COMPILE_NONE);
         APP_LOGD("%{public}s = %{public}s", INSTALL_COMPILE_MODE, compileMode.c_str());
-        if (compileMode == Constants::COMPILE_NONE) {
+        if (compileMode == COMPILE_NONE) {
             APP_LOGD("%{public}s = none, no need to AOT", INSTALL_COMPILE_MODE);
             return;
         }
@@ -477,9 +478,9 @@ void AOTHandler::OTACompileInternal() const
         return;
     }
 
-    std::string compileMode = system::GetParameter(OTA_COMPILE_MODE, Constants::COMPILE_NONE);
+    std::string compileMode = system::GetParameter(OTA_COMPILE_MODE, COMPILE_NONE);
     APP_LOGI("%{public}s = %{public}s", OTA_COMPILE_MODE, compileMode.c_str());
-    if (compileMode == Constants::COMPILE_NONE) {
+    if (compileMode == COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", OTA_COMPILE_MODE);
         return;
     }
@@ -664,7 +665,7 @@ void AOTHandler::HandleIdle() const
     }
     std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, Constants::COMPILE_PARTIAL);
     APP_LOGI("%{public}s = %{public}s", IDLE_COMPILE_MODE, compileMode.c_str());
-    if (compileMode == Constants::COMPILE_NONE) {
+    if (compileMode == COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }
@@ -710,7 +711,7 @@ void AOTHandler::HandleCompile(const std::string &bundleName, const std::string 
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;
     }
-    if (compileMode == Constants::COMPILE_NONE) {
+    if (compileMode == COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }

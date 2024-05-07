@@ -21,12 +21,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* SAND_BOX_RDB_TABLE_NAME = "sandbox";
+}
 SandboxManagerRdb::SandboxManagerRdb()
 {
     APP_LOGI("create SandboxManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = Constants::SAND_BOX_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = SAND_BOX_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }

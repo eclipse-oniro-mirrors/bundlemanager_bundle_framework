@@ -53,12 +53,17 @@ namespace {
 static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_shared.z.so";
 static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
-static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
-static std::string PREFIX_TARGET_PATH = "/print_service/";
+constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
+constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
-static const std::string PROC_MOUNTS_PATH = "/proc/mounts";
-static const std::string QUOTA_DEVICE_DATA_PATH = "/data";
+constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
+constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
+constexpr const char* CACHE_DIR = "cache";
+constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
+constexpr const char* AP_PATH = "ap/";
+constexpr const char* AI_SUFFIX = ".ai";
+constexpr const char* DIFF_SUFFIX = ".diff";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -218,7 +223,7 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     }
 
     if ((extractParam.extractFileType == ExtractFileType::AP) &&
-        !extractor.IsDirExist(Constants::AP)) {
+        !extractor.IsDirExist(AP_PATH)) {
         APP_LOGD("hap has no ap files and does not need to be extracted.");
         return true;
     }
@@ -314,7 +319,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (!EndsWith(entryName, Constants::DIFF_SUFFIX)) {
+    if (!EndsWith(entryName, DIFF_SUFFIX)) {
         APP_LOGD("file name not diff format.");
         return false;
     }
@@ -386,7 +391,7 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             break;
         }
         case ExtractFileType::AP: {
-            prefix = Constants::AP;
+            prefix = AP_PATH;
             break;
         }
         case ExtractFileType::RES_FILE: {
@@ -408,7 +413,7 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
         }
         case ExtractFileType::AN: {
             suffixes.emplace_back(Constants::AN_SUFFIX);
-            suffixes.emplace_back(Constants::AI_SUFFIX);
+            suffixes.emplace_back(AI_SUFFIX);
             break;
         }
         case ExtractFileType::AP: {
@@ -614,7 +619,7 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
     if (codePath.empty()) {
         return false;
     }
-    return IsValidPath(Constants::BUNDLE_BASE_CODE_DIR + Constants::PATH_SEPARATOR, codePath);
+    return IsValidPath(BUNDLE_BASE_CODE_DIR + Constants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)
@@ -804,7 +809,7 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
             continue;
         }
-        if (ptr->d_type == DT_DIR && strcmp(ptr->d_name, Constants::CACHE_DIR) == 0) {
+        if (ptr->d_type == DT_DIR && strcmp(ptr->d_name, CACHE_DIR) == 0) {
             std::string currentDir = filePath + std::string(ptr->d_name);
             cacheDirs.emplace_back(currentDir);
             continue;
@@ -1154,7 +1159,7 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     }
     std::vector<std::string> newSoList;
     for (const auto &diffFileName : diffFileNames) {
-        std::string soFileName = diffFileName.substr(0, diffFileName.rfind(Constants::DIFF_SUFFIX));
+        std::string soFileName = diffFileName.substr(0, diffFileName.rfind(DIFF_SUFFIX));
         APP_LOGD("ApplyDiffPatch soName: %{public}s, diffName: %{public}s", soFileName.c_str(), diffFileName.c_str());
         if (find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName) != oldSoFileNames.end()) {
             int32_t ret = applyPatch(realDiffFilePath + Constants::PATH_SEPARATOR + diffFileName,
@@ -1581,7 +1586,7 @@ bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, co
     for (const auto &entryName : entryNames) {
         if (StartsWith(entryName, Constants::LIBS)
             || StartsWith(entryName, Constants::AN)
-            || StartsWith(entryName, Constants::AP)) {
+            || StartsWith(entryName, AP_PATH)) {
             continue;
         }
         const std::string relativeDir = GetPathDir(entryName);

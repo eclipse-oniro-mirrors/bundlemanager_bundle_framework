@@ -24,6 +24,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace JsonConstant {
+constexpr uint16_t MAX_JSON_STRING_LENGTH = 4096;
+}
 enum class JsonType {
     NULLABLE,
     BOOLEAN,
@@ -145,7 +148,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                     break;
                 }
                 data = jsonObject.at(key).get<T>();
-                if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_STRING_LENGTH) {
+                if (jsonObject.at(key).get<std::string>().length() > JsonConstant::MAX_JSON_STRING_LENGTH) {
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
                 }
                 break;

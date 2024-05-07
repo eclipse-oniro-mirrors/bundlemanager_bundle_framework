@@ -32,6 +32,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace InnerConstant {
+constexpr const char* ASSETS_DIR = "assets";
+constexpr const char* RESOURCES_INDEX = "resources.index";
+constexpr int32_t INVALID_GID = -1;
+const std::string EMPTY_STRING = "";
+}
 struct ExtendResourceInfo {
     std::string moduleName;
     int32_t iconId;
@@ -359,11 +365,11 @@ public:
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-            return Constants::INVALID_GID;
+            return InnerConstant::INVALID_GID;
         }
 
         if (innerBundleUserInfo.gids.empty()) {
-            return Constants::INVALID_GID;
+            return InnerConstant::INVALID_GID;
         }
 
         return innerBundleUserInfo.gids[0];
@@ -397,11 +403,11 @@ public:
         if (innerModuleInfos_.count(currentPackage_) == 1) {
             std::string moduleResPath;
             if (isNewVersion_) {
-                moduleResPath = moduleSrcDir + Constants::PATH_SEPARATOR + Constants::RESOURCES_INDEX;
+                moduleResPath = moduleSrcDir + Constants::PATH_SEPARATOR + InnerConstant::RESOURCES_INDEX;
             } else {
-                moduleResPath = moduleSrcDir + Constants::PATH_SEPARATOR + Constants::ASSETS_DIR +
+                moduleResPath = moduleSrcDir + Constants::PATH_SEPARATOR + InnerConstant::ASSETS_DIR +
                     Constants::PATH_SEPARATOR +innerModuleInfos_.at(currentPackage_).distro.moduleName +
-                    Constants::PATH_SEPARATOR + Constants::RESOURCES_INDEX;
+                    Constants::PATH_SEPARATOR + InnerConstant::RESOURCES_INDEX;
             }
 
             innerModuleInfos_.at(currentPackage_).moduleResPath = moduleResPath;
@@ -421,7 +427,7 @@ public:
             return innerModuleInfos_.at(modulePackage).hapPath;
         }
 
-        return Constants::EMPTY_STRING;
+        return InnerConstant::EMPTY_STRING;
     }
 
     const std::string &GetModuleName(const std::string &modulePackage) const
@@ -430,7 +436,7 @@ public:
             return innerModuleInfos_.at(modulePackage).moduleName;
         }
 
-        return Constants::EMPTY_STRING;
+        return InnerConstant::EMPTY_STRING;
     }
 
     const std::string &GetCurModuleName() const;
@@ -481,7 +487,7 @@ public:
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).modulePath;
         }
-        return Constants::EMPTY_STRING;
+        return InnerConstant::EMPTY_STRING;
     }
 
     std::string GetModuleDataDir(std::string modulePackage) const
@@ -489,7 +495,7 @@ public:
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).moduleDataDir;
         }
-        return Constants::EMPTY_STRING;
+        return InnerConstant::EMPTY_STRING;
     }
 
     bool IsDisabled() const
@@ -724,7 +730,7 @@ public:
         baseBundleInfo_->entryInstallationFree = installationFree;
         if (installationFree) {
             baseApplicationInfo_->needAppDetail = false;
-            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = InnerConstant::EMPTY_STRING;
         }
     }
 
@@ -765,7 +771,7 @@ public:
         baseApplicationInfo_->hideDesktopIcon = hideDesktopIcon;
         if (hideDesktopIcon) {
             baseApplicationInfo_->needAppDetail = false;
-            baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
+            baseApplicationInfo_->appDetailAbilityLibraryPath = InnerConstant::EMPTY_STRING;
         }
     }
 

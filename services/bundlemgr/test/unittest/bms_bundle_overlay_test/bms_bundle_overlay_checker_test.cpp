@@ -58,6 +58,7 @@ const int32_t NOT_EXIST_USERID = -5;
 const int32_t FOUR = 4;
 const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
+constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 } // namespace
 
 class BmsBundleOverlayCheckerTest : public testing::Test {
@@ -707,7 +708,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0100, Function | Small
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
 
-    applicationInfo.targetPriority = Constants::OVERLAY_MAXIMUM_PRIORITY + 1;
+    applicationInfo.targetPriority = OVERLAY_MAXIMUM_PRIORITY + 1;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);

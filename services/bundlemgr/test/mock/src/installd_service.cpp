@@ -31,6 +31,9 @@ using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr unsigned int INSTALLD_UMASK = 0000;
+}
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
     APP_LOGI("installd service instance is created");
@@ -63,7 +66,7 @@ bool InstalldService::Init()
         return false;
     }
     // installd service need mask 000
-    umask(Constants::INSTALLD_UMASK);
+    umask(INSTALLD_UMASK);
     hostImpl_ = new (std::nothrow) InstalldHostImpl();
     if (hostImpl_ == nullptr) {
         APP_LOGE("InstalldHostImpl Init failed");

@@ -73,15 +73,15 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
-const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
-const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
-const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
-const std::string LOG = "log";
-const std::string HSP_VERSION_PREFIX = "v";
-const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
-const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
-const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
-const std::string SKILL_URI_SCHEME_HTTPS = "https";
+constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+constexpr const char* LOG = "log";
+constexpr const char* HSP_VERSION_PREFIX = "v";
+constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -101,6 +101,7 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.mms",
     "com.ohos.FusionSearch"
 };
+constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -3097,7 +3098,7 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
                 continue;
             }
             std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-                            + Constants::DATA_EXTENSION_PATH
+                            + DATA_EXTENSION_PATH
                             + iter->second.bundleName + Constants::PATH_SEPARATOR
                             + iter->second.moduleName + Constants::PATH_SEPARATOR
                             + iter->second.name;
@@ -3173,7 +3174,7 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
         for (const std::string &oldModuleName : oldModuleNames) {
             if (newModules.find(oldModuleName) == newModules.end()) {
                 std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-                            + Constants::DATA_EXTENSION_PATH
+                            + DATA_EXTENSION_PATH
                             + oldInfo.GetBundleName() + Constants::PATH_SEPARATOR
                             + oldModuleName;
                 APP_LOGI("dir %{public}s need to be removed", dir.c_str());
@@ -3251,7 +3252,7 @@ void BaseBundleInstaller::CheckRemoveExtensionBundleDir(
         return;
     }
     std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-        + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName();
+        + DATA_EXTENSION_PATH + oldInfo.GetBundleName();
     if (isFeatureNeedUninstall_) {
         if (!oldInfo.GetAllExtensionDirs(userId_).empty()) {
             removeExtensionDirs_.clear();
@@ -3300,7 +3301,7 @@ void BaseBundleInstaller::CheckRemoveExtensionModuleDir(
         // current module need not to create extension dir
         if (!oldInfo.GetAllExtensionDirsInSpecifiedModule(curModuleName, userId_).empty()) {
             std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-                    + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName()
+                    + DATA_EXTENSION_PATH + oldInfo.GetBundleName()
                     + curModuleName;
             APP_LOGI("need to remove extension dir for module, dir is %{public}s", dir.c_str());
             removeExtensionDirs_.emplace_back(dir);
@@ -3326,7 +3327,7 @@ void BaseBundleInstaller::CheckRemoveExtensionModuleDirWhenUpgrade(const std::ve
     }
     for (const std::string &moduleName : oldModules) {
         std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-                    + Constants::DATA_EXTENSION_PATH + oldInfo.GetBundleName()
+                    + DATA_EXTENSION_PATH + oldInfo.GetBundleName()
                     + moduleName;
         if (oldInfo.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_).empty()) {
             APP_LOGI("dir %{public}s not existed", dir.c_str());
@@ -3363,7 +3364,7 @@ void BaseBundleInstaller::RemoveBundleExtensionDir(const std::string &bundleName
         return;
     }
     std::string dir =  Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
-        + Constants::DATA_EXTENSION_PATH + bundleName;
+        + DATA_EXTENSION_PATH + bundleName;
     auto result = InstalldClient::GetInstance()->RemoveDir(dir);
     if (result != ERR_OK) {
         APP_LOGW("remove extension dir %{public}s failed", dir.c_str());

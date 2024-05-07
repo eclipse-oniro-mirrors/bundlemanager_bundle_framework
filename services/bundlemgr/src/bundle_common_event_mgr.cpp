@@ -37,6 +37,8 @@ constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
 constexpr const char* APP_INDEX = "appIndex";
 const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
+constexpr const char* UID = "uid";
+constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -80,7 +82,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     element.SetModuleName(installResult.modulePackage);
     element.SetAbilityName(installResult.abilityName);
     want.SetElement(element);
-    want.SetParam(Constants::UID, installResult.uid);
+    want.SetParam(UID, installResult.uid);
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     want.SetParam(Constants::USER_ID, bundleUserId);
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
@@ -140,10 +142,10 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     element.SetBundleName(info.GetBundleName());
     element.SetAbilityName(info.GetMainAbility());
     want.SetElement(element);
-    want.SetParam(Constants::UID, uid);
+    want.SetParam(UID, uid);
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(Constants::ABILITY_NAME, info.GetMainAbility());
-    want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
+    want.SetParam(SANDBOX_APP_INDEX, info.GetAppIndex());
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
     want.SetParam(APP_ID, info.GetAppId());
     EventFwk::CommonEventData commonData { want };
@@ -163,7 +165,7 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     element.SetBundleName(bundleName);
     element.SetModuleName(moduleName);
     want.SetElement(element);
-    want.SetParam(Constants::UID, uid);
+    want.SetParam(UID, uid);
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(Constants::OVERLAY_STATE, isEnabled);
     EventFwk::CommonEventData commonData { want };
@@ -190,7 +192,7 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     want.SetAction(DISPOSED_RULE_ADDED);
 
     want.SetParam(Constants::USER_ID, userId);
-    want.SetParam(Constants::APP_ID, appId);
+    want.SetParam(APP_ID, appId);
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
@@ -204,7 +206,7 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     OHOS::AAFwk::Want want;
     want.SetAction(DISPOSED_RULE_DELETED);
     want.SetParam(Constants::USER_ID, userId);
-    want.SetParam(Constants::APP_ID, appId);
+    want.SetParam(APP_ID, appId);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
