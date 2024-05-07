@@ -1110,6 +1110,54 @@ HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1200, Function | Sma
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfos_1300
+ * @tc.name: test implicit query extensionAbilityInfos with skill flag
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos with skill flag by implicit query
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1300, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, GET_EXTENSION_INFO_WITH_SKILL, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfos_1400
+ * @tc.name: test explicit query extensionAbilityInfos with skill flag
+ * @tc.desc: 1.install the hap
+ *           2.query extensionAbilityInfos with skill flag by explicit query
+ */
+HWTEST_F(BmsBundleInstallerTest, QueryExtensionAbilityInfos_1400, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetElementName(SYSTEMFIEID_NAME, "FormName");
+    std::vector<ExtensionAbilityInfo> infos;
+    bool result = dataMgr->QueryExtensionAbilityInfos(want, GET_EXTENSION_INFO_WITH_SKILL, USERID, infos);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
  * @tc.number: GetBundleStats_001
  * @tc.name: test the GetBundleStats
  * @tc.desc: 1.install the hap
