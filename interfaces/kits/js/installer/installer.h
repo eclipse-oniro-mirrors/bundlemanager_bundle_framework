@@ -79,8 +79,8 @@ struct ExtResourceCallbackInfo : public BaseCallbackInfo {
 struct CreateAppTwinCallbackInfo : public BaseCallbackInfo {
     explicit CreateAppTwinCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
-    int32_t userId = 0;
-    int32_t appIndex = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int32_t appIndex = Constants::INITIAL_APP_INDEX;
 };
 
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);

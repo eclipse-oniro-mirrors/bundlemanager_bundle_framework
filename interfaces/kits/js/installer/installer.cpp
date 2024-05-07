@@ -1635,6 +1635,16 @@ void CreateAppTwinComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<CreateAppTwinCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
+void ParseAppTwinParam(napi_env env, napi_value args, int32_t &userId, int32_t &appIndex)
+{
+    if (!ParseUserId(env, args, userId)) {
+        APP_LOGI("parse userId failed. assign a default value = %{public}d.", userId);
+    }
+    if (!ParseAppIndex(env, args, appIndex)) {
+        APP_LOGI("parse appIndex failed. assign a default value = %{public}d.", appIndex);
+    }
+}
+
 napi_value CreateAppTwin(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin to createAppTwin");
@@ -1660,28 +1670,14 @@ napi_value CreateAppTwin(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType != napi_object) {
-                APP_LOGE("Parse CreateAppTwinParam failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CREATE_APP_TWIN_PARAM, TYPE_OBJECT);
-                return nullptr;
-            }
-            if (!ParseUserId(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("parse userId failed. assign a default value.");
-                asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-            }
-            if (!ParseAppIndex(env, args[i], asyncCallbackInfo->appIndex)) {
-                APP_LOGW("parse appIndex failed. assign a default value.");
-                asyncCallbackInfo->appIndex = 0;
+            if (valueType == napi_object) {
+                ParseAppTwinParam(env, args[i], asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
             }
         } else {
             APP_LOGE("The number of parameters is incorrect.");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
-    }
-    if (argc == ARGS_SIZE_ONE) {
-        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-        asyncCallbackInfo->appIndex = 0;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppTwinCallbackInfo>(
         env, asyncCallbackInfo.get(), CREATE_APP_TWIN, CreateAppTwinExec, CreateAppTwinComplete);
