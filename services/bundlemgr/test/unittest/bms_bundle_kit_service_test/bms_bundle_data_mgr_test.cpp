@@ -3708,15 +3708,16 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest 
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0003, Function | SmallTest | Level0)
 {
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
 
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
-    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
 
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
