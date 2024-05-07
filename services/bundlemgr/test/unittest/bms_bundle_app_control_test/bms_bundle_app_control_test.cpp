@@ -1463,7 +1463,9 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4700, Function | Sma
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4800, Function | SmallTest | Level1)
 {
     auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
     auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
     AppRunningControlRuleResult ruleResult;
     appControlManager->appRunningControlRuleResult_["1"] = ruleResult;
     appControlManager->appRunningControlRuleResult_["100"] = ruleResult;
