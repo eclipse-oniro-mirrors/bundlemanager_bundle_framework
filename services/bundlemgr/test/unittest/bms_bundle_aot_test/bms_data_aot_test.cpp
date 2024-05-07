@@ -738,7 +738,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     AOTHandler::GetInstance().ResetAOTFlags();
-
     AOTHandler::GetInstance().OTACompileInternal();
 
     std::string compileMode;
