@@ -1742,32 +1742,10 @@ void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, n
         env, routerItem.buildFunction.c_str(), NAPI_AUTO_LENGTH, &nBuildFunction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUILD_FUNCTION, nBuildFunction));
 
-    napi_value nDataArray;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDataArray));
-    ConvertRouterDataInfos(env, routerItem.data, nDataArray);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nDataArray));
-}
-
-void CommonFunc::ConvertRouterDataInfos(napi_env env,
-    const std::map<std::string, std::string> &data, napi_value objInfos)
-{
-    size_t index = 0;
-    for (const auto &item : data) {
-        napi_value objInfo = nullptr;
-        napi_create_object(env, &objInfo);
-
-        napi_value nKey;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, KEY, nKey));
-
-        napi_value nValue;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, VALUE, nValue));
-
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
-    }
+    napi_value nData;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, routerItem.data.c_str(), NAPI_AUTO_LENGTH, &nData));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nData));
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)
