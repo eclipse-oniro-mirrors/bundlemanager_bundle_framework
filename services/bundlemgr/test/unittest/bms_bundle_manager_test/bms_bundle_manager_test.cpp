@@ -80,6 +80,7 @@ const std::string OVER_MAX_SIZE(300, 'x');
 const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
 const std::string EMPTY_STRING = "";
 const std::string MENU_VALUE = "value";
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const size_t NUMBER_ONE = 1;
 const uint32_t BUNDLE_BACKUP_VERSION = 1000000;
 const uint32_t BUNDLE_BACKUP_LABEL_ID = 16777216;
@@ -1906,7 +1907,7 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0004, Function | SmallTest | Level1)
 {
     struct Skill skill;
     skill.actions.emplace_back("action001");
-    bool ret = skill.MatchType(Constants::TYPE_ONLY_MATCH_WILDCARD, "*/*");
+    bool ret = skill.MatchType(TYPE_ONLY_MATCH_WILDCARD, "*/*");
     EXPECT_EQ(ret, true);
 }
 

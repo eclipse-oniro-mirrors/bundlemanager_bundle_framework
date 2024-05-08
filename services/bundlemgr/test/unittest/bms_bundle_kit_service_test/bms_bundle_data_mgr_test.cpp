@@ -211,9 +211,11 @@ const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
 const int32_t GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040;
+constexpr int32_t MAX_APP_UID = 65535;
 const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
 const std::string ENTRY = "entry";
 const std::string FEATURE = "feature";
+constexpr const char* OVERLAY_STATE = "overlayState";
 }  // namespace
 
 struct Param {
@@ -1052,7 +1054,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0200, Function | SmallTest 
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::DATA_ABILITY_URI_SEPARATOR, Constants::ALL_USERID, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1069,7 +1071,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0300, Function | SmallTest 
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = bundleMgrHostImpl_->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::DATA_ABILITY_URI_SEPARATOR, Constants::ALL_USERID, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 /**
@@ -1098,7 +1100,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0200, Function | SmallTest
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::DATA_ABILITY_URI_SEPARATOR, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1753,7 +1755,7 @@ HWTEST_F(BmsBundleDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Le
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = BUNDLE_NAME_TEST;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    GetBundleDataMgr()->bundleIdMap_.emplace(Constants::MAX_APP_UID, BUNDLE_TEST1);
+    GetBundleDataMgr()->bundleIdMap_.emplace(MAX_APP_UID, BUNDLE_TEST1);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     bool res = GetBundleDataMgr()->GenerateUidAndGid(innerBundleUserInfo);
     EXPECT_EQ(res, false);
@@ -2703,7 +2705,7 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0500, Function | MediumTest 
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
     AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::OVERLAY_STATE;
+    abilityInfo.name = OVERLAY_STATE;
     userInfo.bundleName = MODULE_NAME1;
     info.innerBundleUserInfos_.try_emplace(MODULE_NAME1, userInfo);
     info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);

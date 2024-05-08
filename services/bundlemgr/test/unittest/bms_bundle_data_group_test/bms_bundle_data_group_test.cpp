@@ -52,6 +52,7 @@ constexpr int32_t TEST_GROUP_INDEX_TWO = 2;
 constexpr int32_t TEST_GROUP_INDEX_THREE = 3;
 constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
 const int32_t WAIT_TIME = 5;
+constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 }  // namespace
 
 class BmsBundleDataGroupTest : public testing::Test {
@@ -530,7 +531,7 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupUuidAndUid_0010, Function | Sm
     dataGroupIndexMap.emplace(DATA_GROUP_ID_TEST_ONE, std::make_pair(TEST_GROUP_INDEX_ONE, DATA_GROUP_UUID_ONE));
     dataGroupIndexMap.emplace(DATA_GROUP_ID_TEST_TWO, std::make_pair(TEST_GROUP_INDEX_TWO, DATA_GROUP_UUID_TWO));
 
-    int32_t uid = USERID * Constants::BASE_USER_RANGE + TEST_GROUP_INDEX_THREE + Constants::DATA_GROUP_UID_OFFSET;
+    int32_t uid = USERID * Constants::BASE_USER_RANGE + TEST_GROUP_INDEX_THREE + DATA_GROUP_UID_OFFSET;
     dataMgr->GenerateDataGroupUuidAndUid(dataGroupInfo, USERID, dataGroupIndexMap);
     EXPECT_EQ(dataGroupInfo.uid, uid);
     EXPECT_EQ(dataGroupInfo.gid, uid);

@@ -27,13 +27,14 @@ namespace {
 constexpr int32_t INITIAL_USER_ID = -1;
 const std::string DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
 const std::string BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
+constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 }
 DefaultAppRdb::DefaultAppRdb()
 {
     LOG_D(BMS_TAG_DEFAULT_APP, "create DefaultAppRdb.");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = Constants::DEFAULT_APP_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = DEFAULT_APP_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
     LoadDefaultApplicationConfig();

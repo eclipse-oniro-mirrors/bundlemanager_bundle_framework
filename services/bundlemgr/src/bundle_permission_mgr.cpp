@@ -29,6 +29,8 @@ namespace {
 // pre bundle profile
 constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_permissions.json";
 constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
+// install list permissions file
+constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 const int32_t BASE_API_VERSION = 1000;
 }
 
@@ -49,7 +51,7 @@ bool BundlePermissionMgr::Init()
         permissionFileList.push_back(item + INSTALL_LIST_PERMISSIONS_CONFIG);
     }
 #else
-    permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
+    permissionFileList.emplace_back(INSTALL_LIST_PERMISSIONS_FILE_PATH);
 #endif
     BundleParser bundleParser;
     std::set<DefaultPermission> permissions;
@@ -273,7 +275,8 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
             }
         } else {
             APP_LOGE("request permission name : %{public}s is not exit in AccessTokenMgr", req.c_str());
-            bundleInfo.reqPermissionStates.emplace_back(Constants::PERMISSION_NOT_GRANTED);
+            bundleInfo.reqPermissionStates.emplace_back(
+                static_cast<int32_t>(AccessToken::PermissionState::PERMISSION_DENIED));
         }
     }
     return true;

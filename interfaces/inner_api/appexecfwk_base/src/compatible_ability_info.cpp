@@ -25,6 +25,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr int MAX_DEVICETYPE_SIZE = 50;
+}
 using namespace Constants;
 bool CompatibleAbilityInfo::ReadFromParcel(Parcel& parcel)
 {
@@ -79,7 +82,7 @@ bool CompatibleAbilityInfo::ReadFromParcel(Parcel& parcel)
 
     int32_t deviceTypeSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypeSize);
-    if (deviceTypeSize > Constants::MAX_DEVICETYPE_SIZE) {
+    if (deviceTypeSize > MAX_DEVICETYPE_SIZE) {
         APP_LOGE("device type size is overflow");
         return false;
     }

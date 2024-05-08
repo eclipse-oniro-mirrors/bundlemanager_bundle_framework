@@ -71,6 +71,9 @@ constexpr uint32_t TYPE_HARMONEY_APP = 1;
 constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
 constexpr uint32_t DEFAULT_VALUE = -1;
 constexpr uint32_t DEFAULT_EMBEDDED_VALUE = 0;
+constexpr int32_t DMS_UID = 5522;
+// sa id
+constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
@@ -410,10 +413,10 @@ void BundleConnectAbilityMgr::LoadDownloadService() const
         LOG_E(BMS_TAG_FREE_INSTALL, "Create load callback failed");
         return;
     }
-    auto ret = systemAbilityMgr->LoadSystemAbility(Constants::DOWNLOAD_SERVICE_SA_ID, loadCallback);
+    auto ret = systemAbilityMgr->LoadSystemAbility(DOWNLOAD_SERVICE_SA_ID, loadCallback);
     if (ret != 0) {
         LOG_E(BMS_TAG_FREE_INSTALL, "Load system ability %{public}d failed with %{public}d.",
-            Constants::DOWNLOAD_SERVICE_SA_ID, ret);
+            DOWNLOAD_SERVICE_SA_ID, ret);
         return;
     }
     LOG_I(BMS_TAG_FREE_INSTALL, "LoadDownloadService end");
@@ -861,7 +864,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
-    if (callingUid == Constants::DMS_UID) {
+    if (callingUid == DMS_UID) {
         callingAppids.push_back(want.GetStringParam(PARAM_FREEINSTALL_APPID));
         callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
     } else {

@@ -19,12 +19,15 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
+}
 PreInstallDataStorageRdb::PreInstallDataStorageRdb()
 {
     APP_LOGI("PreInstallDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = Constants::PRE_BUNDLE_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = PRE_BUNDLE_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }

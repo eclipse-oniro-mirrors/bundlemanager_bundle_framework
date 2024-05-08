@@ -29,7 +29,7 @@ struct BmsRdbConfig {
     std::string tableName;
     std::string createTableSql;
     std::vector<std::string> insertColumnSql;
-    int32_t version { Constants::BUNDLE_RDB_VERSION };
+    int32_t version { 1 };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

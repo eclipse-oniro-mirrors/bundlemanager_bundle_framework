@@ -58,6 +58,7 @@ const int32_t USERID = 100;
 const uint32_t ZERO = 0;
 const uint32_t INVALID_ACCESSTOKENID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t BUNDLE_RDB_VERSION = 1;
 // test hap with so
 const std::string BUNDLE_NAME_WITH_LIBS = "com.example.nativelibs";
 const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_01 =
@@ -572,13 +573,13 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0003, Function | SmallT
 HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0004, Function | SmallTest | Level0)
 {
     DistributedBundleInfo distributedBundleInfo;
-    distributedBundleInfo.version = Constants::BUNDLE_RDB_VERSION;
+    distributedBundleInfo.version = BUNDLE_RDB_VERSION;
     distributedBundleInfo.bundleName = "bundleName";
-    distributedBundleInfo.versionCode = Constants::BUNDLE_RDB_VERSION;
+    distributedBundleInfo.versionCode = BUNDLE_RDB_VERSION;
     distributedBundleInfo.versionName = "versionName";
-    distributedBundleInfo.minCompatibleVersion = Constants::BUNDLE_RDB_VERSION;
-    distributedBundleInfo.targetVersionCode = Constants::BUNDLE_RDB_VERSION;
-    distributedBundleInfo.compatibleVersionCode = Constants::BUNDLE_RDB_VERSION;
+    distributedBundleInfo.minCompatibleVersion = BUNDLE_RDB_VERSION;
+    distributedBundleInfo.targetVersionCode = BUNDLE_RDB_VERSION;
+    distributedBundleInfo.compatibleVersionCode = BUNDLE_RDB_VERSION;
     distributedBundleInfo.appId = "appId";
     distributedBundleInfo.enabled = false;
 
@@ -586,13 +587,13 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0004, Function | SmallT
     bool ret = distributedBundleInfo.Marshalling(parcel);
     EXPECT_TRUE(ret);
     auto unmarshalledResult = DistributedBundleInfo::Unmarshalling(parcel);
-    EXPECT_EQ(unmarshalledResult->version, Constants::BUNDLE_RDB_VERSION);
+    EXPECT_EQ(unmarshalledResult->version, BUNDLE_RDB_VERSION);
     EXPECT_EQ(unmarshalledResult->bundleName, "bundleName");
-    EXPECT_EQ(unmarshalledResult->versionCode, Constants::BUNDLE_RDB_VERSION);
+    EXPECT_EQ(unmarshalledResult->versionCode, BUNDLE_RDB_VERSION);
     EXPECT_EQ(unmarshalledResult->versionName, "versionName");
-    EXPECT_EQ(unmarshalledResult->minCompatibleVersion, Constants::BUNDLE_RDB_VERSION);
-    EXPECT_EQ(unmarshalledResult->targetVersionCode, Constants::BUNDLE_RDB_VERSION);
-    EXPECT_EQ(unmarshalledResult->compatibleVersionCode, Constants::BUNDLE_RDB_VERSION);
+    EXPECT_EQ(unmarshalledResult->minCompatibleVersion, BUNDLE_RDB_VERSION);
+    EXPECT_EQ(unmarshalledResult->targetVersionCode, BUNDLE_RDB_VERSION);
+    EXPECT_EQ(unmarshalledResult->compatibleVersionCode, BUNDLE_RDB_VERSION);
     EXPECT_EQ(unmarshalledResult->appId, "appId");
     EXPECT_EQ(unmarshalledResult->enabled, false);
 }

@@ -245,6 +245,7 @@ const std::string URI_UTD = "utd";
 const std::string URI_LINK_FEATURE = "login";
 const std::string SKILL_PERMISSION = "permission1";
 const int32_t MAX_FILE_SUPPORTED = 1;
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -5904,7 +5905,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_TYPE_WILDCARD_001, Function | Small
     skill.uris.emplace_back(skillUri);
     // success testCase
     Want want;
-    want.SetType(Constants::TYPE_ONLY_MATCH_WILDCARD);
+    want.SetType(TYPE_ONLY_MATCH_WILDCARD);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
     // failed testCase

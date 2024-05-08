@@ -108,6 +108,12 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH }
 };
 const std::string SCHEME_END = "://";
+constexpr const char* PARAM_URI_SEPARATOR = ":///";
+constexpr const char* URI_SEPARATOR = "://";
+constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
+constexpr int32_t INVALID_BUNDLEID = -1;
+constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
+constexpr int32_t MAX_APP_UID = 65535;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -118,7 +124,7 @@ BundleDataMgr::BundleDataMgr()
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
-    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= Constants::MAX_APP_UID) {
+    if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
     }
     APP_LOGI("BundleDataMgr instance is created");
@@ -1876,11 +1882,11 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
+    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -1930,11 +1936,11 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR);
+    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::DATA_ABILITY_URI_SEPARATOR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -3751,7 +3757,7 @@ bool BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo)
         return false;
     }
 
-    int32_t bundleId = Constants::INVALID_BUNDLEID;
+    int32_t bundleId = INVALID_BUNDLEID;
     if (!GenerateBundleId(innerBundleUserInfo.bundleName, bundleId)) {
         APP_LOGW("Generate bundleId failed, bundleName: %{public}s", innerBundleUserInfo.bundleName.c_str());
         return false;
@@ -3791,7 +3797,7 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
         }
     }
 
-    if (bundleIdMap_.rbegin()->first == Constants::MAX_APP_UID) {
+    if (bundleIdMap_.rbegin()->first == MAX_APP_UID) {
         APP_LOGW("the bundleId exceeding the maximum value, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
@@ -5020,15 +5026,15 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
     std::string convertUri = uri;
     // example of valid param uri : fileShare:///com.example.FileShare/person/10
     // example of convertUri : fileShare://com.example.FileShare
-    size_t schemePos = uri.find(Constants::PARAM_URI_SEPARATOR);
+    size_t schemePos = uri.find(PARAM_URI_SEPARATOR);
     if (schemePos != uri.npos) {
         // 1. cut string
-        size_t cutPos = uri.find(Constants::SEPARATOR, schemePos + Constants::PARAM_URI_SEPARATOR_LEN);
+        size_t cutPos = uri.find(Constants::PATH_SEPARATOR, schemePos + PARAM_URI_SEPARATOR_LEN);
         if (cutPos != uri.npos) {
             convertUri = uri.substr(0, cutPos);
         }
         // 2. replace :/// with ://
-        convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN, Constants::URI_SEPARATOR);
+        convertUri.replace(schemePos, PARAM_URI_SEPARATOR_LEN, URI_SEPARATOR);
     } else {
         if (convertUri.compare(0, DATA_PROXY_URI_PREFIX_LEN, DATA_PROXY_URI_PREFIX) != 0) {
             LOG_W(BMS_TAG_QUERY_EXTENSION, "invalid uri : %{private}s", uri.c_str());
@@ -6254,14 +6260,14 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
         indexList.emplace(iter->second.first);
     }
     int32_t index = DATA_GROUP_INDEX_START;
-    for (int32_t i = DATA_GROUP_INDEX_START; i < Constants::DATA_GROUP_UID_OFFSET; i++) {
+    for (int32_t i = DATA_GROUP_INDEX_START; i < DATA_GROUP_UID_OFFSET; i++) {
         if (indexList.find(i) == indexList.end()) {
             index = i;
             break;
         }
     }
 
-    int32_t uid = userId * Constants::BASE_USER_RANGE + index + Constants::DATA_GROUP_UID_OFFSET;
+    int32_t uid = userId * Constants::BASE_USER_RANGE + index + DATA_GROUP_UID_OFFSET;
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
@@ -6288,7 +6294,7 @@ void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
         auto iter = dataGroupIndexMap.find(groupId);
         if (iter != dataGroupIndexMap.end()) {
             dataGroupInfo.uuid = iter->second.second;
-            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + Constants::DATA_GROUP_UID_OFFSET;
+            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + DATA_GROUP_UID_OFFSET;
             dataGroupInfo.uid = uid;
             dataGroupInfo.gid = uid;
             innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
@@ -6306,7 +6312,7 @@ void BundleDataMgr::GetDataGroupIndexMap(
         for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
             for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &dataGroupInfo) {
                 int32_t index = dataGroupInfo.uid - dataGroupInfo.userId * Constants::BASE_USER_RANGE
-                    - Constants::DATA_GROUP_UID_OFFSET;
+                    - DATA_GROUP_UID_OFFSET;
                 dataGroupIndexMap[dataGroupInfo.dataGroupId] =
                     std::pair<int32_t, std::string>(index, dataGroupInfo.uuid);
             });

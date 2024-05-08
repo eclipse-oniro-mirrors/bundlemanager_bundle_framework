@@ -86,6 +86,7 @@ const std::string INVALID_TYPE5 = "abc/*";
 const std::string INVALID_TYPE6 = "*/*";
 const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
 const std::string EMAIL_SCHEME = "mailto";
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 const nlohmann::json DEFAULT_CONFIG = R"(
 [{
     "bundleName": "bundleName",
@@ -1137,7 +1138,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5100, Function | SmallTest
     EXPECT_NE(dataMgr, nullptr);
 
     Want want;
-    want.SetAction(Constants::ACTION_VIEW_DATA);
+    want.SetAction(ACTION_VIEW_DATA);
     want.SetType(DEFAULT_FILE_TYPE_VIDEO_MP4);
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfos;
@@ -1251,7 +1252,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
     AAFwk::Want want;
     AAFwk::Want want1;
     want1.ClearWant(&want);
-    want.SetAction(Constants::ACTION_VIEW_DATA);
+    want.SetAction(ACTION_VIEW_DATA);
     want.SetType(DEFAULT_APP_VIDEO);
 
     auto defaultAppProxy = GetDefaultAppProxy();
@@ -1521,7 +1522,7 @@ HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0200, Function | SmallTest | Lev
 {
     std::vector<Skill> skills;
     Skill skill;
-    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+    skill.actions.push_back(ACTION_VIEW_DATA);
 
     SkillUri uris;
     uris.type = "application/msword";

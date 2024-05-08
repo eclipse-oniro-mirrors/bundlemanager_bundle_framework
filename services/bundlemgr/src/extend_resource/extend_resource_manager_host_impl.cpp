@@ -38,6 +38,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
+constexpr const char* EXT_RESOURCE_FILE_SUFFIX = ".hsp";
 
 bool IsFileNameValid(const std::string &fileName)
 {
@@ -85,7 +86,7 @@ void ConvertToExtendResourceInfo(
     extendResourceInfo.moduleName = innerBundleInfo.GetCurModuleName();
     extendResourceInfo.iconId = innerBundleInfo.GetIconId();
     std::string path = BuildResourcePath(bundleName);
-    path.append(extendResourceInfo.moduleName).append(Constants::EXT_RESOURCE_FILE_SUFFIX);
+    path.append(extendResourceInfo.moduleName).append(EXT_RESOURCE_FILE_SUFFIX);
     extendResourceInfo.filePath = path;
 }
 }
@@ -149,7 +150,7 @@ bool ExtendResourceManagerHostImpl::CheckFileParam(const std::string &filePath)
         APP_LOGE("CheckFile filePath(%{public}s) failed due to invalid path", filePath.c_str());
         return false;
     }
-    if (!BundleUtil::CheckFileType(filePath, Constants::EXT_RESOURCE_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(filePath, EXT_RESOURCE_FILE_SUFFIX)) {
         APP_LOGE("CheckFile filePath(%{public}s) failed due to suffix error.", filePath.c_str());
         return false;
     }
@@ -653,7 +654,7 @@ ErrCode ExtendResourceManagerHostImpl::CreateFd(
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
-    if (!BundleUtil::CheckFileType(fileName, Constants::EXT_RESOURCE_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(fileName, EXT_RESOURCE_FILE_SUFFIX)) {
         APP_LOGE("not hsp file.");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
