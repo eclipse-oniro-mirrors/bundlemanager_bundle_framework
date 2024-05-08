@@ -1,0 +1,72 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../../appexecfwk.gni")
+
+ohos_shared_library("cj_bundle_manager") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    "src",
+    "${base_path}/include",
+    "${kits_path}/js/bundle_manager",
+    "${kits_path}/js/common",
+  ]
+
+  if (!defined(defines)) {
+    defines = []
+  }
+
+  if (product_name != "ohos-sdk") {
+    sources = [
+      "src/bundle_manager.cpp",
+      "src/bundle_manager_convert.cpp",
+      "src/bundle_manager_ffi.cpp",
+    ]
+
+    deps = [
+      "${base_path}:appexecfwk_base",
+      "${common_path}:libappexecfwk_common",
+      "${core_path}:appexecfwk_core",
+      "${kits_path}/js/common:bundle_napi_common",
+    ]
+
+    external_deps = [
+      "ability_base:want",
+      "c_utils:utils",
+      "hilog:libhilog",
+      "ipc:ipc_core",
+      "napi:ace_napi",
+      "napi:cj_bind_ffi",
+    ]
+  } else {
+    defines += [ "PREVIEWER" ]
+    sources = [ "src/bundle_manager_mock.cpp" ]
+  }
+
+  if (current_os == "ohos") {
+    defines += [ "OHOS_PLATFORM" ]
+  }
+
+  if (current_os == "mingw") {
+    defines += [ "WINDOWS_PLATFORM" ]
+  }
+
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
