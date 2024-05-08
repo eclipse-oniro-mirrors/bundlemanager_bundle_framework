@@ -34,7 +34,7 @@ constexpr const char* ERR_MSG_BUNDLE_NOT_EXIST = "The specified bundle is not fo
 constexpr const char* ERR_MSG_MODULE_NOT_EXIST = "The specified module is not found.";
 constexpr const char* ERR_MSG_ABILITY_NOT_EXIST = "The specified ability is not found.";
 constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not found.";
-constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is empty string.";
+constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is an empty string.";
 constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission is not found.";
 constexpr const char* ERR_MSG_DEVICE_ID_NOT_EXIST = "The specified deviceId is not found.";
 constexpr const char* ERR_MSG_INSTALL_PARSE_FAILED = "Failed to install the hap since the hap fails to be parsed.";
@@ -49,9 +49,9 @@ constexpr const char* ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT =
 constexpr const char* ERR_MSG_INSTALL_VERSION_DOWNGRADE =
     "Failed to install the hap since the version of the newly installed hap is too early.";
 constexpr const char* ERR_MSG_INSTALL_DEPENDENT_MODULE_NOT_EXIST =
-    "Failed to install because the dependent module does not exist.";
+    "Failed to install the HAP or HSP because the dependent module does not exist.";
 constexpr const char* ERR_MSG_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED =
-    "Failed to install because not allowed to share app library";
+    "Failed to install the HSP due to the lack of required permission.";
 constexpr const char* ERR_MSG_UNINSTALL_PREINSTALL_APP_FAILED = "The preinstalled app cannot be uninstalled.";
 constexpr const char* ERR_MSG_BUNDLE_NOT_PREINSTALLED =
     "Failed to uninstall updates because the HAP is not pre-installed.";
@@ -72,7 +72,7 @@ constexpr const char* ERROR_ABILITY_AND_TYPE_MISMATCH_MSG = "The specified abili
 constexpr const char* ERROR_MSG_CLEAR_CACHE_FILES_UNSUPPORTED =
     "The specified bundle does not support clearing cache files.";
 constexpr const char* ERROR_MSG_INSTALL_HAP_OVERLAY_CHECK_FAILED =
-    "Failed to install the HAP because the overlay check of the HAP is failed";
+    "Failed to install the HAP because the overlay check of the HAP failed.";
 constexpr const char* ERROR_MSG_SPECIFIED_BUNDLE_NOT_OVERLAY_BUNDLE =
     "The specified bundleName is not overlay bundle.";
 constexpr const char* ERROR_MSG_SPECIFIED_MODULE_NOT_OVERLAY_MODULE =
@@ -82,13 +82,13 @@ constexpr const char* ERROR_MSG_SPECIFIED_MODULE_IS_OVERLAY_MODULE =
 constexpr const char* ERROR_MSG_SPECIFIED_BUNDLE_IS_OVERLAY_BUNDLE =
     "The specified bundle is overlay bundle.";
 constexpr const char* ERROR_MSG_SHARE_APP_LIBRARY_IS_RELIED =
-    "The specified shared library is dependened.";
+    "The version of the shared bundle is dependent on other applications.";
 constexpr const char* ERROR_MSG_SHARE_APP_LIBRARY_IS_NOT_EXIST =
     "The specified shared library is not exist";
 constexpr const char* ERR_MSG_UNINSTALL_SHARED_LIBRARY =
     "The specified bundle is shared library";
 constexpr const char* ERR_MSG_DISALLOW_INSTALL =
-    "Failed to install because enterprise device management disallow install";
+    "Failed to install the HAP because enterprise device management disallow install.";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
     "The uri in data proxy is wrong";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
@@ -96,30 +96,30 @@ constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
 constexpr const char* ERR_MSG_WRONG_MODE_ISOLATION =
     "Failed to install the HAP because the isolationMode configured is not supported";
 constexpr const char* ERR_MSG_DISALLOW_UNINSTALL =
-    "Failed to uninstall because enterprise device management disallow uninstall";
+    "Failed to uninstall the HAP because enterprise device management disallow uninstall.";
 constexpr const char* ERR_MSG_ALREADY_EXIST =
     "Failed to install the HAP because the VersionCode to be updated is not greater than the current VersionCode";
 constexpr const char* ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG =
     "The input source file is not ZIP format or damaged.";
 constexpr const char* ERR_MSG_CODE_SIGNATURE_FAILED =
-    "The specified code-signature file or corresponding module are incorrect.";
+    "Failed to install the HAP because the code signature verification failed.";
 constexpr const char* ERR_MSG_SELF_UPDATE_NOT_MDM =
-    "Failed to install the HAP because the distribution type of caller application is not enterprise_mdm.";
+    "Failed to install the HAP because the distribution type of the caller application is not enterprise_mdm.";
 constexpr const char* ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME =
     "Failed to install the HAP because the bundleName is different from the bundleName of the caller application.";
 constexpr const char* ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED =
-    "Failed to install the HAP because enterprise normal/mdm bundle cannot be installed on non-enterprise device.";
+    "Failed to install the HAP because an enterprise normal/MDM bundle cannot be installed on non-enterprise device.";
 constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
-    "Failed to install the HAP because debug bundle cannot be installed under non-developer mode.";
-constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify abc.";
-constexpr const char* ERR_MSG_ERROR_DELETE_ABC = "Failed to delete abc.";
-constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_ADD_ERROR = "Failed to add extend resource.";
-constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_REMOVE_ERROR = "Failed to remove extend resource.";
-constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_GET_ERROR = "Failed to get extend resource.";
-constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR = "Failed to enable dynamic icon.";
-constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR = "Failed to disable dynamic icon.";
-constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR = "Failed to get dynamic icon.";
-constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "Not app gallery call.";
+    "Failed to install the HAP because a debug bundle can be installed only in developer mode.";
+constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify the abc file.";
+constexpr const char* ERR_MSG_ERROR_DELETE_ABC = "Failed to delete the abc file.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_ADD_ERROR = "Failed to add extended resources.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_REMOVE_ERROR = "Failed to remove extended resources.";
+constexpr const char* ERR_MSG_ERROR_EXT_RESOURCE_GET_ERROR = "Failed to obtain extended resources.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_ENABLE_ERROR = "Failed to enable the dynamic icon.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_DISABLE_ERROR = "Failed to disable the dynamic icon.";
+constexpr const char* ERR_MSG_ERROR_DYNAMIC_ICON_GET_ERROR = "Failed to obtain the dynamic icon.";
+constexpr const char* ERROR_MSG_NOT_APP_GALLERY_CALL = "The caller is not AppGallery.";
 constexpr const char* ERROR_MSG_INSTALL_PERMISSION_CHECK_ERROR =
     "Failed to install the HAP because the HAP requests wrong permissions.";
 constexpr const char* ERR_MSG_INVALID_LINK = "The specified link is invalid.";
@@ -130,9 +130,9 @@ constexpr const char* ERR_MSG_INVALID_DEVELOPER_ID =
 constexpr const char* ERR_MSG_ENUM_EROOR =
     "Parameter error. The value of $ is not a valid enum $.";
 constexpr const char* ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED =
-    "The specified application can not be uninstalled.";
+    "The specified application cannot be uninstalled.";
 constexpr const char* ERR_MSG_START_SHORTCUT =
-    "Failed to start shortcut due to specified ability is not supported to be started.";
+    "The ability specified by want in the ShortcutInfo struct cannot be started.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
