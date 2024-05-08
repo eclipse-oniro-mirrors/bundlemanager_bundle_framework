@@ -2285,11 +2285,13 @@ ErrCode BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundle
         if (it == bundleInfos.end()) {
             BundleInfo bundleInfo;
             ErrCode ret = GetBundleInfoV9(bundleNames[i], flags, bundleInfo, userId);
-            if (ret != ERR_OK) {
+            if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
                 APP_LOGE("BatchGetBundleInfo failed, error code: %{public}d", ret);
                 return ret;
             }
-            bundleInfos.push_back(bundleInfo);
+            if (ret == ERR_OK) {
+                bundleInfos.push_back(bundleInfo);
+            }
         }
     }
     APP_LOGD("BatchGetBundleInfo successfully in user(%{public}d)", userId);
