@@ -735,11 +735,6 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
 {
-    ClearDataMgr();
-    ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    AOTHandler::GetInstance().ResetAOTFlags();
-    AOTHandler::GetInstance().OTACompileInternal();
-
     std::string compileMode;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
@@ -748,5 +743,10 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
 
     std::map<std::string, EventInfo> sysEventMap;
     AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    AOTHandler::GetInstance().ResetAOTFlags();
+    AOTHandler::GetInstance().OTACompileInternal();
 }
 } // OHOS
