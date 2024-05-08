@@ -199,7 +199,9 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .uid = uid,
             .accessTokenId = accessTokenId_,
             .isModuleUpdate = isModuleUpdate_,
-            .appDistributionType = appDistributionType_
+            .appDistributionType = appDistributionType_,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_
         };
         if (installParam.allUser) {
             AddBundleStatus(installRes);
@@ -240,7 +242,9 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
             .type = NotifyType::INSTALL,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .appDistributionType = appDistributionType_
+            .appDistributionType = appDistributionType_,
+            .bundleType = static_cast<int32_t>(bundleType_),
+            .atomicServiceModuleUpgrade = atomicServiceModuleUpgrade_
         };
         if (installParam.concentrateSendEvent) {
             AddNotifyBundleEvents(installRes);
@@ -274,7 +278,8 @@ ErrCode BaseBundleInstaller::Recover(
             .type = NotifyType::INSTALL,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .appDistributionType = appDistributionType_
+            .appDistributionType = appDistributionType_,
+            .bundleType = static_cast<int32_t>(bundleType_)
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -319,7 +324,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
-            .appId = uninstallBundleAppId_
+            .appId = uninstallBundleAppId_,
+            .bundleType = static_cast<int32_t>(bundleType_)
         };
 
         if (installParam.concentrateSendEvent) {
@@ -512,7 +518,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
-            .appId = uninstallBundleAppId_
+            .appId = uninstallBundleAppId_,
+            .bundleType = static_cast<int32_t>(bundleType_)
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -758,6 +765,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     CHECK_RESULT(result, "update MDM app failed %{public}d");
 
     if (isAppExist_) {
+        SetAtomicServiceModuleUpgrade(oldInfo);
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("old bundle info is shared package");
             return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
@@ -879,6 +887,19 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     return result;
 }
 
+void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo)
+{
+    std::vector<std::string> moduleNames;
+    oldInfo.GetModuleNames(moduleNames);
+    for (const std::string &moduleName : moduleNames) {
+        int32_t flag = static_cast<int32_t>(oldInfo.GetModuleUpgradeFlag(moduleName));
+        if (flag) {
+            atomicServiceModuleUpgrade_ = flag;
+            return;
+        }
+    }
+}
+
 ErrCode BaseBundleInstaller::CheckAppService(
     const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist)
 {
@@ -940,6 +961,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     if (inBundlePaths.empty() && sharedBundleInstaller.NeedToInstall()) {
         result = sharedBundleInstaller.Install(sysEventInfo_);
         sync();
+        bundleType_ = BundleType::SHARED;
         APP_LOGI("install cross-app shared bundles only, result : %{public}d", result);
         return result;
     }
@@ -1262,6 +1284,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGE("UninstallAndRecover bundle is not pre-install app.");
         return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
     }
+    bundleType_ = oldInfo.GetApplicationBundleType();
     uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -3068,6 +3091,9 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     if (ret != ERR_OK) {
         APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
         return ret;
+    }
+    if (!infos.empty()) {
+        bundleType_ = infos.begin()->second.GetApplicationBundleType();
     }
     GenerateOdid(infos, hapVerifyRes);
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
