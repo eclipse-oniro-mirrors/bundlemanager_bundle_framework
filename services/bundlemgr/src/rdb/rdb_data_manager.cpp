@@ -21,6 +21,7 @@
 #include "scope_guard.h"
 
 #include <thread>
+#include <unistd.h>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -57,6 +58,11 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
+    // for check db exist or not
+    if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
+        APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
+            rdbStoreConfig.GetPath().c_str(), errno);
+    }
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
@@ -66,6 +72,9 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         errCode);
     if (rdbStore_ != nullptr) {
         DelayCloseRdbStore();
+    }
+    if ((rdbStore_ == nullptr) || (errCode != NativeRdb::E_OK)) {
+        APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
     }
     return rdbStore_;
 }
