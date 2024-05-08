@@ -919,17 +919,6 @@ void CommonFunc::ConvertAbilitySkill(napi_env env, const Skill &skill, napi_valu
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, skill.domainVerify, &nDomainVerify));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "domainVerify", nDomainVerify));
     }
-
-    napi_value nPermissions;
-    size = skill.permissions.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermissions));
-    for (size_t idx = 0; idx < size; ++idx) {
-        napi_value nPermission;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, skill.permissions[idx].c_str(), NAPI_AUTO_LENGTH, &nPermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, idx, nPermission));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "permissions", nPermissions));
 }
 
 
