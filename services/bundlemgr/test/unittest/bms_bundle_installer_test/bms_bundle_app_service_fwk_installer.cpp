@@ -56,6 +56,7 @@ const std::string BUNDLE_NAME_TEST = "com.example.l3jsdemo";
 const std::string MODULE_NAME_TEST = "moduleName";
 const std::string MODULE_NAME_LIBRARY_ONE = "library_one";
 const std::string EMPTY_STRING = "";
+const std::string STRING = "string";
 const std::string HAP_PATH_TEST = "/data/test/resource/bms/app_service_test/right.hap";
 const std::string VERSION_ONE_LIBRARY_ONE_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library1.hsp";
 const std::string VERSION_ONE_LIBRARY_TWO_PATH = "/data/test/resource/bms/app_service_test/appService_v1_library2.hsp";
@@ -331,6 +332,10 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeInstall_0100, Function | Sma
     ClearDataMgr();
     res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    std::vector<std::string> emptyVector;
+    res = appServiceFwkInstaller.BeforeInstall(emptyVector, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     ResetDataMgr();
 }
 
@@ -1026,5 +1031,109 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveLowerVersionSoDir_0010, Func
     appServiceFwkInstaller.versionUpgrade_ = true;
     res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: MoveFiles_0100
+ * @tc.name: test function of MoveFiles
+ * @tc.desc: calling MoveFiles of InstalldOperator
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldOperator installdOperator;
+    bool ret = installdOperator.MoveFiles(TEST_CREATE_FILE_PATH, TEST_CREATE_FILE_PATH, true);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ExtractModule_0100
+ * @tc.name: test function of ExtractModule
+ * @tc.desc: 1. calling ExtractModule of AppServiceFwkInstaller
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+    auto ret = installer.ExtractModule(oldInfo, newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: MoveSoToRealPath_0100
+ * @tc.name: test function of MoveSoToRealPath
+ * @tc.desc: calling MoveSoToRealPath of AppServiceFwkInstaller
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    auto ret = installer.MoveSoToRealPath("", "", "");
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = installer.MoveSoToRealPath(STRING, STRING, "");
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeliveryProfileToCodeSign_0100
+ * @tc.name: test function of DeliveryProfileToCodeSign
+ * @tc.desc: calling DeliveryProfileToCodeSign of AppServiceFwkInstaller
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller installer;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateSignatureFileStream_0100
+ * @tc.name: test function of CreateSignatureFileStream
+ * @tc.desc: calling CreateSignatureFileStream of BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CreateSignatureFileStream_0100, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    auto ret = impl.CreateSignatureFileStream("", STRING);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    ret = impl.CreateSignatureFileStream(STRING, "");
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    ret = impl.CreateSignatureFileStream("", "");
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+
+    ret = impl.CreateSignatureFileStream(STRING, STRING);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoByDeveloperId_0100
+ * @tc.name: test function of GetAllBundleInfoByDeveloperId
+ * @tc.desc: calling GetAllBundleInfoByDeveloperId of BundleDataMgr
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetAllBundleInfoByDeveloperId_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    std::map<std::string, InnerBundleInfo> map;
+    InnerBundleInfo info;
+    info.SetApplicationBundleType(BundleType::SHARED);
+    map.try_emplace(BUNDLE_NAME, info);
+    info.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
+    map.try_emplace(BUNDLE_NAME_TEST, info);
+    dataMgr->bundleInfos_ = map;
+    ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
+    EXPECT_NE(ret, ERR_OK);
 }
 }

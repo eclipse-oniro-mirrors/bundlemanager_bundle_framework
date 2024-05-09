@@ -68,6 +68,8 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
+    sptr<IBundleInstaller> GetInstallerProxy();
+    sptr<BundleMgrProxy> GetBundleMgrProxy();
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -119,6 +121,43 @@ void BmsBundlePermissionSyetemAppFalseTest::StartBundleService()
 const std::shared_ptr<BundleDataMgr> BmsBundlePermissionSyetemAppFalseTest::GetBundleDataMgr() const
 {
     return bundleMgrService_->GetDataMgr();
+}
+
+sptr<IBundleInstaller> BmsBundlePermissionSyetemAppFalseTest::GetInstallerProxy()
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        return nullptr;
+    }
+
+    sptr<IBundleInstaller> installerProxy = bundleMgrProxy->GetBundleInstaller();
+    if (!installerProxy) {
+        APP_LOGE("fail to get bundle installer proxy");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle installer proxy success.");
+    return installerProxy;
+}
+
+sptr<BundleMgrProxy> BmsBundlePermissionSyetemAppFalseTest::GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        APP_LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle manager proxy success.");
+    return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
 /**
@@ -1307,5 +1346,109 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500
     bundleInstallerHost_->Init();
     bool ret = bundleInstallerHost_->UninstallAndRecover(BUNDLE_NAME, installParam, statusReceiver);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallByBundleNameTest
+ * @tc.name: test InstallByBundleName of IBundleInstaller
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallByBundleNameTest, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    InstallParam installParam;
+    auto result = installerProxy->InstallByBundleName("", installParam, nullptr);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: UninstallAndRecoverTest
+ * @tc.name: test UninstallAndRecover of IBundleInstaller
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallAndRecoverTest, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    InstallParam installParam;
+    auto result = installerProxy->UninstallAndRecover("", installParam, nullptr);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallCloneAppTest
+ * @tc.name: test InstallCloneApp of IBundleInstaller
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallCloneAppTest, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    int32_t appIndex = 1;
+    auto result = installerProxy->InstallCloneApp("", USERID, appIndex);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryLauncherAbilityInfosTest
+ * @tc.name: test QueryLauncherAbilityInfosTest of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, QueryLauncherAbilityInfosTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        return;
+    }
+    Want want;
+    want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
+    std::vector<AbilityInfo> abilityInfos;
+    auto result = bundleMgrProxy->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyApTest
+ * @tc.name: test CopyAp of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CopyApTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        return;
+    }
+    std::vector<std::string> res;
+    auto result = bundleMgrProxy->CopyAp("", false, res);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetCloneBundleInfoTest
+ * @tc.name: test GetCloneBundleInfo of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetCloneBundleInfoTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        return;
+    }
+    BundleInfo bundleInfo;
+    auto result = bundleMgrProxy->GetCloneBundleInfo("", FLAGS, FLAGS, bundleInfo, USERID);
+    EXPECT_NE(result, ERR_OK);
 }
 } // OHOS

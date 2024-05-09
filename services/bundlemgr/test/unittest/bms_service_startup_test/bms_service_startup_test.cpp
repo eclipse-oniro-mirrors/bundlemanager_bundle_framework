@@ -21,6 +21,7 @@
 
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
+#include "bms_extension_client.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 
@@ -33,6 +34,7 @@ namespace OHOS {
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t TOKENID = 100;
+const int32_t FLAG = 0;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 const std::string AVAILABLE_TYPE_NORMAL = "normal";
 const std::string AVAILABLE_TYPE_MDM = "MDM";
@@ -964,5 +966,89 @@ HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0100, Function | Smal
     BmsExperienceRule rule;
     auto ret = client->QueryFreeInstallExperience(want, callerInfo, rule);
     EXPECT_EQ(ret, OHOS::AppExecFwk::IBmsEcologicalRuleMgrService::ErrCode::ERR_FAILED);
+}
+
+/**
+ * @tc.number: BatchQueryAbilityInfosTest
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsServiceStartupTest, BatchQueryAbilityInfosTest, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    Want want;
+    std::vector<Want> wants = { want };
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bmsExtensionClient->BatchQueryAbilityInfos(wants, FLAG, FLAG, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoTest
+ * @tc.name: QueryAbilityInfo
+ * @tc.desc: test QueryAbilityInfoTest of BmsExtensionClient
+ */
+HWTEST_F(BmsServiceStartupTest, QueryAbilityInfoTest, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    Want want;
+    AbilityInfo abilityInfo;
+    auto ret = bmsExtensionClient->QueryAbilityInfo(want, FLAG, FLAG, abilityInfo, false);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfosTest
+ * @tc.name: GetBundleInfos
+ * @tc.desc: test GetBundleInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsServiceStartupTest, GetBundleInfosTest, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = bmsExtensionClient->GetBundleInfos(FLAG, bundleInfos, FLAG, false);
+    EXPECT_NE(ret, ERR_OK);
+
+    BundleInfo info;
+    ret = bmsExtensionClient->GetBundleInfo(STRING_TYPE, FLAG, info, FLAG, false);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BatchGetBundleInfoTest
+ * @tc.name: BatchGetBundleInfo
+ * @tc.desc: test BatchGetBundleInfo of BmsExtensionClient
+ */
+HWTEST_F(BmsServiceStartupTest, BatchGetBundleInfoTest, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    std::vector<std::string> bundleNames;
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = bmsExtensionClient->BatchGetBundleInfo(bundleNames, FLAG, bundleInfos, false);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ImplicitQueryAbilityInfosTest
+ * @tc.name: ImplicitQueryAbilityInfos
+ * @tc.desc: test ImplicitQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsServiceStartupTest, ImplicitQueryAbilityInfosTest, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+
+    Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    auto ret = bmsExtensionClient->ImplicitQueryAbilityInfos(want, FLAG, FLAG, abilityInfos, false);
+    EXPECT_NE(ret, ERR_OK);
 }
 } // OHOS
