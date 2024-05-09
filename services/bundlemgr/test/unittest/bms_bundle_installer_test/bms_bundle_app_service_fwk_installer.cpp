@@ -322,20 +322,20 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, BeforeInstall_0100, Function | Sma
     InstallParam installParam;
     installParam.isPreInstallApp = false;
 
-    auto res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+    auto res1 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res1, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
 
     installParam.isPreInstallApp = true;
-    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_OK);
+    auto res2 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res2, ERR_OK);
 
     ClearDataMgr();
-    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    auto res3 = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res3, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 
     std::vector<std::string> emptyVector;
-    res = appServiceFwkInstaller.BeforeInstall(emptyVector, installParam);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    auto res4 = appServiceFwkInstaller.BeforeInstall(emptyVector, installParam);
+    EXPECT_EQ(res4, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
     ResetDataMgr();
 }
 
@@ -1068,11 +1068,11 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ExtractModule_0100, Function | Sma
 HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0100, Function | SmallTest | Level1)
 {
     AppServiceFwkInstaller installer;
-    auto ret = installer.MoveSoToRealPath("", "", "");
-    EXPECT_EQ(ret, ERR_OK);
+    auto ret1 = installer.MoveSoToRealPath("", "", "");
+    EXPECT_EQ(ret1, ERR_OK);
 
-    ret = installer.MoveSoToRealPath(STRING, STRING, "");
-    EXPECT_EQ(ret, ERR_OK);
+    auto ret2 = installer.MoveSoToRealPath(STRING, STRING, "");
+    EXPECT_EQ(ret2, ERR_OK);
 }
 
 /**
@@ -1098,17 +1098,17 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CreateSignatureFileStream_0100, Fu
     uint32_t installerId = 1;
     int32_t installedUid = 100;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
-    auto ret = impl.CreateSignatureFileStream("", STRING);
-    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+    auto ret1 = impl.CreateSignatureFileStream("", STRING);
+    EXPECT_EQ(ret1, Constants::DEFAULT_STREAM_FD);
 
-    ret = impl.CreateSignatureFileStream(STRING, "");
-    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+    auto ret2 = impl.CreateSignatureFileStream(STRING, "");
+    EXPECT_EQ(ret2, Constants::DEFAULT_STREAM_FD);
 
-    ret = impl.CreateSignatureFileStream("", "");
-    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+    auto ret3 = impl.CreateSignatureFileStream("", "");
+    EXPECT_EQ(ret3, Constants::DEFAULT_STREAM_FD);
 
-    ret = impl.CreateSignatureFileStream(STRING, STRING);
-    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+    auto ret4 = impl.CreateSignatureFileStream(STRING, STRING);
+    EXPECT_EQ(ret4, Constants::DEFAULT_STREAM_FD);
 }
 
 /**
@@ -1121,10 +1121,11 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetAllBundleInfoByDeveloperId_0100
     auto dataMgr = GetBundleDataMgr();
     ASSERT_NE(dataMgr, nullptr);
     std::vector<BundleInfo> bundleInfos;
-    auto ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::INVALID_USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    auto ret1 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::INVALID_USERID);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    
+    auto ret2 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     std::map<std::string, InnerBundleInfo> map;
     InnerBundleInfo info;
@@ -1133,7 +1134,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetAllBundleInfoByDeveloperId_0100
     info.SetApplicationBundleType(BundleType::APP_SERVICE_FWK);
     map.try_emplace(BUNDLE_NAME_TEST, info);
     dataMgr->bundleInfos_ = map;
-    ret = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
-    EXPECT_NE(ret, ERR_OK);
+    auto ret3 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
+    EXPECT_NE(ret3, ERR_OK);
 }
 }

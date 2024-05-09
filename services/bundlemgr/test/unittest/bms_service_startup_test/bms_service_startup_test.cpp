@@ -976,7 +976,7 @@ HWTEST_F(BmsServiceStartupTest, QueryFreeInstallExperience_0100, Function | Smal
 HWTEST_F(BmsServiceStartupTest, BatchQueryAbilityInfosTest, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     Want want;
     std::vector<Want> wants = { want };
@@ -993,7 +993,7 @@ HWTEST_F(BmsServiceStartupTest, BatchQueryAbilityInfosTest, Function | MediumTes
 HWTEST_F(BmsServiceStartupTest, QueryAbilityInfoTest, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     Want want;
     AbilityInfo abilityInfo;
@@ -1009,15 +1009,15 @@ HWTEST_F(BmsServiceStartupTest, QueryAbilityInfoTest, Function | MediumTest | Le
 HWTEST_F(BmsServiceStartupTest, GetBundleInfosTest, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     std::vector<BundleInfo> bundleInfos;
-    auto ret = bmsExtensionClient->GetBundleInfos(FLAG, bundleInfos, FLAG, false);
-    EXPECT_NE(ret, ERR_OK);
+    auto ret1 = bmsExtensionClient->GetBundleInfos(FLAG, bundleInfos, FLAG, false);
+    EXPECT_NE(ret1, ERR_OK);
 
     BundleInfo info;
-    ret = bmsExtensionClient->GetBundleInfo(STRING_TYPE, FLAG, info, FLAG, false);
-    EXPECT_NE(ret, ERR_OK);
+    auto ret2 = bmsExtensionClient->GetBundleInfo(STRING_TYPE, FLAG, info, FLAG, false);
+    EXPECT_NE(ret2, ERR_OK);
 }
 
 /**
@@ -1028,7 +1028,7 @@ HWTEST_F(BmsServiceStartupTest, GetBundleInfosTest, Function | MediumTest | Leve
 HWTEST_F(BmsServiceStartupTest, BatchGetBundleInfoTest, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     std::vector<std::string> bundleNames;
     std::vector<BundleInfo> bundleInfos;
@@ -1044,7 +1044,7 @@ HWTEST_F(BmsServiceStartupTest, BatchGetBundleInfoTest, Function | MediumTest | 
 HWTEST_F(BmsServiceStartupTest, ImplicitQueryAbilityInfosTest, Function | MediumTest | Level1)
 {
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    EXPECT_NE(bmsExtensionClient, nullptr);
+    ASSERT_NE(bmsExtensionClient, nullptr);
 
     Want want;
     std::vector<AbilityInfo> abilityInfos;

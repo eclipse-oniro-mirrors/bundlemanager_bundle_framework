@@ -1356,10 +1356,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8500
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallByBundleNameTest, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     InstallParam installParam;
     auto result = installerProxy->InstallByBundleName("", installParam, nullptr);
     EXPECT_EQ(result, ERR_OK);
@@ -1373,10 +1370,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallByBundleNameTest, Functio
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallAndRecoverTest, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     InstallParam installParam;
     auto result = installerProxy->UninstallAndRecover("", installParam, nullptr);
     EXPECT_EQ(result, ERR_OK);
@@ -1390,10 +1384,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, UninstallAndRecoverTest, Functio
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallCloneAppTest, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
+    ASSERT_NE(installerProxy, nullptr);
     int32_t appIndex = 1;
     auto result = installerProxy->InstallCloneApp("", USERID, appIndex);
     EXPECT_NE(result, ERR_OK);
@@ -1407,10 +1398,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, InstallCloneAppTest, Function | 
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, QueryLauncherAbilityInfosTest, Function | SmallTest | Level0)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     Want want;
     want.SetElementName(BUNDLE_NAME, ABILITY_NAME);
     std::vector<AbilityInfo> abilityInfos;
@@ -1426,10 +1414,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, QueryLauncherAbilityInfosTest, F
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CopyApTest, Function | SmallTest | Level0)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     std::vector<std::string> res;
     auto result = bundleMgrProxy->CopyAp("", false, res);
     EXPECT_EQ(result, ERR_OK);
@@ -1443,10 +1428,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CopyApTest, Function | SmallTest
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetCloneBundleInfoTest, Function | SmallTest | Level0)
 {
     auto bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        return;
-    }
+    ASSERT_NE(bundleMgrProxy, nullptr);
     BundleInfo bundleInfo;
     auto result = bundleMgrProxy->GetCloneBundleInfo("", FLAGS, FLAGS, bundleInfo, USERID);
     EXPECT_NE(result, ERR_OK);
