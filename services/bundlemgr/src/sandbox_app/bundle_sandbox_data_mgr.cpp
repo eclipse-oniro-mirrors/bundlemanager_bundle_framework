@@ -79,7 +79,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
         APP_LOGE("GetSandboxAppInfo bundleName is empty");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
-    if (appIndex <= Constants::INITIAL_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxAppInfo appIndex is invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -142,24 +142,24 @@ int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleN
     APP_LOGI("GenerateSandboxAppIndex begin");
     if (bundleName.empty()) {
         APP_LOGE("GenerateSandboxAppIndex bundleName is empty");
-        return Constants::INITIAL_APP_INDEX;
+        return Constants::INITIAL_SANDBOX_APP_INDEX;
     }
     std::unique_lock<std::mutex> lock(sandboxAppIndexMapMutex_);
     auto firstIterator = sandboxAppIndexMap_.find(bundleName);
     if (firstIterator == sandboxAppIndexMap_.end()) {
-        std::set<int32_t> innerSet { Constants::INITIAL_APP_INDEX + 1 };
+        std::set<int32_t> innerSet { Constants::INITIAL_SANDBOX_APP_INDEX + 1 };
         sandboxAppIndexMap_.emplace(bundleName, innerSet);
         APP_LOGD("GenerateSandboxAppIndex successfully");
-        return Constants::INITIAL_APP_INDEX + 1;
+        return Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     }
 
     if (firstIterator->second.empty()) {
-        firstIterator->second.insert(Constants::INITIAL_APP_INDEX + 1);
+        firstIterator->second.insert(Constants::INITIAL_SANDBOX_APP_INDEX + 1);
         APP_LOGD("GenerateSandboxAppIndex successfully");
-        return Constants::INITIAL_APP_INDEX + 1;
+        return Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     }
 
-    int32_t pre = Constants::INITIAL_APP_INDEX;
+    int32_t pre = Constants::INITIAL_SANDBOX_APP_INDEX;
     for (const auto &item : firstIterator->second) {
         if (item == pre + 1) {
             pre++;
@@ -169,9 +169,9 @@ int32_t BundleSandboxDataMgr::GenerateSandboxAppIndex(const std::string &bundleN
     }
 
     int32_t newAppIndex = pre + 1;
-    if (newAppIndex > Constants::MAX_APP_INDEX) {
+    if (newAppIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GenerateSandboxAppIndex failed due to exceed limitation of maximum appIndex");
-        return Constants::INITIAL_APP_INDEX;
+        return Constants::INITIAL_SANDBOX_APP_INDEX;
     }
     firstIterator->second.insert(newAppIndex);
     APP_LOGD("GenerateSandboxAppIndex successfully with appIndex %{public}d", newAppIndex);
@@ -216,7 +216,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
 {
     APP_LOGD("GetSandboxHapModuleInfo %{public}s", abilityInfo.bundleName.c_str());
     // check appIndex
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_QUERY_PARAM_ERROR;
     }

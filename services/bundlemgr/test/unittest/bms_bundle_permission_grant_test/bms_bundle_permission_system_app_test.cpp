@@ -665,7 +665,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4100
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4200, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     Want want;
     AbilityInfo info;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
@@ -680,7 +680,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4200
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4300, Function | SmallTest | Level0)
 {
-    int32_t appIndex = 1;
+    int32_t appIndex = 1 + Constants::INITIAL_SANDBOX_APP_INDEX;
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);

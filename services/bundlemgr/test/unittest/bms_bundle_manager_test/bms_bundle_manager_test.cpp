@@ -2301,11 +2301,11 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0700, Function | MediumTest | L
     ret = hostImpl->GetSandboxBundleInfo(TEST_BUNDLE_NAME, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    appIndex = 101;
+    appIndex = 1 + Constants::MAX_SANDBOX_APP_INDEX;
     ret = hostImpl->GetSandboxBundleInfo(TEST_BUNDLE_NAME, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    appIndex = 1;
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     ret = hostImpl->GetSandboxBundleInfo(
         TEST_BUNDLE_NAME, appIndex, Constants::INVALID_USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
@@ -2729,7 +2729,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t status = 0;
     uint32_t resId = 0;
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     size_t len = 1;
     bool isEnabled = true;
     std::vector<ExtensionAbilityInfo> extensionInfos;

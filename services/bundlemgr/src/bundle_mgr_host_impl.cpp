@@ -2597,7 +2597,7 @@ ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     // check appIndex
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -2753,7 +2753,7 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
 {
     APP_LOGD("start GetSandboxAbilityInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
     // check appIndex
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -2782,7 +2782,7 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
 {
     APP_LOGD("start GetSandboxExtAbilityInfos appIndex : %{public}d, userId : %{public}d", appIndex, userId);
     // check appIndex
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -2811,7 +2811,7 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
 {
     APP_LOGD("start GetSandboxHapModuleInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
     // check appIndex
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }

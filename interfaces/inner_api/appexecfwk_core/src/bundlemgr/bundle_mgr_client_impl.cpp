@@ -436,7 +436,7 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
 ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId)
 {
     APP_LOGD("UninstallSandboxApp begin");
-    if (bundleName.empty() || appIndex <= Constants::INITIAL_APP_INDEX) {
+    if (bundleName.empty() || appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("UninstallSandboxApp params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -453,7 +453,7 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
     const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info)
 {
     APP_LOGD("GetSandboxBundleInfo begin");
-    if (bundleName.empty() || appIndex <= Constants::INITIAL_APP_INDEX) {
+    if (bundleName.empty() || appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("UninstallSandboxApp params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -470,7 +470,7 @@ ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t app
     AbilityInfo &abilityInfo)
 {
     APP_LOGD("GetSandboxAbilityInfo begin");
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxAbilityInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -487,7 +487,7 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
     int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     APP_LOGD("GetSandboxExtensionAbilityInfos begin");
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxExtensionAbilityInfos params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
@@ -504,7 +504,7 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     HapModuleInfo &hapModuleInfo)
 {
     APP_LOGD("GetSandboxHapModuleInfo begin");
-    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("GetSandboxHapModuleInfo params are invalid");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }

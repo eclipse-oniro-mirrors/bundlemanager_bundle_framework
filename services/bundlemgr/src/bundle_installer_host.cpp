@@ -245,7 +245,7 @@ void BundleInstallerHost::HandleInstallSandboxApp(MessageParcel &data, MessagePa
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t dplType = data.ReadInt32();
     int32_t userId = data.ReadInt32();
-    int32_t appIndex = Constants::INITIAL_APP_INDEX;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX;
     auto ret = InstallSandboxApp(bundleName, dplType, userId, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
@@ -546,7 +546,7 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     // check appIndex
-    if (appIndex <= INVALID_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+    if (appIndex <= INVALID_APP_INDEX || appIndex > Constants::MAX_SANDBOX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
