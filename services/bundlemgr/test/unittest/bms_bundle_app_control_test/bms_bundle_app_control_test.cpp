@@ -1454,4 +1454,22 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4700, Function | Sma
     EventFwk::CommonEventData eventData {want};
     subscriber.OnReceiveEvent(eventData);
 }
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2800
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4800, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    AppRunningControlRuleResult ruleResult;
+    appControlManager->appRunningControlRuleResult_["1"] = ruleResult;
+    appControlManager->appRunningControlRuleResult_["100"] = ruleResult;
+    ErrCode res = appControlManager->DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS
