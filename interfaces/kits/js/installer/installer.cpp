@@ -82,6 +82,7 @@ const std::string HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const std::string INSTALL_PARAM = "installParam";
 const std::string CREATE_APP_TWIN = "createAppTwin";
+const std::string CREATE_APP_TWIN_PARAM = "createAppTwinParam";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -649,6 +650,27 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
         PARSE_PROPERTY(env, property, int32, userId);
     }
     APP_LOGD("param userId is %{public}d", userId);
+    return true;
+}
+
+static bool ParseAppIndex(napi_env env, napi_value args, int32_t &appIndex)
+{
+    APP_LOGD("start to parse appIndex");
+    PropertyInfo propertyInfo = {
+        .propertyName = APP_INDEX,
+        .isNecessary = false,
+        .propertyType = napi_number
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse appIndex failed");
+        return res;
+    }
+    if (property != nullptr) {
+        PARSE_PROPERTY(env, property, int32, appIndex);
+    }
+    APP_LOGD("param appIndex is %{public}d", appIndex);
     return true;
 }
 
@@ -1613,6 +1635,16 @@ void CreateAppTwinComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<CreateAppTwinCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
+void ParseAppTwinParam(napi_env env, napi_value args, int32_t &userId, int32_t &appIndex)
+{
+    if (!ParseUserId(env, args, userId)) {
+        APP_LOGI("parse userId failed. assign a default value = %{public}d.", userId);
+    }
+    if (!ParseAppIndex(env, args, appIndex)) {
+        APP_LOGI("parse appIndex failed. assign a default value = %{public}d.", appIndex);
+    }
+}
+
 napi_value CreateAppTwin(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin to createAppTwin");
@@ -1638,22 +1670,14 @@ napi_value CreateAppTwin(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("parse userId failed. assign a default value.");
-                asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+            if (valueType == napi_object) {
+                ParseAppTwinParam(env, args[i], asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
             }
-        } else if (i == ARGS_POS_TWO) {
-            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->appIndex)) {
-                APP_LOGW("parse appIndex failed. assign a default value 0.");
-                asyncCallbackInfo->appIndex = 0;
-            }
+        } else {
+            APP_LOGE("The number of parameters is incorrect.");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
         }
-    }
-    if (argc == ARGS_SIZE_ONE) {
-        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-        asyncCallbackInfo->appIndex = 0;
-    } else if (argc == ARGS_SIZE_TWO) {
-        asyncCallbackInfo->appIndex = 0;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppTwinCallbackInfo>(
         env, asyncCallbackInfo.get(), CREATE_APP_TWIN, CreateAppTwinExec, CreateAppTwinComplete);
