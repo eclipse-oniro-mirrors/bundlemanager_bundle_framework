@@ -114,6 +114,7 @@ constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDL
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE";
+constexpr const char* PERMISSION_UNINSTALL_TWIN_BUNDLE = "ohos.permission.UNINSTALL_TWIN_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
@@ -245,6 +246,10 @@ constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
 constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
 constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
+
+// clone application
+constexpr int32_t CLONE_APP_INDEX_MIN = 1;
+constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 extern const std::string CLONE_BUNDLE_PREFIX;

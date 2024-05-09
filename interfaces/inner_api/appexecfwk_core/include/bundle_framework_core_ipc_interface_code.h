@@ -217,6 +217,7 @@ enum class BundleInstallerInterfaceCode : uint32_t {
     DESTORY_STREAM_INSTALLER,
     UNINSTALL_AND_RECOVER,
     INSTALL_CLONE_APP,
+    UNINSTALL_CLONE_APP,
 };
 
 /* SAID: 401-28 Interface No.28 subservice also provides the following interfaces */

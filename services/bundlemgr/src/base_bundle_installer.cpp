@@ -41,6 +41,7 @@
 #include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_data_mgr.h"
+#include "bundle_clone_installer.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
@@ -301,6 +302,9 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
     // uninstall all sandbox app before
     UninstallAllSandboxApps(bundleName, installParam.userId);
+
+    std::shared_ptr<BundleCloneInstaller> cloneInstaller = std::make_shared<BundleCloneInstaller>();
+    cloneInstaller->UninstallAllCloneApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
     bool isUninstalledFromBmsExtension = false;

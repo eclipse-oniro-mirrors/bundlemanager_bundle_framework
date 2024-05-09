@@ -90,14 +90,24 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d begin", bundleName.c_str(), appIndex);
 
-    PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
+    PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
-    // 1. check userId
-    if (GetDataMgr() != ERR_OK) {
-            APP_LOGE("Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-    return ERR_OK;
+    ErrCode result = ProcessCloneBundleUninstall(bundleName, userId, appIndex);
+    NotifyBundleEvents installRes = {
+        .bundleName = bundleName,
+        .resultCode = result,
+        .type = NotifyType::UNINSTALL_BUNDLE,
+        .uid = uid_,
+        .accessTokenId = accessTokenId_,
+        .appIndex = appIndex,
+    };
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    commonEventMgr->NotifyBundleStatus(installRes, dataMgr);
+
+    ResetInstallProperties();
+    PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
+    return result;
 }
 
 ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
@@ -106,11 +116,37 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     APP_LOGI("begin");
     if (bundleName.empty()) {
         APP_LOGE("UninstallAllCloneApps failed due to empty bundle name");
-        return ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR;
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
     }
-
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
+    }
+    if (!dataMgr_->HasUserId(userId)) {
+        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
+    }
+    ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
+    InnerBundleInfo info;
+    bool isExist = dataMgr_->GetInnerBundleInfo(bundleName, info);
+    if (!isExist) {
+        APP_LOGE("the bundle is not installed");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGE("the origin application is not installed at current user");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
+    }
+    ErrCode result = ERR_OK;
+    for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
+        if (UninstallCloneApp(bundleName, userId, std::stoi(it->first)) != ERR_OK) {
+            APP_LOGE("UninstallCloneApp failed, appIndex: %{public}s", it->first.c_str());
+            result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
+        }
+    }
     APP_LOGI("end");
-    return ERR_OK;
+    return result;
 }
 
 ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundleName,
@@ -216,6 +252,55 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
     APP_LOGD("InstallCloneApp %{public}s succesfully", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bundleName,
+    int32_t userId, int32_t appIndex)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("UninstallCloneApp failed due to empty bundle name");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
+    }
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
+    }
+    if (GetDataMgr() != ERR_OK) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
+    }
+    if (!dataMgr_->HasUserId(userId)) {
+        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
+    }
+    ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
+    InnerBundleInfo info;
+    bool isExist = dataMgr_->GetInnerBundleInfo(bundleName, info);
+    if (!isExist) {
+        APP_LOGE("the bundle is not installed");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGE("the origin application is not installed at current user");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
+    }
+    auto it = userInfo.cloneInfos.find(std::to_string(appIndex));
+    if (it == userInfo.cloneInfos.end()) {
+        APP_LOGE("the clone app is not installed");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED;
+    }
+    uid_ = it->second.uid;
+    accessTokenId_ = it->second.accessTokenId;
+    if (dataMgr_->RemoveCloneBundle(bundleName, userId, appIndex)) {
+        APP_LOGE("RemoveCloneBundle failed");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
+    }
+    if (RemoveCloneDataDir(bundleName, userId, appIndex) != ERR_OK) {
+        APP_LOGW("RemoveCloneDataDir failed");
+    }
+    APP_LOGD("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 
