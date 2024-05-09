@@ -63,6 +63,8 @@ struct NotifyBundleEvents {
     bool isModuleUpdate = false;
     std::string appDistributionType;
     int32_t appIndex = 0;
+    int32_t bundleType = 0;
+    int32_t atomicServiceModuleUpgrade = 0;
 };
 
 class BundleCommonEventMgr {
@@ -83,6 +85,7 @@ public:
 
 private:
     std::string GetCommonEventData(const NotifyType &type);
+    void SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult);
     void Init();
 
     std::unordered_map<NotifyType, std::string> commonEventMap_;

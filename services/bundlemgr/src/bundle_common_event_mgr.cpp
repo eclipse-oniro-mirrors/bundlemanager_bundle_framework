@@ -39,6 +39,8 @@ constexpr const char* APP_INDEX = "appIndex";
 const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 constexpr const char* UID = "uid";
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
+constexpr const char* BUNDLE_TYPE = "bundleType";
+constexpr const char* ATOMIC_SERVICE_MODULE_UPGRADE = "atomicServiceModuleUpgrade";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -72,27 +74,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     APP_LOGD("notify type %{public}d with %{public}d for %{public}s-%{public}s in %{public}s",
         static_cast<int32_t>(installResult.type), installResult.resultCode, installResult.modulePackage.c_str(),
         installResult.abilityName.c_str(), installResult.bundleName.c_str());
-
-    std::string eventData = GetCommonEventData(installResult.type);
-    APP_LOGD("will send event data %{public}s", eventData.c_str());
     OHOS::AAFwk::Want want;
-    want.SetAction(eventData);
-    ElementName element;
-    element.SetBundleName(installResult.bundleName);
-    element.SetModuleName(installResult.modulePackage);
-    element.SetAbilityName(installResult.abilityName);
-    want.SetElement(element);
-    want.SetParam(UID, installResult.uid);
-    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
-    want.SetParam(Constants::USER_ID, bundleUserId);
-    want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
-    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
-    want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
-    want.SetParam(APP_ID, installResult.appId);
-    want.SetParam(IS_MODULE_UPDATE, installResult.isModuleUpdate);
-    want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);
-    want.SetParam(APP_DISTRIBUTION_TYPE, installResult.appDistributionType);
-    want.SetParam(APP_INDEX, installResult.appIndex);
+    SetNotifyWant(want, installResult);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
@@ -121,10 +104,34 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     if (installResult.resultCode != ERR_OK || installResult.isBmsExtensionUninstalled) {
         return;
     }
-
+    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
         AccountHelper::GetCurrentActiveUserId() : bundleUserId;
     EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
+}
+
+void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBundleEvents &installResult)
+{
+    std::string eventData = GetCommonEventData(installResult.type);
+    APP_LOGD("will send event data %{public}s", eventData.c_str());
+    want.SetAction(eventData);
+    ElementName element;
+    element.SetBundleName(installResult.bundleName);
+    element.SetModuleName(installResult.modulePackage);
+    element.SetAbilityName(installResult.abilityName);
+    want.SetElement(element);
+    want.SetParam(UID, installResult.uid);
+    want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
+    want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
+    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
+    want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
+    want.SetParam(APP_ID, installResult.appId);
+    want.SetParam(IS_MODULE_UPDATE, installResult.isModuleUpdate);
+    want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);
+    want.SetParam(APP_DISTRIBUTION_TYPE, installResult.appDistributionType);
+    want.SetParam(APP_INDEX, installResult.appIndex);
+    want.SetParam(BUNDLE_TYPE, installResult.bundleType);
+    want.SetParam(ATOMIC_SERVICE_MODULE_UPGRADE, installResult.atomicServiceModuleUpgrade);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,

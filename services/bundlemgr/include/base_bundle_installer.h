@@ -662,6 +662,7 @@ private:
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
     bool VerifyActivationLock() const;
+    void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     void GetValidDataGroupIds(const std::vector<std::string> &extensionDataGroupIds,
@@ -725,6 +726,8 @@ private:
     std::unordered_map<std::string, std::string> signatureFileTmpMap_;
     std::string uninstallBundleAppId_;
     bool isModuleUpdate_ = false;
+    BundleType bundleType_ = BundleType::APP;
+    int32_t atomicServiceModuleUpgrade_ = 0;
     // utilize for install entry firstly from multi-installation
     bool isEntryInstalled_ = false;
     std::string entryModuleName_ = "";
