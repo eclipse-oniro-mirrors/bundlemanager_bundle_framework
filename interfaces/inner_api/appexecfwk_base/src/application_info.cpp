@@ -122,8 +122,8 @@ const std::string APPLICATION_TSAN_ENABLED = "tsanEnabled";
 const std::string APPLICATION_ORGANIZATION = "organization";
 const std::string APPLICATION_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APPLICATION_MULTI_APP_MODE = "multiAppMode";
-const std::string APPLICATION_MULTI_APP_MODE_TYPE = "type";
-const std::string APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
+const std::string APPLICATION_MULTI_APP_MODE_TYPE = "multiAppModeType";
+const std::string APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxCount";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string APPLICATION_APP_INDEX = "appIndex";
@@ -132,15 +132,15 @@ const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
 {
-    type = static_cast<MultiAppModeType>(parcel.ReadInt32());
-    maxAdditionalNumber = parcel.ReadInt32();
+    multiAppModeType = static_cast<MultiAppModeType>(parcel.ReadInt32());
+    maxCount = parcel.ReadInt32();
     return true;
 }
 
 bool MultiAppModeData::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxAdditionalNumber);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(multiAppModeType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxCount);
     return true;
 }
 
@@ -798,8 +798,8 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
 void to_json(nlohmann::json &jsonObject, const MultiAppModeData &multiAppMode)
 {
     jsonObject = nlohmann::json {
-        {APPLICATION_MULTI_APP_MODE_TYPE, multiAppMode.type},
-        {APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER, multiAppMode.maxAdditionalNumber},
+        {APPLICATION_MULTI_APP_MODE_TYPE, multiAppMode.multiAppModeType},
+        {APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER, multiAppMode.maxCount},
     };
 }
 
@@ -808,9 +808,9 @@ void from_json(const nlohmann::json &jsonObject, MultiAppModeData &multiAppMode)
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
     GetValueIfFindKey<MultiAppModeType>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE_TYPE,
-        multiAppMode.type, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+        multiAppMode.multiAppModeType, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
-        multiAppMode.maxAdditionalNumber, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+        multiAppMode.maxCount, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

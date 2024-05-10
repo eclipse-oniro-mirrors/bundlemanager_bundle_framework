@@ -77,8 +77,8 @@ enum class MultiAppModeType {
 };
 
 struct MultiAppModeData : public Parcelable {
-    MultiAppModeType type = MultiAppModeType::UNSPECIFIED;
-    int32_t maxAdditionalNumber = 0;
+    MultiAppModeType multiAppModeType = MultiAppModeType::UNSPECIFIED;
+    int32_t maxCount = 0;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static MultiAppModeData *Unmarshalling(Parcel &parcel);

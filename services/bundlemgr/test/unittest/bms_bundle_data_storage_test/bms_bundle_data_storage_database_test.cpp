@@ -193,8 +193,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
                 "versionCode":0,
                 "versionName":"",
                 "multiAppMode": {
-                    "type":2,
-                    "maxAdditionalNumber":5
+                    "multiAppModeType":2,
+                    "maxCount":5
                 }
             },
             "applicationName":"com.example.myapplication",
@@ -395,8 +395,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "versionName":"1.0.0",
         "resourcesApply":[],
         "multiAppMode": {
-            "type":2,
-            "maxAdditionalNumber":5
+            "multiAppModeType":2,
+            "maxCount":5
         }
     },
     "baseBundleInfo":{
@@ -513,8 +513,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "versionName":"",
             "resourcesApply":[],
             "multiAppMode": {
-                "type":2,
-                "maxAdditionalNumber":5
+                "multiAppModeType":2,
+                "maxCount":5
             }
         },
         "compatibleVersion":9,
@@ -1135,8 +1135,8 @@ protected:
                 "organization": "",
                 "appEnvironments": [],
                 "multiAppMode": {
-                    "type":2,
-                    "maxAdditionalNumber":5
+                    "multiAppModeType":2,
+                    "maxCount":5
                 },
                 "appIndex":0,
                 "maxChildProcess": 0
