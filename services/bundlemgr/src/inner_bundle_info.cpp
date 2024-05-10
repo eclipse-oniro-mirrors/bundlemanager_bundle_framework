@@ -3568,5 +3568,43 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     bundleInfo.appIndex = appIndex;
     return true;
 }
+
+ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex)
+{
+    auto multiAppModeData = this->baseApplicationInfo_->multiAppMode;
+    if (multiAppModeData.multiAppModeType != MultiAppModeType::APP_CLONE) {
+        APP_LOGE("bundleName:%{public}s is not clone app", GetBundleName().c_str());
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE;
+    }
+
+    if (appIndex < 0) {
+        APP_LOGE("appIndex:%{public}d not in valid range", appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
+    if (appIndex == 0) {
+        ErrCode availableRes = GetAvailableCloneAppIndex(userId, appIndex);
+        if (availableRes != ERR_OK) {
+            APP_LOGE("Get Available Clone AppIndex Fail for, errCode: %{public}d", availableRes);
+            return availableRes;
+        }
+    } else {
+        bool found = false;
+        ErrCode isExistedRes = IsCloneAppIndexExisted(userId, appIndex, found);
+        if (isExistedRes != ERR_OK) {
+            return isExistedRes;
+        }
+        if (found == true) {
+            APP_LOGE("AppIndex %{public}d had been existed in userId %{public}d", appIndex, userId);
+            return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
+        }
+    }
+    int32_t maxCount = std::min(multiAppModeData.maxCount, Constants::CLONE_APP_INDEX_MAX);
+    if (appIndex > maxCount) {
+        APP_LOGE("AppIndex %{public}d exceed the max limit %{public}d in userId: %{public}d",
+            appIndex, maxCount, userId);
+        return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
