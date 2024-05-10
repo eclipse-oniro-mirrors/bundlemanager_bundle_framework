@@ -94,6 +94,7 @@ napi_value AddExtResource(napi_env env, napi_callback_info info);
 napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 napi_value UninstallAndRecover(napi_env env, napi_callback_info info);
 napi_value CreateAppClone(napi_env env, napi_callback_info info);
+napi_value DestroyAppClone(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H

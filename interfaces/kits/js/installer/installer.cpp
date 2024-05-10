@@ -82,6 +82,7 @@ const std::string HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const std::string INSTALL_PARAM = "installParam";
 const std::string CREATE_APP_CLONE = "CreateAppClone";
+const std::string DESTROY_APP_CLONE = "destroyAppClone";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -1682,6 +1683,111 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), CREATE_APP_CLONE, CreateAppCloneExec, CreateAppCloneComplete);
     asyncCallbackInfo.release();
     APP_LOGI("call napi CreateAppClone done.");
+    return promise;
+}
+
+static ErrCode InnerDestroyAppClone(std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->UninstallCloneApp(bundleName, userId, appIndex);
+    APP_LOGD("UninstallCloneApp result is %{public}d", result);
+    return result;
+}
+
+void DestroyAppCloneExec(napi_env env, void *data)
+{
+    CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    APP_LOGD("DestroyAppCloneExec param: bundleName = %{public}s, userId = %{public}d, appIndex = %{public}d",
+        asyncCallbackInfo->bundleName.c_str(),
+        asyncCallbackInfo->userId,
+        asyncCallbackInfo->appIndex);
+    asyncCallbackInfo->err =
+        InnerDestroyAppClone(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
+}
+
+void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)
+{
+    CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<CreateAppCloneCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+    APP_LOGD("DestroyAppCloneComplete err is %{public}d, appIndex is %{public}d",
+        asyncCallbackInfo->err,
+        asyncCallbackInfo->appIndex);
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            DESTROY_APP_CLONE, Constants::PERMISSION_UNINSTALL_CLONE_BUNDLE);
+    }
+    CommonFunc::NapiReturnDeferred<CreateAppCloneCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value DestroyAppClone(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to destroyAppClone");
+    NapiArg args(env, info);
+    std::unique_ptr<CreateAppCloneCallbackInfo> asyncCallbackInfo = std::make_unique<CreateAppCloneCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGW("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t argc = args.GetMaxArgc();
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGW("parse bundleName failed!");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->appIndex)) {
+                APP_LOGW("parse appIndex failed!");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("The number of parameters is incorrect.");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (asyncCallbackInfo->userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppCloneCallbackInfo>(
+        env, asyncCallbackInfo.get(), DESTROY_APP_CLONE, DestroyAppCloneExec, DestroyAppCloneComplete);
+    asyncCallbackInfo.release();
+    APP_LOGI("call napi destroyAppTwin done.");
     return promise;
 }
 } // AppExecFwk
