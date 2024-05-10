@@ -72,7 +72,6 @@ ohos_unittest("BmsBundleHspTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -85,7 +84,10 @@ ohos_unittest("BmsBundleHspTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (configpolicy_enable) {
@@ -221,7 +223,6 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -234,7 +235,10 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (configpolicy_enable) {
@@ -365,7 +369,6 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -378,7 +381,10 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (configpolicy_enable) {

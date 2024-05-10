@@ -66,7 +66,6 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
     "appverify:libhapverify",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -91,10 +90,14 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
   ]
 
   defines = []
+  include_dirs = []
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
-    include_dirs = [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
   if (current_cpu == "arm64") {

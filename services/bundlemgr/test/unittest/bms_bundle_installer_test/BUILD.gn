@@ -81,7 +81,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -95,7 +94,10 @@ ohos_unittest("BmsBundleInstallerTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
@@ -256,7 +258,6 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -270,7 +271,10 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
@@ -440,7 +444,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -454,7 +457,10 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
@@ -589,7 +595,6 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -603,7 +608,10 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
@@ -1173,7 +1181,6 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -1189,7 +1196,10 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
@@ -1326,7 +1336,6 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -1340,7 +1349,10 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
