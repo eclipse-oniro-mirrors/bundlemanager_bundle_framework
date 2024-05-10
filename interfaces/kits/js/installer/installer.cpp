@@ -1629,7 +1629,7 @@ void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->appIndex, &result[SECOND_PARAM]));
     } else {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            CREATE_APP_CLONE, Constants::PERMISSION_INSTALL_BUNDLE);
+            CREATE_APP_CLONE, Constants::PERMISSION_INSTALL_CLONE_BUNDLE);
     }
     CommonFunc::NapiReturnDeferred<CreateAppCloneCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
