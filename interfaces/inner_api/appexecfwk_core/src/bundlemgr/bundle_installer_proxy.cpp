@@ -724,5 +724,38 @@ ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int
     }
     return res;
 }
+
+ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to UninstallCloneApp due to write MessageParcel fail");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(bundleName))) {
+        APP_LOGE("failed to UninstallCloneApp due to write bundleName fail");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to UninstallCloneApp due to write userId fail");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("failed to UninstallCloneApp due to write appIndex fail");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret =
+        SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP, data, reply, option);
+    if (!ret) {
+        APP_LOGE("uninstall clone app failed due to send request fail");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_SEND_REQUEST_ERROR;
+    }
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

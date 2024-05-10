@@ -82,9 +82,6 @@ const std::string EXT_RESOURCE_MODULE_NAME = "moduleName";
 const std::string EXT_RESOURCE_ICON_ID = "iconId";
 const std::string EXT_RESOURCE_FILE_PATH = "filePath";
 const int32_t SINGLE_HSP_VERSION = 1;
-// clone application
-constexpr int32_t CLONE_APP_INDEX_MIN = 1;
-constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
@@ -3422,7 +3419,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < CLONE_APP_INDEX_MIN || appIndex > CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -3465,7 +3462,7 @@ ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t a
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < CLONE_APP_INDEX_MIN || appIndex > CLONE_APP_INDEX_MAX) {
+    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }

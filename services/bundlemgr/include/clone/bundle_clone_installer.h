@@ -53,6 +53,8 @@ public:
 
     ErrCode ProcessCloneBundleInstall(const std::string &bundleName, const int32_t userId, int32_t &appIndex);
 
+    ErrCode ProcessCloneBundleUninstall(const std::string &bundleName, int32_t userId, int32_t appIndex);
+
     void ResetInstallProperties();
 private:
     ErrCode CreateCloneDataDir(

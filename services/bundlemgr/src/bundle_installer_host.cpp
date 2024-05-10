@@ -105,6 +105,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_CLONE_APP):
             HandleInstallCloneApp(data, reply);
             break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP):
+            HandleUninstallCloneApp(data, reply);
+            break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
@@ -788,6 +791,42 @@ void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParc
         APP_LOGE("write failed");
     }
     APP_LOGD("handle install clone app message finished");
+}
+
+ErrCode BundleInstallerHost::UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    APP_LOGD("call UninstallCloneApp, params[bundleName: %{public}s, user_id: %{public}d, appIndex: %{public}d]",
+        bundleName.c_str(), userId, appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("install clone app failed due to empty bundleName");
+        return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("vnon-system app calling system api, installCloneApp bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_BUNDLE)) {
+        APP_LOGE("UninstallCloneApp permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<BundleCloneInstaller> installer = std::make_shared<BundleCloneInstaller>();
+    return installer->UninstallCloneApp(bundleName, userId, appIndex);
+}
+
+void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGD("handle uninstall clone app message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+ 
+    APP_LOGI("receive Uninstall CLone App Request");
+
+    auto ret = UninstallCloneApp(bundleName, userId, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+    }
+    APP_LOGD("handle uninstall clone app message finished");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

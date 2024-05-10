@@ -312,4 +312,18 @@ HWTEST_F(BmsBundleCloneAppIPCTest, GetCloneBundleInfoTest003_AppIndexNotFound, F
         std::cout << "ability: " << res << std::endl;
     }
 }
+
+HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    auto result = installerProxy->UninstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
+}
 } // OHOS
