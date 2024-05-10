@@ -210,11 +210,8 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
     int32_t updateIcons = 0;
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, "icons", updateIcons,
         JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    int32_t updateSkin = 0;
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, "skin", updateSkin,
-        JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    if ((updateIcons == 0) && (updateSkin == 0)) {
-        APP_LOGI("icons and skin both no need to change, return");
+    if (updateIcons == 0) {
+        APP_LOGI("icons no need to change, return");
         return false;
     }
 

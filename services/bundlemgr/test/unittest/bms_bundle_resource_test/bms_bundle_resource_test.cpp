@@ -2902,7 +2902,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0115, Function | SmallTest
     nlohmann::json theme = R"(
         {
             "icons": 1,
-            "skin": 1,
+            "skin": 0,
             "font": 0
         }
     )"_json;
