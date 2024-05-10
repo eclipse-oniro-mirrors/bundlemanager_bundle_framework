@@ -103,6 +103,9 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
+constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
+constexpr const char* BMS_TRUE = "true";
+const int32_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -5264,12 +5267,19 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    bool pass = false;
-    ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
-    if ((res == ERR_OK) && !pass) {
-        APP_LOGE("machine be controlled, not allow to install app");
-        return false;
+    char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
+    int32_t ret = GetParameter(BMS_ACTIVATION_LOCK, "", enableActivationLock, BMS_ACTIVATION_LOCK_VAL_LEN);
+    if (ret <= 0) {
+        return true;
+    }
+    if (std::strcmp(enableActivationLock, BMS_TRUE) == 0) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        bool pass = false;
+        ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
+        if ((res == ERR_OK) && !pass) {
+            APP_LOGE("machine be controlled, not allow to install app");
+            return false;
+        }
     }
     // otherwise, pass
     return true;
