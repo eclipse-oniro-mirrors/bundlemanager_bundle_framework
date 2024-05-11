@@ -87,8 +87,6 @@ struct CommonFunc {
         napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, int32_t, std::unique_ptr<char[]>> GetGZDOpenArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, uint32_t> GetGZBufferArg(napi_env env, const NapiFuncArg &funcArg);
-    static std::tuple<bool, std::unique_ptr<char[]>, std::unique_ptr<char[]>> GetGZOpenWArg(
-        napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, gzFile_s, HasGZFileMember> GetGZFileArg(napi_env env, napi_value argGZFile);
     static std::tuple<bool, void *, uint32_t> GetGZReadArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, void *, int64_t, int64_t> GetGZFReadArg(napi_env env, const NapiFuncArg &funcArg);

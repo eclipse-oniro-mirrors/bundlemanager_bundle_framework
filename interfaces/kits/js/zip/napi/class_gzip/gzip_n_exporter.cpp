@@ -103,7 +103,6 @@ bool GZipNExporter::Export()
         NapiValue::DeclareNapiFunction("gzdopen", GZDopen),
         NapiValue::DeclareNapiFunction("gzopen", GZOpen),
         NapiValue::DeclareNapiFunction("gzclose", GZClose),
-        NapiValue::DeclareNapiFunction("gzopenw", GZOpenW),
         NapiValue::DeclareNapiFunction("gzclosew", GZCloseW),
         NapiValue::DeclareNapiFunction("gzbuffer", GZBuffer),
         NapiValue::DeclareNapiFunction("gzread", GZRead),
@@ -236,78 +235,6 @@ napi_value GZipNExporter::GZOpen(napi_env env, napi_callback_info info)
         file = gzopen64(arg->path.get(), arg->mode.get());
 #else
         file = gzopen(arg->path.get(), arg->mode.get());
-#endif
-        if (!file) {
-            return NapiBusinessError(ENOENT, true);
-        }
-        std::unique_ptr<gzFile_s, Deleter<gzFile_s>> gzFile(file);
-        gzipEntity->gzs.swap(gzFile);
-        return NapiBusinessError(ERRNO_NOERR);
-    };
-
-    auto cbCompl = [](napi_env env, NapiBusinessError err) -> NapiValue {
-        if (err) {
-            return {env, err.GetNapiErr(env)};
-        }
-        return {NapiValue::CreateUndefined(env)};
-    };
-
-    NapiValue thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == ArgumentCount::TWO) {
-        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_GZIP_NAME, cbExec, cbCompl).val_;
-    }
-
-    return NapiValue::CreateUndefined(env).val_;
-}
-
-#if defined(_WIN32) && !defined(Z_SOLO)
-static std::wstring CharToWString(const char *cstr)
-{
-    (void)setlocale(LC_ALL, ".UTF-8");
-    std::size_t len = std::mbstowcs(nullptr, cstr, 0);
-    std::unique_ptr<wchar_t[]> wstr = std::make_unique<wchar_t[]>(len + 1);
-    std::mbstowcs(wstr.get(), cstr, len + 1);
-
-    std::wstring wstring;
-    for (std::size_t i = 0; i < len; ++i) {
-        wstring += static_cast<char16_t>(wstr[i]);
-    }
-
-    return wstring;
-}
-#endif
-
-napi_value GZipNExporter::GZOpenW(napi_env env, napi_callback_info info)
-{
-    NapiFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return nullptr;
-    }
-
-    auto arg = make_shared<AsyncGZipArg>();
-    /* To get entity */
-    auto gzipEntity = NapiClass::GetEntityOf<GZipEntity>(env, funcArg.GetThisVar());
-    if (!arg || !gzipEntity) {
-        NapiBusinessError().ThrowErr(env, EFAULT);
-        return nullptr;
-    }
-
-    bool succ = false;
-    tie(succ, arg->path, arg->mode) = CommonFunc::GetGZOpenWArg(env, funcArg);
-    if (!succ) {
-        return nullptr;
-    }
-    auto cbExec = [arg, gzipEntity](napi_env env) -> NapiBusinessError {
-        if (!arg || !gzipEntity) {
-            return NapiBusinessError(EFAULT, true);
-        }
-        gzFile file = nullptr;
-#if defined(_WIN32) && !defined(Z_SOLO)
-        std::wstring path = CharToWString(arg->path.get());
-        file = gzopen_w(path.c_str(), arg->mode.get());
-#else
-        return NapiBusinessError(EARCH, true);
 #endif
         if (!file) {
             return NapiBusinessError(ENOENT, true);
