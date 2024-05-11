@@ -60,6 +60,12 @@ enum CompressMethod {
     DEFLATED = 8
 };
 
+enum ReturnStatus {
+    OK = 0,
+    STREAM_END = 1,
+    NEED_DICT = 2
+};
+
 #define COMPRESS_LEVE_CHECK(level, ret)                                                            \
     if (!(level == COMPRESS_LEVEL_NO_COMPRESSION || level == COMPRESS_LEVEL_DEFAULT_COMPRESSION || \
             level == COMPRESS_LEVEL_BEST_SPEED || level == COMPRESS_LEVEL_BEST_COMPRESSION)) {     \
@@ -284,6 +290,31 @@ napi_value OffsetReferencePointInit(napi_env env, napi_value exports)
     SetNamedProperty(env, OffsetReferencePoint, "SEEK_CUR", SEEK_CUR);
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_PROPERTY("OffsetReferencePoint", OffsetReferencePoint),
+    };
+    NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
+
+    return exports;
+}
+
+/**
+ * @brief ReturnStatusInit data initialization.
+ *
+ * @param env The environment that the Node-API call is invoked under.
+ * @param exports An empty object via the exports parameter as a convenience.
+ *
+ * @return The return value from Init is treated as the exports object for the module.
+ */
+napi_value ReturnStatusInit(napi_env env, napi_value exports)
+{
+    APP_LOGD("%{public}s called.", __func__);
+
+    napi_value ReturnStatus = nullptr;
+    napi_create_object(env, &ReturnStatus);
+    SetNamedProperty(env, ReturnStatus, "OK", OK);
+    SetNamedProperty(env, ReturnStatus, "STREAM_END", STREAM_END);
+    SetNamedProperty(env, ReturnStatus, "NEED_DICT", NEED_DICT);
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_PROPERTY("ReturnStatus", ReturnStatus),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(properties) / sizeof(properties[0]), properties));
 

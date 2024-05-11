@@ -41,6 +41,7 @@ static napi_value Init(napi_env env, napi_value exports)
     CompressStrategyInit(env, exports);
     MemLevelInit(env, exports);
     OffsetReferencePointInit(env, exports);
+    ReturnStatusInit(env, exports);
     ErrorCodeInit(env, exports);
     ZlibInit(env, exports);
     std::vector<std::unique_ptr<NapiExporter>> products;
