@@ -376,7 +376,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
 }
 
 bool BundleResourceRdb::ConvertToBundleResourceInfo(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
     const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)
 {
@@ -421,7 +421,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
 }
 
 bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
     const uint32_t flags,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {

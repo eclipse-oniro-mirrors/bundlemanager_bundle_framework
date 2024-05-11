@@ -356,8 +356,8 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
         APP_LOGE("RdbStore table is invalid");
         return nullptr;
     }
-    auto absSharedResultSet = rdbStore->Query(absRdbPredicates, std::vector<std::string>());
-    if (absSharedResultSet == nullptr || !absSharedResultSet->HasBlock()) {
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
+    if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet failed");
         return nullptr;
     }
