@@ -927,6 +927,7 @@ public:
         int32_t appIndex, AbilityInfo &abilityInfo) const;
     ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId) const;
+    std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const;
 private:
     /**
      * @brief Init transferStates.
@@ -1082,7 +1083,6 @@ private:
     void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId,
         BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
-    std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos, const std::string &bundleName,
         const ElementName &element, int32_t flags, int32_t userId) const;
 private:

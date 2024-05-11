@@ -1002,6 +1002,9 @@ public:
     
     virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flag, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

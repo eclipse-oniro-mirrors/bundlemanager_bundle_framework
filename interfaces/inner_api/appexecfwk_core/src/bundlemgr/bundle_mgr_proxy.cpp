@@ -4756,5 +4756,40 @@ ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_
     return GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO, data, bundleInfo);
 }
+
+ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+    int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetCloneAppIndexes of %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetCloneAppIndexes due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetCloneAppIndexes due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetCloneAppIndexes due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES, data, reply)) {
+        APP_LOGE("fail to GetCloneAppIndexes from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!reply.ReadInt32Vector(&appIndexes)) {
+        APP_LOGE("fail to GetCloneAppIndexes from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

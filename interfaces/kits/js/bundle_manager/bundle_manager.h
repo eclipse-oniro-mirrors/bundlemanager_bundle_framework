@@ -263,6 +263,25 @@ struct PreinstalledApplicationInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
 };
 
+struct CloneAppBundleInfoCallbackInfo : public BaseCallbackInfo {
+    explicit CloneAppBundleInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    std::string bundleName;
+    int32_t appIndex = 0;
+    int32_t bundleFlags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    BundleInfo bundleInfo;
+};
+
+struct CloneAppBundleInfosCallbackInfo : public BaseCallbackInfo {
+    explicit CloneAppBundleInfosCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    std::string bundleName;
+    int32_t bundleFlags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<BundleInfo> bundleInfos;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -308,6 +327,8 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
 napi_value GetAllBundleInfoByDeveloperId(napi_env env, napi_callback_info info);
 napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
+napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
