@@ -1137,13 +1137,13 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
-        Constants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTime());
+        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTime());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string hapName = hapFilePath.substr(hapFilePath.find_last_of("//") + 1);
-    std::string tempHapFile = tempHapPath + Constants::PATH_SEPARATOR + hapName;
+    std::string tempHapFile = tempHapPath + ServiceConstants::PATH_SEPARATOR + hapName;
     if (InstalldClient::GetInstance()->CopyFile(hapRealPath, tempHapFile) != ERR_OK) {
         APP_LOGE("GetBundleArchiveInfo copy hap file failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -1308,9 +1308,9 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     int32_t userId)
 {
     std::vector<std::string> rootDir;
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
-            Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
         rootDir.emplace_back(dataDir);
     }
 

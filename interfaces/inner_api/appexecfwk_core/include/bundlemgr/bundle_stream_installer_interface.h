@@ -21,9 +21,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace StreamConstant {
-constexpr int32_t DEFAULT_INSTALLERID = -1;
-}
 class IBundleStreamInstaller : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleStreamInstaller");
@@ -50,7 +47,7 @@ public:
     }
     virtual uint32_t GetInstallerId() const
     {
-        return StreamConstant::DEFAULT_INSTALLERID;
+        return Constants::DEFAULT_INSTALLERID;
     }
     virtual void SetInstallerId(uint32_t installerId) {};
     virtual void UnInit() {};

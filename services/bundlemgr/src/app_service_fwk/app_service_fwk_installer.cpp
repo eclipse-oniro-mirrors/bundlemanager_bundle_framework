@@ -46,12 +46,12 @@ std::string ObtainTempSoPath(
     auto pos = tempSoPath.find(moduleName);
     if (pos == std::string::npos) {
         tempSoPath = moduleName + AppExecFwk::Constants::TMP_SUFFIX
-            + AppExecFwk::Constants::PATH_SEPARATOR + tempSoPath;
+            + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempSoPath;
     } else {
         std::string innerTempStr = moduleName + AppExecFwk::Constants::TMP_SUFFIX;
         tempSoPath.replace(pos, moduleName.length(), innerTempStr);
     }
-    return tempSoPath + AppExecFwk::Constants::PATH_SEPARATOR;
+    return tempSoPath + AppExecFwk::ServiceConstants::PATH_SEPARATOR;
 };
 
 void BuildCheckParam(
@@ -369,19 +369,19 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
 {
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
     newInfo.SetAppCodePath(bundleDir);
     uint32_t versionCode = newInfo.GetVersionCode();
     std::string versionDir = bundleDir
-        + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+        + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     result = MkdirIfNotExist(versionDir);
     CHECK_RESULT(result, "Check version dir failed %{public}d");
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
-    std::string moduleDir = versionDir + AppExecFwk::Constants::PATH_SEPARATOR + moduleName;
+    std::string moduleDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     result = MkdirIfNotExist(moduleDir);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
 
@@ -400,19 +400,19 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
 {
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
     oldInfo.SetAppCodePath(bundleDir);
     uint32_t versionCode = newInfo.GetVersionCode();
     std::string versionDir = bundleDir
-        + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+        + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     result = MkdirIfNotExist(versionDir);
     CHECK_RESULT(result, "Check version dir failed %{public}d");
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
-    std::string moduleDir = versionDir + AppExecFwk::Constants::PATH_SEPARATOR + moduleName;
+    std::string moduleDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
     result = MkdirIfNotExist(moduleDir);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
 
@@ -459,7 +459,7 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
         }
 
         std::string tempSoPath =
-            versionDir + AppExecFwk::Constants::PATH_SEPARATOR + tempNativeLibraryPath;
+            versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
         APP_LOGD("TempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
@@ -513,8 +513,8 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     const std::string &nativeLibraryPath)
 {
     // 1. move so files to real installation dir
-    std::string realSoPath = versionDir + AppExecFwk::Constants::PATH_SEPARATOR
-        + nativeLibraryPath + AppExecFwk::Constants::PATH_SEPARATOR;
+    std::string realSoPath = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR
+        + nativeLibraryPath + AppExecFwk::ServiceConstants::PATH_SEPARATOR;
     ErrCode result = MkdirIfNotExist(realSoPath);
     CHECK_RESULT(result, "Check module dir failed %{public}d");
     std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
@@ -524,7 +524,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     }
 
     std::string tempSoPath =
-        versionDir + AppExecFwk::Constants::PATH_SEPARATOR + tempNativeLibraryPath;
+        versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
     APP_LOGD("Move so files from path %{public}s to path %{public}s",
         tempSoPath.c_str(), realSoPath.c_str());
     result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
@@ -534,7 +534,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     }
 
     // 2. remove so temp dir
-    std::string deleteTempDir = versionDir + AppExecFwk::Constants::PATH_SEPARATOR
+    std::string deleteTempDir = versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR
         + moduleName + AppExecFwk::Constants::TMP_SUFFIX;
     result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
     if (result != ERR_OK) {
@@ -838,10 +838,10 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(const InnerBundleInfo &o
         return ERR_OK;
     }
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     uint32_t versionCode = oldInfo.GetVersionCode();
     std::string versionDir = bundleDir
-        + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+        + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
 
     return InstalldClient::GetInstance()->RemoveDir(versionDir);
 }

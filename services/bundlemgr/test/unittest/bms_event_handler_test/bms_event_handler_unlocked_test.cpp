@@ -74,7 +74,7 @@ bool BmsEventHandlerUnLockedTest::CreateBundleDataDir(const BundleInfo &bundleIn
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
-    return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, Constants::DIR_EL2);
+    return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
 
 bool BmsEventHandlerUnLockedTest::OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data)

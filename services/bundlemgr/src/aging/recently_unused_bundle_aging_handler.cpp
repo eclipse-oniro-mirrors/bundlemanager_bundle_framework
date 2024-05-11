@@ -178,10 +178,10 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
     std::vector<std::string> rootDir;
     for (const auto &innerBundleUserInfo : innerBundleUserInfos) {
         int32_t userId = innerBundleUserInfo.bundleUserInfo.userId;
-        for (const auto &el : Constants::BUNDLE_EL) {
+        for (const auto &el : ServiceConstants::BUNDLE_EL) {
             std::string dataDir =
                 Constants::BUNDLE_APP_DATA_BASE_DIR + el +
-                Constants::PATH_SEPARATOR + std::to_string(userId) +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId) +
                 Constants::BASE + agingBundle.GetBundleName();
             rootDir.emplace_back(dataDir);
         }

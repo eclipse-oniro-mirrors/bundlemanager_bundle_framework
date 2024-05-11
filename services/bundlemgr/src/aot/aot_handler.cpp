@@ -105,7 +105,7 @@ bool AOTHandler::IsSupportARM64() const
         APP_LOGD("abiList empty");
         return false;
     }
-    return std::find(abiList.begin(), abiList.end(), Constants::ARM64_V8A) != abiList.end();
+    return std::find(abiList.begin(), abiList.end(), ServiceConstants::ARM64_V8A) != abiList.end();
 }
 
 std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const
@@ -123,8 +123,8 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
     }
     std::string path;
     path.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName)
-        .append(Constants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
+        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
     APP_LOGD("path : %{public}s", path.c_str());
     bool isExistFile = false;
     (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
@@ -151,7 +151,8 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.compileMode = compileMode;
     aotArgs.hapPath = info.GetModuleHapPath(aotArgs.moduleName);
     aotArgs.coreLibPath = Constants::EMPTY_STRING;
-    aotArgs.outputPath = Constants::ARK_CACHE_PATH + aotArgs.bundleName + Constants::PATH_SEPARATOR + Constants::ARM64;
+    aotArgs.outputPath = Constants::ARK_CACHE_PATH + aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR
+        + ServiceConstants::ARM64;
     // handle internal hsp
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
@@ -181,7 +182,8 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
-    aotArgs.anFileName = aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName + Constants::AN_SUFFIX;
+    aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName
+        + Constants::AN_SUFFIX;
 
     // key rule is start:end,start:end......
     std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
@@ -377,7 +379,7 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
 {
     std::string arkProfilePath;
     arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName).append(Constants::PATH_SEPARATOR);
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName).append(ServiceConstants::PATH_SEPARATOR);
     ErrCode errCode;
     for (const auto &moduleName : bundleInfo.moduleNames) {
         std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + Constants::AP_SUFFIX;

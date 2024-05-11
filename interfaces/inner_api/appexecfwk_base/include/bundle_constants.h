@@ -23,11 +23,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
-constexpr const char* EMPTY_STRING = "";
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+const std::string EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-extern const std::string PATH_SEPARATOR;
 constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
@@ -48,11 +48,7 @@ constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
-constexpr const char* DIR_EL1 = "el1";
-constexpr const char* DIR_EL2 = "el2";
-constexpr const char* DIR_EL3 = "el3";
-constexpr const char* DIR_EL4 = "el4";
-extern const std::vector<std::string> BUNDLE_EL;
+constexpr const char* CACHE_DIR = "cache";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -69,25 +65,18 @@ constexpr int32_t INVALID_API_VERSION = -1;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
+constexpr int32_t DEFAULT_INSTALLERID = -1;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
 constexpr const char* ABI_SEPARATOR = ",";
 constexpr const char* MODULE_NAME_SEPARATOR = ",";
-constexpr const char* ARM_EABI = "armeabi";
-constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
-constexpr const char* ARM64_V8A = "arm64-v8a";
-constexpr const char* ARM64 = "arm64";
-extern const std::string LIBS;
-extern const std::string AN;
-extern const std::map<std::string, std::string> ABI_MAP;
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* PATCH_PATH = "patch_";
 constexpr const char* HOT_RELOAD_PATH = "hotreload_";
-extern const std::string RES_FILE_PATH;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -155,6 +144,7 @@ constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 
+constexpr uint16_t MAX_JSON_STRING_LENGTH = 4096;
 constexpr const char* UID = "uid";
 constexpr const char* USER_ID = "userId";
 constexpr const char* BUNDLE_NAME = "bundleName";
@@ -254,7 +244,6 @@ constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
-extern const std::string CLONE_BUNDLE_PREFIX;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

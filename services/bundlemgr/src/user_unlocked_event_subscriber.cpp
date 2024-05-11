@@ -81,7 +81,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::DATABASE + bundleInfo.name;
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::DATABASE + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
@@ -159,10 +159,10 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
 
-    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::BUNDLE_EL[1]);
+    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::BUNDLE_EL[1]);
 #ifdef CHECK_ELDIR_ENABLED
-    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL3);
-    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL4);
+    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL3);
+    ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL4);
 #endif
     ProcessUpdateAppLogDir(bundleInfos, userId);
     ProcessFileManagerDir(bundleInfos, userId);
@@ -174,7 +174,7 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
     int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir)
 {
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        Constants::PATH_SEPARATOR + std::to_string(userId);
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     for (const auto &bundleInfo : bundleInfos) {
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
             !CreateBundleDataDir(bundleInfo, userId, elDir)) {
@@ -210,8 +210,8 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
 
 bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string bundleLogDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
-        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::LOG + bundleInfo.name;
+    std::string bundleLogDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::LOG + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());

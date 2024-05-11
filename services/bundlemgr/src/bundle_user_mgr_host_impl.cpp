@@ -276,7 +276,7 @@ void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
 
 void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
 {
-    std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+    std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId);
     APP_LOGI("remove asan log directory %{public}s when remove user", asanLogDir.c_str());
     InstalldClient::GetInstance()->RemoveDir(asanLogDir);
