@@ -765,7 +765,7 @@ ErrCode BundleInstallerHost::InstallCloneApp(const std::string &bundleName, int3
         APP_LOGE("vnon-system app calling system api, installCloneApp bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_CLONE_BUNDLE)) {
         APP_LOGE("InstallCloneApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
