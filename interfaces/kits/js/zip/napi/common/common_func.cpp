@@ -180,7 +180,8 @@ bool CommonFunc::SetZStreamValue(napi_env env, const NapiFuncArg &funcArg)
 static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMember &hasZStreamMember, z_stream &zs)
 {
     bool succ = false;
-    if (zstreamNVal.HasProp("nextIn") && !zstreamNVal.GetProp("nextIn").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("nextIn") && !zstreamNVal.GetProp("nextIn").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("nextIn").TypeIs(napi_null)) {
         void *buf = nullptr;
         size_t bufLen = 0;
         tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextIn").ToArrayBuffer();
@@ -192,7 +193,8 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
         hasZStreamMember.hasNextIn = true;
     }
 
-    if (zstreamNVal.HasProp("availableIn") && !zstreamNVal.GetProp("availableIn").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("availableIn") && !zstreamNVal.GetProp("availableIn").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("availableIn").TypeIs(napi_null)) {
         uint32_t availableIn = 0U;
         tie(succ, availableIn) = zstreamNVal.GetProp("availableIn").ToInt32();
         if (!succ) {
@@ -203,7 +205,8 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
         hasZStreamMember.hasAvailIn = true;
     }
 
-    if (zstreamNVal.HasProp("totalIn") && !zstreamNVal.GetProp("totalIn").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("totalIn") && !zstreamNVal.GetProp("totalIn").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("totalIn").TypeIs(napi_null)) {
         uint64_t totalIn = 0U;
         tie(succ, totalIn) = zstreamNVal.GetProp("totalIn").ToInt64();
         if (!succ) {
@@ -220,7 +223,8 @@ static bool GetZStreamInValue(napi_env env, NapiValue zstreamNVal, HasZStreamMem
 static bool GetZStreamOtherValue(napi_env env, NapiValue zstreamNVal, HasZStreamMember &hasZStreamMember, z_stream &zs)
 {
     bool succ = false;
-    if (zstreamNVal.HasProp("dataType") && !zstreamNVal.GetProp("dataType").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("dataType") && !zstreamNVal.GetProp("dataType").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("dataType").TypeIs(napi_null)) {
         int32_t dataType = 0;
         tie(succ, dataType) = zstreamNVal.GetProp("dataType").ToInt32();
         if (!succ) {
@@ -231,7 +235,8 @@ static bool GetZStreamOtherValue(napi_env env, NapiValue zstreamNVal, HasZStream
         hasZStreamMember.hasDataType = true;
     }
 
-    if (zstreamNVal.HasProp("adler") && !zstreamNVal.GetProp("adler").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("adler") && !zstreamNVal.GetProp("adler").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("adler").TypeIs(napi_null)) {
         uint64_t adler = 0;
         tie(succ, adler) = zstreamNVal.GetProp("adler").ToInt64();
         if (!succ) {
@@ -252,13 +257,19 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
     NapiValue zstreamNVal(env, zstream);
     HasZStreamMember hasZStreamMember = {};
 
+    if (zstreamNVal.TypeIs(napi_undefined) || zstreamNVal.TypeIs(napi_null)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return { false, {}, {} };
+    }
+
     succ = GetZStreamInValue(env, zstreamNVal, hasZStreamMember, zs);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return { false, {}, {} };
     }
 
-    if (zstreamNVal.HasProp("nextOut") && !zstreamNVal.GetProp("nextOut").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("nextOut") && !zstreamNVal.GetProp("nextOut").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("nextOut").TypeIs(napi_null)) {
         void *buf = nullptr;
         size_t bufLen = 0;
         tie(succ, buf, bufLen) = zstreamNVal.GetProp("nextOut").ToArrayBuffer();
@@ -270,7 +281,8 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
         hasZStreamMember.hasNextOut = true;
     }
 
-    if (zstreamNVal.HasProp("availableOut") && !zstreamNVal.GetProp("availableOut").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("availableOut") && !zstreamNVal.GetProp("availableOut").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("availableOut").TypeIs(napi_null)) {
         uint32_t availableOut = 0U;
         tie(succ, availableOut) = zstreamNVal.GetProp("availableOut").ToInt32();
         if (!succ) {
@@ -281,7 +293,8 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
         hasZStreamMember.hasAvailOut = true;
     }
 
-    if (zstreamNVal.HasProp("totalOut") && !zstreamNVal.GetProp("totalOut").TypeIs(napi_undefined)) {
+    if (zstreamNVal.HasProp("totalOut") && !zstreamNVal.GetProp("totalOut").TypeIs(napi_undefined) &&
+        !zstreamNVal.GetProp("totalOut").TypeIs(napi_null)) {
         uint64_t totalOut = 0U;
         tie(succ, totalOut) = zstreamNVal.GetProp("totalOut").ToInt64();
         if (!succ) {
@@ -304,7 +317,8 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
 static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzHeader)
 {
     bool succ = false;
-    if (gzHeaderNVal.HasProp("isText") && !gzHeaderNVal.GetProp("isText").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("isText") && !gzHeaderNVal.GetProp("isText").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("isText").TypeIs(napi_null)) {
         bool text = false;
         tie(succ, text) = gzHeaderNVal.GetProp("isText").ToBool();
         if (!succ) {
@@ -314,7 +328,8 @@ static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzH
         gzHeader.text = text;
     }
 
-    if (gzHeaderNVal.HasProp("time") && !gzHeaderNVal.GetProp("time").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("time") && !gzHeaderNVal.GetProp("time").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("time").TypeIs(napi_null)) {
         uint64_t time = 0U;
         tie(succ, time) = gzHeaderNVal.GetProp("time").ToInt64();
         if (!succ) {
@@ -324,7 +339,8 @@ static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzH
         gzHeader.time = time;
     }
 
-    if (gzHeaderNVal.HasProp("xflags") && !gzHeaderNVal.GetProp("xflags").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("xflags") && !gzHeaderNVal.GetProp("xflags").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("xflags").TypeIs(napi_null)) {
         int32_t xflags = 0;
         tie(succ, xflags) = gzHeaderNVal.GetProp("xflags").ToInt32();
         if (!succ) {
@@ -334,7 +350,8 @@ static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzH
         gzHeader.xflags = xflags;
     }
 
-    if (gzHeaderNVal.HasProp("os") && !gzHeaderNVal.GetProp("os").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("os") && !gzHeaderNVal.GetProp("os").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("os").TypeIs(napi_null)) {
         int32_t os = 0;
         tie(succ, os) = gzHeaderNVal.GetProp("os").ToInt32();
         if (!succ) {
@@ -349,7 +366,8 @@ static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzH
 static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzHeader)
 {
     bool succ = false;
-    if (gzHeaderNVal.HasProp("extra") && !gzHeaderNVal.GetProp("extra").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("extra") && !gzHeaderNVal.GetProp("extra").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("extra").TypeIs(napi_null)) {
         void *extra = nullptr;
         size_t extraLen = 0;
         tie(succ, extra, extraLen) = gzHeaderNVal.GetProp("extra").ToArrayBuffer();
@@ -360,7 +378,8 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
         gzHeader.extra = reinterpret_cast<Bytef *>(extra);
     }
 
-    if (gzHeaderNVal.HasProp("done") && !gzHeaderNVal.GetProp("done").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("done") && !gzHeaderNVal.GetProp("done").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("done").TypeIs(napi_null)) {
         bool done = false;
         tie(succ, done) = gzHeaderNVal.GetProp("done").ToBool();
         if (!succ) {
@@ -370,7 +389,8 @@ static bool UnwrapGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &
         gzHeader.done = done;
     }
 
-    if (gzHeaderNVal.HasProp("hcrc") && !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("hcrc") && !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("hcrc").TypeIs(napi_null)) {
         bool hcrc = false;
         tie(succ, hcrc) = gzHeaderNVal.GetProp("hcrc").ToBool();
         if (!succ) {
@@ -389,13 +409,19 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
     NapiValue gzHeaderNVal(env, argGZheader);
     gz_header gzHeader = {};
 
+    if (gzHeaderNVal.TypeIs(napi_undefined) || gzHeaderNVal.TypeIs(napi_null)) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return { false, {}};
+    }
+
     succ = GetGZHeadValue(env, gzHeaderNVal, gzHeader);
     if (!succ) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return { false, {} };
     }
 
-    if (gzHeaderNVal.HasProp("extraLen") && !gzHeaderNVal.GetProp("extraLen").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("extraLen") && !gzHeaderNVal.GetProp("extraLen").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("extraLen").TypeIs(napi_null)) {
         uint32_t extraLen = 0U;
         tie(succ, extraLen) = gzHeaderNVal.GetProp("extraLen").ToInt32();
         if (!succ) {
@@ -405,7 +431,8 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
         gzHeader.extra_len = extraLen;
     }
 
-    if (gzHeaderNVal.HasProp("name") && !gzHeaderNVal.GetProp("name").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("name") && !gzHeaderNVal.GetProp("name").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("name").TypeIs(napi_null)) {
         void *name = nullptr;
         size_t nameLen = 0;
         tie(succ, name, nameLen) = gzHeaderNVal.GetProp("name").ToArrayBuffer();
@@ -416,7 +443,8 @@ std::tuple<bool, gz_header> CommonFunc::GetGZHeaderArg(napi_env env, napi_value 
         gzHeader.name = reinterpret_cast<Bytef *>(name);
     }
 
-    if (gzHeaderNVal.HasProp("comment") && !gzHeaderNVal.GetProp("comment").TypeIs(napi_undefined)) {
+    if (gzHeaderNVal.HasProp("comment") && !gzHeaderNVal.GetProp("comment").TypeIs(napi_undefined) &&
+        !gzHeaderNVal.GetProp("comment").TypeIs(napi_null)) {
         void *comment = nullptr;
         size_t commentLen = 0;
         tie(succ, comment, commentLen) = gzHeaderNVal.GetProp("comment").ToArrayBuffer();
