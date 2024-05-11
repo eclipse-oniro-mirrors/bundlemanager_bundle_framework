@@ -78,7 +78,8 @@ constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
 constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* SKILLS = "skills";
-constexpr const char* MAX_ADDITIONAL_NUMBER = "maxAdditionalNumber";
+constexpr const char* MAX_ADDITIONAL_NUMBER = "maxCount";
+constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
@@ -1459,13 +1460,13 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nMultiAppMode));
 
     napi_value nMultiAppModeType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.multiAppMode.type),
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.multiAppMode.multiAppModeType),
         &nMultiAppModeType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, TYPE, nMultiAppModeType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MULTI_APP_MODE_TYPE, nMultiAppModeType));
 
-    napi_value nMaxNumber;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.multiAppMode.maxAdditionalNumber, &nMaxNumber));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMaxNumber));
+    napi_value nMaxCount;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.multiAppMode.maxCount, &nMaxCount));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMaxCount));
 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, MULTI_APP_MODE, nMultiAppMode));
 }

@@ -1319,14 +1319,15 @@ HWTEST_F(BmsDataMgrTest, UpdateInnerBundleInfo_0006, Function | SmallTest | Leve
         ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
         EXPECT_TRUE(ret);
         InnerBundleInfo newInfo = info;
-        newInfo.baseApplicationInfo_->multiAppMode.type = MultiAppModeType::MULTI_INSTANCE;
-        newInfo.baseApplicationInfo_->multiAppMode.maxAdditionalNumber = 100;
+        newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+        newInfo.baseApplicationInfo_->multiAppMode.maxCount = 100;
         newInfo.baseApplicationInfo_->multiProjects = true;
         ret = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, newInfo, info);
         EXPECT_TRUE(ret);
-        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.type, newInfo.baseApplicationInfo_->multiAppMode.type);
-        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.maxAdditionalNumber,
-            newInfo.baseApplicationInfo_->multiAppMode.maxAdditionalNumber);
+        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.multiAppModeType,
+            newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType);
+        EXPECT_EQ(info.baseApplicationInfo_->multiAppMode.maxCount,
+            newInfo.baseApplicationInfo_->multiAppMode.maxCount);
         EXPECT_EQ(info.baseApplicationInfo_->multiProjects, newInfo.baseApplicationInfo_->multiProjects);
         ret = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
         EXPECT_TRUE(ret);

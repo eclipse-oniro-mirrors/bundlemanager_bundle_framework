@@ -209,8 +209,8 @@ struct Extension {
 };
 
 struct MultiAppMode {
-    std::string type;
-    int32_t maxAdditionalNumber;
+    std::string multiAppModeType;
+    int32_t maxCount;
 };
 
 struct App {
@@ -893,7 +893,7 @@ void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MULTI_APP_MODE_TYPE,
-        multiAppMode.type,
+        multiAppMode.multiAppModeType,
         JsonType::STRING,
         false,
         g_parseResult,
@@ -901,7 +901,7 @@ void from_json(const nlohmann::json &jsonObject, MultiAppMode &multiAppMode)
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
-        multiAppMode.maxAdditionalNumber,
+        multiAppMode.maxCount,
         JsonType::NUMBER,
         false,
         g_parseResult,
@@ -2001,8 +2001,8 @@ bool ToApplicationInfo(
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
 
-    applicationInfo.multiAppMode.type = ToMultiAppModeType(app.multiAppMode.type);
-    applicationInfo.multiAppMode.maxAdditionalNumber = app.multiAppMode.maxAdditionalNumber;
+    applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
+    applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
     applicationInfo.maxChildProcess = app.maxChildProcess;
     return true;
 }
