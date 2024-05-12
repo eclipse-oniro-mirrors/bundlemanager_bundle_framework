@@ -154,7 +154,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 {
     if (bundleName.empty()) {
         APP_LOGE("the bundle name is empty");
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+        return ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR;
     }
 
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -185,22 +185,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
         return ERR_APPEXECFWK_CLONE_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
 
-    if (appIndex == 0) {
-        ErrCode availableRes = info.GetAvailableCloneAppIndex(userId, appIndex);
-        if (availableRes != ERR_OK) {
-            APP_LOGE("Get Available Clone AppIndex Fail for, errCode: %{public}d", availableRes);
-            return availableRes;
-        }
-    } else {
-        bool found = false;
-        ErrCode isExistedRes = info.IsCloneAppIndexExisted(userId, appIndex, found);
-        if (isExistedRes != ERR_OK) {
-            return isExistedRes;
-        }
-        if (found == true) {
-            APP_LOGE("AppIndex %{public}d had been existed in userId %{public}d", appIndex, userId);
-            return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
-        }
+    ErrCode ackRes = info.VerifyAndAckCloneAppIndex(userId, appIndex);
+    if (ackRes != ERR_OK) {
+        APP_LOGE("installCloneApp fail for verifyAndAck res: %{public}d", ackRes);
+        return ackRes;
     }
 
     // uid

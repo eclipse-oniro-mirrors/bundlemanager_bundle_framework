@@ -173,7 +173,11 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "bundleName":"com.example.myapplication",
         "cacheDir":"",
         "codePath":"/data/app/el1/bundle/public/com.example.myapplication",
-        "cpuAbi":"arm64-v8a"
+        "cpuAbi":"arm64-v8a",
+        "multiAppModeData": {
+            "multiAppModeType":2,
+            "maxCount":3
+        }
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -336,5 +340,239 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, QueryCloneBundle_0001, Function | Sma
     // not exists
     ErrCode r3 = innerBundleInfo.GetBundleInfoV9(0, bundleInfo, userId, appIndex2);
     EXPECT_EQ(r3, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0001
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0001, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t appIndex = 0;
+    auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appIndex, 1);
+
+    InnerBundleCloneInfo cloneInfo1;
+    cloneInfo1.userId = userId;
+    cloneInfo1.appIndex = appIndex;
+    innerBundleInfo.AddCloneBundle(cloneInfo1);
+
+    appIndex = 0;
+    auto res1 = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res1, ERR_OK);
+    EXPECT_EQ(appIndex, 2);
+
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.userId = userId;
+    cloneInfo2.appIndex = appIndex;
+    innerBundleInfo.AddCloneBundle(cloneInfo2);
+
+    appIndex = 0;
+    auto res2 = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res2, ERR_OK);
+    EXPECT_EQ(appIndex, 3);
+
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.userId = userId;
+    cloneInfo3.appIndex = appIndex;
+    innerBundleInfo.AddCloneBundle(cloneInfo3);
+
+    appIndex = 0;
+    auto res3 = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res3, ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER);
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0002
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0002, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    {
+        int32_t appIndex = 2;
+        auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+        EXPECT_EQ(res, ERR_OK);
+        EXPECT_EQ(appIndex, 2);
+        InnerBundleCloneInfo cloneInfo2;
+        cloneInfo2.userId = userId;
+        cloneInfo2.appIndex = appIndex;
+        innerBundleInfo.AddCloneBundle(cloneInfo2);
+    }
+
+    {
+        int32_t appIndex = 1;
+        auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+        EXPECT_EQ(res, ERR_OK);
+        EXPECT_EQ(appIndex, 1);
+        InnerBundleCloneInfo cloneInfo1;
+        cloneInfo1.userId = userId;
+        cloneInfo1.appIndex = appIndex;
+        innerBundleInfo.AddCloneBundle(cloneInfo1);
+    }
+
+    {
+        int32_t appIndex = 3;
+        auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+        EXPECT_EQ(res, ERR_OK);
+        EXPECT_EQ(appIndex, 3);
+    }
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0003
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0003, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t appIndex = -1;
+    auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
+    appIndex = Constants::CLONE_APP_INDEX_MAX + 1;
+    res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER);
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0004
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0004, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t appIndex = 2;
+    auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appIndex, 2);
+
+    InnerBundleCloneInfo cloneInfo2;
+    cloneInfo2.userId = userId;
+    cloneInfo2.appIndex = appIndex;
+    innerBundleInfo.AddCloneBundle(cloneInfo2);
+
+    appIndex = 2;
+    res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED);
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0005
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0005, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t appIndex = 3;
+    auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appIndex, 3);
+
+    InnerBundleCloneInfo cloneInfo3;
+    cloneInfo3.userId = userId;
+    cloneInfo3.appIndex = appIndex;
+    innerBundleInfo.AddCloneBundle(cloneInfo3);
+
+    appIndex = 0;
+    res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(appIndex, 1);
+}
+
+/**
+ * @tc.number: VerifyAndAckCloneAppIndex_0006
+ * @tc.name: innerBundleInfo verifyAndAckCloneAppIndex clone bundle
+ * @tc.desc: 1.system running normally
+ */
+HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0006, Function | SmallTest | Level1)
+{
+    int32_t userId = 1001;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+
+    ApplicationInfo appInfo;
+    appInfo.multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    appInfo.multiAppMode.maxCount = 3;
+    innerBundleInfo.SetBaseApplicationInfo(appInfo);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = userId;
+    innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+
+    int32_t appIndex = 0;
+    auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
+
+    appIndex = 1;
+    res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE);
 }
 } // OHOS

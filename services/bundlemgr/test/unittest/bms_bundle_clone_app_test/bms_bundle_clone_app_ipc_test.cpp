@@ -145,7 +145,7 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Func
         APP_LOGE("get bundle installer Failure.");
         return;
     }
-    const std::string bundleName = "ohos.samples.etsclock";
+    const std::string bundleName = "com.example.myapplication";
     const int32_t userId = 100;
     int32_t appIndex = 0;
 }

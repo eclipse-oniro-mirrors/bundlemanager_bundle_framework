@@ -2003,6 +2003,12 @@ bool ToApplicationInfo(
 
     applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
     applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
+    if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
+        int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
+        if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
+            return false;
+        }
+    }
     applicationInfo.maxChildProcess = app.maxChildProcess;
     return true;
 }
