@@ -177,7 +177,7 @@ constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
 constexpr int32_t INITIAL_SANDBOX_APP_INDEX = 1000;
 constexpr int32_t MAX_APP_INDEX = 100;
-constexpr int32_t MAX_SANDBOX_APP_INDEX = 10000;
+constexpr int32_t MAX_SANDBOX_APP_INDEX = INITIAL_SANDBOX_APP_INDEX + 100;
 
 // app-distribution-type
 constexpr const char* APP_DISTRIBUTION_TYPE_NONE = "none";
