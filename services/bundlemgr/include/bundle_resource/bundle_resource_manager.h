@@ -91,7 +91,7 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
-    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
+    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, uint32_t tempTaskNumber);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 
@@ -103,8 +103,12 @@ private:
 
     void SendBundleResourcesChangedEvent(int32_t userId);
 
+    void InnerProcessResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        std::vector<ResourceInfo> &resourceInfos);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;
+    std::atomic_uint currentTaskNum_ = 0;
 };
 } // AppExecFwk
 } // OHOS
