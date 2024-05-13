@@ -144,9 +144,9 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("QueryData failed, systemState:%{public}s", systemState.c_str());
+        APP_LOGE("QueryByStep failed, systemState:%{public}s", systemState.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
@@ -198,9 +198,9 @@ bool BundleResourceRdb::IsCurrentColorModeExist()
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("QueryData failed, systemState:%{public}s", systemState.c_str());
+        APP_LOGE("QueryByStep failed, systemState:%{public}s", systemState.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
@@ -234,9 +234,9 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("bundleName:%{public}s failed due rdb QueryData failed, systemState:%{public}s",
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
             bundleName.c_str(), systemState.c_str());
         return false;
     }
@@ -266,9 +266,9 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("bundleName:%{public}s failed due rdb QueryData failed, systemState:%{public}s",
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
             bundleName.c_str(), systemState.c_str());
         return false;
     }
@@ -306,7 +306,7 @@ bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
         return false;
@@ -345,7 +345,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
-    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
         return false;
@@ -376,7 +376,7 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
 }
 
 bool BundleResourceRdb::ConvertToBundleResourceInfo(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
     const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)
 {
@@ -421,7 +421,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
 }
 
 bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
-    const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+    const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
     const uint32_t flags,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {

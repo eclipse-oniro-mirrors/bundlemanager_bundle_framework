@@ -342,5 +342,26 @@ void RdbDataManager::DelayCloseRdbStore()
     std::thread closeRdbStoreThread(task);
     closeRdbStoreThread.detach();
 }
+
+std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(
+    const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    APP_LOGD("QueryByStep start");
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return nullptr;
+    }
+    if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
+        APP_LOGE("RdbStore table is invalid");
+        return nullptr;
+    }
+    auto absSharedResultSet = rdbStore->QueryByStep(absRdbPredicates, std::vector<std::string>());
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet failed");
+        return nullptr;
+    }
+    return absSharedResultSet;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

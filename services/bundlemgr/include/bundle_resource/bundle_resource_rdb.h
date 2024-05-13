@@ -57,12 +57,12 @@ public:
 
 private:
     bool ConvertToBundleResourceInfo(
-        const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+        const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo);
 
     bool ConvertToLauncherAbilityResourceInfo(
-        const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
+        const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,
         const uint32_t flags,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
 

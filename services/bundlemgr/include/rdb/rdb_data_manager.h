@@ -45,6 +45,8 @@ public:
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool CreateTable();
     void DelayCloseRdbStore();
+    std::shared_ptr<NativeRdb::ResultSet> QueryByStep(
+        const NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
