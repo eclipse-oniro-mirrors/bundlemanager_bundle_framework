@@ -37,16 +37,19 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
+namespace {
+const std::string CLONE_DIR_PATH_PREFIX = "clone";
+}
 
 std::string GetCloneDataDir(const std::string &bundleName, const int32_t appIndex)
 {
-    return ServiceConstants::CLONE_BUNDLE_PREFIX + bundleName + Constants::FILE_SEPARATOR_CHAR
-        + std::to_string(appIndex);
+    return CLONE_DIR_PATH_PREFIX + Constants::FILE_SEPARATOR_CHAR
+        + bundleName + Constants::FILE_SEPARATOR_CHAR + std::to_string(appIndex);
 }
 
 std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
 {
-    return std::to_string(appIndex) + ServiceConstants::CLONE_BUNDLE_PREFIX + bundleName;
+    return std::to_string(appIndex) + CLONE_DIR_PATH_PREFIX + Constants::FILE_UNDERLINE + bundleName;
 }
 
 BundleCloneInstaller::BundleCloneInstaller()
