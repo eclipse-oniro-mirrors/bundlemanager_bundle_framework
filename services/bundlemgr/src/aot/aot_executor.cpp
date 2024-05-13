@@ -29,11 +29,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#include "aot_compiler_client.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #if defined(CODE_SIGNATURE_ENABLE)
+#include "aot_compiler_client.h"
 #include "code_sign_utils.h"
 #endif
 #include "installd/installd_operator.h"
@@ -203,13 +203,14 @@ ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<i
     APP_LOGI("sign aot file success");
     return ERR_OK;
 #else
-    APP_LOGI("code_signature_enable is 0, ignore");
+    APP_LOGI("code signature disable, ignore");
     return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
 #endif
 }
 
 ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_t> &sigData)
 {
+#if defined(CODE_SIGNATURE_ENABLE)
     std::unordered_map<std::string, std::string> argsMap;
     MapArgs(aotArgs, argsMap);
     std::string aotFilePath = Constants::ARK_CACHE_PATH + aotArgs.bundleName;
@@ -227,6 +228,10 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
     }
     APP_LOGI("aot compiler success");
     return ERR_OK;
+#else
+    APP_LOGI("code signature disable, ignore");
+    return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+#endif
 }
 
 void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
@@ -263,13 +268,14 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
         ResetState();
     }
 #else
-    APP_LOGI("code_signature_enable is 0, ignore");
+    APP_LOGI("code signature disable, ignore");
     ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
 #endif
 }
 
 ErrCode AOTExecutor::StopAOT()
 {
+#if defined(CODE_SIGNATURE_ENABLE)
     APP_LOGI("begin to stop AOT");
     std::lock_guard<std::mutex> lock(stateMutex_);
     if (!state_.running) {
@@ -284,6 +290,10 @@ ErrCode AOTExecutor::StopAOT()
     (void)InstalldOperator::DeleteDir(state_.outputPath);
     ResetState();
     return ERR_OK;
+#else
+    APP_LOGI("code signature disable, ignore");
+    return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
+#endif
 }
 
 void AOTExecutor::InitState(const AOTArgs &aotArgs)

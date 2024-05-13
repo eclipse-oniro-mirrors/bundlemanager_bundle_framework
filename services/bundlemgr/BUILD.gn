@@ -465,7 +465,6 @@ ohos_shared_library("installs") {
   ]
 
   external_deps = [
-    "ets_runtime:libcompiler_service",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -476,7 +475,10 @@ ohos_shared_library("installs") {
   ]
 
   if (code_signature_enable) {
-    external_deps += [ "code_signature:libcode_sign_utils" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
