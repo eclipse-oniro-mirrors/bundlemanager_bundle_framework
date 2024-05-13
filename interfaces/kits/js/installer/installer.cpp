@@ -1654,7 +1654,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
         APP_LOGW("asyncCallbackInfo is null");
         return nullptr;
     }
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGW("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -1678,6 +1678,9 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
+    }
+    if (asyncCallbackInfo->userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppCloneCallbackInfo>(
         env, asyncCallbackInfo.get(), CREATE_APP_CLONE, CreateAppCloneExec, CreateAppCloneComplete);
