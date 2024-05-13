@@ -24,9 +24,33 @@ namespace OHOS {
 namespace CJSystemapi {
 namespace BundleManager {
 
+struct Query {
+    std::string nBundleName;
+    std::string nInterfaceType;
+    int32_t nFlags = 0;
+    int32_t nUserId = AppExecFwk::Constants::UNSPECIFIED_USERID;
+ 
+    Query(const std::string &bundleName, const std::string &interfaceType, int32_t flags, int32_t userId)
+        : nBundleName(bundleName), nInterfaceType(interfaceType), nFlags(flags), nUserId(userId) {}
+ 
+    bool operator==(const Query &query) const
+    {
+        return nBundleName == query.nBundleName && nInterfaceType == query.nInterfaceType &&
+            nFlags == query.nFlags && nUserId == query.nUserId;
+    }
+};
+
+struct QueryHash  {
+    size_t operator()(const Query &query) const
+    {
+        return std::hash<std::string>()(query.nBundleName) ^ std::hash<std::string>()(query.nInterfaceType) ^
+            std::hash<int32_t>()(query.nFlags) ^ std::hash<int32_t>()(query.nUserId);
+    }
+};
+
 extern "C" {
     FFI_EXPORT RetBundleInfo FfiOHOSGetBundleInfoForSelf(int32_t bundleFlags);
-    FFI_EXPORT int32_t FfiOHOSVerifyAbc(std::vector<std::string> abcPaths, bool deleteOriginalFiles);
+    FFI_EXPORT int32_t FfiOHOSVerifyAbc(CArrString cAbcPaths, bool deleteOriginalFiles);
     FFI_EXPORT RetCArrString FfiGetProfileByExtensionAbility(
         char* moduleName, char* extensionAbilityName, char* metadataName);
     FFI_EXPORT RetCArrString FfiGetProfileByAbility(char* moduleName, char* extensionAbilityName, char* metadataName);
