@@ -66,6 +66,7 @@ private:
     bool IsEmailWant(const AAFwk::Want& want) const;
     std::string GetType(const AAFwk::Want& want) const;
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
+    bool GetBrokerBundleInfo(const Element& element, BundleInfo& bundleInfo) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;

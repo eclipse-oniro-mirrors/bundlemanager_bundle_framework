@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_HOST_IMPL_H
 
+#include <atomic>
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "bundle_connect_ability_mgr.h"
 #endif
@@ -962,7 +964,7 @@ private:
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
 
-    bool isBrokerServiceExisted_ = false;
+    std::atomic<bool> isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
