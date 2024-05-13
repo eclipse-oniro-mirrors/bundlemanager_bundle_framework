@@ -91,7 +91,7 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
-    return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, Constants::DIR_EL2);
+    return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, ServiceConstants::DIR_EL2);
 }
 
 /**
@@ -229,7 +229,7 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
     handler->SaveInstallInfoToCache(info);
-    EXPECT_EQ(info.GetAppCodePath(), Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR);
+    EXPECT_EQ(info.GetAppCodePath(), Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR);
 }
 
 /**

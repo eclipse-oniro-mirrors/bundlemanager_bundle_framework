@@ -22,6 +22,7 @@
 #include "app_log_wrapper.h"
 #include "app_privilege_capability.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
@@ -1665,8 +1666,8 @@ void UpdateNativeSoAttrs(
             innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         }
         if (!soRelativePath.empty()) {
-            innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
-            innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+            innerBundleInfo.SetModuleNativeLibraryPath(ServiceConstants::LIBS + cpuAbi);
+            innerBundleInfo.SetSharedModuleNativeLibraryPath(ServiceConstants::LIBS + cpuAbi);
         }
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
@@ -1677,9 +1678,9 @@ void UpdateNativeSoAttrs(
     }
 
     innerBundleInfo.SetModuleNativeLibraryPath(
-        innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
+        innerBundleInfo.GetCurModuleName() + ServiceConstants::PATH_SEPARATOR + soRelativePath);
     innerBundleInfo.SetSharedModuleNativeLibraryPath(
-        innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
+        innerBundleInfo.GetCurModuleName() + ServiceConstants::PATH_SEPARATOR + soRelativePath);
     innerBundleInfo.SetModuleCpuAbi(cpuAbi);
 }
 
@@ -1702,17 +1703,17 @@ bool ParserNativeSo(
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
     std::string cpuAbi;
     std::string soRelativePath;
-    bool soExist = bundleExtractor.IsDirExist(Constants::LIBS);
+    bool soExist = bundleExtractor.IsDirExist(ServiceConstants::LIBS);
     if (!soExist) {
         APP_LOGD("so not exist");
         if (isDefault) {
-            cpuAbi = isSystemLib64Exist ? Constants::ARM64_V8A : Constants::ARM_EABI_V7A;
+            cpuAbi = isSystemLib64Exist ? ServiceConstants::ARM64_V8A : ServiceConstants::ARM_EABI_V7A;
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, false, innerBundleInfo);
             return true;
         }
 
         for (const auto &abi : abiList) {
-            if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end()) {
+            if (ServiceConstants::ABI_MAP.find(abi) != ServiceConstants::ABI_MAP.end()) {
                 cpuAbi = abi;
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, false, innerBundleInfo);
                 return true;
@@ -1726,9 +1727,9 @@ bool ParserNativeSo(
     bool isLibIsolated = moduleJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM64_V8A)) {
-                cpuAbi = Constants::ARM64_V8A;
-                soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM64_V8A);
+            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+                cpuAbi = ServiceConstants::ARM64_V8A;
+                soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
                 return true;
             }
@@ -1736,16 +1737,16 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI_V7A)) {
-            cpuAbi = Constants::ARM_EABI_V7A;
-            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI_V7A);
+        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+            cpuAbi = ServiceConstants::ARM_EABI_V7A;
+            soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(Constants::LIBS + Constants::ARM_EABI)) {
-            cpuAbi = Constants::ARM_EABI;
-            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(Constants::ARM_EABI);
+        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+            cpuAbi = ServiceConstants::ARM_EABI;
+            soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
@@ -1755,10 +1756,11 @@ bool ParserNativeSo(
 
     for (const auto &abi : abiList) {
         std::string libsPath;
-        libsPath.append(Constants::LIBS).append(abi).append(Constants::PATH_SEPARATOR);
-        if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
+        libsPath.append(ServiceConstants::LIBS).append(abi).append(ServiceConstants::PATH_SEPARATOR);
+        if (ServiceConstants::ABI_MAP.find(abi) != ServiceConstants::ABI_MAP.end() &&
+            bundleExtractor.IsDirExist(libsPath)) {
             cpuAbi = abi;
-            soRelativePath = Constants::LIBS + Constants::ABI_MAP.at(abi);
+            soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(abi);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
@@ -1846,7 +1848,7 @@ bool ParserArkNativeFilePath(
         std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
     bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
-    bool anExist = bundleExtractor.IsDirExist(Constants::AN);
+    bool anExist = bundleExtractor.IsDirExist(ServiceConstants::AN);
     if (!anExist) {
         APP_LOGD("an not exist");
         return true;
@@ -1855,21 +1857,21 @@ bool ParserArkNativeFilePath(
     APP_LOGD("an exist");
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM64_V8A)) {
-                innerBundleInfo.SetArkNativeFileAbi(Constants::ARM64_V8A);
+            if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM64_V8A)) {
+                innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM64_V8A);
                 return true;
             }
 
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM_EABI_V7A)) {
-            innerBundleInfo.SetArkNativeFileAbi(Constants::ARM_EABI_V7A);
+        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI_V7A)) {
+            innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI_V7A);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(Constants::AN + Constants::ARM_EABI)) {
-            innerBundleInfo.SetArkNativeFileAbi(Constants::ARM_EABI);
+        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI)) {
+            innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI);
             return true;
         }
 
@@ -1878,8 +1880,9 @@ bool ParserArkNativeFilePath(
 
     for (const auto &abi : abiList) {
         std::string libsPath;
-        libsPath.append(Constants::AN).append(abi).append(Constants::PATH_SEPARATOR);
-        if (Constants::ABI_MAP.find(abi) != Constants::ABI_MAP.end() && bundleExtractor.IsDirExist(libsPath)) {
+        libsPath.append(ServiceConstants::AN).append(abi).append(ServiceConstants::PATH_SEPARATOR);
+        if (ServiceConstants::ABI_MAP.find(abi) != ServiceConstants::ABI_MAP.end() &&
+            bundleExtractor.IsDirExist(libsPath)) {
             innerBundleInfo.SetArkNativeFileAbi(abi);
             return true;
         }

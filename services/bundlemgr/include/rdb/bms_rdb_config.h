@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -29,7 +30,7 @@ struct BmsRdbConfig {
     std::string tableName;
     std::string createTableSql;
     std::vector<std::string> insertColumnSql;
-    int32_t version { 1 };
+    int32_t version { ServiceConstants::BUNDLE_RDB_VERSION };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

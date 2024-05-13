@@ -118,12 +118,12 @@ ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const s
 
     std::string patchPath = Constants::BUNDLE_CODE_DIR;
     if (appqfInfo.type == QuickFixType::PATCH) {
-        patchPath += Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-            std::to_string(appqfInfo.versionCode);
+        patchPath += ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR
+            + Constants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
     }
     if (appqfInfo.type == QuickFixType::HOT_RELOAD) {
-        patchPath += Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + Constants::HOT_RELOAD_PATH +
-            std::to_string(appqfInfo.versionCode);
+        patchPath += ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR
+            + Constants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
     }
 
     LOG_D(BMS_TAG_QUICK_FIX, "patch path is %{public}s", patchPath.c_str());

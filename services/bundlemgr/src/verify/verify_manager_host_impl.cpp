@@ -58,18 +58,18 @@ bool IsValidPath(const std::string &path)
 std::string GetRootDir(const std::string &bundleName)
 {
     std::string rootDir;
-    rootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(bundleName).append(Constants::PATH_SEPARATOR)
-        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR);
+    rootDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
+        .append(ABCS_DIR).append(ServiceConstants::PATH_SEPARATOR);
     return rootDir;
 }
 
 std::string GetTempRootDir(const std::string &bundleName)
 {
     std::string tempRootDir;
-    tempRootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(bundleName).append(Constants::PATH_SEPARATOR).append(ABCS_DIR)
-        .append(Constants::PATH_SEPARATOR).append(ABCS_TEMP_DIR);
+    tempRootDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(ABCS_DIR)
+        .append(ServiceConstants::PATH_SEPARATOR).append(ABCS_TEMP_DIR);
     return tempRootDir;
 }
 
@@ -77,56 +77,56 @@ bool GetDataDir(const std::string &path, std::string &suffix, std::string &el, s
 {
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL1_BASE.size());
-        el = Constants::DIR_EL1;
+        el = ServiceConstants::DIR_EL1;
         baseType = Constants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL1_DATABASE.size());
-        el = Constants::DIR_EL1;
+        el = ServiceConstants::DIR_EL1;
         baseType = Constants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL2_BASE.size());
-        el = Constants::DIR_EL2;
+        el = ServiceConstants::DIR_EL2;
         baseType = Constants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL2_DATABASE.size());
-        el = Constants::DIR_EL2;
+        el = ServiceConstants::DIR_EL2;
         baseType = Constants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL3_BASE.size());
-        el = Constants::DIR_EL3;
+        el = ServiceConstants::DIR_EL3;
         baseType = Constants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL3_DATABASE.size());
-        el = Constants::DIR_EL3;
+        el = ServiceConstants::DIR_EL3;
         baseType = Constants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL4_BASE.size());
-        el = Constants::DIR_EL4;
+        el = ServiceConstants::DIR_EL4;
         baseType = Constants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL4_DATABASE.size());
-        el = Constants::DIR_EL4;
+        el = ServiceConstants::DIR_EL4;
         baseType = Constants::DATABASE;
         return true;
     }
@@ -243,15 +243,15 @@ std::string VerifyManagerHostImpl::GetRealPath(
     const std::string &bundleName, int32_t userId, const std::string &relativePath)
 {
     auto path = relativePath;
-    if (!BundleUtil::StartWith(path, Constants::PATH_SEPARATOR)) {
-        path = Constants::PATH_SEPARATOR + path;
+    if (!BundleUtil::StartWith(path, ServiceConstants::PATH_SEPARATOR)) {
+        path = ServiceConstants::PATH_SEPARATOR + path;
     }
 
     std::string filePath;
     if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
         auto suffix = path.substr(DATA_STORAGE_BUNDLE.size());
-        filePath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-            .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
+        filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
         return filePath;
     }
 
@@ -264,8 +264,8 @@ std::string VerifyManagerHostImpl::GetRealPath(
     }
 
     filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(el)
-            .append(Constants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
-            .append(bundleName).append(Constants::PATH_SEPARATOR).append(suffix);
+            .append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
+            .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
     return filePath;
 }
 
@@ -485,9 +485,9 @@ ErrCode VerifyManagerHostImpl::DeleteAbc(const std::string &path)
     auto &mtx = GetBundleMutex(innerBundleInfo.GetBundleName());
     std::lock_guard lock {mtx};
     std::string realPath;
-    realPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
-        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR).append(path);
+    realPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
+        .append(ABCS_DIR).append(ServiceConstants::PATH_SEPARATOR).append(path);
     bool isExist = false;
     auto result = InstalldClient::GetInstance()->IsExistFile(realPath, isExist);
     if (result != ERR_OK) {

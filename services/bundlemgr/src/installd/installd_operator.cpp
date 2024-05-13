@@ -43,6 +43,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
 #include "parameters.h"
@@ -83,7 +84,7 @@ static std::string HandleScanResult(
         return subName;
     }
 
-    return dir + Constants::PATH_SEPARATOR + subName;
+    return dir + ServiceConstants::PATH_SEPARATOR + subName;
 }
 
 static bool StartsWith(const std::string &sourceString, const std::string &targetPrefix)
@@ -239,7 +240,7 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
             strcmp(entryName.c_str(), "..") == 0) {
             continue;
         }
-        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+        if (entryName.back() == ServiceConstants::PATH_SEPARATOR[0]) {
             continue;
         }
         // handle native file
@@ -297,7 +298,7 @@ bool InstalldOperator::IsNativeFile(
 bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::string &cpuAbi)
 {
     APP_LOGD("IsNativeSo, entryName : %{public}s", entryName.c_str());
-    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
     if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
@@ -314,7 +315,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         APP_LOGD("current hap not include diff");
         return false;
     }
-    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
     if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
@@ -349,7 +350,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         path += Constants::FILE_SEPARATOR_CHAR;
     }
     path += targetName;
-    if (targetName.find(Constants::PATH_SEPARATOR) != std::string::npos) {
+    if (targetName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
         std::string dir = GetPathDir(path);
         if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
             APP_LOGE("create dir %{public}s failed", dir.c_str());
@@ -383,11 +384,11 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
 {
     switch (extractFileType) {
         case ExtractFileType::SO: {
-            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+            prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
             break;
         }
         case ExtractFileType::AN: {
-            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+            prefix = ServiceConstants::AN + cpuAbi + ServiceConstants::PATH_SEPARATOR;
             break;
         }
         case ExtractFileType::AP: {
@@ -395,7 +396,7 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             break;
         }
         case ExtractFileType::RES_FILE: {
-            prefix = Constants::RES_FILE_PATH;
+            prefix = ServiceConstants::RES_FILE_PATH;
             break;
         }
         default: {
@@ -457,7 +458,7 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
 
 std::string InstalldOperator::GetPathDir(const std::string &path)
 {
-    std::size_t pos = path.rfind(Constants::PATH_SEPARATOR);
+    std::size_t pos = path.rfind(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         return std::string();
     }
@@ -604,8 +605,9 @@ bool InstalldOperator::RenameFile(const std::string &oldPath, const std::string 
 
 bool InstalldOperator::IsValidPath(const std::string &rootDir, const std::string &path)
 {
-    if (rootDir.find(Constants::PATH_SEPARATOR) != 0 ||
-        rootDir.rfind(Constants::PATH_SEPARATOR) != (rootDir.size() - 1) || rootDir.find("..") != std::string::npos) {
+    if (rootDir.find(ServiceConstants::PATH_SEPARATOR) != 0 ||
+        rootDir.rfind(ServiceConstants::PATH_SEPARATOR) != (rootDir.size() - 1) ||
+        rootDir.find("..") != std::string::npos) {
         return false;
     }
     if (path.find("..") != std::string::npos) {
@@ -619,7 +621,7 @@ bool InstalldOperator::IsValidCodePath(const std::string &codePath)
     if (codePath.empty()) {
         return false;
     }
-    return IsValidPath(BUNDLE_BASE_CODE_DIR + Constants::PATH_SEPARATOR, codePath);
+    return IsValidPath(BUNDLE_BASE_CODE_DIR + ServiceConstants::PATH_SEPARATOR, codePath);
 }
 
 bool InstalldOperator::DeleteFiles(const std::string &dataPath)
@@ -670,7 +672,7 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
             APP_LOGE("fail to readdir errno:%{public}d", errno);
             break;
         }
-        std::string dirName = Constants::PATH_SEPARATOR + std::string(ptr->d_name);
+        std::string dirName = ServiceConstants::PATH_SEPARATOR + std::string(ptr->d_name);
         if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end()) {
             continue;
         }
@@ -982,7 +984,7 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
             }
             std::string relativePath = currentFile.substr(prefixPath.size());
             paths.emplace_back(relativePath);
-            std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
+            std::string subNewSoPath = GetPathDir(newSoPath + ServiceConstants::PATH_SEPARATOR + relativePath);
             if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
                 APP_LOGE("ScanSoFiles create subNewSoPath (%{public}s) failed", filePath.c_str());
                 closedir(dir);
@@ -1043,7 +1045,7 @@ bool InstalldOperator::ExtractDiffFiles(const std::string &filePath, const std::
             strcmp(entryName.c_str(), "..") == 0) {
             continue;
         }
-        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+        if (entryName.back() == ServiceConstants::PATH_SEPARATOR[0]) {
             continue;
         }
         // handle diff file
@@ -1162,9 +1164,9 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         std::string soFileName = diffFileName.substr(0, diffFileName.rfind(DIFF_SUFFIX));
         APP_LOGD("ApplyDiffPatch soName: %{public}s, diffName: %{public}s", soFileName.c_str(), diffFileName.c_str());
         if (find(oldSoFileNames.begin(), oldSoFileNames.end(), soFileName) != oldSoFileNames.end()) {
-            int32_t ret = applyPatch(realDiffFilePath + Constants::PATH_SEPARATOR + diffFileName,
-                                     realOldSoPath + Constants::PATH_SEPARATOR + soFileName,
-                                     realNewSoPath + Constants::PATH_SEPARATOR + soFileName);
+            int32_t ret = applyPatch(realDiffFilePath + ServiceConstants::PATH_SEPARATOR + diffFileName,
+                                     realOldSoPath + ServiceConstants::PATH_SEPARATOR + soFileName,
+                                     realNewSoPath + ServiceConstants::PATH_SEPARATOR + soFileName);
             if (ret != ERR_OK) {
                 APP_LOGE("ApplyDiffPatch failed, applyPatch errcode: %{public}d", ret);
                 for (const auto &file : newSoList) {
@@ -1173,7 +1175,7 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
                 CloseHandle(&handle);
                 return false;
             }
-            newSoList.emplace_back(realNewSoPath + Constants::PATH_SEPARATOR + soFileName);
+            newSoList.emplace_back(realNewSoPath + ServiceConstants::PATH_SEPARATOR + soFileName);
         }
     }
     CloseHandle(&handle);
@@ -1210,7 +1212,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
             continue;
         }
 
-        std::string curPath = dir + Constants::PATH_SEPARATOR + currentName;
+        std::string curPath = dir + ServiceConstants::PATH_SEPARATOR + currentName;
         struct stat s;
         if (stat(curPath.c_str(), &s) == 0) {
             // directory
@@ -1256,10 +1258,10 @@ bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string
             continue;
         }
 
-        std::string curPath = sourceDir + Constants::PATH_SEPARATOR + currentName;
+        std::string curPath = sourceDir + ServiceConstants::PATH_SEPARATOR + currentName;
         struct stat s;
         if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
-            std::string innerDesStr = destinationDir + Constants::PATH_SEPARATOR + currentName;
+            std::string innerDesStr = destinationDir + ServiceConstants::PATH_SEPARATOR + currentName;
             if (CopyFile(curPath, innerDesStr)) {
                 ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, Constants::BMS_GID);
             }
@@ -1280,7 +1282,7 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     if (!extractor.GetZipFileNames(entryNames)) {
         return false;
     }
-    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
     for (const auto &entryName : entryNames) {
         if (StartsWith(entryName, prefix)) {
             fileNames.push_back(entryName.substr(prefix.length(), entryName.length()));
@@ -1297,7 +1299,7 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
     if (codeSignatureParam.targetSoPath.empty()) {
         return false;
     }
-    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    const std::string prefix = ServiceConstants::LIBS + codeSignatureParam.cpuAbi + ServiceConstants::PATH_SEPARATOR;
     for_each(soEntryFiles.begin(), soEntryFiles.end(),
         [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
         std::string fileName = entry.substr(prefix.length());
@@ -1409,7 +1411,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     Security::CodeCrypto::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
-        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+        const std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
         std::for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
             std::string fileName = entry.substr(prefix.length());
             std::string path = targetSoPath;
@@ -1472,7 +1474,7 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
             strcmp(entryName.c_str(), "..") == 0) {
             continue;
         }
-        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+        if (entryName.back() == ServiceConstants::PATH_SEPARATOR[0]) {
             continue;
         }
         // save native so file entryName in the hap
@@ -1526,8 +1528,8 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
             continue;
         }
 
-        std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
-        std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
+        std::string curPath = realPath + ServiceConstants::PATH_SEPARATOR + currentName;
+        std::string innerDesStr = realDesDir + ServiceConstants::PATH_SEPARATOR + currentName;
         struct stat s;
         if (stat(curPath.c_str(), &s) != 0) {
             APP_LOGD("MoveFiles stat %{public}s failed, errno:%{public}d", curPath.c_str(), errno);
@@ -1584,8 +1586,8 @@ bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, co
         return false;
     }
     for (const auto &entryName : entryNames) {
-        if (StartsWith(entryName, Constants::LIBS)
-            || StartsWith(entryName, Constants::AN)
+        if (StartsWith(entryName, ServiceConstants::LIBS)
+            || StartsWith(entryName, ServiceConstants::AN)
             || StartsWith(entryName, AP_PATH)) {
             continue;
         }
@@ -1643,7 +1645,7 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
             return false;
         }
         std::string innerOriginalDir = originalDir;
-        if (innerOriginalDir.front() == Constants::PATH_SEPARATOR[0]) {
+        if (innerOriginalDir.front() == ServiceConstants::PATH_SEPARATOR[0]) {
             innerOriginalDir = innerOriginalDir.substr(1);
         }
         if (find(entryNames.cbegin(), entryNames.cend(), innerOriginalDir) == entryNames.cend()) {
@@ -1664,7 +1666,7 @@ bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const
     const std::string &destinedDir)
 {
     APP_LOGD("CopyDriverSoFiles beign");
-    auto pos = destinedDir.rfind(Constants::PATH_SEPARATOR);
+    auto pos = destinedDir.rfind(ServiceConstants::PATH_SEPARATOR);
     if ((pos == std::string::npos) || (pos == destinedDir.length() -1)) {
         APP_LOGE("destinedDir(%{public}s) is invalid path", destinedDir.c_str());
         return false;
@@ -1716,8 +1718,8 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
     }
 
     std::string innerTmpSoPath = tmpSoPath;
-    if (innerTmpSoPath.back() != Constants::PATH_SEPARATOR[0]) {
-        innerTmpSoPath += Constants::PATH_SEPARATOR;
+    if (innerTmpSoPath.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+        innerTmpSoPath += ServiceConstants::PATH_SEPARATOR;
     }
 
     /* create innerTmpSoPath */
@@ -1730,7 +1732,7 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
 
     for (const auto &entry : soEntryFiles) {
         APP_LOGD("entryName is %{public}s", entry.c_str());
-        auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
+        auto pos = entry.rfind(ServiceConstants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
             APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;
@@ -1782,8 +1784,8 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     }
 
     std::string innerTmpSoPath = tmpSoPath;
-    if (innerTmpSoPath.back() != Constants::PATH_SEPARATOR[0]) {
-        innerTmpSoPath += Constants::PATH_SEPARATOR;
+    if (innerTmpSoPath.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+        innerTmpSoPath += ServiceConstants::PATH_SEPARATOR;
     }
     // create innerTmpSoPath
     if (!IsExistDir(innerTmpSoPath)) {
@@ -1794,7 +1796,7 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     }
 
     for (const auto &entry : soEntryFiles) {
-        auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
+        auto pos = entry.rfind(ServiceConstants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
             APP_LOGW("invalid so entry %{public}s", entry.c_str());
             continue;

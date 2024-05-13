@@ -126,10 +126,10 @@ bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
      * 1. bundleName
      * 2. bundleName/moduleName/abilityName
      */
-    if (key.find(Constants::PATH_SEPARATOR) == std::string::npos) {
+    if (key.find(ServiceConstants::PATH_SEPARATOR) == std::string::npos) {
         NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
         // need delete both bundle resource and launcher ability resource
-        absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + Constants::PATH_SEPARATOR);
+        absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + ServiceConstants::PATH_SEPARATOR);
         if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
             APP_LOGW("delete key:%{public}s failed", key.c_str());
         }

@@ -196,7 +196,7 @@ ErrCode OverlayDataMgr::GetBundleDir(const std::string &moduleHapPath, std::stri
     if (moduleHapPath.back() == Constants::FILE_SEPARATOR_CHAR) {
         bundleDir = moduleHapPath.substr(0, moduleHapPath.length() - 1);
     }
-    size_t pos = bundleDir.find_last_of(Constants::PATH_SEPARATOR);
+    size_t pos = bundleDir.find_last_of(ServiceConstants::PATH_SEPARATOR);
     if (pos == std::string::npos) {
         APP_LOGW("bundleDir is invalid");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR;

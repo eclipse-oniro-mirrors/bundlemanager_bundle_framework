@@ -28,6 +28,7 @@
 #include "aot/aot_executor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
@@ -271,7 +272,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
 ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirParam)
 {
     APP_LOGI("start bundleName:%{public}s", createDirParam.bundleName.c_str());
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         // data/app/el<>/<userId>/database/<bundleName>
         std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + Constants::DATABASE
             + createDirParam.bundleName;
@@ -331,9 +332,9 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (createDirParam.createDirFlag == CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES) {
         return ChmodBundleDataDir(createDirParam);
     }
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
-            (el == Constants::BUNDLE_EL[0])) {
+            (el == ServiceConstants::BUNDLE_EL[0])) {
             continue;
         }
 
@@ -348,7 +349,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             APP_LOGE("CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
-        if (el == Constants::BUNDLE_EL[1]) {
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
                     createDirParam.uid, createDirParam.gid)) {
@@ -525,8 +526,8 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
 
 static void CleanBundleDataForEl2(const std::string &bundleName, const int userid)
 {
-    std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
-        Constants::PATH_SEPARATOR + std::to_string(userid);
+    std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userid);
     std::string databaseDir = dataDir + Constants::DATABASE + bundleName;
     if (!InstalldOperator::DeleteFiles(databaseDir)) {
         APP_LOGW("clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
@@ -558,7 +559,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         APP_LOGE("Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
         if (!InstalldOperator::DeleteDir(bundleDataDir)) {
             APP_LOGE("remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
@@ -569,7 +570,7 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
             APP_LOGE("remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
-        if (el == Constants::BUNDLE_EL[1]) {
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logDir = GetBundleDataDir(el, userid) + Constants::LOG + bundleName;
             if (!InstalldOperator::DeleteDir(logDir)) {
                 APP_LOGE("remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
@@ -609,7 +610,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string moduleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + ModuleDir;
         if (!InstalldOperator::DeleteDir(moduleDataDir)) {
             APP_LOGE("remove dir %{public}s failed errno:%{public}d", moduleDataDir.c_str(), errno);
@@ -666,8 +667,8 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
         APP_LOGE("Calling the function CleanBundleDataDirByName with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    for (const auto &el : Constants::BUNDLE_EL) {
-        if (el == Constants::BUNDLE_EL[1]) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
             CleanBundleDataForEl2(bundleName, userid);
             continue;
         }
@@ -692,7 +693,7 @@ std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int 
 {
     std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
                           el +
-                          Constants::PATH_SEPARATOR +
+                          ServiceConstants::PATH_SEPARATOR +
                           std::to_string(userid);
     return dataDir;
 }
@@ -708,19 +709,19 @@ ErrCode InstalldHostImpl::GetBundleStats(
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     std::vector<std::string> bundlePath;
-    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
     bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
     // ark profile
-    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
     int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
     bundlePath.clear();
     std::vector<std::string> cachePath;
     int64_t allBundleLocalSize = 0;
-    for (const auto &el : Constants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + Constants::PATH_SEPARATOR +
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
             std::to_string(userId) + Constants::BASE + bundleName;
         allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
-        if (el == Constants::BUNDLE_EL[1]) {
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dataDir : BUNDLE_DATA_DIR) {
                 bundlePath.push_back(filePath + dataDir);
             }
@@ -760,10 +761,10 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bund
         const auto &bundleName = bundleNames[index];
         const auto &uid = uids[index];
         std::vector<std::string> bundlePath;
-        bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+        bundlePath.push_back(Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
         bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
         // ark profile
-        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+        bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
         int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
         // index 0 : bundle data size
         totalFileSize += fileSize;
@@ -1174,7 +1175,7 @@ ErrCode InstalldHostImpl::PrepareEntryMap(const CodeSignatureParam &codeSignatur
         APP_LOGE("get native library file names failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
-    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    const std::string prefix = ServiceConstants::LIBS + codeSignatureParam.cpuAbi + ServiceConstants::PATH_SEPARATOR;
     for (const auto &fileName : fileNames) {
         std::string entryName = prefix + fileName;
         std::string path = codeSignatureParam.targetSoPath;

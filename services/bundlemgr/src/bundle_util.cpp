@@ -32,6 +32,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -211,7 +212,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
     }
     std::string bundlePath = currentBundlePath;
     if (bundlePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        bundlePath.append(Constants::PATH_SEPARATOR);
+        bundlePath.append(ServiceConstants::PATH_SEPARATOR);
     }
     struct dirent *entry = nullptr;
     while ((entry = readdir(dir)) != nullptr) {
@@ -310,7 +311,7 @@ int32_t BundleUtil::GetUserIdByUid(int32_t uid)
 
 void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath)
 {
-    std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
+    std::string bundleDir = configPath + ServiceConstants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
         APP_LOGD("fail to access error:%{public}d", errno);
         if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
@@ -325,7 +326,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
         return;
     }
 
-    realBundleDir += (Constants::PATH_SEPARATOR + BUNDLE_ID_FILE);
+    realBundleDir += (ServiceConstants::PATH_SEPARATOR + BUNDLE_ID_FILE);
 
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
@@ -339,7 +340,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
 
 void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
 {
-    std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
+    std::string bundleDir = configPath + ServiceConstants::PATH_SEPARATOR + bundleName;
     std::string realBundleDir;
     if (!PathToRealPath(bundleDir, realBundleDir)) {
         APP_LOGE("bundleDir is not real path");
@@ -373,17 +374,17 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     std::time_t curTime = std::time(0);
     std::string tempDir = Constants::HAP_COPY_PATH;
     if (type == DirType::STREAM_INSTALL_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
     } else if (type == DirType::SIG_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     } else if (type == DirType::PGO_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + PGO_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + PGO_FILE_PATH;
     } else if (type == DirType::ABC_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + ABC_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::EXT_RESOURCE_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::EXT_RESOURCE_FILE_PATH;
     } else {
         return "";
     }
@@ -393,8 +394,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         return "";
     }
 
-    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
-        std::to_string(installerId) + Constants::PATH_SEPARATOR;
+    tempDir += ServiceConstants::PATH_SEPARATOR + std::to_string(curTime) +
+        std::to_string(installerId) + ServiceConstants::PATH_SEPARATOR;
     return CreateTempDir(tempDir);
 }
 
@@ -402,9 +403,9 @@ std::string BundleUtil::CreateSharedBundleTempDir(uint32_t installerId, uint32_t
 {
     std::time_t curTime = std::time(0);
     std::string tempDir = Constants::HAP_COPY_PATH;
-    tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
-    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
-        std::to_string(installerId) + Constants::FILE_UNDERLINE + std::to_string(index) + Constants::PATH_SEPARATOR;
+    tempDir += ServiceConstants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+    tempDir += ServiceConstants::PATH_SEPARATOR + std::to_string(curTime) + std::to_string(installerId)
+        + Constants::FILE_UNDERLINE + std::to_string(index)+ ServiceConstants::PATH_SEPARATOR;
     return CreateTempDir(tempDir);
 }
 
@@ -661,7 +662,7 @@ bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::str
     }
 
     realPath = sandBoxPath;
-    std::string relaDataPath = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR
+    std::string relaDataPath = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
         + std::to_string(BundleUtil::GetUserIdByCallingUid()) + Constants::BASE + bundleName;
     realPath.replace(realPath.find(Constants::SANDBOX_DATA_PATH),
         std::string(Constants::SANDBOX_DATA_PATH).size(), relaDataPath);
@@ -708,7 +709,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     APP_LOGD("the original dir is %{public}s", filePath.c_str());
     std::string destination = "";
     std::string subStr = "";
-    destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR);
+    destination.append(Constants::HAP_COPY_PATH).append(ServiceConstants::PATH_SEPARATOR);
     if (dirType == DirType::STREAM_INSTALL_DIR) {
         subStr = Constants::STREAM_INSTALL_PATH;
         destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
@@ -722,22 +723,22 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = Constants::SIGNATURE_FILE_PATH;
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
-    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeNs()));
+    destination.append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeNs()));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
-        auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
+        auto lastPathSeperator = filePath.rfind(ServiceConstants::PATH_SEPARATOR);
         if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
             toDeletePaths.emplace_back(destination);
             destination.append(filePath.substr(lastPathSeperator));
         }
     } else {
-        auto secondLastPathSep = filePath.find(Constants::PATH_SEPARATOR, pos);
+        auto secondLastPathSep = filePath.find(ServiceConstants::PATH_SEPARATOR, pos);
         if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == filePath.length() - 1)) {
             return "";
         }
         auto thirdLastPathSep =
-            filePath.find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+            filePath.find(ServiceConstants::PATH_SEPARATOR, secondLastPathSep + 1);
         if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
             return "";
         }

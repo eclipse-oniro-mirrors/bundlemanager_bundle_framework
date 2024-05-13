@@ -116,7 +116,7 @@ std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleNam
         fileSuffix = Constants::HSP_FILE_SUFFIX;
     }
 
-    return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
+    return info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + moduleName + fileSuffix;
 }
 
 std::string GetHapPath(const InnerBundleInfo &info)
@@ -126,7 +126,7 @@ std::string GetHapPath(const InnerBundleInfo &info)
 
 std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
 {
-    auto position = nativeLibraryPath.find(Constants::PATH_SEPARATOR);
+    auto position = nativeLibraryPath.find(ServiceConstants::PATH_SEPARATOR);
     if (position == std::string::npos) {
         return nativeLibraryPath;
     }
@@ -417,12 +417,12 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         APP_LOGE("input versionCode is not exist");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
-    std::string uninstallDir = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
+    std::string uninstallDir = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
     if ((versionCodes.size() > SINGLE_HSP_VERSION && versionCode == Constants::ALL_VERSIONCODE) ||
         versionCodes.size() == SINGLE_HSP_VERSION) {
         return UninstallHspBundle(uninstallDir, info.GetBundleName());
     } else {
-        uninstallDir += Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+        uninstallDir += ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
         return UninstallHspVersion(uninstallDir, versionCode, info);
     }
 }
@@ -1208,7 +1208,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     auto modulePackage = info.GetCurrentModulePackage();
     if (installedModules_[modulePackage]) {
-        std::string createModulePath = info.GetAppCodePath() + Constants::PATH_SEPARATOR +
+        std::string createModulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR +
             modulePackage + Constants::TMP_SUFFIX;
         RemoveModuleDir(createModulePath);
         oldInfo.SetCurrentModulePackage(modulePackage);
@@ -1777,7 +1777,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     CHECK_RESULT(result, "delivery profile failed %{public}d");
 
     ScopeGuard bundleGuard([&] { RemoveBundleAndDataDir(info, false); });
-    std::string modulePath = info.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_;
+    std::string modulePath = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(info, modulePath);
     if (result != ERR_OK) {
         APP_LOGE("extract module failed");
@@ -1926,7 +1926,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         APP_LOGE("save install mark failed");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    std::string modulePath = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_;
+    std::string modulePath = newInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_;
     result = ExtractModule(newInfo, modulePath);
     if (result != ERR_OK) {
         APP_LOGE("extract module and rename failed");
@@ -2036,7 +2036,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     result = ProcessAsanDirectory(newInfo);
     CHECK_RESULT(result, "process asan log directory failed %{public}d");
 
-    moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
+    moduleTmpDir_ = newInfo.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + modulePackage_
+        + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
     CHECK_RESULT(result, "extract module and rename failed %{public}d");
 
@@ -2099,7 +2100,7 @@ void BaseBundleInstaller::ProcessHqfInfo(
             modulePackage_.c_str());
         return;
     }
-    auto pos = nativeLibraryPath.rfind(Constants::LIBS);
+    auto pos = nativeLibraryPath.rfind(ServiceConstants::LIBS);
     if (pos != std::string::npos) {
         nativeLibraryPath = nativeLibraryPath.substr(pos, nativeLibraryPath.length() - pos);
     }
@@ -2139,9 +2140,9 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
         return ret;
     }
 
-    std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+    std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
     if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
         APP_LOGW("Patch no diff file");
@@ -2192,9 +2193,9 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
         return ret;
     }
 
-    std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+    std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
     if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
         APP_LOGW("Patch no diff file");
@@ -2221,7 +2222,7 @@ ErrCode BaseBundleInstaller::UpdateLibAttrs(const InnerBundleInfo &newInfo,
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     auto newNativeLibraryPath = Constants::PATCH_PATH +
-        std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+        std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     auto moduleName = newInfo.GetCurModuleName();
     bool isLibIsolated = newInfo.IsLibIsolated(moduleName);
     if (!isLibIsolated) {
@@ -2255,7 +2256,7 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     if (!hqfLibraryPath.empty()) {
-        auto position = hqfLibraryPath.find(Constants::PATH_SEPARATOR);
+        auto position = hqfLibraryPath.find(ServiceConstants::PATH_SEPARATOR);
         if (position == std::string::npos) {
             return false;
         }
@@ -2299,10 +2300,10 @@ bool BaseBundleInstaller::ExtractEncryptedSoFiles(const InnerBundleInfo &info,
     }
     std::string realSoFilesPath;
     if (info.IsCompressNativeLibs(info.GetCurModuleName())) {
-        realSoFilesPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-            .append(bundleName_).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath);
-        if (realSoFilesPath.back() != Constants::PATH_SEPARATOR[0]) {
-            realSoFilesPath += Constants::PATH_SEPARATOR;
+        realSoFilesPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+            .append(bundleName_).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath);
+        if (realSoFilesPath.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+            realSoFilesPath += ServiceConstants::PATH_SEPARATOR;
         }
     }
     APP_LOGD("real so files path is %{public}s, tmpSoPath is %{public}s", realSoFilesPath.c_str(), tmpSoPath.c_str());
@@ -2320,8 +2321,8 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         return hqfInfo.moduleName == moduleName;
     });
     if (iter != appQfInfo.hqfInfos.end()) {
-        std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
-            bundleName_ + Constants::TMP_SUFFIX + Constants::LIBS;
+        std::string oldSoPath = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+            bundleName_ + Constants::TMP_SUFFIX + ServiceConstants::LIBS;
         ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
 
         InnerBundleInfo innerBundleInfo;
@@ -2348,7 +2349,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             }
         }
 
-        const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+        const std::string tempDiffPath = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
             bundleName_ + Constants::TMP_SUFFIX;
         ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
         ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath, tempDiffPath, cpuAbi);
@@ -2357,9 +2358,9 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
 
-        std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-            Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-            std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
+        std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+            ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+            std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath, bundleUid);
         if (ret != ERR_OK) {
             APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
@@ -2372,10 +2373,10 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
 
 ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
 {
-    for (const auto &el : Constants::BUNDLE_EL) {
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
                                         el +
-                                        Constants::PATH_SEPARATOR +
+                                        ServiceConstants::PATH_SEPARATOR +
                                         std::to_string(userId_);
         std::string baseDataDir = baseBundleDataDir + Constants::BASE + info.GetBundleName();
         bool isExist = true;
@@ -2427,7 +2428,7 @@ ErrCode BaseBundleInstaller::CreateBundleAndDataDir(InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 {
-    auto appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_;
+    auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_;
     APP_LOGD("create bundle dir %{public}s", appCodePath.c_str());
     ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(appCodePath);
     if (result != ERR_OK) {
@@ -2519,8 +2520,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         return result;
     }
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        std::string bundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
-            Constants::PATH_SEPARATOR + std::to_string(userId_) + Constants::BASE + info.GetBundleName();
+        std::string bundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + Constants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
     }
     if (info.GetIsNewVersion()) {
@@ -2547,7 +2548,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         return result;
     }
 
-    std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+    std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         Constants::DATABASE + info.GetBundleName();
     info.SetAppDataBaseDir(dataBaseDir);
     info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
@@ -2591,7 +2592,7 @@ ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
     for (auto &item : oldDataGroupInfos) {
         if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
             !(dataMgr_->IsShareDataGroupId(item.first, userId_)) && !item.second.empty()) {
-            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
                 + Constants::DATA_GROUP_PATH + item.second[0].uuid;
             APP_LOGD("remove dir: %{public}s", dir.c_str());
             removeGroupDirs_.emplace_back(dir);
@@ -2614,7 +2615,7 @@ ErrCode BaseBundleInstaller::RemoveOldGroupDirs() const
 ErrCode BaseBundleInstaller::CreateGroupDirs() const
 {
     for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
-        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
             + Constants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
@@ -2634,7 +2635,7 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
             APP_LOGE("dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
             + Constants::DATA_GROUP_PATH + item.second[0].uuid;
         bool dirExist = false;
         auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
@@ -2650,7 +2651,7 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
 void BaseBundleInstaller::DeleteGroupDirsForException() const
 {
     for (const DataGroupInfo &info : createGroupDirs_) {
-        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
             + Constants::DATA_GROUP_PATH + info.uuid;
         InstalldClient::GetInstance()->RemoveDir(dir);
     }
@@ -2693,7 +2694,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
 
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName);
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
@@ -2703,7 +2704,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 {
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName);
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
@@ -2742,7 +2743,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         info.SetModuleHapPath(GetHapPath(info));
     }
 
-    auto moduleDir = info.GetAppCodePath() + Constants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+    auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     return ERR_OK;
@@ -2759,7 +2760,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
     APP_LOGD("apiTargetVersion is %{public}d, extract resource files", apiTargetVersion);
     ExtractParam extractParam;
     extractParam.srcPath = modulePath_;
-    extractParam.targetPath = targetPath + Constants::PATH_SEPARATOR;
+    extractParam.targetPath = targetPath + ServiceConstants::PATH_SEPARATOR;
     extractParam.extractFileType = ExtractFileType::RESOURCE;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
     APP_LOGD("ExtractResourceFiles ret : %{public}d", ret);
@@ -2770,7 +2771,7 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     APP_LOGD("ExtractResFileDir begin");
     ExtractParam extractParam;
     extractParam.srcPath = modulePath_;
-    extractParam.targetPath = modulePath + Constants::PATH_SEPARATOR + Constants::RES_FILE_PATH;
+    extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::RES_FILE_PATH;
     APP_LOGD("ExtractResFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
     extractParam.extractFileType = ExtractFileType::RES_FILE;
     ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
@@ -2795,16 +2796,16 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
         return ERR_OK;
     }
 
-    if (Constants::ABI_MAP.find(cpuAbi) == Constants::ABI_MAP.end()) {
+    if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
         APP_LOGE("No support %{public}s abi", cpuAbi.c_str());
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
     }
 
     std::string arkNativeFilePath;
-    arkNativeFilePath.append(Constants::ABI_MAP.at(cpuAbi)).append(Constants::PATH_SEPARATOR);
+    arkNativeFilePath.append(ServiceConstants::ABI_MAP.at(cpuAbi)).append(ServiceConstants::PATH_SEPARATOR);
     std::string targetPath;
     targetPath.append(ARK_CACHE_PATH).append(info.GetBundleName())
-        .append(Constants::PATH_SEPARATOR).append(arkNativeFilePath);
+        .append(ServiceConstants::PATH_SEPARATOR).append(arkNativeFilePath);
     APP_LOGD("Begin to extract an file, modulePath : %{public}s, targetPath : %{public}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetPath.c_str(), cpuAbi.c_str());
     ExtractParam extractParam;
@@ -2866,8 +2867,8 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
 {
     std::string targetPath;
     targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName)
-        .append(Constants::PATH_SEPARATOR).append(moduleName)
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
+        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName)
         .append(Constants::AP_SUFFIX);
     if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
         APP_LOGE("copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
@@ -2883,7 +2884,7 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
 {
     std::string targetPath;
     targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(Constants::PATH_SEPARATOR).append(bundleName);
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
     APP_LOGD("Begin to extract ap file, modulePath : %{public}s, targetPath : %{public}s",
         modulePath.c_str(), targetPath.c_str());
     ExtractParam extractParam;
@@ -2954,7 +2955,8 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
 {
     for (const auto &item : infos) {
         const InnerBundleInfo &info = item.second;
-        std::string moduleDir = info.GetAppCodePath() + Constants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+        std::string moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR
+            + info.GetCurrentModulePackage();
         bool isDirEmpty = false;
         InstalldClient::GetInstance()->IsDirEmpty(moduleDir, isDirEmpty);
         if (isDirEmpty) {
@@ -3054,7 +3056,7 @@ ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, con
 
 ErrCode BaseBundleInstaller::RenameModuleDir(const InnerBundleInfo &info) const
 {
-    auto moduleDir = info.GetAppCodePath() + Constants::PATH_SEPARATOR + info.GetCurrentModulePackage();
+    auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
     APP_LOGD("rename module to %{public}s", moduleDir.c_str());
     auto result = InstalldClient::GetInstance()->RenameModuleDir(moduleDir + Constants::TMP_SUFFIX, moduleDir);
     if (result != ERR_OK) {
@@ -3130,10 +3132,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
             if (!iter->second.needCreateSandbox) {
                 continue;
             }
-            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
                             + DATA_EXTENSION_PATH
-                            + iter->second.bundleName + Constants::PATH_SEPARATOR
-                            + iter->second.moduleName + Constants::PATH_SEPARATOR
+                            + iter->second.bundleName + ServiceConstants::PATH_SEPARATOR
+                            + iter->second.moduleName + ServiceConstants::PATH_SEPARATOR
                             + iter->second.name;
             std::string key = iter->second.bundleName + "." + iter->second.moduleName + "." +  iter->second.name;
 
@@ -3206,9 +3208,9 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
         }
         for (const std::string &oldModuleName : oldModuleNames) {
             if (newModules.find(oldModuleName) == newModules.end()) {
-                std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
                             + DATA_EXTENSION_PATH
-                            + oldInfo.GetBundleName() + Constants::PATH_SEPARATOR
+                            + oldInfo.GetBundleName() + ServiceConstants::PATH_SEPARATOR
                             + oldModuleName;
                 APP_LOGI("dir %{public}s need to be removed", dir.c_str());
                 removeExtensionDirs_.emplace_back(dir);
@@ -3284,7 +3286,7 @@ void BaseBundleInstaller::CheckRemoveExtensionBundleDir(
         APP_LOGD("no need to remove extension dir for bundle");
         return;
     }
-    std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+    std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
         + DATA_EXTENSION_PATH + oldInfo.GetBundleName();
     if (isFeatureNeedUninstall_) {
         if (!oldInfo.GetAllExtensionDirs(userId_).empty()) {
@@ -3333,7 +3335,7 @@ void BaseBundleInstaller::CheckRemoveExtensionModuleDir(
         }
         // current module need not to create extension dir
         if (!oldInfo.GetAllExtensionDirsInSpecifiedModule(curModuleName, userId_).empty()) {
-            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
                     + DATA_EXTENSION_PATH + oldInfo.GetBundleName()
                     + curModuleName;
             APP_LOGI("need to remove extension dir for module, dir is %{public}s", dir.c_str());
@@ -3359,7 +3361,7 @@ void BaseBundleInstaller::CheckRemoveExtensionModuleDirWhenUpgrade(const std::ve
         }
     }
     for (const std::string &moduleName : oldModules) {
-        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+        std::string dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
                     + DATA_EXTENSION_PATH + oldInfo.GetBundleName()
                     + moduleName;
         if (oldInfo.GetAllExtensionDirsInSpecifiedModule(moduleName, userId_).empty()) {
@@ -3396,7 +3398,7 @@ void BaseBundleInstaller::RemoveBundleExtensionDir(const std::string &bundleName
         APP_LOGW("bundleName is empty");
         return;
     }
-    std::string dir =  Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+    std::string dir =  Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_)
         + DATA_EXTENSION_PATH + bundleName;
     auto result = InstalldClient::GetInstance()->RemoveDir(dir);
     if (result != ERR_OK) {
@@ -4391,8 +4393,9 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
 ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
 {
     const std::string bundleName = info.GetBundleName();
-    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
-        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + LOG;
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName
+        + ServiceConstants::PATH_SEPARATOR + LOG;
     bool dirExist = false;
     ErrCode errCode = InstalldClient::GetInstance()->IsExistDir(asanLogDir, dirExist);
     if (errCode != ERR_OK) {
@@ -4436,8 +4439,8 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
 {
     const std::string bundleName = info.GetBundleName();
-    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
-        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName;
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName;
     ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
     if (errCode != ERR_OK) {
         APP_LOGE("clean asan log path failed!");
@@ -4486,12 +4489,12 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
                 }
             } else {
                 nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
-                    Constants::PATH_SEPARATOR + nativeLibraryPath;
+                    ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
             }
             APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
-            targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
-                .append(Constants::PATH_SEPARATOR);
+            targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+                .append(info.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR).append(nativeLibraryPath)
+                .append(ServiceConstants::PATH_SEPARATOR);
             targetSoPathMap_.emplace(info.GetCurModuleName(), targetSoPath);
         }
     }
@@ -4616,8 +4619,8 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
             }
         }
     }
-    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-        Constants::PATH_SEPARATOR + Constants::LIBS;
+    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
     }
@@ -4754,7 +4757,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
         APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
         return "";
     }
-    auto posOfPathSep = hapPath.rfind(Constants::PATH_SEPARATOR);
+    auto posOfPathSep = hapPath.rfind(ServiceConstants::PATH_SEPARATOR);
     if (posOfPathSep == std::string::npos) {
         return "";
     }
@@ -4848,10 +4851,10 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
             nativeLibraryPath);
         if (isSoExisted) {
             std::string tempSoDir;
-            tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+            tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+                .append(info.second.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
                 .append(info.second.GetCurrentModulePackage())
-                .append(Constants::TMP_SUFFIX).append(Constants::PATH_SEPARATOR)
+                .append(Constants::TMP_SUFFIX).append(ServiceConstants::PATH_SEPARATOR)
                 .append(nativeLibraryPath);
             bool isDirExisted = false;
             auto result = InstalldClient::GetInstance()->IsExistDir(tempSoDir, isDirExisted);
@@ -4864,8 +4867,8 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 continue;
             }
             std::string realSoDir;
-            realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+            realSoDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+                .append(info.second.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
                 .append(nativeLibraryPath);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
             isDirExisted = false;
@@ -4979,12 +4982,12 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
         APP_LOGW("invalid tempSoDir %{public}s", tempSoDir.c_str());
         return;
     }
-    auto secondPos = tempSoDir.find(Constants::PATH_SEPARATOR, firstPos);
+    auto secondPos = tempSoDir.find(ServiceConstants::PATH_SEPARATOR, firstPos);
     if (secondPos == std::string::npos) {
         APP_LOGW("invalid tempSoDir %{public}s", tempSoDir.c_str());
         return;
     }
-    auto thirdPos = tempSoDir.find(Constants::PATH_SEPARATOR, secondPos + 1);
+    auto thirdPos = tempSoDir.find(ServiceConstants::PATH_SEPARATOR, secondPos + 1);
     if (thirdPos == std::string::npos) {
         InstalldClient::GetInstance()->RemoveDir(tempSoDir);
         return;
@@ -5048,8 +5051,8 @@ ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundle
 
 void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
 {
-    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-        Constants::PATH_SEPARATOR + Constants::LIBS;
+    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
     }
@@ -5059,8 +5062,8 @@ void BaseBundleInstaller::RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &inn
 {
     APP_LOGD("start");
     std::string tempDir;
-    tempDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
+    tempDir.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetBundleName()).append(ServiceConstants::PATH_SEPARATOR)
         .append(innerBundleInfo.GetCurrentModulePackage())
         .append(Constants::TMP_SUFFIX);
     bool isDirEmpty = false;

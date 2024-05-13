@@ -1678,7 +1678,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
     bundleName = keyName;
     appIndex = 0;
     // for clone bundle name
-    auto pos = keyName.find(Constants::CLONE_BUNDLE_PREFIX);
+    auto pos = keyName.find(ServiceConstants::CLONE_BUNDLE_PREFIX);
     if ((pos == std::string::npos) || (pos == 0)) {
         return;
     }
@@ -1687,7 +1687,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         appIndex = 0;
         return;
     }
-    bundleName = keyName.substr(pos + Constants::CLONE_BUNDLE_PREFIX.size());
+    bundleName = keyName.substr(pos + ServiceConstants::CLONE_BUNDLE_PREFIX.size());
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const
@@ -5031,7 +5031,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
     size_t schemePos = uri.find(PARAM_URI_SEPARATOR);
     if (schemePos != uri.npos) {
         // 1. cut string
-        size_t cutPos = uri.find(Constants::PATH_SEPARATOR, schemePos + PARAM_URI_SEPARATOR_LEN);
+        size_t cutPos = uri.find(ServiceConstants::PATH_SEPARATOR, schemePos + PARAM_URI_SEPARATOR_LEN);
         if (cutPos != uri.npos) {
             convertUri = uri.substr(0, cutPos);
         }
@@ -5823,8 +5823,8 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     std::string abi;
     std::string path;
     if (aotCompileStatus == AOTCompileStatus::COMPILE_SUCCESS) {
-        abi = Constants::ARM64_V8A;
-        path = Constants::ARM64 + Constants::PATH_SEPARATOR;
+        abi = ServiceConstants::ARM64_V8A;
+        path = ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR;
     }
     item->second.SetArkNativeFileAbi(abi);
     item->second.SetArkNativeFilePath(path);
@@ -6248,7 +6248,7 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
         APP_LOGW("get uuid by data group id failed");
         return false;
     }
-    dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
+    dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
         + Constants::DATA_GROUP_PATH + uuid;
     APP_LOGD("groupDir: %{private}s", dir.c_str());
     return true;

@@ -95,7 +95,7 @@ ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const M
 
     // create destined dir of driver files
     std::vector<std::string> originalDirVec;
-    SplitStr(originalDir, Constants::PATH_SEPARATOR, originalDirVec, false, false);
+    SplitStr(originalDir, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
     if (originalDirVec.empty()) {
         APP_LOGW("original dir is invalid");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
@@ -145,7 +145,7 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
                 continue;
             }
             std::vector<std::string> originalDirVec;
-            SplitStr(meta.resource, Constants::PATH_SEPARATOR, originalDirVec, false, false);
+            SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
             if (originalDirVec.empty()) {
                 APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
                 return;
@@ -172,8 +172,8 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
         return "";
     }
     std::string resStr = destinedDir;
-    if (resStr.back() != Constants::PATH_SEPARATOR[0]) {
-        resStr += Constants::PATH_SEPARATOR;
+    if (resStr.back() != ServiceConstants::PATH_SEPARATOR[0]) {
+        resStr += ServiceConstants::PATH_SEPARATOR;
     }
     if (isModuleExisted) {
         resStr.append(TEMP_PREFIX);
@@ -201,7 +201,7 @@ void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
                 continue;
             }
             std::vector<std::string> originalDirVec;
-            SplitStr(meta.resource, Constants::PATH_SEPARATOR, originalDirVec, false, false);
+            SplitStr(meta.resource, ServiceConstants::PATH_SEPARATOR, originalDirVec, false, false);
             if (originalDirVec.empty()) {
                 APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
                 return;

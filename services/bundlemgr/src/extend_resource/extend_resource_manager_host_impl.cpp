@@ -72,9 +72,9 @@ std::string GetFileName(const std::string &sourcePath)
 std::string BuildResourcePath(const std::string &bundleName)
 {
     std::string filePath;
-    filePath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(bundleName).append(Constants::PATH_SEPARATOR)
-        .append(Constants::EXT_RESOURCE_FILE_PATH).append(Constants::PATH_SEPARATOR);
+    filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
+        .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
+        .append(Constants::EXT_RESOURCE_FILE_PATH).append(ServiceConstants::PATH_SEPARATOR);
     return filePath;
 }
 

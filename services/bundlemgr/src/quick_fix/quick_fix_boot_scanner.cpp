@@ -161,13 +161,13 @@ void QuickFixBootScanner::ProcessQuickFixDir(const std::vector<std::string> &fil
             continue;
         }
         LOG_D(BMS_TAG_QUICK_FIX, "versionCode of the quick fix file is %{public}d", versionCode);
-        size_t firstPos = fileStr.rfind(Constants::PATH_SEPARATOR);
+        size_t firstPos = fileStr.rfind(ServiceConstants::PATH_SEPARATOR);
         if (firstPos == std::string::npos) {
             LOG_E(BMS_TAG_QUICK_FIX, "ObtainQuickFixInfo failed due to invalid dir");
             invalidQuickFixDir_.emplace_back(fileStr);
             continue;
         }
-        size_t secondPos = fileStr.rfind(Constants::PATH_SEPARATOR, firstPos - 1);
+        size_t secondPos = fileStr.rfind(ServiceConstants::PATH_SEPARATOR, firstPos - 1);
         if (secondPos == std::string::npos) {
             LOG_E(BMS_TAG_QUICK_FIX, "ObtainQuickFixInfo failed due to invalid dir");
             invalidQuickFixDir_.emplace_back(fileStr);
@@ -193,8 +193,8 @@ bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, con
 {
     LOG_D(BMS_TAG_QUICK_FIX, "start to ReprocessQuickFix with bundleName %{public}s", bundleName.c_str());
     std::string destinationDir = Constants::HAP_COPY_PATH;
-    destinationDir += Constants::PATH_SEPARATOR + Constants::SECURITY_QUICK_FIX_PATH +
-        Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR;
+    destinationDir += ServiceConstants::PATH_SEPARATOR + Constants::SECURITY_QUICK_FIX_PATH +
+        ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR;
     if (!BundleUtil::CreateDir(destinationDir)) {
         LOG_E(BMS_TAG_QUICK_FIX, "create dir failed");
         return false;
@@ -285,15 +285,17 @@ void QuickFixBootScanner::RemoveInvalidDir() const
         });
     }
     // remove invalid temp install dir
-    std::string tempInstallDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
-    std::string tempQuickFixDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
-    std::string tempSecureInstallDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+    std::string tempInstallDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR
+        + Constants::STREAM_INSTALL_PATH;
+    std::string tempQuickFixDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR
+        + Constants::QUICK_FIX_PATH;
+    std::string tempSecureInstallDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
         Constants::SECURITY_STREAM_INSTALL_PATH;
-    std::string tempSecureQuickFixDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+    std::string tempSecureQuickFixDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
         Constants::SECURITY_QUICK_FIX_PATH;
-    std::string tempSignatureFileDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+    std::string tempSignatureFileDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
         Constants::SIGNATURE_FILE_PATH;
-    std::string tempSecureSignatureFileDir = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+    std::string tempSecureSignatureFileDir = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
         Constants::SECURITY_SIGNATURE_FILE_PATH;
     BundleUtil::DeleteDir(tempInstallDir);
     BundleUtil::DeleteDir(tempQuickFixDir);

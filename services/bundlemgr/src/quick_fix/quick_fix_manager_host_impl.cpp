@@ -171,18 +171,18 @@ ErrCode QuickFixManagerHostImpl::CopyHqfToSecurityDir(const std::vector<std::str
     std::vector<std::string> &securityFilePaths) const
 {
     LOG_D(BMS_TAG_QUICK_FIX, "start to copy hqf files to securityFilePaths");
-    std::string prefixStr = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    std::string prefixStr = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
     for (const auto &path : bundleFilePaths) {
         if (path.find(prefixStr) == std::string::npos) {
             LOG_E(BMS_TAG_QUICK_FIX, "invalid hqf path %{public}s", path.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
-        std::string securityPathPrefix = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+        std::string securityPathPrefix = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
             Constants::SECURITY_QUICK_FIX_PATH;
         std::string securityPath = path;
         securityPath.replace(0, prefixStr.length(), securityPathPrefix);
 
-        auto pos = securityPath.rfind(Constants::PATH_SEPARATOR);
+        auto pos = securityPath.rfind(ServiceConstants::PATH_SEPARATOR);
         if (pos == std::string::npos) {
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }

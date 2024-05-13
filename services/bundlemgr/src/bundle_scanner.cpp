@@ -84,7 +84,7 @@ bool BundleScanner::ScanImpl(const std::string &dirPath)
         if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
             continue;
         }
-        entries_.push_back(dirPath + Constants::PATH_SEPARATOR + currentName);
+        entries_.push_back(dirPath + ServiceConstants::PATH_SEPARATOR + currentName);
     }
 
     if (closedir(dirp) == -1) {

@@ -39,7 +39,7 @@ BundleExceptionHandler::~BundleExceptionHandler()
 
 void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
 {
-    std::string appCodePath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + info.GetBundleName();
+    std::string appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
     if (!IsBundleHapPathExist(info)) {
         RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId());
         DeleteBundleInfoFromStorage(info);
@@ -51,7 +51,7 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
         return;
     }
     APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
-    auto moduleDir = appCodePath + Constants::PATH_SEPARATOR + mark.packageName;
+    auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;
     auto moduleDataDir = info.GetBundleName() + Constants::HAPS + mark.packageName;
 
     // install and update failed before service restart

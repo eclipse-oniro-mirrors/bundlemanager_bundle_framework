@@ -32,6 +32,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
+#include "bundle_service_constants.h"
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "aot_compiler_client.h"
 #include "code_sign_utils.h"
@@ -162,12 +163,12 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
         objectArray.push_back(object);
     }
     argsMap.emplace("target-compiler-mode", aotArgs.compileMode);
-    argsMap.emplace("aot-file", aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName);
+    argsMap.emplace("aot-file", aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName);
     argsMap.emplace("compiler-pkg-info", subject.dump());
     argsMap.emplace("compiler-external-pkg-info", objectArray.dump());
     argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
     argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
-    argsMap.emplace("ABC-Path", aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
+    argsMap.emplace("ABC-Path", aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
     argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
     argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
     argsMap.emplace("anFileName", aotArgs.anFileName);

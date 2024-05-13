@@ -2583,7 +2583,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0300, Function | MediumTest | Level2)
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(appType.c_str(), Constants::EMPTY_STRING) != 0) {
+        if (std::strcmp(appType.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAppType_0300 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2639,7 +2639,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0500, Function | MediumTest | Level2)
         std::string appType = bundleMgrProxy->GetAppType(appName);
         EXPECT_EQ(appType, Constants::EMPTY_STRING);
 
-        if (std::strcmp(appType.c_str(), Constants::EMPTY_STRING) != 0) {
+        if (std::strcmp(appType.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAppType_0500 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2736,7 +2736,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0300, Function | MediumTest | Lev
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(abilityLabel.c_str(), Constants::EMPTY_STRING) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0300 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2781,7 +2781,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0400, Function | MediumTest | Lev
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(abilityLabel.c_str(), Constants::EMPTY_STRING) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0400 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2838,7 +2838,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0600, Function | MediumTest | Lev
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
         EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
 
-        if (std::strcmp(abilityLabel.c_str(), Constants::EMPTY_STRING) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0600 failed - cycle count: %{public}d", i);
             break;
         }
