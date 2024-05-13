@@ -61,6 +61,8 @@ struct FormInfo : public Parcelable {
     int32_t privacyLevel = 0;
     bool fontScaleFollowSystem = true;
     std::vector<int32_t> supportShapes;
+    uint32_t versionCode = 0;
+    BundleType bundleType = BundleType::APP;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
