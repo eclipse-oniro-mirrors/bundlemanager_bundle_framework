@@ -45,6 +45,8 @@ const std::string ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 static constexpr char PERFORMANCE_DOMAIN[] = "PERFORMANCE";
 
 // event params
+const std::string EVENT_PARAM_PNAMEID = "PNAMEID";
+const std::string EVENT_PARAM_PVERSIONID = "PVERSIONID";
 const std::string EVENT_PARAM_USERID = "USERID";
 const std::string EVENT_PARAM_UID = "UID";
 const std::string EVENT_PARAM_BUNDLE_NAME = "BUNDLE_NAME";
@@ -251,6 +253,8 @@ void InnerEventReport::InnerSendBundleInstallExceptionEvent(const EventInfo& eve
     InnerEventWrite(
         BUNDLE_INSTALL_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -264,6 +268,8 @@ void InnerEventReport::InnerSendBundleUninstallExceptionEvent(const EventInfo& e
     InnerEventWrite(
         BUNDLE_UNINSTALL_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -276,6 +282,8 @@ void InnerEventReport::InnerSendBundleUpdateExceptionEvent(const EventInfo& even
     InnerEventWrite(
         BUNDLE_UPDATE_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -288,6 +296,8 @@ void InnerEventReport::InnerSendPreBundleRecoverExceptionEvent(const EventInfo& 
     InnerEventWrite(
         PRE_BUNDLE_RECOVER_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -301,6 +311,8 @@ void InnerEventReport::InnerSendBundleStateChangeExceptionEvent(const EventInfo&
     InnerEventWrite(
         BUNDLE_STATE_CHANGE_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
@@ -313,6 +325,8 @@ void InnerEventReport::InnerSendBundleCleanCacheExceptionEvent(const EventInfo& 
     InnerEventWrite(
         BUNDLE_CLEAN_CACHE_EXCEPTION,
         HiSysEventType::FAULT,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_CLEAN_TYPE, cleanType);
@@ -323,6 +337,8 @@ void InnerEventReport::InnerSendBootScanStartEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BOOT_SCAN_START,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
@@ -331,6 +347,8 @@ void InnerEventReport::InnerSendBootScanEndEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BOOT_SCAN_END,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
@@ -339,6 +357,8 @@ void InnerEventReport::InnerSendBundleInstallEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BUNDLE_INSTALL,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -360,6 +380,8 @@ void InnerEventReport::InnerSendBundleUninstallEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BUNDLE_UNINSTALL,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -374,6 +396,8 @@ void InnerEventReport::InnerSendBundleUpdateEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BUNDLE_UPDATE,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -394,6 +418,8 @@ void InnerEventReport::InnerSendPreBundleRecoverEvent(const EventInfo& eventInfo
     InnerEventWrite(
         PRE_BUNDLE_RECOVER,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_VERSION, eventInfo.versionCode,
@@ -414,6 +440,8 @@ void InnerEventReport::InnerSendBundleStateChangeEvent(const EventInfo& eventInf
     InnerEventWrite(
         BUNDLE_STATE_CHANGE,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
@@ -427,6 +455,8 @@ void InnerEventReport::InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo
     InnerEventWrite(
         BUNDLE_CLEAN_CACHE,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_CLEAN_TYPE, cleanType);
@@ -437,6 +467,8 @@ void InnerEventReport::InnerSendUserEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BMS_USER_EVENT,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         TYPE, GetUserEventType(eventInfo),
         EVENT_PARAM_USERID, eventInfo.userId,
         EVENT_PARAM_TIME, eventInfo.timeStamp);
@@ -447,6 +479,8 @@ void InnerEventReport::InnerSendQuickFixEvent(const EventInfo& eventInfo)
     InnerEventWrite(
         BUNDLE_QUICK_FIX,
         HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_PNAMEID, eventInfo.packageName,
+        EVENT_PARAM_PVERSIONID, eventInfo.applicationVersion,
         EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
         EVENT_PARAM_APP_DISTRIBUTION_TYPE, eventInfo.appDistributionType,
         EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY, eventInfo.applyQuickFixFrequency,
@@ -510,7 +544,7 @@ void InnerEventReport::InnerEventWrite(
     Types... keyValues)
 {
     HiSysEventWrite(
-        OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLE_MANAGER,
+        OHOS::HiviewDFX::HiSysEvent::Domain::BUNDLEMANAGER_UE,
         eventName,
         static_cast<OHOS::HiviewDFX::HiSysEvent::EventType>(type),
         keyValues...);
