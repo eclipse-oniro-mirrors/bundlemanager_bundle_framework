@@ -326,4 +326,53 @@ HWTEST_F(BmsBundleCloneAppIPCTest, UninstallCloneAppTest001_AppNotExist, Functio
     auto result = installerProxy->UninstallCloneApp(bundleName, userId, appIndex);
     EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
 }
+
+HWTEST_F(BmsBundleCloneAppIPCTest, QueryExtensionAbility_001, Function | SmallTest | Level0)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string abilityName = "MainAbility";
+    const std::string bundleName = "ohos.samples.etsclock";
+    {
+        const int32_t userId = 100;
+        int32_t appIndex = 0;
+        ElementName name;
+        name.SetAbilityName(abilityName);
+        name.SetBundleName(bundleName);
+        
+        ExtensionAbilityInfo extensionAbilityInfo;
+        auto result = bundleMgrProxy->QueryCloneExtensionAbilityInfoWithAppIndex(
+            name, 0, appIndex, extensionAbilityInfo, userId);
+        EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST
+         || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        if (result == ERR_OK) {
+            nlohmann::json abilityInfoJson;
+            to_json(abilityInfoJson, extensionAbilityInfo);
+            std::string res = abilityInfoJson.dump();
+            std::cout << "ability: " << res << std::endl;
+        }
+    }
+    {
+        const int32_t userId = 100;
+        int32_t appIndex = 1;
+        ElementName name;
+        name.SetAbilityName(abilityName);
+        name.SetBundleName(bundleName);
+        
+        ExtensionAbilityInfo extensionAbilityInfo;
+        auto result = bundleMgrProxy->QueryCloneExtensionAbilityInfoWithAppIndex(
+            name, 0, appIndex, extensionAbilityInfo, userId);
+        EXPECT_TRUE(result == ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST
+            || result == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        if (result == ERR_OK) {
+            nlohmann::json abilityInfoJson;
+            to_json(abilityInfoJson, extensionAbilityInfo);
+            std::string res = abilityInfoJson.dump();
+            std::cout << "ability: " << res << std::endl;
+        }
+    }
+}
 } // OHOS

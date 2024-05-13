@@ -3810,5 +3810,38 @@ ErrCode BundleMgrHostImpl::GetCloneAppIndexes(const std::string &bundleName, std
     appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &element, int32_t flags,
+    int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryCloneExtensionAbilityInfoWithAppIndex without type begin");
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName = element.GetBundleName();
+    std::string extensionName = element.GetAbilityName();
+    if (bundleName.empty() || extensionName.empty()) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION,
+            "QueryCloneExtensionAbilityInfoWithAppIndex is failed, bundleName:%{public}s, extensionName:%{public}s",
+            bundleName.c_str(), extensionName.c_str());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    Want want;
+    want.SetElement(element);
+    ErrCode ret = dataMgr->ExplicitQueryExtensionInfoV9(want, flags, userId, extensionAbilityInfo, appIndex);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryExtensionInfo error");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

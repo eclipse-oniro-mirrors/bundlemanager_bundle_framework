@@ -4819,5 +4819,34 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
     }
     return ret;
 }
+
+ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
+    int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&elementName)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write elementName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX, data, extensionAbilityInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
