@@ -38,6 +38,8 @@ using namespace std;
 static constexpr int MIN_NUMBER = 1;
 static constexpr int MIN_ASCII = 0;
 static constexpr int MAX_ASCII = 255;
+static constexpr int MIN_WINDOWBITS = 8;
+static constexpr int MAX_WINDOWBITS = 15;
 
 tuple<bool, int64_t, void *, size_t> CommonFunc::GetAdler32Arg(napi_env env, const NapiFuncArg &funcArg)
 {
@@ -794,7 +796,7 @@ std::tuple<bool, unsigned long, void*, size_t> CommonFunc::GetInflateBackInitArg
     int32_t windowBits = 0;
     NapiValue windowBitsNVal(env, funcArg[ArgumentPosition::SECOND]);
     tie(succ, windowBits) = windowBitsNVal.ToInt64();
-    if (!succ) {
+    if (!succ || windowBits < MIN_WINDOWBITS || windowBits > MAX_WINDOWBITS) {
         NapiBusinessError().ThrowErr(env, EINVAL);
         return {false, 0, nullptr, 0};
     }

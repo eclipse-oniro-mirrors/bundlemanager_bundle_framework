@@ -37,7 +37,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
-
+static constexpr int32_t ERROR_CODE = -5;
+static constexpr int32_t MIN_BITS = 0;
+static constexpr int32_t MAX_BITS = 16;
 struct AsyncZipArg {
     const char *zliVersion = nullptr;
     const char *zErrorMsg = nullptr;
@@ -912,6 +914,9 @@ napi_value ZipNExporter::DeflatePrime(napi_env env, napi_callback_info info)
     tie(succ, bits, value) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
     if (!succ) {
         return nullptr;
+    } else if (bits < MIN_BITS || bits > MAX_BITS) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
     }
 
     auto arg = make_shared<AsyncZipArg>();
@@ -1292,8 +1297,11 @@ napi_value ZipNExporter::Compress(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             compress(reinterpret_cast<Bytef *>(dest), &arg->destLen, reinterpret_cast<Bytef *>(source), arg->sourceLen);
@@ -1347,8 +1355,11 @@ napi_value ZipNExporter::Compress2(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode = compress2(
             static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), arg->sourceLen, arg->level);
@@ -1444,8 +1455,11 @@ napi_value ZipNExporter::UnCompress(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             uncompress(static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), arg->sourceLen);
@@ -1499,8 +1513,11 @@ napi_value ZipNExporter::UnCompress2(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             uncompress2(static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), &arg->sourceLen);
