@@ -62,6 +62,7 @@ constexpr const char* APP_DISTRIBUTION_TYPE_ENUM = "AppDistributionType";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* STATE = "state";
+constexpr const char* APP_INDEX = "appIndex";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -99,6 +100,8 @@ const std::string GET_ALL_PREINSTALLED_APP_INFOS = "GetAllPreinstalledApplicatio
 const std::string GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID = "GetAllBundleInfoByDeveloperId";
 const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
+const std::string GET_APP_CLONE_BUNDLE_INFO = "GetAppCloneBundleInfo";
+const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -4822,6 +4825,222 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
     APP_LOGD("call SwitchUninstallState done.");
     return nRet;
+}
+
+static ErrCode InnerGetAppCloneBundleInfo(const std::string &bundleName, int32_t appIndex,
+    int32_t bundleFlags, int32_t userId, BundleInfo &bundleInfo)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo);
+    APP_LOGD("GetCloneBundleInfo result is %{public}d", ret);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetAppCloneBundleInfoExec(napi_env env, void *data)
+{
+    CloneAppBundleInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    APP_LOGD("param: name=%{public}s,index=%{public}d,bundleFlags=%{public}d,userId=%{public}d",
+        asyncCallbackInfo->bundleName.c_str(),
+        asyncCallbackInfo->appIndex,
+        asyncCallbackInfo->bundleFlags,
+        asyncCallbackInfo->userId);
+    asyncCallbackInfo->err =
+        InnerGetAppCloneBundleInfo(asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex,
+            asyncCallbackInfo->bundleFlags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
+}
+
+void GetAppCloneBundleInfoComplete(napi_env env, napi_status status, void *data)
+{
+    CloneAppBundleInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfoCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<CloneAppBundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertBundleInfo(env, asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], true);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
+    }
+    CommonFunc::NapiReturnDeferred<CloneAppBundleInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAppCloneBundleInfo call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<CloneAppBundleInfoCallbackInfo> asyncCallbackInfo =
+        std::make_unique<CloneAppBundleInfoCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->appIndex)) {
+        APP_LOGE("Parse appIndex failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], asyncCallbackInfo->bundleFlags)) {
+        APP_LOGE("Parse bundleFlags failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_THREE], asyncCallbackInfo->userId)) {
+        APP_LOGI("Parse userId failed, use default value");
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<CloneAppBundleInfoCallbackInfo>(
+        env, asyncCallbackInfo.get(), GET_APP_CLONE_BUNDLE_INFO,
+        GetAppCloneBundleInfoExec, GetAppCloneBundleInfoComplete);
+    asyncCallbackInfo.release();
+    APP_LOGD("call GetAppCloneBundleInfo done.");
+    return promise;
+}
+
+static ErrCode InnerGetAllAppCloneBundleInfo(const std::string &bundleName, int32_t bundleFlags,
+    int32_t userId, std::vector<BundleInfo> &bundleInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    BundleInfo bundleInfoMain;
+    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
+    APP_LOGD("InnerGetAllAppCloneBundleInfo: GetMainBundleInfo ret=%{public}d", ret);
+    if (ret != NO_ERROR) {
+        return CommonFunc::ConvertErrCode(ret);
+    }
+    bundleInfos.emplace_back(bundleInfoMain);
+    // handle clone apps
+    std::vector<int32_t> appIndexes;
+    ret = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
+    if (ret != NO_ERROR) {
+        return CommonFunc::ConvertErrCode(ret);
+    }
+    if (appIndexes.empty()) {
+        return SUCCESS;
+    }
+    for (int32_t appIndex : appIndexes) {
+        BundleInfo bundleInfo;
+        ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
+        if (ret == NO_ERROR) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    return SUCCESS;
+}
+
+void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
+{
+    CloneAppBundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    APP_LOGD("param: name=%{public}s,bundleFlags=%{public}d,userId=%{public}d",
+        asyncCallbackInfo->bundleName.c_str(),
+        asyncCallbackInfo->bundleFlags,
+        asyncCallbackInfo->userId);
+    asyncCallbackInfo->err =
+        InnerGetAllAppCloneBundleInfo(asyncCallbackInfo->bundleName, asyncCallbackInfo->bundleFlags,
+            asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+}
+
+static void CloneAppBundleInfos(
+    napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos)
+{
+    if (bundleInfos.size() == 0) {
+        APP_LOGD("bundleInfos is null");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : bundleInfos) {
+        APP_LOGD("name: %{public}s ", item.name.c_str());
+        napi_value objBundleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
+        CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, true);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index++, objBundleInfo));
+    }
+}
+
+void GetAllAppCloneBundleInfoComplete(napi_env env, napi_status status, void *data)
+{
+    CloneAppBundleInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<CloneAppBundleInfosCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<CloneAppBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CloneAppBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
+    }
+    CommonFunc::NapiReturnDeferred<CloneAppBundleInfosCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAllAppCloneBundleInfo call");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<CloneAppBundleInfosCallbackInfo> asyncCallbackInfo =
+        std::make_unique<CloneAppBundleInfosCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->bundleFlags)) {
+        APP_LOGE("Parse bundleFlags failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], asyncCallbackInfo->userId)) {
+        APP_LOGI("Parse userId failed, use default value");
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<CloneAppBundleInfosCallbackInfo>(
+        env, asyncCallbackInfo.get(), GET_ALL_APP_CLONE_BUNDLE_INFO,
+        GetAllAppCloneBundleInfoExec, GetAllAppCloneBundleInfoComplete);
+    asyncCallbackInfo.release();
+    APP_LOGD("call GetAllAppCloneBundleInfo done.");
+    return promise;
 }
 
 void CreateMultiAppModeTypeObject(napi_env env, napi_value value)

@@ -163,6 +163,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getDeveloperIds", GetDeveloperIds),
         DECLARE_NAPI_FUNCTION("switchUninstallState", SwitchUninstallState),
         DECLARE_NAPI_PROPERTY("MultiAppModeType", nMultiAppModeType),
+        DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
+        DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

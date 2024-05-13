@@ -369,6 +369,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetCloneBundleInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COPY_AP),
         &BundleMgrHost::HandleCopyAp);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES),
+        &BundleMgrHost::HandleGetCloneAppIndexes);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3498,6 +3500,25 @@ ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParc
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !reply.WriteParcelable(&bundleInfo)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<int32_t> appIndexes;
+    auto ret = GetCloneAppIndexes(bundleName, appIndexes, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

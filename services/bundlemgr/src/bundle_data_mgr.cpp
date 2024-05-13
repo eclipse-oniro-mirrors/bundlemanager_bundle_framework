@@ -653,11 +653,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
 void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos, const std::string &bundleName,
     const ElementName &element, int32_t flags, int32_t userId) const
 {
-    int32_t requestUserId = GetUserId(userId);
-    if (requestUserId == Constants::INVALID_USERID) {
-        return;
-    }
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, requestUserId);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, userId);
     if (cloneAppIndexes.empty()) {
         return;
     }
@@ -1690,9 +1686,21 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
     bundleName = keyName.substr(pos + ServiceConstants::CLONE_BUNDLE_PREFIX.size());
 }
 
-std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t requestUserId) const
+std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> cloneAppIndexes;
+    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            LOG_W(BMS_TAG_QUERY_BUNDLE, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
+            return cloneAppIndexes;
+        }
+        userId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+    }
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return cloneAppIndexes;
+    }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
