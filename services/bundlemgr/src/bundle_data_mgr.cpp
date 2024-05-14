@@ -43,6 +43,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
@@ -3905,6 +3906,22 @@ bool BundleDataMgr::RestoreUidAndGid()
                 }
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
                 BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+            }
+            // appClone
+            std::string bundleName = info.second.GetBundleName();
+            std::map<std::string, InnerBundleCloneInfo> &clones = innerBundleUserInfo.cloneInfos;
+            for (auto iter = clones.begin(); iter != clones.end(); iter++) {
+                auto &cloneInfo = iter->second;
+                int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
+                std::string cloneBundleName =
+                    BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
+                std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+                auto item = bundleIdMap_.find(bundleId);
+                if (item == bundleIdMap_.end()) {
+                    bundleIdMap_.emplace(bundleId, cloneBundleName);
+                } else {
+                    bundleIdMap_[bundleId] = cloneBundleName;
+                }
             }
         }
     }

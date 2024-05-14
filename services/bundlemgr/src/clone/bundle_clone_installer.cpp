@@ -29,6 +29,7 @@
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
+#include "inner_bundle_clone_common.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -37,20 +38,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
-namespace {
-const std::string CLONE_DIR_PATH_PREFIX = "clone";
-}
-
-std::string GetCloneDataDir(const std::string &bundleName, const int32_t appIndex)
-{
-    return CLONE_DIR_PATH_PREFIX + Constants::FILE_SEPARATOR_CHAR
-        + bundleName + Constants::FILE_SEPARATOR_CHAR + std::to_string(appIndex);
-}
-
-std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
-{
-    return std::to_string(appIndex) + CLONE_DIR_PATH_PREFIX + Constants::FILE_UNDERLINE + bundleName;
-}
 
 BundleCloneInstaller::BundleCloneInstaller()
 {
@@ -196,7 +183,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     }
 
     // uid
-    std::string cloneBundleName = GetCloneBundleIdKey(bundleName, appIndex);
+    std::string cloneBundleName = BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, appIndex);
     InnerBundleUserInfo tmpUserInfo;
     tmpUserInfo.bundleName = cloneBundleName;
     tmpUserInfo.bundleUserInfo.userId = userId;
@@ -300,7 +287,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     const int32_t userId, const int32_t &uid, const int32_t &appIndex) const
 {
     APP_LOGD("CreateCloneDataDir %{public}s _ %{public}d begin", info.GetBundleName().c_str(), appIndex);
-    std::string innerDataDir = GetCloneDataDir(info.GetBundleName(), appIndex);
+    std::string innerDataDir = BundleCloneCommonHelper::GetCloneDataDir(info.GetBundleName(), appIndex);
     CreateDirParam createDirParam;
     createDirParam.bundleName = innerDataDir;
     createDirParam.userId = userId;
@@ -320,7 +307,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
 
 ErrCode BundleCloneInstaller::RemoveCloneDataDir(const std::string bundleName, int32_t userId, int32_t appIndex)
 {
-    std::string key = GetCloneDataDir(bundleName, appIndex);
+    std::string key = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
     if (InstalldClient::GetInstance()->RemoveBundleDataDir(key, userId) != ERR_OK) {
         APP_LOGW("CloneApp cannot remove the data dir");
         return ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR;
