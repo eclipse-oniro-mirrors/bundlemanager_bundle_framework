@@ -165,6 +165,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("MultiAppModeType", nMultiAppModeType),
         DECLARE_NAPI_FUNCTION("getAppCloneBundleInfo", GetAppCloneBundleInfo),
         DECLARE_NAPI_FUNCTION("getAllAppCloneBundleInfo", GetAllAppCloneBundleInfo),
+        DECLARE_NAPI_FUNCTION("getAppCloneIdentity", GetAppCloneIdentity),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

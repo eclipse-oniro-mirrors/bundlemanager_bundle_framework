@@ -172,6 +172,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_CLONE_BUNDLE_INFO,
     COPY_AP,
     GET_CLONE_APP_INDEXES,
+    GET_NAME_AND_APPINDEX_FOR_UID,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

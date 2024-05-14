@@ -355,6 +355,17 @@ public:
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the formal name associated with the given UID.
+     * @param uid Indicates the uid.
+     * @param bundleName Indicates the obtained formal bundleName.
+     * @param name Indicates the obtained appIndex.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.

@@ -820,6 +820,34 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetNameAndIndexForUid(const int32_t uid, std::string &bundleName, int32_t &appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetNameAndIndexForUid of %{public}d", uid);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetNameAndIndexForUid due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(uid)) {
+        APP_LOGE("fail to GetNameAndIndexForUid due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmdWithLog(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID, data, reply)) {
+        APP_LOGE("fail to GetNameAndIndexForUid from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    bundleName = reply.ReadString();
+    appIndex = reply.ReadInt32();
+    return ERR_OK;
+}
+
 bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
