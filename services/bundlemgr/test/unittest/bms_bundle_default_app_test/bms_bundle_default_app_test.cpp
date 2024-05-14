@@ -1546,6 +1546,25 @@ HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0300, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetBrokerBundleInfo_0100
+ * @tc.name: test GetBrokerBundleInfo
+ * @tc.desc: 1.expect return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, GetBrokerBundleInfo_0100, Function | SmallTest | Level1)
+{
+    Element element;
+    BundleInfo bundleInfo;
+    bool ret = DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.bundleName = "bundleName";
+    ret = DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
+    EXPECT_EQ(ret, false);
+    element.abilityName = "abilityName";
+    ret = DefaultAppMgr::GetInstance().GetBrokerBundleInfo(element, bundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: SetDefaultApplication_0100
  * @tc.name: test SetDefaultApplication
  * @tc.desc: 1.SetDefaultApplication

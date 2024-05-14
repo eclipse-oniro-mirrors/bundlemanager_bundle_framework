@@ -16,6 +16,7 @@
 #include "default_app_mgr.h"
 
 #include "app_log_tag_wrapper.h"
+#include "bms_extension_client.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -491,7 +492,7 @@ bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const
     ret = dataMgr->QueryInfoAndSkillsByElement(userId, element, abilityInfo, extensionInfo, skills);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT_APP, "GetBundleInfo, QueryInfoAndSkillsByElement failed.");
-        return false;
+        return GetBrokerBundleInfo(element, bundleInfo);
     }
     // match type and skills
     ret = IsMatch(type, skills);
@@ -720,7 +721,8 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
     ret = dataMgr->QueryInfoAndSkillsByElement(userId, element, abilityInfo, extensionInfo, skills);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT_APP, "QueryInfoAndSkillsByElement failed.");
-        return false;
+        BundleInfo bundleInfo;
+        return GetBrokerBundleInfo(element, bundleInfo);
     }
     // match type and skills
     ret = IsMatch(type, skills);
@@ -748,6 +750,32 @@ void DefaultAppMgr::ConvertTypeBySuffix(std::string& suffix) const
     LOG_D(BMS_TAG_DEFAULT_APP, "corresponding mime type is %{public}s", type.c_str());
     suffix = type;
     return;
+}
+
+bool DefaultAppMgr::GetBrokerBundleInfo(const Element& element, BundleInfo& bundleInfo) const
+{
+    if (element.bundleName.empty() || element.abilityName.empty()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "invalid param, get broker bundleInfo failed");
+        return false;
+    }
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "broker not started, get broker bundleInfo failed");
+        return false;
+    }
+    Want want;
+    ElementName elementName("", element.bundleName, element.abilityName, element.moduleName);
+    want.SetElement(elementName);
+    AbilityInfo abilityInfo;
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->QueryAbilityInfo(want, 0, Constants::START_USERID, abilityInfo, true);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "query abilityInfo from broker failed");
+        return false;
+    }
+    bundleInfo.name = abilityInfo.bundleName;
+    bundleInfo.abilityInfos.emplace_back(abilityInfo);
+    LOG_I(BMS_TAG_DEFAULT_APP, "get broker bundleInfo success");
+    return true;
 }
 }
 }
