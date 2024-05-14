@@ -157,7 +157,7 @@ ErrCode ExtendResourceManagerHost::HandleGetDynamicIcon(MessageParcel& data, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret != ERR_OK) {
-        return ret;
+        return ERR_OK;
     }
     if (!reply.WriteString(moduleName)) {
         APP_LOGE("write moduleName failed");

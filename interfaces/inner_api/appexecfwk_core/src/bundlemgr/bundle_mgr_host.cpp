@@ -2673,7 +2673,7 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret != ERR_OK) {
-        return ret;
+        return ERR_OK;
     }
     if (mediaDataPtr == nullptr || len == 0) {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -2811,7 +2811,7 @@ ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, Messa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret != ERR_OK) {
-        return ret;
+        return ERR_OK;
     }
     if (!WriteParcelableVector(infos, reply)) {
         APP_LOGE("write failed");
@@ -3128,7 +3128,7 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply)
@@ -3508,7 +3508,7 @@ ErrCode BundleMgrHost::HandleQueryCloneAbilityInfo(MessageParcel &data, MessageP
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode BundleMgrHost::HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply)

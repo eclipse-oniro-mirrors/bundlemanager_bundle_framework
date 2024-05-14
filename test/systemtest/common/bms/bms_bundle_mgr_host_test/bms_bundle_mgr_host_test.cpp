@@ -1406,7 +1406,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetMediaData_0100, Function | MediumTest | 
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetMediaData(data, reply);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -1556,7 +1556,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetBaseSharedBundleInfos_0100, Function | M
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetBaseSharedBundleInfos(data, reply);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -1811,7 +1811,7 @@ HWTEST_F(BmsBundleMgrHostTest, HandleGetJsonProfile_0100, Function | MediumTest 
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = bundleMgrHost.HandleGetJsonProfile(data, reply);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**

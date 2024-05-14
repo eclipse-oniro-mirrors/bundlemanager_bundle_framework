@@ -96,7 +96,7 @@ HWTEST_F(ExtendResourceManagerHostTest, OnRemoteRequest_0100, Function | MediumT
     data.WriteInterfaceToken(descriptor);
     code = GET_DYNAMIC_ICON;
     res = extendResource.OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 
     data.WriteInterfaceToken(descriptor);
     code = CREATE_FD;
@@ -196,7 +196,7 @@ HWTEST_F(ExtendResourceManagerHostTest, HandleGetDynamicIcon_0100, Function | Me
     MessageParcel data;
     MessageParcel reply;
     ErrCode res = extendResource.HandleGetDynamicIcon(data, reply);
-    EXPECT_EQ(res, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
