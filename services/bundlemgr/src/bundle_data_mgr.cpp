@@ -100,6 +100,7 @@ constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 const std::string ENTRY = "entry";
+const std::string CLONE_BUNDLE_PREFIX = "clone_";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -1675,7 +1676,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
     bundleName = keyName;
     appIndex = 0;
     // for clone bundle name
-    auto pos = keyName.find(ServiceConstants::CLONE_BUNDLE_PREFIX);
+    auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
     if ((pos == std::string::npos) || (pos == 0)) {
         return;
     }
@@ -1684,7 +1685,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         appIndex = 0;
         return;
     }
-    bundleName = keyName.substr(pos + ServiceConstants::CLONE_BUNDLE_PREFIX.size());
+    bundleName = keyName.substr(pos + CLONE_BUNDLE_PREFIX.size());
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const

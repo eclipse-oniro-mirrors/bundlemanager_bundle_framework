@@ -49,7 +49,6 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
-const std::string CLONE_BUNDLE_PREFIX = "clone_";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS
