@@ -180,5 +180,34 @@ bool BundleResourceHelper::DeleteAllResourceInfo()
     return false;
 #endif
 }
+
+bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleName,
+    const int32_t appIndex, const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("start");
+    if (userId != Constants::UNSPECIFIED_USERID) {
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if ((currentUserId > 0) && (userId != currentUserId)) {
+            APP_LOGW("currentUserId: %{public}d, userId: %{public}d is not same", currentUserId, userId);
+            return false;
+        }
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return false;
+    }
+    if (!manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
+        APP_LOGE("add clone bundle resource failed, bundleName:%{public}s, appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+        return false;
+    }
+    return true;
+#else
+    APP_LOGI("bundle resource is not support");
+    return true;
+#endif
+}
 } // AppExecFwk
 } // OHOS

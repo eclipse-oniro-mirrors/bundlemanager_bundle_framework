@@ -19,12 +19,18 @@
 #include <string>
 #include <vector>
 
+#include "bundle_resource_info.h"
+#include "launcher_ability_resource_info.h"
 namespace OHOS {
 namespace AppExecFwk {
 class ResourceInfo {
 public:
     ResourceInfo();
     ~ResourceInfo();
+
+    void ConvertFormBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo);
+
+    void ConvertFormLauncherAbilityResourceInfo(const LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
     /**
      * key:
      * 1. bundleName
@@ -51,6 +57,11 @@ public:
     // used for layer icons
     std::vector<uint8_t> foreground_;
     std::vector<uint8_t> background_;
+    // for app clone
+    int32_t appIndex_ = 0;
+
+private:
+    void InnerParseAppIndex(const std::string &key);
 };
 } // AppExecFwk
 } // OHOS

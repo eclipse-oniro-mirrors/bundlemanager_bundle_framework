@@ -57,6 +57,9 @@ bool LauncherAbilityResourceInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < backgroundSize; i++) {
         background.emplace_back(parcel.ReadUint8());
     }
+
+    int32_t appIndex;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;
 }
 
@@ -75,6 +78,7 @@ bool LauncherAbilityResourceInfo::Marshalling(Parcel &parcel) const
     for (const auto &data : background) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint8, parcel, data);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;
 }
 

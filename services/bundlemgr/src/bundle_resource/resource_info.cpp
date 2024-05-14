@@ -22,6 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
+const std::string UNDER_LINE = "_";
 }
 
 ResourceInfo::ResourceInfo()
@@ -41,6 +42,9 @@ std::string ResourceInfo::GetKey() const
         key = moduleName_.empty() ? key : (key + SEPARATOR + moduleName_);
         key = abilityName_.empty() ? key : (key + SEPARATOR + abilityName_);
     }
+    if (appIndex_ > 0) {
+        key = std::string(appIndex_) + UNDER_LINE + key;
+    }
     return key;
 }
 
@@ -48,12 +52,12 @@ void ResourceInfo::ParseKey(const std::string &key)
 {
     auto firstPos = key.find_first_of(SEPARATOR);
     if (firstPos == std::string::npos) {
-        bundleName_ = key;
+        InnerParseAppIndex(key);
         moduleName_ = std::string();
         abilityName_ = std::string();
         return;
     }
-    bundleName_ = key.substr(0, firstPos);
+    InnerParseAppIndex(key.substr(0, firstPos));
     auto lastPos = key.find_last_of(SEPARATOR);
     abilityName_ = key.substr(lastPos + 1);
     if (firstPos != lastPos) {
@@ -61,6 +65,55 @@ void ResourceInfo::ParseKey(const std::string &key)
         return;
     }
     moduleName_ = std::string();
+}
+
+void ResourceInfo::ConvertFormBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo)
+{
+    bundleName_ = bundleResourceInfo.bundleName;
+    moduleName_ = std::string();
+    abilityName_ = std::string();
+    icon_ = bundleResourceInfo.icon;
+    foreground_ = bundleResourceInfo.foreground;
+    background_ = bundleResourceInfo.background;
+    appIndex_ = bundleResourceInfo.appIndex;
+    if (appIndex_ > 0) {
+        label_ = bundleResourceInfo.label + std::to_string(appIndex_);
+    } else {
+        label_ = bundleResourceInfo.label;
+    }
+}
+
+void ResourceInfo::ConvertFormLauncherAbilityResourceInfo(
+    const LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
+{
+    bundleName_ = launcherAbilityResourceInfo.bundleName;
+    moduleName_ = launcherAbilityResourceInfo.moduleName;
+    abilityName_ = launcherAbilityResourceInfo.abilityName;
+    icon_ = launcherAbilityResourceInfo.icon;
+    foreground_ = launcherAbilityResourceInfo.foreground;
+    background_ = launcherAbilityResourceInfo.background;
+    appIndex_ = launcherAbilityResourceInfo.appIndex;
+    if (appIndex_ > 0) {
+        label_ = launcherAbilityResourceInfo.label + std::to_string(appIndex_);
+    } else {
+        label_ = launcherAbilityResourceInfo.label;
+    }
+}
+
+void ResourceInfo::InnerParseAppIndex(const std::string &key)
+{
+    bundleName_ = key;
+    appIndex_ = 0;
+    auto pos = key.find(UNDER_LINE);
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return;
+    }
+    std::string index = key.substr(0, pos);
+    if (!OHOS::StrToInt(index, appIndex_)) {
+        appIndex_ = 0;
+        return;
+    }
+    bundleName_ = key.substr(pos + 1);
 }
 } // AppExecFwk
 } // OHOS

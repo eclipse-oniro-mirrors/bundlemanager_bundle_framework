@@ -51,6 +51,9 @@ public:
 
     static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId);
+
+    static bool AddCloneBundleResourceInfo(const std::string &bundleName,
+        const int32_t appIndex, const int32_t userId = Constants::UNSPECIFIED_USERID);
 };
 } // AppExecFwk
 } // OHOS

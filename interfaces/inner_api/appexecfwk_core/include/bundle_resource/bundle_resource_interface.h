@@ -28,13 +28,13 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.BundleResource");
 
     virtual ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-        BundleResourceInfo &bundleResourceInfo)
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
