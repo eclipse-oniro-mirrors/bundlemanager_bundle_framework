@@ -2698,6 +2698,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     AAFwk::Want want;
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
+    bool findDefaultApp;
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -2706,7 +2707,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     EXPECT_EQ(retBool, false);
 
     retBool = hostImpl->ImplicitQueryInfos(
-        want, flags, USERID, false, abilityInfos, extensionInfos);
+        want, flags, USERID, false, abilityInfos, extensionInfos, findDefaultApp);
     EXPECT_EQ(retBool, false);
 
     retBool = hostImpl->GetAllDependentModuleNames(
