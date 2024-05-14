@@ -176,6 +176,13 @@ private:
      */
     ErrCode HandleGetNameForUid(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetNameAndIndexForUid function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetNameAndIndexForUid(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundleGids function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

@@ -2769,7 +2769,8 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
     }
 
     bundleName = innerBundleInfo.GetBundleName();
-    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s", uid, bundleName.c_str());
+    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s, appIndex %{public}d",
+        uid, bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 

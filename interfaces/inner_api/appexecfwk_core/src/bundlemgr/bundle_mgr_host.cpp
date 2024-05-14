@@ -107,6 +107,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetBundlesForUid);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_FOR_UID),
         &BundleMgrHost::HandleGetNameForUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID),
+        &BundleMgrHost::HandleGetNameAndIndexForUid);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS),
         &BundleMgrHost::HandleGetBundleGids);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS_BY_UID),
@@ -817,6 +819,30 @@ ErrCode BundleMgrHost::HandleGetNameForUid(MessageParcel &data, MessageParcel &r
     }
     if (ret == ERR_OK) {
         if (!reply.WriteString(name)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetNameAndIndexForUid(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int uid = data.ReadInt32();
+    std::string bundleName;
+    int32_t appIndex;
+    ErrCode ret = GetNameAndIndexForUid(uid, bundleName, appIndex);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteString(bundleName)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteInt32(appIndex)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }

@@ -224,6 +224,14 @@ public:
      */
     virtual ErrCode GetNameForUid(const int uid, std::string &name) override;
     /**
+     * @brief Obtains the formal name associated with the given UID.
+     * @param uid Indicates the uid.
+     * @param name Indicates the obtained formal bundleName.
+     * @param appIndex Indicates the obtained appIndex.
+     * @return Returns ERR_OK if execute success; returns errCode otherwise.
+     */
+    virtual ErrCode GetNameAndIndexForUid(const int uid, std::string &bundleName, int32_t &appIndex) override;
+    /**
      * @brief Obtains an array of all group IDs associated with a specified bundle.
      * @param bundleName Indicates the bundle name.
      * @param gids Indicates the group IDs associated with the specified bundle.

@@ -65,6 +65,7 @@ constexpr const char* STATE = "state";
 constexpr const char* APP_INDEX = "appIndex";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
+const std::string GET_APP_CLONE_IDENTITY = "getAppCloneIdentity";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
 const std::string BATCH_QUERY_ABILITY_INFOS = "BatchQueryAbilityInfos";
 const std::string QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
@@ -76,6 +77,7 @@ const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string PERMISSION_NAME = "permissionName";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+const std::string APP_CLONE_IDENTITY_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
@@ -102,6 +104,7 @@ const std::string GET_DEVELOPER_IDS = "GetDeveloperIds";
 const std::string SWITCH_UNINSTALL_STATE = "SwitchUninstallState";
 const std::string GET_APP_CLONE_BUNDLE_INFO = "GetAppCloneBundleInfo";
 const std::string GET_ALL_APP_CLONE_BUNDLE_INFO = "GetAllAppCloneBundleInfo";
+const std::string CLONE_BUNDLE_PREFIX = "clone_";
 constexpr int32_t ENUM_ONE = 1;
 constexpr int32_t ENUM_TWO = 2;
 constexpr int32_t ENUM_THREE = 3;
@@ -253,15 +256,15 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetBundleNameByUid(int32_t uid, std::string &bundleName)
+static ErrCode InnerGetAppCloneIdentity(int32_t uid, std::string &bundleName, int32_t &appIndex)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = iBundleMgr->GetNameForUid(uid, bundleName);
-    APP_LOGD("GetNameForUid ErrCode : %{public}d", ret);
+    ErrCode ret = iBundleMgr->GetNameAndIndexForUid(uid, bundleName, appIndex);
+    APP_LOGD("GetNameAndIndexForUid ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -307,6 +310,29 @@ static void ProcessApplicationInfos(
     }
 }
 
+void GetBundleNameAndIndexByName(
+    const std::string &keyName, std::string &bundleName, int32_t &appIndex)
+{
+    bundleName = keyName;
+    appIndex = 0;
+    // for clone bundle name
+    auto pos = keyName.find(CLONE_BUNDLE_PREFIX);
+    if ((pos == std::string::npos) || (pos == 0)) {
+        return;
+    }
+    std::string index = keyName.substr(0, pos);
+    if (!OHOS::StrToInt(index, appIndex)) {
+        appIndex = 0;
+        return;
+    }
+    bundleName = keyName.substr(pos + CLONE_BUNDLE_PREFIX.size());
+}
+
+std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
+{
+    return std::to_string(appIndex) + CLONE_BUNDLE_PREFIX + bundleName;
+}
+
 void GetBundleNameByUidExec(napi_env env, void *data)
 {
     GetBundleNameByUidCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetBundleNameByUidCallbackInfo *>(data);
@@ -319,16 +345,23 @@ void GetBundleNameByUidExec(napi_env env, void *data)
         std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
         if (!g_ownBundleName.empty()) {
             APP_LOGD("query own bundleName, has cache, no need to query from host");
-            asyncCallbackInfo->bundleName = g_ownBundleName;
+            int32_t appIndex = 0;
+            GetBundleNameAndIndexByName(g_ownBundleName, asyncCallbackInfo->bundleName, appIndex);
             asyncCallbackInfo->err = NO_ERROR;
             return;
         }
     }
-    asyncCallbackInfo->err = InnerGetBundleNameByUid(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName);
+    int32_t appIndex = 0;
+    asyncCallbackInfo->err =
+        InnerGetAppCloneIdentity(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, appIndex);
     if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
-        APP_LOGD("put own bundleName to cache");
+        std::string bundleNameCached = asyncCallbackInfo->bundleName;
+        if (appIndex > 0) {
+            bundleNameCached = GetCloneBundleIdKey(asyncCallbackInfo->bundleName, appIndex);
+        }
+        APP_LOGD("put own bundleName = %{public}s to cache", bundleNameCached.c_str());
         std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
-        g_ownBundleName = asyncCallbackInfo->bundleName;
+        g_ownBundleName = bundleNameCached;
     }
 }
 
@@ -350,6 +383,65 @@ void GetBundleNameByUidComplete(napi_env env, napi_status status, void *data)
             GET_BUNDLE_NAME_BY_UID, BUNDLE_PERMISSIONS);
     }
     CommonFunc::NapiReturnDeferred<GetBundleNameByUidCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+void GetAppCloneIdentityExec(napi_env env, void *data)
+{
+    GetAppCloneIdentityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAppCloneIdentityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    bool queryOwn = (asyncCallbackInfo->uid == IPCSkeleton::GetCallingUid());
+    if (queryOwn) {
+        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
+        if (!g_ownBundleName.empty()) {
+            APP_LOGD("query own bundleName and appIndex, has cache, no need to query from host");
+            GetBundleNameAndIndexByName(g_ownBundleName, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+            asyncCallbackInfo->err = NO_ERROR;
+            return;
+        }
+    }
+    asyncCallbackInfo->err = InnerGetAppCloneIdentity(
+        asyncCallbackInfo->uid, asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+    if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
+        std::string bundleNameCached = asyncCallbackInfo->bundleName;
+        if (asyncCallbackInfo->appIndex > 0) {
+            bundleNameCached = GetCloneBundleIdKey(asyncCallbackInfo->bundleName, asyncCallbackInfo->appIndex);
+        }
+        APP_LOGD("put own bundleName = %{public}s to cache", bundleNameCached.c_str());
+        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
+        g_ownBundleName = bundleNameCached;
+    }
+}
+
+void GetAppCloneIdentityComplete(napi_env env, napi_status status, void *data)
+{
+    GetAppCloneIdentityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAppCloneIdentityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<GetAppCloneIdentityCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+
+        napi_value nName;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->bundleName.c_str(),
+            NAPI_AUTO_LENGTH, &nName));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[ARGS_POS_ONE], BUNDLE_NAME, nName));
+
+        napi_value nAppIndex;
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->appIndex, &nAppIndex));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[ARGS_POS_ONE], APP_INDEX, nAppIndex));
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_APP_CLONE_IDENTITY, APP_CLONE_IDENTITY_PERMISSIONS);
+    }
+    CommonFunc::NapiReturnDeferred<GetAppCloneIdentityCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetApplicationInfoComplete(napi_env env, napi_status status, void *data)
@@ -452,6 +544,33 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_BUNDLE_NAME_BY_UID, GetBundleNameByUidExec, GetBundleNameByUidComplete);
     callbackPtr.release();
     APP_LOGD("call GetBundleNameByUid done");
+    return promise;
+}
+
+napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetAppCloneIdentity");
+    NapiArg args(env, info);
+    GetAppCloneIdentityCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetAppCloneIdentityCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<GetAppCloneIdentityCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], asyncCallbackInfo->uid)) {
+        APP_LOGW("parse uid failed!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, "uid", TYPE_NUMBER);
+        return nullptr;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<GetAppCloneIdentityCallbackInfo>(env, asyncCallbackInfo,
+        GET_APP_CLONE_IDENTITY, GetAppCloneIdentityExec, GetAppCloneIdentityComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAppCloneIdentity done");
     return promise;
 }
 

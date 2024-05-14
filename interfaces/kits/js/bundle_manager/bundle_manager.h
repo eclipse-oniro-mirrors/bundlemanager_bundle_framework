@@ -58,6 +58,11 @@ struct GetBundleNameByUidCallbackInfo : public BaseCallbackInfo {
     int32_t uid = 0;
     std::string bundleName;
 };
+struct GetAppCloneIdentityCallbackInfo : public GetBundleNameByUidCallbackInfo {
+    explicit GetAppCloneIdentityCallbackInfo(napi_env env) : GetBundleNameByUidCallbackInfo(env) {}
+
+    int32_t appIndex = 0;
+};
 struct AbilityCallbackInfo : public BaseCallbackInfo {
     explicit AbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -329,6 +334,7 @@ napi_value GetDeveloperIds(napi_env env, napi_callback_info info);
 napi_value SwitchUninstallState(napi_env env, napi_callback_info info);
 napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
