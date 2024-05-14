@@ -87,6 +87,8 @@ struct EventInfo {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
+    std::string packageName;
+    std::string applicationVersion;
     int64_t timeStamp = 0;
     uint32_t versionCode = 0;
 
@@ -139,6 +141,8 @@ struct EventInfo {
         bundleName.clear();
         moduleName.clear();
         abilityName.clear();
+        packageName.clear();
+        applicationVersion.clear();
         versionCode = 0;
         timeStamp = 0;
         preBundleScene = InstallScene::NORMAL;

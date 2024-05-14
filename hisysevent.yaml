@@ -11,13 +11,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-domain: BUNDLE_MANAGER
+domain: BUNDLEMANAGER_UE
 
 ################################################################################
 #                                   FAULT EVENT                                #
 ################################################################################
 BUNDLE_INSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle install}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -27,6 +29,8 @@ BUNDLE_INSTALL_EXCEPTION:
 
 BUNDLE_UNINSTALL_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle uninstall}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -35,6 +39,8 @@ BUNDLE_UNINSTALL_EXCEPTION:
 
 BUNDLE_UPDATE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when bundle update}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -43,6 +49,8 @@ BUNDLE_UPDATE_EXCEPTION:
 
 PRE_BUNDLE_RECOVER_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when prebundle recover}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -51,6 +59,8 @@ PRE_BUNDLE_RECOVER_EXCEPTION:
 
 BUNDLE_STATE_CHANGE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when state change}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
@@ -58,6 +68,8 @@ BUNDLE_STATE_CHANGE_EXCEPTION:
 
 BUNDLE_CLEAN_CACHE_EXCEPTION:
   __BASE: {type: FAULT, level: MINOR, desc: used to fault happened when clean cache or clean data}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
@@ -67,14 +79,20 @@ BUNDLE_CLEAN_CACHE_EXCEPTION:
 ################################################################################
 BOOT_SCAN_START:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: boot scan start}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   TIME: {type: INT64, desc: time stamp}
 
 BOOT_SCAN_END:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: boot scan end}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   TIME: {type: INT64, desc: time stamp}
 
 BUNDLE_INSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle install}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -92,6 +110,8 @@ BUNDLE_INSTALL:
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -102,6 +122,8 @@ BUNDLE_UNINSTALL:
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -118,6 +140,8 @@ BUNDLE_UPDATE:
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
@@ -134,6 +158,8 @@ PRE_BUNDLE_RECOVER:
 
 BUNDLE_STATE_CHANGE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle or component disable or enable}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
@@ -142,12 +168,16 @@ BUNDLE_STATE_CHANGE:
 
 BUNDLE_CLEAN_CACHE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle clean cache}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   CLEAN_TYPE: {type: STRING, desc: clean cache or clean data}
 
 GET_REMOTE_ABILITY_INFO:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: get remote abilityInfo}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   DEVICE_ID: {type: STRING, desc: deviceId}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   LOCALE_INFO: {type: STRING, desc: localeInfo}
@@ -156,6 +186,8 @@ GET_REMOTE_ABILITY_INFO:
 
 GET_REMOTE_ABILITY_INFOS:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: get remote abilityInfos}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   DEVICE_ID: {type: STRING, desc: deviceId}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   LOCALE_INFO: {type: STRING, desc: localeInfo}
@@ -164,12 +196,16 @@ GET_REMOTE_ABILITY_INFOS:
 
 BMS_USER_EVENT:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: user event}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   TYPE: {type: STRING, desc: user event type}
   USERID: {type: INT32, desc: userId of the bundle}
   TIME: {type: INT64, desc: time stamp}
 
 BUNDLE_QUICK_FIX:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle apply quick fix}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
   APPLY_QUICK_FIX_FREQUENCY: {type: INT32, desc: apply quick fix frequency}
@@ -178,6 +214,8 @@ BUNDLE_QUICK_FIX:
 
 QUERY_OF_CONTINUE_TYPE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: query abilityInfo by continuetype and bundleName}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   ABILITY_NAME: {type: STRING, desc: abilityName}
   CONTINUE_TYPE: {type: STRING, desc: continueType}
