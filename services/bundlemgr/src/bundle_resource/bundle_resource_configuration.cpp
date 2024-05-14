@@ -57,10 +57,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-    if (!hapPath.empty() && !resourceManager->AddResource(hapPath.c_str())) {
-        APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
-        return false;
-    }
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");
@@ -78,6 +74,11 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
         APP_LOGE("UpdateResConfig failed with errcode %{public}d", static_cast<int32_t>(ret));
+        return false;
+    }
+    if (!hapPath.empty() && !resourceManager->AddResource(hapPath.c_str(),
+        Global::Resource::SELECT_STRING | Global::Resource::SELECT_MEDIA)) {
+        APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
         return false;
     }
     return true;
@@ -91,16 +92,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-    // adapt overlay
-    if (overlayHaps.empty()) {
-        if (!resourceManager->AddResource(hapPath.c_str())) {
-            APP_LOGW("AddResource failed, hapPath: %{public}s", hapPath.c_str());
-        }
-    } else {
-        if (!resourceManager->AddResource(hapPath, overlayHaps)) {
-            APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
-        }
-    }
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");
@@ -119,6 +110,17 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     if (ret != Global::Resource::RState::SUCCESS) {
         APP_LOGE("UpdateResConfig failed with errcode %{public}d", static_cast<int32_t>(ret));
         return false;
+    }
+    // adapt overlay
+    if (overlayHaps.empty()) {
+        if (!resourceManager->AddResource(hapPath.c_str(),
+            Global::Resource::SELECT_STRING | Global::Resource::SELECT_MEDIA)) {
+            APP_LOGW("AddResource failed, hapPath: %{public}s", hapPath.c_str());
+        }
+    } else {
+        if (!resourceManager->AddResource(hapPath, overlayHaps)) {
+            APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
+        }
     }
     return true;
 }

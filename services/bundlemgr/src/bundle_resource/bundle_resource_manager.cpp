@@ -101,13 +101,17 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
 
 bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
 {
+    ++currentTaskNum_;
+    uint32_t tempTaskNum = currentTaskNum_;
+    std::lock_guard<std::mutex> guard(mutex_);
+    APP_LOGI("bundle resource hold mutex");
     std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
     if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfosMap)) {
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
 
-    if (!AddResourceInfos(resourceInfosMap)) {
+    if (!AddResourceInfos(resourceInfosMap, tempTaskNum)) {
         APP_LOGE("failed, userId:%{public}d", userId);
         return false;
     }
@@ -167,14 +171,18 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
-bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
+bool BundleResourceManager::AddResourceInfos(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    uint32_t tempTaskNumber)
 {
     if (resourceInfosMap.empty()) {
         APP_LOGE("resourceInfosMap is empty.");
         return false;
     }
-    std::lock_guard<std::mutex> guard(mutex_);
-    APP_LOGI("bundle resource hold mutex");
+    if (tempTaskNumber != currentTaskNum_) {
+        APP_LOGI("need stop current task, new first");
+        return false;
+    }
     std::shared_ptr<ThreadPool> threadPool = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
     if (threadPool == nullptr) {
         APP_LOGE("threadPool is nullptr");
@@ -187,6 +195,11 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
         currentUserId = Constants::START_USERID;
     }
     for (const auto &item : resourceInfosMap) {
+        if (tempTaskNumber != currentTaskNum_) {
+            APP_LOGI("need stop current task, new first");
+            threadPool->Stop();
+            return false;
+        }
         std::string bundleName = item.first;
         auto task = [currentUserId, bundleName, &resourceInfosMap]() {
             // need to parse label and icon
@@ -198,22 +211,12 @@ bool BundleResourceManager::AddResourceInfos(std::map<std::string, std::vector<R
         threadPool->AddTask(task);
     }
     while (threadPool->GetCurTaskNum() > 0) {
-        APP_LOGI("sleep");
         std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL));
     }
     threadPool->Stop();
     APP_LOGI("All tasks has executed end");
-    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
     std::vector<ResourceInfo> resourceInfos;
-    for (auto &item : resourceInfosMap) {
-        for (auto &resourceInfo : item.second) {
-            if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
-                ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME] :
-                    std::vector<ResourceInfo>(), resourceInfo);
-            }
-            resourceInfos.emplace_back(resourceInfo);
-        }
-    }
+    InnerProcessResourceInfos(resourceInfosMap, resourceInfos);
     APP_LOGI("resource info size:%{public}zu", resourceInfos.size());
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
@@ -247,6 +250,9 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
 
 bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t userId)
 {
+    ++currentTaskNum_;
+    uint32_t tempTaskNum = currentTaskNum_;
+    std::lock_guard<std::mutex> guard(mutex_);
     std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
     // to judge whether the current colorMode exists in the database
     bool isExist = bundleResourceRdb_->IsCurrentColorModeExist();
@@ -277,7 +283,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             return false;
         }
     }
-    if (!AddResourceInfos(resourceInfosMap)) {
+    if (!AddResourceInfos(resourceInfosMap, tempTaskNum)) {
         APP_LOGE("add resource infos failed, userId:%{public}d", userId);
         return false;
     }
@@ -456,6 +462,22 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
 
     APP_LOGI("UpdateBundleIcon %{public}s, size: %{public}zu", bundleName.c_str(), resourceInfos.size());
     return SaveResourceInfos(resourceInfos);
+}
+
+void BundleResourceManager::InnerProcessResourceInfos(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    std::vector<ResourceInfo> &resourceInfos)
+{
+    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
+    for (auto &item : resourceInfosMap) {
+        for (auto &resourceInfo : item.second) {
+            if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
+                ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME] :
+                    std::vector<ResourceInfo>(), resourceInfo);
+            }
+            resourceInfos.emplace_back(resourceInfo);
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS
