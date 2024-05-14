@@ -2692,7 +2692,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t fl
 }
 
 bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,  bool withDefault,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
     APP_LOGD("begin to ImplicitQueryInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
@@ -2711,7 +2711,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    bool findDefaultApp = false;
+    findDefaultApp = false;
     auto ret = dataMgr->ImplicitQueryInfos(
         want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (ret && findDefaultApp) {
