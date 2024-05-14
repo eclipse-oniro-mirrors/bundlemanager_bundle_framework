@@ -184,7 +184,7 @@ ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<i
 #if defined(CODE_SIGNATURE_ENABLE)
     if (sigData.empty()) {
         APP_LOGI("not enforce code sign if no aot file save");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        return ERR_OK;
     }
     uint32_t byteSize = static_cast<uint32_t>(sigData.size());
     std::vector<uint8_t> byteData;
