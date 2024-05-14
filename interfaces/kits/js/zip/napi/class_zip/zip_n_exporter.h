@@ -83,7 +83,6 @@ public:
     static napi_value InflatePrime(napi_env env, napi_callback_info info);
     static napi_value InflateMark(napi_env env, napi_callback_info info);
     static napi_value InflateValidate(napi_env env, napi_callback_info info);
-    static napi_value InflateUndermine(napi_env env, napi_callback_info info);
     static napi_value InflateSyncPoint(napi_env env, napi_callback_info info);
 
     static napi_value InflateCopy(napi_env env, napi_callback_info info);

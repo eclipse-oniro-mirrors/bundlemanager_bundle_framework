@@ -186,7 +186,6 @@ vector<napi_property_descriptor> ZipNExporter::InflateExport()
         NapiValue::DeclareNapiFunction("inflatePrime", InflatePrime),
         NapiValue::DeclareNapiFunction("inflateMark", InflateMark),
         NapiValue::DeclareNapiFunction("inflateValidate", InflateValidate),
-        NapiValue::DeclareNapiFunction("inflateUndermine", InflateUndermine),
         NapiValue::DeclareNapiFunction("inflateSyncPoint", InflateSyncPoint),
         NapiValue::DeclareNapiFunction("inflateCopy", InflateCopy),
     };
@@ -2475,58 +2474,6 @@ napi_value ZipNExporter::InflateValidate(napi_env env, napi_callback_info info)
             return NapiBusinessError(EFAULT, true);
         }
         arg->errCode = inflateValidate(zipEntity->zs.get(), check);
-        if (arg->errCode < 0) {
-            return NapiBusinessError(arg->errCode, true);
-        }
-        return NapiBusinessError(ERRNO_NOERR);
-    };
-
-    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
-        if (err) {
-            return {env, err.GetNapiErr(env)};
-        }
-        if (!arg) {
-            return {NapiValue::CreateUndefined(env)};
-        }
-        return {NapiValue::CreateInt32(env, arg->errCode)};
-    };
-
-    NapiValue thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == ArgumentCount::TWO) {
-        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
-    }
-
-    return NapiValue::CreateUndefined(env).val_;
-}
-
-napi_value ZipNExporter::InflateUndermine(napi_env env, napi_callback_info info)
-{
-    NapiFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return nullptr;
-    }
-
-    /* To get entity */
-    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
-    if (!zipEntity) {
-        NapiBusinessError().ThrowErr(env, EFAULT);
-        return nullptr;
-    }
-
-    bool succ = false;
-    int32_t subvert = 0;
-    tie(succ, subvert) = CommonFunc::GetInflateUndermineArg(env, funcArg);
-    if (!succ) {
-        return nullptr;
-    }
-
-    auto arg = make_shared<AsyncZipArg>();
-    auto cbExec = [arg, zipEntity, subvert](napi_env env) -> NapiBusinessError {
-        if (!arg || !zipEntity || !zipEntity->zs) {
-            return NapiBusinessError(EFAULT, true);
-        }
-        arg->errCode = inflateUndermine(zipEntity->zs.get(), subvert);
         if (arg->errCode < 0) {
             return NapiBusinessError(arg->errCode, true);
         }

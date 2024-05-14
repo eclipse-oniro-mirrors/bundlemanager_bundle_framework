@@ -829,25 +829,6 @@ std::tuple<bool, int32_t> CommonFunc::GetInflateValidateArg(napi_env env, const 
     return {true, check};
 }
 
-std::tuple<bool, int32_t> CommonFunc::GetInflateUndermineArg(napi_env env, const NapiFuncArg &funcArg)
-{
-    bool succ = CommonFunc::SetZStreamValue(env, funcArg);
-    if (!succ) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return {false, 0};
-    }
-
-    NapiValue subvertNVal(env, funcArg[ArgumentPosition::SECOND]);
-    int32_t subvert = 0;
-    tie(succ, subvert) = subvertNVal.ToInt32();
-    if (!succ) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return {false, 0};
-    }
-
-    return {true, subvert};
-}
-
 std::tuple<bool, gz_header> CommonFunc::GetInflateGetHeaderArg(napi_env env, const NapiFuncArg &funcArg)
 {
     bool succ = CommonFunc::SetZStreamValue(env, funcArg);
