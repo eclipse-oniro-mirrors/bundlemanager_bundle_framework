@@ -21,7 +21,6 @@
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
 #include <sys/ioctl.h>
-#include "code_crypto_metadata_process.h"
 #include "linux/code_decrypt.h"
 #endif
 #include <cerrno>
@@ -56,6 +55,13 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
+#if defined(CODE_ENCRYPTION_ENABLE)
+static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
+static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
+static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15CodeCryptoUtils28"
+    "EnforceMetadataProcessForAppERKNSt3__h13unordered_mapINS3_12basic_stringIcNS3_11char_traitsIcEENS3_"
+    "9allocatorIcEEEESA_NS3_4hashISA_EENS3_8equal_toISA_EENS8_INS3_4pairIKSA_SA_EEEEEEjRbNS2_17InstallBundleTypeERKb";
+#endif
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
 constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
@@ -76,6 +82,8 @@ static int32_t INVALID_FILE_DESCRIPTOR = -1;
 std::recursive_mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
+using EnforceMetadataProcessForApp = int32_t (*)(const std::unordered_map<std::string, std::string> &,
+    uint32_t, bool &, const int32_t, const bool &);
 
 static std::string HandleScanResult(
     const std::string &dir, const std::string &subName, ResultMode resultMode)
@@ -1087,6 +1095,39 @@ void InstalldOperator::CloseHandle(void **handle)
     APP_LOGI("InstalldOperator::CloseHandle end");
 }
 
+#if defined(CODE_ENCRYPTION_ENABLE)
+bool InstalldOperator::OpenEncryptionHandle(void **handle)
+{
+    APP_LOGI("OpenEncryptionHandle start");
+    if (handle == nullptr) {
+        APP_LOGE("OpenEncryptionHandle error handle is nullptr.");
+        return false;
+    }
+    *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (*handle == nullptr) {
+        APP_LOGW("failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        *handle = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    }
+    if (*handle == nullptr) {
+        APP_LOGE("failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        return false;
+    }
+    APP_LOGI("OpenEncryptionHandle end");
+    return true;
+}
+
+void InstalldOperator::CloseEncryptionHandle(void **handle)
+{
+    APP_LOGI("CloseEncryptionHandle start");
+    if ((handle != nullptr) && (*handle != nullptr)) {
+        dlclose(*handle);
+        *handle = nullptr;
+        APP_LOGD("CloseEncryptionHandle, err:%{public}s", dlerror());
+    }
+    APP_LOGI("CloseEncryptionHandle end");
+}
+#endif
+
 bool InstalldOperator::ProcessApplyDiffPatchPath(
     const std::string &oldSoPath, const std::string &diffFilePath,
     const std::string &newSoPath, std::vector<std::string> &oldSoFileNames, std::vector<std::string> &diffFileNames)
@@ -1377,6 +1418,32 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     return true;
 }
 
+#if defined(CODE_ENCRYPTION_ENABLE)
+bool InstalldOperator::EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
+    bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary)
+{
+    void *handle = nullptr;
+    if (!OpenEncryptionHandle(&handle)) {
+        return false;
+    }
+    auto enforceMetadataProcessForApp =
+        reinterpret_cast<EnforceMetadataProcessForApp>(dlsym(handle, CODE_CRYPTO_FUNCTION_NAME));
+    if (enforceMetadataProcessForApp == nullptr) {
+        APP_LOGE("failed to get enforceMetadataProcessForApp err:%{public}s", dlerror());
+        CloseEncryptionHandle(&handle);
+        return false;
+    }
+    ErrCode ret = enforceMetadataProcessForApp(entryMap, bundleId,
+        isEncryption, static_cast<int32_t>(installBundleType), isCompressNativeLibrary);
+    CloseEncryptionHandle(&handle);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckEncryption failed due to %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+#endif
+
 bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
     APP_LOGD("process check encryption of src path %{public}s", checkEncryptionParam.modulePath.c_str());
@@ -1408,7 +1475,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
 
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
-    Security::CodeCrypto::EntryMap entryMap;
+    std::unordered_map<std::string, std::string> entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
         const std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
@@ -1422,11 +1489,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
             APP_LOGD("CheckEncryption the targetSoPath is %{public}s", (path + fileName).c_str());
         });
     }
-    ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
-        isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),
-        isCompressNativeLibrary);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckEncryption failed due to %{public}d", ret);
+    if (!EnforceEncryption(entryMap, bundleId, isEncryption, installBundleType, isCompressNativeLibrary)) {
         return false;
     }
 #endif
@@ -1443,13 +1506,9 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
         "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
         installBundleType, bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
-    Security::CodeCrypto::EntryMap entryMap;
+    std::unordered_map<std::string, std::string> entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, hapPath);
-    ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
-        isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),
-        isCompressNativeLibrary);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckEncryption failed due to %{public}d", ret);
+    if (!EnforceEncryption(entryMap, bundleId, isEncryption, installBundleType, isCompressNativeLibrary)) {
         return false;
     }
 #endif

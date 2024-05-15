@@ -33,9 +33,6 @@
 #include "byte_buffer.h"
 #include "code_sign_utils.h"
 #endif
-#if defined(CODE_ENCRYPTION_ENABLE)
-#include "code_crypto_metadata_process.h"
-#endif
 #include "common_profile.h"
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
