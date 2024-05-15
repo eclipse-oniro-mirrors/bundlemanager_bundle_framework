@@ -344,7 +344,7 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
             return defPerm.name == permissionName;
         });
     if (iter == grantPermission.end()) {
-        APP_LOGW("can not find permission(%{public}s)", permissionName.c_str());
+        APP_LOGD("can not find permission(%{public}s)", permissionName.c_str());
         return false;
     }
 

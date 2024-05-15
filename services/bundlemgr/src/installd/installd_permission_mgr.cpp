@@ -15,7 +15,7 @@
 
 #include "installd/installd_permission_mgr.h"
 
-#include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -26,7 +26,8 @@ bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
     if (callingUid == uid) {
         return true;
     }
-    APP_LOGE("VerifyCallingPermission failed, uid = %{public}d, calling uid = %{public}d", uid, callingUid);
+    LOG_E(BMS_TAG_INSTALLD, "VerifyCallingPermission failed, uid = %{public}d, calling uid = %{public}d",
+        uid, callingUid);
     return false;
 }
 } // AppExecFwk
