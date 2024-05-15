@@ -21,10 +21,11 @@
 #include "bundle_info.h"
 #include "ipc_skeleton.h"
 #include "bundle_manager_convert.h"
+#include "bundle_manager_ffi.h"
+#include <shared_mutex>
 
 using namespace OHOS::CJSystemapi::BundleManager::Convert;
 using namespace OHOS::CJSystemapi::BundleManager;
-
 
 namespace OHOS {
 namespace CJSystemapi {
@@ -52,12 +53,45 @@ CArrString g_vectorToCArrString(std::vector<std::string> &vec)
     return {result, vec.size()};
 }
 
+static std::shared_mutex g_cacheMutex;
+
+static std::unordered_map<Query, AppExecFwk::BundleInfo, QueryHash> cache;
+
+static void CheckToCache(int32_t uid, int32_t callingUid, const Query &query, AppExecFwk::BundleInfo bundleInfo)
+{
+    if (uid != callingUid) {
+        LOGE("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
+        return;
+    }
+    LOGI("put applicationInfo to cache");
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    LOGI("put applicationInfo to cache locked");
+    cache[query] = bundleInfo;
+}
+
 extern "C" {
     RetBundleInfo FfiOHOSGetBundleInfoForSelf(int32_t bundleFlags)
     {
         LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf");
+        std::string bundleName;
+        auto uid = IPCSkeleton::GetCallingUid();
+        bundleName = std::to_string(uid);
+        AppExecFwk::BundleInfo nBundleInfo;
+        int32_t userId = uid / AppExecFwk::Constants::BASE_USER_RANGE;
+        {
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+            auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId));
+            if (item != cache.end()) {
+                LOGI("GetBundleInfo param from cache");
+                nBundleInfo = item->second;
+                RetBundleInfo nCjInfo = ConvertBundleInfo(nBundleInfo, bundleFlags);
+                return nCjInfo;
+            }
+        }
         AppExecFwk::BundleInfo bundleInfo = BundleManagerImpl::GetBundleInfoForSelf(bundleFlags);
         RetBundleInfo cjInfo = ConvertBundleInfo(bundleInfo, bundleFlags);
+        Query query(bundleName, GET_BUNDLE_INFO, bundleFlags, userId);
+        CheckToCache(bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, bundleInfo);
         LOGI("BundleManager::FfiOHOSGetBundleInfoForSelf success");
         return cjInfo;
     }
