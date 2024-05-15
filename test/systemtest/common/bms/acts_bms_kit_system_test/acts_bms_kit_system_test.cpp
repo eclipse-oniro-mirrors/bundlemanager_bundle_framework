@@ -91,6 +91,8 @@ const int32_t PERMS_INDEX_THREE = 3;
 const int32_t PERMS_INDEX_FORE = 4;
 const int32_t PERMS_INDEX_FIVE = 5;
 const int32_t PERMS_INDEX_SIX = 6;
+const int32_t PERMS_INDEX_SEVEN = 7;
+const int32_t PERMS_INDEX_EIGHT = 8;
 const size_t ODID_LENGTH = 36;
 const int32_t TEST_INSTALLER_UID = 100;
 }  // namespace
@@ -293,7 +295,7 @@ void ActsBmsKitSystemTest::TearDown()
 
 void ActsBmsKitSystemTest::StartProcess()
 {
-    const int32_t permsNum = 7;
+    const int32_t permsNum = 9;
     uint64_t tokenId;
     const char *perms[permsNum];
     perms[PERMS_INDEX_ZERO] = "ohos.permission.GET_DEFAULT_APPLICATION";
@@ -303,6 +305,8 @@ void ActsBmsKitSystemTest::StartProcess()
     perms[PERMS_INDEX_FORE] = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
     perms[PERMS_INDEX_FIVE] = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
     perms[PERMS_INDEX_SIX] = "ohos.permission.CHANGE_BUNDLE_UNINSTALL_STATE";
+    perms[PERMS_INDEX_SEVEN] = "ohos.permission.INSTALL_CLONE_BUNDLE";
+    perms[PERMS_INDEX_EIGHT] = "ohos.permission.UNINSTALL_CLONE_BUNDLE";
     NativeTokenInfoParams infoInstance = {
         .dcapsNum = 0,
         .permsNum = permsNum,
@@ -8996,5 +9000,125 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfoByContinueType_0004, Function | M
 
     std::cout << "END QueryAbilityInfoByContinueType_0004" << std::endl;
 }
+
+/**
+ * @tc.number: InstallCloneAppTest001_AppNotExist
+ * @tc.name: test install clone app failed: app not exists
+ * @tc.desc: 1.use a invalid bundleName when install clone app
+ *           2.get the result
+ */
+HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest001_AppNotExist, Function | MediumTest | Level1)
+{
+    StartProcess();
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.appnotfound";
+    const int32_t userId = 100;
+    int32_t appIndex = 1;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED
+        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstallCloneAppTest002_UserNotFound
+ * @tc.name: test install clone app failed: user not exists
+ * @tc.desc: 1.use a userId not in system when install clone app
+ *           2.get the result
+ */
+HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest002_UserNotFound, Function | MediumTest | Level1)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return;
+    }
+    const std::string bundleName = "ohos.samples.etsclock";
+    const int32_t userId = 200; // ensure userId 200 not in system
+    int32_t appIndex = 1;
+    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
+        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetCloneAppIndexes_0001
+ * @tc.name: test query clone app's indexes
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the clone app
+ *           3.get clone app's indexes
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetCloneAppIndexes_0001, Function | MediumTest | Level1)
+{
+    std::cout << "START GetCloneAppIndexes_0001" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    int32_t appIndex = 1;
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr);
+    ErrCode ret = installerProxy->InstallCloneApp(appName, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<int32_t> appIndexes;
+    ret = bundleMgrProxy->GetCloneAppIndexes(appName, appIndexes, USERID);
+    EXPECT_EQ(ret, ERR_OK) << "GetCloneAppIndexes fail!";
+    EXPECT_EQ(appIndexes.size(), 1);
+
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetCloneAppIndexes_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetNameAndIndexForUid_0100
+ * @tc.name: test get name and appIndex by uid
+ * @tc.desc: 1.get bundleName and appIndex by uid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetNameAndIndexForUid_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetNameAndIndexForUid_0100" << std::endl;
+    CommonTool commonTool;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    BundleInfo bundleInfo;
+    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
+
+    std::string name;
+    int32_t testAppIndex = -1;
+    ErrCode ret = bundleMgrProxy->GetNameAndIndexForUid(bundleInfo.uid, name, testAppIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(name, appName);
+    EXPECT_EQ(testAppIndex, 0);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetNameAndIndexForUid_0100" << std::endl;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
