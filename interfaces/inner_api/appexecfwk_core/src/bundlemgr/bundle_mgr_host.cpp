@@ -2257,7 +2257,7 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     bool withDefault = data.ReadBool();
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool findDefaultApp;
+    bool findDefaultApp = false;
     bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed.");
