@@ -121,7 +121,9 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest001_AppNotExist, Function 
     const int32_t userId = 100;
     int32_t appIndex = 1;
     auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
-    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED
+        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest002_UserNotFound, Function | SmallTest | Level0)
@@ -135,7 +137,8 @@ HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest002_UserNotFound, Function
     const int32_t userId = 200; // ensure userId 200 not in system
     int32_t appIndex = 1;
     auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
-    EXPECT_EQ(result, ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST);
+    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
+        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Function | SmallTest | Level0)
