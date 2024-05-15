@@ -2541,6 +2541,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         APP_LOGW("fail to create shader cache, error is %{public}d", result);
     }
 
+    CreateCloudShader(info.GetBundleName(), createDirParam.uid, createDirParam.gid);
+
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
@@ -5256,6 +5258,18 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
     shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
     APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
+}
+
+void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
+{
+    const std::string cloudShaderOwner = OHOS::system::GetParameter(Constants::CLOUD_SHADER_OWNER, "");
+    if (cloudShaderOwner.empty() || (bundleName != cloudShaderOwner)) {
+        return;
+    }
+
+    constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
+    ErrCode result = InstalldClient::GetInstance()->Mkdir(Constants::CLOUD_SHADER_PATH, mode, uid, gid);
+    APP_LOGI("Create cloud shader cache result: %{public}d", result);
 }
 
 std::string BaseBundleInstaller::GetCheckResultMsg() const
