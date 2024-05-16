@@ -72,7 +72,9 @@ typedef struct OH_NativeBundle_ApplicationInfo OH_NativeBundle_ApplicationInfo;
 /**
  * @brief Obtains the application info based on the The current bundle.
  *
- * @return Returns the application info.
+ * @return Returns the newly created OH_NativeBundle_ApplicationInfo object, if the returned object is NULL,
+ * it indicates creation failure. The possible cause of failure could be that the application address space is full,
+ * leading to space allocation failure.
  * @since 9
  * @version 1.0
  */
@@ -84,7 +86,10 @@ OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo();
  * After utilizing this interface, to prevent memory leaks,
  * it is necessary to manually release the pointer returned by the interface.
  *
- * @return Returns the appId info.
+ * @return Returns the newly created string that indicates appId information,
+ * if the returned object is NULL, it indicates creation failure.
+ * The possible cause of failure could be that the application address space is full,
+ * leading to space allocation failure.
  * @since 11
  * @version 1.0
  */
@@ -96,7 +101,10 @@ char* OH_NativeBundle_GetAppId();
  * After utilizing this interface, to prevent memory leaks,
  * it is necessary to manually release the pointer returned by the interface.
  *
- * @return Returns the appIdentifier info.
+ * @return Returns the newly created string that indicates app identifier information,
+ * if the returned object is NULL, it indicates creation failure.
+ * The possible cause of failure could be that the application address space is full,
+ * leading to space allocation failure.
  * @since 11
  * @version 1.0
  */
