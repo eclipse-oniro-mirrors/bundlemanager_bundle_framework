@@ -507,7 +507,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     }
     bundleResourceInfo.appIndex = appIndex;
     ResourceInfo bundleResource;
-    bundleResource.ConvertFormBundleResourceInfo(bundleResourceInfo);
+    bundleResource.ConvertFromBundleResourceInfo(bundleResourceInfo);
     std::vector<ResourceInfo> resourceInfos;
     resourceInfos.emplace_back(bundleResource);
     // 2. get main launcher ability resource info
@@ -519,7 +519,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     for (auto &launcherAbility : launcherAbilityResourceInfos) {
         launcherAbility.appIndex = appIndex;
         ResourceInfo launcherResource;
-        launcherResource.ConvertFormLauncherAbilityResourceInfo(launcherAbility);
+        launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
         resourceInfos.emplace_back(launcherResource);
     }
     APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,

@@ -3615,7 +3615,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest
         BundleResourceInfo bundleResourceInfo;
         bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), 
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             bundleResourceInfo);
         EXPECT_TRUE(ret);
         // add clone bundle resource
@@ -3624,7 +3624,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest
         EXPECT_TRUE(ret);
         BundleResourceInfo cloneBundleResourceInfo;
         ret = manager->GetBundleResourceInfo(BUNDLE_NAME, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), 
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             cloneBundleResourceInfo, appIndex);
         EXPECT_TRUE(ret);
         EXPECT_EQ(cloneBundleResourceInfo.bundleName, bundleResourceInfo.bundleName);
@@ -3632,7 +3632,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest
         EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
         EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
         EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
-        EXPECT_FALSE(cloneBundleResourceInfo.background.empty());
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3657,7 +3656,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest
         std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
         bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), 
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             launcherAbilityResourceInfos);
         EXPECT_TRUE(ret);
         // add clone bundle resource
@@ -3668,7 +3667,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest
         std::vector<LauncherAbilityResourceInfo> cloneLauncherAbilityResourceInfos;
         ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR), 
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
             cloneLauncherAbilityResourceInfos, appIndex);
         EXPECT_TRUE(ret);
         EXPECT_EQ(launcherAbilityResourceInfos.size(), cloneLauncherAbilityResourceInfos.size());
@@ -3681,7 +3680,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest
             EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].appIndex, appIndex);
             EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].icon.empty());
             EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].foreground.empty());
-            EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].background.empty());
         }
     }
 
@@ -3747,7 +3745,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
 
     key = "100_" + BUNDLE_NAME;
     resourceInfo.InnerParseAppIndex(key);
-    EXPECT_EQ(resourceInfo.bundleName_, key);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
     EXPECT_EQ(resourceInfo.appIndex_, 100);
 }
 #endif

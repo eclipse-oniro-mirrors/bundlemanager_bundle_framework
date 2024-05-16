@@ -28,9 +28,9 @@ public:
     ResourceInfo();
     ~ResourceInfo();
 
-    void ConvertFormBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo);
+    void ConvertFromBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo);
 
-    void ConvertFormLauncherAbilityResourceInfo(const LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+    void ConvertFromLauncherAbilityResourceInfo(const LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
     /**
      * key:
      * 1. bundleName

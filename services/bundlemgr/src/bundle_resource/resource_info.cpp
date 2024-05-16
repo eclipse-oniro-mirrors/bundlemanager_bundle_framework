@@ -67,7 +67,7 @@ void ResourceInfo::ParseKey(const std::string &key)
     moduleName_ = std::string();
 }
 
-void ResourceInfo::ConvertFormBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo)
+void ResourceInfo::ConvertFromBundleResourceInfo(const BundleResourceInfo &bundleResourceInfo)
 {
     bundleName_ = bundleResourceInfo.bundleName;
     moduleName_ = std::string();
@@ -83,7 +83,7 @@ void ResourceInfo::ConvertFormBundleResourceInfo(const BundleResourceInfo &bundl
     }
 }
 
-void ResourceInfo::ConvertFormLauncherAbilityResourceInfo(
+void ResourceInfo::ConvertFromLauncherAbilityResourceInfo(
     const LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {
     bundleName_ = launcherAbilityResourceInfo.bundleName;
