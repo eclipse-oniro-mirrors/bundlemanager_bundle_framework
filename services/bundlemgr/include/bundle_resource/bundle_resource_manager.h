@@ -91,7 +91,8 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
-    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, uint32_t tempTaskNumber);
+    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        bool needDeleteAllResourceInfo, uint32_t tempTaskNumber);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 

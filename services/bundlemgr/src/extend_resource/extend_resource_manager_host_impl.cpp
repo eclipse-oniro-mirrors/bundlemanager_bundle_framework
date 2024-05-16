@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_data_mgr.h"
@@ -591,12 +592,13 @@ bool ExtendResourceManagerHostImpl::ResetBundleResourceIcon(const std::string &b
     }
 
     // Reset default icon
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    if (!manager->GetLauncherAbilityResourceInfo(bundleName,
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfos)) {
-        APP_LOGD("No default icon, bundleName:%{public}s", bundleName.c_str());
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if ((currentUserId <= 0)) {
+        currentUserId = Constants::START_USERID;
     }
-
+    if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
+        APP_LOGE("No default icon, bundleName:%{public}s", bundleName.c_str());
+    }
     return true;
 #else
     return false;

@@ -111,8 +111,8 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
         return false;
     }
 
-    if (!AddResourceInfos(resourceInfosMap, tempTaskNum)) {
-        APP_LOGE("failed, userId:%{public}d", userId);
+    if (!AddResourceInfos(resourceInfosMap, true, tempTaskNum)) {
+        APP_LOGE("add all resource info failed, userId:%{public}d", userId);
         return false;
     }
     SendBundleResourcesChangedEvent(userId);
@@ -173,6 +173,7 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
 
 bool BundleResourceManager::AddResourceInfos(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    bool needDeleteAllResourceInfo,
     uint32_t tempTaskNumber)
 {
     if (resourceInfosMap.empty()) {
@@ -214,10 +215,13 @@ bool BundleResourceManager::AddResourceInfos(
         std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL));
     }
     threadPool->Stop();
-    APP_LOGI("All tasks has executed end");
     std::vector<ResourceInfo> resourceInfos;
     InnerProcessResourceInfos(resourceInfosMap, resourceInfos);
-    APP_LOGI("resource info size:%{public}zu", resourceInfos.size());
+    APP_LOGI("All tasks has executed end, resource info size:%{public}zu", resourceInfos.size());
+    // first delete all resource info, then add new resource
+    if (needDeleteAllResourceInfo && !bundleResourceRdb_->DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource info failed, then add new resource info");
+    }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
@@ -283,7 +287,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             return false;
         }
     }
-    if (!AddResourceInfos(resourceInfosMap, tempTaskNum)) {
+    if (!AddResourceInfos(resourceInfosMap, false, tempTaskNum)) {
         APP_LOGE("add resource infos failed, userId:%{public}d", userId);
         return false;
     }
@@ -300,16 +304,8 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        // invalid userId
-        currentUserId = Constants::START_USERID;
-    }
-    if (!AddResourceInfoByBundleName(bundleName, currentUserId)) {
-        APP_LOGW("bundleName:%{public}s add failed", bundleName.c_str());
-    }
-    return bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo);
+    APP_LOGE("bundleName:%{public}s not exist in resource rdb", bundleName.c_str());
+    return false;
 }
 
 bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -321,16 +317,8 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        // invalid userId
-        currentUserId = Constants::START_USERID;
-    }
-    if (!AddResourceInfoByBundleName(bundleName, currentUserId)) {
-        APP_LOGW("bundleName:%{public}s add failed", bundleName.c_str());
-    }
-    return bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo);
+    APP_LOGE("bundleName:%{public}s not exist in resource rdb", bundleName.c_str());
+    return false;
 }
 
 bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
