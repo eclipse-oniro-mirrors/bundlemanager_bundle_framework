@@ -245,6 +245,8 @@ constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
+constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
+constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

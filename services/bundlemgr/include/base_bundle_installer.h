@@ -661,6 +661,7 @@ private:
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,

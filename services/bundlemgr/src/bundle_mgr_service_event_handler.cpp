@@ -48,6 +48,7 @@
 #include "event_report.h"
 #include "installd_client.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
@@ -306,6 +307,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1082,6 +1084,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
+    ProcessCheckCloudShaderDir();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1363,6 +1366,56 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
             APP_LOGI("create shader cache failed: %{public}s ", shaderCachePath.c_str());
         }
     }
+}
+
+void BMSEventHandler::ProcessCheckCloudShaderDir()
+{
+    bool checkCloudShader = false;
+    CheckOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR, checkCloudShader);
+    if (checkCloudShader) {
+        APP_LOGD("Not need to check cloud shader cache dir due to has checked.");
+        return;
+    }
+    APP_LOGD("Need to check cloud shader cache dir.");
+    InnerProcessCheckCloudShaderDir();
+    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckCloudShaderDir()
+{
+    bool cloudExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(Constants::CLOUD_SHADER_PATH, cloudExist);
+    if (result != ERR_OK) {
+        APP_LOGW("IsExistDir failed, error is %{public}d", result);
+        return;
+    }
+    if (cloudExist) {
+        APP_LOGD("CLOUD_SHADER_PATH is exist");
+        return;
+    }
+
+    const std::string bundleName = OHOS::system::GetParameter(Constants::CLOUD_SHADER_OWNER, "");
+    if (bundleName.empty()) {
+        return;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("DataMgr is nullptr");
+        return;
+    }
+
+    BundleInfo info;
+    auto hasBundleInstalled = dataMgr->GetBundleInfo(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, info, Constants::ANY_USERID);
+    if (!hasBundleInstalled) {
+        APP_LOGD("Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
+        return;
+    }
+
+    constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
+    result = InstalldClient::GetInstance()->Mkdir(Constants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+    APP_LOGI("Create cloud shader cache result: %{public}d", result);
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
