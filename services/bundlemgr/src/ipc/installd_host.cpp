@@ -110,6 +110,10 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR),
         &InstalldHost::HandleCreateBundleDataDirWithVector);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::STOP_AOT), &InstalldHost::HandleStopAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_ENCRYPTION_DIR),
+        &InstalldHost::HandleSetEncryptionDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID),
+        &InstalldHost::HandleDeleteEncryptionKeyId);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -644,6 +648,31 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     std::string bundleName = Str16ToStr8(data.ReadString16());
 
     ErrCode result = RemoveSignProfile(bundleName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t uid = data.ReadInt32();
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    std::string keyId = "";
+
+    ErrCode result = SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteString(keyId)) {
+        APP_LOGE("write keyId failed");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply)
+{
+    std::string keyId = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = DeleteEncryptionKeyId(keyId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

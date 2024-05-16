@@ -591,4 +591,32 @@ HWTEST_F(BmsInstalldHostTest, HandRemoveSignProfile_0100, Function | SmallTest |
     ErrCode res = installdHost.HandRemoveSignProfile(data, reply);
     EXPECT_TRUE(res);
 }
+
+/**
+ * @tc.number: HandleSetEncryptionDir_0100
+ * @tc.name: test HandleSetEncryptionDir
+ * @tc.desc: 1.HandleSetEncryptionDir test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleSetEncryptionDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleSetEncryptionDir(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleDeleteEncryptionKeyId_0100
+ * @tc.name: test HandleDeleteEncryptionKeyId
+ * @tc.desc: 1.HandleDeleteEncryptionKeyId test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleDeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleDeleteEncryptionKeyId(data, reply);
+    EXPECT_TRUE(res);
+}
 } // OHOS

@@ -981,6 +981,7 @@ public:
     bool GetBundleInfoAdaptBundleClone(const InnerBundleUserInfo &innerBundleUserInfo, int32_t appIndex,
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
+    void SetkeyId(const int32_t userId, const std::string &keyId);
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

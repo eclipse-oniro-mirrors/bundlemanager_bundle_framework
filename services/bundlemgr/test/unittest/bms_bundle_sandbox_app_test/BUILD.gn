@@ -62,6 +62,7 @@ ohos_unittest("BmsSandboxAppTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -216,6 +217,7 @@ ohos_unittest("BmsSandboxRdbTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",

@@ -810,4 +810,36 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4000, Function | SmallTest |
     auto ret = installdProxy->RemoveSignProfile(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_4100
+ * @tc.name: test function SetEncryptionPolicy
+ * @tc.desc: 1. calling SetEncryptionPolicy of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    int32_t uid = 0;
+    std::string bundleName = TEST_STRING;
+    int32_t userId = 100;
+    std::string keyId = "";
+    auto ret = proxy->SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4200
+ * @tc.name: test function DeleteEncryptionKeyId
+ * @tc.desc: 1. calling DeleteEncryptionKeyId of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS
