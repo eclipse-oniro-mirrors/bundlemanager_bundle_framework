@@ -58,7 +58,6 @@ bool LauncherAbilityResourceInfo::ReadFromParcel(Parcel &parcel)
         background.emplace_back(parcel.ReadUint8());
     }
 
-    int32_t appIndex;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     return true;
 }

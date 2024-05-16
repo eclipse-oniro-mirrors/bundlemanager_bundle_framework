@@ -43,7 +43,7 @@ std::string ResourceInfo::GetKey() const
         key = abilityName_.empty() ? key : (key + SEPARATOR + abilityName_);
     }
     if (appIndex_ > 0) {
-        key = std::string(appIndex_) + UNDER_LINE + key;
+        key = std::to_string(appIndex_) + UNDER_LINE + key;
     }
     return key;
 }

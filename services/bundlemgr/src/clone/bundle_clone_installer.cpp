@@ -58,8 +58,7 @@ ErrCode BundleCloneInstaller::InstallCloneApp(const std::string &bundleName,
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
-    ErrCode result = 
-    (bundleName, userId, appIndex);
+    ErrCode result = ProcessCloneBundleInstall(bundleName, userId, appIndex);
     NotifyBundleEvents installRes = {
         .bundleName = bundleName,
         .resultCode = result,
@@ -287,10 +286,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGW("RemoveCloneDataDir failed");
     }
     // process icon and label
-    ResourceInfo resourceInfo;
-    resourceInfo.bundleName_ = bundleName;
-    resourceInfo.appIndex_ = appIndex;
-    if (!BundleResourceHelper::DeleteResourceInfo(resourceInfo.GetKey(), userId)) {
+    if (!BundleResourceHelper::DeleteResourceInfo(std::to_string(appIndex) + "_" + bundleName, userId)) {
         APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
             bundleName.c_str(), appIndex);
     }

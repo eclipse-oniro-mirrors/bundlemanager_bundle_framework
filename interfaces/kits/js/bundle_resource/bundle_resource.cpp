@@ -292,7 +292,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    auto ret = InnerGetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos, appIndex);
+    auto ret = InnerGetLauncherAbilityResourceInfo(bundleName, flags, appIndex, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCHER_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
