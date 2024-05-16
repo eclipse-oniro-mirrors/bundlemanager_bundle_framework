@@ -3730,6 +3730,11 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
     EXPECT_EQ(resourceInfo.appIndex_, 1);
 
+    key = "_" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, key);
+    EXPECT_EQ(resourceInfo.appIndex_, 0);
+
     key = "a1_" + BUNDLE_NAME;
     resourceInfo.InnerParseAppIndex(key);
     EXPECT_EQ(resourceInfo.bundleName_, key);

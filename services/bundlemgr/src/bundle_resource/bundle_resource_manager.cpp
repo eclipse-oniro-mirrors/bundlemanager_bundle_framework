@@ -533,5 +533,16 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     APP_LOGD("end, add clone bundle resource succeed");
     return true;
 }
+
+bool BundleResourceManager::DeleteCloneBundleResourceInfo(const std::string &bundleName,
+    const int32_t appIndex)
+{
+    APP_LOGD("start delete clone bundle resource info, bundleName:%{public}s appIndex:%{public}d",
+        bundleName.c_str(), appIndex);
+    ResourceInfo info;
+    info.bundleName_ = bundleName;
+    info.appIndex_ = appIndex;
+    return bundleResourceRdb_->DeleteResourceInfo(info.GetKey());
+}
 } // AppExecFwk
 } // OHOS

@@ -286,7 +286,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGW("RemoveCloneDataDir failed");
     }
     // process icon and label
-    if (!BundleResourceHelper::DeleteResourceInfo(std::to_string(appIndex) + "_" + bundleName, userId)) {
+    if (!BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId)) {
         APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
             bundleName.c_str(), appIndex);
     }
