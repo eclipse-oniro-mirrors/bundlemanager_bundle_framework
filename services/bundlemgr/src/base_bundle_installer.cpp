@@ -83,6 +83,7 @@ constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
+constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -1118,6 +1119,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CreateNewExtensionDirs(newInfos);
     ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
 
+    // create Screen Lock File Protection Dir
+    CreateScreenLockProtectionDir(newInfos);
+    ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
+
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
@@ -1155,6 +1160,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
+    ScreenLockFileProtectionDirGuard.Dismiss();
     RemoveOldGroupDirs();
     RemoveOldExtensionDirs();
     /* process quick fix when install new moudle */
@@ -1338,6 +1344,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
     CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
     RemoveBundleExtensionDir(oldInfo.GetBundleName());
+
+    DeleteEncryptionKeyId(oldInfo);
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
@@ -2610,6 +2618,130 @@ ErrCode BaseBundleInstaller::RemoveOldGroupDirs() const
     }
     APP_LOGD("RemoveOldGroupDirs success");
     return ERR_OK;
+}
+
+std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(const std::string &bundleName) const
+{
+    std::vector<std::string> dirs;
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return dirs;
+    }
+    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId_) + Constants::BASE + bundleName);
+    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+        std::to_string(userId_) + Constants::DATABASE + bundleName);
+    return dirs;
+}
+
+bool BaseBundleInstaller::SetEncryptionDirPolicy()
+{
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return false;
+    }
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+        APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.", info.GetBundleName().c_str(), userId_);
+        return false;
+    }
+
+    int32_t uid = userInfo.uid;
+    std::string bundleName = info.GetBundleName();
+    std::string keyId = "";
+    auto result = InstalldClient::GetInstance()->SetEncryptionPolicy(uid, bundleName, userId_, keyId);
+    if (result != ERR_OK) {
+        APP_LOGE("SetEncryptionPolicy failed");
+    }
+    APP_LOGD("SetEncryptionDirPolicy bundleName: %{public}s, keyId: %{public}s", bundleName.c_str(), keyId.c_str());
+    info.SetkeyId(userId_, keyId);
+    if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+        APP_LOGE("save keyId failed");
+        return false;
+    }
+    return result;
+}
+
+void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGI("CreateScreenLockProtectionDir start");
+    if (infos.empty()) {
+        APP_LOGE("innerBundleInfo infos is empty.");
+        return;
+    }
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
+    bool hasPermission = false;
+    for (auto &info : infos) {
+        std::vector<RequestPermission> reqPermissions = info.second.GetRequestPermissions();
+        auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+        });
+        if (it != reqPermissions.end()) {
+            hasPermission = true;
+            break;
+        }
+    }
+    if (!hasPermission) {
+        APP_LOGI("no protection permission found, remove dirs");
+        for (const std::string &dir : dirs) {
+            if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+                APP_LOGW("remove Screen Lock Protection dir %{public}s failed", dir.c_str());
+            }
+        }
+        return;
+    }
+    for (const std::string &dir : dirs) {
+        bool dirExist = false;
+        if (InstalldClient::GetInstance()->IsExistDir(dir, dirExist) != ERR_OK) {
+            APP_LOGE("check if dir existed failed");
+            return;
+        }
+        if (!dirExist) {
+            APP_LOGD("ScreenLockProtectionDir: %{public}s need to be created.", dir.c_str());
+            if (InstalldClient::GetInstance()->CreateBundleDir(dir) != ERR_OK) {
+                APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
+            }
+        }
+    }
+    if (!SetEncryptionDirPolicy()) {
+        APP_LOGE("SetEncryptionDirPolicy failed.");
+    }
+}
+
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const
+{
+    if (oldInfo.GetBundleName().empty()) {
+        APP_LOGW("bundleName is empty");
+        return;
+    }
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(oldInfo.GetBundleName());
+    for (const std::string &dir : dirs) {
+        if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
+            APP_LOGW("remove Screen Lock Protection dir %{public}s failed", dir.c_str());
+        }
+    }
+
+    InnerBundleUserInfo userInfo;
+    if (!oldInfo.GetInnerBundleUserInfo(userId_, userInfo)) {
+        APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.", oldInfo.GetBundleName().c_str(), userId_);
+        return;
+    }
+    if (InstalldClient::GetInstance()->DeleteEncryptionKeyId(userInfo.keyId) != ERR_OK) {
+        APP_LOGW("delete encryption key id failed");
+    }
+}
+
+void BaseBundleInstaller::DeleteScreenLockProtectionDir(const std::string bundleName) const
+{
+    std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName);
+    for (const std::string &dir : dirs) {
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        if (result != ERR_OK) {
+            APP_LOGW("remove Screen Lock Protection dir %{public}s failed", dir.c_str());
+        }
+    }
 }
 
 ErrCode BaseBundleInstaller::CreateGroupDirs() const
