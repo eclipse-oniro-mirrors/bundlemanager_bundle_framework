@@ -787,7 +787,7 @@ ErrCode BundleDataMgr::BatchQueryAbilityInfos(
                 return ret;
             }
         }
-        for (int j = 0; j < tmpAbilityInfos.size(); j++) {
+        for (size_t j = 0; j < tmpAbilityInfos.size(); j++) {
             auto it = std::find_if(abilityInfos.begin(), abilityInfos.end(),
                 [&](const AbilityInfo& info) {
                     return tmpAbilityInfos[j].bundleName == info.bundleName &&

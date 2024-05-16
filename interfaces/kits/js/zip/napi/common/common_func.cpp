@@ -124,7 +124,7 @@ tuple<bool, unsigned long, unsigned long, int64_t> CommonFunc::GetAdler32Combine
     return {true, adler1, adler2, len};
 }
 
-static void SetZStreamOutValue(HasZStreamMember &hasZStreamMember, ZipEntity *zipEntity, z_stream &zs)
+static void SetZStreamOutValue(const HasZStreamMember &hasZStreamMember, ZipEntity *zipEntity, const z_stream &zs)
 {
     if (hasZStreamMember.hasNextOut) {
         zipEntity->zs.get()->next_out = zs.next_out;
@@ -316,7 +316,7 @@ std::tuple<bool, z_stream, HasZStreamMember> CommonFunc::GetZstreamArg(napi_env 
     return {true, zs, hasZStreamMember};
 }
 
-static bool GetGZHeadValue(napi_env env, NapiValue &gzHeaderNVal, gz_header &gzHeader)
+static bool GetGZHeadValue(napi_env env, const NapiValue &gzHeaderNVal, gz_header &gzHeader)
 {
     bool succ = false;
     if (gzHeaderNVal.HasProp("isText") && !gzHeaderNVal.GetProp("isText").TypeIs(napi_undefined) &&
@@ -611,7 +611,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetCompressArg(nap
     }
 
     void *source = nullptr;
-    size_t sourceLen = 0;
+    int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
     tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
@@ -647,7 +647,7 @@ std::tuple<bool, void *, size_t, void *, size_t, int32_t> CommonFunc::GetCompres
     }
 
     void *source = nullptr;
-    size_t sourceLen = 0;
+    int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
     tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
@@ -690,7 +690,7 @@ std::tuple<bool, void *, size_t, void *, int64_t> CommonFunc::GetUnCompressArg(n
     }
 
     void *source = nullptr;
-    size_t sourceLen = 0;
+    int64_t sourceLen = 0;
     NapiValue sourceNVal(env, funcArg[ArgumentPosition::SECOND]);
     tie(succ, source, sourceLen) = sourceNVal.ToArrayBuffer();
     if (!succ) {
@@ -1101,7 +1101,7 @@ std::tuple<bool, gzFile_s, HasGZFileMember> CommonFunc::GetGZFileArg(napi_env en
             NapiBusinessError().ThrowErr(env, EINVAL);
             return {false, {}, {}};
         }
-        gzs.pos = pos;
+        gzs.pos = static_cast<z_off64_t>(pos);
         hasGZFileMember.hasPos = true;
     }
     return {true, gzs, hasGZFileMember};
@@ -1263,7 +1263,7 @@ std::tuple<bool, int32_t, int32_t> CommonFunc::GetGzSetParamsArg(napi_env env, c
     return {true, level, strategy};
 }
 
-void CommonFunc::GetLogContent(string &formatStr, vector<NapiParam> &params, string &ret, uint32_t &pos)
+void CommonFunc::GetLogContent(string &formatStr, const vector<NapiParam> &params, string &ret, uint32_t &pos)
 {
     uint32_t count = 0;
     for (; pos < formatStr.size(); ++pos) {
@@ -1314,9 +1314,9 @@ void CommonFunc::GetLogContent(string &formatStr, vector<NapiParam> &params, str
     return;
 }
 
-void CommonFunc::ParseLogContent(string &formatStr, vector<NapiParam> &params, string &printContent)
+void CommonFunc::ParseLogContent(string &formatStr, vector<NapiParam> &params, string &logContent)
 {
-    std::string &ret = printContent;
+    std::string &ret = logContent;
     if (params.empty()) {
         ret += formatStr;
         return;

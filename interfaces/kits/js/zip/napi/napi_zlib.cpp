@@ -482,7 +482,7 @@ napi_value UnwrapStringArrayParam(std::vector<std::string> &stringArray, napi_en
             return nullptr;
         }
         size_t strLen = 0;
-        napi_status status = napi_get_value_string_utf8(env, result, nullptr, 0, &strLen);
+        status = napi_get_value_string_utf8(env, result, nullptr, 0, &strLen);
         if (status != napi_ok) {
             APP_LOGI("%{public}s called, Get locale tag length failed", __func__);
             return nullptr;

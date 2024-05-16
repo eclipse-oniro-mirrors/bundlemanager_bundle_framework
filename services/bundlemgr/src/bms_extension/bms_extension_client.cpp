@@ -122,7 +122,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         }
     }
 
-    for (int i = 0; i < wants.size(); i++) {
+    for (size_t i = 0; i < wants.size(); i++) {
         std::vector<AbilityInfo> tmpAbilityInfos;
         std::string bundleName = wants[i].GetElement().GetBundleName();
         InnerBundleInfo info;
