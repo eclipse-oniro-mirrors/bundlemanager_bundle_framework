@@ -1158,7 +1158,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTime());
+        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
