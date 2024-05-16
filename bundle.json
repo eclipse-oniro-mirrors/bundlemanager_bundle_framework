@@ -82,7 +82,8 @@
                 "code_crypto_metadata_process",
                 "ets_runtime",
                 "json",
-                "zlib"
+                "zlib",
+                "bounds_checking_function"
             ],
             "third_party": [
                 "libuv",

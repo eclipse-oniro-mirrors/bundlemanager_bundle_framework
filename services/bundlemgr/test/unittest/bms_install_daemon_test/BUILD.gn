@@ -59,6 +59,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "bounds_checking_function:libsec_shared"
   ]
 
   external_deps += bundle_install_external_deps
