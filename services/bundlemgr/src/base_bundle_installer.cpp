@@ -95,7 +95,10 @@ const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
+const int32_t USER_MODE = 0;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
+const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.sceneboard",
     "com.ohos.callui",
@@ -103,9 +106,6 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
-constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
-constexpr const char* BMS_TRUE = "true";
-const int32_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -5284,12 +5284,8 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
-    char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
-    int32_t ret = GetParameter(BMS_ACTIVATION_LOCK, "", enableActivationLock, BMS_ACTIVATION_LOCK_VAL_LEN);
-    if (ret <= 0) {
-        return true;
-    }
-    if (std::strcmp(enableActivationLock, BMS_TRUE) == 0) {
+    int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
+    if (mode == USER_MODE) {
         BmsExtensionDataMgr bmsExtensionDataMgr;
         bool pass = false;
         ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
