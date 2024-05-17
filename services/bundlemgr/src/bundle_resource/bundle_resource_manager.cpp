@@ -300,11 +300,6 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    if (appIndex > 0) {
-        APP_LOGW("bundleName:%{public}s appIndex:%{public}d not exist in resource rdb, need add again ",
-            bundleName.c_str(), appIndex);
-        return false;
-    }
     APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
@@ -326,11 +321,6 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         launcherAbilityResourceInfo, appIndex)) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
-    }
-    if (appIndex > 0) {
-        APP_LOGW("bundleName:%{public}s appIndex:%{public}d not exist in resource rdb, need add again ",
-            bundleName.c_str(), appIndex);
-        return false;
     }
     APP_LOGW("bundleName:%{public}s not exist in resource rdb, need add again ", bundleName.c_str());
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
