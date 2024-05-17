@@ -914,6 +914,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
+    baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
+    baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const

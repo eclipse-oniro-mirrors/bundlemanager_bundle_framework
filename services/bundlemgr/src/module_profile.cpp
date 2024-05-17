@@ -248,7 +248,7 @@ struct App {
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
-    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 0);
+    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
 };
 
 struct Module {
