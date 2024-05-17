@@ -1119,33 +1119,35 @@ void InstalldOperator::CloseHandle(void **handle)
 #if defined(CODE_ENCRYPTION_ENABLE)
 bool InstalldOperator::OpenEncryptionHandle(void **handle)
 {
-    APP_LOGI("OpenEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle start");
     if (handle == nullptr) {
-        APP_LOGE("OpenEncryptionHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr.");
         return false;
     }
     *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     if (*handle == nullptr) {
-        APP_LOGW("failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        LOG_W(BMS_TAG_INSTALLD, "failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
+            dlerror());
         *handle = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {
-        APP_LOGE("failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        LOG_E(BMS_TAG_INSTALLD, "failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
+            dlerror());
         return false;
     }
-    APP_LOGI("OpenEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle end");
     return true;
 }
 
 void InstalldOperator::CloseEncryptionHandle(void **handle)
 {
-    APP_LOGI("CloseEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle start");
     if ((handle != nullptr) && (*handle != nullptr)) {
         dlclose(*handle);
         *handle = nullptr;
-        APP_LOGD("CloseEncryptionHandle, err:%{public}s", dlerror());
+        LOG_D(BMS_TAG_INSTALLD, "CloseEncryptionHandle, err:%{public}s", dlerror());
     }
-    APP_LOGI("CloseEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle end");
 }
 #endif
 
