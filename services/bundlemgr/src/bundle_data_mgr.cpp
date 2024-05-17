@@ -19,6 +19,7 @@
 #include <chrono>
 #include <cinttypes>
 #include <sstream>
+#include <string>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -4350,6 +4351,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
+    std::string moduleName = element.GetModuleName();
     std::string extensionName = element.GetAbilityName();
     LOG_D(BMS_TAG_QUERY_EXTENSION, "bundleName:%{public}s extensionName:%{public}s",
         bundleName.c_str(), extensionName.c_str());
@@ -4358,8 +4360,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         ExtensionAbilityInfo info;
         bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
         if (!ret) {
-            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit query error bundleName:%{public}s extensionName:%{public}s",
-                bundleName.c_str(), extensionName.c_str());
+            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit query error bundleName:%{public}s moduleName:%{public}s extensionName:%{public}s",
+                bundleName.c_str(), moduleName.c_str(), extensionName.c_str());
             return false;
         }
         extensionInfos.emplace_back(info);
