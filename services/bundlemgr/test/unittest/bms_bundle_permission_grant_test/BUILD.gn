@@ -79,7 +79,6 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -242,7 +241,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -403,7 +401,6 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -570,7 +567,6 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -736,7 +732,6 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -900,7 +895,6 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
 
   external_deps = [
     "ability_base:want",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",

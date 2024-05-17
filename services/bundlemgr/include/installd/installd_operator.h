@@ -273,11 +273,6 @@ public:
     static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
 
-    static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId);
-
-    static bool DeleteKeyId(const std::string &keyId);
-
 private:
     static bool OpenHandle(void **handle);
 

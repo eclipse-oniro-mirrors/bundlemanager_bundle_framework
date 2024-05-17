@@ -42,7 +42,6 @@ constexpr const char* HAPS = "/haps/";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
-constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr const char* DATA_GROUP_PATH = "/group/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";

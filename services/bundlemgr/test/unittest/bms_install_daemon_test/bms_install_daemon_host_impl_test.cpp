@@ -892,33 +892,4 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | Sma
     auto ret = hostImpl->ExtractDriverSoFiles("", dirMap);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
-
-/**
- * @tc.number: InstalldHostImplTest_5100
- * @tc.name: test SetEncryptionPolicy
- * @tc.desc: 1.system run normally
- *           2.SetEncryptionPolicy failed
- */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5100, Function | SmallTest | Level1)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-    std::string keyId = "";
-    auto ret = hostImpl->SetEncryptionPolicy(0, "", 100, keyId);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_5200
- * @tc.name: test DeleteEncryptionKeyId
- * @tc.desc: 1.system run normally
- *           2.DeleteEncryptionKeyId failed
- */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | SmallTest | Level1)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    ASSERT_NE(hostImpl, nullptr);
-    auto ret = hostImpl->DeleteEncryptionKeyId("");
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
 } // OHOS
