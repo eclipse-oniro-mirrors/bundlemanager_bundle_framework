@@ -201,6 +201,11 @@ public:
 
     ErrCode RemoveSignProfile(const std::string &bundleName);
 
+    ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+        const int32_t userId, std::string &keyId);
+
+    ErrCode DeleteEncryptionKeyId(const std::string &keyId);
+
 private:
     /**
      * @brief Get the installd proxy object.

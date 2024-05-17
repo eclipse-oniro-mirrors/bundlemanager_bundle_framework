@@ -654,6 +654,11 @@ private:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ForceWriteToDisk() const;
+    std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
+    void CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void DeleteScreenLockProtectionDir(const std::string bundleName) const;
+    bool SetEncryptionDirPolicy();
+    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
