@@ -1311,5 +1311,40 @@ bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string
     }
     return true;
 }
+
+ErrCode InstalldHostImpl::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+    const int32_t userId, std::string &keyId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function SetEncryptionPolicy with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::GenerateKeyIdAndSetPolicy(uid, bundleName, userId, keyId)) {
+        LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
+        return ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &keyId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (keyId.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function DeleteEncryptionKeyId with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::DeleteKeyId(keyId)) {
+        LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
+        return ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

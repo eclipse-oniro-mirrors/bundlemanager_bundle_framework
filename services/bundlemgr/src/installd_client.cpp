@@ -473,5 +473,24 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
     }
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
 }
+
+ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+    const int32_t userId, std::string &keyId)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::SetEncryptionPolicy, uid, bundleName, userId, keyId);
+}
+
+ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
+{
+    if (keyId.empty()) {
+        APP_LOGE("keyId is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeleteEncryptionKeyId, keyId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
