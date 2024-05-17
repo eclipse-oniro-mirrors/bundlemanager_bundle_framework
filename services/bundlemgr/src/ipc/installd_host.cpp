@@ -15,7 +15,7 @@
 
 #include "ipc/installd_host.h"
 
-#include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
@@ -37,12 +37,12 @@ InstalldHost::InstalldHost()
 {
     Init();
     InitEventHandler();
-    APP_LOGI("installd host instance is created");
+    LOG_I(BMS_TAG_INSTALLD, "installd host instance is created");
 }
 
 InstalldHost::~InstalldHost()
 {
-    APP_LOGI("installd host instance is destroyed");
+    LOG_I(BMS_TAG_INSTALLD, "installd host instance is destroyed");
 }
 
 void InstalldHost::Init()
@@ -110,29 +110,33 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR),
         &InstalldHost::HandleCreateBundleDataDirWithVector);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::STOP_AOT), &InstalldHost::HandleStopAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_ENCRYPTION_DIR),
+        &InstalldHost::HandleSetEncryptionDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID),
+        &InstalldHost::HandleDeleteEncryptionKeyId);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGD(
-        "installd host receives message from client, code = %{public}d, flags = %{public}d", code, option.GetFlags());
+    LOG_D(BMS_TAG_INSTALLD, "installd host receives message from client, code = %{public}d, flags = %{public}d",
+        code, option.GetFlags());
     RemoveCloseInstalldTask();
     std::u16string descripter = InstalldHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
-        APP_LOGE("installd host fail to write reply message due to the reply is nullptr");
+        LOG_E(BMS_TAG_INSTALLD, "installd host fail to write reply message due to the reply is nullptr");
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool result = true;
-    APP_LOGD("funcMap_ size is %{public}d", static_cast<int32_t>(funcMap_.size()));
+    LOG_D(BMS_TAG_INSTALLD, "funcMap_ size is %{public}d", static_cast<int32_t>(funcMap_.size()));
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         result = (this->*funcMap_[code])(data, reply);
     } else {
-        APP_LOGW("installd host receives unknown code, code = %{public}u", code);
+        LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    APP_LOGD("installd host finish to process message from client");
+    LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
     AddCloseInstalldTask();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
@@ -142,7 +146,7 @@ void InstalldHost::InitEventHandler()
     std::lock_guard<std::mutex> lock(unloadTaskMutex_);
     runner_ = EventRunner::Create(UNLOAD_QUEUE_NAME);
     if (runner_ == nullptr) {
-        APP_LOGE("init event runner failed");
+        LOG_E(BMS_TAG_INSTALLD, "init event runner failed");
         return;
     }
     handler_ = std::make_shared<EventHandler>(runner_);
@@ -153,7 +157,7 @@ void InstalldHost::InitEventHandler()
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleDir = Str16ToStr8(data.ReadString16());
-    APP_LOGI("bundleName %{public}s", bundleDir.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "bundleName %{public}s", bundleDir.c_str());
     ErrCode result = CreateBundleDir(bundleDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
@@ -165,7 +169,7 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string targetSoPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    APP_LOGI("extract module %{public}s", targetPath.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "extract module %{public}s", targetPath.c_str());
     ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
@@ -175,7 +179,7 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
@@ -188,7 +192,7 @@ bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
 {
     std::unique_ptr<AOTArgs> aotArgs(data.ReadParcelable<AOTArgs>());
     if (aotArgs == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return false;
     }
 
@@ -217,7 +221,7 @@ bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel 
 {
     std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     ErrCode result = CreateBundleDataDir(*info);
@@ -236,7 +240,7 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
     for (int32_t index = 0; index < createDirParamSize; ++index) {
         std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
         if (info == nullptr) {
-            APP_LOGE("readParcelableInfo failed");
+            LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
             return false;
         }
         createDirParams.emplace_back(*info);
@@ -299,7 +303,7 @@ bool InstalldHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &repl
     ErrCode result = GetBundleStats(bundleName, userId, bundleStats, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
-        APP_LOGE("HandleGetBundleStats write failed");
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetBundleStats write failed");
         return false;
     }
     return true;
@@ -327,7 +331,7 @@ bool InstalldHost::HandleGetAllBundleStats(MessageParcel &data, MessageParcel &r
     ErrCode result = GetAllBundleStats(bundleNames, userId, bundleStats, uids);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteInt64Vector(bundleStats)) {
-        APP_LOGE("HandleGetAllBundleStats write failed");
+        LOG_E(BMS_TAG_INSTALLD, "HandleGetAllBundleStats write failed");
         return false;
     }
     return true;
@@ -352,7 +356,7 @@ bool InstalldHost::HandleGetBundleCachePath(MessageParcel &data, MessageParcel &
     ErrCode result = GetBundleCachePath(dir, cachePath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(cachePath)) {
-        APP_LOGE("fail to GetBundleCachePath from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to GetBundleCachePath from reply");
         return false;
     }
     return true;
@@ -367,7 +371,7 @@ bool InstalldHost::HandleScanDir(MessageParcel &data, MessageParcel &reply)
     ErrCode result = ScanDir(dir, scanMode, resultMode, paths);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteStringVector(paths)) {
-        APP_LOGE("fail to Scan from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to Scan from reply");
         return false;
     }
 
@@ -412,7 +416,7 @@ bool InstalldHost::HandleGetFileStat(MessageParcel &data, MessageParcel &reply)
     ErrCode result = GetFileStat(file, fileStat);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteParcelable(&fileStat)) {
-        APP_LOGE("fail to GetFileStat from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to GetFileStat from reply");
         return false;
     }
 
@@ -448,7 +452,7 @@ bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
     ErrCode result = IsExistDir(path, isExist);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
-        APP_LOGE("fail to IsExistDir from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to IsExistDir from reply");
         return false;
     }
     return true;
@@ -461,7 +465,7 @@ bool InstalldHost::HandleIsExistFile(MessageParcel &data, MessageParcel &reply)
     ErrCode result = IsExistFile(path, isExist);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
-        APP_LOGE("fail to IsExistFile from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to IsExistFile from reply");
         return false;
     }
     return true;
@@ -474,7 +478,7 @@ bool InstalldHost::HandleIsExistApFile(MessageParcel &data, MessageParcel &reply
     ErrCode result = IsExistApFile(path, isExist);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
-        APP_LOGE("fail to IsExistApFile from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to IsExistApFile from reply");
         return false;
     }
     return true;
@@ -487,7 +491,7 @@ bool InstalldHost::HandleIsDirEmpty(MessageParcel &data, MessageParcel &reply)
     ErrCode result = IsDirEmpty(dir, isDirEmpty);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isDirEmpty)) {
-        APP_LOGE("write isDirEmpty failed");
+        LOG_E(BMS_TAG_INSTALLD, "write isDirEmpty failed");
         return false;
     }
     return true;
@@ -500,7 +504,7 @@ bool InstalldHost::HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel 
     ErrCode result = ObtainQuickFixFileDir(dir, dirVec);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if ((result == ERR_OK) && !reply.WriteStringVector(dirVec)) {
-        APP_LOGE("fail to obtain quick fix file dir from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to obtain quick fix file dir from reply");
         return false;
     }
     return true;
@@ -524,7 +528,7 @@ bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessagePar
     ErrCode result = GetNativeLibraryFileNames(filePath, cupAbi, fileNames);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if ((result == ERR_OK) && !reply.WriteStringVector(fileNames)) {
-        APP_LOGE("fail to obtain fileNames from reply");
+        LOG_E(BMS_TAG_INSTALLD, "fail to obtain fileNames from reply");
         return false;
     }
     return true;
@@ -534,7 +538,7 @@ bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &r
 {
     std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
@@ -547,7 +551,7 @@ bool InstalldHost::HandleCheckEncryption(MessageParcel &data, MessageParcel &rep
 {
     std::unique_ptr<CheckEncryptionParam> info(data.ReadParcelable<CheckEncryptionParam>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
@@ -555,7 +559,7 @@ bool InstalldHost::HandleCheckEncryption(MessageParcel &data, MessageParcel &rep
     ErrCode result = CheckEncryption(*info, isEncryption);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isEncryption)) {
-        APP_LOGE("write isEncryption failed");
+        LOG_E(BMS_TAG_INSTALLD, "write isEncryption failed");
         return false;
     }
     return true;
@@ -606,7 +610,7 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
 {
     std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
@@ -625,7 +629,7 @@ bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &r
     }
     auto dataInfo = data.ReadRawData(profileBlockLength);
     if (!dataInfo) {
-        APP_LOGE("readRawData failed");
+        LOG_E(BMS_TAG_INSTALLD, "readRawData failed");
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
         return false;
     }
@@ -648,6 +652,31 @@ bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &rep
     return true;
 }
 
+bool InstalldHost::HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t uid = data.ReadInt32();
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+    std::string keyId = "";
+
+    ErrCode result = SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteString(keyId)) {
+        APP_LOGE("write keyId failed");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply)
+{
+    std::string keyId = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = DeleteEncryptionKeyId(keyId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
 void InstalldHost::RemoveCloseInstalldTask()
 {
     std::lock_guard<std::mutex> lock(unloadTaskMutex_);
@@ -660,13 +689,13 @@ void InstalldHost::AddCloseInstalldTask()
     auto task = [] {
         BundleMemoryGuard memoryGuard;
         if (!SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID)) {
-            APP_LOGE("fail to unload to system ability manager");
+            LOG_E(BMS_TAG_INSTALLD, "fail to unload to system ability manager");
             return;
         }
-        APP_LOGI("unload Installd successfully");
+        LOG_I(BMS_TAG_INSTALLD, "unload Installd successfully");
     };
     handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
-    APP_LOGD("send unload task successfully");
+    LOG_D(BMS_TAG_INSTALLD, "send unload task successfully");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

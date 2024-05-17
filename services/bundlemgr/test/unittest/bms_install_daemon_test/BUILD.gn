@@ -49,6 +49,7 @@ ohos_unittest("BmsInstallDaemonTest") {
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
@@ -129,6 +130,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "bounds_checking_function:libsec_shared",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -150,6 +152,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
@@ -203,9 +206,11 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   ]
 
   external_deps = [
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
+    "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -229,6 +234,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
@@ -275,8 +281,10 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   ]
 
   external_deps = [
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -295,6 +303,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }

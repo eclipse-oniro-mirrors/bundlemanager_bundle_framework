@@ -74,6 +74,8 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "ability_base:want",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
+    "bounds_checking_function:libsec_shared",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -98,6 +100,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
@@ -232,8 +235,10 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   deps += bundle_install_deps
   external_deps = [
     "ability_base:want",
+    "bounds_checking_function:libsec_shared",
     "ability_runtime:ability_manager",
     "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -258,6 +263,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }

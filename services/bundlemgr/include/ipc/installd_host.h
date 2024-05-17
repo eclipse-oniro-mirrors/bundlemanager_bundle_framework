@@ -185,6 +185,10 @@ private:
 
     bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleSetEncryptionDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

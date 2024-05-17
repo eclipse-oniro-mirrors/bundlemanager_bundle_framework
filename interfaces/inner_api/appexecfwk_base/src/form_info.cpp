@@ -67,6 +67,8 @@ const std::string JSON_KEY_TRANSPARENCY_ENABLED = "transparencyEnabled";
 const std::string JSON_KEY_PRIVACY_LEVEL = "privacyLevel";
 const std::string JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM = "fontScaleFollowSystem";
 const std::string JSON_KEY_SUPPORT_SHAPES = "supportShapes";
+const std::string JSON_KEY_VERSION_CODE = "versionCode";
+const std::string JSON_KEY_BUNDLE_TYPE = "bundleType";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -210,6 +212,11 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < supportShapeSize; i++) {
         supportShapes.emplace_back(parcel.ReadInt32());
     }
+
+    versionCode = parcel.ReadUint32();
+    int32_t bundleTypeData;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, bundleTypeData);
+    bundleType = static_cast<BundleType>(bundleTypeData);
     return true;
 }
 
@@ -289,6 +296,9 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     for (auto i = 0; i < supportShapeSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportShapes[i]);
     }
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
     return true;
 }
 
@@ -353,7 +363,9 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_TRANSPARENCY_ENABLED, formInfo.transparencyEnabled},
         {JSON_KEY_PRIVACY_LEVEL, formInfo.privacyLevel},
         {JSON_KEY_FONT_SCALE_FOLLOW_SYSTEM, formInfo.fontScaleFollowSystem},
-        {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes}
+        {JSON_KEY_SUPPORT_SHAPES, formInfo.supportShapes},
+        {JSON_KEY_VERSION_CODE, formInfo.versionCode},
+        {JSON_KEY_BUNDLE_TYPE, formInfo.bundleType}
     };
 }
 
@@ -699,6 +711,22 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NUMBER);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_VERSION_CODE,
+        formInfo.versionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleType>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_BUNDLE_TYPE,
+        formInfo.bundleType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module formInfo from jsonObject error, error code : %{public}d", parseResult);
     }

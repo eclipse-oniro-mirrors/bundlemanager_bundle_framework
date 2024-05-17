@@ -55,6 +55,8 @@ ohos_unittest("BmsSyscapToolTest") {
 
   external_deps = [
     "ability_base:want",
+    "bounds_checking_function:libsec_shared",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -75,6 +77,7 @@ ohos_unittest("BmsSyscapToolTest") {
     external_deps += [
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
+      "bounds_checking_function:libsec_shared"
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }

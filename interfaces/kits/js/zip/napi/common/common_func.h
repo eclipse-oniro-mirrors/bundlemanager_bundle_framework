@@ -72,7 +72,6 @@ struct CommonFunc {
     static std::tuple<bool, unsigned long, void *, size_t> GetInflateBackArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, int32_t, int32_t> GetInflatePrimeArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, int32_t> GetInflateValidateArg(napi_env env, const NapiFuncArg &funcArg);
-    static std::tuple<bool, int32_t> GetInflateUndermineArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, gz_header> GetInflateGetHeaderArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, gz_header> GetGZHeaderArg(napi_env env, napi_value argGZheader);
     static std::tuple<bool, int32_t, int32_t> UnwrapTwoIntParams(napi_env env, const NapiFuncArg &funcArg);

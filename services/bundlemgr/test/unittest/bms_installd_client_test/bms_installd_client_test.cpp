@@ -1014,5 +1014,28 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFiles_0100, TestSize.L
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFiles, sourceDir, destinationDir));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFiles_0100 end";
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_SetEncryptionPolicy_0100
+ * @tc.name: SetEncryptionPolicy
+ * @tc.desc: call SetEncryptionPolicy.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetEncryptionPolicy_0100, TestSize.Level1)
+{
+    std::string keyId = "";
+    ErrCode result = installClient_->SetEncryptionPolicy(0, "", 100, keyId);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_DeleteEncryptionKeyId_0100
+ * @tc.name: DeleteEncryptionKeyId
+ * @tc.desc: call DeleteEncryptionKeyId.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteEncryptionKeyId_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->DeleteEncryptionKeyId("");
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

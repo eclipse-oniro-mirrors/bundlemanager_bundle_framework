@@ -17,7 +17,7 @@
 
 #include "ipc_types.h"
 
-#include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -30,12 +30,12 @@ constexpr int32_t WAIT_TIME = 3000;
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
 {
-    APP_LOGI("installd proxy instance is created");
+    LOG_I(BMS_TAG_INSTALLD, "installd proxy instance is created");
 }
 
 InstalldProxy::~InstalldProxy()
 {
-    APP_LOGI("installd proxy instance is destroyed");
+    LOG_I(BMS_TAG_INSTALLD, "installd proxy instance is destroyed");
 }
 
 ErrCode InstalldProxy::CreateBundleDir(const std::string &bundleDir)
@@ -69,7 +69,7 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&extractParam)) {
-        APP_LOGE("WriteParcelable extractParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -83,7 +83,7 @@ ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&aotArgs)) {
-        APP_LOGE("WriteParcelable aotArgs failed");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable aotArgs failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -119,7 +119,7 @@ ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&createDirParam)) {
-        APP_LOGE("WriteParcelable createDirParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -133,13 +133,13 @@ ErrCode InstalldProxy::CreateBundleDataDirWithVector(const std::vector<CreateDir
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (createDirParams.empty()) {
-        APP_LOGE("createDirParams size is empty.");
+        LOG_E(BMS_TAG_INSTALLD, "createDirParams size is empty.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     INSTALLD_PARCEL_WRITE(data, Uint32, createDirParams.size());
     for (const auto &createDirParam : createDirParams) {
         if (!data.WriteParcelable(&createDirParam)) {
-            APP_LOGE("WriteParcelable createDirParam failed.");
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -362,13 +362,13 @@ ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_FILE_STAT, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
 
     std::unique_ptr<FileStat> info(reply.ReadParcelable<FileStat>());
     if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
@@ -415,7 +415,7 @@ ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_DIR, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     isExist = reply.ReadBool();
@@ -432,7 +432,7 @@ ErrCode InstalldProxy::IsExistFile(const std::string &path, bool &isExist)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_FILE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     isExist = reply.ReadBool();
@@ -449,7 +449,7 @@ ErrCode InstalldProxy::IsExistApFile(const std::string &path, bool &isExist)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_AP_FILE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     isExist = reply.ReadBool();
@@ -466,7 +466,7 @@ ErrCode InstalldProxy::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_DIR_EMPTY, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     isDirEmpty = reply.ReadBool();
@@ -483,7 +483,7 @@ ErrCode InstalldProxy::ObtainQuickFixFileDir(const std::string &dir, std::vector
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     if (!reply.ReadStringVector(&dirVec)) {
@@ -503,7 +503,7 @@ ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::COPY_FILES, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -521,11 +521,11 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     if (!reply.ReadStringVector(&fileNames)) {
-        APP_LOGE("ReadStringVector failed");
+        LOG_E(BMS_TAG_INSTALLD, "ReadStringVector failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -536,7 +536,7 @@ ErrCode InstalldProxy::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&codeSignatureParam)) {
-        APP_LOGE("WriteParcelable codeSignatureParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -544,7 +544,7 @@ ErrCode InstalldProxy::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -555,14 +555,14 @@ ErrCode InstalldProxy::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&checkEncryptionParam)) {
-        APP_LOGE("WriteParcelable checkEncryptionParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable checkEncryptionParam failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::CHECK_ENCRYPTION, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     isEncryption = reply.ReadBool();
@@ -580,7 +580,7 @@ ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &d
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILES, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -601,7 +601,7 @@ ErrCode InstalldProxy::ExtractDriverSoFiles(const std::string &srcPath,
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -622,7 +622,7 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -633,7 +633,7 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&codeSignatureParam)) {
-        APP_LOGE("WriteParcelable codeSignatureParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -641,7 +641,7 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -651,7 +651,7 @@ ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_
     const unsigned char *profileBlock)
 {
     if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY || profileBlock == nullptr) {
-        APP_LOGE("invalid params");
+        LOG_E(BMS_TAG_INSTALLD, "invalid params");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     MessageParcel data;
@@ -660,7 +660,7 @@ ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, profileBlockLength);
     if (!data.WriteRawData(profileBlock, profileBlockLength)) {
-        APP_LOGE("Failed to write raw data");
+        LOG_E(BMS_TAG_INSTALLD, "Failed to write raw data");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -668,7 +668,7 @@ ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE, data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGE("TransactInstalldCmd failed");
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
     return ERR_OK;
@@ -684,6 +684,42 @@ ErrCode InstalldProxy::RemoveSignProfile(const std::string &bundleName)
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::REMOVE_SIGN_PROFILE, data, reply, option);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+    const int32_t userId, std::string &keyId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::SET_ENCRYPTION_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    keyId = reply.ReadString();
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::DeleteEncryptionKeyId(const std::string &keyId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(keyId));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID, data, reply, option);
+    if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
     }
@@ -695,12 +731,12 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail to send %{public}u cmd to service due to remote object is null", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u cmd to service due to remote object is null", code);
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
-        APP_LOGE("fail to send %{public}u request to service due to transact error", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     return reply.ReadInt32();
