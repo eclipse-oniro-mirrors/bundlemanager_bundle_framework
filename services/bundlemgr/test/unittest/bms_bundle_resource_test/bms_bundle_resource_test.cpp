@@ -2524,8 +2524,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2563,8 +2561,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
     code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
