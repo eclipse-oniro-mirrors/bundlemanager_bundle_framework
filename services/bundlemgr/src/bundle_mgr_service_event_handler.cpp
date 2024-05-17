@@ -1975,6 +1975,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             if (!installer.UninstallSystemBundle(bundleName)) {
                 APP_LOGE("OTA uninstall app(%{public}s) error", bundleName.c_str());
             } else {
+                APP_LOGI("OTA uninstall preInstall bundleName:%{public}s succeed.", bundleName.c_str());
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
             }
@@ -2028,6 +2029,10 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
             return false;
         }
+    }
+    if (bundleInfo.hapModuleNames.size() == 1) {
+        APP_LOGI("bundleName:%{public}s only has one module, can not be uninstalled", bundleInfo.name.c_str());
+        return false;
     }
     bool needUninstallModule = false;
     // Check the installed module.
