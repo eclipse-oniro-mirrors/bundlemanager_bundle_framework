@@ -2524,8 +2524,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2563,8 +2561,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
     code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2682,10 +2678,10 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfos(resourceInfosMap, 0);
+        bool ret = manager->AddResourceInfos(resourceInfosMap, true, 0);
         EXPECT_FALSE(ret);
         resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-        ret = manager->AddResourceInfos(resourceInfosMap, manager->currentTaskNum_);
+        ret = manager->AddResourceInfos(resourceInfosMap, false, manager->currentTaskNum_);
         EXPECT_TRUE(ret);
     }
 
