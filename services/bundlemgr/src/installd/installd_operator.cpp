@@ -20,6 +20,7 @@
 #include "code_sign_utils.h"
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
+#include <sys/ioctl.h>
 #include "linux/code_decrypt.h"
 #endif
 #include <cerrno>
@@ -33,7 +34,6 @@
 #include <regex>
 #include <sstream>
 #include <string.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <sys/quota.h>
 #include <sys/stat.h>
@@ -45,9 +45,7 @@
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
-#include "el5_filekey_manager_kit.h"
 #include "parameters.h"
-#include "securec.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -113,19 +111,6 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
     return false;
 }
 } // namespace
-
-#define FSCRYPT_KEY_DESCRIPTOR_SIZE 8
-#define HMFS_IOCTL_MAGIC 0xf5
-#define HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY _IOW(HMFS_IOCTL_MAGIC, 84, struct fscrypt_asdp_policy)
-#define FORCE_PROTECT 0x0
-
-struct fscrypt_asdp_policy {
-    char version;
-    char asdp_class;
-    char flags;
-    char reserved;
-    char app_key2_descriptor[FSCRYPT_KEY_DESCRIPTOR_SIZE];
-} __attribute__((__packed__));
 
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
@@ -2045,60 +2030,5 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
     return ret;
 }
 #endif
-
-bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
-{
-    APP_LOGD("GenerateKeyId uid is %{public}d, bundleName is %{public}s, userId is %{public}d",
-        uid, bundleName.c_str(), userId);
-    auto ret = Security::AccessToken::El5FilekeyManagerKit::GenerateAppKey(
-        static_cast<uint32_t>(uid), bundleName, keyId);
-    if (ret != 0) {
-        APP_LOGE("Call GenerateAppKey failed ret = %{public}d", ret);
-        return false;
-    }
-    if (keyId.empty()) {
-        APP_LOGE("keyId is empty");
-        return false;
-    }
-    struct fscrypt_asdp_policy policy;
-    policy.version = 0;
-    policy.asdp_class = FORCE_PROTECT;
-    strncpy_s(policy.app_key2_descriptor, sizeof(policy.app_key2_descriptor),
-        keyId.c_str(), FSCRYPT_KEY_DESCRIPTOR_SIZE - 1);
-
-    std::vector<std::string> dirs;
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::BASE + bundleName);
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::DATABASE + bundleName);
-    for (const auto &dir : dirs) {
-        auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
-        if (fd < 0) {
-            APP_LOGE("open filePath failed");
-            return false;
-        }
-        // call ioctl to set e policy
-        auto result = ioctl(fd, HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY, &policy);
-        if (result != 0) {
-            APP_LOGE("ioctl failed result:%{public}d", result);
-            close(fd);
-            return false;
-        }
-        close(fd);
-    }
-    return true;
-}
-
-bool InstalldOperator::DeleteKeyId(const std::string &keyId)
-{
-    APP_LOGD("DeleteKeyId keyId is %{public}s", keyId.c_str());
-    auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(keyId);
-    if (ret != 0) {
-        APP_LOGE("Call DeleteAppKey failed ret = %{public}d", ret);
-        return false;
-    }
-    return true;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

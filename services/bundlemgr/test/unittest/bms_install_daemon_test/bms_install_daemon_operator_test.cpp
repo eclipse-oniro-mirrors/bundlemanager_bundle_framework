@@ -1227,16 +1227,4 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | Sma
     res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
     EXPECT_EQ(res, false);
 }
-
-/**
- * @tc.number: InstalldOperatorTest_7600
- * @tc.name: test function of GenerateKeyIdAndSetPolicy
- * @tc.desc: 1. calling GenerateKeyIdAndSetPolicy
-*/
-HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7600, Function | SmallTest | Level0)
-{
-    std::string keyId = "";
-    bool res = InstalldOperator::GenerateKeyIdAndSetPolicy(0, "", 100, keyId);
-    EXPECT_EQ(res, false);
-}
 } // OHOS

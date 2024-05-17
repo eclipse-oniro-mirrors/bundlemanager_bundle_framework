@@ -247,16 +247,5 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 {
     return ERR_OK;
 }
-
-ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
-{
-    return ERR_OK;
-}
-
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
-{
-    return ERR_OK;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -346,17 +346,6 @@ public:
     {
         return ERR_OK;
     }
-
-    virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-        const int32_t userId, std::string &keyId)
-    {
-        return ERR_OK;
-    }
-
-    virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId)
-    {
-        return ERR_OK;
-    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

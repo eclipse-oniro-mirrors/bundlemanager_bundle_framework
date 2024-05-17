@@ -63,7 +63,6 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",

@@ -394,25 +394,6 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
     return CallService(&IInstalld::RemoveSignProfile, bundleName);
 }
 
-ErrCode InstalldClient::SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
-    const int32_t userId, std::string &keyId)
-{
-    if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::SetEncryptionPolicy, uid, bundleName, userId, keyId);
-}
-
-ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
-{
-    if (keyId.empty()) {
-        APP_LOGE("keyId is empty");
-        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    return CallService(&IInstalld::DeleteEncryptionKeyId, keyId);
-}
-
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
