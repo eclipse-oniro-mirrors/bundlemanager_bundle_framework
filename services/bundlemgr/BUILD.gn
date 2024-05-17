@@ -465,6 +465,8 @@ ohos_shared_library("installs") {
   ]
 
   external_deps = [
+    "access_token:el5_filekey_manager_sdk",
+    "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
@@ -483,8 +485,6 @@ ohos_shared_library("installs") {
   }
 
   if (code_encryption_enable) {
-    external_deps +=
-        [ "code_crypto_metadata_process:libcode_crypto_metadata_process_utils" ]
     defines += [ "CODE_ENCRYPTION_ENABLE" ]
   }
 

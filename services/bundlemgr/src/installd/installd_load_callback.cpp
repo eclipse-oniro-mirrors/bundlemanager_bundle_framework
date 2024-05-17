@@ -15,7 +15,7 @@
 
 #include "installd/installd_load_callback.h"
 
-#include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "installd_client.h"
 #include "system_ability_definition.h"
 
@@ -25,26 +25,26 @@ void InstalldLoadCallback::OnLoadSystemAbilitySuccess(
     int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
 {
     if (systemAbilityId != INSTALLD_SERVICE_ID) {
-        APP_LOGE("System ability id %{public}d mismatch.", systemAbilityId);
+        LOG_E(BMS_TAG_INSTALLD, "System ability id %{public}d mismatch.", systemAbilityId);
         return;
     }
     if (remoteObject == nullptr) {
-        APP_LOGE("Object is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "Object is nullptr.");
         return;
     }
 
-    APP_LOGD("Load system ability %{public}d succeed.", systemAbilityId);
+    LOG_D(BMS_TAG_INSTALLD, "Load system ability %{public}d succeed.", systemAbilityId);
     InstalldClient::GetInstance()->OnLoadSystemAbilitySuccess(remoteObject);
 }
 
 void InstalldLoadCallback::OnLoadSystemAbilityFail(int32_t systemAbilityId)
 {
     if (systemAbilityId != INSTALLD_SERVICE_ID) {
-        APP_LOGE("System ability id %{public}d mismatch.", systemAbilityId);
+        LOG_E(BMS_TAG_INSTALLD, "System ability id %{public}d mismatch.", systemAbilityId);
         return;
     }
 
-    APP_LOGD("Load system ability %{public}d failed.", systemAbilityId);
+    LOG_D(BMS_TAG_INSTALLD, "Load system ability %{public}d failed.", systemAbilityId);
     InstalldClient::GetInstance()->OnLoadSystemAbilityFail();
 }
 }

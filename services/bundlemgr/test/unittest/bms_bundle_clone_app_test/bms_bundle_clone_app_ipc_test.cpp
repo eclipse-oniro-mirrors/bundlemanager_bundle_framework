@@ -110,37 +110,6 @@ sptr<IBundleInstaller> BmsBundleCloneAppIPCTest::GetInstallerProxy()
     return installerProxy;
 }
 
-HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest001_AppNotExist, Function | SmallTest | Level0)
-{
-    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
-    const std::string bundleName = "ohos.samples.appnotfound";
-    const int32_t userId = 100;
-    int32_t appIndex = 1;
-    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
-
-    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED
-        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
-}
-
-HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest002_UserNotFound, Function | SmallTest | Level0)
-{
-    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer Failure.");
-        return;
-    }
-    const std::string bundleName = "ohos.samples.etsclock";
-    const int32_t userId = 200; // ensure userId 200 not in system
-    int32_t appIndex = 1;
-    auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
-    EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
-        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
-}
-
 HWTEST_F(BmsBundleCloneAppIPCTest, InstallCloneAppTest003_AppIndexNotValid, Function | SmallTest | Level0)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();

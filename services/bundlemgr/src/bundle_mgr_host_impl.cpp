@@ -93,7 +93,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_E(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
+    LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
         appName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
@@ -1158,7 +1158,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTime());
+        ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;

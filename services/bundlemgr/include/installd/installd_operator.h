@@ -233,6 +233,11 @@ public:
 
     static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static bool EnforceEncryption(std::unordered_map<std::string, std::string> &entryMap, int32_t bundleId,
+        bool &isEncryption, InstallBundleType installBundleType, bool isCompressNativeLibrary);
+#endif
+
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
     static bool CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
@@ -268,10 +273,21 @@ public:
     static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
 
+    static bool GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
+        const int32_t userId, std::string &keyId);
+
+    static bool DeleteKeyId(const std::string &keyId);
+
 private:
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
+
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static bool OpenEncryptionHandle(void **handle);
+
+    static void CloseEncryptionHandle(void **handle);
+#endif
 
     static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
         std::vector<std::string> &soEntryFiles);

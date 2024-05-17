@@ -189,6 +189,11 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+        const int32_t userId, std::string &keyId) override;
+
+    virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
