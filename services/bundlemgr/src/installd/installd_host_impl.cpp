@@ -65,6 +65,9 @@ const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
 const std::string BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
 const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
 enum class DirType {
     DIR_EL1,
     DIR_EL2,
@@ -256,6 +259,21 @@ static void GetBackupExtDirByType(std::string &bundleBackupDir, const std::strin
     }
 }
 
+static void GetNewBackupExtDirByType(std::string &bundleBackupDir,
+    const std::string &bundleName, const DirType dirType)
+{
+    switch (dirType) {
+        case DirType::DIR_EL1:
+            bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL1_NEW + bundleName + BUNDLE_BACKUP_INNER_DIR;
+            break;
+        case DirType::DIR_EL2:
+            bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2_NEW + bundleName + BUNDLE_BACKUP_INNER_DIR;
+            break;
+        default:
+            break;
+    }
+}
+
 static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid,
     std::string &bundleBackupDir, const DirType dirType)
 {
@@ -273,6 +291,28 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
             LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir MkOwnerDir(backup's home dir) failed errno:%{public}d",
+                errno);
+        });
+    }
+}
+
+static void CreateNewBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid,
+    std::string &bundleBackupDir, const DirType dirType)
+{
+    GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    LOG_D(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+        dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        return;
+    }
+    // Setup BackupExtensionAbility's home directory in a harmless way
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::MkOwnerDir(
+        bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, ServiceConstants::BACKU_HOME_GID)) {
+        static std::once_flag logOnce;
+        std::call_once(logOnce, []() {
+            LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir MkOwnerDir(backup's home dir) failed errno:%{public}d",
                 errno);
         });
     }
@@ -481,6 +521,22 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
 
+    std::string newBundleBackupDir;
+    CreateNewBackupExtHomeDir(createDirParam.bundleName,
+        createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL2);
+    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
+        createDirParam.isPreInstallApp, createDirParam.debug);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
+    }
+    CreateNewBackupExtHomeDir(createDirParam.bundleName,
+        createDirParam.userId, createDirParam.uid, newBundleBackupDir, DirType::DIR_EL1);
+    ret = SetDirApl(newBundleBackupDir, createDirParam.bundleName, createDirParam.apl,
+        createDirParam.isPreInstallApp, createDirParam.debug);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
+    }
+
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
     CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, ServiceConstants::DFS_GID);
     return ERR_OK;
@@ -535,6 +591,24 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
     return ERR_OK;
 }
 
+static ErrCode RemoveNewBackupExtHomeDir(const std::string &bundleName, const int userid, DirType dirType)
+{
+    std::string bundleBackupDir;
+    GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    LOG_D(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+        dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
+        LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
+}
+
 static void CleanBackupExtHomeDir(const std::string &bundleName, const int userid, DirType dirType)
 {
     std::string bundleBackupDir;
@@ -543,6 +617,22 @@ static void CleanBackupExtHomeDir(const std::string &bundleName, const int useri
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
         LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d.", dirType);
+        return;
+    }
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteFiles(bundleBackupDir)) {
+        LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
+    }
+}
+
+static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int userid, DirType dirType)
+{
+    std::string bundleBackupDir;
+    GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
+    LOG_D(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+        dirType, bundleBackupDir.c_str());
+    if (bundleBackupDir.empty()) {
+        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d.", dirType);
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -689,6 +779,11 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         LOG_E(BMS_TAG_INSTALLD, "failed to remove backup ext home dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
+    if (RemoveNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK ||
+        RemoveNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove new backup ext home dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
     if (RemoveDistributedDir(bundleName, userid) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
@@ -793,6 +888,8 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
     CleanCloudDir(bundleName, userid);
     CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2);
     CleanBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1);
+    CleanNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2);
+    CleanNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1);
     CleanDistributedDir(bundleName, userid);
     return ERR_OK;
 }
