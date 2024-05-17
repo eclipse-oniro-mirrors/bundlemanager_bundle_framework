@@ -81,8 +81,7 @@
                 "ace_engine",
                 "ets_runtime",
                 "json",
-                "zlib",
-                "bounds_checking_function"
+                "zlib"
             ],
             "third_party": [
                 "libuv",
