@@ -128,10 +128,10 @@ void BundleSandboxExceptionHandler::KeepSandboxDirs(const std::string &bundleNam
     APP_LOGD("start to keep sandbox dir");
     std::string innerBundleName = std::to_string(appIndex) + Constants::FILE_UNDERLINE + bundleName;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string baseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-            std::to_string(userId) + Constants::BASE + innerBundleName;
-        std::string databaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-            std::to_string(userId) + Constants::DATABASE + innerBundleName;
+        std::string baseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
+            std::to_string(userId) + ServiceConstants::BASE + innerBundleName;
+        std::string databaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
+            std::to_string(userId) + ServiceConstants::DATABASE + innerBundleName;
         APP_LOGD("to keep sandbox dirs data dir %{public}s, database dir %{public}s", baseDir.c_str(),
             databaseDir.c_str());
         if (sandboxDirs_.find(userId) == sandboxDirs_.end()) {

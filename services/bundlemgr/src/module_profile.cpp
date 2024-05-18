@@ -1950,7 +1950,7 @@ bool ToApplicationInfo(
 
     applicationInfo.apiReleaseType = app.apiReleaseType;
     applicationInfo.debug = app.debug;
-    applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
+    applicationInfo.deviceId = ServiceConstants::CURRENT_DEVICE_ID;
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;

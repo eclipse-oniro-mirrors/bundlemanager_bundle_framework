@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct BmsRdbConfig {
-    std::string dbPath { Constants::BUNDLE_MANAGER_SERVICE_PATH };
+    std::string dbPath { ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH };
     std::string dbName;
     std::string tableName;
     std::string createTableSql;

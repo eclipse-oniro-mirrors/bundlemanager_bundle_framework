@@ -264,8 +264,8 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
         APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
         return result;
     }
-    std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        Constants::DATABASE + innerDataDir;
+    std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::DATABASE + innerDataDir;
     info.SetAppDataBaseDir(dataBaseDir);
     APP_LOGI("CreateSandboxDataDir successfully");
     return result;

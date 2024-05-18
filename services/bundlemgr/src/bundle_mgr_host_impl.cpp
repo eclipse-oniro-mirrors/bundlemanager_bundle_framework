@@ -1073,7 +1073,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGE("invalid hapFilePath");
         return false;
     }
-    if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
@@ -1114,7 +1114,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGD("invalid hapFilePath");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
-    if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == 0) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
@@ -1157,7 +1157,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
+    std::string tempHapPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH +
         ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
@@ -1330,8 +1330,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 {
     std::vector<std::string> rootDir;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
+        std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleName;
         rootDir.emplace_back(dataDir);
     }
 

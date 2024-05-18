@@ -343,7 +343,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     } else {
         // save hsp and so files to installation dir
         std::string realHspPath = moduleDir + ServiceConstants::PATH_SEPARATOR + moduleName +
-            Constants::HSP_FILE_SUFFIX;
+            ServiceConstants::HSP_FILE_SUFFIX;
         result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
@@ -522,7 +522,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (inBundlePaths.size() == 1) {
-        if (!BundleUtil::EndWith(inBundlePaths[0], Constants::HSP_FILE_SUFFIX)) {
+        if (!BundleUtil::EndWith(inBundlePaths[0], ServiceConstants::HSP_FILE_SUFFIX)) {
             APP_LOGE("invalid file in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
@@ -532,12 +532,12 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
     int32_t numberOfHsp = 0;
     int32_t numberOfSignatureFile = 0;
     for (const auto &path : inBundlePaths) {
-        if ((path.find(Constants::HSP_FILE_SUFFIX) == std::string::npos) &&
+        if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
             (path.find(Constants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
             APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
-        if (BundleUtil::EndWith(path, Constants::HSP_FILE_SUFFIX)) {
+        if (BundleUtil::EndWith(path, ServiceConstants::HSP_FILE_SUFFIX)) {
             numberOfHsp++;
             bundlePaths.emplace_back(path);
         }
@@ -567,7 +567,7 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
 
     // 2. copy hsp to installation dir, and then to verify code signature of hsp
     std::string tempHspPath = tempHspDir + ServiceConstants::PATH_SEPARATOR + moduleName +
-        Constants::HSP_FILE_SUFFIX;
+        ServiceConstants::HSP_FILE_SUFFIX;
     if (!signatureFileDir_.empty()) {
         result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     } else {
@@ -614,7 +614,8 @@ ErrCode InnerSharedBundleInstaller::MoveSoToRealPath(const std::string &moduleNa
     }
 
     // 2. remove so temp dir
-    std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName + Constants::TMP_SUFFIX;
+    std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName
+        + ServiceConstants::TMP_SUFFIX;
     result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
     if (result != ERR_OK) {
         APP_LOGW("remove hsp temp so dir %{public}s failed, error is %{public}d", deleteTempDir.c_str(), result);
@@ -633,9 +634,9 @@ std::string InnerSharedBundleInstaller::ObtainTempSoPath(const std::string &modu
     tempSoPath = nativeLibPath;
     auto pos = tempSoPath.find(moduleName);
     if (pos == std::string::npos) {
-        tempSoPath = moduleName + Constants::TMP_SUFFIX + ServiceConstants::PATH_SEPARATOR + tempSoPath;
+        tempSoPath = moduleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::PATH_SEPARATOR + tempSoPath;
     } else {
-        std::string innerTempStr = moduleName + Constants::TMP_SUFFIX;
+        std::string innerTempStr = moduleName + ServiceConstants::TMP_SUFFIX;
         tempSoPath.replace(pos, moduleName.length(), innerTempStr);
     }
     return tempSoPath + ServiceConstants::PATH_SEPARATOR;

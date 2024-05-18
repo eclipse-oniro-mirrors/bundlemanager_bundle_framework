@@ -273,7 +273,7 @@ ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirPara
     LOG_I(BMS_TAG_INSTALLD, "start bundleName:%{public}s", createDirParam.bundleName.c_str());
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         // data/app/el<>/<userId>/database/<bundleName>
-        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + Constants::DATABASE
+        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE
             + createDirParam.bundleName;
         InstalldOperator::ChangeDirProperties(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
         InstalldOperator::ChangeDirPropertiesRecursively(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
@@ -337,7 +337,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             continue;
         }
 
-        std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + Constants::BASE;
+        std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
             LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
                 bundleDataDir.c_str(), createDirParam.bundleName.c_str());
@@ -357,7 +357,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 }
             }
             std::string logDir = GetBundleDataDir(el, createDirParam.userId) +
-                Constants::LOG + createDirParam.bundleName;
+                ServiceConstants::LOG + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
                 logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
                 LOG_E(BMS_TAG_INSTALLD, "create log dir failed errno:%{public}d", errno);
@@ -370,7 +370,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
         }
-        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + Constants::DATABASE
+        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE
             + createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(
             databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DATABASE_DIR_GID)) {
@@ -527,17 +527,17 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
 
 static void CleanBundleDataForEl2(const std::string &bundleName, const int userid)
 {
-    std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+    std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userid);
-    std::string databaseDir = dataDir + Constants::DATABASE + bundleName;
+    std::string databaseDir = dataDir + ServiceConstants::DATABASE + bundleName;
     if (!InstalldOperator::DeleteFiles(databaseDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
     }
-    std::string logDir = dataDir + Constants::LOG + bundleName;
+    std::string logDir = dataDir + ServiceConstants::LOG + bundleName;
     if (!InstalldOperator::DeleteFiles(logDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
     }
-    std::string bundleDataDir = dataDir + Constants::BASE + bundleName;
+    std::string bundleDataDir = dataDir + ServiceConstants::BASE + bundleName;
     for (const auto &dir : BUNDLE_DATA_DIR) {
         std::string subDir = bundleDataDir + dir;
         if (!InstalldOperator::DeleteFiles(subDir)) {
@@ -561,18 +561,18 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + bundleName;
         if (!InstalldOperator::DeleteDir(bundleDataDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
-        std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
+        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + bundleName;
         if (!InstalldOperator::DeleteDir(databaseDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
         if (el == ServiceConstants::BUNDLE_EL[1]) {
-            std::string logDir = GetBundleDataDir(el, userid) + Constants::LOG + bundleName;
+            std::string logDir = GetBundleDataDir(el, userid) + ServiceConstants::LOG + bundleName;
             if (!InstalldOperator::DeleteDir(logDir)) {
                 LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
                 return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
@@ -612,7 +612,7 @@ ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, cons
     }
 
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string moduleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + ModuleDir;
+        std::string moduleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + ModuleDir;
         if (!InstalldOperator::DeleteDir(moduleDataDir)) {
             LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", moduleDataDir.c_str(), errno);
         }
@@ -673,11 +673,11 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
             CleanBundleDataForEl2(bundleName, userid);
             continue;
         }
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE + bundleName;
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + bundleName;
         if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
         }
-        std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
+        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + bundleName;
         if (!InstalldOperator::DeleteFiles(databaseDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
         }
@@ -692,7 +692,7 @@ ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName
 
 std::string InstalldHostImpl::GetBundleDataDir(const std::string &el, const int userid) const
 {
-    std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
+    std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
                           el +
                           ServiceConstants::PATH_SEPARATOR +
                           std::to_string(userid);
@@ -719,8 +719,8 @@ ErrCode InstalldHostImpl::GetBundleStats(
     std::vector<std::string> cachePath;
     int64_t allBundleLocalSize = 0;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string filePath = Constants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
-            std::to_string(userId) + Constants::BASE + bundleName;
+        std::string filePath = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el + ServiceConstants::PATH_SEPARATOR +
+            std::to_string(userId) + ServiceConstants::BASE + bundleName;
         allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dataDir : BUNDLE_DATA_DIR) {
@@ -1142,7 +1142,7 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 
     if (!CheckPathValid(hapPath, Constants::BUNDLE_CODE_DIR) ||
         !CheckPathValid(realSoFilesPath, Constants::BUNDLE_CODE_DIR) ||
-        !CheckPathValid(tmpSoPath, Constants::HAP_COPY_PATH)) {
+        !CheckPathValid(tmpSoPath, ServiceConstants::HAP_COPY_PATH)) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
     }
     if (realSoFilesPath.empty()) {
@@ -1181,8 +1181,8 @@ ErrCode InstalldHostImpl::PrepareEntryMap(const CodeSignatureParam &codeSignatur
     for (const auto &fileName : fileNames) {
         std::string entryName = prefix + fileName;
         std::string path = codeSignatureParam.targetSoPath;
-        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-            path += Constants::FILE_SEPARATOR_CHAR;
+        if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+            path += ServiceConstants::FILE_SEPARATOR_CHAR;
         }
         entryMap.emplace(entryName, path + fileName);
         LOG_D(BMS_TAG_INSTALLD, "entryMap add soEntry %{public}s: %{public}s",
