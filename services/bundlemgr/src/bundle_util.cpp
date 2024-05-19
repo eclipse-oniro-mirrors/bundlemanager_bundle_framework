@@ -835,5 +835,14 @@ std::string BundleUtil::ExtractGroupIdByDevelopId(const std::string &developerId
     // If '.' If it is not the first place, there is a groupId, and the groupId is returned
     return developerId.substr(0, dot_position);
 }
+
+std::string BundleUtil::ToString(const std::vector<std::string> &vector)
+{
+    std::string ret;
+    for (const std::string &item : vector) {
+        ret.append(item).append(",");
+    }
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

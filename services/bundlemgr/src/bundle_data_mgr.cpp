@@ -783,7 +783,7 @@ ErrCode BundleDataMgr::BatchQueryAbilityInfos(
                 return ret;
             }
         }
-        for (int j = 0; j < tmpAbilityInfos.size(); j++) {
+        for (size_t j = 0; j < tmpAbilityInfos.size(); j++) {
             auto it = std::find_if(abilityInfos.begin(), abilityInfos.end(),
                 [&](const AbilityInfo& info) {
                     return tmpAbilityInfos[j].bundleName == info.bundleName &&
@@ -2287,28 +2287,17 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+void BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        auto it = std::find_if(bundleInfos.begin(), bundleInfos.end(),
-            [&](const BundleInfo& info) {
-                return bundleNames[i] == info.name;
-            });
-        if (it == bundleInfos.end()) {
-            BundleInfo bundleInfo;
-            ErrCode ret = GetBundleInfoV9(bundleNames[i], flags, bundleInfo, userId);
-            if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
-                APP_LOGE("BatchGetBundleInfo failed, error code: %{public}d", ret);
-                return ret;
-            }
-            if (ret == ERR_OK) {
-                bundleInfos.push_back(bundleInfo);
-            }
+    for (const auto &bundleName : bundleNames) {
+        BundleInfo bundleInfo;
+        ErrCode ret = GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+        if (ret != ERR_OK) {
+            continue;
         }
+        bundleInfos.push_back(bundleInfo);
     }
-    APP_LOGD("BatchGetBundleInfo successfully in user(%{public}d)", userId);
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, bool clearData) const
