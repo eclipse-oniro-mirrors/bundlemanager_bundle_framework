@@ -268,44 +268,27 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
 ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    std::string bundleNameStr = "[";
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (i > 0) {
-            bundleNameStr += ",";
-        }
-        bundleNameStr += "{" + bundleNames[i] + "}";
+    APP_LOGI("start BatchGetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
+        BundleUtil::ToString(bundleNames).c_str(), flags, userId);
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    bundleNameStr += "]";
-    APP_LOGD("start GetBundleInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
-        bundleNameStr.c_str(), flags, userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-            Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-            !BundlePermissionMgr::IsBundleSelfCalling(bundleNames[i])) {
-            APP_LOGE("verify permission failed");
-            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-        }
-    }
-    APP_LOGD("verify permission success, begin to GetBundleInfoV9");
+    APP_LOGD("verify permission success, begin to BatchGetBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto res = dataMgr->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-    if (res != ERR_OK) {
-        if (isBrokerServiceExisted_) {
-            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-            if (bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true) == ERR_OK) {
-                return ERR_OK;
-            }
-        }
+    dataMgr->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (bundleInfos.size() == bundleNames.size()) {
+        return ERR_OK;
     }
-    return res;
+    if (isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
+    }
+    return bundleInfos.empty() ? ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
@@ -852,7 +835,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     bool callingPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll(
         { Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO });
     bool checkResult = false;
-    for (int i = 0; i < wants.size(); i++) {
+    for (size_t i = 0; i < wants.size(); i++) {
         if (!callingPermission && !BundlePermissionMgr::IsBundleSelfCalling(wants[i].GetElement().GetBundleName())) {
             APP_LOGE("verify is bundle self calling failed");
             return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;

@@ -16,6 +16,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include <numeric>
+#include <set>
 #include <unistd.h>
 
 #include "ipc_types.h"
@@ -422,18 +423,19 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-
+    std::set<std::string> bundleNameSet(bundleNames.begin(), bundleNames.end());
+    std::vector<std::string> newBundleNames(bundleNameSet.begin(), bundleNameSet.end());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(bundleNames.size())) {
+    if (!data.WriteInt32(newBundleNames.size())) {
         APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!data.WriteString(bundleNames[i])) {
+    for (size_t i = 0; i < newBundleNames.size(); i++) {
+        if (!data.WriteString(newBundleNames[i])) {
             APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}u fail", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }

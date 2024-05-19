@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_PROXY_H
 
 #include <string>
+#include <vector>
 
 #include "bundle_event_callback_interface.h"
 #include "bundle_framework_core_ipc_interface_code.h"

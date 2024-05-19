@@ -315,7 +315,7 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
-    ErrCode BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+    void BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
         std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
