@@ -36,7 +36,7 @@ constexpr int32_t MAX_TASK_NUMBER = 10;
 const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int32_t CHECK_INTERVAL = 50; // 50ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
-constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 10;
+constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
 }
 
 BundleResourceManager::BundleResourceManager()
