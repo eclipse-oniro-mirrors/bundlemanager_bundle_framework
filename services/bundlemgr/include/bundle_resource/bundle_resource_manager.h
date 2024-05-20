@@ -88,6 +88,8 @@ public:
 
     bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const std::vector<int32_t> appIndexes);
+
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
 private:
