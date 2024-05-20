@@ -742,7 +742,10 @@ public:
 
     virtual std::string GetAppType(const std::string &bundleName) override;
 
-    virtual int GetUidByBundleName(const std::string &bundleName, const int userId) override;
+    virtual int32_t GetUidByBundleName(const std::string &bundleName, const int32_t userId) override;
+
+    virtual int32_t GetUidByBundleName(const std::string &bundleName, const int32_t userId,
+        int32_t appIndex) override;
 
     virtual int GetUidByDebugBundleName(const std::string &bundleName, const int userId) override;
 
