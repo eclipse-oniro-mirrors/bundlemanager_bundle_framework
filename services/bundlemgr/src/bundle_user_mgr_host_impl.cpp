@@ -41,6 +41,7 @@ const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
+constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -97,7 +98,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
-    EventReport::SendScanSysEvent(BMSEventType::CPU_SCENE_ENTRY);
+    EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
     APP_LOGI("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     if (CheckInitialUser() != ERR_OK) {
@@ -223,7 +224,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
-    EventReport::SendScanSysEvent(BMSEventType::CPU_SCENE_ENTRY);
+    EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
     APP_LOGI("RemoveUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     auto dataMgr = GetDataMgrFromService();

@@ -41,7 +41,6 @@ const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
 const std::string BUNDLE_QUICK_FIX = "BUNDLE_QUICK_FIX";
 const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 const std::string CPU_SCENE_ENTRY = "CPU_SCENE_ENTRY";
-const std::string ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 static constexpr char PERFORMANCE_DOMAIN[] = "PERFORMANCE";
 
 // event params
@@ -527,13 +526,12 @@ void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
 
 void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
 {
-    int32_t id = 1 << 1; // second scene
     HiSysEventWrite(
         PERFORMANCE_DOMAIN,
         CPU_SCENE_ENTRY,
         HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        EVENT_PARAM_PACKAGE_NAME, ACCESSTOKEN_PROCESS_NAME,
-        EVENT_PARAM_SCENE_ID, std::to_string(id).c_str(),
+        EVENT_PARAM_PACKAGE_NAME, eventInfo.processName,
+        EVENT_PARAM_SCENE_ID, std::to_string(eventInfo.sceneId).c_str(),
         EVENT_PARAM_HAPPEN_TIME, eventInfo.timeStamp);
 }
 

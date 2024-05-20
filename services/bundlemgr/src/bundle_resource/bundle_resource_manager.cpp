@@ -25,6 +25,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
+#include "event_report.h"
 #include "thread_pool.h"
 
 namespace OHOS {
@@ -34,6 +35,8 @@ constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 constexpr int32_t MAX_TASK_NUMBER = 10;
 const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int32_t CHECK_INTERVAL = 50; // 50ms
+constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
+constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 10;
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -101,6 +104,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
 
 bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
 {
+    EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_UPDATE_RESOURCE);
     ++currentTaskNum_;
     uint32_t tempTaskNum = currentTaskNum_;
     std::lock_guard<std::mutex> guard(mutex_);
