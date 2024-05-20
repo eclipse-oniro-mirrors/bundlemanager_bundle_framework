@@ -419,7 +419,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
     for (size_t i = 0; i < bundleNames.size(); i++) {
         APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
         if (bundleNames[i].empty()) {
-            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}u empty", i);
+            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}zu empty", i);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -436,7 +436,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
     }
     for (size_t i = 0; i < newBundleNames.size(); i++) {
         if (!data.WriteString(newBundleNames[i])) {
-            APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}u fail", i);
+            APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}zu fail", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -1215,7 +1215,7 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     }
     for (size_t i = 0; i < wants.size(); i++) {
         if (!data.WriteParcelable(&wants[i])) {
-            APP_LOGE("write want %{public}d failed", i);
+            APP_LOGE("write want %{public}zu failed", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
