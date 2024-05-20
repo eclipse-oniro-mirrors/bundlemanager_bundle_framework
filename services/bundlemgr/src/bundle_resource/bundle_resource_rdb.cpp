@@ -222,22 +222,26 @@ bool BundleResourceRdb::DeleteAllResourceInfo()
 bool BundleResourceRdb::GetBundleResourceInfo(
     const std::string &bundleName,
     const uint32_t flags,
-    BundleResourceInfo &bundleResourceInfo)
+    BundleResourceInfo &bundleResourceInfo,
+    int32_t appIndex)
 {
-    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    APP_LOGD("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
-    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, bundleName);
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
+    absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
-            bundleName.c_str(), systemState.c_str());
+        APP_LOGE("bundleName:%{public}s appIndex: %{public}d failed due rdb QueryByStep failed, systemState:%{public}s",
+            bundleName.c_str(), appIndex, systemState.c_str());
         return false;
     }
 
@@ -254,15 +258,20 @@ bool BundleResourceRdb::GetBundleResourceInfo(
 bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     const std::string &bundleName,
     const uint32_t flags,
-    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
+    const int32_t appIndex)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
     }
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
-    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, bundleName + BundleResourceConstants::SEPARATOR);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
 
@@ -390,6 +399,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
         APP_LOGD("key:%{public}s not bundle resource info, continue", bundleResourceInfo.bundleName.c_str());
         return false;
     }
+    ParseKey(bundleResourceInfo.bundleName, bundleResourceInfo);
 
     bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
@@ -475,6 +485,16 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     launcherAbilityResourceInfo.bundleName = info.bundleName_;
     launcherAbilityResourceInfo.moduleName = info.moduleName_;
     launcherAbilityResourceInfo.abilityName = info.abilityName_;
+    launcherAbilityResourceInfo.appIndex = info.appIndex_;
+}
+
+void BundleResourceRdb::ParseKey(const std::string &key,
+    BundleResourceInfo &bundleResourceInfo)
+{
+    ResourceInfo info;
+    info.ParseKey(key);
+    bundleResourceInfo.bundleName = info.bundleName_;
+    bundleResourceInfo.appIndex = info.appIndex_;
 }
 } // AppExecFwk
 } // OHOS

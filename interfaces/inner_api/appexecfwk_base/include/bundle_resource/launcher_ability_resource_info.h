@@ -28,6 +28,7 @@ struct LauncherAbilityResourceInfo : Parcelable {
     std::string abilityName;
     std::string label;
     std::string icon;
+    int32_t appIndex = 0;
 
     std::vector<uint8_t> foreground;
     std::vector<uint8_t> background;

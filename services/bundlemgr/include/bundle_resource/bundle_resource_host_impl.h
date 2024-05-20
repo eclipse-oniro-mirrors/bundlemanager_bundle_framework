@@ -26,10 +26,10 @@ public:
     virtual ~BundleResourceHostImpl() = default;
 
     virtual ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-        BundleResourceInfo &bundleResourceInfo) override;
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0) override;
 
     virtual ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo) override;
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0) override;
 
     virtual ErrCode GetAllBundleResourceInfo(const uint32_t flags,
         std::vector<BundleResourceInfo> &bundleResourceInfos) override;

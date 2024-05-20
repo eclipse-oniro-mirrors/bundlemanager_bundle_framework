@@ -70,10 +70,10 @@ public:
     bool AddResourceInfoByColorModeChanged(const int32_t userId);
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-        BundleResourceInfo &bundleResourceInfo);
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
 
     bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
 
     bool GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
 
@@ -85,6 +85,10 @@ public:
     void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
 
     bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
+
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
+
+    bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);

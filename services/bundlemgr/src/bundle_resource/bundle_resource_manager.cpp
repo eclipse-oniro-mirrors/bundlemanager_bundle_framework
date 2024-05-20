@@ -296,11 +296,11 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
 }
 
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-    BundleResourceInfo &bundleResourceInfo)
+    BundleResourceInfo &bundleResourceInfo, int32_t appIndex)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo)) {
+    if (bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo, appIndex)) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
@@ -309,11 +309,12 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
 }
 
 bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     uint32_t resourceFlags = CheckResourceFlags(flags);
-    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo)) {
+    if (bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags,
+        launcherAbilityResourceInfo, appIndex)) {
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
@@ -466,6 +467,60 @@ void BundleResourceManager::InnerProcessResourceInfos(
             resourceInfos.emplace_back(resourceInfo);
         }
     }
+}
+
+bool BundleResourceManager::AddCloneBundleResourceInfo(
+    const std::string &bundleName,
+    const int32_t appIndex)
+{
+    APP_LOGD("start add clone bundle resource info, bundleName:%{public}s appIndex:%{public}d",
+        bundleName.c_str(), appIndex);
+    // 1. get main bundle resource info
+    BundleResourceInfo bundleResourceInfo;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (!bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
+        APP_LOGE("get bundle resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        return false;
+    }
+    bundleResourceInfo.appIndex = appIndex;
+    ResourceInfo bundleResource;
+    bundleResource.ConvertFromBundleResourceInfo(bundleResourceInfo);
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.emplace_back(bundleResource);
+    // 2. get main launcher ability resource info
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos)) {
+        APP_LOGW("get ability resource failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+    }
+    for (auto &launcherAbility : launcherAbilityResourceInfos) {
+        launcherAbility.appIndex = appIndex;
+        ResourceInfo launcherResource;
+        launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
+        resourceInfos.emplace_back(launcherResource);
+    }
+    APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
+        resourceInfos.size());
+    // 3.need to process icon
+    // 4. save clone bundle resource info
+    if (!bundleResourceRdb_->AddResourceInfos(resourceInfos)) {
+        APP_LOGE("add resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        return false;
+    }
+    APP_LOGD("end, add clone bundle resource succeed");
+    return true;
+}
+
+bool BundleResourceManager::DeleteCloneBundleResourceInfo(const std::string &bundleName,
+    const int32_t appIndex)
+{
+    APP_LOGD("start delete clone bundle resource info, bundleName:%{public}s appIndex:%{public}d",
+        bundleName.c_str(), appIndex);
+    ResourceInfo info;
+    info.bundleName_ = bundleName;
+    info.appIndex_ = appIndex;
+    return bundleResourceRdb_->DeleteResourceInfo(info.GetKey());
 }
 } // AppExecFwk
 } // OHOS

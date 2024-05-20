@@ -58,7 +58,8 @@ BundleResourceProxy::BundleResourceProxy(const sptr<IRemoteObject>& object) : IR
 
 ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName,
     const uint32_t flags,
-    BundleResourceInfo &bundleResourceInfo)
+    BundleResourceInfo &bundleResourceInfo,
+    const int32_t appIndex)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
@@ -79,13 +80,18 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
         APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to write flags");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return GetParcelInfo<BundleResourceInfo>(
         BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO, data, bundleResourceInfo);
 }
 
 ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &bundleName,
     const uint32_t flags,
-    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo,
+    const int32_t appIndex)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
@@ -104,6 +110,10 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
     }
     if (!data.WriteUint32(flags)) {
         APP_LOGE("fail to write flags");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to write appIndex");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
