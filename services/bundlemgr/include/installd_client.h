@@ -169,6 +169,13 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
+    ErrCode ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam);
+
+    ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+        const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName);
+
+    ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
+
     ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 

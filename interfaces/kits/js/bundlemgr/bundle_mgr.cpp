@@ -4870,6 +4870,9 @@ static void ConvertInstallResult(InstallResult &installResult)
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NATIVE_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
             installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
@@ -5038,6 +5041,10 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         APP_LOGE("install failed due to no space left");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT;
         installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
+    } else if (res == ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED) {
+        APP_LOGE("install failed native hnp extract failed");
+        installResult.resultCode = IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED;
+        installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
     } else {
         installResult.resultCode = callback->GetResultCode();
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);

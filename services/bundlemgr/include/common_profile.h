@@ -365,6 +365,7 @@ constexpr const char* MODULE_TYPE = "type";
 constexpr const char* MODULE_PROCESS = "process";
 constexpr const char* MODULE_MAIN_ELEMENT = "mainElement";
 constexpr const char* MODULE_DEVICE_TYPES = "deviceTypes";
+constexpr const char* MODULE_HNP_PACKAGE = "hnp_packages";
 constexpr const char* MODULE_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
 constexpr const char* MODULE_INSTALLATION_FREE = "installationFree";
 constexpr const char* MODULE_VIRTUAL_MACHINE = "virtualMachine";
@@ -402,6 +403,9 @@ constexpr const char* DEVICE_CONFIG_ACCESSIBLE = "accessible";
 constexpr const char* META_DATA_NAME = "name";
 constexpr const char* META_DATA_VALUE = "value";
 constexpr const char* META_DATA_RESOURCE = "resource";
+// hnppackge
+constexpr const char* HNP_PACKAGE = "package";
+constexpr const char* HNP_TYPE = "type";
 // metadata reserved
 constexpr const char* META_DATA_FORM = "ohos.extension.form";
 constexpr const char* META_DATA_SHORTCUTS = "ohos.ability.shortcuts";

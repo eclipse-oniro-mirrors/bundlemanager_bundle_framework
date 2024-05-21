@@ -150,6 +150,46 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     return ERR_OK;
 }
 
+
+ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+{
+    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFiles hnpPackageInfo %{public}s", hnpPackageInfo.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "ExtractHnpFiles extractParam %{public}s", extractParam.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageInfo.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function ExtractFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "extract failed errno:%{public}d", errno);
+        return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    if (!InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName)) {
+        return ERR_APPEXECFWK_NATIVE_INSTALL_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    if (!InstalldOperator::ProcessBundleUnInstallNative(userId, packageName)) {
+        return ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
 {
     LOG_D(BMS_TAG_INSTALLD, "begin to execute AOT, args : %{public}s", aotArgs.ToString().c_str());

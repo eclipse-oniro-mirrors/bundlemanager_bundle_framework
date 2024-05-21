@@ -44,6 +44,7 @@ ohos_unittest("BmsInstalldClientTest") {
     "access_token:el5_filekey_manager_sdk",
     "access_token:libaccesstoken_sdk",
     "eventhandler:libeventhandler",
+    "appspawn:hnpapi",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

@@ -86,6 +86,12 @@ void InstalldHost::Init()
         &InstalldHost::HandObtainQuickFixFileDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES), &InstalldHost::HandCopyFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES), &InstalldHost::HandleExtractFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES),
+        &InstalldHost::HandleExtractHnpFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE),
+        &InstalldHost::HandleProcessBundleInstallNative);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::UNINSTALL_NATIVE),
+        &InstalldHost::HandleProcessBundleUnInstallNative);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
         &InstalldHost::HandGetNativeLibraryFileNames);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
@@ -184,6 +190,43 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
     }
 
     ErrCode result = ExtractFiles(*info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExtractHnpFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string hnpPackageInfo = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<ExtractParam> info(data.ReadParcelable<ExtractParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    ErrCode result = ExtractHnpFiles(hnpPackageInfo, *info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleProcessBundleInstallNative(MessageParcel &data, MessageParcel &reply)
+{
+    std::string userId = Str16ToStr8(data.ReadString16());
+    std::string hnpRootPath = Str16ToStr8(data.ReadString16());
+    std::string hapPath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    std::string packageName = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleProcessBundleUnInstallNative(MessageParcel &data, MessageParcel &reply)
+{
+    std::string userId = Str16ToStr8(data.ReadString16());
+    std::string packageName = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = ProcessBundleUnInstallNative(userId, packageName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

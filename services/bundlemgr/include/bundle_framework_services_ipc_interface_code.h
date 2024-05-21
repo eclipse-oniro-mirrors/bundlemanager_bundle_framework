@@ -67,6 +67,9 @@ enum class InstalldInterfaceCode : uint32_t {
     STOP_AOT,
     SET_ENCRYPTION_DIR,
     DELETE_ENCRYPTION_KEY_ID,
+    EXTRACT_HNP_FILES,
+    INSTALL_NATIVE,
+    UNINSTALL_NATIVE,
 };
 
 } // namespace AppExecFwk

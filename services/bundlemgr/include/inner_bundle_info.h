@@ -415,6 +415,15 @@ public:
         }
     }
 
+    void AddModuleHnpsPath(const std::string &moduleSrcDir)
+    {
+        if (innerModuleInfos_.count(currentPackage_) == 1) {
+            std::string moduleHnpsPath = moduleSrcDir +  ServiceConstants::PATH_SEPARATOR + 
+                ServiceConstants::HNPS_FILE_PATH;
+            innerModuleInfos_.at(currentPackage_).moduleHnpsPath = moduleHnpsPath;
+        }
+    }
+
     void SetModuleHapPath(const std::string &hapPath);
     const std::string &GetModuleHapPath(const std::string &modulePackage) const
     {
@@ -600,6 +609,8 @@ public:
     void GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos) const;
     void GetCommonEvents(const std::string &eventKey, std::vector<CommonEventInfo> &commonEvents) const;
     std::optional<InnerModuleInfo> GetInnerModuleInfoByModuleName(const std::string &moduleName) const;
+    std::optional<std::vector<HnpPackage>> GetInnerModuleInfoHnpInfo(const std::string &moduleName) const;
+    std::string GetInnerModuleInfoHnpPath(const std::string &moduleName) const;
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
     const std::map<std::string, InnerModuleInfo> &GetInnerModuleInfos() const
     {

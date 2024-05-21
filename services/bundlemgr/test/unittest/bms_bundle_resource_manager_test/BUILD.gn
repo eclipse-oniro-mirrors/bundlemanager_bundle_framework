@@ -67,6 +67,7 @@ ohos_unittest("BmsBundleResourceManagerTest") {
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
