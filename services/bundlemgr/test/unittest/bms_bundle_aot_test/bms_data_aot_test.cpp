@@ -575,15 +575,16 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
 HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
 {
     std::string bundleName = "";
+    std::vector<std::string> results;
     ClearDataMgr();
-    AOTHandler::GetInstance().HandleCompile(bundleName, COMPILE_NONE, true);
+    AOTHandler::GetInstance().HandleCompile(bundleName, COMPILE_NONE, true, results);
     EXPECT_EQ(bundleName, "");
     ResetDataMgr();
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true);
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true, results);
     EXPECT_EQ(bundleName, "");
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false);
+    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false, results);
     EXPECT_EQ(bundleName, "");
 }
 

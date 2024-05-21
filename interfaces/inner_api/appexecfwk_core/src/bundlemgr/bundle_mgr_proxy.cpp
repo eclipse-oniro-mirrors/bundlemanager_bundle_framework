@@ -4543,8 +4543,8 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::CompileProcessAOT(
-    const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+ErrCode BundleMgrProxy::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+    bool isAllBundle, std::vector<std::string> &compileResults)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to compile");
@@ -4571,7 +4571,14 @@ ErrCode BundleMgrProxy::CompileProcessAOT(
         APP_LOGE("fail to compile from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ERR_OK;
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        if (!reply.ReadStringVector(&compileResults)) {
+            APP_LOGE("fail to get compile results from reply");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
 }
 
 ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBundle)

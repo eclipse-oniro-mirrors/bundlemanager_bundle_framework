@@ -1520,15 +1520,14 @@ bool BundleMgrHostImpl::UnregisterBundleStatusCallback()
     return dataMgr->UnregisterBundleStatusCallback();
 }
 
-ErrCode BundleMgrHostImpl::CompileProcessAOT(
-    const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+ErrCode BundleMgrHostImpl::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+    bool isAllBundle, std::vector<std::string> &compileResults)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle);
-    return ERR_OK;
+    return AOTHandler::GetInstance().HandleCompile(bundleName, compileMode, isAllBundle, compileResults);
 }
 
 ErrCode BundleMgrHostImpl::CompileReset(const std::string &bundleName, bool isAllBundle)

@@ -1902,7 +1902,8 @@ HWTEST_F(BmsInstallSystemTest, CompileProcessAOT_0100, Function | SmallTest | Le
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
-    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "", false);
+    std::vector<std::string> results;
+    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "", false, results);
     EXPECT_EQ(ret, ERR_OK);
 }
 

@@ -701,26 +701,35 @@ void AOTHandler::HandleIdle() const
     APP_LOGI("HandleIdle end");
 }
 
-void AOTHandler::HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const
+ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
+    std::vector<std::string> &compileResults) const
 {
     APP_LOGI("HandleCompile begin");
     std::unique_lock<std::mutex> lock(compileMutex_, std::defer_lock);
     if (!lock.try_lock()) {
         APP_LOGI("compile task is running, skip %{public}s", bundleName.c_str());
-        return;
+        std::string compileResult = "info: compile task is running, skip.";
+        compileResults.emplace_back(compileResult);
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     if (!IsSupportARM64()) {
         APP_LOGI("current device doesn't support arm64, no need to AOT");
-        return;
+        std::string compileResult = "info: current device doesn't support arm64, no need to AOT.";
+        compileResults.emplace_back(compileResult);
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     if (compileMode == COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
-        return;
+        std::string compileResult = "info: persist.bm.idle.arkopt = none, no need to AOT.";
+        compileResults.emplace_back(compileResult);
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
-        return;
+        std::string compileResult = "error: dataMgr is null, compile fail.";
+        compileResults.emplace_back(compileResult);
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     std::vector<std::string> bundleNames;
     if (isAllBundle) {
@@ -728,25 +737,78 @@ void AOTHandler::HandleCompile(const std::string &bundleName, const std::string 
     } else {
         bundleNames = {bundleName};
     }
-    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [this, dataMgr, &compileMode](const auto &bundleToCompile) {
+    ErrCode ret = HandleCompileBundles(bundleNames, compileMode, dataMgr, compileResults);
+    if (ret == ERR_OK) {
+        compileResults.clear();
+    }
+    APP_LOGI("HandleCompile end");
+    return ret;
+}
+
+ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
+    std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults) const
+{
+    ErrCode ret = ERR_OK;
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(),
+        [this, dataMgr, &compileMode, &ret, &compileResults](const auto &bundleToCompile) {
         APP_LOGD("HandleCompile bundleToCompile : %{public}s", bundleToCompile.c_str());
         InnerBundleInfo info;
         if (!dataMgr->QueryInnerBundleInfo(bundleToCompile, info)) {
             APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile: %{public}s", bundleToCompile.c_str());
+            std::string compileResult = bundleToCompile + ": QueryInnerBundleInfo failed.";
+            compileResults.emplace_back(compileResult);
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
             return;
         }
         if (!info.GetIsNewVersion()) {
             APP_LOGD("not stage model, no need to AOT");
+            std::string compileResult = bundleToCompile + ": not stage model, no need to AOT.";
+            compileResults.emplace_back(compileResult);
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
             return;
         }
         std::vector<std::string> moduleNames;
         info.GetModuleNames(moduleNames);
-        std::for_each(moduleNames.cbegin(), moduleNames.cend(),
-            [this, &info, &compileMode](const auto &moduleName) {
-            (void)HandleCompileWithSingleHap(info, moduleName, compileMode);
-        });
+        std::string compileResult = "";
+        if (HandleCompileModules(moduleNames, compileMode, info, compileResult) == ERR_OK) {
+            compileResult = bundleToCompile + ": compile success.";
+        } else {
+            compileResult = bundleToCompile + ":" + compileResult;
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        }
+        compileResults.emplace_back(compileResult);
     });
-    APP_LOGI("HandleCompile end");
+    return ret;
+}
+
+ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleNames, const std::string &compileMode,
+    InnerBundleInfo &info, std::string &compileResult) const
+{
+    ErrCode ret = ERR_OK;
+    std::for_each(moduleNames.cbegin(), moduleNames.cend(),
+        [this, &info, &compileMode, &ret, &compileResult](const auto &moduleName) {
+        ErrCode errCode = HandleCompileWithSingleHap(info, moduleName, compileMode);
+        switch (errCode) {
+            case ERR_OK:
+                break;
+            case ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED:
+                compileResult += "  " + moduleName + ":compile-fail";
+                break;
+            case ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED:
+                compileResult += "  " + moduleName + ":signature-fail";
+                break;
+            case ERR_APPEXECFWK_AOT_ARGS_EMPTY:
+                compileResult += "  " + moduleName + ":args-empty";
+                break;
+            default:
+                compileResult += "  " + moduleName + ":other-fail";
+                break;
+        }
+        if (errCode != ERR_OK) {
+            ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        }
+    });
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

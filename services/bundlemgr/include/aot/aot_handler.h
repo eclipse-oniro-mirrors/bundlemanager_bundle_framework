@@ -36,7 +36,8 @@ public:
     void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void HandleOTA();
     void HandleIdle() const;
-    void HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle) const;
+    ErrCode HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
+        std::vector<std::string> &compileResults) const;
     void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
     ErrCode HandleCopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) const;
 private:
@@ -57,6 +58,10 @@ private:
     const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
         std::shared_ptr<BundleDataMgr> dataMgr) const;
+    ErrCode HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
+        std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults) const;
+    ErrCode HandleCompileModules(const std::vector<std::string> &moduleNames, const std::string &compileMode,
+        InnerBundleInfo &info, std::string &compileResult) const;
     void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
