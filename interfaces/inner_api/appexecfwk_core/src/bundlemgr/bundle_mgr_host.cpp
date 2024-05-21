@@ -374,6 +374,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCopyAp);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES),
         &BundleMgrHost::HandleGetCloneAppIndexes);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX),
+        &BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -3547,6 +3549,30 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
     }
     if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ElementName> element(data.ReadParcelable<ElementName>());
+    if (!element) {
+        APP_LOGE("ReadParcelable<ElementName> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t flag = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    auto ret = QueryCloneExtensionAbilityInfoWithAppIndex(*element, flag, appIndex, extensionAbilityInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&extensionAbilityInfo)) {
+        APP_LOGE("write extension infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

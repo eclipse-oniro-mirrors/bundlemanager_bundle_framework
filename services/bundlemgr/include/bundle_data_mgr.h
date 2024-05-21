@@ -778,7 +778,7 @@ public:
     bool GetInnerBundleInfoWithBundleFlagsAndLock(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     ErrCode GetInnerBundleInfoWithFlagsV9(const std::string &bundleName, int32_t flags,
-        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     ErrCode GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName, int32_t flags,
         InnerBundleInfo &info, int32_t userId = Constants::UNSPECIFIED_USERID, int32_t appIndex = 0) const;
     std::shared_ptr<BundleSandboxAppHelper> GetSandboxAppHelper() const;
@@ -928,6 +928,9 @@ public:
     ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flags, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId) const;
     std::vector<int32_t> GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const;
+
+    ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
+        ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
 private:
     /**
      * @brief Init transferStates.
@@ -988,8 +991,6 @@ private:
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
-        ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
-    ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
