@@ -78,56 +78,56 @@ bool GetDataDir(const std::string &path, std::string &suffix, std::string &el, s
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL1_BASE.size());
         el = ServiceConstants::DIR_EL1;
-        baseType = Constants::BASE;
+        baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL1_DATABASE.size());
         el = ServiceConstants::DIR_EL1;
-        baseType = Constants::DATABASE;
+        baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL2_BASE.size());
         el = ServiceConstants::DIR_EL2;
-        baseType = Constants::BASE;
+        baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL2_DATABASE.size());
         el = ServiceConstants::DIR_EL2;
-        baseType = Constants::DATABASE;
+        baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL3_BASE.size());
         el = ServiceConstants::DIR_EL3;
-        baseType = Constants::BASE;
+        baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL3_DATABASE.size());
         el = ServiceConstants::DIR_EL3;
-        baseType = Constants::DATABASE;
+        baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_BASE)) {
         suffix = path.substr(DATA_STORAGE_EL4_BASE.size());
         el = ServiceConstants::DIR_EL4;
-        baseType = Constants::BASE;
+        baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_DATABASE)) {
         suffix = path.substr(DATA_STORAGE_EL4_DATABASE.size());
         el = ServiceConstants::DIR_EL4;
-        baseType = Constants::DATABASE;
+        baseType = ServiceConstants::DATABASE;
         return true;
     }
 
@@ -263,7 +263,7 @@ std::string VerifyManagerHostImpl::GetRealPath(
         return filePath;
     }
 
-    filePath.append(Constants::BUNDLE_APP_DATA_BASE_DIR).append(el)
+    filePath.append(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR).append(el)
             .append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(userId)).append(baseType)
             .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
     return filePath;

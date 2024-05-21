@@ -41,6 +41,7 @@ ohos_shared_library("launcherbundlemanager") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",
+    "ability_runtime:ability_start_options",
     "ability_runtime:napi_common",
     "c_utils:utils",
     "common_event_service:cesfwk_core",

@@ -23,6 +23,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "installd/installd_operator.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
@@ -72,7 +73,7 @@ bool InstalldService::Init()
         APP_LOGE("InstalldHostImpl Init failed");
         return false;
     }
-    if (!InitDir(Constants::HAP_COPY_PATH)) {
+    if (!InitDir(ServiceConstants::HAP_COPY_PATH)) {
         APP_LOGI("HAP_COPY_PATH is already exists");
     }
     return true;

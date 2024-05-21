@@ -369,8 +369,8 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
-    if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-        path += Constants::FILE_SEPARATOR_CHAR;
+    if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        path += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
     path += targetName;
     if (targetName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
@@ -791,8 +791,8 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
             filePath.c_str(), errno);
         return 0;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *entry = nullptr;
     int64_t size = 0;
@@ -832,8 +832,8 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
         LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", filePath.c_str(), errno);
         return;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
@@ -990,8 +990,8 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         LOG_E(BMS_TAG_INSTALLD, "ScanSoFiles open dir(%{public}s) fail, errno:%{public}d", filePath.c_str(), errno);
         return false;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
@@ -1008,8 +1008,8 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         if (ptr->d_type == DT_REG) {
             std::string currentFile = filePath + std::string(ptr->d_name);
             std::string prefixPath = originPath;
-            if (prefixPath.back() != Constants::FILE_SEPARATOR_CHAR) {
-                prefixPath.push_back(Constants::FILE_SEPARATOR_CHAR);
+            if (prefixPath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+                prefixPath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
             }
             std::string relativePath = currentFile.substr(prefixPath.size());
             paths.emplace_back(relativePath);
@@ -1289,7 +1289,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
 
             // file
             if ((s.st_mode & S_IFREG) &&
-                (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
+                (currentName.find(ServiceConstants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
                     fileVec.emplace_back(dir);
                 }
         }
@@ -1372,8 +1372,8 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
         [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
         std::string fileName = entry.substr(prefix.length());
         std::string path = codeSignatureParam.targetSoPath;
-        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-            path += Constants::FILE_SEPARATOR_CHAR;
+        if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+            path += ServiceConstants::FILE_SEPARATOR_CHAR;
         }
         entryMap.emplace(entry, path + fileName);
         LOG_D(BMS_TAG_INSTALLD, "VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
@@ -1509,8 +1509,8 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         std::for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
             std::string fileName = entry.substr(prefix.length());
             std::string path = targetSoPath;
-            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-                path += Constants::FILE_SEPARATOR_CHAR;
+            if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+                path += ServiceConstants::FILE_SEPARATOR_CHAR;
             }
             entryMap.emplace(entry, path + fileName);
             LOG_D(BMS_TAG_INSTALLD, "CheckEncryption the targetSoPath is %{public}s", (path + fileName).c_str());
@@ -2071,9 +2071,9 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
 
     std::vector<std::string> dirs;
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::BASE + bundleName);
+        std::to_string(userId) + ServiceConstants::BASE + bundleName);
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::DATABASE + bundleName);
+        std::to_string(userId) + ServiceConstants::DATABASE + bundleName);
     for (const auto &dir : dirs) {
         auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (fd < 0) {

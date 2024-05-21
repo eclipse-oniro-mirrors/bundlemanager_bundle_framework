@@ -24,6 +24,7 @@
 #include "bundle_extractor.h"
 #include "bundle_parser.h"
 #include "bundle_profile.h"
+#include "bundle_service_constants.h"
 #include "common_profile.h"
 #include "default_permission_profile.h"
 #include "json_constants.h"
@@ -32,6 +33,7 @@
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::Constants;
+using namespace OHOS::AppExecFwk::ServiceConstants;
 using namespace OHOS::AppExecFwk::ProfileReader;
 namespace OHOS {
 namespace {

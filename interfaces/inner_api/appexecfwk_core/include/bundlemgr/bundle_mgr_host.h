@@ -769,6 +769,8 @@ private:
     ErrCode HandleGetCloneBundleInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

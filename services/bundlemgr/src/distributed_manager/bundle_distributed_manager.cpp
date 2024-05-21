@@ -88,7 +88,8 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
-    if (jsonObject.find(CHARACTER_OS_SYSCAP) == jsonObject.end()) {
+    if ((jsonObject.find(CHARACTER_OS_SYSCAP) == jsonObject.end()) ||
+        (jsonObject.find(CHARACTER_PRIVATE_SYSCAP) == jsonObject.end())) {
         APP_LOGE("ossyscap no exist ");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }

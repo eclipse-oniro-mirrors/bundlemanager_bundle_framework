@@ -391,7 +391,13 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
             results.emplace_back(result);
             continue;
         }
+        if (sourceAp.find(Constants::RELATIVE_PATH) != std::string::npos) {
+            return;
+        }
         std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + Constants::AP_SUFFIX;
+        if (sourceAp.find(destAp) == std::string::npos) {
+            return;
+        }
         result.append(sourceAp);
         errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
         if (errCode != ERR_OK) {
