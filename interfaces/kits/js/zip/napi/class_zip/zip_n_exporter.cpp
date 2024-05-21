@@ -209,10 +209,14 @@ bool ZipNExporter::Export()
         NapiValue::DeclareNapiFunction("uncompress", UnCompress),
         NapiValue::DeclareNapiFunction("uncompress2", UnCompress2),
     };
-    auto deflateExportResult = DeflateExport();
-    auto inflateExportResult = InflateExport();
-    std::copy(deflateExportResult.begin(), deflateExportResult.end(), std::back_inserter(props));
-    std::copy(inflateExportResult.begin(), inflateExportResult.end(), std::back_inserter(props));
+    for (const auto &prop : DeflateExport()) {
+        props.push_back(prop);
+    }
+
+    for (const auto &prop : InflateExport()) {
+        props.push_back(prop);
+    }
+
     string className = GetClassName();
     bool succ = false;
     napi_value cls = nullptr;
