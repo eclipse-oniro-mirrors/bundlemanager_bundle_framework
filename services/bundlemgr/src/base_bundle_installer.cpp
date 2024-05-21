@@ -2706,8 +2706,14 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::
             return;
         }
         if (!dirExist) {
-            APP_LOGD("ScreenLockProtectionDir: %{public}s need to be created.", dir.c_str());
-            if (InstalldClient::GetInstance()->CreateBundleDir(dir) != ERR_OK) {
+            InnerBundleUserInfo newInnerBundleUserInfo;
+            if (!infos.begin()->second.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+                APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+                    infos.begin()->second.GetBundleName().c_str(), userId_);
+                return;
+            }
+            if (InstalldClient::GetInstance()->Mkdir(
+                dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
                 APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
             }
         }
