@@ -46,49 +46,7 @@ void BundleExceptionHandler::HandleInvalidBundle(InnerBundleInfo &info, bool &is
         isBundleValid = false;
         return;
     }
-    auto mark = info.GetInstallMark();
-    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
-        return;
-    }
-    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
-    auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;
-    auto moduleDataDir = info.GetBundleName() + Constants::HAPS + mark.packageName;
-
-    // install and update failed before service restart
-    if (mark.status == InstallExceptionStatus::INSTALL_START &&
-        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
-        DeleteBundleInfoFromStorage(info);
-        isBundleValid = false;
-    } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
-        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + Constants::TMP_SUFFIX) == ERR_OK) {
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
-            info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        }
-    } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&
-        RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
-        info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
-        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    } else if (mark.status == InstallExceptionStatus::UNINSTALL_BUNDLE_START &&
-        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {  // continue to uninstall
-        DeleteBundleInfoFromStorage(info);
-        isBundleValid = false;
-    } else if (mark.status == InstallExceptionStatus::UNINSTALL_PACKAGE_START) {
-        if (info.IsOnlyModule(mark.packageName) &&
-            RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
-            DeleteBundleInfoFromStorage(info);
-            isBundleValid = false;
-            return;
-        }
-        if (RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
-            info.RemoveModuleInfo(mark.packageName);
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
-            info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        }
-    } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
-        if (InstalldClient::GetInstance()->RenameModuleDir(moduleDir + Constants::TMP_SUFFIX, moduleDir) == ERR_OK) {
-            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
-        }
-    }
+    InnerHandleInvalidBundle(info, isBundleValid);
 }
 
 bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir,
@@ -100,7 +58,7 @@ bool BundleExceptionHandler::RemoveBundleAndDataDir(const std::string &bundleDir
         return false;
     }
 
-    if (bundleOrMoudleDir.find(Constants::HAPS) != std::string::npos) {
+    if (bundleOrMoudleDir.find(ServiceConstants::HAPS) != std::string::npos) {
         result = InstalldClient::GetInstance()->RemoveModuleDataDir(bundleOrMoudleDir, userId);
         if (result != ERR_OK) {
             APP_LOGE("fail to remove module data dir %{public}s, error is %{public}d", bundleOrMoudleDir.c_str(),
@@ -151,6 +109,55 @@ bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
         }
     }
     return true;
+}
+
+void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid)
+{
+    auto mark = info.GetInstallMark();
+    if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
+        return;
+    }
+    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
+    std::string appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
+    auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;
+    auto moduleDataDir = info.GetBundleName() + ServiceConstants::HAPS + mark.packageName;
+
+    // install and update failed before service restart
+    if (mark.status == InstallExceptionStatus::INSTALL_START &&
+        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
+        DeleteBundleInfoFromStorage(info);
+        isBundleValid = false;
+    } else if (mark.status == InstallExceptionStatus::UPDATING_EXISTED_START) {
+        if (InstalldClient::GetInstance()->RemoveDir(moduleDir + ServiceConstants::TMP_SUFFIX) == ERR_OK) {
+            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
+            info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        }
+    } else if (mark.status == InstallExceptionStatus::UPDATING_NEW_START &&
+        RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
+        info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
+        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    } else if (mark.status == InstallExceptionStatus::UNINSTALL_BUNDLE_START &&
+        RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {  // continue to uninstall
+        DeleteBundleInfoFromStorage(info);
+        isBundleValid = false;
+    } else if (mark.status == InstallExceptionStatus::UNINSTALL_PACKAGE_START) {
+        if (info.IsOnlyModule(mark.packageName) &&
+            RemoveBundleAndDataDir(appCodePath, info.GetBundleName(), info.GetUserId())) {
+            DeleteBundleInfoFromStorage(info);
+            isBundleValid = false;
+            return;
+        }
+        if (RemoveBundleAndDataDir(moduleDir, moduleDataDir, info.GetUserId())) {
+            info.RemoveModuleInfo(mark.packageName);
+            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
+            info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        }
+    } else if (mark.status == InstallExceptionStatus::UPDATING_FINISH) {
+        if (InstalldClient::GetInstance()->RenameModuleDir(
+            moduleDir + ServiceConstants::TMP_SUFFIX, moduleDir) == ERR_OK) {
+            info.SetInstallMark(mark.bundleName, mark.packageName, InstallExceptionStatus::INSTALL_FINISH);
+        }
+    }
 }
 }  // namespace AppExecFwkConstants
 }  // namespace OHOS

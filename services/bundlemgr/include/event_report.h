@@ -134,6 +134,8 @@ struct EventInfo {
     bool compileResult = false;
     std::string failureReason;
     int64_t costTimeSeconds = 0;
+    int32_t sceneId = 0;
+    std::string processName;
 
     void Reset()
     {
@@ -168,6 +170,8 @@ struct EventInfo {
         compileResult = false;
         failureReason.clear();
         costTimeSeconds = 0;
+        sceneId = 0;
+        processName.clear();
     }
 };
 
@@ -224,6 +228,8 @@ public:
      */
     static void SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &bundleName,
         const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType);
+
+    static void SendCpuSceneEvent(const std::string &processName, const int32_t sceneId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

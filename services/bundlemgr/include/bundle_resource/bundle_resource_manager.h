@@ -70,10 +70,10 @@ public:
     bool AddResourceInfoByColorModeChanged(const int32_t userId);
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-        BundleResourceInfo &bundleResourceInfo);
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
 
     bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
 
     bool GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
 
@@ -86,12 +86,17 @@ public:
 
     bool UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo);
 
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
+
+    bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
+
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
-    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, uint32_t tempTaskNumber);
+    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        bool needDeleteAllResourceInfo, uint32_t tempTaskNumber);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 

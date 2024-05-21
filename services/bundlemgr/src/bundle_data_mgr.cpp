@@ -344,8 +344,6 @@ bool BundleDataMgr::AddNewModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         updateTsanEnabled(newInfo, oldInfo);
         ProcessAllowedAcls(newInfo, oldInfo);
-        updateAppEnvironments(newInfo, oldInfo);
-        updateMaxChildProcess(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
@@ -549,8 +547,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
-        updateAppEnvironments(newInfo, oldInfo);
-        updateMaxChildProcess(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -1893,11 +1889,11 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
+    auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -1947,11 +1943,11 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
+    auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -2291,28 +2287,17 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
+void BundleDataMgr::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        auto it = std::find_if(bundleInfos.begin(), bundleInfos.end(),
-            [&](const BundleInfo& info) {
-                return bundleNames[i] == info.name;
-            });
-        if (it == bundleInfos.end()) {
-            BundleInfo bundleInfo;
-            ErrCode ret = GetBundleInfoV9(bundleNames[i], flags, bundleInfo, userId);
-            if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
-                APP_LOGE("BatchGetBundleInfo failed, error code: %{public}d", ret);
-                return ret;
-            }
-            if (ret == ERR_OK) {
-                bundleInfos.push_back(bundleInfo);
-            }
+    for (const auto &bundleName : bundleNames) {
+        BundleInfo bundleInfo;
+        ErrCode ret = GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+        if (ret != ERR_OK) {
+            continue;
         }
+        bundleInfos.push_back(bundleInfo);
     }
-    APP_LOGD("BatchGetBundleInfo successfully in user(%{public}d)", userId);
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, bool clearData) const
@@ -6290,8 +6275,8 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
         APP_LOGW("get uuid by data group id failed");
         return false;
     }
-    dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
-        + Constants::DATA_GROUP_PATH + uuid;
+    dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
+        + ServiceConstants::DATA_GROUP_PATH + uuid;
     APP_LOGD("groupDir: %{private}s", dir.c_str());
     return true;
 }
@@ -6835,34 +6820,6 @@ void BundleDataMgr::ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBund
         return;
     }
     oldInfo.AddAllowedAcls(newInfo.GetAllowedAcls());
-}
-
-void BundleDataMgr::updateAppEnvironments(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
-{
-    const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
-    bool flag = true;
-    for (const auto &innerModuleInfo : oldInfo.GetInnerModuleInfos()) {
-        if (innerModuleInfo.second.distro.moduleType == ENTRY) {
-            flag = false;
-        }
-    }
-    if (flag || (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
-        oldInfo.SetAppEnvironments(newInfo.GetAppEnvironments());
-    }
-}
-
-void BundleDataMgr::updateMaxChildProcess(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
-{
-    const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
-    bool flag = true;
-    for (const auto &innerModuleInfo : oldInfo.GetInnerModuleInfos()) {
-        if (innerModuleInfo.second.distro.moduleType == ENTRY) {
-            flag = false;
-        }
-    }
-    if (flag || (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
-        oldInfo.SetMaxChildProcess(newInfo.GetMaxChildProcess());
-    }
 }
 
 ErrCode BundleDataMgr::GetAllBundleInfoByDeveloperId(const std::string &developerId,

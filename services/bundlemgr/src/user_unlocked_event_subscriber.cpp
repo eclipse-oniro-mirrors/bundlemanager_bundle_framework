@@ -80,8 +80,8 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
 bool UpdateAppDataMgr::CreateBundleDataDir(
     const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
-    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::DATABASE + bundleInfo.name;
+    std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::DATABASE + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", baseBundleDataDir.c_str());
@@ -173,21 +173,21 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 void UpdateAppDataMgr::ProcessUpdateAppDataDir(
     int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir)
 {
-    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
+    std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     for (const auto &bundleInfo : bundleInfos) {
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
             !CreateBundleDataDir(bundleInfo, userId, elDir)) {
             continue;
         }
-        std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;
+        std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.debug) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDir dir");
             continue;
         }
-        std::string baseDataDir = baseBundleDataDir + Constants::DATABASE + bundleInfo.name;
+        std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.debug) != ERR_OK) {
@@ -210,8 +210,8 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
 
 bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId)
 {
-    std::string bundleLogDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::LOG + bundleInfo.name;
+    std::string bundleLogDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::LOG + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
         APP_LOGE("path: %{public}s IsExistDir failed", bundleLogDir.c_str());

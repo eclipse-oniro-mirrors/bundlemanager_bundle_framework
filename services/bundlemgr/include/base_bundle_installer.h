@@ -654,6 +654,11 @@ private:
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ForceWriteToDisk() const;
+    std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
+    void CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void DeleteScreenLockProtectionDir(const std::string bundleName) const;
+    bool SetEncryptionDirPolicy();
+    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const;
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
@@ -661,6 +666,7 @@ private:
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
     ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
     bool VerifyActivationLock() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,

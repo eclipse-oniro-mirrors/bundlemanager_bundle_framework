@@ -36,6 +36,7 @@ constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* LABEL = "label";
 constexpr const char* ICON = "icon";
+constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* DRAWABLE_DESCRIPTOR = "drawableDescriptor";
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
@@ -82,6 +83,9 @@ static void ConvertBundleResourceInfo(
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleResourceInfo,
         DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
 
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, bundleResourceInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objBundleResourceInfo, APP_INDEX, nAppIndex));
     APP_LOGD("end");
 }
 
@@ -147,6 +151,9 @@ static void ConvertLauncherAbilityResourceInfo(
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objLauncherAbilityResourceInfo,
         DRAWABLE_DESCRIPTOR, nDrawableDescriptor));
 
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, launcherAbilityResourceInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objLauncherAbilityResourceInfo, APP_INDEX, nAppIndex));
     APP_LOGD("end");
 }
 
@@ -165,7 +172,7 @@ static void ConvertLauncherAbilityResourceInfos(
 }
 
 static ErrCode InnerGetBundleResourceInfo(
-    const std::string &bundleName, uint32_t flags, BundleResourceInfo &resourceInfo)
+    const std::string &bundleName, uint32_t flags, int32_t appIndex, BundleResourceInfo &resourceInfo)
 {
     APP_LOGD("start");
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -178,7 +185,7 @@ static ErrCode InnerGetBundleResourceInfo(
         APP_LOGE("bundleResourceProxy is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleResourceProxy->GetBundleResourceInfo(bundleName, flags, resourceInfo);
+    ErrCode ret = bundleResourceProxy->GetBundleResourceInfo(bundleName, flags, resourceInfo, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
     }
@@ -189,7 +196,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI start");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -209,8 +216,14 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
     if (flags <= 0) {
         flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     }
+    int32_t appIndex = 0;
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+            APP_LOGW("parse appIndex failed");
+        }
+    }
     BundleResourceInfo resourceInfo;
-    auto ret = InnerGetBundleResourceInfo(bundleName, flags, resourceInfo);
+    auto ret = InnerGetBundleResourceInfo(bundleName, flags, appIndex, resourceInfo);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
@@ -225,7 +238,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 }
 
 static ErrCode InnerGetLauncherAbilityResourceInfo(
-    const std::string &bundleName, uint32_t flags,
+    const std::string &bundleName, uint32_t flags, int32_t appIndex,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
 {
     APP_LOGD("start");
@@ -240,7 +253,7 @@ static ErrCode InnerGetLauncherAbilityResourceInfo(
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = bundleResourceProxy->GetLauncherAbilityResourceInfo(bundleName,
-        flags, launcherAbilityResourceInfo);
+        flags, launcherAbilityResourceInfo, appIndex);
     if (ret != ERR_OK) {
         APP_LOGE("failed, bundleName is %{public}s, errCode: %{public}d", bundleName.c_str(), ret);
     }
@@ -251,7 +264,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI start");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -271,9 +284,15 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     if (flags <= 0) {
         flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     }
+    int32_t appIndex = 0;
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+            APP_LOGW("parse appIndex failed");
+        }
+    }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    auto ret = InnerGetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos);
+    auto ret = InnerGetLauncherAbilityResourceInfo(bundleName, flags, appIndex, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCHER_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);

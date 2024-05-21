@@ -914,6 +914,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
     baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
+    baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
+    baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const
@@ -1962,6 +1964,16 @@ void InnerBundleInfo::SetAccessTokenIdEx(
 
     infoItem->second.accessTokenId = accessTokenIdEx.tokenIdExStruct.tokenID;
     infoItem->second.accessTokenIdEx = accessTokenIdEx.tokenIDEx;
+}
+
+void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        return;
+    }
+    infoItem->second.keyId = keyId;
 }
 
 void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)

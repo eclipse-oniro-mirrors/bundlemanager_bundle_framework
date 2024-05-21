@@ -353,8 +353,8 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
         return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
     }
-    std::string oldSoPath = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-        appQuickFix.bundleName + Constants::TMP_SUFFIX + ServiceConstants::LIBS;
+    std::string oldSoPath = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+        appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
     ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
 
     ret = ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
@@ -589,15 +589,15 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
     QuickFixMark mark = innerAppQuickFix.GetQuickFixMark();
     AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
     std::string path = targetPath;
-    if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-        path.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        path.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     for (HqfInfo &info : appQuickFix.deployingAppqfInfo.hqfInfos) {
         if (info.hqfFilePath.empty()) {
             LOG_E(BMS_TAG_QUICK_FIX, "error hapFilePath is empty");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
-        std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
+        std::string realPath = path + info.moduleName + ServiceConstants::QUICK_FIX_FILE_SUFFIX;
         ErrCode ret = InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_QUICK_FIX, "error CopyFile failed, errcode: %{public}d", ret);
@@ -667,8 +667,8 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
             LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
-        if (path.find(Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-            Constants::SECURITY_QUICK_FIX_PATH + ServiceConstants::PATH_SEPARATOR) != 0) {
+        if (path.find(ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SECURITY_QUICK_FIX_PATH + ServiceConstants::PATH_SEPARATOR) != 0) {
             LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
@@ -679,7 +679,7 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
     for (const auto &path : realFilePaths) {
-        if (!BundleUtil::CheckFileType(path, Constants::QUICK_FIX_FILE_SUFFIX)) {
+        if (!BundleUtil::CheckFileType(path, ServiceConstants::QUICK_FIX_FILE_SUFFIX)) {
             LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths CheckFileType failed.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
@@ -748,8 +748,8 @@ ErrCode QuickFixDeployer::ExtractSoAndApplyDiff(const AppQuickFix &appQuickFix, 
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
         // if hap has no so file then continue
-        std::string tmpSoPath = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-            appQuickFix.bundleName + Constants::TMP_SUFFIX + ServiceConstants::LIBS;
+        std::string tmpSoPath = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+            appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
 
         InnerBundleInfo innerBundleInfo;
         if (!FetchInnerBundleInfo(appQuickFix.bundleName, innerBundleInfo)) {
@@ -831,8 +831,8 @@ ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, 
         return ERR_OK;
     }
     // extract diff so, diff so path
-    std::string diffFilePath = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-        appQuickFix.bundleName + Constants::TMP_SUFFIX;
+    std::string diffFilePath = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+        appQuickFix.bundleName + ServiceConstants::TMP_SUFFIX;
     ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
     // extract diff so to targetPath
     auto ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);

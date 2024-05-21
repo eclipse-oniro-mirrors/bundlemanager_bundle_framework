@@ -777,7 +777,6 @@ void BundleInstallChecker::SetEntryInstallationFree(
     const BundlePackInfo &bundlePackInfo,
     InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("start");
     if (!bundlePackInfo.GetValid()) {
         APP_LOGW("no pack.info in the hap file");
         return;
@@ -798,7 +797,6 @@ void BundleInstallChecker::SetEntryInstallationFree(
     if (installationFree && !innerBundleInfo.GetIsNewVersion()) {
         innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
     }
-    APP_LOGI("end");
 }
 
 ErrCode BundleInstallChecker::CheckSystemSize(

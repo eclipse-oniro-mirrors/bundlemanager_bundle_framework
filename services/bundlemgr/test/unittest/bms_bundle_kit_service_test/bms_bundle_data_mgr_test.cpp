@@ -1054,7 +1054,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0200, Function | SmallTest 
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1071,7 +1071,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0300, Function | SmallTest 
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = bundleMgrHostImpl_->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 /**
@@ -1100,7 +1100,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0200, Function | SmallTest
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + Constants::FILE_SEPARATOR_CHAR, abilityInfo);
+        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -3753,7 +3753,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest 
 HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0100, TestSize.Level1)
 {
     std::string moduleDir = Constants::BUNDLE_CODE_DIR + BUNDLE_TEST1 +
-        ServiceConstants::PATH_SEPARATOR + PACKAGE_NAME + Constants::TMP_SUFFIX;
+        ServiceConstants::PATH_SEPARATOR + PACKAGE_NAME + ServiceConstants::TMP_SUFFIX;
     bool ret = BundleUtil::CreateDir(moduleDir);
     EXPECT_TRUE(ret);
 
@@ -3784,7 +3784,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0200, TestSize.Level1)
 
     std::shared_ptr<IBundleDataStorage> dataStorageSptr = nullptr;
     BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
-    BundleExceptionHandler.RemoveBundleAndDataDir(moduleDir, moduleDir + Constants::HAPS, USERID);
+    BundleExceptionHandler.RemoveBundleAndDataDir(moduleDir, moduleDir + ServiceConstants::HAPS, USERID);
     EXPECT_TRUE(ret);
 
     ret = BundleUtil::DeleteDir(moduleDir);
@@ -4547,68 +4547,5 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0040, Function | S
     abilityInfos.emplace_back(abilityInfo);
     GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
     EXPECT_EQ(abilityInfos.size(), 0);
-}
-
-/**
- * @tc.number: UpdateMaxChildProcess_0010
- * @tc.name: UpdateMaxChildProcess
- * @tc.desc: test UpdateMaxChildProcess.
- */
-HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0010, Function | SmallTest | Level1)
-{
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    Param param;
-    param.moduleType = ENTRY;
-    param.maxChildProcess = 10;
-    Param param1;
-    param1.moduleType = FEATURE;
-    param1.maxChildProcess = 5;
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
-    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
-    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 10);
-}
-
-/**
- * @tc.number: UpdateMaxChildProcess_0020
- * @tc.name: UpdateMaxChildProcess
- * @tc.desc: test UpdateMaxChildProcess.
- */
-HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0020, Function | SmallTest | Level1)
-{
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    Param param;
-    param.moduleType = FEATURE;
-    param.maxChildProcess = 10;
-    Param param1;
-    param1.moduleType = FEATURE;
-    param1.maxChildProcess = 5;
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
-    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
-    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 5);
-}
-
-/**
- * @tc.number: UpdateMaxChildProcess_0030
- * @tc.name: UpdateMaxChildProcess
- * @tc.desc: test UpdateMaxChildProcess.
- */
-HWTEST_F(BmsBundleDataMgrTest, UpdateMaxChildProcess_0030, Function | SmallTest | Level1)
-{
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
-    Param param;
-    param.moduleType = FEATURE;
-    param.maxChildProcess = 10;
-    Param param1;
-    param1.moduleType = ENTRY;
-    param1.maxChildProcess = 5;
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, param, oldInfo);
-    MockInnerBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST1, ABILITY_NAME_TEST1, param1, newInfo);
-    GetBundleDataMgr()->updateMaxChildProcess(newInfo, oldInfo);
-    EXPECT_EQ(oldInfo.baseApplicationInfo_->maxChildProcess, 5);
 }
 }

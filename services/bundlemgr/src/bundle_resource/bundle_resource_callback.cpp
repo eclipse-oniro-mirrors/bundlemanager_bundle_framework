@@ -44,10 +44,6 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
         APP_LOGE("switch userId : %{public}d failed, manager is nullptr", userId);
         return false;
     }
-    if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGE("DeleteAllResourceInfo userId : %{public}d failed", userId);
-        return false;
-    }
     if (!manager->AddAllResourceInfo(userId)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
@@ -102,9 +98,6 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
         currentUserId = Constants::START_USERID;
     }
 
-    if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed", currentUserId);
-    }
     if (!manager->AddAllResourceInfo(currentUserId)) {
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;
@@ -225,9 +218,6 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
         currentUserId = Constants::START_USERID;
     }
 
-    if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed", currentUserId);
-    }
     if (!manager->AddAllResourceInfo(currentUserId)) {
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;

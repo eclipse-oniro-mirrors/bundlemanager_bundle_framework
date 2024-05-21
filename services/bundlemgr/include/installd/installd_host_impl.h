@@ -191,6 +191,11 @@ public:
 
     virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
 
+    virtual ErrCode SetEncryptionPolicy(int32_t uid, const std::string &bundleName,
+        const int32_t userId, std::string &keyId) override;
+
+    virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);

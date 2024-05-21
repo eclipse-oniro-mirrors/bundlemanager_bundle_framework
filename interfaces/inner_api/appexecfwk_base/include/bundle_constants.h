@@ -25,29 +25,9 @@ namespace AppExecFwk {
 namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
-constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
-constexpr const char* HSP_FILE_SUFFIX = ".hsp";
-constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* FILE_UNDERLINE = "_";
-const char FILE_SEPARATOR_CHAR = '/';
-constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
-constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
-constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
-constexpr const char* BASE = "/base/";
-constexpr const char* DATABASE = "/database/";
-constexpr const char* LOG = "/log/";
-constexpr const char* HAPS = "/haps/";
-constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
-constexpr const char* REAL_DATA_PATH = "/data/app/el2";
-constexpr const char* DATA_GROUP_PATH = "/group/";
-constexpr const char* STREAM_INSTALL_PATH = "stream_install";
-constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
-constexpr const char* QUICK_FIX_PATH = "quick_fix";
-constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
-constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
+constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
 constexpr const char* CACHE_DIR = "cache";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
@@ -245,6 +225,8 @@ constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
+constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
+constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

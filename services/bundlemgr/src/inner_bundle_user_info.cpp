@@ -28,6 +28,7 @@ const std::string INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
 const std::string INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
 const std::string INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 const std::string INNER_BUNDLE_USER_INFO_CLONE_INFOS = "cloneInfos";
+const std::string INNER_BUNDLE_USER_INFO_KEYID = "keyId";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -43,6 +44,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO, innerBundleUserInfo.bundleUserInfo},
         {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
         {INNER_BUNDLE_USER_INFO_CLONE_INFOS, innerBundleUserInfo.cloneInfos},
+        {INNER_BUNDLE_USER_INFO_KEYID, innerBundleUserInfo.keyId},
     };
 }
 
@@ -71,6 +73,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
     GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
+        innerBundleUserInfo.keyId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

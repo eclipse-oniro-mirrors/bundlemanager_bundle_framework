@@ -48,6 +48,7 @@
 #include "event_report.h"
 #include "installd_client.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
@@ -116,7 +117,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
     const std::string &bundleName, std::vector<std::string> &toPaths)
 {
     std::string tempDir =
-        Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
+        ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
     if (!BundleUtil::CreateDir(tempDir)) {
         APP_LOGE("create tempdir failed %{public}s", tempDir.c_str());
         return;
@@ -125,7 +126,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
     int32_t hapIndex = 0;
     for (const auto &path : fromPaths) {
         auto toPath = tempDir + ServiceConstants::PATH_SEPARATOR + MODULE_PREFIX
-            + std::to_string(hapIndex) + Constants::INSTALL_FILE_SUFFIX;
+            + std::to_string(hapIndex) + ServiceConstants::INSTALL_FILE_SUFFIX;
         hapIndex++;
         if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
             APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
@@ -154,7 +155,7 @@ public:
             return;
         }
 
-        std::string tempDir = Constants::HAP_COPY_PATH
+        std::string tempDir = ServiceConstants::HAP_COPY_PATH
             + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName_;
         APP_LOGD("delete tempDir %{public}s", tempDir.c_str());
         BundleUtil::DeleteDir(tempDir);
@@ -306,6 +307,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -378,7 +380,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
         return scanResultCode;
     }
 
-    std::string baseDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0];
+    std::string baseDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0];
     std::vector<std::string> userIds;
     if (!ScanDir(baseDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userIds)) {
         APP_LOGD("Check the base user directory(%{public}s) failed", baseDataDir.c_str());
@@ -394,7 +396,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
 
         dataMgr->AddUserId(userIdInt);
         std::vector<std::string> userDataBundleNames;
-        std::string userDataDir = baseDataDir + ServiceConstants::PATH_SEPARATOR + userId + Constants::BASE;
+        std::string userDataDir = baseDataDir + ServiceConstants::PATH_SEPARATOR + userId + ServiceConstants::BASE;
         if (!ScanDir(userDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userDataBundleNames)) {
             APP_LOGD("Check the user installation directory(%{public}s) failed", userDataDir.c_str());
             continue;
@@ -552,7 +554,7 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
 {
     std::vector<std::string> checkHapPaths;
     for (const auto &hapPath : hapPaths) {
-        if (!BundleUtil::CheckFileType(hapPath, Constants::INSTALL_FILE_SUFFIX)) {
+        if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX)) {
             APP_LOGE("Check hapPath(%{public}s) failed", hapPath.c_str());
             continue;
         }
@@ -771,8 +773,8 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
     auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
     info.SetAppCodePath(appCodePath);
 
-    std::string dataBaseDir = Constants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
-        + Constants::DATABASE + bundleName;
+    std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
+        + ServiceConstants::DATABASE + bundleName;
     info.SetAppDataBaseDir(dataBaseDir);
 
     auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
@@ -1082,6 +1084,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
+    ProcessCheckCloudShaderDir();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1363,6 +1366,56 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
             APP_LOGI("create shader cache failed: %{public}s ", shaderCachePath.c_str());
         }
     }
+}
+
+void BMSEventHandler::ProcessCheckCloudShaderDir()
+{
+    bool checkCloudShader = false;
+    CheckOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR, checkCloudShader);
+    if (checkCloudShader) {
+        APP_LOGD("Not need to check cloud shader cache dir due to has checked.");
+        return;
+    }
+    APP_LOGD("Need to check cloud shader cache dir.");
+    InnerProcessCheckCloudShaderDir();
+    UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckCloudShaderDir()
+{
+    bool cloudExist = true;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(Constants::CLOUD_SHADER_PATH, cloudExist);
+    if (result != ERR_OK) {
+        APP_LOGW("IsExistDir failed, error is %{public}d", result);
+        return;
+    }
+    if (cloudExist) {
+        APP_LOGD("CLOUD_SHADER_PATH is exist");
+        return;
+    }
+
+    const std::string bundleName = OHOS::system::GetParameter(Constants::CLOUD_SHADER_OWNER, "");
+    if (bundleName.empty()) {
+        return;
+    }
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGW("DataMgr is nullptr");
+        return;
+    }
+
+    BundleInfo info;
+    auto hasBundleInstalled = dataMgr->GetBundleInfo(
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, info, Constants::ANY_USERID);
+    if (!hasBundleInstalled) {
+        APP_LOGD("Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
+        return;
+    }
+
+    constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
+    result = InstalldClient::GetInstance()->Mkdir(Constants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+    APP_LOGI("Create cloud shader cache result: %{public}d", result);
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
@@ -1922,6 +1975,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             if (!installer.UninstallSystemBundle(bundleName)) {
                 APP_LOGE("OTA uninstall app(%{public}s) error", bundleName.c_str());
             } else {
+                APP_LOGI("OTA uninstall preInstall bundleName:%{public}s succeed.", bundleName.c_str());
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
             }
@@ -1975,6 +2029,10 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         if (hapModuleInfo.hapPath.find(Constants::BUNDLE_CODE_DIR) == 0) {
             return false;
         }
+    }
+    if (bundleInfo.hapModuleNames.size() == 1) {
+        APP_LOGI("bundleName:%{public}s only has one module, can not be uninstalled", bundleInfo.name.c_str());
+        return false;
     }
     bool needUninstallModule = false;
     // Check the installed module.
@@ -2533,11 +2591,11 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         for (const auto &el : ServiceConstants::BUNDLE_EL) {
-            std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
+            std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR +
                                             el +
                                             ServiceConstants::PATH_SEPARATOR +
                                             std::to_string(userId);
-            std::string baseDataDir = baseBundleDataDir + Constants::BASE + bundleName;
+            std::string baseDataDir = baseBundleDataDir + ServiceConstants::BASE + bundleName;
             bool isExist = true;
             ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
             if (result != ERR_OK) {
@@ -2555,7 +2613,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
                 APP_LOGW("bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
                     bundleName.c_str(), result);
             }
-            std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + bundleName;
+            std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleName;
             result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, isPreInstall, debug);
             if (result != ERR_OK) {
                 APP_LOGW("bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
@@ -2645,7 +2703,7 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
                 + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX
                 + std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + ServiceConstants::PATH_SEPARATOR
                 + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::PATH_SEPARATOR
-                + sharedBundleInfo.sharedModuleInfos[0].name + Constants::HSP_FILE_SUFFIX;
+                + sharedBundleInfo.sharedModuleInfos[0].name + ServiceConstants::HSP_FILE_SUFFIX;
             AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
         }
     }

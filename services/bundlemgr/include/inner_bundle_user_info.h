@@ -44,6 +44,9 @@ struct InnerBundleUserInfo {
     // appIndex -> cloneInfo
     std::map<std::string, InnerBundleCloneInfo> cloneInfos;
 
+    // encryption key id
+    std::string keyId;
+
     bool operator() (const InnerBundleUserInfo& info) const
     {
         if (bundleName == info.bundleName) {

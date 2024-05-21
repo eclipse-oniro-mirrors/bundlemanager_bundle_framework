@@ -40,6 +40,7 @@ const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
+constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -628,7 +629,7 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t bundleNameCount = data.ReadInt32();
-    if (bundleNameCount <= 0) {
+    if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("bundleName count is error");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }

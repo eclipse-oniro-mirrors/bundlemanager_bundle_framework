@@ -49,6 +49,7 @@ ohos_unittest("BmsInstallDaemonTest") {
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
@@ -202,6 +203,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   ]
 
   external_deps = [
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",
@@ -274,6 +276,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   ]
 
   external_deps = [
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "c_utils:utils",

@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "securec.h"
 #include "zlib.h"
 
@@ -260,8 +261,8 @@ bool ZipFile::IsDirExist(const std::string &dir) const
     }
 
     auto tempDir = dir;
-    if (tempDir.back() != Constants::FILE_SEPARATOR_CHAR) {
-        tempDir.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (tempDir.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        tempDir.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
 
     for (const auto &item : entriesMap_) {

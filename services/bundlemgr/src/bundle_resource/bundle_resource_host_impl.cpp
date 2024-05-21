@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-    BundleResourceInfo &bundleResourceInfo)
+    BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -34,12 +34,17 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if ((appIndex < 0) || (appIndex > Constants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
+            bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
+    if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
         APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -47,7 +52,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
 }
 
 ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
 {
     APP_LOGD("start, bundleName: %{public}s, flags: %{public}u", bundleName.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp()) {
@@ -58,12 +63,17 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+    if ((appIndex < 0) || (appIndex > Constants::CLONE_APP_INDEX_MAX)) {
+        APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
+            bundleName.c_str(), appIndex);
+        return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
+    }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo)) {
+    if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
         APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }

@@ -249,22 +249,18 @@ ErrCode BmsExtensionClient::BatchGetBundleInfo(const std::vector<std::string> &b
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         }
     }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        InnerBundleInfo innerBundleInfo;
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (const auto &bundleName :bundleNames) {
+        if (dataMgr->IsBundleExist(bundleName)) {
+            continue;
+        }
         BundleInfo bundleInfo;
-        if (dataMgr->QueryInnerBundleInfo(bundleNames[i], innerBundleInfo)) {
-            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
-                bundleNames[i].c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-        if (bmsExtensionImpl_ == nullptr) {
-            APP_LOGW("bmsExtensionImpl_ is nullptr");
-            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
-        }
-        ErrCode res = bmsExtensionImpl_->GetBundleInfo(bundleNames[i], flags, userId, bundleInfo, isNewVersion);
-        if (res != ERR_OK) {
-            APP_LOGD("query bundle info failed due to error code %{public}d", res);
-            return res;
+        ErrCode ret = bmsExtensionImpl_->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
+        if (ret != ERR_OK) {
+            continue;
         }
         bundleInfos.push_back(bundleInfo);
     }

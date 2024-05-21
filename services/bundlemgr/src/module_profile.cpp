@@ -248,7 +248,7 @@ struct App {
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
-    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 0);
+    int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
 };
 
 struct Module {
@@ -1950,7 +1950,7 @@ bool ToApplicationInfo(
 
     applicationInfo.apiReleaseType = app.apiReleaseType;
     applicationInfo.debug = app.debug;
-    applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
+    applicationInfo.deviceId = ServiceConstants::CURRENT_DEVICE_ID;
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
