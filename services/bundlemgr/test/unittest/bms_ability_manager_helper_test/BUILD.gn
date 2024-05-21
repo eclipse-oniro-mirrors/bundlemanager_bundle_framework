@@ -95,6 +95,7 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
     sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
+      "ability_runtime:ability_start_options",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",
