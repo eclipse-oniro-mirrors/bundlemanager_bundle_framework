@@ -834,7 +834,6 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     bool callingPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll(
         { Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO });
-    bool checkResult = false;
     for (size_t i = 0; i < wants.size(); i++) {
         if (!callingPermission && !BundlePermissionMgr::IsBundleSelfCalling(wants[i].GetElement().GetBundleName())) {
             APP_LOGE("verify is bundle self calling failed");

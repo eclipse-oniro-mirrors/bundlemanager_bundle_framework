@@ -3389,7 +3389,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
     APP_LOGD("Called.");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
-    int32_t vectorSize = preinstalledApplicationInfos.size();
+    int32_t vectorSize = static_cast<int32_t>(preinstalledApplicationInfos.size());
     if (vectorSize > MAX_STATUS_VECTOR_NUM) {
         APP_LOGE("PreinstallApplicationInfos vector is over size.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
