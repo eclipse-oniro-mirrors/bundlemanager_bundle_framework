@@ -155,7 +155,7 @@ bool ExtendResourceManagerHostImpl::CheckFileParam(const std::string &filePath)
         APP_LOGE("CheckFile filePath(%{public}s) failed due to suffix error.", filePath.c_str());
         return false;
     }
-    if (!BundleUtil::StartWith(filePath, Constants::HAP_COPY_PATH)) {
+    if (!BundleUtil::StartWith(filePath, ServiceConstants::HAP_COPY_PATH)) {
         APP_LOGE("CheckFile filePath(%{public}s) failed due to prefix error.", filePath.c_str());
         return false;
     }

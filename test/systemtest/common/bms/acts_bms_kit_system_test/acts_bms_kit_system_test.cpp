@@ -77,6 +77,7 @@ const std::string ROUTER_INDEX_ZERO_BUILD_FUNCTION = "myFunction";
 const std::string ROUTER_INDEX_ONE_URL = "DynamicPage2";
 const std::string ROUTER_INDEX_ONE_BUILD_FUNCTION = "myBuilder";
 const std::string CONTROL_MESSAGE = "msg1_cantRun";
+const std::string CURRENT_DEVICE_ID = "PHONE-001";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -4691,7 +4692,7 @@ HWTEST_F(ActsBmsKitSystemTest, ApplicationInfo_0200, Function | MediumTest | Lev
         appInfo.bundleName = "com.third.hiworld.example_02";
         appInfo.label = "bmsThirdBundle_A1 Ability";
         appInfo.description = "example helloworld";
-        appInfo.deviceId = Constants::CURRENT_DEVICE_ID;
+        appInfo.deviceId = CURRENT_DEVICE_ID;
         appInfo.isSystemApp = false;
 
         ApplicationInfo *pAppInfo = &appInfo;

@@ -300,7 +300,7 @@ bool BundleMgrService::InitOverlayManager()
 void BundleMgrService::CreateBmsServiceDir()
 {
     auto ret = InstalldClient::GetInstance()->Mkdir(
-        Constants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
+        ServiceConstants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
         Constants::FOUNDATION_UID, Constants::BMS_GID);
     if (!ret) {
         APP_LOGE("create dir failed");

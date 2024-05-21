@@ -56,6 +56,8 @@ public:
     bool IsBundleHapPathExist(const InnerBundleInfo &info);
 
 private:
+    void InnerHandleInvalidBundle(InnerBundleInfo &info, bool &isBundleValid);
+
     std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk

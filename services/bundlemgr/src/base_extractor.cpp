@@ -22,6 +22,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -116,11 +117,11 @@ bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames) const
 {
     auto &entryMap = zipFile_.GetAllEntries();
     auto entryFilter = [&fileNames](const auto &entry) {
-        auto position = entry.first.rfind(Constants::QUICK_FIX_FILE_SUFFIX);
+        auto position = entry.first.rfind(ServiceConstants::QUICK_FIX_FILE_SUFFIX);
         bool isHqfFile = false;
         if (position != std::string::npos) {
             std::string suffixStr = entry.first.substr(position);
-            isHqfFile = suffixStr == Constants::QUICK_FIX_FILE_SUFFIX;
+            isHqfFile = suffixStr == ServiceConstants::QUICK_FIX_FILE_SUFFIX;
         }
         if ((entry.first.find(Constants::RELATIVE_PATH) == std::string::npos) && !isHqfFile) {
             fileNames.emplace_back(entry.first);

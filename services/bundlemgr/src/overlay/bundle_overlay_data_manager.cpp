@@ -193,7 +193,7 @@ void OverlayDataMgr::BuildInternalOverlayConnection(const std::string &moduleNam
 ErrCode OverlayDataMgr::GetBundleDir(const std::string &moduleHapPath, std::string &bundleDir) const
 {
     bundleDir = moduleHapPath;
-    if (moduleHapPath.back() == Constants::FILE_SEPARATOR_CHAR) {
+    if (moduleHapPath.back() == ServiceConstants::FILE_SEPARATOR_CHAR) {
         bundleDir = moduleHapPath.substr(0, moduleHapPath.length() - 1);
     }
     size_t pos = bundleDir.find_last_of(ServiceConstants::PATH_SEPARATOR);

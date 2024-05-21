@@ -76,7 +76,7 @@ void BmsBundleParserModuleTest::TearDown()
  */
 HWTEST_F(BmsBundleParserModuleTest, MultiAbilityParse_0100, Function | MediumTest | Level1)
 {
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle2" << Constants::INSTALL_FILE_SUFFIX;
+    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle2" << ServiceConstants::INSTALL_FILE_SUFFIX;
     CheckBundleParserResult(pathStream_);
 }
 
@@ -87,7 +87,7 @@ HWTEST_F(BmsBundleParserModuleTest, MultiAbilityParse_0100, Function | MediumTes
  */
 HWTEST_F(BmsBundleParserModuleTest, NullAbility_0200, Function | MediumTest | Level2)
 {
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle1" << Constants::INSTALL_FILE_SUFFIX;
+    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle1" << ServiceConstants::INSTALL_FILE_SUFFIX;
     CheckBundleParserResult(pathStream_);
 }
 
@@ -99,7 +99,7 @@ HWTEST_F(BmsBundleParserModuleTest, NullAbility_0200, Function | MediumTest | Le
  */
 HWTEST_F(BmsBundleParserModuleTest, InvalidBundleProfileName_0300, Function | MediumTest | Level2)
 {
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << Constants::INSTALL_FILE_SUFFIX;
+    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle14" << ServiceConstants::INSTALL_FILE_SUFFIX;
     BundleParser bundleParser;
     InnerBundleInfo innerBundleInfo;
     ErrCode result = bundleParser.Parse(pathStream_.str(), innerBundleInfo);
@@ -114,7 +114,7 @@ HWTEST_F(BmsBundleParserModuleTest, InvalidBundleProfileName_0300, Function | Me
 HWTEST_F(BmsBundleParserModuleTest, RepeatBundleParser_0400, Function | MediumTest | Level1)
 {
     int count = 10;
-    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle1" << Constants::INSTALL_FILE_SUFFIX;
+    pathStream_ << RESOURCE_ROOT_PATH << "bmsThirdBundle1" << ServiceConstants::INSTALL_FILE_SUFFIX;
     for (int i = 0; i < count; i++) {
         CheckBundleParserResult(pathStream_);
     }

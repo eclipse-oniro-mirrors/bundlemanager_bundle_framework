@@ -69,9 +69,9 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         APP_LOGE("bundle file path invalid");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
-    if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, Constants::HSP_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX) &&
+    if (!CheckFileType(bundlePath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, ServiceConstants::HSP_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not hap, hsp, hqf or sig");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
@@ -211,7 +211,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         return false;
     }
     std::string bundlePath = currentBundlePath;
-    if (bundlePath.back() != Constants::FILE_SEPARATOR_CHAR) {
+    if (bundlePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
         bundlePath.append(ServiceConstants::PATH_SEPARATOR);
     }
     struct dirent *entry = nullptr;
@@ -372,11 +372,11 @@ std::string BundleUtil::CreateTempDir(const std::string &tempDir)
 std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)
 {
     std::time_t curTime = std::time(0);
-    std::string tempDir = Constants::HAP_COPY_PATH;
+    std::string tempDir = ServiceConstants::HAP_COPY_PATH;
     if (type == DirType::STREAM_INSTALL_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::QUICK_FIX_PATH;
     } else if (type == DirType::SIG_FILE_DIR) {
         tempDir += ServiceConstants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     } else if (type == DirType::PGO_FILE_DIR) {
@@ -402,8 +402,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
 std::string BundleUtil::CreateSharedBundleTempDir(uint32_t installerId, uint32_t index)
 {
     std::time_t curTime = std::time(0);
-    std::string tempDir = Constants::HAP_COPY_PATH;
-    tempDir += ServiceConstants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+    std::string tempDir = ServiceConstants::HAP_COPY_PATH;
+    tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::STREAM_INSTALL_PATH;
     tempDir += ServiceConstants::PATH_SEPARATOR + std::to_string(curTime) + std::to_string(installerId)
         + Constants::FILE_UNDERLINE + std::to_string(index)+ ServiceConstants::PATH_SEPARATOR;
     return CreateTempDir(tempDir);
@@ -656,16 +656,16 @@ bool BundleUtil::CreateDir(const std::string &dir)
 bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath)
 {
     if (sandBoxPath.empty() || bundleName.empty() ||
-        sandBoxPath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
+        sandBoxPath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
         APP_LOGE("input sandboxPath or bundleName invalid");
         return false;
     }
 
     realPath = sandBoxPath;
-    std::string relaDataPath = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
-        + std::to_string(BundleUtil::GetUserIdByCallingUid()) + Constants::BASE + bundleName;
-    realPath.replace(realPath.find(Constants::SANDBOX_DATA_PATH),
-        std::string(Constants::SANDBOX_DATA_PATH).size(), relaDataPath);
+    std::string relaDataPath = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
+    realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
+        std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);
     return true;
 }
 
@@ -709,10 +709,10 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     APP_LOGD("the original dir is %{public}s", filePath.c_str());
     std::string destination = "";
     std::string subStr = "";
-    destination.append(Constants::HAP_COPY_PATH).append(ServiceConstants::PATH_SEPARATOR);
+    destination.append(ServiceConstants::HAP_COPY_PATH).append(ServiceConstants::PATH_SEPARATOR);
     if (dirType == DirType::STREAM_INSTALL_DIR) {
-        subStr = Constants::STREAM_INSTALL_PATH;
-        destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
+        subStr = ServiceConstants::STREAM_INSTALL_PATH;
+        destination.append(ServiceConstants::SECURITY_STREAM_INSTALL_PATH);
         mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
         if (InstalldClient::GetInstance()->Mkdir(
             destination, mode, Constants::FOUNDATION_UID, Constants::BMS_GID) != ERR_OK) {

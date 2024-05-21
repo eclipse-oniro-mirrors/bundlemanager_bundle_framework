@@ -1889,11 +1889,11 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
+    auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -1943,11 +1943,11 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         return false;
     }
     std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
-    auto posFirstSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR);
+    auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
     }
-    auto posSecondSeparator = noPpefixUri.find(Constants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
+    auto posSecondSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR, posFirstSeparator + 1);
     std::string uri;
     if (posSecondSeparator == std::string::npos) {
         uri = noPpefixUri.substr(posFirstSeparator + 1, noPpefixUri.size() - posFirstSeparator - 1);
@@ -6275,8 +6275,8 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
         APP_LOGW("get uuid by data group id failed");
         return false;
     }
-    dir = Constants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
-        + Constants::DATA_GROUP_PATH + uuid;
+    dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
+        + ServiceConstants::DATA_GROUP_PATH + uuid;
     APP_LOGD("groupDir: %{private}s", dir.c_str());
     return true;
 }
