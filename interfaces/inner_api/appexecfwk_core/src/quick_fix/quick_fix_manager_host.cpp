@@ -75,6 +75,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool isDebug = data.ReadBool();
+    std::string targetPath = data.ReadString();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
         LOG_E(BMS_TAG_QUICK_FIX, "read statusCallback failed.");
@@ -82,7 +83,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug);
+    auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_QUICK_FIX, "write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;

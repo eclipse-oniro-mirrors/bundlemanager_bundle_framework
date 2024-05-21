@@ -28,7 +28,8 @@ public:
     QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback);
     ~QuickFixer() = default;
 
-    void DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug = false);
+    void DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug = false,
+        const std::string &targetPath = "");
     void SwitchQuickFix(const std::string &bundleName, bool enable);
     void DeleteQuickFix(const std::string &bundleName);
 

@@ -36,7 +36,7 @@ QuickFixMgr::~QuickFixMgr()
 }
 
 ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
+    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &targetPath)
 {
     LOG_I(BMS_TAG_QUICK_FIX, "DeployQuickFix begin");
     auto quickFixer = CreateQuickFixer(statusCallback);
@@ -45,9 +45,9 @@ ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePa
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
-    auto task = [quickFixer, bundleFilePaths, isDebug] {
+    auto task = [quickFixer, bundleFilePaths, isDebug, targetPath] {
         BundleMemoryGuard memoryGuard;
-        quickFixer->DeployQuickFix(bundleFilePaths, isDebug);
+        quickFixer->DeployQuickFix(bundleFilePaths, isDebug, targetPath);
     };
 
     ffrt::submit(task);
