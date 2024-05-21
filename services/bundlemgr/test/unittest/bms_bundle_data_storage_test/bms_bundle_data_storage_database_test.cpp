@@ -997,6 +997,7 @@ protected:
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
                 "appPrivilegeLevel": "normal",
+                "hnpPackages": {},
                 "appQuickFix": {
                     "bundleName": "",
                     "versionCode": 0,

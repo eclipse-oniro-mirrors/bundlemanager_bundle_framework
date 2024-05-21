@@ -450,15 +450,15 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
     const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
 {
     struct HapInfo hapInfo;
-    int res = strcpy_s(hapInfo.packageName, packageName.length(), packageName.c_str());
+    int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName.");
     }
-    res = strcpy_s(hapInfo.hapPath, hapPath.length(), hapPath.c_str());
+    res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath.");
     }
-    res = strcpy_s(hapInfo.abi, cpuAbi.length(), cpuAbi.c_str());
+    res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
     if (res != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi.");
     }
