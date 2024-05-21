@@ -43,8 +43,8 @@ ohos_unittest("BmsInstalldClientTest") {
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
     "access_token:libaccesstoken_sdk",
-    "eventhandler:libeventhandler",
     "appspawn:hnpapi",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",

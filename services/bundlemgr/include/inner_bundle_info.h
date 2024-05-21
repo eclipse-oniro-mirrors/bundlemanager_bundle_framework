@@ -418,7 +418,7 @@ public:
     void AddModuleHnpsPath(const std::string &moduleSrcDir)
     {
         if (innerModuleInfos_.count(currentPackage_) == 1) {
-            std::string moduleHnpsPath = moduleSrcDir +  ServiceConstants::PATH_SEPARATOR + 
+            std::string moduleHnpsPath = moduleSrcDir +  ServiceConstants::PATH_SEPARATOR +
                 ServiceConstants::HNPS_FILE_PATH;
             innerModuleInfos_.at(currentPackage_).moduleHnpsPath = moduleHnpsPath;
         }
