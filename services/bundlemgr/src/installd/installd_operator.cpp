@@ -287,7 +287,7 @@ bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const Extr
     while (getline(hnpPackageInfoString, keyValue, '}')) {
         size_t pos = keyValue.find(":");
         if (pos != std::string::npos) {
-            std::string key = keyValue.substr(1, pos-1);
+            std::string key = keyValue.substr(1, pos - 1);
             std::string value = keyValue.substr(pos + 1);
             hnpPackageInfoMap[key] = value;
         }
@@ -371,8 +371,8 @@ bool InstalldOperator::IsNativeFile(
     }
 
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
-         && extractParam.extractFileType != ExtractFileType::SO
-		&& extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
+        && extractParam.extractFileType != ExtractFileType::SO
+        && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
         LOG_D(BMS_TAG_INSTALLD, "file type error.");
         return false;
     }
