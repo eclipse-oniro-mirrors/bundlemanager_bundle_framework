@@ -48,6 +48,7 @@
 #include "el5_filekey_manager_kit.h"
 #include "parameters.h"
 #include "securec.h"
+#include "hnp_api.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -278,6 +279,68 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     return true;
 }
 
+bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam)
+{
+    std::map<std::string, std::string> hnpPackageInfoMap;
+    std::stringstream hnpPackageInfoString(hnpPackageInfo);
+    std::string keyValue;
+    while (getline(hnpPackageInfoString, keyValue, '}')) {
+        size_t pos = keyValue.find(":");
+        if (pos != std::string::npos) {
+            std::string key = keyValue.substr(1, pos - 1);
+            std::string value = keyValue.substr(pos + 1);
+            hnpPackageInfoMap[key] = value;
+        }
+    }
+
+    BundleExtractor extractor(extractParam.srcPath);
+    if (!extractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
+        return false;
+    }
+
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "get entryNames failed");
+        return false;
+    }
+    std::string targetPathAndName = "";
+    for (const auto &entryName : entryNames) {
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+                continue;
+        }
+        if (entryName.back() == ServiceConstants::PATH_SEPARATOR[0]) {
+            continue;
+        }
+        // handle native file
+        if (IsNativeFile(entryName, extractParam)) {
+            std::string prefix;
+
+            if (!DeterminePrefix(extractParam.extractFileType, extractParam.cpuAbi, prefix)) {
+                LOG_E(BMS_TAG_INSTALLD, "determine prefix failed");
+                return false;
+            }
+            
+            std::string targetName = entryName.substr(prefix.length());
+            if (hnpPackageInfoMap.find(targetName) == hnpPackageInfoMap.end()) {
+                LOG_E(BMS_TAG_INSTALLD, "illegal native bundle");
+                continue;
+            }
+            targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
+                                + ServiceConstants::PATH_SEPARATOR + targetName;
+            ExtractTargetHnpFile(extractor, entryName, targetPathAndName, extractParam.extractFileType);
+            hnpPackageInfoMap.erase(targetName);
+            continue;
+        }
+    }
+
+    if (hnpPackageInfoMap.size() > 0) {
+        return false;
+    }
+    LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
+    return true;
+}
 bool InstalldOperator::IsNativeFile(
     const std::string &entryName, const ExtractParam &extractParam)
 {
@@ -308,7 +371,8 @@ bool InstalldOperator::IsNativeFile(
     }
 
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
-        && extractParam.extractFileType != ExtractFileType::SO) {
+        && extractParam.extractFileType != ExtractFileType::SO
+        && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
         LOG_D(BMS_TAG_INSTALLD, "file type error.");
         return false;
     }
@@ -348,6 +412,73 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "find native diff, entryName : %{public}s", entryName.c_str());
+    return true;
+}
+
+void InstalldOperator::ExtractTargetHnpFile(const BundleExtractor &extractor, const std::string &entryName,
+    const std::string &targetPath, const ExtractFileType &extractFileType)
+{
+    std::string path = targetPath;
+    std::string dir = GetPathDir(path);
+    if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create dir %{public}s failed", dir.c_str());
+        return;
+    }
+    bool ret = extractor.ExtractFile(entryName, path);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLD, "extract file failed, entryName : %{public}s", entryName.c_str());
+        return;
+    }
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(targetPath.c_str(), &buf) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+            return;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
+    }
+    if (!OHOS::ChangeModeFile(path, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+        return;
+    }
+    LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
+}
+
+bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    struct HapInfo hapInfo;
+    int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName.");
+    }
+    res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath.");
+    }
+    res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi.");
+    }
+    int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
+    LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    int ret = NativeUnInstallHnp(userId.c_str(), packageName.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Native package uninstallation failed with error code: %{public}d", ret);
+        return false;
+    }
     return true;
 }
 
@@ -422,6 +553,14 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             prefix = ServiceConstants::RES_FILE_PATH;
             break;
         }
+        case ExtractFileType::HNPS_FILE: {
+            if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
+                LOG_E(BMS_TAG_INSTALLD, "illegal cpuAbi");
+                return false;
+            }
+            prefix = ServiceConstants::HNPS + ServiceConstants::ABI_MAP.at(cpuAbi) + ServiceConstants::PATH_SEPARATOR;
+            break;
+        }
         default: {
             return false;
         }
@@ -445,6 +584,9 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
             break;
         }
         case ExtractFileType::RES_FILE: {
+            break;
+        }
+        case ExtractFileType::HNPS_FILE: {
             break;
         }
         default: {

@@ -148,6 +148,11 @@ struct Metadata {
     std::string resource;
 };
 
+struct HnpPackage {
+    std::string package;
+    std::string type;
+};
+
 struct Ability {
     std::string name;
     std::string srcEntrance;
@@ -265,6 +270,7 @@ struct Module {
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
     std::string pages;
     std::vector<Metadata> metadata;
+    std::vector<HnpPackage> hnpPackages;
     std::vector<Ability> abilities;
     std::vector<Extension> extensionAbilities;
     std::vector<RequestPermission> requestPermissions;
@@ -316,6 +322,28 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         jsonObjectEnd,
         META_DATA_RESOURCE,
         metadata.resource,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+}
+
+void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
+{
+    APP_LOGD("read hnppackage tag from module.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HNP_PACKAGE,
+        hnpPackage.package,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HNP_TYPE,
+        hnpPackage.type,
         JsonType::STRING,
         false,
         g_parseResult,
@@ -1410,6 +1438,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<HnpPackage>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_HNP_PACKAGE,
+        module.hnpPackages,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<Ability>>(jsonObject,
         jsonObjectEnd,
         MODULE_ABILITIES,
@@ -1610,6 +1646,16 @@ void GetMetadata(std::vector<Metadata> &metadata, const std::vector<Profile::Met
         tmpMetadata.value = item.value;
         tmpMetadata.resource = item.resource;
         metadata.emplace_back(tmpMetadata);
+    }
+}
+
+void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profile::HnpPackage> &profileHnpPackage)
+{
+    for (const Profile::HnpPackage &item : profileHnpPackage) {
+        HnpPackage tmpHnpPackage;
+        tmpHnpPackage.package = item.package;
+        tmpHnpPackage.type = item.type;
+        hnpPackage.emplace_back(tmpHnpPackage);
     }
 }
 
@@ -2266,6 +2312,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.description = moduleJson.module.description;
     innerModuleInfo.descriptionId = moduleJson.module.descriptionId;
     GetMetadata(innerModuleInfo.metadata, moduleJson.module.metadata);
+    GetHnpPackage(innerModuleInfo.hnpPackages, moduleJson.module.hnpPackages);
     innerModuleInfo.distro.deliveryWithInstall = moduleJson.module.deliveryWithInstall;
     innerModuleInfo.distro.installationFree = moduleJson.module.installationFree;
     innerModuleInfo.distro.moduleName = moduleJson.module.name;

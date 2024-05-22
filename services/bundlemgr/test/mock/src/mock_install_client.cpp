@@ -33,6 +33,22 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return 0;
 }
 
+ErrCode InstalldClient::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
 {
     return 0;

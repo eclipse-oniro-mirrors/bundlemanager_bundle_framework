@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <unordered_set>
 #include "nlohmann/json.hpp"
-
+#include <sstream>
 #include <unistd.h>
 
 #include "account_helper.h"
@@ -1365,6 +1365,12 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("remove nativeBundle failed");
+        return ret;
+    }
+
     ErrCode result = RemoveBundle(oldInfo, installParam.isKeepData);
     if (result != ERR_OK) {
         APP_LOGE("remove whole bundle failed");
@@ -1529,6 +1535,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         enableGuard.Dismiss();
         stateGuard.Dismiss();
         if (onlyInstallInUser) {
+            result = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName);
+            if (result != ERR_OK) {
+                APP_LOGE("remove nativeBundle failed");
+                return result;
+            }
             result = RemoveBundle(oldInfo, installParam.isKeepData);
             if (result != ERR_OK) {
                 APP_LOGE("remove bundle failed");
@@ -1750,6 +1761,36 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId)
+{
+    if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+        std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
+        std::string hapPath = modulePath_;
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
+            hapPath, info.GetCpuAbi(), info.GetBundleName());
+        if (ret != ERR_OK) {
+            APP_LOGE("Failed to install because installing the native package failed. error code: %{public}d", ret);
+        }
+        if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
+            APP_LOGE("delete dir %{public}s failed!", moduleHnpsPath.c_str());
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
+    int32_t &userId, std::string bundleName)
+{
+    if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
+            std::to_string(userId).c_str(), bundleName.c_str());
+        if (ret != ERR_OK) {
+            APP_LOGE("Failed to uninstall because uninstalling the native package failed. error code: %{public}d", ret);
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid)
 {
     modulePackage_ = info.GetCurrentModulePackage();
@@ -1789,6 +1830,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     result = ExtractModule(info, modulePath);
     if (result != ERR_OK) {
         APP_LOGE("extract module failed");
+        return result;
+    }
+
+    result = ProcessBundleInstallNative(info, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("Install Native failed");
         return result;
     }
 
@@ -1940,6 +1987,13 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         APP_LOGE("extract module and rename failed");
         return result;
     }
+
+    result = ProcessBundleInstallNative(newInfo, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("Install Native failed");
+        return result;
+    }
+
     ScopeGuard moduleGuard([&] { RemoveModuleDir(modulePath); });
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("new moduleupdate state failed");
@@ -2041,6 +2095,21 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     result = CheckArkProfileDir(newInfo, oldInfo);
     CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
 
+    auto hnpPackageOldInfos = oldInfo.GetInnerModuleInfoHnpInfo(oldInfo.GetCurModuleName());
+    auto hnpPackageNewInfos = newInfo.GetInnerModuleInfoHnpInfo(newInfo.GetCurModuleName());
+    if (hnpPackageOldInfos) {
+        for (const auto &item : *hnpPackageOldInfos) {
+            auto it = std::find_if(hnpPackageNewInfos->begin(), hnpPackageNewInfos->end(),
+            [&](const HnpPackage &hnpPackage) {return hnpPackage.package == item.package;});
+            if (it == hnpPackageNewInfos->end()) {
+                ErrCode ret = ProcessBundleUnInstallNative(oldInfo, userId_, bundleName_);
+                if (ret != ERR_OK) {
+                    APP_LOGE("remove nativeBundle failed");
+                    return ret;
+                }
+            }
+        }
+    }
     result = ProcessAsanDirectory(newInfo);
     CHECK_RESULT(result, "process asan log directory failed %{public}d");
 
@@ -2048,6 +2117,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         + ServiceConstants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
     CHECK_RESULT(result, "extract module and rename failed %{public}d");
+
+    result = ProcessBundleInstallNative(newInfo, userId_);
+    if (result != ERR_OK) {
+        APP_LOGE("Install Native failed");
+        return result;
+    }
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("old module update state failed");
@@ -2882,6 +2957,22 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         return result;
     }
 
+    if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+        std::map<std::string, std::string> hnpPackageInfoMap;
+        std::stringstream hnpPackageInfoString;
+        for (const auto &hnp_packageInfo : *hnpPackageInfos) {
+            hnpPackageInfoMap[hnp_packageInfo.package] = hnp_packageInfo.type;
+        }
+        for (const auto &hnpPackageKV : hnpPackageInfoMap) {
+            hnpPackageInfoString << "{" << hnpPackageKV.first << ":" << hnpPackageKV.second << "}";
+        }
+        std::string cpuAbi = info.GetCpuAbi();
+        result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to ExtractHnpsFileDir, error is %{public}d", result);
+        }
+    }
+
     if (info.GetIsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -2891,6 +2982,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     auto moduleDir = info.GetAppCodePath() + ServiceConstants::PATH_SEPARATOR + info.GetCurrentModulePackage();
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
+    info.AddModuleHnpsPath(modulePath);
     return ERR_OK;
 }
 
@@ -2925,6 +3017,29 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
         return ret;
     }
     APP_LOGD("ExtractResFileDir end");
+    return ret;
+}
+
+ErrCode BaseBundleInstaller::ExtractHnpFileDir(std::string cpuAbi, const std::string hnpPackageInfoString,
+    const std::string &modulePath) const
+{
+    APP_LOGD("ExtractHnpFileDir begin");
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = modulePath + ServiceConstants::PATH_SEPARATOR + ServiceConstants::HNPS_FILE_PATH;
+    if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
+        APP_LOGE("No support %{public}s abi", cpuAbi.c_str());
+        return ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED;
+    }
+    extractParam.cpuAbi = cpuAbi;
+    APP_LOGD("ExtractHnpFileDir targetPath: %{public}s", extractParam.targetPath.c_str());
+    extractParam.extractFileType = ExtractFileType::HNPS_FILE;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractHnpFiles(hnpPackageInfoString, extractParam);
+    if (ret != ERR_OK) {
+        APP_LOGE("ExtractHnpFileDir ExtractFiles failed, error is %{public}d", ret);
+        return ret;
+    }
+    APP_LOGD("ExtractHnpFileDir end");
     return ret;
 }
 

@@ -65,6 +65,7 @@ const std::string MODULE_VIRTUAL_MACHINE = "virtualMachine";
 const std::string MODULE_UI_SYNTAX = "uiSyntax";
 const std::string MODULE_PAGES = "pages";
 const std::string MODULE_META_DATA = "metadata";
+const std::string MODULE_HNP_PACKAGE = "hnpPackage";
 const std::string MODULE_REQUEST_PERMISSIONS = "requestPermissions";
 const std::string MODULE_DEFINE_PERMISSIONS = "definePermissions";
 const std::string MODULE_EXTENSION_KEYS = "extensionKeys";
@@ -169,6 +170,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_UI_SYNTAX, info.uiSyntax},
         {MODULE_PAGES, info.pages},
         {MODULE_META_DATA, info.metadata},
+        {MODULE_HNP_PACKAGE, info.hnpPackages},
         {MODULE_REQUEST_PERMISSIONS, info.requestPermissions},
         {MODULE_DEFINE_PERMISSIONS, info.definePermissions},
         {MODULE_EXTENSION_KEYS, info.extensionKeys},
@@ -488,6 +490,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         jsonObjectEnd,
         MODULE_META_DATA,
         info.metadata,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<HnpPackage>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_HNP_PACKAGE,
+        info.hnpPackages,
         JsonType::ARRAY,
         false,
         parseResult,

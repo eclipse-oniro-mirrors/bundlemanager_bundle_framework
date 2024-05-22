@@ -219,6 +219,21 @@ private:
      */
     ErrCode ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid);
     /**
+     * @brief The process of installing a native bundle.
+     * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
+     * @param uid Indicates the uid of the application.
+     * @return Returns ERR_OK if the native bundle install successfully; returns error code otherwise.
+     */
+    ErrCode ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId);
+    /**
+     * @brief The process of uninstalling a native bundle.
+     * @param info Indicates the InnerBundleInfo parsed from the config.json in the HAP package.
+     * @param uid Indicates the uid of the application.
+     * @param bundleName Indicates the bundleName of the application.
+     * @return Returns ERR_OK if the native bundle uninstall successfully; returns error code otherwise.
+     */
+    ErrCode ProcessBundleUnInstallNative(InnerBundleInfo &info, int32_t &userId, std::string bundleName);
+    /**
      * @brief The process of updating an exist bundle.
      * @param oldInfo Indicates the exist InnerBundleInfo object get from the database.
      * @param newInfo Indicates the InnerBundleInfo object parsed from the config.json in the HAP package.
@@ -648,6 +663,8 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
+    ErrCode ExtractHnpFileDir(std::string cpuAbi, const std::string hnpPackageInfoString,
+        const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
