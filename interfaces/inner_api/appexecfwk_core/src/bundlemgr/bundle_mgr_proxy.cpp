@@ -1619,6 +1619,34 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
         BundleMgrInterfaceCode::GET_PERMISSION_DEF, data, permissionDef);
 }
 
+ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGI("begin to CleanBundleCacheFilesAutomatic cache size of %{public}llu", cacheSize);
+
+    if (cacheSize == 0) {
+        APP_LOGE("parameter error, cache size must be greater than 0");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(cacheSize)) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write cache size fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE, data, reply)) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
 {

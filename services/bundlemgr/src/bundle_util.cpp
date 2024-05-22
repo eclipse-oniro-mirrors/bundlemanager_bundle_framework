@@ -703,6 +703,46 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
     return fileInfo.st_size;
 }
 
+void BundleUtil::GetTotalSizeOfFiles(const std::string& path, off_t &totalSize)
+{
+    struct stat fileStat;
+    if (stat(path.c_str(), &fileStat) == 0) {
+        if (S_ISREG(fileStat.st_mode)) {
+            totalSize += fileStat.st_size;
+        } else if (S_ISDIR(fileStat.st_mode)) {
+            totalSize += GetTotalSizeOfFilesInDirectory(path);
+        }
+    } else {
+        APP_LOGE("Error getting information for file/directory: %{public}s", path.c_str());
+    }
+}
+
+uint64_t BundleUtil::GetTotalSizeOfFilesInDirectory(const std::string& directoryPath)
+{
+    DIR* dir;
+    struct dirent* ent;
+    off_t totalSize = 0;
+
+    APP_LOGI("GetTotalSizeOfFilesInDirectory directoryPath: %{public}s", directoryPath.c_str());
+
+    if ((dir = opendir(directoryPath.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            std::string path = directoryPath + "/" + ent->d_name;
+
+            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+                continue;
+            }
+
+            GetTotalSizeOfFiles(path, totalSize);
+        }
+        closedir(dir);
+    } else {
+        APP_LOGE("opendir failed, path: %{public}s", directoryPath.c_str());
+    }
+
+    return static_cast<uint64_t>(totalSize);
+}
+
 std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
     std::vector<std::string> &toDeletePaths)
 {

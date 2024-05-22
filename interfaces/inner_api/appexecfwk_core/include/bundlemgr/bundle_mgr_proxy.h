@@ -502,6 +502,12 @@ public:
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
+     * @brief Clears cache data of a specified size through the proxy object.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    /**
      * @brief Clears cache data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.

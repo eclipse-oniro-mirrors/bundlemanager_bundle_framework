@@ -158,6 +158,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetLaunchWantForBundle);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PERMISSION_DEF),
         &BundleMgrHost::HandleGetPermissionDef);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE),
+        &BundleMgrHost::HandleCleanBundleCacheFilesAutomatic);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES),
         &BundleMgrHost::HandleCleanBundleCacheFiles);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR),
@@ -1396,6 +1398,20 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    uint64_t cacheSize = data.ReadUint64();
+    ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
+    
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
