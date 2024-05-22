@@ -1311,11 +1311,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         bool isRunning = false;
         std::string bundleName = useStat.bundleName_;
         for (const auto &info : runningList) {
-            auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),
-                [bundleName](const auto &bundleNameInRunningProcessInfo) {
-                    return bundleNameInRunningProcessInfo == bundleName;
-                });
-            if (res) {
+            std::unordered_set<std::string> infoSet(info.bundleNames.begin(), info.bundleNames.end());
+            if (infoSet.find(bundleName) != infoSet.end()) {
                 isRunning = true;
             }
         }
