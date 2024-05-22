@@ -1305,6 +1305,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
+    uint32_t notRunningSum = 0; // The total amount of application that is not running
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
     for (auto useStat : useStats) {
         bool isRunning = false;
@@ -1319,6 +1320,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             }
         }
         if (!isRunning) {
+            notRunningSum++;
             uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
             ErrCode ret = CleanBundleCacheFilesGetCleanSize(bundleName, currentUserId, cleanCacheSize);
             if (ret != ERR_OK) {
@@ -1329,6 +1331,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
                 return ERR_OK;
             }
         }
+    }
+
+    if (notRunningSum == 0) {
+        APP_LOGE("All apps are running under the current active user");
+        return ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING;
     }
 
     return ERR_OK;
