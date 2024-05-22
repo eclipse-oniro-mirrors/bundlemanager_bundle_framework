@@ -176,6 +176,10 @@ ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, con
 ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
     const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (!InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName)) {
         return ERR_APPEXECFWK_NATIVE_INSTALL_FAILED;
     }
@@ -184,6 +188,10 @@ ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, 
 
 ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
 {
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
     if (!InstalldOperator::ProcessBundleUnInstallNative(userId, packageName)) {
         return ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED;
     }

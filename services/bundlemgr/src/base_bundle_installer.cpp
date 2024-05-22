@@ -1763,28 +1763,32 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId)
 {
-    ErrCode ret = ERR_OK;
     if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
         std::string hapPath = modulePath_;
-        ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath, hapPath,
-                                                                        info.GetCpuAbi(), info.GetBundleName());
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
+            hapPath, info.GetCpuAbi(), info.GetBundleName());
+        if (ret != ERR_OK) {
+            APP_LOGE("Failed to install because installing the native package failed. error code: %{public}d", ret);
+        }
         if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
             APP_LOGE("delete dir %{public}s failed!", moduleHnpsPath.c_str());
         }
     }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     int32_t &userId, std::string bundleName)
 {
-    ErrCode ret = ERR_OK;
     if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
-        ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
+        ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
             std::to_string(userId).c_str(), bundleName.c_str());
+        if (ret != ERR_OK) {
+            APP_LOGE("Failed to uninstall because uninstalling the native package failed. error code: %{public}d", ret);
+        }
     }
-    return ret;
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid)
@@ -2960,7 +2964,6 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
         if (result != ERR_OK) {
             APP_LOGE("fail to ExtractHnpsFileDir, error is %{public}d", result);
-            return result;
         }
     }
 

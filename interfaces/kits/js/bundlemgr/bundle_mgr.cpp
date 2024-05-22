@@ -5041,10 +5041,6 @@ static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFil
         APP_LOGE("install failed due to no space left");
         installResult.resultCode = IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT;
         installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
-    } else if (res == ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED) {
-        APP_LOGE("install failed native hnp extract failed");
-        installResult.resultCode = IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED;
-        installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
     } else {
         installResult.resultCode = callback->GetResultCode();
         APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
