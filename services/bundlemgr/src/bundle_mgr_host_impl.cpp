@@ -1262,6 +1262,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
+    // Get current active userId
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     APP_LOGI("current active userId is %{public}d", currentUserId);
     if (currentUserId == Constants::INVALID_USERID) {
@@ -1276,8 +1277,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    // all apps under the current active user
-    std::vector<std::string> currentUserBundleNames;
+    std::vector<std::string> currentUserBundleNames; // All apps under the current active user
     if (!dataMgr->GetBundleList(currentUserBundleNames, currentUserId)) {
         APP_LOGE("get bundle list failed by currentUserId(%{public}d)", currentUserId);
         return ERR_BUNDLE_MANAGER_GET_BUNDLE_LIST_FAILED;
@@ -1344,9 +1344,9 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_ALL_UNUSED_BUNDLES_USAGE_TIME_ARE_EMPTY;
     }
 
-    uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
     for (const auto& bundleMap : bundleUseTimeMap) {
+        uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
         ErrCode ret = CleanBundleCacheFilesGetCleanSize(bundleMap.second, currentUserId, cleanCacheSize);
         if (ret != ERR_OK) {
             return ret;
