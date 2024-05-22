@@ -655,10 +655,11 @@ private:
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ForceWriteToDisk() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
-    void CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void CreateScreenLockProtectionDir();
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
-    bool SetEncryptionDirPolicy();
+    bool SetEncryptionDirPolicy(InnerBundleInfo &info);
     void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const;
+    void CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info, const std::string &dir);
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
