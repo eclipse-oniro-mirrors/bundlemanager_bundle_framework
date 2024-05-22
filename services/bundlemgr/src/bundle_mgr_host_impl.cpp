@@ -1270,18 +1270,25 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
-    // Get all apps under the current active user
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    // Get apps use time under the current active user
+    int64_t startTime = 0;
+    int64_t endTime = BundleUtil::GetCurrentTimeMs();
+    const int32_t PERIOD_ANNUALLY = 4;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
+    DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
+        useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
+
+    if (useStats.empty()) {
+        APP_LOGE("useStats under the current active user is empty");
+        return ERR_BUNDLE_MANAGER_DEVICE_USAGE_STATS_EMPTY;
     }
 
-    std::vector<std::string> currentUserBundleNames; // All apps under the current active user
-    if (!dataMgr->GetBundleList(currentUserBundleNames, currentUserId)) {
-        APP_LOGE("get bundle list failed by currentUserId(%{public}d)", currentUserId);
-        return ERR_BUNDLE_MANAGER_GET_BUNDLE_LIST_FAILED;
-    }
+    // Sort apps use time from small to large under the current active user
+    std::sort(useStats.begin(), useStats.end(),
+        [](DeviceUsageStats::BundleActivePackageStats a,
+        DeviceUsageStats::BundleActivePackageStats b) {
+            return a.totalInFrontTime_ < b.totalInFrontTime_;
+        });
 
     // Get all running apps
     sptr<IAppMgr> appMgrProxy =
@@ -1298,10 +1305,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
-    // All apps that are not running under the current active user
-    std::vector<std::string> currentUserNotRunningBundleNames;
-    for (auto bundleName : currentUserBundleNames) {
+    uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
+    for (auto useStat : useStats) {
         bool isRunning = false;
+        std::string bundleName = useStat.bundleName_;
         for (const auto &info : runningList) {
             auto res = std::any_of(info.bundleNames.begin(), info.bundleNames.end(),
                 [bundleName](const auto &bundleNameInRunningProcessInfo) {
@@ -1312,48 +1319,15 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             }
         }
         if (!isRunning) {
-            currentUserNotRunningBundleNames.push_back(bundleName);
-        }
-    }
-
-    if (currentUserNotRunningBundleNames.empty()) {
-        APP_LOGE("All apps are running under the current active user");
-        return ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING;
-    }
-
-    // Get apps use time
-    int64_t startTime = 0;
-    int64_t endTime = BundleUtil::GetCurrentTimeMs();
-    const int32_t PERIOD_ANNUALLY = 4;
-    std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
-    DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
-        useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
-
-    // Sort apps use time from small to large
-    std::map<int64_t, std::string> bundleUseTimeMap;
-    for (auto bundleName : currentUserNotRunningBundleNames) {
-        for (auto useStat : useStats) {
-            if (bundleName == useStat.bundleName_) {
-                bundleUseTimeMap.insert(make_pair(useStat.totalInFrontTime_, bundleName));
+            uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
+            ErrCode ret = CleanBundleCacheFilesGetCleanSize(bundleName, currentUserId, cleanCacheSize);
+            if (ret != ERR_OK) {
+                return ret;
             }
-        }
-    }
-
-    if (bundleUseTimeMap.empty()) {
-        APP_LOGE("the current active user all unused apps usage time are empty");
-        return ERR_BUNDLE_MANAGER_ALL_UNUSED_BUNDLES_USAGE_TIME_ARE_EMPTY;
-    }
-
-    uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
-    for (const auto& bundleMap : bundleUseTimeMap) {
-        uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
-        ErrCode ret = CleanBundleCacheFilesGetCleanSize(bundleMap.second, currentUserId, cleanCacheSize);
-        if (ret != ERR_OK) {
-            return ret;
-        }
-        cleanCacheSum += cleanCacheSize;
-        if (cleanCacheSum >= cacheSize) {
-            return ERR_OK;
+            cleanCacheSum += cleanCacheSize;
+            if (cleanCacheSum >= cacheSize) {
+                return ERR_OK;
+            }
         }
     }
 

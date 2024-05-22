@@ -73,7 +73,6 @@ ohos_unittest("BmsBundleCommonTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
-    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
