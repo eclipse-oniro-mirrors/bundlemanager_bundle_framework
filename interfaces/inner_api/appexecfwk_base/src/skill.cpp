@@ -233,24 +233,34 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const std::vector<s
 {
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
-        if (skillUri.linkFeature == linkFeature) {
-            if (!vecTypes.empty()) {
-                for (const std::string &strType : vecTypes) {
-                    if (MatchUriAndType(skillUri, uriString, strType)) {
-                        APP_LOGD("linkFeature %{public}s, type %{public}s, Is Matched", linkFeature.c_str(),
-                            strType.c_str());
-                        matchUriIndex = uriIndex;
-                        return true;
-                    }
-                }
-            } else if (MatchUriAndType(skillUri, uriString, type)) {
-                APP_LOGD("linkFeature %{public}s, Is Matched", linkFeature.c_str());
-                matchUriIndex = uriIndex;
-                return true;
-            }
+        if (skillUri.linkFeature != linkFeature) {
+            continue;
+        }
+
+        if (MatchWithVecTypes(skillUri, vecTypes, uriString, matchUriIndex, uriIndex)) {
+            return true;
+        }
+
+        if (vecTypes.empty() && MatchUriAndType(skillUri, uriString, type)) {
+            APP_LOGD("linkFeature %{public}s, Is Matched", linkFeature.c_str());
+            matchUriIndex = uriIndex;
+            return true;
         }
     }
+    return false;
+}
 
+bool Skill::MatchWithVecTypes(const SkillUri &skillUri, const std::vector<std::string> &vecTypes,
+    const std::string &uriString, size_t &matchUriIndex, size_t uriIndex) const
+{
+    for (const std::string &strType : vecTypes) {
+        if (MatchUriAndType(skillUri, uriString, strType)) {
+            APP_LOGD("linkFeature %{public}s, type %{public}s, Is Matched", skillUri.linkFeature.c_str(),
+                strType.c_str());
+            matchUriIndex = uriIndex;
+            return true;
+        }
+    }
     return false;
 }
 

@@ -71,6 +71,8 @@ private:
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
     bool MatchMimeType(const SkillUri &skillUri, const std::string &uriString) const;
+    bool MatchWithVecTypes(const SkillUri &skillUri, const std::vector<std::string> &vecTypes,
+        const std::string &uriString, size_t &matchUriIndex, size_t uriIndex) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 }  // namespace AppExecFwk
