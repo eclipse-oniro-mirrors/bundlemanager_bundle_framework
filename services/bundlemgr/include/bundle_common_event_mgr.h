@@ -77,8 +77,8 @@ public:
         const SandboxInstallType &type);
     void NotifyOverlayModuleStateStatus(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId, int32_t uid);
-    void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data);
-    void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId);
+    void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex);
+    void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex);
     void NotifyDynamicIconEvent(
         const std::string &bundleName, bool isEnableDynamicIcon);
     void NotifyBundleResourcesChanged(int32_t userId);

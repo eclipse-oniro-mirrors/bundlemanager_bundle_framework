@@ -68,6 +68,12 @@ public:
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetAbilityRunningControlRule(
         const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
+    virtual ErrCode GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
+        int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);

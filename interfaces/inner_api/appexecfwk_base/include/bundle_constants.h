@@ -221,6 +221,7 @@ constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 
 // clone application
+constexpr int32_t MAIN_APP_INDEX = 0;
 constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 

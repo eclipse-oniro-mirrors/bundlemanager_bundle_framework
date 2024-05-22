@@ -60,6 +60,9 @@ private:
     ErrCode HandleGetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAbilityRunningControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleSetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply);
 
     DISALLOW_COPY_AND_MOVE(AppControlHost);
 };
