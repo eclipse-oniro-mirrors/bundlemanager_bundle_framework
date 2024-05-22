@@ -51,9 +51,11 @@ ohos_unittest("BmsServiceBundleScanTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",

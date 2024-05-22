@@ -61,11 +61,13 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
 
   external_deps = [
     "ability_runtime:ability_manager",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",

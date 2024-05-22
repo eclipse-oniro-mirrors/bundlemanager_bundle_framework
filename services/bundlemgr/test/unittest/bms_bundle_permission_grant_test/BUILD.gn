@@ -79,11 +79,13 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -243,11 +245,13 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -405,11 +409,13 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -573,11 +579,13 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -740,11 +748,13 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -905,11 +915,13 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -1061,9 +1073,11 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "battery_manager:batterysrv_client",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
