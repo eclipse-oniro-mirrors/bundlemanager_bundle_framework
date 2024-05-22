@@ -717,7 +717,7 @@ napi_value ZipNExporter::DeflateBound(napi_env env, napi_callback_info info)
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
         }
-        arg->errCode = deflateBound(zipEntity->zs.get(), sourceLen);
+        arg->errCode = static_cast<int32_t>(deflateBound(zipEntity->zs.get(), sourceLen));
         return NapiBusinessError(ERRNO_NOERR);
     };
 
@@ -1407,7 +1407,7 @@ napi_value ZipNExporter::CompressBound(napi_env env, napi_callback_info info)
         if (!arg) {
             return NapiBusinessError(EFAULT, true);
         }
-        arg->errCode = compressBound(sourceLen);
+        arg->errCode = static_cast<int32_t>(compressBound(sourceLen));
         return NapiBusinessError(ERRNO_NOERR);
     };
 
@@ -2341,7 +2341,7 @@ napi_value ZipNExporter::InflateCodesUsed(napi_env env, napi_callback_info info)
         if (!arg || !zipEntity || !zipEntity->zs) {
             return NapiBusinessError(EFAULT, true);
         }
-        arg->errCode = inflateCodesUsed(zipEntity->zs.get());
+        arg->errCode = static_cast<int32_t>(inflateCodesUsed(zipEntity->zs.get()));
         return NapiBusinessError(ERRNO_NOERR);
     };
 

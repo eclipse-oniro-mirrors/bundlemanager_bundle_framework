@@ -66,6 +66,7 @@ ohos_unittest("BmsAOTMgrTest") {
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
     "appverify:libhapverify",
     "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
@@ -102,6 +103,7 @@ ohos_unittest("BmsAOTMgrTest") {
     sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
+      "ability_runtime:ability_start_options",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",

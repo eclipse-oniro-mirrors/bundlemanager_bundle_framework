@@ -45,6 +45,8 @@ void to_json(nlohmann::json &jsonObject, const CustomizeData &customizeData);
 void from_json(const nlohmann::json &jsonObject, CustomizeData &customizeData);
 void to_json(nlohmann::json &jsonObject, const MetaData &metaData);
 void from_json(const nlohmann::json &jsonObject, MetaData &metaData);
+void to_json(nlohmann::json &jsonObject, const HnpPackage &hnpPackage);
+void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage);
 void to_json(nlohmann::json &jsonObject, const Metadata &metadata);
 void from_json(const nlohmann::json &jsonObject, Metadata &metadata);
 void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo);

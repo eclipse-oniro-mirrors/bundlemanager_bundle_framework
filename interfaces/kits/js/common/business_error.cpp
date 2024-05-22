@@ -88,7 +88,7 @@ constexpr const char* ERROR_MSG_SHARE_APP_LIBRARY_IS_NOT_EXIST =
 constexpr const char* ERR_MSG_UNINSTALL_SHARED_LIBRARY =
     "The specified bundle is shared library";
 constexpr const char* ERR_MSG_DISALLOW_INSTALL =
-    "Failed to install the HAP because enterprise device management disallow install.";
+    "Failed to install the HAP because the installation is forbidden by enterprise device management.";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
     "The uri in data proxy is wrong";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
@@ -96,7 +96,7 @@ constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
 constexpr const char* ERR_MSG_WRONG_MODE_ISOLATION =
     "Failed to install the HAP because the isolationMode configured is not supported";
 constexpr const char* ERR_MSG_DISALLOW_UNINSTALL =
-    "Failed to uninstall the HAP because enterprise device management disallow uninstall.";
+    "Failed to uninstall the HAP because the uninstall is forbidden by enterprise device management.";
 constexpr const char* ERR_MSG_ALREADY_EXIST =
     "Failed to install the HAP because the VersionCode to be updated is not greater than the current VersionCode";
 constexpr const char* ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG =
@@ -108,7 +108,7 @@ constexpr const char* ERR_MSG_SELF_UPDATE_NOT_MDM =
 constexpr const char* ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME =
     "Failed to install the HAP because the bundleName is different from the bundleName of the caller application.";
 constexpr const char* ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED =
-    "Failed to install the HAP because an enterprise normal/MDM bundle cannot be installed on non-enterprise device.";
+    "Failed to install the HAP because an enterprise normal/MDM bundle cannot be installed on non-enterprise devices.";
 constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
     "Failed to install the HAP because a debug bundle can be installed only in developer mode.";
 constexpr const char* ERR_MSG_ERROR_VERIFY_ABC = "Failed to verify the abc file.";
@@ -135,6 +135,10 @@ constexpr const char* ERR_MSG_START_SHORTCUT =
     "The ability specified by want in the ShortcutInfo struct cannot be started.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_CONTROLLED =
     "Failed to install the HAP because the device has been controlled.";
+constexpr const char* ERR_MSG_NATIVE_INSTALL_FAILED =
+    "Failed to install the HAP because installing the native package failed.";
+constexpr const char* ERR_MSG_NATIVE_UNINSTALL_FAILED =
+    "Failed to uninstall the HAP because uninstalling the native package failed.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -207,6 +211,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED },
     { ERROR_START_SHORTCUT_ERROR, ERR_MSG_START_SHORTCUT },
     { ERROR_INSTALL_FAILED_CONTROLLED, ERR_MSG_INSTALL_FAILED_CONTROLLED },
+    { ERROR_INSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_INSTALL_FAILED },
+    { ERROR_UNINSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_UNINSTALL_FAILED },
 };
 } // namespace
 

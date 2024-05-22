@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_PROXY_H
 
 #include <string>
+#include <vector>
 
 #include "bundle_event_callback_interface.h"
 #include "bundle_framework_core_ipc_interface_code.h"
@@ -1012,6 +1013,10 @@ public:
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetCloneAppIndexes(const std::string &bundleName, std::vector<int32_t> &appIndexes,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName, int32_t flags,
+        int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 private:
     /**

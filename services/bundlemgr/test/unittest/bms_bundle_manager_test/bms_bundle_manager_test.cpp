@@ -3995,7 +3995,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0013, Function | SmallTest | Lev
 HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0014, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     ExtensionAbilityInfo extensionInfo;
     GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
     bool testRet = GetBundleDataMgr()->ExplicitQueryExtensionInfo(
@@ -4082,7 +4082,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0017, Function | SmallTest | Lev
     want.AddEntity("entity.system.home");
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    int32_t appIndex = 2;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 2;
     GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
     ErrCode testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfosV9(
         want, 0, USERID, extensionInfos, appIndex);

@@ -127,6 +127,15 @@ void EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &
     EventReport::SendSystemEvent(BMSEventType::QUERY_OF_CONTINUE_TYPE, eventInfo);
 }
 
+void EventReport::SendCpuSceneEvent(const std::string &processName, const int32_t sceneId)
+{
+    EventInfo eventInfo;
+    eventInfo.sceneId = sceneId;
+    eventInfo.processName = processName;
+    eventInfo.timeStamp = BundleUtil::GetCurrentTimeMs();
+    EventReport::SendSystemEvent(BMSEventType::CPU_SCENE_ENTRY, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

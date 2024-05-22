@@ -2098,6 +2098,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0090, Function | SmallTest
     info.bundleName = "bundleName";
     info.label = "label";
     info.icon = "icon";
+    info.appIndex = 1;
 
     Parcel parcel;
     bool ret = info.Marshalling(parcel);
@@ -2108,6 +2109,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0090, Function | SmallTest
     EXPECT_EQ(info_2.bundleName, info.bundleName);
     EXPECT_EQ(info_2.label, info.label);
     EXPECT_EQ(info_2.icon, info.icon);
+    EXPECT_EQ(info_2.appIndex, info.appIndex);
 
     Parcel parcel_2;
     ret = info.Marshalling(parcel_2);
@@ -2118,6 +2120,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0090, Function | SmallTest
         EXPECT_EQ(infoPtr->bundleName, info.bundleName);
         EXPECT_EQ(infoPtr->label, info.label);
         EXPECT_EQ(infoPtr->icon, info.icon);
+        EXPECT_EQ(infoPtr->appIndex, info.appIndex);
     }
 
     Parcel parcel_3;
@@ -2142,6 +2145,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0091, Function | SmallTest
     info.abilityName = "abilityName";
     info.label = "label";
     info.icon = "icon";
+    info.appIndex = 1;
 
     Parcel parcel;
     bool ret = info.Marshalling(parcel);
@@ -2154,6 +2158,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0091, Function | SmallTest
     EXPECT_EQ(info_2.abilityName, info.abilityName);
     EXPECT_EQ(info_2.label, info.label);
     EXPECT_EQ(info_2.icon, info.icon);
+    EXPECT_EQ(info_2.appIndex, info.appIndex);
 
     Parcel parcel_2;
     ret = info.Marshalling(parcel_2);
@@ -2167,6 +2172,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0091, Function | SmallTest
         EXPECT_EQ(infoPtr->abilityName, info.abilityName);
         EXPECT_EQ(infoPtr->label, info.label);
         EXPECT_EQ(infoPtr->icon, info.icon);
+        EXPECT_EQ(infoPtr->appIndex, info.appIndex);
     }
 
     Parcel parcel_3;
@@ -2406,6 +2412,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
     EXPECT_EQ(installResult, ERR_OK);
 
@@ -2435,6 +2447,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest
 
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(info.size() == 0);
+
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, -1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
+    EXPECT_TRUE(info.size() == 0);
+
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 100);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     EXPECT_TRUE(info.size() == 0);
 
     ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
@@ -2524,8 +2544,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2563,8 +2581,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
     code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
     EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2682,10 +2698,10 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfos(resourceInfosMap, 0);
+        bool ret = manager->AddResourceInfos(resourceInfosMap, true, 0);
         EXPECT_FALSE(ret);
         resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-        ret = manager->AddResourceInfos(resourceInfosMap, manager->currentTaskNum_);
+        ret = manager->AddResourceInfos(resourceInfosMap, false, manager->currentTaskNum_);
         EXPECT_TRUE(ret);
     }
 
@@ -3558,6 +3574,175 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0142, Function | SmallTest
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0143
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfo, bundleName not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0143, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, 1);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0144
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfo, bundleName exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0144, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo bundleResourceInfo;
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        // add clone bundle resource
+        int32_t appIndex = 1;
+        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
+        BundleResourceInfo cloneBundleResourceInfo;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME, static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            cloneBundleResourceInfo, appIndex);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(cloneBundleResourceInfo.bundleName, bundleResourceInfo.bundleName);
+        EXPECT_EQ(cloneBundleResourceInfo.appIndex, appIndex);
+        EXPECT_EQ(cloneBundleResourceInfo.label, bundleResourceInfo.label + std::to_string(appIndex));
+        EXPECT_FALSE(cloneBundleResourceInfo.icon.empty());
+        EXPECT_FALSE(cloneBundleResourceInfo.foreground.empty());
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0145
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddCloneBundleResourceInfo, bundleName exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0145, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            launcherAbilityResourceInfos);
+        EXPECT_TRUE(ret);
+        // add clone bundle resource
+        int32_t appIndex = 1;
+        ret = manager->AddCloneBundleResourceInfo(BUNDLE_NAME, appIndex);
+        EXPECT_TRUE(ret);
+
+        std::vector<LauncherAbilityResourceInfo> cloneLauncherAbilityResourceInfos;
+        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR),
+            cloneLauncherAbilityResourceInfos, appIndex);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(launcherAbilityResourceInfos.size(), cloneLauncherAbilityResourceInfos.size());
+        if (!launcherAbilityResourceInfos.empty() && !cloneLauncherAbilityResourceInfos.empty()) {
+            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].bundleName, launcherAbilityResourceInfos[0].bundleName);
+            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].moduleName, launcherAbilityResourceInfos[0].moduleName);
+            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].abilityName, launcherAbilityResourceInfos[0].abilityName);
+            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].label,
+                launcherAbilityResourceInfos[0].label + std::to_string(appIndex));
+            EXPECT_EQ(cloneLauncherAbilityResourceInfos[0].appIndex, appIndex);
+            EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].icon.empty());
+            EXPECT_FALSE(cloneLauncherAbilityResourceInfos[0].foreground.empty());
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0146
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test ResourceInfo ParseKey
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0146, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.appIndex_ = 0;
+    std::string key = resourceInfo.GetKey();
+    EXPECT_EQ(key, BUNDLE_NAME);
+
+    resourceInfo.appIndex_ = 1;
+    key = resourceInfo.GetKey();
+    EXPECT_EQ(key, "1_" + BUNDLE_NAME);
+
+    ResourceInfo newInfo;
+    newInfo.ParseKey(key);
+    EXPECT_EQ(newInfo.bundleName_, resourceInfo.bundleName_);
+    EXPECT_EQ(newInfo.appIndex_, resourceInfo.appIndex_);
+    EXPECT_EQ(newInfo.appIndex_, 1);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0147
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test ResourceInfo ParseKey
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    std::string key = "1_" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(resourceInfo.appIndex_, 1);
+
+    key = "_" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, key);
+    EXPECT_EQ(resourceInfo.appIndex_, 0);
+
+    key = "a1_" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, key);
+    EXPECT_EQ(resourceInfo.appIndex_, 0);
+
+    key = "a1" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, key);
+    EXPECT_EQ(resourceInfo.appIndex_, 0);
+
+    key = "100_" + BUNDLE_NAME;
+    resourceInfo.InnerParseAppIndex(key);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(resourceInfo.appIndex_, 100);
 }
 #endif
 } // OHOS

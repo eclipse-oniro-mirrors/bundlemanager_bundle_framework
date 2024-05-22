@@ -3357,7 +3357,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0600, Function | SmallTes
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     BundleInfo bundleInfo;
     bool ret = hostImpl->GetBundleArchiveInfo(
-        Constants::SANDBOX_DATA_PATH, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+        ServiceConstants::SANDBOX_DATA_PATH, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(ret);
 }
 

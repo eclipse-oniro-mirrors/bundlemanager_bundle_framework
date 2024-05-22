@@ -70,8 +70,9 @@ ErrCode BundleResourceHost::HandleGetBundleResourceInfo(MessageParcel &data, Mes
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     uint32_t flags = data.ReadUint32();
+    int32_t appIndex = data.ReadInt32();
     BundleResourceInfo bundleResourceInfo;
-    ErrCode ret = GetBundleResourceInfo(bundleName, flags, bundleResourceInfo);
+    ErrCode ret = GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -87,8 +88,9 @@ ErrCode BundleResourceHost::HandleGetLauncherAbilityResourceInfo(MessageParcel &
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     uint32_t flags = data.ReadUint32();
+    int32_t appIndex = data.ReadInt32();
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    ErrCode ret = GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos);
+    ErrCode ret = GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos, appIndex);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

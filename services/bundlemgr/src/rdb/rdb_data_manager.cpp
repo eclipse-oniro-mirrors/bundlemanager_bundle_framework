@@ -58,6 +58,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
+    rdbStoreConfig.SetAllowRebuild(true);
     // for check db exist or not
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",

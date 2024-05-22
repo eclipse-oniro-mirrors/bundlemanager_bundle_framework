@@ -59,6 +59,26 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return CallService(&IInstalld::ExtractFiles, extractParam);
 }
 
+ErrCode InstalldClient::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+{
+    if (extractParam.srcPath.empty() || extractParam.targetPath.empty() || hnpPackageInfo.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractHnpFiles, hnpPackageInfo, extractParam);
+}
+
+ErrCode InstalldClient::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    return CallService(&IInstalld::ProcessBundleInstallNative, userId, hnpRootPath,
+        hapPath, cpuAbi, packageName);
+}
+
+ErrCode InstalldClient::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    return CallService(&IInstalld::ProcessBundleUnInstallNative, userId, packageName);
+}
+
 ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
 {
     return CallService(&IInstalld::ExecuteAOT, aotArgs);

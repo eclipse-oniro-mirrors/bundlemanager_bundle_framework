@@ -40,6 +40,7 @@ const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
+constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -373,6 +374,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCopyAp);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES),
         &BundleMgrHost::HandleGetCloneAppIndexes);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX),
+        &BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -628,7 +631,7 @@ ErrCode BundleMgrHost::HandleBatchGetBundleInfo(MessageParcel &data, MessageParc
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t bundleNameCount = data.ReadInt32();
-    if (bundleNameCount <= 0) {
+    if (bundleNameCount <= 0 || bundleNameCount > MAX_BATCH_QUERY_BUNDLE_SIZE) {
         APP_LOGE("bundleName count is error");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -3388,7 +3391,7 @@ ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &d
     APP_LOGD("Called.");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
-    int32_t vectorSize = preinstalledApplicationInfos.size();
+    int32_t vectorSize = static_cast<int32_t>(preinstalledApplicationInfos.size());
     if (vectorSize > MAX_STATUS_VECTOR_NUM) {
         APP_LOGE("PreinstallApplicationInfos vector is over size.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -3546,6 +3549,30 @@ ErrCode BundleMgrHost::HandleGetCloneAppIndexes(MessageParcel &data, MessageParc
     }
     if (ret == ERR_OK && !reply.WriteInt32Vector(appIndexes)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<ElementName> element(data.ReadParcelable<ElementName>());
+    if (!element) {
+        APP_LOGE("ReadParcelable<ElementName> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t flag = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    auto ret = QueryCloneExtensionAbilityInfoWithAppIndex(*element, flag, appIndex, extensionAbilityInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&extensionAbilityInfo)) {
+        APP_LOGE("write extension infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

@@ -16,6 +16,7 @@
 #include "bundle_mgr_proxy.h"
 
 #include <numeric>
+#include <set>
 #include <unistd.h>
 
 #include "ipc_types.h"
@@ -418,23 +419,24 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
     for (size_t i = 0; i < bundleNames.size(); i++) {
         APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
         if (bundleNames[i].empty()) {
-            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}u empty", i);
+            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}zu empty", i);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
-
+    std::set<std::string> bundleNameSet(bundleNames.begin(), bundleNames.end());
+    std::vector<std::string> newBundleNames(bundleNameSet.begin(), bundleNameSet.end());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to BatchGetBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(bundleNames.size())) {
+    if (!data.WriteInt32(newBundleNames.size())) {
         APP_LOGE("fail to BatchGetBundleInfo due to write bundle name count fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!data.WriteString(bundleNames[i])) {
-            APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}u fail", i);
+    for (size_t i = 0; i < newBundleNames.size(); i++) {
+        if (!data.WriteString(newBundleNames[i])) {
+            APP_LOGE("fail to BatchGetBundleInfo due to write bundle name %{public}zu fail", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -1213,7 +1215,7 @@ ErrCode BundleMgrProxy::BatchQueryAbilityInfos(
     }
     for (size_t i = 0; i < wants.size(); i++) {
         if (!data.WriteParcelable(&wants[i])) {
-            APP_LOGE("write want %{public}d failed", i);
+            APP_LOGE("write want %{public}zu failed", i);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -4819,6 +4821,35 @@ ErrCode BundleMgrProxy::GetCloneAppIndexes(const std::string &bundleName, std::v
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;
+}
+
+ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &elementName,
+    int32_t flags, int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&elementName)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write elementName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flags)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfo write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfoWithErrCode<ExtensionAbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX, data, extensionAbilityInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

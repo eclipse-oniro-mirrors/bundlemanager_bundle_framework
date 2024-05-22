@@ -45,10 +45,10 @@ public:
     bool GetAllResourceName(std::vector<std::string> &keyName);
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
-        BundleResourceInfo &bundleResourceInfo);
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
 
     bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
-        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0);
 
     bool GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
 
@@ -67,7 +67,10 @@ private:
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
 
     void ParseKey(const std::string &key,
-    LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+        LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
+
+    void ParseKey(const std::string &key,
+        BundleResourceInfo &bundleResourceInfo);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 

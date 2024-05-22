@@ -22,6 +22,7 @@
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "bundle_sandbox_data_mgr.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
@@ -226,6 +227,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     }
     ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
 
+    // process icon and label
+    if (!BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
+        APP_LOGW("add clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+    }
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
@@ -278,6 +284,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     if (RemoveCloneDataDir(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGW("RemoveCloneDataDir failed");
+    }
+    // process icon and label
+    if (!BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId)) {
+        APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
     }
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;

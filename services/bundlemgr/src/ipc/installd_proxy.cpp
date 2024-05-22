@@ -78,6 +78,50 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hnpPackageInfo));
+    if (!data.WriteParcelable(&extractParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_HNP_FILES, data, reply, option);
+}
+
+ErrCode InstalldProxy::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(userId));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hnpRootPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(packageName));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::INSTALL_NATIVE, data, reply, option);
+}
+
+ErrCode InstalldProxy::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(userId));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(packageName));
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::UNINSTALL_NATIVE, data, reply, option);
+}
+
+
 ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
 {
     MessageParcel data;

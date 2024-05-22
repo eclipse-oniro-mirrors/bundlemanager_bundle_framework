@@ -2203,7 +2203,7 @@ bool ToApplicationInfo(
     }
 
     applicationInfo.debug = configJson.deveicConfig.defaultDevice.debug;
-    applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
+    applicationInfo.deviceId = ServiceConstants::CURRENT_DEVICE_ID;
     applicationInfo.distributedNotificationEnabled = true;
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.process = configJson.deveicConfig.defaultDevice.process;

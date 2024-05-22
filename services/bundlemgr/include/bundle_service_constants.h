@@ -31,6 +31,8 @@ const std::string PATH_SEPARATOR = "/";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
 const std::string RES_FILE_PATH = "resources/resfile/";
+const std::string HNPS_FILE_PATH = "hnp_tmp_extract_dir/";
+const std::string HNPS = "hnp/";
 constexpr const char* DIR_EL1 = "el1";
 constexpr const char* DIR_EL2 = "el2";
 constexpr const char* DIR_EL3 = "el3";
@@ -49,6 +51,27 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
+constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
+constexpr const char* HSP_FILE_SUFFIX = ".hsp";
+constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
+const char FILE_SEPARATOR_CHAR = '/';
+constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
+constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* TMP_SUFFIX = "_tmp";
+constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
+constexpr const char* BASE = "/base/";
+constexpr const char* DATABASE = "/database/";
+constexpr const char* LOG = "/log/";
+constexpr const char* HAPS = "/haps/";
+constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
+constexpr const char* REAL_DATA_PATH = "/data/app/el2";
+constexpr const char* DATA_GROUP_PATH = "/group/";
+constexpr const char* STREAM_INSTALL_PATH = "stream_install";
+constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
+constexpr const char* QUICK_FIX_PATH = "quick_fix";
+constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
+constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1280,7 +1280,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0700, Function | SmallTest
     BundleUtil bundleUtil;
     std::string key = "";
     bundleUtil.DeviceAndNameToKey(
-        Constants::CURRENT_DEVICE_ID, BUNDLE_NAME, key);
+        ServiceConstants::CURRENT_DEVICE_ID, BUNDLE_NAME, key);
     EXPECT_EQ(key, "PHONE-001_com.example.l3jsdemo");
 }
 
@@ -1293,7 +1293,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_0800, Function | SmallTest
 {
     BundleUtil bundleUtil;
     std::string underline = "_";
-    std::string deviceId = Constants::CURRENT_DEVICE_ID;
+    std::string deviceId = ServiceConstants::CURRENT_DEVICE_ID;
     std::string bundleName = "com.split.underline";
     std::string key = deviceId + underline + bundleName;
     bool ret = bundleUtil.KeyToDeviceAndName(key, deviceId, bundleName);

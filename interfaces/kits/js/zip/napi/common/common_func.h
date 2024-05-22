@@ -94,7 +94,8 @@ struct CommonFunc {
     static std::tuple<bool, int32_t> GetGZPutCArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, std::unique_ptr<char[]>> GetGZPutSArg(napi_env env, const NapiFuncArg &funcArg);
     static std::tuple<bool, int32_t, int32_t> GetGzSetParamsArg(napi_env env, const NapiFuncArg &funcArg);
-    static void GetLogContent(std::string& formatStr, std::vector<NapiParam>& params, std::string& ret, uint32_t& pos);
+    static void GetLogContent(
+        std::string& formatStr, const std::vector<NapiParam>& params, std::string& ret, uint32_t& pos);
     static void ParseLogContent(std::string& formatStr, std::vector<NapiParam>& params, std::string& logContent);
     static void ParseNapiValue(napi_env env, napi_value element, std::vector<NapiParam>& params);
     static bool ParseNapiValueFromArray(napi_env env, std::vector<NapiParam>& params, const NapiFuncArg& funcArg);

@@ -184,6 +184,7 @@ public:
     static std::string GetHexHash(const std::string &s);
     static void RecursiveHash(std::string& s);
     static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
+    static std::string ToString(const std::vector<std::string> &vector);
 private:
     static std::mutex g_mutex;
 };

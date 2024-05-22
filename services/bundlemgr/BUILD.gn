@@ -466,6 +466,8 @@ ohos_shared_library("installs") {
 
   external_deps = [
     "access_token:el5_filekey_manager_sdk",
+    "appspawn:hnpapi",
+    "bounds_checking_function:libsec_shared",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
     "hitrace:hitrace_meter",

@@ -48,6 +48,7 @@
 #include "el5_filekey_manager_kit.h"
 #include "parameters.h"
 #include "securec.h"
+#include "hnp_api.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -278,6 +279,68 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
     return true;
 }
 
+bool InstalldOperator::ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam)
+{
+    std::map<std::string, std::string> hnpPackageInfoMap;
+    std::stringstream hnpPackageInfoString(hnpPackageInfo);
+    std::string keyValue;
+    while (getline(hnpPackageInfoString, keyValue, '}')) {
+        size_t pos = keyValue.find(":");
+        if (pos != std::string::npos) {
+            std::string key = keyValue.substr(1, pos - 1);
+            std::string value = keyValue.substr(pos + 1);
+            hnpPackageInfoMap[key] = value;
+        }
+    }
+
+    BundleExtractor extractor(extractParam.srcPath);
+    if (!extractor.Init()) {
+        LOG_E(BMS_TAG_INSTALLD, "extractor init failed");
+        return false;
+    }
+
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "get entryNames failed");
+        return false;
+    }
+    std::string targetPathAndName = "";
+    for (const auto &entryName : entryNames) {
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+                continue;
+        }
+        if (entryName.back() == ServiceConstants::PATH_SEPARATOR[0]) {
+            continue;
+        }
+        // handle native file
+        if (IsNativeFile(entryName, extractParam)) {
+            std::string prefix;
+
+            if (!DeterminePrefix(extractParam.extractFileType, extractParam.cpuAbi, prefix)) {
+                LOG_E(BMS_TAG_INSTALLD, "determine prefix failed");
+                return false;
+            }
+            
+            std::string targetName = entryName.substr(prefix.length());
+            if (hnpPackageInfoMap.find(targetName) == hnpPackageInfoMap.end()) {
+                LOG_E(BMS_TAG_INSTALLD, "illegal native bundle");
+                continue;
+            }
+            targetPathAndName = extractParam.targetPath + hnpPackageInfoMap[targetName]
+                                + ServiceConstants::PATH_SEPARATOR + targetName;
+            ExtractTargetHnpFile(extractor, entryName, targetPathAndName, extractParam.extractFileType);
+            hnpPackageInfoMap.erase(targetName);
+            continue;
+        }
+    }
+
+    if (hnpPackageInfoMap.size() > 0) {
+        return false;
+    }
+    LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles end");
+    return true;
+}
 bool InstalldOperator::IsNativeFile(
     const std::string &entryName, const ExtractParam &extractParam)
 {
@@ -308,7 +371,8 @@ bool InstalldOperator::IsNativeFile(
     }
 
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
-        && extractParam.extractFileType != ExtractFileType::SO) {
+        && extractParam.extractFileType != ExtractFileType::SO
+        && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
         LOG_D(BMS_TAG_INSTALLD, "file type error.");
         return false;
     }
@@ -351,6 +415,73 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
     return true;
 }
 
+void InstalldOperator::ExtractTargetHnpFile(const BundleExtractor &extractor, const std::string &entryName,
+    const std::string &targetPath, const ExtractFileType &extractFileType)
+{
+    std::string path = targetPath;
+    std::string dir = GetPathDir(path);
+    if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
+        LOG_E(BMS_TAG_INSTALLD, "create dir %{public}s failed", dir.c_str());
+        return;
+    }
+    bool ret = extractor.ExtractFile(entryName, path);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLD, "extract file failed, entryName : %{public}s", entryName.c_str());
+        return;
+    }
+    mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(targetPath.c_str(), &buf) != 0) {
+            LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+            return;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
+    }
+    if (!OHOS::ChangeModeFile(path, mode)) {
+        LOG_E(BMS_TAG_INSTALLD, "ChangeModeFile %{public}s failed, errno: %{public}d", path.c_str(), errno);
+        return;
+    }
+    LOG_D(BMS_TAG_INSTALLD, "extract file success, path : %{public}s", path.c_str());
+}
+
+bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    struct HapInfo hapInfo;
+    int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName.");
+    }
+    res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath.");
+    }
+    res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
+    if (res != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi.");
+    }
+    int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
+    LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Native package installation failed with error code: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
+bool InstalldOperator::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    int ret = NativeUnInstallHnp(userId.c_str(), packageName.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "NativeUnInstallHnp ret: %{public}d", ret);
+    if (ret != 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Native package uninstallation failed with error code: %{public}d", ret);
+        return false;
+    }
+    return true;
+}
+
 void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const std::string &entryName,
     const std::string &targetPath, const std::string &cpuAbi, const ExtractFileType &extractFileType)
 {
@@ -369,8 +500,8 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
-    if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-        path += Constants::FILE_SEPARATOR_CHAR;
+    if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        path += ServiceConstants::FILE_SEPARATOR_CHAR;
     }
     path += targetName;
     if (targetName.find(ServiceConstants::PATH_SEPARATOR) != std::string::npos) {
@@ -422,6 +553,14 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             prefix = ServiceConstants::RES_FILE_PATH;
             break;
         }
+        case ExtractFileType::HNPS_FILE: {
+            if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
+                LOG_E(BMS_TAG_INSTALLD, "illegal cpuAbi");
+                return false;
+            }
+            prefix = ServiceConstants::HNPS + ServiceConstants::ABI_MAP.at(cpuAbi) + ServiceConstants::PATH_SEPARATOR;
+            break;
+        }
         default: {
             return false;
         }
@@ -445,6 +584,9 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
             break;
         }
         case ExtractFileType::RES_FILE: {
+            break;
+        }
+        case ExtractFileType::HNPS_FILE: {
             break;
         }
         default: {
@@ -791,8 +933,8 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
             filePath.c_str(), errno);
         return 0;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *entry = nullptr;
     int64_t size = 0;
@@ -832,8 +974,8 @@ void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, st
         LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", filePath.c_str(), errno);
         return;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
@@ -990,8 +1132,8 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         LOG_E(BMS_TAG_INSTALLD, "ScanSoFiles open dir(%{public}s) fail, errno:%{public}d", filePath.c_str(), errno);
         return false;
     }
-    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
-        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    if (filePath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
     }
     struct dirent *ptr = nullptr;
     while ((ptr = readdir(dir)) != nullptr) {
@@ -1008,8 +1150,8 @@ bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::stri
         if (ptr->d_type == DT_REG) {
             std::string currentFile = filePath + std::string(ptr->d_name);
             std::string prefixPath = originPath;
-            if (prefixPath.back() != Constants::FILE_SEPARATOR_CHAR) {
-                prefixPath.push_back(Constants::FILE_SEPARATOR_CHAR);
+            if (prefixPath.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+                prefixPath.push_back(ServiceConstants::FILE_SEPARATOR_CHAR);
             }
             std::string relativePath = currentFile.substr(prefixPath.size());
             paths.emplace_back(relativePath);
@@ -1119,33 +1261,35 @@ void InstalldOperator::CloseHandle(void **handle)
 #if defined(CODE_ENCRYPTION_ENABLE)
 bool InstalldOperator::OpenEncryptionHandle(void **handle)
 {
-    APP_LOGI("OpenEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle start");
     if (handle == nullptr) {
-        APP_LOGE("OpenEncryptionHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr.");
         return false;
     }
     *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     if (*handle == nullptr) {
-        APP_LOGW("failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        LOG_W(BMS_TAG_INSTALLD, "failed to open lib64 libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
+            dlerror());
         *handle = dlopen(LIB_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {
-        APP_LOGE("failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s", dlerror());
+        LOG_E(BMS_TAG_INSTALLD, "failed to open lib libcode_crypto_metadata_process_utils.z.so, err:%{public}s",
+            dlerror());
         return false;
     }
-    APP_LOGI("OpenEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle end");
     return true;
 }
 
 void InstalldOperator::CloseEncryptionHandle(void **handle)
 {
-    APP_LOGI("CloseEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle start");
     if ((handle != nullptr) && (*handle != nullptr)) {
         dlclose(*handle);
         *handle = nullptr;
-        APP_LOGD("CloseEncryptionHandle, err:%{public}s", dlerror());
+        LOG_D(BMS_TAG_INSTALLD, "CloseEncryptionHandle, err:%{public}s", dlerror());
     }
-    APP_LOGI("CloseEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle end");
 }
 #endif
 
@@ -1287,7 +1431,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
 
             // file
             if ((s.st_mode & S_IFREG) &&
-                (currentName.find(Constants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
+                (currentName.find(ServiceConstants::QUICK_FIX_FILE_SUFFIX) != std::string::npos)) {
                     fileVec.emplace_back(dir);
                 }
         }
@@ -1370,8 +1514,8 @@ bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignaturePa
         [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
         std::string fileName = entry.substr(prefix.length());
         std::string path = codeSignatureParam.targetSoPath;
-        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-            path += Constants::FILE_SEPARATOR_CHAR;
+        if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+            path += ServiceConstants::FILE_SEPARATOR_CHAR;
         }
         entryMap.emplace(entry, path + fileName);
         LOG_D(BMS_TAG_INSTALLD, "VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
@@ -1507,8 +1651,8 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         std::for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
             std::string fileName = entry.substr(prefix.length());
             std::string path = targetSoPath;
-            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-                path += Constants::FILE_SEPARATOR_CHAR;
+            if (path.back() != ServiceConstants::FILE_SEPARATOR_CHAR) {
+                path += ServiceConstants::FILE_SEPARATOR_CHAR;
             }
             entryMap.emplace(entry, path + fileName);
             LOG_D(BMS_TAG_INSTALLD, "CheckEncryption the targetSoPath is %{public}s", (path + fileName).c_str());
@@ -2049,16 +2193,16 @@ int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_
 bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string &bundleName,
     const int32_t userId, std::string &keyId)
 {
-    APP_LOGD("GenerateKeyId uid is %{public}d, bundleName is %{public}s, userId is %{public}d",
+    LOG_D(BMS_TAG_INSTALLD, "GenerateKeyId uid is %{public}d, bundleName is %{public}s, userId is %{public}d",
         uid, bundleName.c_str(), userId);
     auto ret = Security::AccessToken::El5FilekeyManagerKit::GenerateAppKey(
         static_cast<uint32_t>(uid), bundleName, keyId);
     if (ret != 0) {
-        APP_LOGE("Call GenerateAppKey failed ret = %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLD, "Call GenerateAppKey failed ret = %{public}d", ret);
         return false;
     }
     if (keyId.empty()) {
-        APP_LOGE("keyId is empty");
+        LOG_E(BMS_TAG_INSTALLD, "keyId is empty");
         return false;
     }
     struct fscrypt_asdp_policy policy;
@@ -2069,19 +2213,19 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
 
     std::vector<std::string> dirs;
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::BASE + bundleName);
+        std::to_string(userId) + ServiceConstants::BASE + bundleName);
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
-        std::to_string(userId) + Constants::DATABASE + bundleName);
+        std::to_string(userId) + ServiceConstants::DATABASE + bundleName);
     for (const auto &dir : dirs) {
         auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
         if (fd < 0) {
-            APP_LOGE("open filePath failed");
+            LOG_E(BMS_TAG_INSTALLD, "open filePath failed");
             return false;
         }
         // call ioctl to set e policy
         auto result = ioctl(fd, HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY, &policy);
         if (result != 0) {
-            APP_LOGE("ioctl failed result:%{public}d", result);
+            LOG_E(BMS_TAG_INSTALLD, "ioctl failed result:%{public}d", result);
             close(fd);
             return false;
         }
@@ -2092,10 +2236,10 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
 
 bool InstalldOperator::DeleteKeyId(const std::string &keyId)
 {
-    APP_LOGD("DeleteKeyId keyId is %{public}s", keyId.c_str());
+    LOG_D(BMS_TAG_INSTALLD, "DeleteKeyId keyId is %{public}s", keyId.c_str());
     auto ret = Security::AccessToken::El5FilekeyManagerKit::DeleteAppKey(keyId);
     if (ret != 0) {
-        APP_LOGE("Call DeleteAppKey failed ret = %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLD, "Call DeleteAppKey failed ret = %{public}d", ret);
         return false;
     }
     return true;

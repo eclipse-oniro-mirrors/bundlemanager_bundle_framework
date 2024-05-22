@@ -268,44 +268,27 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
 ErrCode BundleMgrHostImpl::BatchGetBundleInfo(const std::vector<std::string> &bundleNames, int32_t flags,
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    std::string bundleNameStr = "[";
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (i > 0) {
-            bundleNameStr += ",";
-        }
-        bundleNameStr += "{" + bundleNames[i] + "}";
+    APP_LOGI("start BatchGetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
+        BundleUtil::ToString(bundleNames).c_str(), flags, userId);
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    bundleNameStr += "]";
-    APP_LOGD("start GetBundleInfoV9, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
-        bundleNameStr.c_str(), flags, userId);
-    if (!BundlePermissionMgr::IsSystemApp()) {
-        APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
-    for (size_t i = 0; i < bundleNames.size(); i++) {
-        if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
-            Constants::PERMISSION_GET_BUNDLE_INFO}) &&
-            !BundlePermissionMgr::IsBundleSelfCalling(bundleNames[i])) {
-            APP_LOGE("verify permission failed");
-            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-        }
-    }
-    APP_LOGD("verify permission success, begin to GetBundleInfoV9");
+    APP_LOGD("verify permission success, begin to BatchGetBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto res = dataMgr->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-    if (res != ERR_OK) {
-        if (isBrokerServiceExisted_) {
-            auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-            if (bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true) == ERR_OK) {
-                return ERR_OK;
-            }
-        }
+    dataMgr->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
+    if (bundleInfos.size() == bundleNames.size()) {
+        return ERR_OK;
     }
-    return res;
+    if (isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId, true);
+    }
+    return bundleInfos.empty() ? ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST : ERR_OK;
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
@@ -851,8 +834,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     bool callingPermission = BundlePermissionMgr::VerifyCallingPermissionsForAll(
         { Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED, Constants::PERMISSION_GET_BUNDLE_INFO });
-    bool checkResult = false;
-    for (int i = 0; i < wants.size(); i++) {
+    for (size_t i = 0; i < wants.size(); i++) {
         if (!callingPermission && !BundlePermissionMgr::IsBundleSelfCalling(wants[i].GetElement().GetBundleName())) {
             APP_LOGE("verify is bundle self calling failed");
             return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -1073,7 +1055,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGE("invalid hapFilePath");
         return false;
     }
-    if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
         if (ret != ERR_OK) {
@@ -1114,7 +1096,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGD("invalid hapFilePath");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
-    if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == 0) {
+    if (hapFilePath.find(ServiceConstants::SANDBOX_DATA_PATH) == 0) {
         APP_LOGD("sandbox path");
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo, true);
     }
@@ -1157,7 +1139,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    std::string tempHapPath = Constants::BUNDLE_MANAGER_SERVICE_PATH +
+    std::string tempHapPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH +
         ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
@@ -1330,8 +1312,8 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 {
     std::vector<std::string> rootDir;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string dataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleName;
+        std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleName;
         rootDir.emplace_back(dataDir);
     }
 
@@ -3808,6 +3790,39 @@ ErrCode BundleMgrHostImpl::GetCloneAppIndexes(const std::string &bundleName, std
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const ElementName &element, int32_t flags,
+    int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryCloneExtensionAbilityInfoWithAppIndex without type begin");
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string bundleName = element.GetBundleName();
+    std::string extensionName = element.GetAbilityName();
+    if (bundleName.empty() || extensionName.empty()) {
+        LOG_E(BMS_TAG_QUERY_EXTENSION,
+            "QueryCloneExtensionAbilityInfoWithAppIndex is failed, bundleName:%{public}s, extensionName:%{public}s",
+            bundleName.c_str(), extensionName.c_str());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    Want want;
+    want.SetElement(element);
+    ErrCode ret = dataMgr->ExplicitQueryExtensionInfoV9(want, flags, userId, extensionAbilityInfo, appIndex);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryExtensionInfo error");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

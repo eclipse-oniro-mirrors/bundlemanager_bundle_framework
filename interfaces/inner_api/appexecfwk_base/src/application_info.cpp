@@ -80,6 +80,9 @@ const std::string APPLICATION_ENABLED = "enabled";
 const std::string APPLICATION_UID = "uid";
 const std::string APPLICATION_PERMISSIONS = "permissions";
 const std::string APPLICATION_MODULE_SOURCE_DIRS = "moduleSourceDirs";
+const std::string APPLICATION_HNP_PACKAGES = "hnpPackages";
+const std::string APPLICATION_HNP_PACKAGES_PACKAGE = "package";
+const std::string APPLICATION_HNP_PACKAGES_TYPE = "type";
 const std::string APPLICATION_MODULE_INFOS = "moduleInfos";
 const std::string APPLICATION_META_DATA_CONFIG_JSON = "metaData";
 const std::string APPLICATION_META_DATA_MODULE_JSON = "metadata";
@@ -185,6 +188,31 @@ Metadata *Metadata::Unmarshalling(Parcel &parcel)
         metadata = nullptr;
     }
     return metadata;
+}
+
+bool HnpPackage::ReadFromParcel(Parcel &parcel)
+{
+    package = Str16ToStr8(parcel.ReadString16());
+    type = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool HnpPackage::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(package));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(type));
+    return true;
+}
+
+HnpPackage *HnpPackage::Unmarshalling(Parcel &parcel)
+{
+    HnpPackage *hnpPackage = new (std::nothrow) HnpPackage;
+    if (hnpPackage && !hnpPackage->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete hnpPackage;
+        hnpPackage = nullptr;
+    }
+    return hnpPackage;
 }
 
 CustomizeData::CustomizeData(std::string paramName, std::string paramValue, std::string paramExtra)
@@ -437,6 +465,23 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         moduleInfos.emplace_back(*moduleInfo);
     }
 
+    int32_t hnpPackageSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hnpPackageSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hnpPackageSize, &hnpPackages);
+    for (int32_t i = 0; i < hnpPackageSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        int32_t hnpSize = parcel.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(parcel, hnpSize, &hnpPackages[key]);
+        for (int n = 0; n < hnpSize; ++n) {
+            std::unique_ptr<HnpPackage> hnp(parcel.ReadParcelable<HnpPackage>());
+            if (!hnp) {
+                APP_LOGE("ReadParcelable<HnpPackage> failed");
+                return false;
+            }
+            hnpPackages[key].emplace_back(*hnp);
+        }
+    }
+
     int32_t metaDataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaDataSize);
     CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData);
@@ -636,6 +681,15 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &moduleInfo);
     }
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hnpPackages.size());
+    for (auto &item : hnpPackages) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item.second.size());
+        for (auto &hnp : item.second) {
+            WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hnp);
+        }
+    }
+
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metaData.size());
     for (auto &item : metaData) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.first));
@@ -816,6 +870,39 @@ void from_json(const nlohmann::json &jsonObject, MultiAppModeData &multiAppMode)
     }
 }
 
+void to_json(nlohmann::json &jsonObject, const HnpPackage &hnpPackage)
+{
+    jsonObject = nlohmann::json {
+        {APPLICATION_HNP_PACKAGES_PACKAGE, hnpPackage.package},
+        {APPLICATION_HNP_PACKAGES_TYPE, hnpPackage.type},
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_HNP_PACKAGES_PACKAGE,
+        hnpPackage.package,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_HNP_PACKAGES_TYPE,
+        hnpPackage.type,
+        JsonType::STRING,
+        true,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read Resource from database error, error code : %{public}d", parseResult);
+    }
+}
+
 void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
 {
     jsonObject = nlohmann::json {
@@ -868,6 +955,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_PERMISSIONS, applicationInfo.permissions},
         {APPLICATION_MODULE_SOURCE_DIRS, applicationInfo.moduleSourceDirs},
         {APPLICATION_MODULE_INFOS, applicationInfo.moduleInfos},
+        {APPLICATION_HNP_PACKAGES, applicationInfo.hnpPackages},
         {APPLICATION_META_DATA_CONFIG_JSON, applicationInfo.metaData},
         {APPLICATION_META_DATA_MODULE_JSON, applicationInfo.metadata},
         {APPLICATION_FINGERPRINT, applicationInfo.fingerprint},
@@ -1013,6 +1101,9 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.moduleSourceDirs, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
     GetValueIfFindKey<std::vector<ModuleInfo>>(jsonObject, jsonObjectEnd, APPLICATION_MODULE_INFOS,
         applicationInfo.moduleInfos, JsonType::ARRAY, false, parseResult, ArrayType::OBJECT);
+    GetValueIfFindKey<std::map<std::string, std::vector<HnpPackage>>>(jsonObject, jsonObjectEnd,
+        APPLICATION_HNP_PACKAGES, applicationInfo.hnpPackages, JsonType::OBJECT, false,
+        parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<CustomizeData>>>(jsonObject, jsonObjectEnd,
         APPLICATION_META_DATA_CONFIG_JSON,
         applicationInfo.metaData, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);

@@ -24,6 +24,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_resource/bundle_resource_constants.h"
+#include "bundle_service_constants.h"
 #include "installd/installd_operator.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
@@ -81,7 +82,7 @@ bool InstalldService::Init()
         LOG_E(BMS_TAG_INSTALLD, "InstalldHostImpl Init failed");
         return false;
     }
-    if (!InitDir(Constants::HAP_COPY_PATH)) {
+    if (!InitDir(ServiceConstants::HAP_COPY_PATH)) {
         LOG_I(BMS_TAG_INSTALLD, "HAP_COPY_PATH is already exists");
     }
     if (!InitDir(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)) {

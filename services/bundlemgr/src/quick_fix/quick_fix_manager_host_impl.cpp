@@ -126,7 +126,7 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         LOG_E(BMS_TAG_QUICK_FIX, "verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;
     }
-    if (!BundleUtil::CheckFileType(fileName, Constants::QUICK_FIX_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(fileName, ServiceConstants::QUICK_FIX_FILE_SUFFIX)) {
         LOG_E(BMS_TAG_QUICK_FIX, "not quick fix file.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
@@ -171,14 +171,15 @@ ErrCode QuickFixManagerHostImpl::CopyHqfToSecurityDir(const std::vector<std::str
     std::vector<std::string> &securityFilePaths) const
 {
     LOG_D(BMS_TAG_QUICK_FIX, "start to copy hqf files to securityFilePaths");
-    std::string prefixStr = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    std::string prefixStr = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR
+        + ServiceConstants::QUICK_FIX_PATH;
     for (const auto &path : bundleFilePaths) {
         if (path.find(prefixStr) == std::string::npos) {
             LOG_E(BMS_TAG_QUICK_FIX, "invalid hqf path %{public}s", path.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
         }
-        std::string securityPathPrefix = Constants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-            Constants::SECURITY_QUICK_FIX_PATH;
+        std::string securityPathPrefix = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+            ServiceConstants::SECURITY_QUICK_FIX_PATH;
         std::string securityPath = path;
         securityPath.replace(0, prefixStr.length(), securityPathPrefix);
 
