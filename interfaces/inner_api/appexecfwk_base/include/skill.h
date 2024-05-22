@@ -47,6 +47,8 @@ public:
     std::vector<std::string> permissions;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
+    bool MatchLinkFeature(const std::string &linkFeature, const std::vector<std::string> &vecTypes,
+        const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
     bool ReadFromParcel(Parcel &parcel);
@@ -63,10 +65,12 @@ private:
     bool MatchActionAndEntities(const OHOS::AAFwk::Want &want) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const;
+    bool MatchUriAndType(const SkillUri &skillUri, const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
+    bool MatchMimeType(const SkillUri &skillUri, const std::string &uriString) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 }  // namespace AppExecFwk

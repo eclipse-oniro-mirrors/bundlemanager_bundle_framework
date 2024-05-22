@@ -49,6 +49,7 @@ constexpr const char* PATH_SEPARATOR = "/";
 constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+const std::string LINK_FEATURE = "linkFeature";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -77,11 +78,17 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
 
 bool Skill::Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
 {
+    std::string linkFeature = want.GetStringParam(LINK_FEATURE);
+    std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+    if (!linkFeature.empty()) {
+        return MatchLinkFeature(linkFeature, vecTypes, want.GetUriString(),  want.GetType(), matchUriIndex);
+    }
+
     if (!MatchActionAndEntities(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
     }
-    std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
             if (MatchUriAndType(want.GetUriString(), strType, matchUriIndex)) {
@@ -219,6 +226,57 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
         }
         return false;
     }
+}
+
+bool Skill::MatchLinkFeature(const std::string &linkFeature, const std::vector<std::string> &vecTypes,
+    const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
+{
+    for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+        const SkillUri &skillUri = uris[uriIndex];
+        if (skillUri.linkFeature == linkFeature) {
+            if (!vecTypes.empty()) {
+                for (const std::string &strType : vecTypes) {
+                    if (MatchUriAndType(skillUri, uriString, strType)) {
+                        APP_LOGD("linkFeature %{public}s, type %{public}s, Is Matched", linkFeature.c_str(),
+                            strType.c_str());
+                        matchUriIndex = uriIndex;
+                        return true;
+                    }
+                }
+            } else if (MatchUriAndType(skillUri, uriString, type)) {
+                APP_LOGD("linkFeature %{public}s, Is Matched", linkFeature.c_str());
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool Skill::MatchUriAndType(const SkillUri &skillUri, const std::string &uriString, const std::string &type) const
+{
+    if (uriString.empty() && type.empty()) {
+        // case1 : param uri empty, param type empty
+        return skillUri.scheme.empty() && skillUri.type.empty();
+    }
+
+    if (!uriString.empty() && type.empty()) {
+        // case2 : param uri not empty, param type empty
+        if (MatchUri(uriString, skillUri) && skillUri.type.empty()) {
+            return true;
+        }
+        // if uri is a file path, match type by the suffix
+        return MatchMimeType(skillUri, uriString);
+    }
+
+    if (uriString.empty() && !type.empty()) {
+        // case3 : param uri empty, param type not empty
+        return skillUri.scheme.empty() && MatchType(type, skillUri.type);
+    }
+
+    // case4 : param uri not empty, param type not empty
+    return MatchUri(uriString, skillUri) && MatchType(type, skillUri.type);
 }
 
 bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
@@ -403,6 +461,23 @@ bool Skill::MatchMimeType(const std::string & uriString) const
                 MatchType(mimeType, skillUri.type)) {
                 return true;
             }
+        }
+    }
+    return false;
+}
+
+bool Skill::MatchMimeType(const SkillUri &skillUri, const std::string &uriString) const
+{
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    for (const auto &mimeType : mimeTypes) {
+        if ((MatchUri(uriString, skillUri) ||
+            (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+            MatchType(mimeType, skillUri.type)) {
+            return true;
         }
     }
     return false;

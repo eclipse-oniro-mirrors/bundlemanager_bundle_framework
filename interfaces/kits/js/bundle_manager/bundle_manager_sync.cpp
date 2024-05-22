@@ -63,7 +63,7 @@ const std::string INVALID_WANT_ERROR =
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
-
+const std::string LINK_FEATURE = "linkFeature";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;
@@ -94,7 +94,7 @@ bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
     }
     bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
     if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
-        want.GetUriString().empty() && want.GetType().empty()) {
+        want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         APP_LOGW("implicit params all empty");
         return false;
     }
