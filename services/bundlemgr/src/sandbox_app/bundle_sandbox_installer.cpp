@@ -36,6 +36,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t DLP_SANDBOX_APP_INDEX = 1000;
+} // namespace
+
 using namespace OHOS::Security;
 
 BundleSandboxInstaller::BundleSandboxInstaller()
@@ -259,6 +263,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().debug;
+    createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
