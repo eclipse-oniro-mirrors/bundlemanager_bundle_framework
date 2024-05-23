@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
-const std::string EMPTY_STRING = "";
+constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* SCREEN_LOCK_FILE_DATA_PATH = "/data/app/el5";
