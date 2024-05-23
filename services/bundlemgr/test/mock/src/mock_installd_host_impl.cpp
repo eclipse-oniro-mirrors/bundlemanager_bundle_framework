@@ -40,6 +40,22 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::ExtractHnpFiles(const std::string &hnpPackageInfo, const ExtractParam &extractParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
+    const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId, const std::string &packageName)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     return ERR_OK;

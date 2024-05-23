@@ -330,6 +330,9 @@ napi_value GZipNExporter::GZBuffer(napi_env env, napi_callback_info info)
             return NapiBusinessError(EFAULT, true);
         }
         arg->errCode = gzbuffer(gzipEntity->gzs.get(), size);
+        if (arg->errCode < 0) {
+            return NapiBusinessError(ENOSTR, true);
+        }
         return NapiBusinessError(ERRNO_NOERR);
     };
 

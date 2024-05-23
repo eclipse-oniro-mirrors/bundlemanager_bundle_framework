@@ -174,6 +174,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_CLONE_APP_INDEXES,
     GET_NAME_AND_APPINDEX_FOR_UID,
     QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX,
+    AUTO_CLEAN_CACHE_BY_SIZE,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

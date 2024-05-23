@@ -81,7 +81,8 @@
                 "ace_engine",
                 "ets_runtime",
                 "json",
-                "zlib"
+                "zlib",
+                "appspawn"
             ],
             "third_party": [
                 "libuv",

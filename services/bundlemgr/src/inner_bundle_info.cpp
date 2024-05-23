@@ -1319,6 +1319,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
             moduleInfo.moduleSourceDir = info.second.modulePath;
             appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
         }
+        if (info.second.hnpPackages.size() > 0) {
+            appInfo.hnpPackages[info.second.moduleName] = info.second.hnpPackages;
+        }
         moduleInfo.preloads = info.second.preloads;
         appInfo.moduleInfos.emplace_back(moduleInfo);
         if (deCompress && info.second.isEntry) {
@@ -1370,6 +1373,9 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
         if (deCompress) {
             moduleInfo.moduleSourceDir = info.second.modulePath;
             appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
+        }
+        if (info.second.hnpPackages.size() > 0) {
+            appInfo.hnpPackages[info.second.moduleName] = info.second.hnpPackages;
         }
         moduleInfo.preloads = info.second.preloads;
         appInfo.moduleInfos.emplace_back(moduleInfo);
@@ -1833,6 +1839,30 @@ std::optional<InnerModuleInfo> InnerBundleInfo::GetInnerModuleInfoByModuleName(c
         }
     }
     return std::nullopt;
+}
+
+std::optional<std::vector<HnpPackage>> InnerBundleInfo::GetInnerModuleInfoHnpInfo(const std::string &moduleName) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!(innerModuleInfo.second.hnpPackages.empty())) {
+            if (innerModuleInfo.second.moduleName == moduleName) {
+                return innerModuleInfo.second.hnpPackages;
+            }
+        }
+    }
+    return std::nullopt;
+}
+
+std::string InnerBundleInfo::GetInnerModuleInfoHnpPath(const std::string &moduleName) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        if (!(innerModuleInfo.second.hnpPackages.empty())) {
+            if (innerModuleInfo.second.moduleName == moduleName) {
+                return innerModuleInfo.second.moduleHnpsPath;
+            }
+        }
+    }
+    return "";
 }
 
 void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) const

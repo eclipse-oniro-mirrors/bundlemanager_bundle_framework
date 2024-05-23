@@ -62,6 +62,7 @@ struct InnerModuleInfo {
     std::string modulePath;
     std::string moduleDataDir;
     std::string moduleResPath;
+    std::string moduleHnpsPath;
     std::string label;
     std::string hapPath;
     int32_t labelId = 0;
@@ -99,6 +100,7 @@ struct InnerModuleInfo {
     std::vector<std::string> extensionKeys;
     std::vector<std::string> extensionSkillKeys;
     std::vector<Metadata> metadata;
+    std::vector<HnpPackage> hnpPackages;
     int32_t upgradeFlag = 0;
     std::vector<Dependency> dependencies;
     std::string compileMode;

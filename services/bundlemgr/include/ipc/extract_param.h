@@ -28,6 +28,7 @@ enum ExtractFileType {
     AP,
     RESOURCE,
     RES_FILE,
+    HNPS_FILE
 };
 
 struct ExtractParam : public Parcelable {

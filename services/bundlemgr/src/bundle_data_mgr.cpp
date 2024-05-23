@@ -19,7 +19,6 @@
 #include <chrono>
 #include <cinttypes>
 #include <sstream>
-#include <string>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -4351,7 +4350,6 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-    std::string moduleName = element.GetModuleName();
     std::string extensionName = element.GetAbilityName();
     LOG_D(BMS_TAG_QUERY_EXTENSION, "bundleName:%{public}s extensionName:%{public}s",
         bundleName.c_str(), extensionName.c_str());
@@ -4360,8 +4358,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         ExtensionAbilityInfo info;
         bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
         if (!ret) {
-            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit query error bundleName:%{public}s moduleName:%{public}s extensionName:%{public}s",
-                bundleName.c_str(), moduleName.c_str(), extensionName.c_str());
+            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit query error bundleName:%{public}s extensionName:%{public}s",
+                bundleName.c_str(), extensionName.c_str());
             return false;
         }
         extensionInfos.emplace_back(info);
@@ -5195,6 +5193,10 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (!resConfig) {
+        APP_LOGE("resConfig is nullptr");
+        return nullptr;
+    }
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
     OHOS::Global::I18n::LocaleInfo locale(
@@ -5210,7 +5212,8 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         }
         if (!moduleResPath.empty()) {
             APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
-            if (!resourceManager->AddResource(moduleResPath.c_str(), Global::Resource::SELECT_STRING)) {
+            if (!resourceManager->AddResource(moduleResPath.c_str(), Global::Resource::SELECT_STRING
+            | Global::Resource::SELECT_MEDIA)) {
                 APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
             }
         }

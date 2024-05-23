@@ -135,6 +135,10 @@ constexpr const char* ERR_MSG_START_SHORTCUT =
     "The ability specified by want in the ShortcutInfo struct cannot be started.";
 constexpr const char* ERR_MSG_INSTALL_FAILED_CONTROLLED =
     "Failed to install the HAP because the device has been controlled.";
+constexpr const char* ERR_MSG_NATIVE_INSTALL_FAILED =
+    "Failed to install the HAP because installing the native package failed.";
+constexpr const char* ERR_MSG_NATIVE_UNINSTALL_FAILED =
+    "Failed to uninstall the HAP because uninstalling the native package failed.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -207,6 +211,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERR_MSG_BUNDLE_CAN_NOT_BE_UNINSTALLED },
     { ERROR_START_SHORTCUT_ERROR, ERR_MSG_START_SHORTCUT },
     { ERROR_INSTALL_FAILED_CONTROLLED, ERR_MSG_INSTALL_FAILED_CONTROLLED },
+    { ERROR_INSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_INSTALL_FAILED },
+    { ERROR_UNINSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_UNINSTALL_FAILED },
 };
 } // namespace
 

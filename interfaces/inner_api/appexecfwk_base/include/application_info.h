@@ -95,6 +95,15 @@ struct Metadata : public Parcelable {
     static Metadata *Unmarshalling(Parcel &parcel);
 };
 
+struct HnpPackage : public Parcelable {
+    std::string package;
+    std::string type;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static HnpPackage *Unmarshalling(Parcel &parcel);
+};
+
 struct CustomizeData : public Parcelable {
     std::string name;
     std::string value;
@@ -249,6 +258,7 @@ struct ApplicationInfo : public Parcelable {
     std::vector<std::string> permissions;
     std::vector<std::string> moduleSourceDirs;
     std::vector<ModuleInfo> moduleInfos;
+    std::map<std::string, std::vector<HnpPackage>> hnpPackages;
     std::map<std::string, std::vector<CustomizeData>> metaData;
     std::map<std::string, std::vector<Metadata>> metadata;
     // Installation-free

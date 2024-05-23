@@ -68,9 +68,11 @@ ohos_unittest("BmsBundleHspTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
@@ -220,9 +222,11 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
@@ -367,9 +371,11 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
 
   external_deps = [
     "ability_base:want",
+    "ability_runtime:app_manager",
     "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",

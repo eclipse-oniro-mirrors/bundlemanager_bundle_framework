@@ -84,12 +84,25 @@ public:
     static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
     static bool ExtractFiles(const ExtractParam &extractParam);
+    static bool ExtractFiles(const std::string hnpPackageInfo, const ExtractParam &extractParam);
     static void ExtractTargetFile(
         const BundleExtractor &extractor,
         const std::string &entryName,
         const std::string &targetPath,
         const std::string &cpuAbi,
         const ExtractFileType &extractFileType = ExtractFileType::SO);
+    static void ExtractTargetHnpFile(
+        const BundleExtractor &extractor,
+        const std::string &entryName,
+        const std::string &targetPath,
+        const ExtractFileType &extractFileType = ExtractFileType::SO);
+    static bool ProcessBundleInstallNative(
+        const std::string &userId,
+        const std::string &hnpRootPath,
+        const std::string &hapPath,
+        const std::string &cpuAbi,
+        const std::string &packageName);
+    static bool ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName);
 
     static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
         std::string &prefix);

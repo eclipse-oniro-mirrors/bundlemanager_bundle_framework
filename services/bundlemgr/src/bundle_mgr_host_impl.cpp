@@ -49,6 +49,11 @@
 #include "json_serializer.h"
 #include "scope_guard.h"
 #include "system_ability_definition.h"
+#include "app_mgr_interface.h"
+#include "system_ability_helper.h"
+#include "running_process_info.h"
+#include "bundle_active_client.h"
+#include "bundle_active_period_stats.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1241,6 +1246,193 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
         return ERR_BUNDLE_MANAGER_QUERY_PERMISSION_DEFINE_FAILED;
     }
     return BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
+}
+
+ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
+{
+    APP_LOGI("start CleanBundleCacheFilesAutomatic, cacheSize : %{public}llu", cacheSize);
+
+    if (cacheSize == 0) {
+        APP_LOGE("parameter error, cache size must be greater than 0");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
+        APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    // Get current active userId
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    APP_LOGI("current active userId is %{public}d", currentUserId);
+    if (currentUserId == Constants::INVALID_USERID) {
+        APP_LOGE("currentUserId %{public}d is invalid", currentUserId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    // Get apps use time under the current active user
+    int64_t startTime = 0;
+    int64_t endTime = BundleUtil::GetCurrentTimeMs();
+    const int32_t PERIOD_ANNUALLY = 4; // 4 is the number of the period ANN
+    std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
+    DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
+        useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
+
+    if (useStats.empty()) {
+        APP_LOGE("useStats under the current active user is empty");
+        return ERR_BUNDLE_MANAGER_DEVICE_USAGE_STATS_EMPTY;
+    }
+
+    // Sort apps use time from small to large under the current active user
+    std::sort(useStats.begin(), useStats.end(),
+        [](DeviceUsageStats::BundleActivePackageStats a,
+        DeviceUsageStats::BundleActivePackageStats b) {
+            return a.totalInFrontTime_ < b.totalInFrontTime_;
+        });
+
+    // Get all running apps
+    sptr<IAppMgr> appMgrProxy =
+        iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
+    if (appMgrProxy == nullptr) {
+        APP_LOGE("fail to find the app mgr service to check app is running");
+        return ERR_BUNDLE_MANAGER_GET_SYSTEM_ABILITY_FAILED;
+    }
+
+    std::vector<RunningProcessInfo> runningList;
+    int result = appMgrProxy->GetAllRunningProcesses(runningList);
+    if (result != ERR_OK) {
+        APP_LOGE("GetAllRunningProcesses failed.");
+        return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
+    }
+
+    std::unordered_set<std::string> runningSet;
+    for (const auto &info : runningList) {
+        runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
+    }
+
+    uint32_t notRunningSum = 0; // The total amount of application that is not running
+    uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
+    for (auto useStat : useStats) {
+        if (runningSet.find(useStat.bundleName_) == runningSet.end()) {
+            notRunningSum++;
+            uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
+            ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanCacheSize);
+            if (ret != ERR_OK) {
+                return ret;
+            }
+            cleanCacheSum += cleanCacheSize;
+            if (cleanCacheSum >= cacheSize) {
+                return ERR_OK;
+            }
+        }
+    }
+
+    if (notRunningSum == 0) {
+        APP_LOGE("All apps are running under the current active user");
+        return ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
+    int32_t userId, uint64_t &cleanCacheSize)
+{
+    APP_LOGI("start CleanBundleCacheFilesGetCleanSize, bundleName : %{public}s, userId : %{public}d",
+        bundleName.c_str(), userId);
+
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (userId < 0) {
+        APP_LOGE("userId is invalid");
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    if (bundleName.empty()) {
+        APP_LOGE("the bundleName empty");
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    ApplicationInfo applicationInfo;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    auto ret = dataMgr->GetApplicationInfoWithResponseId(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return ret;
+    }
+
+    if (!applicationInfo.userDataClearable) {
+        APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
+    }
+
+    CleanBundleCacheTaskGetCleanSize(bundleName, dataMgr, userId, cleanCacheSize);
+    return ERR_OK;
+}
+
+void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
+    const std::shared_ptr<BundleDataMgr> &dataMgr,
+    int32_t userId, uint64_t &cleanCacheSize)
+{
+    std::vector<std::string> rootDir;
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleName;
+        rootDir.emplace_back(dataDir);
+    }
+
+    auto cleanCache = [bundleName, userId, &cleanCacheSize, rootDir, dataMgr, this]() {
+        std::vector<std::string> caches;
+        for (const auto &st : rootDir) {
+            std::vector<std::string> cache;
+            if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
+                APP_LOGE("GetBundleCachePath failed, path: %{public}s", st.c_str());
+            }
+            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+        }
+
+        bool succeed = true;
+        if (!caches.empty()) {
+            for (const auto& cache : caches) {
+                cleanCacheSize += BundleUtil::GetTotalSizeOfFilesInDirectory(cache);
+                ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+                if (ret != ERR_OK) {
+                    APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+                    succeed = false;
+                }
+            }
+        }
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
+        APP_LOGE("CleanBundleCacheFiles with succeed %{public}d", succeed);
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+            APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
+            return;
+        }
+        NotifyBundleEvents installRes = {
+            .bundleName = bundleName,
+            .resultCode = ERR_OK,
+            .type = NotifyType::BUNDLE_CACHE_CLEARED,
+            .uid = innerBundleUserInfo.uid,
+            .accessTokenId = innerBundleUserInfo.accessTokenId
+        };
+        NotifyBundleStatus(installRes);
+    };
+    ffrt::submit(cleanCache);
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
