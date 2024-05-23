@@ -1638,7 +1638,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0014, Function | SmallTest | Lev
     GetBundleDataMgr()->bundleInfos_.clear();
     ErrCode testRet = GetBundleDataMgr()->GetInnerBundleInfoByUid(
         2, innerBundleInfo);
-    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_UID);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
 
