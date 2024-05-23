@@ -306,6 +306,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -502,6 +503,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
