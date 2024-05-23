@@ -871,7 +871,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Functi
     bool findDefaultApp = false;
     bundleMgrHostImpl_->UpgradeAtomicService(want, USERID);
     bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos,
-    findDefaultApp);
+        findDefaultApp);
     EXPECT_EQ(ret, false);
 }
 
