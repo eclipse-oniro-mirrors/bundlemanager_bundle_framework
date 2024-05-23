@@ -489,6 +489,12 @@ public:
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
+     * @brief Clears cache data of a specified size.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    /**
      * @brief Clears cache data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
@@ -967,6 +973,11 @@ private:
     bool VerifyDependency(const std::string &sharedBundleName);
     void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
+    ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
+        int32_t userId, uint64_t &cleanCacheSize);
+    void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
+        const std::shared_ptr<BundleDataMgr> &dataMgr,
+        int32_t userId, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
