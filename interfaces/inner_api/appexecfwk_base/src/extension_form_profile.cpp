@@ -344,9 +344,11 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct 
 bool CheckFormNameIsValid(const std::string &name)
 {
     if (name.empty()) {
+        APP_LOGE("name is empty");
         return false;
     }
     if (name.size() > MAX_FORM_NAME) {
+        APP_LOGE("name size is too long");
         return false;
     }
     return true;

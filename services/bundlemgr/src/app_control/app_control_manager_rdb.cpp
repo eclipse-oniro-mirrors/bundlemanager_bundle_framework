@@ -78,6 +78,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     for (auto appId : appIds) {
         ErrCode result = DeleteOldControlRule(callingName, controlRuleType, appId, userId);
         if (result != ERR_OK) {
+            LOG_E(BMS_TAG_APP_CONTROL, "DeleteOldControlRule failed.");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;
@@ -185,6 +186,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
     for (auto &controlRule : controlRules) {
         ErrCode result = DeleteOldControlRule(callingName, RUNNING_CONTROL, controlRule.appId, userId);
         if (result != ERR_OK) {
+            LOG_E(BMS_TAG_APP_CONTROL, "DeleteOldControlRule failed.");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;

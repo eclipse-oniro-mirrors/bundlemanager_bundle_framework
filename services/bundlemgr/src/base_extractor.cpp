@@ -43,6 +43,7 @@ BaseExtractor::~BaseExtractor()
 
 bool BaseExtractor::Init()
 {
+    APP_LOGD("BaseExtractor::Init begin.");
     if (!zipFile_.Open()) {
         APP_LOGE("open zip file failed, errno:%{public}d", errno);
         return false;

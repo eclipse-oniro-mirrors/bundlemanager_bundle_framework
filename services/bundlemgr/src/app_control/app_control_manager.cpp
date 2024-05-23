@@ -54,6 +54,7 @@ AppControlManager::AppControlManager()
 
 AppControlManager::~AppControlManager()
 {
+    LOG_D(BMS_TAG_APP_CONTROL, "destroy AppControlManager.");
 }
 
 ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingName,
@@ -136,6 +137,7 @@ ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callin
 {
     ErrCode res = appControlManagerDb_->DeleteAppRunningControlRule(callingName, userId);
     if (res != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "DeleteAppRunningControlRule failed");
         return res;
     }
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);

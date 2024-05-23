@@ -2260,6 +2260,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     APP_LOGI("ProcessDeployingHqfInfo");
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
     if (quickFixDataMgr == nullptr) {
+        APP_LOGE("quick fix data mgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
@@ -3229,6 +3230,7 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
 std::string BaseBundleInstaller::GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     if (infos.empty()) {
+        APP_LOGE("module info is empty");
         return Constants::EMPTY_STRING;
     }
     std::string moduleNames;
@@ -3665,6 +3667,7 @@ void BaseBundleInstaller::RemoveBundleExtensionDir(const std::string &bundleName
 void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (infos.empty()) {
+        APP_LOGE("infos is empty");
         return;
     }
     appDistributionType_ = infos.begin()->second.GetAppDistributionType();
@@ -3789,6 +3792,7 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
 
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
+        APP_LOGE("check app label info error");
         return ret;
     }
 

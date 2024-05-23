@@ -204,6 +204,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
 {
     auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
+        APP_LOGE("bms is nullptr.");
         return false;
     }
 
@@ -215,6 +216,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
 
     sptr<AgingUninstallReceiveImpl> unInstallReceiverImpl(new (std::nothrow) AgingUninstallReceiveImpl());
     if (unInstallReceiverImpl == nullptr) {
+        APP_LOGE("unInstallReceiverImpl is null.");
         return false;
     }
 

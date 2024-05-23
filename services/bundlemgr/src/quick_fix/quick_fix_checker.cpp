@@ -79,6 +79,7 @@ ErrCode QuickFixChecker::CheckPatchWithInstalledBundle(const AppQuickFix &appQui
 {
     ErrCode ret = CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "error: CheckCommonWithInstalledBundle failed");
         return ret;
     }
     bool isDebug = bundleInfo.applicationInfo.debug &&
@@ -152,6 +153,7 @@ ErrCode QuickFixChecker::CheckHotReloadWithInstalledBundle(const AppQuickFix &ap
 {
     ErrCode ret = CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "error: CheckCommonWithInstalledBundle failed");
         return ret;
     }
     bool isDebug = bundleInfo.applicationInfo.debug &&
@@ -202,6 +204,7 @@ ErrCode QuickFixChecker::CheckModuleNameExist(const BundleInfo &bundleInfo,
 {
     for (const auto &info : infos) {
         if (info.second.deployingAppqfInfo.hqfInfos.empty()) {
+            LOG_E(BMS_TAG_QUICK_FIX, "info is empty");
             return ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST;
         }
         auto iter = std::find(bundleInfo.moduleNames.begin(), bundleInfo.moduleNames.end(),

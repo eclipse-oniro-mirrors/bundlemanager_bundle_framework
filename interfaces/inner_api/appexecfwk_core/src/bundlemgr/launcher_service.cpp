@@ -45,6 +45,7 @@ LauncherService::LauncherService()
 
 void LauncherService::init()
 {
+    APP_LOGD("LauncherService::init begin.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
@@ -249,10 +250,12 @@ ErrCode LauncherService::GetShortcutInfos(
 {
     APP_LOGD("GetShortcutInfos called");
     if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
@@ -261,9 +264,11 @@ ErrCode LauncherService::GetShortcutInfos(
 
     std::vector<ShortcutInfo> infos;
     if (!iBundleMgr->GetShortcutInfos(bundleName, infos)) {
+        APP_LOGE("GetShortcutInfos is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infos.size() == 0) {
+        APP_LOGE("infos size is empty");
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
 
@@ -376,6 +381,7 @@ ErrCode LauncherService::GetShortcutInfoV9(
     std::vector<ShortcutInfo> infos;
     ErrCode errCode = iBundleMgr->GetShortcutInfoV9(bundleName, infos);
     if (errCode != ERR_OK) {
+        APP_LOGE("GetShortcutInfoV9 is failed");
         return errCode;
     }
     if (infos.empty()) {

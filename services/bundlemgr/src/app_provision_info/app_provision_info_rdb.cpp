@@ -126,6 +126,7 @@ bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleNa
 bool AppProvisionInfoManagerRdb::DeleteAppProvisionInfo(const std::string &bundleName)
 {
     if (bundleName.empty()) {
+        APP_LOGE("DeleteAppProvisionInfo failed, bundleName is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
@@ -137,6 +138,7 @@ bool AppProvisionInfoManagerRdb::GetAppProvisionInfo(const std::string &bundleNa
     AppProvisionInfo &appProvisionInfo)
 {
     if (bundleName.empty()) {
+        APP_LOGE("GetAppProvisionInfo failed, bundleName is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
@@ -218,6 +220,7 @@ bool AppProvisionInfoManagerRdb::SetSpecifiedDistributionType(
     const std::string &bundleName, const std::string &specifiedDistributionType)
 {
     if (bundleName.empty()) {
+        APP_LOGE("SetSpecifiedDistributionType failed, bundleName is empty");
         return false;
     }
     NativeRdb::ValuesBucket valuesBucket;
@@ -235,6 +238,7 @@ bool AppProvisionInfoManagerRdb::GetSpecifiedDistributionType(
     const std::string &bundleName, std::string &specifiedDistributionType)
 {
     if (bundleName.empty()) {
+        APP_LOGE("GetSpecifiedDistributionType failed, bundleName is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
@@ -263,6 +267,7 @@ bool AppProvisionInfoManagerRdb::SetAdditionalInfo(
     const std::string &bundleName, const std::string &additionalInfo)
 {
     if (bundleName.empty()) {
+        APP_LOGE("SetAdditionalInfo failed, bundleName is empty");
         return false;
     }
     NativeRdb::ValuesBucket valuesBucket;
@@ -280,6 +285,7 @@ bool AppProvisionInfoManagerRdb::GetAdditionalInfo(
     const std::string &bundleName, std::string &additionalInfo)
 {
     if (bundleName.empty()) {
+        APP_LOGE("GetAdditionalInfo failed, bundleName is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);

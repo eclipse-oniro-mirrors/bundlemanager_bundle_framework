@@ -613,6 +613,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -654,6 +655,7 @@ void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
 {
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, userId);
     if (cloneAppIndexes.empty()) {
+        APP_LOGE("clone app index is empty");
         return;
     }
     for (int32_t appIndex: cloneAppIndexes) {
@@ -670,6 +672,7 @@ bool BundleDataMgr::QueryAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -712,6 +715,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -754,6 +758,7 @@ ErrCode BundleDataMgr::BatchQueryAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -818,6 +823,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
 
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -905,6 +911,7 @@ void BundleDataMgr::FilterAbilityInfosByModuleName(const std::string &moduleName
 {
     LOG_D(BMS_TAG_QUERY_ABILITY, "FilterAbilityInfosByModuleName moduleName: %{public}s", moduleName.c_str());
     if (moduleName.empty()) {
+        APP_LOGE("module name is empty");
         return;
     }
     for (auto iter = abilityInfos.begin(); iter != abilityInfos.end();) {
@@ -1426,10 +1433,12 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
 bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skills) const
 {
     if (want.GetAction() != SHARE_ACTION) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "action not action");
         return false;
     }
     std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
     if (shareActionSkills.empty()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "shareActionSkills is empty");
         return false;
     }
     auto wantParams = want.GetParams();
@@ -1555,10 +1564,12 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return;
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("response user id is invalid");
         return;
     }
     bool isExist = false;
@@ -1713,6 +1724,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
     }
     const std::map<std::string, InnerBundleCloneInfo> &cloneInfos = innerBundleUserInfo.cloneInfos;
     if (cloneInfos.empty()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "clone infos is empty");
         return cloneAppIndexes;
     }
     for (const auto &cloneInfo : cloneInfos) {
@@ -1845,6 +1857,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -2897,6 +2910,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         return false;
     }
     if (bundleStats.empty()) {
+        APP_LOGE("bundle stats is empty");
         return true;
     }
     for (const auto &bundleName : bundleNames) {
@@ -3303,6 +3317,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId) const
 {
     if (bundleName.empty()) {
+        APP_LOGE("bundle name is empty");
         return false;
     }
     int32_t requestUserId = GetUserId(userId);
@@ -3392,6 +3407,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     const int32_t flags, InnerBundleInfo &info, int32_t userId, int32_t appIndex) const
 {
     if (bundleName.empty()) {
+        APP_LOGE("bundle name is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t requestUserId = GetUserId(userId);
@@ -3854,6 +3870,7 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 {
     auto userInfos = info.GetInnerBundleUserInfos();
     if (userInfos.empty()) {
+        APP_LOGE("user infos is empty");
         return;
     }
 
@@ -4132,6 +4149,7 @@ bool BundleDataMgr::SavePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 
@@ -4147,6 +4165,7 @@ bool BundleDataMgr::DeletePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 
@@ -4178,6 +4197,7 @@ bool BundleDataMgr::GetPreInstallBundleInfo(
 bool BundleDataMgr::LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 
@@ -4589,6 +4609,7 @@ void BundleDataMgr::FilterExtensionAbilityInfosByModuleName(const std::string &m
 {
     LOG_D(BMS_TAG_QUERY_EXTENSION, "FilterExtensionAbilityInfos moduleName: %{public}s", moduleName.c_str());
     if (moduleName.empty()) {
+        LOG_W(BMS_TAG_QUERY_EXTENSION, "module name is empty");
         return;
     }
     for (auto iter = extensionInfos.begin(); iter != extensionInfos.end();) {

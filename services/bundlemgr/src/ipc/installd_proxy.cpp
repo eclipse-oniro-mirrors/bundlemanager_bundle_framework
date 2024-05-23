@@ -345,6 +345,7 @@ ErrCode InstalldProxy::ScanDir(
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::SCAN_DIR, data, reply, option);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
 

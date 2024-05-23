@@ -242,6 +242,7 @@ bool BundleResourceProcess::GetDynamicIcon(
 {
     std::string curDynamicIconModule = innerBundleInfo.GetCurDynamicIconModule();
     if (curDynamicIconModule.empty()) {
+        APP_LOGE("curDynamicIconModule is empty");
         return false;
     }
 

@@ -162,6 +162,7 @@ ErrCode QuickFixDeleter::GetDataMgr()
 ErrCode QuickFixDeleter::RemoveDeployingInfo(const std::string &bundleName)
 {
     if (GetDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, " get data mar failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;

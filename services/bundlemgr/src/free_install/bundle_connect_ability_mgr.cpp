@@ -832,6 +832,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     const InnerBundleInfo &innerBundleInfo, sptr<TargetAbilityInfo> &targetAbilityInfo)
 {
     if (targetAbilityInfo == nullptr) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "targetability info is nullptr");
         return;
     }
     ElementName element = want.GetElement();

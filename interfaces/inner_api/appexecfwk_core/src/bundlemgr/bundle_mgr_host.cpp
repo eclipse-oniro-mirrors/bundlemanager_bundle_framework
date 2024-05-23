@@ -1538,6 +1538,7 @@ ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParce
     ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1553,6 +1554,7 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
     ErrCode ret = CompileReset(bundleName, isAllBundle);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1612,9 +1614,11 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     bool isEnable = false;
     ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
+        APP_LOGE("WriteBool failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1632,6 +1636,7 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1648,9 +1653,11 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
     bool isEnable = false;
     ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
+        APP_LOGE("WriteBool failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1668,6 +1675,7 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2286,6 +2294,7 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessagePa
     BundleInfo info;
     auto res = GetSandboxBundleInfo(bundleName, appIndex, userId, info);
     if (!reply.WriteInt32(res)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {

@@ -37,10 +37,12 @@ const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
 {
+    APP_LOGD("RdbDataManager create");
 }
 
 RdbDataManager::~RdbDataManager()
 {
+    APP_LOGD("RdbDataManager destroy");
     rdbStore_ = nullptr;
 }
 

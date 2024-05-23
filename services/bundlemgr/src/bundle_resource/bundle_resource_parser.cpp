@@ -52,10 +52,12 @@ void from_json(const nlohmann::json &jsonObject, LayeredImage &layeredImage)
 
 BundleResourceParser::BundleResourceParser()
 {
+    APP_LOGD("BundleResourceParser create!");
 }
 
 BundleResourceParser::~BundleResourceParser()
 {
+    APP_LOGD("BundleResourceParser destroy!");
 }
 
 bool BundleResourceParser::ParseResourceInfo(const int32_t userId, ResourceInfo &resourceInfo)

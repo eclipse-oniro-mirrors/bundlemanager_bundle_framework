@@ -308,6 +308,7 @@ ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
 
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
+        APP_LOGE("CheckAppLabelInfo is failed");
         return ret;
     }
 
@@ -455,6 +456,7 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     if (newInfo.IsCompressNativeLibs(moduleName)) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
         if (tempNativeLibraryPath.empty()) {
+            APP_LOGE("tempNativeLibraryPath is empty");
             return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
         }
 
