@@ -1273,7 +1273,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     // Get apps use time under the current active user
     int64_t startTime = 0;
     int64_t endTime = BundleUtil::GetCurrentTimeMs();
-    const int32_t PERIOD_ANNUALLY = 4;
+    const int32_t PERIOD_ANNUALLY = 4; // 4 is the number of the period ANN
     std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
     DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
         useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
@@ -1305,21 +1305,18 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
+    std::unordered_set<std::string> runningSet;
+    for (const auto &info : runningList) {
+        runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
+    }
+
     uint32_t notRunningSum = 0; // The total amount of application that is not running
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
     for (auto useStat : useStats) {
-        bool isRunning = false;
-        std::string bundleName = useStat.bundleName_;
-        for (const auto &info : runningList) {
-            std::unordered_set<std::string> infoSet(info.bundleNames.begin(), info.bundleNames.end());
-            if (infoSet.find(bundleName) != infoSet.end()) {
-                isRunning = true;
-            }
-        }
-        if (!isRunning) {
+        if (runningSet.find(useStat.bundleName_) == runningSet.end()) {
             notRunningSum++;
             uint64_t cleanCacheSize = 0; // The cache size of a single application cleaned up
-            ErrCode ret = CleanBundleCacheFilesGetCleanSize(bundleName, currentUserId, cleanCacheSize);
+            ErrCode ret = CleanBundleCacheFilesGetCleanSize(useStat.bundleName_, currentUserId, cleanCacheSize);
             if (ret != ERR_OK) {
                 return ret;
             }
