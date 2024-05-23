@@ -3344,14 +3344,14 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0021, Function | SmallTest | Leve
 {
     InnerBundleInfo info;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, false, Constants::INVALID_USERID);
+        TEST_BUNDLE_NAME, 0, false, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     AbilityInfo abilityInfo;
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, false, Constants::INVALID_USERID);
+        abilityInfo, 0, false, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, false, Constants::UNSPECIFIED_USERID);
+        abilityInfo, 0, false, Constants::UNSPECIFIED_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3592,7 +3592,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0009, Function | SmallTest 
 {
     bool isEnable = true;
     ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled(
-        TEST_BUNDLE_NAME, isEnable, USERID);
+        TEST_BUNDLE_NAME, 0, isEnable, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -3621,10 +3621,10 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0011, Function | SmallTest 
     bool isEnable = true;
     AbilityInfo abilityInfo;
     ErrCode testRet = GetBundleDataMgr()->IsAbilityEnabled(
-        abilityInfo, isEnable);
+        abilityInfo, 0, isEnable);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     testRet = GetBundleDataMgr()->SetAbilityEnabled(
-        abilityInfo, isEnable, USERID);
+        abilityInfo, 0, isEnable, USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -5510,7 +5510,7 @@ HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0004, Function | SmallTest | Level
     std::string wrongName = "wrong";
     std::string profile;
 
-    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, false, USERID);
+    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, 0, false, USERID);
     EXPECT_EQ(ret, ERR_OK);
     ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);

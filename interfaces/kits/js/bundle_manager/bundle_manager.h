@@ -122,6 +122,7 @@ struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
     explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     bool isEnable = false;
+    int32_t appIndex = 0;
 };
 
 struct LaunchWantCallbackInfo : public BaseCallbackInfo {
@@ -164,6 +165,7 @@ struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
     explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     AbilityInfo abilityInfo;
     bool isEnable = false;
+    int32_t appIndex = 0;
 };
 
 struct ApplicationInfoCallbackInfo : public BaseCallbackInfo {

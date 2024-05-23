@@ -2034,7 +2034,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest
     ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_FALSE(resourceInfos.empty());
-    
+
     auto code = bundleInfo.SetAbilityEnabled(MODULE_NAME, ABILITY_NAME, false, USERID);
     EXPECT_EQ(code, ERR_OK);
 
@@ -2535,14 +2535,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
 
     // disable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, false, USERID);
+    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, false, USERID);
     EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
+    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, true, USERID);
     EXPECT_EQ(code, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -2572,14 +2572,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     abilityInfo.name = ABILITY_NAME;
     // disable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, USERID);
+    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, USERID);
     EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
+    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, USERID);
     EXPECT_EQ(code, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);

@@ -2223,6 +2223,43 @@ ErrCode InnerBundleInfo::SetAbilityEnabled(
     return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
 }
 
+ErrCode InnerBundleInfo::SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
+    bool isEnabled, int32_t userId, int32_t appIndex)
+{
+    APP_LOGD("SetAbilityEnabled : %{public}s, %{public}s, %{public}d for appIndex %{public}d",
+        moduleName.c_str(), abilityName.c_str(), userId, appIndex);
+    for (const auto &ability : baseAbilityInfos_) {
+        if ((ability.second.name == abilityName) &&
+            (moduleName.empty() || (ability.second.moduleName == moduleName))) {
+            auto &key = NameAndUserIdToKey(GetBundleName(), userId);
+            auto infoItem = innerBundleUserInfos_.find(key);
+            if (infoItem == innerBundleUserInfos_.end()) {
+                APP_LOGE("SetAbilityEnabled find innerBundleUserInfo failed");
+                return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+            }
+
+            auto cloneIter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
+            if (cloneIter == infoItem->second.cloneInfos.end()) {
+                APP_LOGW("appIndex %{public}d is invalid", appIndex);
+                return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+            }
+
+            auto iter = std::find(cloneIter->second.disabledAbilities.begin(),
+                                  cloneIter->second.disabledAbilities.end(),
+                                  abilityName);
+            if (iter != cloneIter->second.disabledAbilities.end() && isEnabled) {
+                cloneIter->second.disabledAbilities.erase(iter);
+            }
+            if (iter == cloneIter->second.disabledAbilities.end() && !isEnabled) {
+                cloneIter->second.disabledAbilities.push_back(abilityName);
+            }
+            return ERR_OK;
+        }
+    }
+    APP_LOGW("SetCloneAbilityEnabled find abilityInfo failed");
+    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+}
+
 void InnerBundleInfo::RemoveDuplicateName(std::vector<std::string> &name) const
 {
     std::sort(name.begin(), name.end());
@@ -2290,6 +2327,26 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     }
 
     infoItem->second.bundleUserInfo.enabled = enabled;
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId)
+{
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
+            GetBundleName().c_str(), userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
+    if (iter == infoItem->second.cloneInfos.end()) {
+        APP_LOGE("SetApplicationEnabled can not find:%{public}d appIndex in userId: %{public}d",
+            appIndex, userId);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    iter->second.enabled = enabled;
     return ERR_OK;
 }
 

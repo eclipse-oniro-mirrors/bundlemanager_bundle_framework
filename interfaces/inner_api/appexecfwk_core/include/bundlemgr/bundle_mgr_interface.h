@@ -828,6 +828,17 @@ public:
         return ERR_OK;
     }
     /**
+     * @brief Checks whether a specified clone application is enabled.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Sets whether to enable a specified application.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
@@ -836,6 +847,20 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified clone application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Specifies whether to enable the application.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_OK;
@@ -852,6 +877,17 @@ public:
     }
     /**
      * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability to check.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified ability.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
@@ -859,6 +895,20 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnabled Specifies whether to enable the ability.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_OK;

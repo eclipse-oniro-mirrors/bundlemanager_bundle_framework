@@ -37,6 +37,7 @@ constexpr const char* ERR_MSG_INVALID_USER_ID = "The specified user id is not fo
 constexpr const char* ERR_MSG_APPID_NOT_EXIST = "The specified appId is an empty string.";
 constexpr const char* ERR_MSG_PERMISSION_NOT_EXIST = "The specified permission is not found.";
 constexpr const char* ERR_MSG_DEVICE_ID_NOT_EXIST = "The specified deviceId is not found.";
+constexpr const char* ERR_MSG_INVALID_APP_INDEX = "The specified app index is invalid.";
 constexpr const char* ERR_MSG_INSTALL_PARSE_FAILED = "Failed to install the hap since the hap fails to be parsed.";
 constexpr const char* ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED =
     "Failed to install the hap since the hap signature fails to be verified.";
@@ -150,6 +151,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_ABILITY_NOT_EXIST, ERR_MSG_ABILITY_NOT_EXIST },
     { ERROR_INVALID_USER_ID, ERR_MSG_INVALID_USER_ID },
     { ERROR_INVALID_APPID, ERR_MSG_APPID_NOT_EXIST },
+    { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APP_INDEX },
     { ERROR_PERMISSION_NOT_EXIST, ERR_MSG_PERMISSION_NOT_EXIST },
     { ERROR_DEVICE_ID_NOT_EXIST, ERR_MSG_DEVICE_ID_NOT_EXIST },
     { ERROR_INSTALL_PARSE_FAILED, ERR_MSG_INSTALL_PARSE_FAILED },

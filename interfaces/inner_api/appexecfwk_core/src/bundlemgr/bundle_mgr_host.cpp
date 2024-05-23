@@ -378,6 +378,14 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetCloneAppIndexes);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX),
         &BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleSetCloneApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleIsCloneApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED),
+        &BundleMgrHost::HandleSetCloneAbilityEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED),
+        &BundleMgrHost::HandleIsCloneAbilityEnabled);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1636,6 +1644,26 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleIsCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to HandleIsCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = false;
+    ErrCode ret = IsCloneApplicationEnabled(bundleName, appIndex, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1647,6 +1675,24 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     bool isEnable = data.ReadBool();
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -1672,6 +1718,26 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleIsCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = false;
+    ErrCode ret = IsCloneAbilityEnabled(*abilityInfo, appIndex, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteBool(isEnable)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1683,6 +1749,24 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnabled = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SetCloneAbilityEnabled(*abilityInfo, appIndex, isEnabled, userId);
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
