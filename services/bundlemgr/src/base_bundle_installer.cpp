@@ -1770,6 +1770,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
             hapPath, info.GetCpuAbi(), info.GetBundleName());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to install because installing the native package failed. error code: %{public}d", ret);
+            return ret;
         }
         if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
             APP_LOGE("delete dir %{public}s failed!", moduleHnpsPath.c_str());
@@ -1786,6 +1787,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to uninstall because uninstalling the native package failed. error code: %{public}d", ret);
+            return ret;
         }
     }
     return ERR_OK;
@@ -2970,6 +2972,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
         if (result != ERR_OK) {
             APP_LOGE("fail to ExtractHnpsFileDir, error is %{public}d", result);
+            return result;
         }
     }
 
