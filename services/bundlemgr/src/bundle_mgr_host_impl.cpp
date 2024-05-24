@@ -1250,8 +1250,6 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 {
-    APP_LOGI("start CleanBundleCacheFilesAutomatic, cacheSize : %{public}llu", cacheSize);
-
     if (cacheSize == 0) {
         APP_LOGE("parameter error, cache size must be greater than 0");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
