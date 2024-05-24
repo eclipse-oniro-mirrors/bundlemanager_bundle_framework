@@ -113,6 +113,9 @@ private:
     void InnerProcessResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         std::vector<ResourceInfo> &resourceInfos);
 
+    bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
+        const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;
     std::atomic_uint currentTaskNum_ = 0;

@@ -154,7 +154,7 @@ ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleNa
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleResourceInfo bundleResourceInfo;
-    if (manager->GetBundleResourceInfo(bundleName,
+    if (!manager->GetBundleResourceInfo(bundleName,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo)) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
