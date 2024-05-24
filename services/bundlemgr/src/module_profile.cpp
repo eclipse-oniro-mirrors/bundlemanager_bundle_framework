@@ -1829,7 +1829,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {
-                APP_LOGE("preloadObj is empty");
+                APP_LOGD("preloadObj is empty");
                 return true;
             }
             if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {

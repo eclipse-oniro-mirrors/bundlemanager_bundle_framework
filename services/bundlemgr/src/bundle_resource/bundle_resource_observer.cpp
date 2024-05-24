@@ -29,14 +29,10 @@ namespace OHOS {
 namespace AppExecFwk {
 #ifdef ABILITY_RUNTIME_ENABLE
 BundleResourceObserver::BundleResourceObserver()
-{
-    APP_LOGD("BundleResourceObserver create!");
-}
+{}
 
 BundleResourceObserver::~BundleResourceObserver()
-{
-    APP_LOGD("BundleResourceObserver destroy!");
-}
+{}
 
 void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configuration& configuration)
 {

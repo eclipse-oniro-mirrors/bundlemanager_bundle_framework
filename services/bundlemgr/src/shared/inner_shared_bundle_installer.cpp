@@ -374,7 +374,6 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         const auto &currentBundle = iter->second;
         const auto& infos = currentBundle.GetInnerSharedModuleInfos();
         if (infos.empty()) {
-            APP_LOGE("infos is empty");
             continue;
         }
 

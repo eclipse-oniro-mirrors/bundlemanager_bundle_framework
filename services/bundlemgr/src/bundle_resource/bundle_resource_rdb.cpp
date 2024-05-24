@@ -48,7 +48,6 @@ BundleResourceRdb::BundleResourceRdb()
 
 BundleResourceRdb::~BundleResourceRdb()
 {
-    APP_LOGD("BundleResourceParser destroy!");
 }
 
 bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)

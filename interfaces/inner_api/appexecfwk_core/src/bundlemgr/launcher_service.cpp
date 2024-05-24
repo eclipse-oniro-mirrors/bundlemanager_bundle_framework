@@ -45,7 +45,6 @@ LauncherService::LauncherService()
 
 void LauncherService::init()
 {
-    APP_LOGD("LauncherService::init begin.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);

@@ -214,7 +214,7 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "targetSoPath is empty");
+        LOG_D(BMS_TAG_INSTALLD, "targetSoPath is empty");
         return true;
     }
 
@@ -1570,7 +1570,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     }
 
     if (soEntryFiles.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "soEntryFiles is empty");
+        LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
         return true;
     }
 

@@ -54,7 +54,6 @@ AppControlManager::AppControlManager()
 
 AppControlManager::~AppControlManager()
 {
-    LOG_D(BMS_TAG_APP_CONTROL, "destroy AppControlManager.");
 }
 
 ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingName,

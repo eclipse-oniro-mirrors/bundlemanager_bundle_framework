@@ -655,7 +655,7 @@ void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
 {
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, userId);
     if (cloneAppIndexes.empty()) {
-        APP_LOGE("clone app index is empty");
+        APP_LOGI("clone app index is empty");
         return;
     }
     for (int32_t appIndex: cloneAppIndexes) {
@@ -1564,12 +1564,12 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("request user id is invalid");
+        APP_LOGD("request user id is invalid");
         return;
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     if (responseUserId == Constants::INVALID_USERID) {
-        APP_LOGE("response user id is invalid");
+        APP_LOGD("response user id is invalid");
         return;
     }
     bool isExist = false;

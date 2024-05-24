@@ -523,7 +523,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
 
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
-            APP_LOGE("GetInnerModuleInfos is empty");
+            APP_LOGD("GetInnerModuleInfos is empty");
             continue;
         }
         // There is only one innerModuleInfo when installing
@@ -592,7 +592,6 @@ bool BundleInstallChecker::FindModuleInInstallingPackage(
     for (const auto &info : infos) {
         if (info.second.GetBundleName() == bundleName) {
             if (info.second.GetInnerModuleInfos().empty()) {
-                APP_LOGE("GetInnerModuleInfos is empty");
                 continue;
             }
             // There is only one innerModuleInfo when installing
