@@ -129,7 +129,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
         if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
             APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
             if (!AddCloneBundleResourceInfo(item.first, item.second[0].appIndexes_)) {
-                APP_LOGW("bundleName:%{public}s add clone resource failed", item.second[0].bundleName.c_str());
+                APP_LOGW("bundleName:%{public}s add clone resource failed", item.second[0].bundleName_.c_str());
             }
         }
     }
