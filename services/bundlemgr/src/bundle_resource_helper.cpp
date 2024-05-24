@@ -61,7 +61,7 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
     const int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("start");
+    APP_LOGI("bundleName:%{public}s userId:%{public}d add resource start", bundleName.c_str(), userId);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
@@ -84,6 +84,7 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
     if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
         APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
     }
+    APP_LOGI("bundleName:%{public}s userId:%{public}d add resource end", bundleName.c_str(), userId);
 #endif
 }
 

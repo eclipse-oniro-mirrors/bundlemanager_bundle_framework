@@ -120,6 +120,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
         return false;
     }
     SendBundleResourcesChangedEvent(userId);
+    APP_LOGI("add all resource end");
     return true;
 }
 
