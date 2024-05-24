@@ -82,7 +82,8 @@
                 "ets_runtime",
                 "json",
                 "zlib",
-                "appspawn"
+                "appspawn",
+                "bounds_checking_function"
             ],
             "third_party": [
                 "libuv",
