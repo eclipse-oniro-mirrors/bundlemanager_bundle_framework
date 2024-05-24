@@ -1417,7 +1417,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
     if (appControlMgr != nullptr) {
         APP_LOGD("Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
-        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo.GetAppId(), userId_);
+        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
     }
 #endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());

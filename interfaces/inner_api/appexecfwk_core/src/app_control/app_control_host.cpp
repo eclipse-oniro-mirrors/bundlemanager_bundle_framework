@@ -91,6 +91,12 @@ int AppControlHost::OnRemoteRequest(
             return HandleGetDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE):
             return HandleGetAbilityRunningControlRule(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP):
+            return HandleGetDisposedRuleForCloneApp(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP):
+            return HandleSetDisposedRuleForCloneApp(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP):
+            return HandleDeleteDisposedRuleForCloneApp(data, reply);
         default:
             LOG_W(BMS_TAG_APP_CONTROL, "AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -413,6 +419,57 @@ ErrCode AppControlHost::HandleGetAbilityRunningControlRule(MessageParcel& data, 
             LOG_E(BMS_TAG_APP_CONTROL, "write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel &reply)
+{
+    std::string appId = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    DisposedRule rule;
+    ErrCode ret = GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&rule)) {
+            LOG_E(BMS_TAG_APP_CONTROL, "write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleSetDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appId = data.ReadString();
+    std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    if (disposedRule == nullptr) {
+        LOG_E(BMS_TAG_APP_CONTROL, "ReadParcelable<disposedRule> failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetDisposedRuleForCloneApp(appId, *disposedRule, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleDeleteDisposedRuleForCloneApp(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appId = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
+    ErrCode ret = DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

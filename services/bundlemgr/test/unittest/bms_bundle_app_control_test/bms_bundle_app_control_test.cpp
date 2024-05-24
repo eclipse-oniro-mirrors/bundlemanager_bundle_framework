@@ -1416,7 +1416,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4500, Function | Sma
     auto appControlManager = impl->appControlManager_;
     std::vector<DisposedRule> disposedRules;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    ErrCode res = appControlManager->GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, userId, disposedRules);
+    ErrCode res = appControlManager->GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, Constants::MAIN_APP_INDEX,
+        userId, disposedRules);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_EQ(disposedRules.empty(), true);
 }
@@ -1432,7 +1433,8 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4600, Function | Sma
     auto appControlManager = impl->appControlManager_;
     ASSERT_NE(appControlManager, nullptr);
     DisposedRule rule;
-    ErrCode res = appControlManager->GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, USERID);
+    ErrCode res = appControlManager->GetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, Constants::MAIN_APP_INDEX,
+        USERID);
     EXPECT_EQ(res, ERR_OK);
 }
 

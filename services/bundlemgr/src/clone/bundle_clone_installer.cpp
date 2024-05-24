@@ -290,6 +290,13 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
             bundleName.c_str(), appIndex);
     }
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr != nullptr) {
+        APP_LOGD("Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+        appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
+    }
+#endif
     APP_LOGD("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
