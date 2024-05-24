@@ -5191,20 +5191,12 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     BundleInfo bundleInfo;
     innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
-        std::string moduleResPath;
-        if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
-            moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
-        }
-        if (!moduleResPath.empty()) {
-            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
-            if (!resourceManager->AddResource(moduleResPath.c_str())) {
-                APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
-            }
-        }
-    }
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (!resConfig) {
+        APP_LOGE("resConfig is nullptr");
+        return nullptr;
+    }
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
     OHOS::Global::I18n::LocaleInfo locale(
@@ -5212,6 +5204,20 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
+
+    for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string moduleResPath;
+        if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
+            moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
+        }
+        if (!moduleResPath.empty()) {
+            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
+            if (!resourceManager->AddResource(moduleResPath.c_str(), Global::Resource::SELECT_STRING
+            | Global::Resource::SELECT_MEDIA)) {
+                APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
+            }
+        }
+    }
     return resourceManager;
 }
 #endif
