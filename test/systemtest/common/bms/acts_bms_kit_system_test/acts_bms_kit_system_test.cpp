@@ -2482,6 +2482,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0500, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetUidByBundleName_0600
+ * @tc.name: test query UID
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query UID by empty bundleName
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0600, Function | MediumTest | Level1)
+{
+    std::cout << "START GetUidByBundleName_0600" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string bundleName = "";
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID, 0);
+    EXPECT_EQ(uid, Constants::INVALID_UID);
+    std::cout << "END GetUidByBundleName_0600" << std::endl;
+}
+
+/**
  * @tc.number: GetAppType_0100
  * @tc.name: test GetAppType interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap

@@ -2584,7 +2584,12 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
     return appType;
 }
 
-int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
+int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    return GetUidByBundleName(bundleName, userId, 0);
+}
+
+int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
@@ -2599,7 +2604,7 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
     }
     BundleInfo bundleInfo;
     int32_t uid = Constants::INVALID_UID;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId, appIndex);
     if (ret == ERR_OK) {
         uid = bundleInfo.uid;
         APP_LOGD("get bundle uid success, uid is %{public}d", uid);
