@@ -311,7 +311,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_QUERY_BUNDLE, "GetBundleNameForUid failed, uid is %{public}d", uid);
-        return ret;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
 }
