@@ -931,6 +931,11 @@ public:
 
     ErrCode ExplicitQueryExtensionInfoV9(const Want &want, int32_t flags, int32_t userId,
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
+
+    void QueryAllCloneExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) const;
+    void QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) const;
 private:
     /**
      * @brief Init transferStates.
@@ -997,11 +1002,11 @@ private:
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
-        std::vector<ExtensionAbilityInfo> &einfos) const;
+        std::vector<ExtensionAbilityInfo> &einfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
-        std::vector<ExtensionAbilityInfo> &infos) const;
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     void GetAllExtensionInfos(uint32_t flags, int32_t userId, const InnerBundleInfo &info,
-        std::vector<ExtensionAbilityInfo> &infos) const;
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex = 0) const;
     bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
@@ -1042,6 +1047,8 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
+    ErrCode CheckInnerBundleInfoWithFlagsV9(
+        const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
     void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
     void GetAllLauncherAbility(const Want &want, std::vector<AbilityInfo> &abilityInfos,
         const int32_t userId, const int32_t requestUserId) const;
@@ -1063,7 +1070,7 @@ private:
     std::vector<Skill> FindSkillsContainShareAction(const std::vector<Skill> &skills) const;
     void EmplaceExtensionInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills,
         ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos,
-        std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
+        std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex, int32_t appIndex = 0) const;
     void EmplaceAbilityInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills, AbilityInfo &abilityInfo,
         int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos,
         std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex, int32_t appIndex = 0) const;
@@ -1097,6 +1104,15 @@ private:
         std::vector<AbilityInfo> &abilityInfos) const;
     void ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos) const;
+    
+    bool ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
+    ErrCode ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) const;
+    ErrCode ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;

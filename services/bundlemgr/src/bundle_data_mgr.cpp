@@ -2875,6 +2875,58 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlagsV9(
+    const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex) const
+{
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGD("userId is invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGW("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (appIndex == 0) {
+        if (!(static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+            bool isEnabled = false;
+            ErrCode ret = innerBundleInfo.GetApplicationEnabledV9(userId, isEnabled, appIndex);
+            if (ret != ERR_OK) {
+                APP_LOGW("bundleName: %{public}s userId: %{public}d incorrect",
+                    innerBundleInfo.GetBundleName().c_str(), userId);
+                return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+            }
+            if (!isEnabled) {
+                APP_LOGW("bundleName: %{public}s userId: %{public}d incorrect",
+                    innerBundleInfo.GetBundleName().c_str(), userId);
+                return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+            }
+        }
+    } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+        bool isEnabled = false;
+        ErrCode ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
+        if (ret != ERR_OK) {
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+        if (!(static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
+            && !isEnabled) {
+            APP_LOGW("bundleName: %{public}s userId: %{public}d, appIndex: %{public}d incorrect",
+                innerBundleInfo.GetBundleName().c_str(), requestUserId, appIndex);
+            return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+        }
+    } else {
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    return ERR_OK;
+}
+
 bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -4790,8 +4842,8 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
         }
     }
     if (appIndex > Constants::INITIAL_APP_INDEX && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
-        ErrCode res = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
-        if (res != ERR_OK) {
+        bool res = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
+        if (!res) {
             LOG_W(BMS_TAG_QUERY_EXTENSION, "ExplicitQueryExtensionInfo failed");
             return false;
         }
@@ -4817,6 +4869,19 @@ bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, 
             ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, responseUserId,
             extensionInfo.applicationInfo, appIndex);
     }
+    // set uid for NAPI cache use
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        extensionInfo.uid = innerBundleUserInfo.uid;
+        if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
+            std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
+            if (innerBundleUserInfo.cloneInfos.find(key) != innerBundleUserInfo.cloneInfos.end()) {
+                auto cloneInfo = innerBundleUserInfo.cloneInfos.at(key);
+                extensionInfo.uid = cloneInfo.uid;
+            }
+        }
+    }
+    extensionInfo.appIndex = appIndex;
     return true;
 }
 
@@ -4901,6 +4966,7 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
             }
         }
     }
+    extensionInfo.appIndex = appIndex;
     return ERR_OK;
 }
 
@@ -5006,7 +5072,7 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
             bundleName.c_str());
         return false;
     }
-    if (appIndex > 0) {
+    if (appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         if (sandboxAppHelper_ == nullptr) {
             LOG_W(BMS_TAG_QUERY_EXTENSION, "sandboxAppHelper_ is nullptr");
             return false;
@@ -5016,9 +5082,16 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
             LOG_D(BMS_TAG_QUERY_EXTENSION, "GetSandboxAppInfo failed errCode %{public}d", ret);
             return false;
         }
+    } 
+    if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
+        bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId, appIndex);
+        if (!ret) {
+            LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryExtensionAbilityInfos failed errCode %{public}d", ret);
+            return false;
+        }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos);
+    GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
     FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
     LOG_D(BMS_TAG_QUERY_EXTENSION, "finish to ImplicitQueryCurExtensionInfos");
     return true;
@@ -5056,7 +5129,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurExtensionInfosV9(const Want &want, int32_
         }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, infos);
+    GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
     FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
     LOG_D(BMS_TAG_QUERY_EXTENSION, "finish to ImplicitQueryCurExtensionInfosV9");
     return ERR_OK;
@@ -5107,6 +5180,17 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
         }
     } else if (appIndex > Constants::INITIAL_APP_INDEX && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "start to query extensionAbility in appClone");
+        for (const auto &item : bundleInfos_) {
+            int32_t responseUserId = item.second.GetResponseUserId(requestUserId);
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_ABILITY,
+                    "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                    innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
+                continue;
+            }
+            GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
+        }
     }
     LOG_D(BMS_TAG_QUERY_EXTENSION, "finish to ImplicitQueryAllExtensionInfos");
 }
@@ -5130,15 +5214,15 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
         }
     } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         for (const auto &item : bundleInfos_) {
-            InnerBundleInfo innerBundleInfo;
-            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId, appIndex);
-            if (ret != ERR_OK) {
-                LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryExtensionAbilityInfos failed, bundleName:%{public}s",
-                    item.first.c_str());
+            const InnerBundleInfo &innerBundleInfo = item.second;
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            if (CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_ABILITY,
+                    "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                    innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
                 continue;
             }
-            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-            GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, infos);
+            GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
         }
     } else if (appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         // query from sandbox manager for sandbox bundle
@@ -5175,8 +5259,8 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
             InnerBundleInfo innerBundleInfo;
-            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
-            if (ret != ERR_OK) {
+            bool ret = GetInnerBundleInfoWithFlags(item.first, flags, innerBundleInfo, userId);
+            if (!ret) {
                 LOG_D(BMS_TAG_QUERY_EXTENSION, "GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s",
                     item.first.c_str());
                 continue;
@@ -5184,7 +5268,7 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
             int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
             GetAllExtensionInfos(flags, responseUserId, innerBundleInfo, infos);
         }
-    } else {
+    } else if (appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         // query from sandbox manager for sandbox bundle
         if (sandboxAppHelper_ == nullptr) {
             LOG_W(BMS_TAG_QUERY_EXTENSION, "sandboxAppHelper_ is nullptr");
@@ -5204,7 +5288,19 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
                 continue;
             }
             int32_t responseUserId = info.GetResponseUserId(userId);
-            GetAllExtensionInfos(flags, responseUserId, info, infos);
+            GetAllExtensionInfos(flags, responseUserId, info, infos, appIndex);
+        }
+    } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
+        for (const auto &item : bundleInfos_) {
+            InnerBundleInfo innerBundleInfo;
+            bool ret = GetInnerBundleInfoWithFlags(item.first, flags, innerBundleInfo, userId, appIndex);
+            if (!ret) {
+                LOG_D(BMS_TAG_QUERY_EXTENSION, "GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s",
+                    item.first.c_str());
+                continue;
+            }
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetAllExtensionInfos(flags, responseUserId, innerBundleInfo, infos, appIndex);
         }
     }
     LOG_D(BMS_TAG_QUERY_EXTENSION, "finish to ImplicitQueryAllExtensionInfos");
@@ -5212,7 +5308,7 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
 }
 
 void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId,
-    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
+    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
@@ -5250,6 +5346,7 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
                 GET_EXTENSION_INFO_WITH_SKILL_URI) == GET_EXTENSION_INFO_WITH_SKILL_URI) {
                 AddSkillUrisInfo(skillInfos.second, extensionInfo.skillUri, skillIndex, matchUriIndex);
             }
+            extensionInfo.appIndex = appIndex;
             infos.emplace_back(extensionInfo);
             break;
         }
@@ -5258,13 +5355,13 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
 
 void BundleDataMgr::EmplaceExtensionInfo(const InnerBundleInfo &info, const std::vector<Skill> &skills,
     ExtensionAbilityInfo &extensionInfo, int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos,
-    std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const
+    std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex, int32_t appIndex) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
         static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
         info.GetApplicationInfoV9(static_cast<int32_t>(
-            GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
+            GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo, appIndex);
     }
     if ((static_cast<uint32_t>(flags) &
         static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
@@ -5286,11 +5383,12 @@ void BundleDataMgr::EmplaceExtensionInfo(const InnerBundleInfo &info, const std:
         static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL_URI)) {
         AddSkillUrisInfo(skills, extensionInfo.skillUri, matchSkillIndex, matchUriIndex);
     }
+    extensionInfo.appIndex = appIndex;
     infos.emplace_back(extensionInfo);
 }
 
 void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
-    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
+    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
@@ -5306,7 +5404,7 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
             EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
-                std::nullopt, std::nullopt);
+                std::nullopt, std::nullopt, appIndex);
             continue;
         }
         for (size_t skillIndex = 0; skillIndex < skillInfos.second.size(); ++skillIndex) {
@@ -5322,14 +5420,14 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
             EmplaceExtensionInfo(info, skillInfos.second, extensionInfo, flags, userId, infos,
-                skillIndex, matchUriIndex);
+                skillIndex, matchUriIndex, appIndex);
             break;
         }
     }
 }
 
 void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
-    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
+    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
     auto extensionInfos = info.GetInnerExtensionInfos();
     for (const auto &extensionAbilityInfo : extensionInfos) {
@@ -5338,7 +5436,7 @@ void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
             info.GetApplicationInfoV9(static_cast<int32_t>(
-                GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
+                GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo, appIndex);
         }
         if ((flags &
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
@@ -5355,6 +5453,7 @@ void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
             static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_SKILL)) {
             extensionInfo.skills.clear();
         }
+        extensionInfo.appIndex = appIndex;
         infos.emplace_back(extensionInfo);
     }
 }
@@ -7523,6 +7622,198 @@ ErrCode BundleDataMgr::GetCloneBundleInfo(
     ProcessBundleRouterMap(bundleInfo, flags);
     LOG_D(BMS_TAG_QUERY_BUNDLE, "get bundleInfo(%{public}s) successfully in user(%{public}d)",
         bundleName.c_str(), userId);
+    return ERR_OK;
+}
+
+void BundleDataMgr::QueryAllCloneExtensionInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos) const
+{
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "begin to ImplicitQueryAllCloneExtensionInfosV9");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "invalid user");
+        return;
+    }
+
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    std::string extensionName = element.GetAbilityName();
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "bundle name:%{public}s, extension name:%{public}s",
+        bundleName.c_str(), extensionName.c_str());
+
+    if (!bundleName.empty() && !extensionName.empty()) {
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, userId);
+        if (cloneAppIndexes.empty()) {
+            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryAllCloneExtensionInfo empty");
+            return;
+        }
+        for (int32_t appIndex: cloneAppIndexes) {
+            ExtensionAbilityInfo info;
+            ErrCode ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
+            if (ret != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryExtensionInfo error");
+                continue;
+            }
+            infos.emplace_back(info);
+        }
+        return;
+    } else if (!bundleName.empty()) {
+        ImplicitQueryCurCloneExtensionAbilityInfos(want, flags, requestUserId, infos);
+    }
+    ImplicitQueryAllCloneExtensionAbilityInfos(want, flags, requestUserId, infos);
+}
+
+void BundleDataMgr::QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos) const
+{
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "begin to ImplicitQueryAllCloneExtensionInfosV9");
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "invalid user");
+        return;
+    }
+
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    std::string extensionName = element.GetAbilityName();
+    LOG_D(BMS_TAG_QUERY_EXTENSION, "bundle name:%{public}s, extension name:%{public}s",
+        bundleName.c_str(), extensionName.c_str());
+
+    if (!bundleName.empty() && !extensionName.empty()) {
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(bundleName, userId);
+        if (cloneAppIndexes.empty()) {
+            LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryAllCloneExtensionInfo empty");
+            return;
+        }
+        for (int32_t appIndex: cloneAppIndexes) {
+            ExtensionAbilityInfo info;
+            ErrCode ret = ExplicitQueryExtensionInfoV9(want, flags, requestUserId, info, appIndex);
+            if (ret != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryExtensionInfo error");
+                continue;
+            }
+            infos.emplace_back(info);
+        }
+        return;
+    } else if (!bundleName.empty()) {
+        ImplicitQueryCurCloneExtensionAbilityInfosV9(want, flags, requestUserId, infos);
+    }
+    ImplicitQueryAllCloneExtensionAbilityInfosV9(want, flags, requestUserId, infos);
+}
+
+bool BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &abilityInfos) const
+{
+    LOG_D(BMS_TAG_QUERY_ABILITY, "begin ImplicitQueryCurCloneExtensionAbilityInfos.");
+    std::string bundleName = want.GetElement().GetBundleName();
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId);
+    if (!ret) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryCurCloneExtensionAbilityInfos failed");
+        return false;
+    }
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    if (cloneAppIndexes.empty()) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit ImplicitQueryCurCloneExtensionAbilityInfos empty");
+        return true;
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    for (int32_t appIndex: cloneAppIndexes) {
+        if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+            LOG_D(BMS_TAG_QUERY_EXTENSION,
+                "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
+            continue;
+        }
+        GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, abilityInfos, appIndex);
+    }
+    LOG_D(BMS_TAG_QUERY_ABILITY, "end ImplicitQueryCurCloneExtensionAbilityInfos.");
+    return true;
+}
+
+ErrCode BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &abilityInfos) const
+{
+    LOG_D(BMS_TAG_QUERY_ABILITY, "begin ImplicitQueryCurCloneExtensionAbilityInfosV9.");
+    std::string bundleName = want.GetElement().GetBundleName();
+
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, userId);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryCurCloneExtensionAbilityInfosV9 failed");
+        return ret;
+    }
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    if (cloneAppIndexes.empty()) {
+        LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit ImplicitQueryCurCloneExtensionAbilityInfosV9 empty");
+        return ERR_OK;
+    }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    for (int32_t appIndex: cloneAppIndexes) {
+        if (CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+            LOG_D(BMS_TAG_QUERY_EXTENSION,
+                "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
+            continue;
+        }
+        GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, abilityInfos, appIndex);
+    }
+    LOG_D(BMS_TAG_QUERY_ABILITY, "end ImplicitQueryCurCloneExtensionAbilityInfosV9.");
+    return ERR_OK;
+}
+
+bool BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(innerBundleInfo.GetBundleName(), userId);
+        if (cloneAppIndexes.empty()) {
+            continue;
+        }
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+        for (int32_t appIndex: cloneAppIndexes) {
+            if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_EXTENSION,
+                    "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                    innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
+                continue;
+            }
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetMatchExtensionInfos(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
+        }
+    }
+    FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
+    return true;
+}
+
+ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = item.second;
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(innerBundleInfo.GetBundleName(), userId);
+        if (cloneAppIndexes.empty()) {
+            continue;
+        }
+        int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+        for (int32_t appIndex: cloneAppIndexes) {
+            if (CheckInnerBundleInfoWithFlagsV9(innerBundleInfo, flags, responseUserId, appIndex) != ERR_OK) {
+                LOG_D(BMS_TAG_QUERY_EXTENSION,
+                    "failed, bundleName:%{public}s, responseUserId:%{public}d, appIndex:%{public}d",
+                    innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
+                continue;
+            }
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetMatchExtensionInfosV9(want, flags, responseUserId, innerBundleInfo, infos, appIndex);
+        }
+    }
+    FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -4058,7 +4058,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0016, Function | SmallTest | Lev
     bool testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
         want, 0, USERID, extensionInfos, appIndex);
     EXPECT_EQ(testRet, true);
-    appIndex = 2;
+    appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     testRet = GetBundleDataMgr()->ImplicitQueryCurExtensionInfos(
         want, 0, USERID, extensionInfos, appIndex);
     EXPECT_EQ(testRet, false);
