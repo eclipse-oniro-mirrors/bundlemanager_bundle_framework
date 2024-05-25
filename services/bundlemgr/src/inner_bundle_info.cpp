@@ -928,7 +928,7 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
     if (appIndex == 0) {
         isEnabled = innerBundleUserInfo.bundleUserInfo.enabled;
         return ERR_OK;
-    } else {
+    } else if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         const std::map<std::string, InnerBundleCloneInfo> mpCloneInfos = innerBundleUserInfo.cloneInfos;
         std::string key = InnerBundleUserInfo::AppIndexToKey(appIndex);
         if (mpCloneInfos.find(key) == mpCloneInfos.end()) {
@@ -936,6 +936,8 @@ ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled
         }
         isEnabled = mpCloneInfos.at(key).enabled;
         return ERR_OK;
+    } else {
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
     }
 }
 
