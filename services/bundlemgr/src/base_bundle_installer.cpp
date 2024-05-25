@@ -1122,7 +1122,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
 
     // create Screen Lock File Protection Dir
-    CreateScreenLockProtectionDir(newInfos);
+    CreateScreenLockProtectionDir();
     ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
@@ -2715,14 +2715,8 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
     return dirs;
 }
 
-bool BaseBundleInstaller::SetEncryptionDirPolicy()
+bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 {
-    InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
-        APP_LOGE("GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
-        return false;
-    }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.", info.GetBundleName().c_str(), userId_);
@@ -2747,28 +2741,45 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy()
         APP_LOGE("save keyId failed");
         return false;
     }
-    return result;
+    return result == ERR_OK;
 }
 
-void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos)
+void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
+    const std::string &dir)
 {
-    APP_LOGI("CreateScreenLockProtectionDir start");
-    if (infos.empty()) {
-        APP_LOGE("innerBundleInfo infos is empty.");
+    APP_LOGI("CreateScreenLockProtectionExistDirs start");
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+        APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+            info.GetBundleName().c_str(), userId_);
         return;
     }
+    if (InstalldClient::GetInstance()->Mkdir(
+        dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
+        APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
+    }
+}
+
+void BaseBundleInstaller::CreateScreenLockProtectionDir()
+{
+    APP_LOGI("CreateScreenLockProtectionDir start");
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return ;
+    }
+
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
     bool hasPermission = false;
-    for (auto &info : infos) {
-        std::vector<RequestPermission> reqPermissions = info.second.GetRequestPermissions();
-        auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-        });
-        if (it != reqPermissions.end()) {
-            hasPermission = true;
-            break;
-        }
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it != reqPermissions.end()) {
+        hasPermission = true;
     }
+
     if (!hasPermission) {
         APP_LOGI("no protection permission found, remove dirs");
         for (const std::string &dir : dirs) {
@@ -2778,27 +2789,21 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::
         }
         return;
     }
+    bool dirExist = false;
     for (const std::string &dir : dirs) {
-        bool dirExist = false;
         if (InstalldClient::GetInstance()->IsExistDir(dir, dirExist) != ERR_OK) {
             APP_LOGE("check if dir existed failed");
             return;
         }
         if (!dirExist) {
-            InnerBundleUserInfo newInnerBundleUserInfo;
-            if (!infos.begin()->second.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
-                APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
-                    infos.begin()->second.GetBundleName().c_str(), userId_);
-                return;
-            }
-            if (InstalldClient::GetInstance()->Mkdir(
-                dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
-                APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
-            }
+            APP_LOGD("ScreenLockProtectionDir: %{public}s need to be created.", dir.c_str());
+            CreateScreenLockProtectionExistDirs(info, dir);
         }
     }
-    if (!SetEncryptionDirPolicy()) {
-        APP_LOGE("SetEncryptionDirPolicy failed.");
+    if (!dirExist) {
+        if (!SetEncryptionDirPolicy(info)) {
+            APP_LOGE("Encryption failed dir");
+        }
     }
 }
 
