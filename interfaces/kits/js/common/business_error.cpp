@@ -139,6 +139,10 @@ constexpr const char* ERR_MSG_NATIVE_INSTALL_FAILED =
     "Failed to install the HAP because installing the native package failed.";
 constexpr const char* ERR_MSG_NATIVE_UNINSTALL_FAILED =
     "Failed to uninstall the HAP because uninstalling the native package failed.";
+constexpr const char* ERR_MSG_INVALID_APPINDEX =
+    "The appIndex is invalid.";
+constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
+    "The app does not support the creation of an appClone instance.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -213,6 +217,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_FAILED_CONTROLLED, ERR_MSG_INSTALL_FAILED_CONTROLLED },
     { ERROR_INSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_INSTALL_FAILED },
     { ERROR_UNINSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_UNINSTALL_FAILED },
+    { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APPINDEX },
+    { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
 };
 } // namespace
 
