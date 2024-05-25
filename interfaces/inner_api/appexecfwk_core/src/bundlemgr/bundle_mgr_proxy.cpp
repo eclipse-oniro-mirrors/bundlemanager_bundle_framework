@@ -2075,6 +2075,40 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
     return NO_ERROR;
 }
 
+ErrCode BundleMgrProxy::IsCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsCloneApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
+}
+
 ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2108,6 +2142,44 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
+    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to SetCloneApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnable)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write isEnable fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2127,6 +2199,39 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
     }
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IS_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
+}
+
+ErrCode BundleMgrProxy::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write abilityInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();
@@ -2165,6 +2270,44 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
+    const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to SetCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write abilityInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();

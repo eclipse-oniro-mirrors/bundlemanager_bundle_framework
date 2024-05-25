@@ -80,20 +80,30 @@ void EventReport::SendUserSysEvent(UserEventType userEventType, int32_t userId)
     EventReport::SendSystemEvent(BMSEventType::BMS_USER_EVENT, eventInfo);
 }
 
-void EventReport::SendComponentStateSysEvent(const std::string &bundleName,
-    const std::string &abilityName, int32_t userId, bool isEnable, bool exception)
+void EventReport::SendComponentStateSysEventForException(const std::string &bundleName,
+    const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex)
 {
     EventInfo eventInfo;
     eventInfo.bundleName = bundleName;
     eventInfo.abilityName = abilityName;
     eventInfo.userId = userId;
     eventInfo.isEnable = isEnable;
-    BMSEventType bmsEventType;
-    if (exception) {
-        bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE_EXCEPTION;
-    } else {
-        bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE;
-    }
+    eventInfo.appIndex = appIndex;
+    BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE_EXCEPTION;
+
+    EventReport::SendSystemEvent(bmsEventType, eventInfo);
+}
+
+void EventReport::SendComponentStateSysEvent(const std::string &bundleName,
+    const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.abilityName = abilityName;
+    eventInfo.userId = userId;
+    eventInfo.isEnable = isEnable;
+    eventInfo.appIndex = appIndex;
+    BMSEventType bmsEventType = BMSEventType::BUNDLE_STATE_CHANGE;
 
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
 }

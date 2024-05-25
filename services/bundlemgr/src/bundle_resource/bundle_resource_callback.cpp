@@ -109,7 +109,7 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
 bool BundleResourceCallback::OnBundleStatusChanged(
     const std::string &bundleName,
     bool enabled,
-    const int32_t userId)
+    const int32_t userId, int32_t appIndex)
 {
     APP_LOGI("start, bundleName: %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
@@ -128,19 +128,26 @@ bool BundleResourceCallback::OnBundleStatusChanged(
         APP_LOGE("manager is nullptr");
         return false;
     }
-
-    if (enabled) {
-        if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
+    if (appIndex == 0) {
+        if (enabled && !manager->AddResourceInfoByBundleName(bundleName, userId)) {
             APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
             return false;
         }
-    } else {
-        if (!manager->DeleteResourceInfo(bundleName)) {
+        if (!enabled && !manager->DeleteResourceInfo(bundleName)) {
             APP_LOGE("delete bundleName : %{public}s resource failed", bundleName.c_str());
             return false;
         }
+        return true;
     }
-    APP_LOGI("end, bundleName: %{public}s", bundleName.c_str());
+    if (enabled && !manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
+        APP_LOGE("add bundleName : %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
+        return false;
+    }
+    if (!enabled && !manager->DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
+        APP_LOGE("delete bundleName: %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
+        return false;
+    }
+    APP_LOGI("end, bundleName: %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
     return true;
 }
 

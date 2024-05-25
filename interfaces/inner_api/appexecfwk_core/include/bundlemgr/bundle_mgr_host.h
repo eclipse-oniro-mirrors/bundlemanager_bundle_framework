@@ -485,12 +485,26 @@ private:
      */
     ErrCode HandleIsApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the IsCloneApplicationEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleIsCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the SetApplicationEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleSetApplicationEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the SetCloneApplicationEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleSetCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the IsAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -499,12 +513,26 @@ private:
      */
     ErrCode HandleIsAbilityEnabled(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the IsCloneAbilityEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleIsCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the SetAbilityEnabled function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleSetAbilityEnabled(MessageParcel &data, MessageParcel &reply);
+    /**
+     * @brief Handles the SetCloneAbilityEnabled function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the GetAllFormsInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -764,7 +792,7 @@ private:
     ErrCode HandleGetOdid(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllBundleInfoByDeveloperId(MessageParcel &data, MessageParcel &reply);
-    
+
     ErrCode HandleGetDeveloperIds(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleSwitchUninstallState(MessageParcel &data, MessageParcel &reply);

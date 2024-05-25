@@ -3707,7 +3707,7 @@ bool BundleDataMgr::EnableBundle(const std::string &bundleName)
     return true;
 }
 
-ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, bool &isEnabled) const
+ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnabled) const
 {
     APP_LOGD("IsApplicationEnabled %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -3717,20 +3717,36 @@ ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, bool 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t responseUserId = infoItem->second.GetResponseUserId(GetUserId());
-    ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled);
-    if (ret != ERR_OK) {
-        APP_LOGW("GetApplicationEnabled failed: %{public}s", bundleName.c_str());
+    if (appIndex == 0) {
+        ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled);
+        if (ret != ERR_OK) {
+            APP_LOGW("GetApplicationEnabled failed: %{public}s", bundleName.c_str());
+        }
+        return ret;
     }
-    return ret;
+    const InnerBundleInfo &bundleInfo = infoItem->second;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!bundleInfo.GetInnerBundleUserInfo(responseUserId, innerBundleUserInfo)) {
+        APP_LOGW("can not find userId %{public}d", responseUserId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    auto iter = innerBundleUserInfo.cloneInfos.find(std::to_string(appIndex));
+    if (iter == innerBundleUserInfo.cloneInfos.end()) {
+        APP_LOGW("can not find appIndex %{public}d", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
+    isEnabled = iter->second.enabled;
+    return ERR_OK;
 }
 
-ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
+ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
+    int32_t appIndex, bool isEnable, int32_t userId)
 {
     APP_LOGD("SetApplicationEnabled %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGW("Request userId is invalid, bundleName:%{public}s", bundleName.c_str());
+        APP_LOGW("Request userId %{public}d is invalid, bundleName:%{public}s", userId, bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto infoItem = bundleInfos_.find(bundleName);
@@ -3740,10 +3756,24 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName, bool
     }
 
     InnerBundleInfo& newInfo = infoItem->second;
+    if (appIndex != 0) {
+        auto ret = newInfo.SetCloneApplicationEnabled(isEnable, appIndex, requestUserId);
+        if (ret != ERR_OK) {
+            APP_LOGW("SetCloneApplicationEnabled for innerBundleInfo fail, errCode is %{public}d", ret);
+            return ret;
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+            APP_LOGE("SaveStorageBundleInfo failed for bundle %{public}s", newInfo.GetBundleName().c_str());
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        return ERR_OK;
+    }
     auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
     if (ret != ERR_OK) {
+        APP_LOGW("SetApplicationEnabled failed, err %{public}d", ret);
         return ret;
     }
+
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {
         APP_LOGW("can not find bundleUserInfo in userId: %{public}d", requestUserId);
@@ -3822,7 +3852,7 @@ ErrCode BundleDataMgr::IsModuleRemovable(const std::string &bundleName, const st
     return newInfo.IsModuleRemovable(moduleName, userId, isRemovable);
 }
 
-ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) const
+ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(abilityInfo.bundleName);
@@ -3839,12 +3869,12 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &is
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(GetUserId());
-    return innerBundleInfo.IsAbilityEnabledV9((*ability), responseUserId, isEnable);
+    return innerBundleInfo.IsAbilityEnabledV9((*ability), responseUserId, isEnable, appIndex);
 }
 
-ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
+ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex,
+    bool isEnabled, int32_t userId)
 {
-    APP_LOGD("SetAbilityEnabled %{public}s", abilityInfo.name.c_str());
     std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -3858,9 +3888,25 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo& newInfo = infoItem->second;
+    if (appIndex != 0) {
+        auto ret = newInfo.SetCloneAbilityEnabled(
+            abilityInfo.moduleName, abilityInfo.name, isEnabled, userId, appIndex);
+        if (ret != ERR_OK) {
+            APP_LOGW("SetCloneAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
+                ret, abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
+            return ret;
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(newInfo)) {
+            APP_LOGE("SaveStorageBundleInfo bundle %{public}s failed", newInfo.GetBundleName().c_str());
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+        return ERR_OK;
+    }
     ErrCode ret = newInfo.SetAbilityEnabled(
         abilityInfo.moduleName, abilityInfo.name, isEnabled, userId);
     if (ret != ERR_OK) {
+        APP_LOGW("SetAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
+            ret, abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return ret;
     }
     InnerBundleUserInfo innerBundleUserInfo;
@@ -3869,7 +3915,6 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool is
             requestUserId, abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
     if (innerBundleUserInfo.bundleUserInfo.IsInitialState()) {
         bundleStateStorage_->DeleteBundleState(abilityInfo.bundleName, requestUserId);
     } else {

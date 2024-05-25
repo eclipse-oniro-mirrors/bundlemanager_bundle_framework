@@ -6310,6 +6310,48 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: CheckCloneAbilityEnabled_0100
+ * @tc.name: test SetCloneAbilityEnabled and IsCloneAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckCloneAbilityEnabled_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = BASE_ABILITY_NAME;
+    abilityInfo.bundleName = ROUTER_MAP_TEST_BUNDLE_NAME;
+    abilityInfo.moduleName = BASE_MODULE_NAME;
+    int32_t testRet = bundleMgrProxy->SetCloneAbilityEnabled(abilityInfo, 1, false, USERID);
+    EXPECT_NE(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsCloneAbilityEnabled(abilityInfo, 1, isEnable);
+    EXPECT_NE(0, testRet1);
+}
+
+/**
+ * @tc.number: CheckCloneApplicationEnabled_0100
+ * @tc.name: test SetCloneAbilityEnabled and IsCloneAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckCloneApplicationEnabled_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    int32_t testRet = bundleMgrProxy->SetCloneApplicationEnabled(BASE_ABILITY_NAME, 1, false, USERID);
+    EXPECT_NE(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsCloneApplicationEnabled(BASE_ABILITY_NAME, 1, isEnable);
+    EXPECT_NE(0, testRet1);
+}
+
+/**
  * @tc.number: GetAllBundleInfoByDeveloperId_0001
  * @tc.name: test query bundle information
  * @tc.desc: 1.get information failed

@@ -136,6 +136,7 @@ struct EventInfo {
     int64_t costTimeSeconds = 0;
     int32_t sceneId = 0;
     std::string processName;
+    int32_t appIndex = 0;
 
     void Reset()
     {
@@ -172,6 +173,7 @@ struct EventInfo {
         costTimeSeconds = 0;
         sceneId = 0;
         processName.clear();
+        appIndex = 0;
     }
 };
 
@@ -194,10 +196,20 @@ public:
      * @param abilityName Indicates the abilityName.
      * @param userId Indicates the userId.
      * @param isEnable Indicates the isEnable.
-     * @param exception Indicates the exception.
+     * @param appIndex Indicates the app index for clone app.
+     */
+    static void SendComponentStateSysEventForException(const std::string &bundleName,
+        const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex);
+    /**
+     * @brief Send component diable or enable system events.
+     * @param bundleName Indicates the bundleName.
+     * @param abilityName Indicates the abilityName.
+     * @param userId Indicates the userId.
+     * @param isEnable Indicates the isEnable.
+     * @param appIndex Indicates the app index for clone app.
      */
     static void SendComponentStateSysEvent(const std::string &bundleName,
-        const std::string &abilityName, int32_t userId, bool isEnable, bool exception);
+        const std::string &abilityName, int32_t userId, bool isEnable, int32_t appIndex);
     /**
      * @brief Send clean cache system events.
      * @param bundleName Indicates the bundleName.

@@ -435,7 +435,7 @@ public:
      * @param isEnable Indicates the application status is enabled.
      * @return Returns result of the operation.
      */
-    ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) const;
+    ErrCode IsApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable) const;
     /**
      * @brief Set the application status.
      * @param bundleName Indicates the bundle name.
@@ -443,7 +443,7 @@ public:
      * @param userId Indicates the user id.
      * @return Returns result of the operation.
      */
-    ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+    ErrCode SetApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
@@ -451,7 +451,7 @@ public:
      * @param isEnable Indicates the ability status is enabled.
      * @return Returns result of the operation.
      */
-    ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) const;
+    ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable) const;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
@@ -460,7 +460,7 @@ public:
      * @param userId Indicates the user id.
      * @return Returns result of the operation.
      */
-    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+    ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID);
     /**
      * @brief Register the bundle status callback function.

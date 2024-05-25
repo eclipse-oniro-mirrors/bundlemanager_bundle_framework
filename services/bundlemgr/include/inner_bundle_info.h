@@ -222,6 +222,7 @@ public:
         int32_t appIndex = 0) const;
 
     ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
 
     void InsertInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
     {
@@ -595,6 +596,8 @@ public:
         const std::string &abilityName,
         bool isEnabled,
         int32_t userId);
+    ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
+        bool isEnabled, int32_t userId, int32_t appIndex);
     ErrCode SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(std::string moduleName) const;
     void GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo, int32_t appIndex = 0) const;
