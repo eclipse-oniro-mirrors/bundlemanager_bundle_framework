@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_resource_callback.h"
+#include "bundle_resource_change_type.h"
 #include "bundle_system_state.h"
 
 #ifdef ABILITY_RUNTIME_ENABLE
@@ -37,43 +38,50 @@ BundleResourceObserver::~BundleResourceObserver()
 void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configuration& configuration)
 {
     APP_LOGI("called");
+    uint32_t type = 0;
     std::string colorMode = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE);
     if (!colorMode.empty() && (colorMode != BundleSystemState::GetInstance().GetSystemColorMode())) {
         APP_LOGI("OnSystemColorModeChanged colorMode:%{public}s", colorMode.c_str());
-        std::thread colorModeChangedThread(OnSystemColorModeChanged, colorMode);
+        type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE) :
+            (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
+        std::thread colorModeChangedThread(OnSystemColorModeChanged, colorMode, type);
         colorModeChangedThread.detach();
     }
     std::string language = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE);
     if (!language.empty() && (language != BundleSystemState::GetInstance().GetSystemLanguage())) {
         APP_LOGI("OnSystemLanguageChange language:%{public}s", language.c_str());
-        std::thread systemLanguageChangedThread(OnSystemLanguageChange, language);
+        type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) :
+            (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
+        std::thread systemLanguageChangedThread(OnSystemLanguageChange, language, type);
         systemLanguageChangedThread.detach();
     }
     std::string theme = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME);
     if (!theme.empty()) {
         APP_LOGI("OnApplicationThemeChanged theme:%{public}s", theme.c_str());
-        std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme);
+        type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) :
+            (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
+        std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, type);
         applicationThemeChangedThread.detach();
     }
-    APP_LOGI("end");
+    APP_LOGI("end, bundle resource change type:%{public}u", type);
 }
 
-void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMode)
+void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type)
 {
     BundleResourceCallback callback;
-    callback.OnSystemColorModeChanged(colorMode);
+    callback.OnSystemColorModeChanged(colorMode, type);
 }
 
-void BundleResourceObserver::OnSystemLanguageChange(const std::string &language)
+void BundleResourceObserver::OnSystemLanguageChange(const std::string &language, const uint32_t type)
 {
     BundleResourceCallback callback;
-    callback.OnSystemLanguageChange(language);
+    callback.OnSystemLanguageChange(language, type);
 }
 
-void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme)
+void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme, const uint32_t type)
 {
     BundleResourceCallback callback;
-    callback.OnApplicationThemeChanged(theme);
+    callback.OnApplicationThemeChanged(theme, type);
 }
 #endif
 } // AppExecFwk

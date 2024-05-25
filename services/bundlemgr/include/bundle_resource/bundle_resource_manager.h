@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_resource_change_type.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
@@ -46,7 +47,7 @@ public:
      * add all resource info in system, used when system configuration changed, like:
      * language, colorMode, theme, and so on
      */
-    bool AddAllResourceInfo(const int32_t userId);
+    bool AddAllResourceInfo(const int32_t userId, const uint32_t type);
     /**
      * delete all resource info
      */
@@ -67,7 +68,8 @@ public:
     /**
      * add resource info by colorMode changed
      */
-    bool AddResourceInfoByColorModeChanged(const int32_t userId);
+    bool AddResourceInfoByColorModeChanged(const int32_t userId,
+        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
@@ -108,7 +110,7 @@ private:
 
     uint32_t CheckResourceFlags(const uint32_t flags);
 
-    void SendBundleResourcesChangedEvent(int32_t userId);
+    void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type);
 
     void InnerProcessResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         std::vector<ResourceInfo> &resourceInfos);

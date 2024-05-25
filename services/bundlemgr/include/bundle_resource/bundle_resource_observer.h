@@ -34,11 +34,11 @@ public:
     void OnConfigurationUpdated(const AppExecFwk::Configuration& configuration) override;
 
 private:
-    static void OnSystemColorModeChanged(const std::string &colorMode);
+    static void OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type);
 
-    static void OnSystemLanguageChange(const std::string &language);
+    static void OnSystemLanguageChange(const std::string &language, const uint32_t type);
 
-    static void OnApplicationThemeChanged(const std::string &theme);
+    static void OnApplicationThemeChanged(const std::string &theme, const uint32_t type);
 };
 #endif
 } // AppExecFwk

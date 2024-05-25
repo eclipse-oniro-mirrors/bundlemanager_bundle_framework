@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_common_event.h"
 #include "bundle_constants.h"
+#include "bundle_resource_change_type.h"
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
@@ -42,6 +43,7 @@ constexpr const char* UID = "uid";
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* ATOMIC_SERVICE_MODULE_UPGRADE = "atomicServiceModuleUpgrade";
+constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -239,11 +241,12 @@ void BundleCommonEventMgr::NotifyDynamicIconEvent(
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
-void BundleCommonEventMgr::NotifyBundleResourcesChanged(int32_t userId)
+void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type)
 {
     OHOS::AAFwk::Want want;
     want.SetAction(BUNDLE_RESOURCES_CHANGED);
     want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(BUNDLE_RESOURCE_CHANGE_TYPE, static_cast<int32_t>(type));
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_GET_BUNDLE_RESOURCES };

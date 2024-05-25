@@ -18,6 +18,8 @@
 
 #include <string>
 
+#include "bundle_resource_change_type.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceCallback {
@@ -27,13 +29,16 @@ public:
     ~BundleResourceCallback() = default;
 
     // for userId switched
-    bool OnUserIdSwitched(const int32_t userId);
+    bool OnUserIdSwitched(const int32_t userId,
+        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
 
     // for colorMode changed
-    bool OnSystemColorModeChanged(const std::string &colorMode);
+    bool OnSystemColorModeChanged(const std::string &colorMode,
+        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
 
     // for system language changed
-    bool OnSystemLanguageChange(const std::string &language);
+    bool OnSystemLanguageChange(const std::string &language,
+        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
 
     // for bundle enable or disable
     bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId, int32_t appIndex = 0);
@@ -43,7 +48,8 @@ public:
         const std::string &abilityName, bool enabled, const int32_t userId);
 
     // for application theme changed
-    bool OnApplicationThemeChanged(const std::string &theme);
+    bool OnApplicationThemeChanged(const std::string &theme,
+        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
 
     // for overlay
     bool OnOverlayStatusChanged(const std::string &bundleName, bool isEnabled, int32_t userId);

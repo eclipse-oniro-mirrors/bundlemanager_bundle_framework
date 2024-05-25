@@ -30,6 +30,7 @@
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_callback.h"
+#include "bundle_resource_change_type.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_event_subscriber.h"
 #include "bundle_resource_helper.h"
@@ -579,7 +580,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0012, Function | SmallTest
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     EXPECT_NE(manager, nullptr);
     // userId not exist, no resourceInfo
-    bool ans = manager->AddAllResourceInfo(200);
+    bool ans = manager->AddAllResourceInfo(200,
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
     EXPECT_FALSE(ans);
 }
 
