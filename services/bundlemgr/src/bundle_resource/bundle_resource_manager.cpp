@@ -78,7 +78,7 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
-        if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, resourceInfos[0].appIndexes_) ) {
+        if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, resourceInfos[0].appIndexes_)) {
             APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
         }
     }
