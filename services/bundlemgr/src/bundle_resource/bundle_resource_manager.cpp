@@ -77,6 +77,11 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
+    if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
+        if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, resourceInfos[0].appIndexes_)) {
+            APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
+        }
+    }
     APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
     return true;
 }
@@ -118,6 +123,15 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
     if (!AddResourceInfos(resourceInfosMap, true, tempTaskNum)) {
         APP_LOGE("add all resource info failed, userId:%{public}d", userId);
         return false;
+    }
+    // process clone bundle resource info
+    for (const auto &item : resourceInfosMap) {
+        if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
+            APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
+            if (!AddCloneBundleResourceInfo(item.first, item.second[0].appIndexes_)) {
+                APP_LOGW("bundleName:%{public}s add clone resource failed", item.second[0].bundleName_.c_str());
+            }
+        }
     }
     SendBundleResourcesChangedEvent(userId);
     APP_LOGI("add all resource end");
@@ -295,6 +309,15 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
     if (!AddResourceInfos(resourceInfosMap, false, tempTaskNum)) {
         APP_LOGE("add resource infos failed, userId:%{public}d", userId);
         return false;
+    }
+    // process clone bundle resource info
+    for (const auto &item : resourceInfosMap) {
+        if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
+            APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
+            if (!AddCloneBundleResourceInfo(item.first, item.second[0].appIndexes_)) {
+                APP_LOGW("bundle:%{public}s add clone resource failed", item.first.c_str());
+            }
+        }
     }
     SendBundleResourcesChangedEvent(userId);
     return true;
@@ -481,33 +504,17 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     APP_LOGD("start add clone bundle resource info, bundleName:%{public}s appIndex:%{public}d",
         bundleName.c_str(), appIndex);
     // 1. get main bundle resource info
-    BundleResourceInfo bundleResourceInfo;
-    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
-        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
-    if (!bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
-        APP_LOGE("get bundle resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    std::vector<ResourceInfo> resourceInfos;
+    if (!GetBundleResourceInfoForCloneBundle(bundleName, appIndex, resourceInfos)) {
+        APP_LOGE("add clone bundle resource failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
         return false;
     }
-    bundleResourceInfo.appIndex = appIndex;
-    ResourceInfo bundleResource;
-    bundleResource.ConvertFromBundleResourceInfo(bundleResourceInfo);
-    std::vector<ResourceInfo> resourceInfos;
-    resourceInfos.emplace_back(bundleResource);
-    // 2. get main launcher ability resource info
-    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    if (!bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos)) {
-        APP_LOGW("get ability resource failed, bundleName:%{public}s appIndex:%{public}d",
-            bundleName.c_str(), appIndex);
+    // 2. need to process base icon and badge icon
+    // 3. need delete old clone resource info
+    if (!DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
+        APP_LOGW("delete bundleName:%{public}s appIndex:%{public}d resource failed", bundleName.c_str(), appIndex);
     }
-    for (auto &launcherAbility : launcherAbilityResourceInfos) {
-        launcherAbility.appIndex = appIndex;
-        ResourceInfo launcherResource;
-        launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
-        resourceInfos.emplace_back(launcherResource);
-    }
-    APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
-        resourceInfos.size());
-    // 3.need to process icon
     // 4. save clone bundle resource info
     if (!bundleResourceRdb_->AddResourceInfos(resourceInfos)) {
         APP_LOGE("add resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
@@ -526,6 +533,54 @@ bool BundleResourceManager::DeleteCloneBundleResourceInfo(const std::string &bun
     info.bundleName_ = bundleName;
     info.appIndex_ = appIndex;
     return bundleResourceRdb_->DeleteResourceInfo(info.GetKey());
+}
+
+bool BundleResourceManager::AddCloneBundleResourceInfo(
+    const std::string &bundleName,
+    const std::vector<int32_t> appIndexes)
+{
+    APP_LOGD("start add clone resource info, bundleName:%{public}s", bundleName.c_str());
+    bool result = true;
+    for (const auto index : appIndexes) {
+        result = AddCloneBundleResourceInfo(bundleName, index);
+        if (!result) {
+            APP_LOGW("bundleName:%{public}s appIndex:%{public}d add clone bundle resource failed", bundleName.c_str(),
+                index);
+        }
+    }
+    return result;
+}
+
+bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
+    const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos)
+{
+    // 1. get main bundle resource info
+    BundleResourceInfo bundleResourceInfo;
+    uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
+    if (!bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
+        APP_LOGE("get bundle resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        return false;
+    }
+    bundleResourceInfo.appIndex = appIndex;
+    ResourceInfo bundleResource;
+    bundleResource.ConvertFromBundleResourceInfo(bundleResourceInfo);
+    resourceInfos.emplace_back(bundleResource);
+    // 2. get main launcher ability resource info
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    if (!bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos)) {
+        APP_LOGW("get ability resource failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+    }
+    for (auto &launcherAbility : launcherAbilityResourceInfos) {
+        launcherAbility.appIndex = appIndex;
+        ResourceInfo launcherResource;
+        launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
+        resourceInfos.emplace_back(launcherResource);
+    }
+    APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
+        resourceInfos.size());
+    return true;
 }
 } // AppExecFwk
 } // OHOS
