@@ -21,6 +21,7 @@
 #include "app_control_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_service_constants.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -327,7 +328,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
-    ret = appControlManager_->DeleteDisposedRule(callerName, appId, userId);
+    ret = appControlManager_->DeleteDisposedRule(callerName, appId, Constants::MAIN_APP_INDEX, userId);
 
     return ret;
 }
@@ -409,7 +410,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
-    auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, userId);
+    auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_APP_CONTROL, "host GetDisposedStatus error:%{public}d", ret);
     }
@@ -437,7 +438,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }
-    auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, userId);
+    auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_APP_CONTROL, "host GetDisposedStatus error:%{public}d", ret);
     }
@@ -452,7 +453,107 @@ ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(
         LOG_E(BMS_TAG_APP_CONTROL, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->GetAbilityRunningControlRule(bundleName, userId, disposedRules);
+    return appControlManager_->GetAbilityRunningControlRule(bundleName, Constants::MAIN_APP_INDEX, userId,
+        disposedRules);
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
+    int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "host begin to GetDisposedRuleForCloneApp");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_APP_CONTROL, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_APP_CONTROL, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_APP_CONTROL, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "GetDisposedRuleForCloneApp error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
+    int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "host begin to SetDisposedRuleForCloneApp");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_APP_CONTROL, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_APP_CONTROL, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_APP_CONTROL, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (uid == AppControlConstants::EDM_UID) {
+        rule.isEdm = true;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "SetDisposedRuleForCloneApp error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    }
+    return ret;
+}
+ErrCode AppControlManagerHostImpl::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex,
+    int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "host begin to DeleteDisposedRuleForCloneApp");
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_APP_CONTROL, "non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        LOG_W(BMS_TAG_APP_CONTROL, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (appIndex < Constants::MAIN_APP_INDEX || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+        LOG_E(BMS_TAG_APP_CONTROL, "appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = ERR_OK;
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        ret = appControlManager_->DeleteDisposedStatus(appId, userId);
+        if (ret != ERR_OK) {
+            LOG_W(BMS_TAG_APP_CONTROL, "DeleteDisposedStatus error:%{public}d", ret);
+        }
+    }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ret = appControlManager_->DeleteDisposedRule(callerName, appId, appIndex, userId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "DeleteDisposedRule error:%{public}d, appIndex:%{public}d", ret, appIndex);
+    }
+    return ret;
 }
 } // AppExecFwk
 } // OHOS

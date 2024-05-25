@@ -2415,6 +2415,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, -1);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
@@ -2426,6 +2429,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest
     EXPECT_EQ(info.bundleName, BUNDLE_NAME);
     EXPECT_FALSE(info.icon.empty());
     EXPECT_FALSE(info.label.empty());
+
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
@@ -2453,6 +2459,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     EXPECT_TRUE(info.size() == 0);
 
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(info.size() == 0);
+
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     EXPECT_TRUE(info.size() == 0);
@@ -2469,6 +2479,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest
         EXPECT_FALSE(info[0].label.empty());
         EXPECT_FALSE(info[0].icon.empty());
     }
+
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);

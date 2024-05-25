@@ -36,6 +36,9 @@ public:
 
     virtual ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
+
+private:
+    ErrCode CheckBundleNameValid(const std::string &bundleName, int32_t appIndex);
 };
 } // AppExecFwk
 } // OHOS

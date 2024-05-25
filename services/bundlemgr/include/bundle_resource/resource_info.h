@@ -59,6 +59,7 @@ public:
     std::vector<uint8_t> background_;
     // for app clone
     int32_t appIndex_ = 0;
+    std::vector<int32_t> appIndexes_;
 
 private:
     void InnerParseAppIndex(const std::string &key);

@@ -642,12 +642,18 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
 
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
+    return GetUidByBundleName(bundleName, userId, 0);
+}
+
+int32_t BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+{
     if (bundleName.empty()) {
         APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
         return Constants::INVALID_UID;
     }
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d, appIndex : %{public}d", bundleName.c_str(),
+        userId, appIndex);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -659,6 +665,10 @@ int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int 
         return Constants::INVALID_UID;
     }
     if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetUidByBundleName due to write uid fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteInt32(appIndex)) {
         APP_LOGE("failed to GetUidByBundleName due to write uid fail");
         return Constants::INVALID_UID;
     }

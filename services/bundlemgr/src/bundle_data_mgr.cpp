@@ -2747,10 +2747,10 @@ ErrCode BundleDataMgr::GetBundleNameAndIndexForUid(const int32_t uid, std::strin
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoAndIndexByUid(uid, innerBundleInfo, appIndex) != ERR_OK) {
         if (sandboxAppHelper_ == nullptr) {
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
 
@@ -2765,7 +2765,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
 {
     if (uid < Constants::BASE_APP_UID) {
         APP_LOGD("the uid(%{public}d) is not an application.", uid);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     int32_t userId = GetUserIdByUid(uid);
     int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
@@ -2776,7 +2776,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
         auto bundleIdIter = bundleIdMap_.find(bundleId);
         if (bundleIdIter == bundleIdMap_.end()) {
             APP_LOGW("uid %{public}d is not existed.", uid);
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+            return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         keyName = bundleIdIter->second;
     }
@@ -2787,12 +2787,12 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
     auto bundleInfoIter = bundleInfos_.find(bundleName);
     if (bundleInfoIter == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s is not existed in bundleInfos_.", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
 
     if (bundleInfoIter->second.IsDisabled()) {
         APP_LOGD("app %{public}s is disabled", bundleInfoIter->second.GetBundleName().c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INVALID_UID;
     }
     if (bundleInfoIter->second.GetUid(userId, appIndex) == uid) {
         innerBundleInfo = bundleInfoIter->second;
@@ -2800,7 +2800,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
     }
 
     APP_LOGW("the uid(%{public}d) is not exists.", uid);
-    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    return ERR_BUNDLE_MANAGER_INVALID_UID;
 }
 
 ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int32_t uid, InnerBundleInfo &innerBundleInfo) const
@@ -5236,20 +5236,12 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     BundleInfo bundleInfo;
     innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
-        std::string moduleResPath;
-        if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
-            moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
-        }
-        if (!moduleResPath.empty()) {
-            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
-            if (!resourceManager->AddResource(moduleResPath.c_str())) {
-                APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
-            }
-        }
-    }
 
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (!resConfig) {
+        APP_LOGE("resConfig is nullptr");
+        return nullptr;
+    }
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
     OHOS::Global::I18n::LocaleInfo locale(
@@ -5257,6 +5249,20 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
+
+    for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string moduleResPath;
+        if (moduleName.empty() || moduleName == hapModuleInfo.moduleName) {
+            moduleResPath = hapModuleInfo.hapPath.empty() ? hapModuleInfo.resourcePath : hapModuleInfo.hapPath;
+        }
+        if (!moduleResPath.empty()) {
+            APP_LOGD("DistributedBms::InitResourceManager, moduleResPath: %{public}s", moduleResPath.c_str());
+            if (!resourceManager->AddResource(moduleResPath.c_str(), Global::Resource::SELECT_STRING
+            | Global::Resource::SELECT_MEDIA)) {
+                APP_LOGW("DistributedBms::InitResourceManager AddResource failed");
+            }
+        }
+    }
     return resourceManager;
 }
 #endif

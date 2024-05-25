@@ -85,6 +85,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -100,6 +101,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -250,6 +252,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -264,6 +267,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -413,6 +417,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -427,6 +432,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -582,6 +588,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -600,6 +607,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -750,6 +758,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -764,6 +773,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -916,6 +926,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -930,6 +941,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
@@ -1071,6 +1083,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -1091,6 +1104,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]

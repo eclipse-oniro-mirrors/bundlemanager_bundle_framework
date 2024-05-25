@@ -306,6 +306,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -502,6 +503,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -1415,7 +1417,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
     if (appControlMgr != nullptr) {
         APP_LOGD("Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
-        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo.GetAppId(), userId_);
+        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
     }
 #endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -1770,6 +1772,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
             hapPath, info.GetCpuAbi(), info.GetBundleName());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to install because installing the native package failed. error code: %{public}d", ret);
+            return ret;
         }
         if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
             APP_LOGE("delete dir %{public}s failed!", moduleHnpsPath.c_str());
@@ -1786,6 +1789,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to uninstall because uninstalling the native package failed. error code: %{public}d", ret);
+            return ret;
         }
     }
     return ERR_OK;
@@ -2970,6 +2974,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
         if (result != ERR_OK) {
             APP_LOGE("fail to ExtractHnpsFileDir, error is %{public}d", result);
+            return result;
         }
     }
 

@@ -1209,7 +1209,7 @@ bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     std::vector<std::string> oldAppIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->GetOldAppIds(bundleName, oldAppIds)) {
-        APP_LOGE("Get OldAppIds failed.");
+        APP_LOGD("Get OldAppIds failed.");
         return false;
     }
     for (const auto &signature : appSignatures) {

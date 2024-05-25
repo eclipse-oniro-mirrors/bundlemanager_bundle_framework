@@ -295,7 +295,20 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             innerBundleInfo.GetBundleName().c_str());
         ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
-
+    // for clone bundle
+    std::vector<int32_t> appIndexes;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
+            appIndexes.emplace_back(cloneInfo.second.appIndex);
+        }
+    }
+    if (!appIndexes.empty()) {
+        APP_LOGI("bundleName:%{public}s contains clone bundle", innerBundleInfo.GetBundleName().c_str());
+        for (auto &info : resourceInfos) {
+            info.appIndexes_ = appIndexes;
+        }
+    }
     return true;
 }
 

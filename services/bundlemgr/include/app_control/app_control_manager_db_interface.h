@@ -56,14 +56,14 @@ public:
     virtual ErrCode GetDisposedStatus(const std::string &callingNmae,
         const std::string &appId, Want& want, int32_t userId) = 0;
     virtual ErrCode SetDisposedRule(const std::string &callingName,
-        const std::string &appId, const DisposedRule& rule, int32_t userId) = 0;
+        const std::string &appId, const DisposedRule& rule, int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode GetDisposedRule(const std::string &callingName,
-        const std::string &appId, DisposedRule& rule, int32_t userId) = 0;
+        const std::string &appId, DisposedRule& rule, int32_t appIndex, int32_t userId) = 0;
     virtual ErrCode DeleteDisposedRule(const std::string &callingName,
-        const std::string &appId, int32_t userId) = 0;
-    virtual ErrCode GetAbilityRunningControlRule(
-        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) = 0;
-    virtual ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId) = 0;
+        const std::string &appId, int32_t appIndex, int32_t userId) = 0;
+    virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        std::vector<DisposedRule>& disposedRules) = 0;
+    virtual ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t appIndex, int32_t userId) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

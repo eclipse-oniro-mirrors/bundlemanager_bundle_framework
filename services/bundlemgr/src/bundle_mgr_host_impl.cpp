@@ -311,7 +311,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_QUERY_BUNDLE, "GetBundleNameForUid failed, uid is %{public}d", uid);
-        return ret;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
 }
@@ -2729,7 +2729,12 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
     return appType;
 }
 
-int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
+int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    return GetUidByBundleName(bundleName, userId, 0);
+}
+
+int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
@@ -2744,7 +2749,7 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
     }
     BundleInfo bundleInfo;
     int32_t uid = Constants::INVALID_UID;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, GET_BUNDLE_DEFAULT, bundleInfo, userId, appIndex);
     if (ret == ERR_OK) {
         uid = bundleInfo.uid;
         APP_LOGD("get bundle uid success, uid is %{public}d", uid);
@@ -2856,6 +2861,12 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (ret && findDefaultApp) {
         APP_LOGD("default app has been found and unnecessary to find from bms extension");
+        return ret;
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) !=
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGI("contains app linking flag, no need to query from bms extension");
         return ret;
     }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();

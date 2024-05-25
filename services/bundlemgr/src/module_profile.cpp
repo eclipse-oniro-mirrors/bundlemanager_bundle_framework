@@ -40,7 +40,7 @@ bool IsSupportCompressNativeLibs()
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {

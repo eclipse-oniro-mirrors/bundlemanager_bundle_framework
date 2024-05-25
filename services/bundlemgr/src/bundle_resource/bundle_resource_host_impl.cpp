@@ -46,7 +46,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
     }
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
         APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;
 }
@@ -75,7 +75,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
     }
     if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
         APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;
 }
@@ -103,7 +103,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetAllBundleResourceInfo(flags, bundleResourceInfos)) {
-        APP_LOGE("get all resource failed, flags:%{public}u",  flags);
+        APP_LOGE("get all resource failed, flags:%{public}u", flags);
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -141,6 +141,25 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;
+}
+
+ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleName, int32_t appIndex)
+{
+    if (appIndex == 0) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    BundleResourceInfo bundleResourceInfo;
+    if (!manager->GetBundleResourceInfo(bundleName,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo)) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    APP_LOGE("get failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
 }
 } // AppExecFwk
 } // OHOS

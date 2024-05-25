@@ -88,6 +88,8 @@ public:
 
     bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
+    bool AddCloneBundleResourceInfo(const std::string &bundleName, const std::vector<int32_t> appIndexes);
+
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
 private:
@@ -110,6 +112,9 @@ private:
 
     void InnerProcessResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         std::vector<ResourceInfo> &resourceInfos);
+
+    bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
+        const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
 
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;

@@ -2209,7 +2209,8 @@ ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
-    int32_t uid = GetUidByBundleName(bundleName, userId);
+    int32_t appIndex = data.ReadInt32();
+    int32_t uid = GetUidByBundleName(bundleName, userId, appIndex);
     APP_LOGD("uid is %{public}d", uid);
     if (!reply.WriteInt32(uid)) {
         APP_LOGE("write failed");
