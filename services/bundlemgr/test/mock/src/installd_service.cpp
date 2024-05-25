@@ -16,6 +16,7 @@
 #include "installd/installd_service.h"
 
 #include <chrono>
+#include <csignal>
 #include <errno.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -34,6 +35,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr unsigned int INSTALLD_UMASK = 0000;
+constexpr int32_t DFX_SIGNAL = 35;
 }
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
@@ -119,6 +121,14 @@ void InstalldService::Stop()
     SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
+}
+
+__attribute__((constructor)) void InstalldService::DisableDfx()
+{
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, DFX_SIGNAL);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

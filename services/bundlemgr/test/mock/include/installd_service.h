@@ -69,6 +69,8 @@ private:
      */
     bool InitDir(const std::string &path);
 
+    void DisableDfx();
+
 private:
     bool isReady_ = false;
     sptr<InstalldHostImpl> hostImpl_;
