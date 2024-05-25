@@ -3546,11 +3546,11 @@ ErrCode BundleDataMgr::SetApplicationEnabled(const std::string &bundleName,
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         return ERR_OK;
-    } else {
-        auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
-        if (ret != ERR_OK) {
-            return ret;
-        }
+    }
+    auto ret = newInfo.SetApplicationEnabled(isEnable, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGW("SetApplicationEnabled failed, err %{public}d", ret);
+        return ret;
     }
 
     InnerBundleUserInfo innerBundleUserInfo;
@@ -3680,14 +3680,13 @@ ErrCode BundleDataMgr::SetAbilityEnabled(const AbilityInfo &abilityInfo, int32_t
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         return ERR_OK;
-    } else {
-        ErrCode ret = newInfo.SetAbilityEnabled(
-            abilityInfo.moduleName, abilityInfo.name, isEnabled, userId);
-        if (ret != ERR_OK) {
-            APP_LOGW("SetAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
-                ret, abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
-            return ret;
-        }
+    }
+    ErrCode ret = newInfo.SetAbilityEnabled(
+        abilityInfo.moduleName, abilityInfo.name, isEnabled, userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("SetAbilityEnabled failed result: %{public}d, bundleName:%{public}s, abilityName:%{public}s",
+            ret, abilityInfo.bundleName.c_str(), abilityInfo.name.c_str());
+        return ret;
     }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!newInfo.GetInnerBundleUserInfo(requestUserId, innerBundleUserInfo)) {

@@ -1416,7 +1416,7 @@ ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data,
 
     uint64_t cacheSize = data.ReadUint64();
     ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
-    
+
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1658,7 +1658,7 @@ ErrCode BundleMgrHost::HandleIsCloneApplicationEnabled(MessageParcel &data, Mess
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!reply.WriteBool(isEnable)) {
+    if ((ret == ERR_OK) && !reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1732,7 +1732,7 @@ ErrCode BundleMgrHost::HandleIsCloneAbilityEnabled(MessageParcel &data, MessageP
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!reply.WriteBool(isEnable)) {
+    if ((ret == ERR_OK) && !reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

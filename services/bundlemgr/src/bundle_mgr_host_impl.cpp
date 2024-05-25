@@ -2047,9 +2047,6 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
 {
     APP_LOGI("SetCloneApplicationEnabled param %{public}s %{public}d %{public}d %{public}d",
         bundleName.c_str(), appIndex, isEnable, userId);
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = BundleUtil::GetUserIdByCallingUid();
-    }
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -2058,6 +2055,9 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
     }
     APP_LOGD("verify permission success, begin to SetCloneApplicationEnabled");
     auto dataMgr = GetDataMgrFromService();
@@ -2186,9 +2186,6 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     int32_t appIndex, bool isEnabled, int32_t userId)
 {
     APP_LOGD("start SetCloneAbilityEnabled");
-    if (userId == Constants::UNSPECIFIED_USERID) {
-        userId = BundleUtil::GetUserIdByCallingUid();
-    }
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -2198,6 +2195,9 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, appIndex);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = BundleUtil::GetUserIdByCallingUid();
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
