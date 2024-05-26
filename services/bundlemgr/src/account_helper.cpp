@@ -40,17 +40,13 @@ int AccountHelper::IsOsAccountExists(const int id, bool &isOsAccountExists)
 int32_t AccountHelper::GetCurrentActiveUserId()
 {
 #ifdef ACCOUNT_ENABLE
-    std::vector<int32_t> activeIds;
-    int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
+    std::int32_t localId;
+    int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     if (ret != 0) {
-        APP_LOGE("QueryActiveOsAccountIds failed ret:%{public}d", ret);
+        APP_LOGE("GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
         return Constants::INVALID_USERID;
     }
-    if (activeIds.empty()) {
-        APP_LOGE("QueryActiveOsAccountIds activeIds empty");
-        return Constants::INVALID_USERID;
-    }
-    return activeIds[0];
+    return localId;
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");
     return 0;
