@@ -522,6 +522,12 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
         return false;
     }
     // 2. need to process base icon and badge icon
+    // BundleResourceParser
+    BundleResourceParser parser;
+    if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+        APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
+            bundleName.c_str(), appIndex);
+    }
     // 3. need delete old clone resource info
     if (!DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
         APP_LOGW("delete bundleName:%{public}s appIndex:%{public}d resource failed", bundleName.c_str(), appIndex);

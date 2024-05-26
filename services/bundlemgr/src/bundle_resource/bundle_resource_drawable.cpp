@@ -73,5 +73,33 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     return false;
 #endif
 }
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+bool BundleResourceDrawable::GetBadgedIconResource(
+    const std::shared_ptr<Media::PixelMap> layeredPixelMap,
+    const std::shared_ptr<Media::PixelMap> badgedPixelMap,
+    ResourceInfo &resourceInfo)
+{
+    if ((layeredPixelMap == nullptr) || (badgedPixelMap == nullptr)) {
+        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s layered or badge pixelMap are nullptr",
+            resourceInfo.bundleName_.c_str());
+        return false;
+    }
+    Ace::Napi::LayeredDrawableDescriptor layeredDrawableDescriptor;
+    std::shared_ptr<Media::PixelMap> compositePixelMap;
+    if (!layeredDrawableDescriptor.GetCompositePixelMapWithBadge(layeredPixelMap, badgedPixelMap, compositePixelMap)) {
+        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s GetCompositePixelMapWithBadge failed",
+            resourceInfo.bundleName_.c_str());
+        return false;
+    }
+    if (compositePixelMap == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s compositePixelMap is nullptr",
+            resourceInfo.bundleName_.c_str());
+        return false;
+    }
+    BundleResourceImageInfo info;
+    return info.ConvertToString(compositePixelMap, resourceInfo.icon_);
+}
+#endif
 } // AppExecFwk
 } // OHOS
