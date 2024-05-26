@@ -3707,7 +3707,8 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
     return ERR_OK;
 }
 
-void InnerBundleInfo::UpdateMultiAppMode(const InnerBundleInfo &newInfo) {
+void InnerBundleInfo::UpdateMultiAppMode(const InnerBundleInfo &newInfo)
+{
     std::string moduleType = newInfo.GetModuleTypeByPackage(newInfo.GetCurrentModulePackage());
     if (moduleType == Profile::MODULE_TYPE_ENTRY || moduleType == Profile::MODULE_TYPE_FEATURE) {
         baseApplicationInfo_->multiAppMode = newInfo.GetBaseApplicationInfo().multiAppMode;
