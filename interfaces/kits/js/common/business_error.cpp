@@ -144,6 +144,8 @@ constexpr const char* ERR_MSG_INVALID_APPINDEX =
     "The appIndex is invalid.";
 constexpr const char* ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE =
     "The app does not support the creation of an appClone instance.";
+constexpr const char* ERR_MSG_INSTALL_MULTI_APP_MAX_COUNT_DECREASE =
+    "Failed to install the HAP because the maximum count of multi-app cannot be reduced.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -221,6 +223,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_UNINSTALL_NATIVE_FAILED, ERR_MSG_NATIVE_UNINSTALL_FAILED },
     { ERROR_INVALID_APPINDEX, ERR_MSG_INVALID_APPINDEX },
     { ERROR_APP_NOT_SUPPORTED_MULTI_TYPE, ERR_MSG_APP_NOT_SUPPORTED_MULTI_TYPE },
+    { ERROR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE, ERR_MSG_INSTALL_MULTI_APP_MAX_COUNT_DECREASE },
 };
 } // namespace
 

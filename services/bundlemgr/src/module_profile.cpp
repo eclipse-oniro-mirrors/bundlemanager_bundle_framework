@@ -216,7 +216,7 @@ struct Extension {
 
 struct MultiAppMode {
     std::string multiAppModeType;
-    int32_t maxCount;
+    int32_t maxCount = 0;
 };
 
 struct App {
