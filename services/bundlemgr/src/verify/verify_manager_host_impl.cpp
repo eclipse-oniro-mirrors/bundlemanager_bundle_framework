@@ -448,8 +448,7 @@ void VerifyManagerHostImpl::Rollback(
 void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
 {
     for (const auto &abcPath : paths) {
-        std::string targetPath;
-        auto result = InstalldClient::GetInstance()->MoveFile(abcPath, targetPath);
+        auto result = BundleUtil::DeleteDir(abcPath);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
         }
