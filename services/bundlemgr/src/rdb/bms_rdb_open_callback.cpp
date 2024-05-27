@@ -52,6 +52,7 @@ int32_t BmsRdbOpenCallback::OnOpen(NativeRdb::RdbStore &rdbStore)
 
 int32_t BmsRdbOpenCallback::onCorruption(std::string databaseFile)
 {
+    APP_LOGI("onCorruption");
     return NativeRdb::E_OK;
 }
 }  // namespace AppExecFwk

@@ -523,6 +523,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
 
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
+            APP_LOGD("GetInnerModuleInfos is empty");
             continue;
         }
         // There is only one innerModuleInfo when installing
@@ -678,6 +679,7 @@ void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::V
     InnerBundleInfo &newInfo)
 {
     if (provisionMetadatas.empty()) {
+        APP_LOGE("provisionMetadatas is empty");
         return;
     }
     std::vector<Metadata> metadatas;

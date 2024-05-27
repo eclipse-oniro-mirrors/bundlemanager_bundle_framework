@@ -131,6 +131,7 @@ struct fscrypt_asdp_policy {
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
     if (path.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty");
         return false;
     }
 
@@ -169,6 +170,7 @@ bool InstalldOperator::IsExistApFile(const std::string &path)
 bool InstalldOperator::IsExistDir(const std::string &path)
 {
     if (path.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty");
         return false;
     }
 
@@ -212,6 +214,7 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "targetSoPath is empty");
         return true;
     }
 
@@ -763,6 +766,7 @@ bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid
 bool InstalldOperator::RenameFile(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "old path or new path is empty");
         return false;
     }
     if (!DeleteDir(newPath)) {
@@ -787,6 +791,7 @@ bool InstalldOperator::IsValidPath(const std::string &rootDir, const std::string
 bool InstalldOperator::IsValidCodePath(const std::string &codePath)
 {
     if (codePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
     return IsValidPath(BUNDLE_BASE_CODE_DIR + ServiceConstants::PATH_SEPARATOR, codePath);
@@ -1565,6 +1570,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     }
 
     if (soEntryFiles.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
         return true;
     }
 

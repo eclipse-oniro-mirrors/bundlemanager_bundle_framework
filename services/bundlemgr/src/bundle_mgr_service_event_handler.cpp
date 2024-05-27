@@ -152,6 +152,7 @@ public:
         const int32_t resultCode, const std::string &resultMsg) override
     {
         if (bundleName_.empty()) {
+            APP_LOGD("bundleName_ is empty");
             return;
         }
 

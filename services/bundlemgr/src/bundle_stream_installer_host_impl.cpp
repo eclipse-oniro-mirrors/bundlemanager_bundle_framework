@@ -45,6 +45,7 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
     receiver_ = statusReceiver;
     std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_, DirType::STREAM_INSTALL_DIR);
     if (tempDir.empty()) {
+        APP_LOGE("tempDir is empty");
         return false;
     }
     tempDir_ = tempDir;
@@ -63,11 +64,13 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
 
     tempSignatureFileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::SIG_FILE_DIR);
     if (tempSignatureFileDir_.empty()) {
+        APP_LOGE("tempSignatureFileDir_ is empty");
         return false;
     }
 
     tempPgoFileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::PGO_FILE_DIR);
     if (tempPgoFileDir_.empty()) {
+        APP_LOGE("tempPgoFileDir_ is empty");
         return false;
     }
     return true;

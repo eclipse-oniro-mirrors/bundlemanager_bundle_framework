@@ -247,6 +247,7 @@ void InnerSharedBundleInstaller::SendBundleSystemEvent(const EventInfo &eventTem
 ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
 {
     if (parsedBundles_.empty()) {
+        APP_LOGE("parsedBundles is empty");
         return ERR_OK;
     }
     bundleName_ = parsedBundles_.begin()->second.GetBundleName();
@@ -656,6 +657,7 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
     if (newInfo.IsCompressNativeLibs(moduleName)) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
         if (tempNativeLibraryPath.empty()) {
+            APP_LOGE("tempNativeLibraryPath is empty");
             return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
         }
         std::string tempSoPath = versionDir + ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;

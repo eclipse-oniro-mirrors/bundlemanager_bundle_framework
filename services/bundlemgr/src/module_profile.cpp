@@ -1662,9 +1662,11 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
 bool CheckBundleNameIsValid(const std::string &bundleName)
 {
     if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return false;
     }
     if (bundleName.size() < Constants::MIN_BUNDLE_NAME || bundleName.size() > Constants::MAX_BUNDLE_NAME) {
+        APP_LOGE("bundleName size too long or too short");
         return false;
     }
     char head = bundleName.at(0);
@@ -1682,9 +1684,11 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
 bool CheckModuleNameIsValid(const std::string &moduleName)
 {
     if (moduleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return false;
     }
     if (moduleName.size() > MAX_MODULE_NAME) {
+        APP_LOGE("bundleName size too long");
         return false;
     }
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
@@ -1825,6 +1829,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {
+                APP_LOGD("preloadObj is empty");
                 return true;
             }
             if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {

@@ -615,6 +615,7 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -656,6 +657,7 @@ void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
 {
     std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(element.GetBundleName(), userId);
     if (cloneAppIndexes.empty()) {
+        APP_LOGI("clone app index is empty");
         return;
     }
     for (int32_t appIndex: cloneAppIndexes) {
@@ -672,6 +674,7 @@ bool BundleDataMgr::QueryAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -710,6 +713,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -748,6 +752,7 @@ ErrCode BundleDataMgr::BatchQueryAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -812,6 +817,7 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
 
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("request user id is invalid");
         return false;
     }
 
@@ -1616,10 +1622,12 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
 bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skills) const
 {
     if (want.GetAction() != SHARE_ACTION) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "action not action");
         return false;
     }
     std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
     if (shareActionSkills.empty()) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "shareActionSkills is empty");
         return false;
     }
     auto wantParams = want.GetParams();
@@ -1745,10 +1753,12 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGD("request user id is invalid");
         return;
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGD("response user id is invalid");
         return;
     }
     bool isExist = false;
@@ -2035,6 +2045,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
+        LOG_E(BMS_TAG_QUERY_ABILITY, "request user id is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -3105,6 +3116,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         return false;
     }
     if (bundleStats.empty()) {
+        APP_LOGE("bundle stats is empty");
         return true;
     }
     for (const auto &bundleName : bundleNames) {
@@ -4122,6 +4134,7 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 {
     auto userInfos = info.GetInnerBundleUserInfos();
     if (userInfos.empty()) {
+        APP_LOGE("user infos is empty");
         return;
     }
 
@@ -4400,6 +4413,7 @@ bool BundleDataMgr::SavePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 
@@ -4415,6 +4429,7 @@ bool BundleDataMgr::DeletePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 
@@ -4446,6 +4461,7 @@ bool BundleDataMgr::GetPreInstallBundleInfo(
 bool BundleDataMgr::LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
 {
     if (preInstallDataStorage_ == nullptr) {
+        APP_LOGW("preInstallDataStorage_ is nullptr");
         return false;
     }
 

@@ -57,6 +57,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     std::vector<std::string> realFilePaths;
     ErrCode ret = ProcessBundleFilePaths(patchPaths_, realFilePaths);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths failed");
         return ret;
     }
     ScopeGuard guardRemovePath([realFilePaths] {
@@ -803,6 +804,7 @@ bool QuickFixDeployer::ExtractSoFiles(
         nativeLibraryPath = iter->nativeLibraryPath;
     }
     if (nativeLibraryPath.empty()) {
+        LOG_W(BMS_TAG_QUICK_FIX, "nativeLibraryPath is empty");
         return false;
     }
 
@@ -869,6 +871,7 @@ bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, con
         nativeLibraryPath = iter->nativeLibraryPath;
     }
     if (nativeLibraryPath.empty()) {
+        LOG_W(BMS_TAG_QUICK_FIX, "nativeLibraryPath is empty");
         return false;
     }
     std::string hapPath = iter->hapPath;

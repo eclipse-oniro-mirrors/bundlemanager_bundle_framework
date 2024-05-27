@@ -30,15 +30,18 @@ BmsExperienceRule *BmsExperienceRule::Unmarshalling(Parcel &in)
 {
     auto *rule = new (std::nothrow) BmsExperienceRule();
     if (rule == nullptr) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "rule is nullptr");
         return nullptr;
     }
 
     if (!in.ReadBool(rule->isAllow)) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "read isAllow failed");
         delete rule;
         return nullptr;
     }
 
     if (!in.ReadString(rule->sceneCode)) {
+        LOG_E(BMS_TAG_FREE_INSTALL, "read sceneCode failed");
         delete rule;
         return nullptr;
     }

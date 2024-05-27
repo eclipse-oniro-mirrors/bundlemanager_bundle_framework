@@ -308,6 +308,7 @@ ErrCode HidumpHelper::GetAllBundleNameList(std::string &result)
 {
     auto shareDataMgr = dataMgr_.lock();
     if (shareDataMgr == nullptr) {
+        APP_LOGE("shareDataMgr is nullptr");
         return ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR;
     }
 

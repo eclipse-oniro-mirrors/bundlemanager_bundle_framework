@@ -357,6 +357,7 @@ std::string DefaultAppMgr::GetType(const Want& want) const
         }
         std::string uri = want.GetUriString();
         if (uri.empty()) {
+            LOG_E(BMS_TAG_DEFAULT_APP, "uri is empty");
             return Constants::EMPTY_STRING;
         }
         std::string convertType;
@@ -625,6 +626,7 @@ bool DefaultAppMgr::IsTypeValid(const std::string& type) const
 bool DefaultAppMgr::IsAppType(const std::string& type) const
 {
     if (type.empty()) {
+        LOG_E(BMS_TAG_DEFAULT_APP, "type is empty");
         return false;
     }
     return supportAppTypes.find(type) != supportAppTypes.end();

@@ -54,6 +54,7 @@ ErrCode InstalldClient::ExtractModuleFiles(const std::string &srcModulePath, con
 ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
 {
     if (extractParam.srcPath.empty() || extractParam.targetPath.empty()) {
+        APP_LOGE("src path or target path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractFiles, extractParam);
@@ -342,6 +343,7 @@ ErrCode InstalldClient::ExtractDiffFiles(const std::string &filePath, const std:
     const std::string &cpuAbi)
 {
     if (filePath.empty() || targetPath.empty() || cpuAbi.empty()) {
+        APP_LOGE("file path or target path or cpuAbi is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractDiffFiles, filePath, targetPath, cpuAbi);
@@ -351,6 +353,7 @@ ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::
     const std::string &newSoPath, int32_t uid)
 {
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
+        APP_LOGE("old path or diff file path or new so path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath, uid);
@@ -395,6 +398,7 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
 ErrCode InstalldClient::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     if (codeSignatureParam.modulePath.empty()) {
+        APP_LOGE("module path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::VerifyCodeSignature, codeSignatureParam);
@@ -403,6 +407,7 @@ ErrCode InstalldClient::VerifyCodeSignature(const CodeSignatureParam &codeSignat
 ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
 {
     if (checkEncryptionParam.modulePath.empty()) {
+        APP_LOGE("module path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::CheckEncryption, checkEncryptionParam, isEncryption);
@@ -411,6 +416,7 @@ ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncrypt
 ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
 {
     if (srcDir.empty() || desDir.empty()) {
+        APP_LOGE("src dir or des dir is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::MoveFiles, srcDir, desDir);
@@ -421,6 +427,7 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
     const std::unordered_multimap<std::string, std::string> &dirMap)
 {
     if (srcPath.empty() || dirMap.empty()) {
+        APP_LOGE("src path or dir map is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractDriverSoFiles, srcPath, dirMap);
@@ -429,6 +436,7 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
 ErrCode InstalldClient::VerifyCodeSignatureForHap(const CodeSignatureParam &codeSignatureParam)
 {
     if (codeSignatureParam.modulePath.empty()) {
+        APP_LOGE("module path is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::VerifyCodeSignatureForHap, codeSignatureParam);
@@ -438,6 +446,7 @@ ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32
     const unsigned char *profileBlock)
 {
     if (bundleName.empty() || profileBlock == nullptr) {
+        APP_LOGE("bundle name or profile block is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
@@ -446,6 +455,7 @@ ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32
 ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 {
     if (bundleName.empty()) {
+        APP_LOGE("bundle name is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::RemoveSignProfile, bundleName);

@@ -138,6 +138,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     }
 
     if (GetDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "GetDataMgr failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
@@ -177,6 +178,7 @@ ErrCode QuickFixSwitcher::InnerSwitchQuickFix(const std::string &bundleName, con
     });
 
     if (GetQuickFixDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "GetQuickFixDataMgr failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     // 8. update quick fix info status of SWITCH_END
