@@ -2049,13 +2049,17 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
-
-    applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
-    applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
-    if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
-        int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
-        if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
-            return false;
+    // bundleType is app && moduleType is entry or feature
+    if (applicationInfo.bundleType == BundleType::APP &&
+        (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY ||
+        moduleJson.module.type == Profile::MODULE_TYPE_FEATURE)) {
+        applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
+        applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
+        if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
+            int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
+            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
+                return false;
+            }
         }
     }
     applicationInfo.maxChildProcess = app.maxChildProcess;

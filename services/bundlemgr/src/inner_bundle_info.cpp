@@ -913,7 +913,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     UpdateDebug(applicationInfo.debug, isEntry);
     baseApplicationInfo_->organization = applicationInfo.organization;
     baseApplicationInfo_->multiProjects = applicationInfo.multiProjects;
-    baseApplicationInfo_->multiAppMode = applicationInfo.multiAppMode;
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
 }
@@ -3706,6 +3705,14 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER;
     }
     return ERR_OK;
+}
+
+void InnerBundleInfo::UpdateMultiAppMode(const InnerBundleInfo &newInfo)
+{
+    std::string moduleType = newInfo.GetModuleTypeByPackage(newInfo.GetCurrentModulePackage());
+    if (moduleType == Profile::MODULE_TYPE_ENTRY || moduleType == Profile::MODULE_TYPE_FEATURE) {
+        baseApplicationInfo_->multiAppMode = newInfo.GetBaseApplicationInfo().multiAppMode;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
