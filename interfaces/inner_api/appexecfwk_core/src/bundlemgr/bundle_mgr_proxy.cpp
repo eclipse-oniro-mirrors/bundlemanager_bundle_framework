@@ -1632,7 +1632,6 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin to CleanBundleCacheFilesAutomatic cache size of %{public}llu", cacheSize);
 
     if (cacheSize == 0) {
         APP_LOGE("parameter error, cache size must be greater than 0");
