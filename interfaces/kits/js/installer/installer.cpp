@@ -1565,9 +1565,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_POS_ONE) {
             if (valueType != napi_object || !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("Parse installParam failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, INSTALL_PARAM, TYPE_OBJECT);
-                return nullptr;
+                APP_LOGW("Parse installParam failed");
             }
         } else {
             APP_LOGE("The number of parameters is incorrect.");
