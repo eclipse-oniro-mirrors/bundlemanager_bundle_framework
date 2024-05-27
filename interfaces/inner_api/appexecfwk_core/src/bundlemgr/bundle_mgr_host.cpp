@@ -1611,6 +1611,7 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
     std::string result;
     APP_LOGI("dump info name %{public}s", bundleName.c_str());
     bool ret = DumpInfos(flag, bundleName, userId, result);
+    (void)reply.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
