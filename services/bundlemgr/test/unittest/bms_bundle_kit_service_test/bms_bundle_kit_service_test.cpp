@@ -245,6 +245,9 @@ const std::string URI_UTD = "utd";
 const std::string URI_LINK_FEATURE = "login";
 const std::string SKILL_PERMISSION = "permission1";
 const int32_t MAX_FILE_SUPPORTED = 1;
+const std::string ERROR_LINK_FEATURE = "ERROR_LINK";
+const std::string FILE_URI = "test.jpg";
+const std::string URI_MIME_IMAGE = "image/jpeg";
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 }  // namespace
 
@@ -5856,6 +5859,48 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
 
 /**
  * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test with linkFeature
+ * @tc.desc: config only has scheme and host and port,
+ *           param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_004, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
  * @tc.name: uri with param match test
  * @tc.desc: want's uri has param, ignore param then match.
  */
@@ -5936,6 +5981,151 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_HOME_ACTION_001, Function | SmallTe
     skill.actions.emplace_back(Constants::WANT_ACTION_HOME);
     want.SetAction(Constants::ACTION_HOME);
     ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri empty, type not empty, linkFeature not empty; skill uri empty,
+ *           type not empty, linkFeature not empty.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.type = TYPE_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetType(TYPE_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri empty, type empty, linkFeature not empty;
+ *           skill uri empty, type empty, linkFeature not empty.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri not empty,
+ *           type empty, linkFeature not empty, uri path match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.path = PATH_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri empty,
+ *           type not empty, linkFeature not empty, file type match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_004, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.type = URI_MIME_IMAGE;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(FILE_URI);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri not empty,
+ *           type empty, linkFeature not empty, uri pathRegex match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_005, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    size_t uriIndex = 0;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.pathRegex = PATH_REGEX_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type not empty, linkFeature not empty; skill uri not empty,
+ *           type not empty, linkFeature not empty, uri and type match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_006, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    size_t uriIndex = 0;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.pathRegex = PATH_REGEX_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skillUri.type = TYPE_001;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetType(TYPE_001);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
     EXPECT_EQ(true, ret);
 }
 

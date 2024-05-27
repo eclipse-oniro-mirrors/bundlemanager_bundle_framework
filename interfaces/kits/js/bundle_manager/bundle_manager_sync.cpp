@@ -88,17 +88,13 @@ bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
         want.SetElement(elementName);
         return true;
     }
-    if (!want.GetStringParam(LINK_FEATURE).empty()) {
-        APP_LOGI("link feature not empty");
-        return true;
-    }
     if (!UnwrapWant(env, args, want)) {
         APP_LOGW("parse want failed");
         return false;
     }
     bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
     if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
-        want.GetUriString().empty() && want.GetType().empty()) {
+        want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         APP_LOGW("implicit params all empty");
         return false;
     }
@@ -131,7 +127,7 @@ bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<Want>
         }
         bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
         if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
-            want.GetUriString().empty() && want.GetType().empty()) {
+            want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
             APP_LOGW("implicit params all empty of want %{public}d", i);
             continue;
         }
