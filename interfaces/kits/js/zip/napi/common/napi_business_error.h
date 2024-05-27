@@ -67,7 +67,7 @@ const std::unordered_map<int32_t, std::pair<int32_t, std::string>> errCodeTable{
     {-6, {ZLIB_SYS_CAP_TAG + E_BADF, "Version error"}},
     {ENOSTR, {ZLIB_SYS_CAP_TAG + E_MEMORY, "Internal structure error"}},
     {EARCH, {ZLIB_SYS_CAP_TAG + E_ARCH, "System architecture error, compiling with _WIN32"}},
-    {ENOENT, {ZLIB_SYS_CAP_TAG + E_NOENT, "No such file or directory"}},
+    {ENOENT, {ZLIB_SYS_CAP_TAG + E_NOENT, "No such file or access mode error"}},
 };
 
 class NapiBusinessError {
