@@ -1261,6 +1261,54 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0010, Function | SmallTest |
 }
 
 /**
+ * @tc.number: CheckAppLabel_0011
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0011, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0012
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0012, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 5;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0013
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0013, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 1;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE);
+}
+
+/**
  * @tc.number: CheckAppLabelInfo_0008
  * @tc.name: test the start function of CheckAppLabelInfo
  * @tc.desc: 1. CheckAppLabelInfo_0008

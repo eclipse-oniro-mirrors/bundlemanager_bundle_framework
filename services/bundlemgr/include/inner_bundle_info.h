@@ -900,6 +900,11 @@ public:
         baseApplicationInfo_->applicationReservedFlag &= ~flag;
     }
 
+    int32_t GetMultiAppMaxCount() const
+    {
+        return baseApplicationInfo_->multiAppMode.maxCount;
+    }
+
     std::set<std::string> GetAllExtensionDirsInSpecifiedModule(
         const std::string &moduleName, int32_t userId) const;
     std::set<std::string> GetAllExtensionDirs(int32_t userId) const;
