@@ -118,7 +118,6 @@ bool Skill::MatchAction(const std::string &action) const
 {
     // config actions empty, no match
     if (actions.empty()) {
-        APP_LOGE("actions is empty");
         return false;
     }
     // config actions not empty, param empty, match
@@ -149,7 +148,6 @@ bool Skill::MatchEntities(const std::vector<std::string> &paramEntities) const
     }
     // config entities empty, param entities not empty, not match
     if (entities.empty()) {
-        APP_LOGE("entities is empty");
         return false;
     }
     // config entities not empty, param entities not empty, if every param entity in config entities, match
