@@ -67,6 +67,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 #endif
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
+static constexpr int32_t KEY_ID_STEP = 2;
 constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
@@ -2208,8 +2209,15 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
     struct fscrypt_asdp_policy policy;
     policy.version = 0;
     policy.asdp_class = FORCE_PROTECT;
-    strncpy_s(policy.app_key2_descriptor, sizeof(policy.app_key2_descriptor),
-        keyId.c_str(), FSCRYPT_KEY_DESCRIPTOR_SIZE - 1);
+    // keyId length = KEY_ID_STEP * FSCRYPT_KEY_DESCRIPTOR_SIZE
+    for (uint32_t i = 0; i < keyId.size(); i += KEY_ID_STEP) {
+        if (i / KEY_ID_STEP >= FSCRYPT_KEY_DESCRIPTOR_SIZE) {
+            break;
+        }
+        std::string byteString = keyId.substr(i, KEY_ID_STEP);
+        char byte = (char)strtol(byteString.c_str(), NULL, 16);
+        policy.app_key2_descriptor[i / KEY_ID_STEP] = byte;
+    }
 
     std::vector<std::string> dirs;
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
