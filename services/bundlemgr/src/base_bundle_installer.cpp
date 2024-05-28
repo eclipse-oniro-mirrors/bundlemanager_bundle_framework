@@ -4253,7 +4253,9 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetMultiAppMaxCount() > newInfo.GetMultiAppMaxCount()) {
+    if (oldInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
+        newInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
+        oldInfo.GetMultiAppMaxCount() > newInfo.GetMultiAppMaxCount()) {
         APP_LOGE("the multiAppMaxCount of the new bundle is less than old one");
         return ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE;
     }
