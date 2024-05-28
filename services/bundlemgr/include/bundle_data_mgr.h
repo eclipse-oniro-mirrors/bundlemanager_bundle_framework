@@ -1005,6 +1005,7 @@ private:
     bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
+    std::vector<int32_t> GetCloneAppIndexesUnLock(const std::string &bundleName, int32_t userId) const;
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
