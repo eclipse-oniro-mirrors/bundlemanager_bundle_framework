@@ -3757,5 +3757,86 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
     EXPECT_EQ(resourceInfo.appIndex_, 100);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0148
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0148, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0149
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherResourceInfoByAbilityName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0149, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+        USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0150
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0150, Function | SmallTest | Level0)
+{
+    std::vector<std::string> resourceNames;
+    std::vector<ResourceInfo> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0151
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetTargetBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0151, Function | SmallTest | Level0)
+{
+    std::string targetBundleName;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    BundleResourceProcess::GetTargetBundleName(BUNDLE_NAME, targetBundleName);
+    EXPECT_TRUE(BUNDLE_NAME == targetBundleName);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0152
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0152, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+}
 #endif
 } // OHOS
