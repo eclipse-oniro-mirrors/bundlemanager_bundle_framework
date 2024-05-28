@@ -54,6 +54,12 @@ const std::string LINK_FEATURE = "linkFeature";
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
+    std::string linkFeature = want.GetStringParam(LINK_FEATURE);
+    if (!linkFeature.empty()) {
+        size_t matchUriIndex = 0;
+        return MatchLinkFeature(linkFeature, want, matchUriIndex);
+    }
+
     if (!MatchActionAndEntities(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
@@ -232,14 +238,15 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
 {
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
-        if (skillUri.linkFeature == linkFeature) {
-            if (MatchUriAndType(want.GetUriString(), want.GetType())) {
-                APP_LOGD("linkFeature %{public}s, Is Matched", linkFeature.c_str());
-                matchUriIndex = uriIndex;
-                return true;
-            } else {
-                return false;
-            }
+        if (skillUri.linkFeature == linkFeature && MatchUri(want.GetUriString(), skillUri) &&
+            MatchType(want.GetType(), skillUri.type)) {
+            matchUriIndex = uriIndex;
+            return true;
+        }
+        if (skillUri.linkFeature == linkFeature && !want.GetUriString().empty() && want.GetType().empty() &&
+            MatchMimeType(want.GetUriString())) {
+            matchUriIndex = uriIndex;
+            return true;
         }
     }
     return false;
@@ -314,8 +321,11 @@ std::string Skill::GetOptParamUri(const std::string &uriString) const
 
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
-    if (skillUri.scheme.empty()) {
-        return uriString.empty();
+    if (uriString.empty() && skillUri.scheme.empty()) {
+        return true;
+    }
+    if (uriString.empty() || skillUri.scheme.empty()) {
+        return false;
     }
     if (skillUri.host.empty()) {
         // config uri is : scheme
@@ -385,8 +395,10 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
 
 bool Skill::MatchType(const std::string &type, const std::string &skillUriType) const
 {
-    // type is not empty
-    if (skillUriType.empty()) {
+    if (type.empty() && skillUriType.empty()) {
+        return true;
+    }
+    if (type.empty() || skillUriType.empty()) {
         return false;
     }
     // only match */*
