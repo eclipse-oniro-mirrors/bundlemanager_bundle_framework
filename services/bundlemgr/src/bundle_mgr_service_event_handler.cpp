@@ -2111,6 +2111,7 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
         return;
     }
 
+    APP_LOGI("Starting to save pre-install exception for bundle: %{public}s", bundleDir.c_str());
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
 }
 
@@ -2127,6 +2128,7 @@ void BMSEventHandler::HandlePreInstallException()
     std::set<std::string> exceptionBundleNames;
     if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
         exceptionPaths, exceptionBundleNames)) {
+        APP_LOGI("No pre-install exception information found");
         return;
     }
 
@@ -2141,9 +2143,11 @@ void BMSEventHandler::HandlePreInstallException()
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+        APP_LOGI("Deleted pre-install exception path: %{public}s", pathIter.c_str());
     }
 
     if (exceptionBundleNames.size() > 0) {
+        APP_LOGI("Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
 
@@ -2162,10 +2166,12 @@ void BMSEventHandler::HandlePreInstallException()
             APP_LOGW("HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
         }
 
+        APP_LOGI("Deleting bundle name %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 
     preInstallExceptionMgr->ClearAll();
+    APP_LOGI("Pre-install exception information cleared successfully");
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
@@ -2217,6 +2223,8 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
+    APP_LOGI("OTAInstallSystemBundleNeedCheckUser called for bundle %{public}s with return code: %{public}d",
+             bundleName.c_str(), ret);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }
