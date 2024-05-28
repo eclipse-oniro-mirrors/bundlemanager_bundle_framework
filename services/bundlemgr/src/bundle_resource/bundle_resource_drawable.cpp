@@ -42,30 +42,30 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     std::pair<std::unique_ptr<uint8_t[]>, size_t> backgroundInfo;
     Global::Resource::RState state = resourceManager->GetThemeIcons(iconId, foregroundInfo, backgroundInfo, density);
     if (state == Global::Resource::SUCCESS) {
-        LOG_D(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
-        // init foreground
-        resourceInfo.foreground_.resize(foregroundInfo.second);
-        for (size_t index = 0; index < foregroundInfo.second; ++index) {
-            resourceInfo.foreground_[index] = foregroundInfo.first[index];
-        }
-        // init background
-        resourceInfo.background_.resize(backgroundInfo.second);
-        for (size_t index = 0; index < backgroundInfo.second; ++index) {
-            resourceInfo.background_[index] = backgroundInfo.first[index];
-        }
+        LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s find theme resource", resourceInfo.bundleName_.c_str());
         auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(foregroundInfo, backgroundInfo,
             themeMask, drawableType, resourceManager);
-        if (drawableDescriptor != nullptr) {
+        if ((drawableDescriptor != nullptr) && (drawableDescriptor->GetPixelMap() != nullptr)) {
+            // init foreground
+            resourceInfo.foreground_.resize(foregroundInfo.second);
+            for (size_t index = 0; index < foregroundInfo.second; ++index) {
+                resourceInfo.foreground_[index] = foregroundInfo.first[index];
+            }
+            // init background
+            resourceInfo.background_.resize(backgroundInfo.second);
+            for (size_t index = 0; index < backgroundInfo.second; ++index) {
+                resourceInfo.background_[index] = backgroundInfo.first[index];
+            }
             return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
         }
-        LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, need create again",
+        LOG_W(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor or pixelMap is nullptr, need create again",
             resourceInfo.bundleName_.c_str());
     }
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(
         iconId, resourceManager, state, drawableType, 0);
     if ((drawableDescriptor == nullptr) || (state != Global::Resource::SUCCESS)) {
-        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr",
-            resourceInfo.bundleName_.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s drawableDescriptor is nullptr, errCode:%{public}d",
+            resourceInfo.bundleName_.c_str(), static_cast<int32_t>(state));
         return false;
     }
     return info.ConvertToString(drawableDescriptor->GetPixelMap(), resourceInfo.icon_);
