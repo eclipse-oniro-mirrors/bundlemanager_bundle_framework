@@ -2478,8 +2478,9 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryInfos_0100, Function | MediumTest | 
     std::vector<ExtensionAbilityInfo> extensionInfo;
     bool findDefaultApp = false;
     bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, 0, USERID, USERID, abilityInfo, extensionInfo,
-    findDefaultApp);
+        findDefaultApp);
     EXPECT_EQ(ret, false);
+    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**
