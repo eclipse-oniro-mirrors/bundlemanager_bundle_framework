@@ -905,6 +905,11 @@ public:
         return baseApplicationInfo_->multiAppMode.maxCount;
     }
 
+    MultiAppModeType GetMultiAppModeType() const
+    {
+        return baseApplicationInfo_->multiAppMode.multiAppModeType;
+    }
+
     std::set<std::string> GetAllExtensionDirsInSpecifiedModule(
         const std::string &moduleName, int32_t userId) const;
     std::set<std::string> GetAllExtensionDirs(int32_t userId) const;

@@ -1269,6 +1269,8 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0011, Function | SmallTest |
 {
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     BaseBundleInstaller baseBundleInstaller;
@@ -1285,6 +1287,8 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0012, Function | SmallTest |
 {
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 5;
     BaseBundleInstaller baseBundleInstaller;
@@ -1301,11 +1305,67 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0013, Function | SmallTest |
 {
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::APP_CLONE;
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 1;
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0014
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0014, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0015
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0015, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 5;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0016
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. CheckAppLabel check maxCount of multiAppMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0016, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    newInfo.baseApplicationInfo_->multiAppMode.multiAppModeType = MultiAppModeType::MULTI_INSTANCE;
+    oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
+    newInfo.baseApplicationInfo_->multiAppMode.maxCount = 1;
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
