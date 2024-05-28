@@ -570,8 +570,8 @@ public:
      * @param isAllBundle Does it represent all bundlenames.
      * @return Returns result of the operation.
      */
-    virtual ErrCode CompileProcessAOT(
-        const std::string &bundleName, const std::string &compileMode, bool isAllBundle) override;
+    virtual ErrCode CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+        bool isAllBundle, std::vector<std::string> &compileResults) override;
     /**
      * @brief Reset the bundle informations with specific flags through the proxy object.
      * @param bundleName Indicates the bundle name if needed.

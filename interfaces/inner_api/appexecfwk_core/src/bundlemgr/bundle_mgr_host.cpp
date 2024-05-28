@@ -1557,13 +1557,20 @@ ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParce
     std::string bundleName = data.ReadString();
     std::string compileMode = data.ReadString();
     bool isAllBundle = data.ReadBool();
+    std::vector<std::string> compileResults;
 
     APP_LOGI("compile info name %{public}s", bundleName.c_str());
-    ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle);
+    ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle, compileResults);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        if (!reply.WriteStringVector(compileResults)) {
+            APP_LOGE("write compile process AOT results failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

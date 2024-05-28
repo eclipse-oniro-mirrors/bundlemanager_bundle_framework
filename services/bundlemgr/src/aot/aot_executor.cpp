@@ -58,6 +58,7 @@ constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
 constexpr const char* IS_SCREEN_OFF = "isScreenOff";
 constexpr const char* PGO_DIR = "pgoDir";
+const int32_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
 }
 
 AOTExecutor& AOTExecutor::GetInstance()
@@ -194,12 +195,12 @@ ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<i
     Security::CodeSign::ByteBuffer sigBuffer;
     if (!sigBuffer.CopyFrom(byteData.data(), byteSize)) {
         APP_LOGE("fail to receive code signature ByteBuffer");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
     }
     if (Security::CodeSign::CodeSignUtils::EnforceCodeSignForFile(aotArgs.anFileName, sigBuffer)
         != CommonErrCode::CS_SUCCESS) {
         APP_LOGE("fail to enable code signature for the aot file");
-        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
     }
     APP_LOGI("sign aot file success");
     return ERR_OK;
@@ -223,6 +224,10 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
     }
     APP_LOGI("start to aot compiler");
     ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, sigData);
+    if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
+        APP_LOGE("aot compiler local signature fail");
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
+    }
     if (ret != ERR_OK) {
         APP_LOGE("aot compiler fail");
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;

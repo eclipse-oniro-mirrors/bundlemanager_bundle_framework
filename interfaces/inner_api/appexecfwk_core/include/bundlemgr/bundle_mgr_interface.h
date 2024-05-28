@@ -802,8 +802,8 @@ public:
      * @param isAllBundle Does it represent all bundlenames.
      * @return Returns true if the compile result is successfully obtained; returns false otherwise.
      */
-    virtual ErrCode CompileProcessAOT(
-        const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+    virtual ErrCode CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+        bool isAllBundle, std::vector<std::string> &compileResults)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

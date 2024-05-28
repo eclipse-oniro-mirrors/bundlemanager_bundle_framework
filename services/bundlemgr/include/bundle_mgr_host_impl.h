@@ -550,8 +550,8 @@ public:
      * @param isAllBundle Does it represent all bundlenames.
      * @return Returns true if the compile result is successfully obtained; returns false otherwise.
      */
-    virtual ErrCode CompileProcessAOT(
-        const std::string &bundleName, const std::string &compileMode, bool isAllBundle) override;
+    virtual ErrCode CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+        bool isAllBundle, std::vector<std::string> &compileResults) override;
     /**
      * @brief Compile the bundle informations with specific flags.
      * @param bundleName Indicates the bundle name if needed.
