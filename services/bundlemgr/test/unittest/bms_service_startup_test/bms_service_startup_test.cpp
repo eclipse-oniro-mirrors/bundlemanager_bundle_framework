@@ -688,6 +688,90 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1400, Function | SmallTest |
     EXPECT_EQ(ret, false);
 }
 
+
+/**
+ * @tc.number: BundlePermissionMgr_1500
+ * @tc.name: test IsBundleSelfCalling
+ * @tc.desc: 1.test IsBundleSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1500, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    std::string bundleName;
+    ret = BundlePermissionMgr::IsBundleSelfCalling(bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1600
+ * @tc.name: test CreateHapInfoParams
+ * @tc.desc: 1.test CreateHapInfoParams of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1600, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = 100;
+    int32_t dlpType = 0;
+    auto hapInfo = BundlePermissionMgr::CreateHapInfoParams(innerBundleInfo, userId, dlpType);
+    EXPECT_EQ(hapInfo.userID, userId);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1700
+ * @tc.name: test InitHapToken
+ * @tc.desc: 1.test InitHapToken of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1700, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = 0;
+    int32_t dlpType = 0;
+    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+
+    ret = BundlePermissionMgr::InitHapToken(innerBundleInfo, userId, dlpType, tokenIdeEx);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1800
+ * @tc.name: test UpdateHapToken
+ * @tc.desc: 1.test UpdateHapToken of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1800, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    InnerBundleInfo innerBundleInfo;
+    Security::AccessToken::AccessTokenIDEx tokenIdeEx;
+    ret = BundlePermissionMgr::UpdateHapToken(tokenIdeEx, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_1900
+ * @tc.name: test VerifyCallingBundleSdkVersion
+ * @tc.desc: 1.test VerifyCallingBundleSdkVersion of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_1900, Function | SmallTest | Level0)
+{
+    bool ret = BundlePermissionMgr::Init();
+    int32_t beginApiVersion = 0;
+    ret = BundlePermissionMgr::VerifyCallingBundleSdkVersion(beginApiVersion);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2000
+ * @tc.name: test CreateHapPolicyParam
+ * @tc.desc: 1.test CreateHapPolicyParam of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2000, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    auto hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(innerBundleInfo);
+    EXPECT_EQ(hapPolicy.domain, "domain");
+}
+
 /**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
