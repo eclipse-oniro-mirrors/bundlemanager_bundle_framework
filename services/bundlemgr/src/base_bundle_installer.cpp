@@ -1426,6 +1426,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
     if (oldInfo.GetIsPreInstallApp()) {
+        APP_LOGI("Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
     BundleResourceHelper::DeleteResourceInfo(bundleName);
@@ -1570,6 +1571,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
 
             if (oldInfo.GetIsPreInstallApp()) {
+                APP_LOGI("Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
 
@@ -1606,6 +1608,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
 void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, bool isUninstalled)
 {
+    APP_LOGI("Entering %{public}s for bundle: %{public}s, isUninstalled: %{public}d",
+             __func__, bundleName.c_str(), isUninstalled);
     if (!dataMgr_) {
         APP_LOGE("dataMgr is nullptr");
         return;
