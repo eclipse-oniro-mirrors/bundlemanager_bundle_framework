@@ -37,7 +37,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 using namespace std;
-
+static constexpr int32_t ERROR_CODE = -5;
+static constexpr int32_t MIN_BITS = 0;
+static constexpr int32_t MAX_BITS = 16;
 struct AsyncZipArg {
     const char *zliVersion = nullptr;
     const char *zErrorMsg = nullptr;
@@ -186,7 +188,6 @@ vector<napi_property_descriptor> ZipNExporter::InflateExport()
         NapiValue::DeclareNapiFunction("inflatePrime", InflatePrime),
         NapiValue::DeclareNapiFunction("inflateMark", InflateMark),
         NapiValue::DeclareNapiFunction("inflateValidate", InflateValidate),
-        NapiValue::DeclareNapiFunction("inflateUndermine", InflateUndermine),
         NapiValue::DeclareNapiFunction("inflateSyncPoint", InflateSyncPoint),
         NapiValue::DeclareNapiFunction("inflateCopy", InflateCopy),
     };
@@ -912,6 +913,9 @@ napi_value ZipNExporter::DeflatePrime(napi_env env, napi_callback_info info)
     tie(succ, bits, value) = CommonFunc::UnwrapTwoIntParams(env, funcArg);
     if (!succ) {
         return nullptr;
+    } else if (bits < MIN_BITS || bits > MAX_BITS) {
+        NapiBusinessError().ThrowErr(env, EINVAL);
+        return nullptr;
     }
 
     auto arg = make_shared<AsyncZipArg>();
@@ -1292,8 +1296,11 @@ napi_value ZipNExporter::Compress(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             compress(reinterpret_cast<Bytef *>(dest), &arg->destLen, reinterpret_cast<Bytef *>(source), arg->sourceLen);
@@ -1347,8 +1354,11 @@ napi_value ZipNExporter::Compress2(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode = compress2(
             static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), arg->sourceLen, arg->level);
@@ -1444,8 +1454,11 @@ napi_value ZipNExporter::UnCompress(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             uncompress(static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), arg->sourceLen);
@@ -1499,8 +1512,11 @@ napi_value ZipNExporter::UnCompress2(napi_env env, napi_callback_info info)
     }
 
     auto cbExec = [arg, dest, source](napi_env env) -> NapiBusinessError {
-        if (!arg || !source || !dest) {
+        if (!arg) {
             return NapiBusinessError(EFAULT, true);
+        }
+        if (!source || !dest) {
+            return NapiBusinessError(ERROR_CODE, true);
         }
         arg->errCode =
             uncompress2(static_cast<Bytef *>(dest), &arg->destLen, static_cast<Bytef *>(source), &arg->sourceLen);
@@ -2475,58 +2491,6 @@ napi_value ZipNExporter::InflateValidate(napi_env env, napi_callback_info info)
             return NapiBusinessError(EFAULT, true);
         }
         arg->errCode = inflateValidate(zipEntity->zs.get(), check);
-        if (arg->errCode < 0) {
-            return NapiBusinessError(arg->errCode, true);
-        }
-        return NapiBusinessError(ERRNO_NOERR);
-    };
-
-    auto cbCompl = [arg](napi_env env, NapiBusinessError err) -> NapiValue {
-        if (err) {
-            return {env, err.GetNapiErr(env)};
-        }
-        if (!arg) {
-            return {NapiValue::CreateUndefined(env)};
-        }
-        return {NapiValue::CreateInt32(env, arg->errCode)};
-    };
-
-    NapiValue thisVar(env, funcArg.GetThisVar());
-    if (funcArg.GetArgc() == ArgumentCount::TWO) {
-        return NapiAsyncWorkPromise(env, thisVar).Schedule(PROCEDURE_ZIP_NAME, cbExec, cbCompl).val_;
-    }
-
-    return NapiValue::CreateUndefined(env).val_;
-}
-
-napi_value ZipNExporter::InflateUndermine(napi_env env, napi_callback_info info)
-{
-    NapiFuncArg funcArg(env, info);
-    if (!funcArg.InitArgs(ArgumentCount::TWO, ArgumentCount::THREE)) {
-        NapiBusinessError().ThrowErr(env, EINVAL);
-        return nullptr;
-    }
-
-    /* To get entity */
-    auto zipEntity = NapiClass::GetEntityOf<ZipEntity>(env, funcArg.GetThisVar());
-    if (!zipEntity) {
-        NapiBusinessError().ThrowErr(env, EFAULT);
-        return nullptr;
-    }
-
-    bool succ = false;
-    int32_t subvert = 0;
-    tie(succ, subvert) = CommonFunc::GetInflateUndermineArg(env, funcArg);
-    if (!succ) {
-        return nullptr;
-    }
-
-    auto arg = make_shared<AsyncZipArg>();
-    auto cbExec = [arg, zipEntity, subvert](napi_env env) -> NapiBusinessError {
-        if (!arg || !zipEntity || !zipEntity->zs) {
-            return NapiBusinessError(EFAULT, true);
-        }
-        arg->errCode = inflateUndermine(zipEntity->zs.get(), subvert);
         if (arg->errCode < 0) {
             return NapiBusinessError(arg->errCode, true);
         }
