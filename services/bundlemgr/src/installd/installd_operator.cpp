@@ -557,11 +557,7 @@ bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, c
             break;
         }
         case ExtractFileType::HNPS_FILE: {
-            if (ServiceConstants::ABI_MAP.find(cpuAbi) == ServiceConstants::ABI_MAP.end()) {
-                LOG_E(BMS_TAG_INSTALLD, "illegal cpuAbi");
-                return false;
-            }
-            prefix = ServiceConstants::HNPS + ServiceConstants::ABI_MAP.at(cpuAbi) + ServiceConstants::PATH_SEPARATOR;
+            prefix = ServiceConstants::HNPS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
             break;
         }
         default: {
