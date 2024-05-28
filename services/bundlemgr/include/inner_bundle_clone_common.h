@@ -23,14 +23,15 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string CLONE_DIR_PATH_PREFIX = "clone";
+const std::string PLUS_SIGN = "+";
+const std::string MINUS_SIGN = "-";
 }
 
 class BundleCloneCommonHelper {
 public:
     static std::string GetCloneDataDir(const std::string &bundleName, const int32_t appIndex)
     {
-        return CLONE_DIR_PATH_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR
-            + bundleName + ServiceConstants::FILE_SEPARATOR_CHAR + std::to_string(appIndex);
+        return PLUS_SIGN + CLONE_DIR_PATH_PREFIX + MINUS_SIGN + std::to_string(appIndex) + PLUS_SIGN + bundleName;
     }
 
     static std::string GetCloneBundleIdKey(const std::string &bundleName, const int32_t appIndex)
