@@ -47,7 +47,6 @@ public:
     std::vector<std::string> permissions;
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
-    bool MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
     bool ReadFromParcel(Parcel &parcel);
@@ -68,6 +67,7 @@ private:
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
+    bool MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 }  // namespace AppExecFwk
