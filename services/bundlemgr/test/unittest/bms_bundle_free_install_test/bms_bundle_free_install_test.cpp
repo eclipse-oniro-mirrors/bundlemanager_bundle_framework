@@ -1967,7 +1967,8 @@ HWTEST_F(BmsBundleFreeInstallTest, OnDelayedHeartbeat_0001, Function | SmallTest
     std::string transactId = "1";
     connectAbilityMgr->OnDelayedHeartbeat(transactId);
     EXPECT_EQ(transactId, "1");
-    EXPECT_EQ(connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end(), true);
+    EXPECT_EQ(connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end(),
+        true);
     if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
         connectAbilityMgr->freeInstallParamsMap_.erase("1");
     }
