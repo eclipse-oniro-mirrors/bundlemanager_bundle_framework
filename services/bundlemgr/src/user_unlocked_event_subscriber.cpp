@@ -176,6 +176,11 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
     std::string baseBundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + elDir +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userId);
     for (const auto &bundleInfo : bundleInfos) {
+        if (bundleInfo.appIndex > 0) {
+            APP_LOGI("bundleName:%{public}s appIndex:%{public}d clone app no need to change",
+                bundleInfo.name.c_str(), bundleInfo.appIndex);
+            continue;
+        }
         if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
             !CreateBundleDataDir(bundleInfo, userId, elDir)) {
             continue;
