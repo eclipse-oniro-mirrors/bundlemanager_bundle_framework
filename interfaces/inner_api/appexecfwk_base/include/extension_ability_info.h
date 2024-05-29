@@ -77,6 +77,7 @@ enum class ExtensionAbilityType {
     ACCOUNTLOGOUT = 263,
     STATUS_BAR_VIEW = 264,
     LIVEVIEW_LOCKSCREEN = 265,
+    PHOTO_EDITOR = 266,
     SYSDIALOG_USERAUTH = 300,
     SYSDIALOG_COMMON = 301,
     SYSDIALOG_ATOMICSERVICEPANEL = 302,
@@ -97,7 +98,8 @@ enum class ExtensionAbilityType {
     SYS_COMMON_UI = 500,
     AUTO_FILL_PASSWORD = 501,
     VPN = 502,
-    AUTO_FILL_SMART = 503
+    AUTO_FILL_SMART = 503,
+    SYSPICKER_PHOTOEDITOR = 504
 };
 
 enum class CompileMode {
