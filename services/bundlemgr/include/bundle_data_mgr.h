@@ -757,8 +757,8 @@ public:
         std::map<std::string, std::vector<std::string>> &freeInstallModules) const;
 #endif
 
-    bool GetBundleStats(
-        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
+    bool GetBundleStats(const std::string &bundleName,
+        const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex = 0) const;
     bool GetAllBundleStats(const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool HasUserInstallInBundle(const std::string &bundleName, const int32_t userId) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -1010,7 +1010,7 @@ private:
     bool MatchUtd(const Skill &skill, const std::string &utd, int32_t count) const;
     bool MatchUtd(const std::string &skillUtd, const std::string &wantUtd) const;
     bool MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd) const;
-    std::vector<int32_t> GetCloneAppIndexesUnLock(const std::string &bundleName, int32_t userId) const;
+    std::vector<int32_t> GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const;
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;

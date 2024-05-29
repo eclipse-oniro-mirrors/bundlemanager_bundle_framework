@@ -3089,7 +3089,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats)
+    std::vector<int64_t> &bundleStats, int32_t appIndex)
 {
     APP_LOGD("begin to GetBundleStats");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3104,6 +3104,10 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundleStats due to write userId fail");
+        return false;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetBundleStats due to write appIndex fail");
         return false;
     }
 
