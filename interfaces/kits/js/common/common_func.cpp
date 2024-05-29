@@ -1297,6 +1297,10 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSkills, index, nSkill));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, SKILLS, nSkills));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objExtensionInfo, APP_INDEX, nAppIndex));
 }
 
 

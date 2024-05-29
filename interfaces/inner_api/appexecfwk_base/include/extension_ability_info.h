@@ -156,6 +156,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     // for NAPI, save self query cache
     int32_t uid = -1;
+    int32_t appIndex = 0;
 
     // for Check flags, add to abilityInfo and extensionAbilityInfo
     std::vector<SkillUriForAbilityAndExtension> skillUri;

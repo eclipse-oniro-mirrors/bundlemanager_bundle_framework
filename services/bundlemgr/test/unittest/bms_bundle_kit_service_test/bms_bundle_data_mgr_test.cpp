@@ -1984,7 +1984,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurExtensionInfos_0200, Function | S
 {
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     GetBundleDataMgr()->ImplicitQueryAllExtensionInfos(
         want, GET_ABILITY_INFO_DEFAULT, Constants::INVALID_UID, infos, appIndex);
     GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();

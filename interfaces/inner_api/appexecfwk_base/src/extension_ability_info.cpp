@@ -52,6 +52,7 @@ const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
 const std::string COMPILE_MODE = "compileMode";
 const std::string UID = "uid";
+const std::string APP_INDEX = "appIndex";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
 const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
@@ -219,6 +220,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     process = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     uid = parcel.ReadInt32();
+    appIndex = parcel.ReadInt32();
     if (!ReadSkillInfoFromParcel(parcel, skillUri)) {
         APP_LOGE("Read skill info failed");
         return false;
@@ -322,6 +324,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUri.size());
     for (auto &uri : skillUri) {
         MarshallingSkillUri(parcel, uri);
@@ -377,6 +380,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {PROCESS, extensionInfo.process},
         {COMPILE_MODE, extensionInfo.compileMode},
         {UID, extensionInfo.uid},
+        {APP_INDEX, extensionInfo.appIndex},
         {EXTENSION_PROCESS_MODE, extensionInfo.extensionProcessMode},
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {EXTENSION_SANDBOX_PATH, extensionInfo.sandboxPath},
@@ -587,6 +591,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         jsonObjectEnd,
         UID,
         extensionInfo.uid,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        APP_INDEX,
+        extensionInfo.appIndex,
         JsonType::NUMBER,
         false,
         parseResult,

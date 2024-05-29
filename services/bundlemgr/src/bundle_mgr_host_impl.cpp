@@ -2431,11 +2431,8 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
         LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
         return false;
     }
-    bool ret = dataMgr->QueryExtensionAbilityInfos(want, flag, userId, extensionInfos);
-    if (!ret) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos is failed");
-        return false;
-    }
+    (void)dataMgr->QueryExtensionAbilityInfos(want, flag, userId, extensionInfos);
+    dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, extensionInfos);
     if (extensionInfos.empty()) {
         LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
         return false;
@@ -2464,11 +2461,9 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
         LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 is failed");
-        return ret;
-    }
+    (void)dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    dataMgr->QueryAllCloneExtensionInfosV9(want, flags, userId, extensionInfos);
+
     if (extensionInfos.empty()) {
         LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
@@ -2498,11 +2493,9 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
         return false;
     }
     std::vector<ExtensionAbilityInfo> infos;
-    bool ret = dataMgr->QueryExtensionAbilityInfos(want, flag, userId, infos);
-    if (!ret) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos is failed");
-        return false;
-    }
+    (void)dataMgr->QueryExtensionAbilityInfos(want, flag, userId, infos);
+    dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, infos);
+
     for_each(infos.begin(), infos.end(), [&extensionType, &extensionInfos](const auto &info)->decltype(auto) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos extensionType:%{public}d info.type:%{public}d",
             static_cast<int32_t>(extensionType), static_cast<int32_t>(info.type));
@@ -2538,11 +2531,8 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<ExtensionAbilityInfo> infos;
-    ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 is failed");
-        return ret;
-    }
+    (void)dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
+    dataMgr->QueryAllCloneExtensionInfosV9(want, flags, userId, infos);
     for_each(infos.begin(), infos.end(), [&extensionType, &extensionInfos](const auto &info)->decltype(auto) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 extensionType:%{public}d info.type:%{public}d",
             static_cast<int32_t>(extensionType), static_cast<int32_t>(info.type));
