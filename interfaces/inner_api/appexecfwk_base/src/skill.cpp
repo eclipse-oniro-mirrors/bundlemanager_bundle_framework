@@ -238,22 +238,27 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
 {
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
-        if (skillUri.linkFeature == linkFeature && MatchUri(want.GetUriString(), skillUri) &&
-            MatchType(want.GetType(), skillUri.type)) {
+        if (linkFeature != skillUri.linkFeature) {
+            continue;
+        }
+        if (MatchUri(want.GetUriString(), skillUri) && MatchType(want.GetType(), skillUri.type)) {
             matchUriIndex = uriIndex;
             return true;
         }
-        if (skillUri.linkFeature == linkFeature && !want.GetUriString().empty() && want.GetType().empty()) {
-            std::vector<std::string> mimeTypes;
-            if (MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes)) {
-                for (const auto &mimeType : mimeTypes) {
-                    if ((MatchUri(want.GetUriString(), skillUri) ||
-                        (skillUri.scheme.empty() && want.GetUriString().find(SCHEME_SEPARATOR) == std::string::npos)) &&
-                        MatchType(mimeType, skillUri.type)) {
-                        matchUriIndex = uriIndex;
-                        return true;
-                    }
-                }
+        bool onlyUri = !want.GetUriString().empty() && want.GetType().empty();
+        if (!onlyUri) {
+            continue;
+        }
+        std::vector<std::string> mimeTypes;
+        if (!MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes)) {
+            continue;
+        }
+        for (const auto &mimeType : mimeTypes) {
+            if ((MatchUri(want.GetUriString(), skillUri) ||
+                (skillUri.scheme.empty() && want.GetUriString().find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(mimeType, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
             }
         }
     }
