@@ -243,10 +243,18 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
             matchUriIndex = uriIndex;
             return true;
         }
-        if (skillUri.linkFeature == linkFeature && !want.GetUriString().empty() && want.GetType().empty() &&
-            MatchMimeType(want.GetUriString())) {
-            matchUriIndex = uriIndex;
-            return true;
+        if (skillUri.linkFeature == linkFeature && !want.GetUriString().empty() && want.GetType().empty()) {
+            std::vector<std::string> mimeTypes;
+            if (MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes)) {
+                for (const auto &mimeType : mimeTypes) {
+                    if ((MatchUri(want.GetUriString(), skillUri) ||
+                        (skillUri.scheme.empty() && want.GetUriString().find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                        MatchType(mimeType, skillUri.type)) {
+                        matchUriIndex = uriIndex;
+                        return true;
+                    }
+                }
+            }
         }
     }
     return false;
