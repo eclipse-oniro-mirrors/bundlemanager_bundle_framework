@@ -2698,25 +2698,29 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     AAFwk::Want want;
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
+    bool findDefaultApp = false;
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool retBool = hostImpl->ImplicitQueryInfoByPriority(
         want, flags, USERID, abilityInfo, extensionInfo);
     EXPECT_EQ(retBool, false);
+    EXPECT_EQ(findDefaultApp, false);
 
     retBool = hostImpl->ImplicitQueryInfos(
-        want, flags, USERID, false, abilityInfos, extensionInfos);
+        want, flags, USERID, false, abilityInfos, extensionInfos, findDefaultApp);
     EXPECT_EQ(retBool, false);
+    EXPECT_EQ(findDefaultApp, false);
 
     retBool = hostImpl->GetAllDependentModuleNames(
         "", "", dependentModuleNames);
     EXPECT_EQ(retBool, false);
+    EXPECT_EQ(findDefaultApp, false);
 
     ErrCode retCode = hostImpl->GetBaseSharedBundleInfos(
         "", baseSharedBundleInfos);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-
+    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**

@@ -868,9 +868,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Functi
     Want want;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool findDefaultApp = false;
     bundleMgrHostImpl_->UpgradeAtomicService(want, USERID);
-    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos);
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos,
+        findDefaultApp);
     EXPECT_EQ(ret, false);
+    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**

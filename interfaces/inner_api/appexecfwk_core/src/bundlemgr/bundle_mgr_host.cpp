@@ -2357,7 +2357,8 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     bool withDefault = data.ReadBool();
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos);
+    bool findDefaultApp = false;
+    bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2369,6 +2370,10 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
         }
         if (!WriteParcelableVector(extensionInfos, reply)) {
             APP_LOGE("WriteParcelableVector extensionInfo failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteBool(findDefaultApp)) {
+            APP_LOGE("write findDefaultApp failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }

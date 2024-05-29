@@ -5763,6 +5763,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
 
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool findDefaultApp = false;
     Want want;
     ElementName name;
     name.SetAbilityName(BASE_ABILITY_NAME);
@@ -5772,8 +5773,9 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     bool testRet = bundleMgrProxy->ImplicitQueryInfos(
-        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos);
+        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos, findDefaultApp);
     EXPECT_EQ(false, testRet);
+    EXPECT_EQ(findDefaultApp, false);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -7094,8 +7096,12 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | L
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos);
+    bool findDefaultApp = false;
+    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos,
+        findDefaultApp);
     EXPECT_TRUE(ret);
+    EXPECT_EQ(findDefaultApp, false);
+
     ret = !abilityInfos.empty() || !extensionInfos.empty();
     EXPECT_TRUE(ret);
 }
