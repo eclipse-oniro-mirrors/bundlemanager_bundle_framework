@@ -111,6 +111,7 @@ const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH }
 };
 const std::string SCHEME_END = "://";
+const std::string LINK_FEATURE = "linkFeature";
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr const char* URI_SEPARATOR = "://";
 constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
@@ -1008,7 +1009,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosV9(
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }

@@ -67,6 +67,7 @@ private:
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
     bool MatchMimeType(const std::string &uriString, size_t &matchUriIndex) const;
+    bool MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 }  // namespace AppExecFwk

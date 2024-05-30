@@ -49,10 +49,17 @@ constexpr const char* PATH_SEPARATOR = "/";
 constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+const std::string LINK_FEATURE = "linkFeature";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
+    std::string linkFeature = want.GetStringParam(LINK_FEATURE);
+    if (!linkFeature.empty()) {
+        size_t matchUriIndex = 0;
+        return MatchLinkFeature(linkFeature, want, matchUriIndex);
+    }
+
     if (!MatchActionAndEntities(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
@@ -77,10 +84,16 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
 
 bool Skill::Match(const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
 {
+    std::string linkFeature = want.GetStringParam(LINK_FEATURE);
+    if (!linkFeature.empty()) {
+        return MatchLinkFeature(linkFeature, want, matchUriIndex);
+    }
+
     if (!MatchActionAndEntities(want)) {
         APP_LOGD("Action or entities does not match");
         return false;
     }
+
     std::vector<std::string> vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
@@ -221,6 +234,39 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
     }
 }
 
+bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
+{
+    std::string paramUriString = want.GetUriString();
+    std::string paramType = want.GetType();
+    bool onlyUri = !paramUriString.empty() && paramType.empty();
+    for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+        const SkillUri &skillUri = uris[uriIndex];
+        if (linkFeature != skillUri.linkFeature) {
+            continue;
+        }
+        if (MatchUri(paramUriString, skillUri) && MatchType(paramType, skillUri.type)) {
+            matchUriIndex = uriIndex;
+            return true;
+        }
+        if (!onlyUri) {
+            continue;
+        }
+        std::vector<std::string> mimeTypes;
+        if (!MimeTypeMgr::GetMimeTypeByUri(paramUriString, mimeTypes)) {
+            continue;
+        }
+        for (const auto &mimeType : mimeTypes) {
+            if ((MatchUri(paramUriString, skillUri) ||
+                (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+                MatchType(mimeType, skillUri.type)) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
 {
     if (uriString.empty() && type.empty()) {
@@ -290,8 +336,11 @@ std::string Skill::GetOptParamUri(const std::string &uriString) const
 
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
-    if (skillUri.scheme.empty()) {
-        return uriString.empty();
+    if (uriString.empty() && skillUri.scheme.empty()) {
+        return true;
+    }
+    if (uriString.empty() || skillUri.scheme.empty()) {
+        return false;
     }
     if (skillUri.host.empty()) {
         // config uri is : scheme
@@ -361,8 +410,10 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
 
 bool Skill::MatchType(const std::string &type, const std::string &skillUriType) const
 {
-    // type is not empty
-    if (skillUriType.empty()) {
+    if (type.empty() && skillUriType.empty()) {
+        return true;
+    }
+    if (type.empty() || skillUriType.empty()) {
         return false;
     }
     // only match */*
@@ -407,6 +458,7 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     }
     return false;
 }
+
 
 bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) const
 {
