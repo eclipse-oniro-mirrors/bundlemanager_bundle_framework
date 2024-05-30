@@ -110,8 +110,8 @@ private:
 
     void SendBundleResourcesChangedEvent(int32_t userId);
 
-    void InnerProcessResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        std::vector<ResourceInfo> &resourceInfos);
+    void InnerProcessResourceInfos(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        bool isExistDefaultIcon, std::vector<ResourceInfo> &resourceInfos);
 
     bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
         const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
