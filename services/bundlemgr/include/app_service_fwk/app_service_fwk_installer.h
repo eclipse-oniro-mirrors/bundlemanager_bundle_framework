@@ -85,12 +85,10 @@ private:
     bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     bool CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos, InnerBundleInfo &oldInfo);
     bool CheckNeedUpdate(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
-    void GetUninstallModuleNames(
-        const std::vector<std::string> oldModuleNames, std::vector<std::string> &uninstallModuleNames) const;
     ErrCode ProcessBundleUpdateStatus(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, const std::string &hspPath);
     ErrCode ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo, const std::string &hspPath);
-    ErrCode RemoveLowerVersionSoDir(const InnerBundleInfo &oldInfo);
+    ErrCode RemoveLowerVersionSoDir(uint32_t versionCode);
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
         const std::string &targetSoPath) const;
     ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
