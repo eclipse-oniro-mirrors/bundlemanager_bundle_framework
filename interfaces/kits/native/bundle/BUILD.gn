@@ -48,6 +48,10 @@ ohos_shared_library("bundle_ndk") {
     "src/bundle_mgr_proxy_native.cpp",
     "src/native_interface_bundle.cpp",
   ]
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   use_exceptions = true
   deps = [ "${common_path}:libappexecfwk_common" ]
 

@@ -22,6 +22,9 @@ ohos_shared_library("innerbundlemanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   sources = []
 
   deps = [

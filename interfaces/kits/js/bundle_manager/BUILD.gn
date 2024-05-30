@@ -34,6 +34,9 @@ ohos_shared_library("bundlemanager") {
     "../common:bundle_napi_common",
   ]
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:napi_common",

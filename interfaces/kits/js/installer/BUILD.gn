@@ -25,6 +25,9 @@ ohos_shared_library("installer") {
     "LOG_DOMAIN = 0xD001120",
   ]
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
