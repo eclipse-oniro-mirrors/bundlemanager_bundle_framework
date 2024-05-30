@@ -250,14 +250,15 @@ ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, c
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME, data, reply, option);
 }
 
-ErrCode InstalldProxy::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
+ErrCode InstalldProxy::GetBundleStats(const std::string &bundleName, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
     INSTALLD_PARCEL_WRITE(data, Int32, uid);
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_STATS, data, reply, option);
@@ -345,6 +346,7 @@ ErrCode InstalldProxy::ScanDir(
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::SCAN_DIR, data, reply, option);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd failed");
         return ret;
     }
 

@@ -43,6 +43,7 @@ namespace {
     const std::string DISPOSED_STATUS = "DISPOSED_STATUS";
     const std::string PRIORITY = "PRIORITY";
     const std::string TIME_STAMP = "TIME_STAMP";
+    const std::string APP_INDEX = "APP_INDEX";
 
     enum class PRIORITY {
         EDM = 100,
@@ -61,6 +62,8 @@ AppControlManagerRdb::AppControlManagerRdb()
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
         + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_CONTROL_RDB_TABLE_NAME +
+        " ADD APP_INDEX INTEGER DEFAULT 0;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -78,6 +81,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     for (auto appId : appIds) {
         ErrCode result = DeleteOldControlRule(callingName, controlRuleType, appId, userId);
         if (result != ERR_OK) {
+            LOG_E(BMS_TAG_APP_CONTROL, "DeleteOldControlRule failed.");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;
@@ -185,6 +189,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
     for (auto &controlRule : controlRules) {
         ErrCode result = DeleteOldControlRule(callingName, RUNNING_CONTROL, controlRule.appId, userId);
         if (result != ERR_OK) {
+            LOG_E(BMS_TAG_APP_CONTROL, "DeleteOldControlRule failed.");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;
@@ -442,9 +447,9 @@ ErrCode AppControlManagerRdb::DeleteOldControlRule(const std::string &callingNam
 }
 
 ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
-    const std::string &appId, const DisposedRule &rule, int32_t userId)
+    const std::string &appId, const DisposedRule &rule, int32_t appIndex, int32_t userId)
 {
-    ErrCode code = DeleteDisposedRule(callingName, appId, userId);
+    ErrCode code = DeleteDisposedRule(callingName, appId, appIndex, userId);
     if (code != ERR_OK) {
         LOG_E(BMS_TAG_APP_CONTROL, "DeleteDisposedStatus failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
@@ -458,6 +463,7 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
     valuesBucket.PutInt(PRIORITY, rule.priority);
     valuesBucket.PutInt(TIME_STAMP, timeStamp);
     valuesBucket.PutString(USER_ID, std::to_string(userId));
+    valuesBucket.PutString(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
         LOG_E(BMS_TAG_APP_CONTROL, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
@@ -468,13 +474,14 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
 }
 
 ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
-    const std::string &appId, int32_t userId)
+    const std::string &appId, int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
         LOG_E(BMS_TAG_APP_CONTROL, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed.",
@@ -484,13 +491,17 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
     return ERR_OK;
 }
 
-ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId)
+ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t appIndex, int32_t userId)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     std::vector<std::string> controlList = {DISPOSED_RULE, RUNNING_CONTROL};
     absRdbPredicates.In(APP_CONTROL_LIST, controlList);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    // if appIndex is main app also clear all clone app
+    if (appIndex != Constants::MAIN_APP_INDEX) {
+        absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    }
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
         LOG_E(BMS_TAG_APP_CONTROL, "DeleteAllDisposedRuleByBundle appId:%{public}s failed.", appId.c_str());
@@ -500,7 +511,7 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &a
 }
 
 ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
-    const std::string &appId, DisposedRule &rule, int32_t userId)
+    const std::string &appId, DisposedRule &rule, int32_t appIndex, int32_t userId)
 {
     LOG_D(BMS_TAG_APP_CONTROL, "rdb begin to GetDisposedRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
@@ -508,6 +519,7 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_APP_CONTROL, "GetAppInstallControlRule failed.");
@@ -540,13 +552,14 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
 }
 
 ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
-    const std::string &appId, int32_t userId, std::vector<DisposedRule>& disposedRules)
+    const std::string &appId, int32_t appIndex, int32_t userId, std::vector<DisposedRule>& disposedRules)
 {
     LOG_D(BMS_TAG_APP_CONTROL, "rdb begin to GetAbilityRunningControlRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     absRdbPredicates.OrderByAsc(PRIORITY); // ascending
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {

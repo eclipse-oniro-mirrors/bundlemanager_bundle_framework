@@ -220,6 +220,14 @@ public:
      */
     virtual int GetUidByBundleName(const std::string &bundleName, const int userId) override;
     /**
+     * @brief Obtains the application UID based on the given bundle name and user ID through the proxy object.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param userId Indicates the app Index.
+     * @return Returns the uid if successfully obtained; returns -1 otherwise.
+     */
+    virtual int32_t GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex) override;
+    /**
      * @brief Obtains the debug application UID based on the given bundle name and user ID through the proxy object.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
@@ -502,6 +510,12 @@ public:
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
     /**
+     * @brief Clears cache data of a specified size through the proxy object.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize) override;
+    /**
      * @brief Clears cache data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
      * @param cleanCacheCallback Indicates the callback to be invoked for returning the operation result.
@@ -556,8 +570,8 @@ public:
      * @param isAllBundle Does it represent all bundlenames.
      * @return Returns result of the operation.
      */
-    virtual ErrCode CompileProcessAOT(
-        const std::string &bundleName, const std::string &compileMode, bool isAllBundle) override;
+    virtual ErrCode CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+        bool isAllBundle, std::vector<std::string> &compileResults) override;
     /**
      * @brief Reset the bundle informations with specific flags through the proxy object.
      * @param bundleName Indicates the bundle name if needed.
@@ -581,6 +595,15 @@ public:
      */
     virtual ErrCode IsApplicationEnabled(const std::string &bundleName, bool &isEnable) override;
     /**
+     * @brief Checks whether a specified clone application is enabled.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneApplicationEnabled(
+        const std::string &bundleName, int32_t appIndex, bool &isEnable) override;
+    /**
      * @brief Sets whether to enable a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
@@ -591,12 +614,31 @@ public:
     virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
+     * @brief Sets whether to enable a specified clone application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Specifies whether to enable the application.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability to check.
      * @param isEnable Indicates the ability status is enabled.
      * @return Returns result of the operation.
      */
     virtual ErrCode IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable) override;
+    /**
+     * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability to check.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable) override;
     /**
      * @brief Sets whether to enable a specified ability through the proxy object.
      * @param abilityInfo Indicates information about the ability.
@@ -607,6 +649,17 @@ public:
      */
     virtual ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    /**
+     * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnabled Specifies whether to enable the ability.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID)  override;
     /**
      * @brief Obtains the interface used to install and uninstall bundles through the proxy object.
      * @return Returns a pointer to IBundleInstaller class if exist; returns nullptr otherwise.
@@ -742,7 +795,8 @@ public:
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) override;
 
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
+        bool &findDefaultApp) override;
 
     /**
      * @brief Obtains the AbilityInfo based on a given bundle name through the proxy object.
@@ -825,7 +879,7 @@ public:
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
-        std::vector<int64_t> &bundleStats) override;
+        std::vector<int64_t> &bundleStats, int32_t appIndex = 0) override;
 
     virtual bool GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats) override;
 
@@ -1005,10 +1059,10 @@ public:
      */
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    
+
     virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
         int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
-    
+
     virtual ErrCode GetCloneBundleInfo(const std::string &bundleName, int32_t flag, int32_t appIndex,
         BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 

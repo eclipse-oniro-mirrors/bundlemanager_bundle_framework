@@ -111,8 +111,9 @@ namespace OHOS {
         abilityInfo.name = bundleName;
         std::vector<AbilityInfo> abilityInfos;
         abilityInfos.push_back(abilityInfo);
+        bool findDafaultApp = false;
         bundleMgrProxy.ImplicitQueryInfos(want, reinterpret_cast<uintptr_t>(data),
-            reinterpret_cast<uintptr_t>(data), true, abilityInfos, extensionInfos);
+            reinterpret_cast<uintptr_t>(data), true, abilityInfos, extensionInfos, findDafaultApp);
 
         std::string abilityName (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.GetAbilityInfo(bundleName, abilityName, abilityInfo);

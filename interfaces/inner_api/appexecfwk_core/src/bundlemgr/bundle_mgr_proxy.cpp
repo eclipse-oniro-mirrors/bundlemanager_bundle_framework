@@ -642,12 +642,18 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
 
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
+    return GetUidByBundleName(bundleName, userId, 0);
+}
+
+int32_t BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+{
     if (bundleName.empty()) {
         APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
         return Constants::INVALID_UID;
     }
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d, appIndex : %{public}d", bundleName.c_str(),
+        userId, appIndex);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -659,6 +665,10 @@ int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int 
         return Constants::INVALID_UID;
     }
     if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetUidByBundleName due to write uid fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteInt32(appIndex)) {
         APP_LOGE("failed to GetUidByBundleName due to write uid fail");
         return Constants::INVALID_UID;
     }
@@ -1619,6 +1629,33 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
         BundleMgrInterfaceCode::GET_PERMISSION_DEF, data, permissionDef);
 }
 
+ErrCode BundleMgrProxy::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (cacheSize == 0) {
+        APP_LOGE("parameter error, cache size must be greater than 0");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint64(cacheSize)) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic due to write cache size fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE, data, reply)) {
+        APP_LOGE("fail to CleanBundleCacheFilesAutomatic from server");
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
 {
@@ -2037,6 +2074,40 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
     return NO_ERROR;
 }
 
+ErrCode BundleMgrProxy::IsCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsCloneApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to IsCloneApplicationEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
+}
+
 ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, bool isEnable, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2070,6 +2141,44 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::SetCloneApplicationEnabled(
+    const std::string &bundleName, int32_t appIndex, bool isEnable, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to SetCloneApplicationEnabled of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnable)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write isEnable fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
 ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2089,6 +2198,39 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
     }
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::IS_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    int32_t ret = reply.ReadInt32();
+    if (ret != NO_ERROR) {
+        return ret;
+    }
+    isEnable = reply.ReadBool();
+    return NO_ERROR;
+}
+
+ErrCode BundleMgrProxy::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to IsCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write abilityInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to IsCloneAbilityEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();
@@ -2127,6 +2269,44 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
 
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_ENABLED, data, reply)) {
+        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
+    }
+    return reply.ReadInt32();
+}
+
+ErrCode BundleMgrProxy::SetCloneAbilityEnabled(
+    const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to SetCloneAbilityEnabled of %{public}s", abilityInfo.name.c_str());
+    if (abilityInfo.bundleName.empty() || abilityInfo.name.empty()) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&abilityInfo)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write abilityInfo fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write appIndex fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SetCloneAbilityEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
@@ -2755,9 +2935,8 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
 }
 
 bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "begin to ImplicitQueryInfos");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -2807,6 +2986,8 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         }
         extensionInfos.emplace_back(*extensionInfoPtr);
     }
+    findDefaultApp = reply.ReadBool();
+
     return true;
 }
 
@@ -2908,7 +3089,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats)
+    std::vector<int64_t> &bundleStats, int32_t appIndex)
 {
     APP_LOGD("begin to GetBundleStats");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2923,6 +3104,10 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
     if (!data.WriteInt32(userId)) {
         APP_LOGE("fail to GetBundleStats due to write userId fail");
+        return false;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        APP_LOGE("fail to GetBundleStats due to write appIndex fail");
         return false;
     }
 
@@ -4543,8 +4728,8 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
     return ERR_OK;
 }
 
-ErrCode BundleMgrProxy::CompileProcessAOT(
-    const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+ErrCode BundleMgrProxy::CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+    bool isAllBundle, std::vector<std::string> &compileResults)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to compile");
@@ -4571,7 +4756,14 @@ ErrCode BundleMgrProxy::CompileProcessAOT(
         APP_LOGE("fail to compile from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return ERR_OK;
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        if (!reply.ReadStringVector(&compileResults)) {
+            APP_LOGE("fail to get compile results from reply");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ret;
 }
 
 ErrCode BundleMgrProxy::CompileReset(const std::string &bundleName, bool isAllBundle)

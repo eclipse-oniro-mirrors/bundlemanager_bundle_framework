@@ -1685,7 +1685,7 @@ HWTEST_F(BmsBundleDataMgrTest, IsApplicationEnabled_0100, Function | SmallTest |
     bool isEnabled = false;
     GetBundleDataMgr()->multiUserIdsSet_.insert(Constants::ALL_USERID);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    ErrCode res = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnabled);
+    ErrCode res = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnabled);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
@@ -1705,7 +1705,7 @@ HWTEST_F(BmsBundleDataMgrTest, SetApplicationEnabled_0100, Function | SmallTest 
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->SetApplicationEnabled(
-        BUNDLE_NAME_TEST, isEnabled, Constants::ALL_USERID);
+        BUNDLE_NAME_TEST, 0, isEnabled, Constants::ALL_USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -1984,7 +1984,7 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryCurExtensionInfos_0200, Function | S
 {
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
-    int32_t appIndex = 1;
+    int32_t appIndex = Constants::INITIAL_SANDBOX_APP_INDEX + 1;
     GetBundleDataMgr()->ImplicitQueryAllExtensionInfos(
         want, GET_ABILITY_INFO_DEFAULT, Constants::INVALID_UID, infos, appIndex);
     GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
@@ -2476,9 +2476,11 @@ HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryInfos_0100, Function | MediumTest | 
     want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
     std::vector<AbilityInfo> abilityInfo;
     std::vector<ExtensionAbilityInfo> extensionInfo;
-
-    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, 0, USERID, USERID, abilityInfo, extensionInfo);
+    bool findDefaultApp = false;
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, 0, USERID, USERID, abilityInfo, extensionInfo,
+        findDefaultApp);
     EXPECT_EQ(ret, false);
+    EXPECT_EQ(findDefaultApp, false);
 }
 
 /**

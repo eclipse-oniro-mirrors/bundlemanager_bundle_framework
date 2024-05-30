@@ -78,6 +78,7 @@ const std::string ROUTER_INDEX_ONE_URL = "DynamicPage2";
 const std::string ROUTER_INDEX_ONE_BUILD_FUNCTION = "myBuilder";
 const std::string CONTROL_MESSAGE = "msg1_cantRun";
 const std::string CURRENT_DEVICE_ID = "PHONE-001";
+const std::string EMPTY_STRING = "";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -2481,6 +2482,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0500, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetUidByBundleName_0600
+ * @tc.name: test query UID
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the hap
+ *           3.query UID by empty bundleName
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0600, Function | MediumTest | Level1)
+{
+    std::cout << "START GetUidByBundleName_0600" << std::endl;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string bundleName = "";
+    int uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID, 0);
+    EXPECT_EQ(uid, Constants::INVALID_UID);
+    std::cout << "END GetUidByBundleName_0600" << std::endl;
+}
+
+/**
  * @tc.number: GetAppType_0100
  * @tc.name: test GetAppType interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -2504,7 +2524,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0100, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(appName);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
+        EXPECT_EQ(appType, EMPTY_STRING);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -2541,7 +2561,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0200, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(SYSTEM_SETTINGS_BUNDLE_NAME);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
+        EXPECT_EQ(appType, EMPTY_STRING);
 
         if (std::strcmp(appType.c_str(), "") != 0) {
             APP_LOGI("GetAppType_0200 failed - cycle count: %{public}d", i);
@@ -2582,13 +2602,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0300, Function | MediumTest | Level2)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(errName);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
+        EXPECT_EQ(appType, EMPTY_STRING);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(appType.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
+        if (std::strcmp(appType.c_str(), (EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAppType_0300 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2615,7 +2635,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0400, Function | MediumTest | Level2)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType("");
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
+        EXPECT_EQ(appType, EMPTY_STRING);
 }
 
 /**
@@ -2642,9 +2662,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0500, Function | MediumTest | Level2)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string appType = bundleMgrProxy->GetAppType(appName);
-        EXPECT_EQ(appType, Constants::EMPTY_STRING);
+        EXPECT_EQ(appType, EMPTY_STRING);
 
-        if (std::strcmp(appType.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
+        if (std::strcmp(appType.c_str(), (EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAppType_0500 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2734,14 +2754,14 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0300, Function | MediumTest | Lev
         std::string errAppName = BASE_BUNDLE_NAME + "e";
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(errAppName, abilityName);
         ErrCode abilityLabel1 = bundleMgrProxy->GetAbilityLabel("", abilityName, BASE_MODULE_NAME, label);
-        EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
+        EXPECT_EQ(abilityLabel, EMPTY_STRING);
         EXPECT_NE(abilityLabel1, ERR_OK);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0300 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2780,13 +2800,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0400, Function | MediumTest | Lev
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, errAbilityName);
-        EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
+        EXPECT_EQ(abilityLabel, EMPTY_STRING);
         resvec.clear();
         Uninstall(appName, resvec);
         std::string uninstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 
-        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0400 failed - cycle count: %{public}d", i);
             break;
         }
@@ -2813,7 +2833,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0500, Function | MediumTest | Lev
     ASSERT_NE(bundleMgrProxy, nullptr);
 
     std::string abilityLabel = bundleMgrProxy->GetAbilityLabel("", "");
-    EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
+    EXPECT_EQ(abilityLabel, EMPTY_STRING);
 }
 
 /**
@@ -2841,9 +2861,9 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0600, Function | MediumTest | Lev
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         std::string abilityLabel = bundleMgrProxy->GetAbilityLabel(appName, abilityName);
-        EXPECT_EQ(abilityLabel, Constants::EMPTY_STRING);
+        EXPECT_EQ(abilityLabel, EMPTY_STRING);
 
-        if (std::strcmp(abilityLabel.c_str(), (Constants::EMPTY_STRING).c_str()) != 0) {
+        if (std::strcmp(abilityLabel.c_str(), (EMPTY_STRING).c_str()) != 0) {
             APP_LOGI("GetAbilityLabel_0600 failed - cycle count: %{public}d", i);
             break;
         }
@@ -5743,6 +5763,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
 
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool findDefaultApp = false;
     Want want;
     ElementName name;
     name.SetAbilityName(BASE_ABILITY_NAME);
@@ -5752,8 +5773,9 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     bool testRet = bundleMgrProxy->ImplicitQueryInfos(
-        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos);
+        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos, findDefaultApp);
     EXPECT_EQ(false, testRet);
+    EXPECT_EQ(findDefaultApp, false);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -6037,13 +6059,13 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0200, Function | SmallTest | Level1)
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     auto res = bundleMgrProxy->GetIconById("", BASE_MODULE_NAME, RESID, 0, USERID);
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
+    EXPECT_EQ(res, EMPTY_STRING);
 
     res = bundleMgrProxy->GetIconById(BASE_MODULE_NAME, "", RESID, 0, USERID);
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
+    EXPECT_EQ(res, EMPTY_STRING);
 
     res = bundleMgrProxy->GetIconById("", "", RESID, 0, USERID);
-    EXPECT_EQ(res, Constants::EMPTY_STRING);
+    EXPECT_EQ(res, EMPTY_STRING);
 }
 
 /**
@@ -6287,6 +6309,48 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetUdidByNetworkId_0100" << std::endl;
+}
+
+/**
+ * @tc.number: CheckCloneAbilityEnabled_0100
+ * @tc.name: test SetCloneAbilityEnabled and IsCloneAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckCloneAbilityEnabled_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = BASE_ABILITY_NAME;
+    abilityInfo.bundleName = ROUTER_MAP_TEST_BUNDLE_NAME;
+    abilityInfo.moduleName = BASE_MODULE_NAME;
+    int32_t testRet = bundleMgrProxy->SetCloneAbilityEnabled(abilityInfo, 1, false, USERID);
+    EXPECT_NE(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsCloneAbilityEnabled(abilityInfo, 1, isEnable);
+    EXPECT_NE(0, testRet1);
+}
+
+/**
+ * @tc.number: CheckCloneApplicationEnabled_0100
+ * @tc.name: test SetCloneAbilityEnabled and IsCloneAbilityEnabled proxy
+ * @tc.desc: 1.system run normally
+ *           2.set ability enabled
+ *           3.get ability enabled
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckCloneApplicationEnabled_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    int32_t testRet = bundleMgrProxy->SetCloneApplicationEnabled(BASE_ABILITY_NAME, 1, false, USERID);
+    EXPECT_NE(0, testRet);
+    bool isEnable = false;
+    int32_t testRet1 = bundleMgrProxy->IsCloneApplicationEnabled(BASE_ABILITY_NAME, 1, isEnable);
+    EXPECT_NE(0, testRet1);
 }
 
 /**
@@ -7032,8 +7096,12 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | L
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos);
+    bool findDefaultApp = false;
+    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos,
+        findDefaultApp);
     EXPECT_TRUE(ret);
+    EXPECT_EQ(findDefaultApp, false);
+
     ret = !abilityInfos.empty() || !extensionInfos.empty();
     EXPECT_TRUE(ret);
 }
@@ -8277,9 +8345,9 @@ HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0200, Function | SmallTest 
     std::string moduleName = "moduleName";
     int32_t triggerMode = 0;
 
-    ErrCode ret = bundleMgrProxy->ResetAOTCompileStatus(Constants::EMPTY_STRING, moduleName, triggerMode);
+    ErrCode ret = bundleMgrProxy->ResetAOTCompileStatus(EMPTY_STRING, moduleName, triggerMode);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
-    ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, Constants::EMPTY_STRING, triggerMode);
+    ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, EMPTY_STRING, triggerMode);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     APP_LOGI("ResetAOTCompileStatus_0200 end");
 }

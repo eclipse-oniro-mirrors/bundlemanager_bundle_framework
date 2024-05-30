@@ -2034,7 +2034,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest
     ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_FALSE(resourceInfos.empty());
-    
+
     auto code = bundleInfo.SetAbilityEnabled(MODULE_NAME, ABILITY_NAME, false, USERID);
     EXPECT_EQ(code, ERR_OK);
 
@@ -2415,6 +2415,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, -1);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
@@ -2426,6 +2429,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest
     EXPECT_EQ(info.bundleName, BUNDLE_NAME);
     EXPECT_FALSE(info.icon.empty());
     EXPECT_FALSE(info.label.empty());
+
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
@@ -2453,6 +2459,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     EXPECT_TRUE(info.size() == 0);
 
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(info.size() == 0);
+
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 100);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
     EXPECT_TRUE(info.size() == 0);
@@ -2469,6 +2479,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest
         EXPECT_FALSE(info[0].label.empty());
         EXPECT_FALSE(info[0].icon.empty());
     }
+
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info, 1);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2535,14 +2548,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest
 
     // disable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, false, USERID);
+    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, false, USERID);
     EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, true, USERID);
+    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, true, USERID);
     EXPECT_EQ(code, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -2572,14 +2585,14 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     abilityInfo.name = ABILITY_NAME;
     // disable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, USERID);
+    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, USERID);
     EXPECT_EQ(code, ERR_OK);
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     // enable
     BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, USERID);
+    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, USERID);
     EXPECT_EQ(code, ERR_OK);
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3743,6 +3756,87 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0147, Function | SmallTest
     resourceInfo.InnerParseAppIndex(key);
     EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
     EXPECT_EQ(resourceInfo.appIndex_, 100);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0148
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0148, Function | SmallTest | Level0)
+{
+    std::map<std::string, std::vector<ResourceInfo>> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0149
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherResourceInfoByAbilityName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0149, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetLauncherResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+        USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0150
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0150, Function | SmallTest | Level0)
+{
+    std::vector<std::string> resourceNames;
+    std::vector<ResourceInfo> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0151
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetTargetBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0151, Function | SmallTest | Level0)
+{
+    std::string targetBundleName;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    BundleResourceProcess::GetTargetBundleName(BUNDLE_NAME, targetBundleName);
+    EXPECT_TRUE(BUNDLE_NAME == targetBundleName);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0152
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0152, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    bundleMgrService_->RegisterDataMgr(nullptr);
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
 }
 #endif
 } // OHOS

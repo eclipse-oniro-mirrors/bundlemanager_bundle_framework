@@ -89,7 +89,7 @@ const std::string ENABLE_DYNAMIC_ICON = "EnableDynamicIcon";
 const std::string DISABLE_DYNAMIC_ICON = "DisableDynamicIcon";
 const std::string GET_DYNAMIC_ICON = "GetDynamicIcon";
 const std::string INVALID_WANT_ERROR =
-    "implicit query condition, at least one query param(action entities uri type) non-empty.";
+    "implicit query condition, at least one query param(action, entities, uri, type, or linkFeature) non-empty.";
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
@@ -716,47 +716,67 @@ static ErrCode InnerBatchQueryAbilityInfos(const std::vector<OHOS::AAFwk::Want> 
     return CommonFunc::ConvertErrCode(ret);
 }
 
-static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable)
+static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
+    ErrCode ret = ERR_OK;
+    if (appIndex == 0) {
+        ret = bundleMgr->SetApplicationEnabled(bundleName, isEnable);
+    } else {
+        ret = bundleMgr->SetCloneApplicationEnabled(bundleName, appIndex, isEnable);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
-static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &isEnable)
+static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    ErrCode ret = ERR_OK;
+    if (appIndex != 0) {
+        ret = bundleMgr->IsCloneApplicationEnabled(bundleName, appIndex, isEnable);
+    } else {
+        ret = bundleMgr->IsApplicationEnabled(bundleName, isEnable);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
-static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
+static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
+    ErrCode ret = ERR_OK;
+    if (appIndex != 0) {
+        ret = bundleMgr->SetCloneAbilityEnabled(abilityInfo, appIndex, isEnable);
+    } else {
+        ret = bundleMgr->SetAbilityEnabled(abilityInfo, isEnable);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
-static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable)
+static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEnable, int32_t appIndex)
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
         APP_LOGE("CommonFunc::GetBundleMgr failed.");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    ErrCode ret = ERR_OK;
+    if (appIndex != 0) {
+        ret = bundleMgr->IsCloneAbilityEnabled(abilityInfo, appIndex, isEnable);
+    } else {
+        ret = bundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -1608,7 +1628,7 @@ void SetApplicationEnabledExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->isEnable);
+        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
 void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
@@ -1630,6 +1650,75 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
+bool ParseBundleName(napi_env env, const napi_value& value, std::string& bundleName)
+{
+    if (!CommonFunc::ParseString(env, value, bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return false;
+    }
+    return true;
+}
+
+bool ParseAppIndex(napi_env env, const napi_value& value, int32_t& appIndex)
+{
+    if (!CommonFunc::ParseInt(env, value, appIndex)) {
+        APP_LOGE("parse appIndex failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+        return false;
+    }
+    return true;
+}
+
+bool ParseIsEnable(napi_env env, const napi_value& value, bool& isEnabled)
+{
+    if (!CommonFunc::ParseBool(env, value, isEnabled)) {
+        APP_LOGE("parse isEnabled failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+        return false;
+    }
+    return true;
+}
+
+bool HandleSetApplicationEnabledArg(
+    napi_env env, napi_value arg, size_t index, ApplicationEnableCallbackInfo *asyncCallbackInfo,
+    bool& callCloneFunc)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+
+    if (index == ARGS_POS_ZERO) {
+        return ParseBundleName(env, arg, asyncCallbackInfo->bundleName);
+    } else if (index == ARGS_POS_ONE) {
+        if (valueType == napi_number) {
+            callCloneFunc = true;
+            return ParseAppIndex(env, arg, asyncCallbackInfo->appIndex);
+        } else if (valueType == napi_boolean) {
+            return ParseIsEnable(env, arg, asyncCallbackInfo->isEnable);
+        } else {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+    } else if (index == ARGS_POS_TWO) {
+        if (callCloneFunc && valueType != napi_boolean) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+        if (valueType == napi_boolean && !CommonFunc::ParseBool(env, arg, asyncCallbackInfo->isEnable)) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+    } else {
+        APP_LOGE("param check error");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return false;
+    }
+    return true;
+}
+
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to SetApplicationEnabled");
@@ -1644,27 +1733,25 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
         APP_LOGE("Napi func init failed");
         return nullptr;
     }
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+    bool callCloneFunc = false;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (!HandleSetApplicationEnabledArg(env, args[i], i, asyncCallbackInfo, callCloneFunc)) {
             return nullptr;
         }
-        if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], asyncCallbackInfo->isEnable)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
-            return nullptr;
-        }
-        if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        if (i == ARGS_POS_TWO) {
             napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+            napi_typeof(env, args[i], &valueType);
             if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
-                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             }
         }
-    } else {
+    }
+    if (callCloneFunc && (args.GetMaxArgc() == ARGS_SIZE_TWO)) {
+        APP_LOGE("params are too few for clone app");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
+
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
         env, asyncCallbackInfo, "SetApplicationEnabled", SetApplicationEnabledExec, SetApplicationEnabledComplete);
     callbackPtr.release();
@@ -1680,7 +1767,7 @@ void SetAbilityEnabledExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerSetAbilityEnabled(asyncCallbackInfo->abilityInfo,
-        asyncCallbackInfo->isEnable);
+        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
 void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
@@ -1702,6 +1789,47 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
+bool HandleSetAbilityEnabledArg(napi_env env, napi_value arg, size_t index,
+    AbilityEnableCallbackInfo *asyncCallbackInfo, bool& callCloneFunc)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+
+    if (index == ARGS_POS_ZERO) {
+        if (!CommonFunc::ParseAbilityInfo(env, arg, asyncCallbackInfo->abilityInfo)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+            return false;
+        }
+    } else if (index == ARGS_POS_ONE) {
+        if (valueType == napi_number) {
+            callCloneFunc = true;
+            return ParseAppIndex(env, arg, asyncCallbackInfo->appIndex);
+        } else if (valueType == napi_boolean) {
+            return ParseIsEnable(env, arg, asyncCallbackInfo->isEnable);
+        } else {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+    } else if (index == ARGS_POS_TWO) {
+        if (callCloneFunc && valueType != napi_boolean) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+        if (valueType == napi_boolean && !CommonFunc::ParseBool(env, arg, asyncCallbackInfo->isEnable)) {
+            APP_LOGE("parse isEnable failed");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+            return false;
+        }
+    } else {
+        APP_LOGE("param check error");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return false;
+    }
+    return true;
+}
+
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to SetAbilityEnabled");
@@ -1717,24 +1845,21 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->abilityInfo)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+    bool callCloneFunc = false;
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (!HandleSetAbilityEnabledArg(env, args[i], i, asyncCallbackInfo, callCloneFunc)) {
             return nullptr;
         }
-        if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], asyncCallbackInfo->isEnable)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
-            return nullptr;
-        }
-        if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        if (i == ARGS_POS_TWO) {
             napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+            napi_typeof(env, args[i], &valueType);
             if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
-                    NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             }
         }
-    } else {
+    }
+    if (callCloneFunc && (args.GetMaxArgc() == ARGS_SIZE_TWO)) {
+        APP_LOGE("params are too few for clone app");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1753,7 +1878,7 @@ void IsApplicationEnabledExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerIsApplicationEnabled(asyncCallbackInfo->bundleName,
-        asyncCallbackInfo->isEnable);
+        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
 void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
@@ -1775,6 +1900,26 @@ void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
+bool HandleIsApplicationEnabledArg(napi_env env, napi_value arg, size_t index,
+    ApplicationEnableCallbackInfo *asyncCallbackInfo)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+
+    if (index == ARGS_POS_ZERO) {
+        return ParseBundleName(env, arg, asyncCallbackInfo->bundleName);
+    } else if (index == ARGS_POS_ONE) {
+        if (valueType == napi_number) {
+            return ParseAppIndex(env, arg, asyncCallbackInfo->appIndex);
+        }
+    } else {
+        APP_LOGE("param check error");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return false;
+    }
+    return true;
+}
+
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to IsApplicationEnabled");
@@ -1790,22 +1935,18 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
-        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (!HandleIsApplicationEnabledArg(env, args[i], i, asyncCallbackInfo)) {
             return nullptr;
         }
-        if (args.GetMaxArgc() == ARGS_POS_TWO) {
+        if (i == ARGS_POS_ONE) {
             napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            napi_typeof(env, args[i], &valueType);
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
                     NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             }
         }
-    } else {
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
         env, asyncCallbackInfo, "IsSetApplicationEnabled", IsApplicationEnabledExec, IsApplicationEnabledComplete);
@@ -1822,7 +1963,7 @@ void IsAbilityEnabledExec(napi_env env, void *data)
         return;
     }
     asyncCallbackInfo->err = InnerIsAbilityEnabled(asyncCallbackInfo->abilityInfo,
-        asyncCallbackInfo->isEnable);
+        asyncCallbackInfo->isEnable, asyncCallbackInfo->appIndex);
 }
 
 void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
@@ -1844,6 +1985,29 @@ void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
+bool HandleIsAbilityEnabledArg(napi_env env, napi_value arg, size_t index,
+    AbilityEnableCallbackInfo *asyncCallbackInfo)
+{
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, arg, &valueType);
+
+    if (index == ARGS_POS_ZERO) {
+        if (!CommonFunc::ParseAbilityInfo(env, arg, asyncCallbackInfo->abilityInfo)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+            return false;
+        }
+    } else if (index == ARGS_POS_ONE) {
+        if (valueType == napi_number) {
+            return ParseAppIndex(env, arg, asyncCallbackInfo->appIndex);
+        }
+    } else {
+        APP_LOGE("param check error");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return false;
+    }
+    return true;
+}
+
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
 {
     APP_LOGI("begin to IsAbilityEnabled");
@@ -1859,23 +2023,20 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
-        if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->abilityInfo)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        if (!HandleIsAbilityEnabledArg(env, args[i], i, asyncCallbackInfo)) {
             return nullptr;
         }
-        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        if (i == ARGS_POS_ONE) {
             napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            napi_typeof(env, args[i], &valueType);
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
                     NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             }
         }
-    } else {
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
     }
+
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
         env, asyncCallbackInfo, "IsAbilityEnabled", IsAbilityEnabledExec, IsAbilityEnabledComplete);
     callbackPtr.release();
@@ -2966,7 +3127,7 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::EMBEDDED_UI), &nEmbeddedUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "EMBEDDED_UI", nEmbeddedUI));
-	
+
     napi_value nInsightIntentUI;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::INSIGHT_INTENT_UI), &nInsightIntentUI));

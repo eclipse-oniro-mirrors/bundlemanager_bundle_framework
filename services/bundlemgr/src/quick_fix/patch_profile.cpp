@@ -184,6 +184,7 @@ QuickFixType GetQuickFixType(const std::string &type)
 bool CheckNameIsValid(const std::string &name)
 {
     if (name.empty()) {
+        LOG_E(BMS_TAG_QUICK_FIX, "CheckNameIsValid: name is empty");
         return false;
     }
     if (name.find(Constants::RELATIVE_PATH) != std::string::npos) {

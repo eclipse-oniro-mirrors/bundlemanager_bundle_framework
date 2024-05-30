@@ -305,6 +305,17 @@ public:
         return Constants::INVALID_UID;
     }
     /**
+     * @brief Obtains the application UID based on the given bundle name and user ID.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @param userId Indicates the app Index.
+     * @return Returns the uid if successfully obtained; returns -1 otherwise.
+     */
+    virtual int32_t GetUidByBundleName(const std::string &bundleName, const int32_t userId, int32_t appIndex)
+    {
+        return Constants::INVALID_UID;
+    }
+    /**
      * @brief Obtains the debug application UID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
@@ -691,6 +702,15 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Clears cache data of a specified size.
+     * @param cacheSize Indicates the size of the cache data is to be cleared.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Clears application running data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose data is to be cleared.
      * @param userId Indicates the user id.
@@ -782,8 +802,8 @@ public:
      * @param isAllBundle Does it represent all bundlenames.
      * @return Returns true if the compile result is successfully obtained; returns false otherwise.
      */
-    virtual ErrCode CompileProcessAOT(
-        const std::string &bundleName, const std::string &compileMode, bool isAllBundle)
+    virtual ErrCode CompileProcessAOT(const std::string &bundleName, const std::string &compileMode,
+        bool isAllBundle, std::vector<std::string> &compileResults)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -819,6 +839,17 @@ public:
         return ERR_OK;
     }
     /**
+     * @brief Checks whether a specified clone application is enabled.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the application status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnable)
+    {
+        return ERR_OK;
+    }
+    /**
      * @brief Sets whether to enable a specified application.
      * @param bundleName Indicates the bundle name of the application.
      * @param isEnable Specifies whether to enable the application.
@@ -827,6 +858,20 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetApplicationEnabled(const std::string &bundleName, bool isEnable,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified clone application.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Specifies whether to enable the application.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool isEnable,
         int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_OK;
@@ -843,6 +888,17 @@ public:
     }
     /**
      * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability to check.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnable Indicates the ability status is enabled.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode IsCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool &isEnable)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified ability.
      * @param abilityInfo Indicates information about the ability.
      * @param isEnabled Specifies whether to enable the ability.
      *                 The value true means to enable it, and the value false means to disable it.
@@ -850,6 +906,20 @@ public:
      * @return Returns result of the operation.
      */
     virtual ErrCode SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_OK;
+    }
+    /**
+     * @brief Sets whether to enable a specified ability.
+     * @param abilityInfo Indicates information about the ability.
+     * @param appIndex Indicates the app index of clone applications.
+     * @param isEnabled Specifies whether to enable the ability.
+     *                 The value true means to enable it, and the value false means to disable it.
+     * @param userId description the user id.
+     * @return Returns result of the operation.
+     */
+    virtual ErrCode SetCloneAbilityEnabled(const AbilityInfo &abilityInfo, int32_t appIndex, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_OK;
@@ -1064,7 +1134,8 @@ public:
     }
 
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
+        bool &findDefaultApp)
     {
         return false;
     }
@@ -1153,7 +1224,8 @@ public:
         return nullptr;
     }
 
-    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
+    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats,
+        int32_t appIndex = 0)
     {
         return false;
     }

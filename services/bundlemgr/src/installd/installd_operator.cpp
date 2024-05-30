@@ -67,6 +67,7 @@ static const char CODE_CRYPTO_FUNCTION_NAME[] = "_ZN4OHOS8Security10CodeCrypto15
 #endif
 static constexpr int32_t INSTALLS_UID = 3060;
 static constexpr int32_t MODE_BASE = 07777;
+static constexpr int32_t KEY_ID_STEP = 2;
 constexpr const char* PROC_MOUNTS_PATH = "/proc/mounts";
 constexpr const char* QUOTA_DEVICE_DATA_PATH = "/data";
 constexpr const char* CACHE_DIR = "cache";
@@ -131,6 +132,7 @@ struct fscrypt_asdp_policy {
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
     if (path.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty");
         return false;
     }
 
@@ -169,6 +171,7 @@ bool InstalldOperator::IsExistApFile(const std::string &path)
 bool InstalldOperator::IsExistDir(const std::string &path)
 {
     if (path.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "path is empty");
         return false;
     }
 
@@ -212,6 +215,7 @@ bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::st
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldOperator::ExtractFiles start");
     if (targetSoPath.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "targetSoPath is empty");
         return true;
     }
 
@@ -763,6 +767,7 @@ bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid
 bool InstalldOperator::RenameFile(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "old path or new path is empty");
         return false;
     }
     if (!DeleteDir(newPath)) {
@@ -787,6 +792,7 @@ bool InstalldOperator::IsValidPath(const std::string &rootDir, const std::string
 bool InstalldOperator::IsValidCodePath(const std::string &codePath)
 {
     if (codePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "code path is empty");
         return false;
     }
     return IsValidPath(BUNDLE_BASE_CODE_DIR + ServiceConstants::PATH_SEPARATOR, codePath);
@@ -1565,6 +1571,7 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     }
 
     if (soEntryFiles.empty()) {
+        LOG_D(BMS_TAG_INSTALLD, "soEntryFiles is empty");
         return true;
     }
 
@@ -2208,8 +2215,15 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
     struct fscrypt_asdp_policy policy;
     policy.version = 0;
     policy.asdp_class = FORCE_PROTECT;
-    strncpy_s(policy.app_key2_descriptor, sizeof(policy.app_key2_descriptor),
-        keyId.c_str(), FSCRYPT_KEY_DESCRIPTOR_SIZE - 1);
+    // keyId length = KEY_ID_STEP * FSCRYPT_KEY_DESCRIPTOR_SIZE
+    for (uint32_t i = 0; i < keyId.size(); i += KEY_ID_STEP) {
+        if (i / KEY_ID_STEP >= FSCRYPT_KEY_DESCRIPTOR_SIZE) {
+            break;
+        }
+        std::string byteString = keyId.substr(i, KEY_ID_STEP);
+        char byte = (char)strtol(byteString.c_str(), NULL, 16);
+        policy.app_key2_descriptor[i / KEY_ID_STEP] = byte;
+    }
 
     std::vector<std::string> dirs;
     dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +

@@ -40,7 +40,7 @@ bool IsSupportCompressNativeLibs()
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -216,7 +216,7 @@ struct Extension {
 
 struct MultiAppMode {
     std::string multiAppModeType;
-    int32_t maxCount;
+    int32_t maxCount = 0;
 };
 
 struct App {
@@ -1662,9 +1662,11 @@ void GetHnpPackage(std::vector<HnpPackage> &hnpPackage, const std::vector<Profil
 bool CheckBundleNameIsValid(const std::string &bundleName)
 {
     if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return false;
     }
     if (bundleName.size() < Constants::MIN_BUNDLE_NAME || bundleName.size() > Constants::MAX_BUNDLE_NAME) {
+        APP_LOGE("bundleName size too long or too short");
         return false;
     }
     char head = bundleName.at(0);
@@ -1682,9 +1684,11 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
 bool CheckModuleNameIsValid(const std::string &moduleName)
 {
     if (moduleName.empty()) {
+        APP_LOGE("bundleName is empty");
         return false;
     }
     if (moduleName.size() > MAX_MODULE_NAME) {
+        APP_LOGE("bundleName size too long");
         return false;
     }
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
@@ -1825,6 +1829,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
             if (preloadObj.empty()) {
+                APP_LOGD("preloadObj is empty");
                 return true;
             }
             if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
@@ -2049,13 +2054,17 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
-
-    applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
-    applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
-    if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
-        int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
-        if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
-            return false;
+    // bundleType is app && moduleType is entry or feature
+    if (applicationInfo.bundleType == BundleType::APP &&
+        (moduleJson.module.type == Profile::MODULE_TYPE_ENTRY ||
+        moduleJson.module.type == Profile::MODULE_TYPE_FEATURE)) {
+        applicationInfo.multiAppMode.multiAppModeType = ToMultiAppModeType(app.multiAppMode.multiAppModeType);
+        applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
+        if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
+            int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
+            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
+                return false;
+            }
         }
     }
     applicationInfo.maxChildProcess = app.maxChildProcess;

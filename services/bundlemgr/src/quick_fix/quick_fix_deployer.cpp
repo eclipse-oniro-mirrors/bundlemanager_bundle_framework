@@ -32,10 +32,11 @@ namespace AppExecFwk {
 namespace {
 const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+const std::string PATCH_DIR = "patch/";
 }
 
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
-    bool isDebug) : patchPaths_(bundleFilePaths), isDebug_(isDebug)
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug,
+    const std::string &targetPath) : patchPaths_(bundleFilePaths), isDebug_(isDebug), targetPath_(targetPath)
 {}
 
 ErrCode QuickFixDeployer::Execute()
@@ -57,6 +58,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     std::vector<std::string> realFilePaths;
     ErrCode ret = ProcessBundleFilePaths(patchPaths_, realFilePaths);
     if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths failed");
         return ret;
     }
     ScopeGuard guardRemovePath([realFilePaths] {
@@ -70,8 +72,7 @@ ErrCode QuickFixDeployer::DeployQuickFix()
     // parse check multi hqf files, update status DEPLOY_START
     InnerAppQuickFix newInnerAppQuickFix;
     InnerAppQuickFix oldInnerAppQuickFix;
-    ret = ToDeployStartStatus(realFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix);
-    if (ret != ERR_OK) {
+    if ((ret = ToDeployStartStatus(realFilePaths, newInnerAppQuickFix, oldInnerAppQuickFix)) != ERR_OK) {
         return ret;
     }
     // extract diff files, apply diff patch and copy hqf, update status DEPLOY_END
@@ -324,8 +325,12 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
 
     AppQuickFix appQuickFix = innerAppQuickFix.GetAppQuickFix();
     if (isSoExist) {
-        nativeLibraryPath = Constants::PATCH_PATH +
-            std::to_string(appQuickFix.deployingAppqfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + libraryPath;
+        if (!targetPath_.empty()) {
+            nativeLibraryPath = PATCH_DIR + targetPath_ + ServiceConstants::PATH_SEPARATOR + libraryPath;
+        } else {
+            nativeLibraryPath = Constants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode) +
+                ServiceConstants::PATH_SEPARATOR + libraryPath;
+        }
     } else {
         LOG_I(BMS_TAG_QUICK_FIX, "So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
             soPath.c_str(), nativeLibraryPath.c_str());
@@ -335,9 +340,14 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
 
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
 {
-    patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
-        + ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH
-        + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
+    if (!targetPath_.empty()) {
+        patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
+            + ServiceConstants::PATH_SEPARATOR + PATCH_DIR + targetPath_;
+    } else {
+        patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
+            + ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH
+            + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
+    }
     if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
         LOG_E(BMS_TAG_QUICK_FIX, "error: creat patch path failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
@@ -803,6 +813,7 @@ bool QuickFixDeployer::ExtractSoFiles(
         nativeLibraryPath = iter->nativeLibraryPath;
     }
     if (nativeLibraryPath.empty()) {
+        LOG_W(BMS_TAG_QUICK_FIX, "nativeLibraryPath is empty");
         return false;
     }
 
@@ -869,6 +880,7 @@ bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, con
         nativeLibraryPath = iter->nativeLibraryPath;
     }
     if (nativeLibraryPath.empty()) {
+        LOG_W(BMS_TAG_QUICK_FIX, "nativeLibraryPath is empty");
         return false;
     }
     std::string hapPath = iter->hapPath;

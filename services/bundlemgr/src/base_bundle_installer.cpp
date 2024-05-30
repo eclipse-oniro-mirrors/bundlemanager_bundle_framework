@@ -306,6 +306,7 @@ ErrCode BaseBundleInstaller::Recover(
 
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -502,6 +503,7 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("begin to process %{public}s module in %{public}s uninstall", modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -1120,7 +1122,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ScopeGuard extensionDirGuard([&] { RemoveCreatedExtensionDirsForException(); });
 
     // create Screen Lock File Protection Dir
-    CreateScreenLockProtectionDir(newInfos);
+    CreateScreenLockProtectionDir();
     ScopeGuard ScreenLockFileProtectionDirGuard([&] { DeleteScreenLockProtectionDir(bundleName_); });
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
@@ -1415,7 +1417,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
     if (appControlMgr != nullptr) {
         APP_LOGD("Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
-        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo.GetAppId(), userId_);
+        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo, Constants::MAIN_APP_INDEX, userId_);
     }
 #endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
@@ -1424,6 +1426,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
     if (oldInfo.GetIsPreInstallApp()) {
+        APP_LOGI("Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
     BundleResourceHelper::DeleteResourceInfo(bundleName);
@@ -1568,6 +1571,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             }
 
             if (oldInfo.GetIsPreInstallApp()) {
+                APP_LOGI("Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
 
@@ -1604,6 +1608,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
 void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, bool isUninstalled)
 {
+    APP_LOGI("Entering %{public}s for bundle: %{public}s, isUninstalled: %{public}d",
+             __func__, bundleName.c_str(), isUninstalled);
     if (!dataMgr_) {
         APP_LOGE("dataMgr is nullptr");
         return;
@@ -1770,6 +1776,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
             hapPath, info.GetCpuAbi(), info.GetBundleName());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to install because installing the native package failed. error code: %{public}d", ret);
+            return ret;
         }
         if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
             APP_LOGE("delete dir %{public}s failed!", moduleHnpsPath.c_str());
@@ -1786,6 +1793,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {
             APP_LOGE("Failed to uninstall because uninstalling the native package failed. error code: %{public}d", ret);
+            return ret;
         }
     }
     return ERR_OK;
@@ -2260,6 +2268,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     APP_LOGI("ProcessDeployingHqfInfo");
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
     if (quickFixDataMgr == nullptr) {
+        APP_LOGE("quick fix data mgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
@@ -2711,14 +2720,8 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
     return dirs;
 }
 
-bool BaseBundleInstaller::SetEncryptionDirPolicy()
+bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 {
-    InnerBundleInfo info;
-    bool isExist = false;
-    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
-        APP_LOGE("GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
-        return false;
-    }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.", info.GetBundleName().c_str(), userId_);
@@ -2743,28 +2746,45 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy()
         APP_LOGE("save keyId failed");
         return false;
     }
-    return result;
+    return result == ERR_OK;
 }
 
-void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::string, InnerBundleInfo> &infos)
+void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
+    const std::string &dir)
 {
-    APP_LOGI("CreateScreenLockProtectionDir start");
-    if (infos.empty()) {
-        APP_LOGE("innerBundleInfo infos is empty.");
+    APP_LOGI("CreateScreenLockProtectionExistDirs start");
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+        APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+            info.GetBundleName().c_str(), userId_);
         return;
     }
+    if (InstalldClient::GetInstance()->Mkdir(
+        dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
+        APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
+    }
+}
+
+void BaseBundleInstaller::CreateScreenLockProtectionDir()
+{
+    APP_LOGI("CreateScreenLockProtectionDir start");
+    InnerBundleInfo info;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(info, isExist) || !isExist) {
+        APP_LOGE("GetInnerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return ;
+    }
+
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(bundleName_);
     bool hasPermission = false;
-    for (auto &info : infos) {
-        std::vector<RequestPermission> reqPermissions = info.second.GetRequestPermissions();
-        auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
-            return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
-        });
-        if (it != reqPermissions.end()) {
-            hasPermission = true;
-            break;
-        }
+    std::vector<RequestPermission> reqPermissions = info.GetAllRequestPermissions();
+    auto it = std::find_if(reqPermissions.begin(), reqPermissions.end(), [](const RequestPermission& permission) {
+        return permission.name == PERMISSION_PROTECT_SCREEN_LOCK_DATA;
+    });
+    if (it != reqPermissions.end()) {
+        hasPermission = true;
     }
+
     if (!hasPermission) {
         APP_LOGI("no protection permission found, remove dirs");
         for (const std::string &dir : dirs) {
@@ -2774,27 +2794,21 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir(std::unordered_map<std::
         }
         return;
     }
+    bool dirExist = false;
     for (const std::string &dir : dirs) {
-        bool dirExist = false;
         if (InstalldClient::GetInstance()->IsExistDir(dir, dirExist) != ERR_OK) {
             APP_LOGE("check if dir existed failed");
             return;
         }
         if (!dirExist) {
-            InnerBundleUserInfo newInnerBundleUserInfo;
-            if (!infos.begin()->second.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
-                APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
-                    infos.begin()->second.GetBundleName().c_str(), userId_);
-                return;
-            }
-            if (InstalldClient::GetInstance()->Mkdir(
-                dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
-                APP_LOGW("create Screen Lock Protection dir %{public}s failed.", dir.c_str());
-            }
+            APP_LOGD("ScreenLockProtectionDir: %{public}s need to be created.", dir.c_str());
+            CreateScreenLockProtectionExistDirs(info, dir);
         }
     }
-    if (!SetEncryptionDirPolicy()) {
-        APP_LOGE("SetEncryptionDirPolicy failed.");
+    if (!dirExist) {
+        if (!SetEncryptionDirPolicy(info)) {
+            APP_LOGE("Encryption failed dir");
+        }
     }
 }
 
@@ -2970,6 +2984,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         result = ExtractHnpFileDir(cpuAbi, hnpPackageInfoString.str(), modulePath);
         if (result != ERR_OK) {
             APP_LOGE("fail to ExtractHnpsFileDir, error is %{public}d", result);
+            return result;
         }
     }
 
@@ -3229,6 +3244,7 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
 std::string BaseBundleInstaller::GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     if (infos.empty()) {
+        APP_LOGE("module info is empty");
         return Constants::EMPTY_STRING;
     }
     std::string moduleNames;
@@ -3665,6 +3681,7 @@ void BaseBundleInstaller::RemoveBundleExtensionDir(const std::string &bundleName
 void BaseBundleInstaller::SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (infos.empty()) {
+        APP_LOGE("infos is empty");
         return;
     }
     appDistributionType_ = infos.begin()->second.GetAppDistributionType();
@@ -3789,6 +3806,7 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
 
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
+        APP_LOGE("check app label info error");
         return ret;
     }
 
@@ -4238,6 +4256,12 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 #endif
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
+    }
+    if (oldInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
+        newInfo.GetMultiAppModeType() == MultiAppModeType::APP_CLONE &&
+        oldInfo.GetMultiAppMaxCount() > newInfo.GetMultiAppMaxCount()) {
+        APP_LOGE("the multiAppMaxCount of the new bundle is less than old one");
+        return ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE;
     }
 
     ErrCode ret = CheckDebugType(oldInfo, newInfo);

@@ -472,7 +472,7 @@ ErrCode AppControlProxy::SetDisposedRule(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write bundleName failed.");
+        LOG_E(BMS_TAG_APP_CONTROL, "write appId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&disposedRule)) {
@@ -539,6 +539,109 @@ ErrCode AppControlProxy::GetAbilityRunningControlRule(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfos(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE, data, rules);
+}
+
+ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
+    const std::string &appId, DisposedRule &disposedRule, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to SetDisposedRuleForCloneApp");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&disposedRule)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write disposedRule failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appIndex appIndex.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE_FOR_CLONE_APP, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "SendRequest failed.");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule &rule,
+    int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to GetDisposedRuleForCloneApp");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appIndex failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetParcelableInfo<DisposedRule>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE_FOR_CLONE_APP,
+        data, rule);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::DeleteDisposedRuleForCloneApp(const std::string &appId, int32_t appIndex, int32_t userId)
+{
+    LOG_D(BMS_TAG_APP_CONTROL, "proxy begin to DeleteDisposedRuleForCloneApp");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_APP_CONTROL, "WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "write appIndex failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP, data, reply);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "SendRequest failed.");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_APP_CONTROL, "host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
 bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data)

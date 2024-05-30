@@ -36,7 +36,7 @@ public:
     bool OnSystemLanguageChange(const std::string &language);
 
     // for bundle enable or disable
-    bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId);
+    bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId, int32_t appIndex = 0);
 
     // for ability enable or disable
     bool OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,

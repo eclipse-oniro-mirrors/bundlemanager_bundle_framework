@@ -48,8 +48,8 @@ const size_t ORIGIN_STRING_LENGTH = 32;
 constexpr char UUID_SEPARATOR = '-';
 const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
+const int64_t SPACE_NEED_DOUBLE = 2;
 const uint32_t UUID_LENGTH_MAX = 512;
-const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
 // hmdfs and sharefs config
@@ -176,7 +176,7 @@ bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t file
         APP_LOGE("call stat error:%{public}d", errno);
         return false;
     }
-    if (fileInfo.st_size > fileSize) {
+    if (std::max(fileInfo.st_size * SPACE_NEED_DOUBLE, HALF_GB) > fileSize) {
         return false;
     }
     return true;
@@ -189,11 +189,10 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
         APP_LOGE("call statfs error:%{public}d", errno);
         return false;
     }
-    int64_t freeSize = diskInfo.f_bfree * diskInfo.f_bsize;
+    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
     APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize);
 
-    // bundleSize + keepSize <= system-freeSize needs to be satisfied
-    return CheckFileSize(bundlePath, freeSize - std::min(freeSize * SAVE_SPACE_PERCENT, static_cast<double>(HALF_GB)));
+    return CheckFileSize(bundlePath, freeSize);
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
@@ -701,6 +700,46 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
         return 0;
     }
     return fileInfo.st_size;
+}
+
+void BundleUtil::GetTotalSizeOfFiles(const std::string& path, off_t &totalSize)
+{
+    struct stat fileStat;
+    if (stat(path.c_str(), &fileStat) == 0) {
+        if (S_ISREG(fileStat.st_mode)) {
+            totalSize += fileStat.st_size;
+        } else if (S_ISDIR(fileStat.st_mode)) {
+            totalSize += GetTotalSizeOfFilesInDirectory(path);
+        }
+    } else {
+        APP_LOGE("Error getting information for file/directory: %{public}s", path.c_str());
+    }
+}
+
+uint64_t BundleUtil::GetTotalSizeOfFilesInDirectory(const std::string& directoryPath)
+{
+    DIR* dir;
+    struct dirent* ent;
+    off_t totalSize = 0;
+
+    APP_LOGI("GetTotalSizeOfFilesInDirectory directoryPath: %{public}s", directoryPath.c_str());
+
+    if ((dir = opendir(directoryPath.c_str())) != NULL) {
+        while ((ent = readdir(dir)) != NULL) {
+            std::string path = directoryPath + "/" + ent->d_name;
+
+            if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0) {
+                continue;
+            }
+
+            GetTotalSizeOfFiles(path, totalSize);
+        }
+        closedir(dir);
+    } else {
+        APP_LOGE("opendir failed, path: %{public}s", directoryPath.c_str());
+    }
+
+    return static_cast<uint64_t>(totalSize);
 }
 
 std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,

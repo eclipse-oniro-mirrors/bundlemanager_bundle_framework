@@ -66,6 +66,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "access_token:libtokenid_sdk",
     "appspawn:hnpapi",
     "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
@@ -76,6 +77,18 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += [
+    "ability_runtime:ability_manager",
+    "ability_runtime:app_manager",
+    "battery_manager:batterysrv_client",
+    "device_usage_statistics:usagestatsinner",
+    "display_manager:displaymgr",
+    "ffrt:libffrt",
+    "power_manager:powermgr_client",
+    "syscap_codec:syscap_interface_shared",
+  ]
+
   external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
@@ -97,6 +110,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
+      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]

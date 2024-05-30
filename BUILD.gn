@@ -37,6 +37,7 @@ group("test_target") {
 
   deps = [
     "common/test:unittest",
+    "interfaces/inner_api/test/unittest:unittest",
     "interfaces/kits/js/zip/test:unittest",
     "services/bundlemgr/test:unittest",
     "services/test/moduletest/common/bms:moduletest",

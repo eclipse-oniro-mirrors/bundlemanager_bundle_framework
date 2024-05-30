@@ -158,6 +158,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetLaunchWantForBundle);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PERMISSION_DEF),
         &BundleMgrHost::HandleGetPermissionDef);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE),
+        &BundleMgrHost::HandleCleanBundleCacheFilesAutomatic);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES),
         &BundleMgrHost::HandleCleanBundleCacheFiles);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR),
@@ -376,6 +378,14 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetCloneAppIndexes);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX),
         &BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleSetCloneApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleIsCloneApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED),
+        &BundleMgrHost::HandleSetCloneAbilityEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED),
+        &BundleMgrHost::HandleIsCloneAbilityEnabled);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1400,6 +1410,20 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleCleanBundleCacheFilesAutomatic(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    uint64_t cacheSize = data.ReadUint64();
+    ErrCode ret = CleanBundleCacheFilesAutomatic(cacheSize);
+
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleCleanBundleCacheFiles(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1533,12 +1557,20 @@ ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParce
     std::string bundleName = data.ReadString();
     std::string compileMode = data.ReadString();
     bool isAllBundle = data.ReadBool();
+    std::vector<std::string> compileResults;
 
     APP_LOGI("compile info name %{public}s", bundleName.c_str());
-    ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle);
+    ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle, compileResults);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret != ERR_OK) {
+        if (!reply.WriteStringVector(compileResults)) {
+            APP_LOGE("write compile process AOT results failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }
@@ -1553,6 +1585,7 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
     ErrCode ret = CompileReset(bundleName, isAllBundle);
     APP_LOGI("ret is %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1587,6 +1620,7 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
     std::string result;
     APP_LOGI("dump info name %{public}s", bundleName.c_str());
     bool ret = DumpInfos(flag, bundleName, userId, result);
+    (void)reply.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1612,9 +1646,31 @@ ErrCode BundleMgrHost::HandleIsApplicationEnabled(MessageParcel &data, MessagePa
     bool isEnable = false;
     ErrCode ret = IsApplicationEnabled(bundleName, isEnable);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
+        APP_LOGE("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to HandleIsCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = false;
+    ErrCode ret = IsCloneApplicationEnabled(bundleName, appIndex, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1632,6 +1688,25 @@ ErrCode BundleMgrHost::HandleSetApplicationEnabled(MessageParcel &data, MessageP
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetApplicationEnabled(bundleName, isEnable, userId);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetCloneApplicationEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    if (bundleName.empty()) {
+        APP_LOGE("fail to SetCloneApplicationEnabled due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SetCloneApplicationEnabled(bundleName, appIndex, isEnable, userId);
+    if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1648,9 +1723,31 @@ ErrCode BundleMgrHost::HandleIsAbilityEnabled(MessageParcel &data, MessageParcel
     bool isEnable = false;
     ErrCode ret = IsAbilityEnabled(*abilityInfo, isEnable);
     if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteBool(isEnable)) {
+        APP_LOGE("WriteBool failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleIsCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnable = false;
+    ErrCode ret = IsCloneAbilityEnabled(*abilityInfo, appIndex, isEnable);
+    if (!reply.WriteInt32(ret)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteBool(isEnable)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -1667,6 +1764,25 @@ ErrCode BundleMgrHost::HandleSetAbilityEnabled(MessageParcel &data, MessageParce
     bool isEnabled = data.ReadBool();
     int32_t userId = data.ReadInt32();
     ErrCode ret = SetAbilityEnabled(*abilityInfo, isEnabled, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("WriteInt32 failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetCloneAbilityEnabled(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<AbilityInfo> abilityInfo(data.ReadParcelable<AbilityInfo>());
+    if (abilityInfo == nullptr) {
+        APP_LOGE("ReadParcelable<abilityInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t appIndex = data.ReadInt32();
+    bool isEnabled = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = SetCloneAbilityEnabled(*abilityInfo, appIndex, isEnabled, userId);
     if (!reply.WriteInt32(ret)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -2109,7 +2225,8 @@ ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
-    int32_t uid = GetUidByBundleName(bundleName, userId);
+    int32_t appIndex = data.ReadInt32();
+    int32_t uid = GetUidByBundleName(bundleName, userId, appIndex);
     APP_LOGD("uid is %{public}d", uid);
     if (!reply.WriteInt32(uid)) {
         APP_LOGE("write failed");
@@ -2240,7 +2357,8 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     bool withDefault = data.ReadBool();
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos);
+    bool findDefaultApp = false;
+    bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2252,6 +2370,10 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
         }
         if (!WriteParcelableVector(extensionInfos, reply)) {
             APP_LOGE("WriteParcelableVector extensionInfo failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!reply.WriteBool(findDefaultApp)) {
+            APP_LOGE("write findDefaultApp failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -2286,6 +2408,7 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessagePa
     BundleInfo info;
     auto res = GetSandboxBundleInfo(bundleName, appIndex, userId, info);
     if (!reply.WriteInt32(res)) {
+        APP_LOGE("WriteInt32 failed");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
@@ -2629,8 +2752,9 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
     std::vector<int64_t> bundleStats;
-    bool ret = GetBundleStats(bundleName, userId, bundleStats);
+    bool ret = GetBundleStats(bundleName, userId, bundleStats, appIndex);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

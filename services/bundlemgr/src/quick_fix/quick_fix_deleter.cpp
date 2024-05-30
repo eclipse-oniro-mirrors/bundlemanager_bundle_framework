@@ -24,6 +24,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string PATCH_DIR = "patch";
+}
 QuickFixDeleter::QuickFixDeleter(const std::string &bundleName) : bundleName_(bundleName)
 {
     LOG_I(BMS_TAG_QUICK_FIX, "enter QuickFixDeleter");
@@ -116,14 +119,18 @@ ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const s
         return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
 
-    std::string patchPath = Constants::BUNDLE_CODE_DIR;
+    std::string patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR +
+        bundleName + ServiceConstants::PATH_SEPARATOR;
     if (appqfInfo.type == QuickFixType::PATCH) {
-        patchPath += ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR
-            + Constants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
+        if (appqfInfo.nativeLibraryPath.substr(0,
+            appqfInfo.nativeLibraryPath.find(ServiceConstants::PATH_SEPARATOR)) == PATCH_DIR) {
+            patchPath += PATCH_DIR;
+        } else {
+            patchPath += Constants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
+        }
     }
     if (appqfInfo.type == QuickFixType::HOT_RELOAD) {
-        patchPath += ServiceConstants::PATH_SEPARATOR + bundleName + ServiceConstants::PATH_SEPARATOR
-            + Constants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
+        patchPath += Constants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
     }
 
     LOG_D(BMS_TAG_QUICK_FIX, "patch path is %{public}s", patchPath.c_str());
@@ -162,6 +169,7 @@ ErrCode QuickFixDeleter::GetDataMgr()
 ErrCode QuickFixDeleter::RemoveDeployingInfo(const std::string &bundleName)
 {
     if (GetDataMgr() != ERR_OK) {
+        LOG_E(BMS_TAG_QUICK_FIX, "get data mar failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;

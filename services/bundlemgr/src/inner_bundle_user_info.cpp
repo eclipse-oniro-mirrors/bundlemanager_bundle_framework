@@ -73,8 +73,8 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
     GetValueIfFindKey<std::map<std::string, InnerBundleCloneInfo>>(jsonObject, jsonObjectEnd,
         INNER_BUNDLE_USER_INFO_CLONE_INFOS,
         innerBundleUserInfo.cloneInfos, JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
-        innerBundleUserInfo.keyId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, INNER_BUNDLE_USER_INFO_KEYID,
+        innerBundleUserInfo.keyId, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
 }
 } // namespace AppExecFwk
 } // namespace OHOS

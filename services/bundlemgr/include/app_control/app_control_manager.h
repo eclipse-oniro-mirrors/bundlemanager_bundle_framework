@@ -74,21 +74,24 @@ public:
 
     void SetAppInstallControlStatus();
 
-    ErrCode SetDisposedRule(const std::string &callerName,
-        const std::string &appId, const DisposedRule &DisposedRule, int32_t userId);
+    ErrCode SetDisposedRule(const std::string &callerName, const std::string &appId,
+        const DisposedRule &DisposedRule, int32_t appIndex, int32_t userId);
 
-    ErrCode GetDisposedRule(const std::string &callerName,
-        const std::string &appId, DisposedRule &DisposedRule, int32_t userId);
+    ErrCode GetDisposedRule(const std::string &callerName, const std::string &appId,
+        DisposedRule &DisposedRule, int32_t appIndex, int32_t userId);
 
-    ErrCode DeleteDisposedRule(const std::string &callerName, const std::string &appId, int32_t userId);
+    ErrCode DeleteDisposedRule(const std::string &callerName, const std::string &appId,
+        int32_t appIndex, int32_t userId);
 
-    ErrCode GetAbilityRunningControlRule(
-        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules);
+    ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t appIndex, int32_t userId,
+        std::vector<DisposedRule>& disposedRules);
 
-    ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId);
+    ErrCode DeleteAllDisposedRuleByBundle(const InnerBundleInfo &bundleInfo, int32_t appIndex, int32_t userId);
     
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
+    void DeleteAppRunningRuleCache(std::string &key);
+    void DeleteAbilityRunningRuleCache(std::string &key);
 
     bool isAppInstallControlEnabled_ = false;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;

@@ -406,7 +406,9 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED}
+        { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
+        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
+        { IStatusReceiver::ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE, ERROR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE },
     };
 }
 
@@ -1564,9 +1566,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_POS_ONE) {
             if (valueType != napi_object || !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("Parse installParam failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, INSTALL_PARAM, TYPE_OBJECT);
-                return nullptr;
+                APP_LOGW("Parse installParam failed");
             }
         } else {
             APP_LOGE("The number of parameters is incorrect.");

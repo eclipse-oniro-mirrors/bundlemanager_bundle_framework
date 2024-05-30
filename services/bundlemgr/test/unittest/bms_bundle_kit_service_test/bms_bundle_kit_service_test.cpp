@@ -245,6 +245,9 @@ const std::string URI_UTD = "utd";
 const std::string URI_LINK_FEATURE = "login";
 const std::string SKILL_PERMISSION = "permission1";
 const int32_t MAX_FILE_SUPPORTED = 1;
+const std::string ERROR_LINK_FEATURE = "ERROR_LINK";
+const std::string FILE_URI = "test.jpg";
+const std::string URI_MIME_IMAGE = "image/jpeg";
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 }  // namespace
 
@@ -3489,7 +3492,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0100, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
-    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3505,10 +3508,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0200, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
 
@@ -3525,16 +3528,16 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, false, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_FALSE(isEnable);
 
-    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
+    int32_t testRet2 = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
-    ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
 
@@ -3550,7 +3553,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0300, Function | Small
 HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0400, Function | SmallTest | Level1)
 {
     bool isEnable = false;
-    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_NE(0, ret);
 }
 
@@ -3564,10 +3567,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0500, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
-    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, isEnable);
+    int32_t ret = GetBundleDataMgr()->IsApplicationEnabled(BUNDLE_NAME_TEST, 0, isEnable);
     EXPECT_EQ(0, ret);
     EXPECT_TRUE(isEnable);
 
@@ -3584,10 +3587,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0600, Function | Small
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
-    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME_TEST, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsApplicationEnabled("", 0, isEnable);
     EXPECT_NE(0, testRet1);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3646,7 +3649,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0800, Function | Small
  */
 HWTEST_F(BmsBundleKitServiceTest, CheckApplicationEnabled_0900, Function | SmallTest | Level1)
 {
-    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", true, Constants::INVALID_USERID);
+    ErrCode testRet = GetBundleDataMgr()->SetApplicationEnabled("", 0, true, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
@@ -4372,7 +4375,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0100, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
-    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4388,10 +4391,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0200, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_TRUE(testRet == 0);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_TRUE(isEnable);
 
@@ -4408,15 +4411,15 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0300, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_FALSE(isEnable);
-    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet2 = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet2);
-    int32_t testRet3 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet3 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet3);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4432,7 +4435,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0400, Function | SmallTest
 {
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
-    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_NE(0, testRet);
 }
 
@@ -4447,11 +4450,11 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0500, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     AbilityInfo abilityInfoEmpty;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, false, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfoEmpty, 0, false, Constants::DEFAULT_USERID);
     EXPECT_NE(0, testRet);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4467,11 +4470,11 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0600, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     AbilityInfo abilityInfoEmpty;
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfoEmpty, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfoEmpty, 0, isEnable);
     EXPECT_NE(0, testRet1);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4489,10 +4492,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0700, Function | SmallTest
     AbilityInfo abilityInfo;
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_TRUE(isEnable);
 
@@ -4512,10 +4515,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0800, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_TRUE(isEnable);
 
@@ -4535,7 +4538,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_0900, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST_1;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_FALSE(testRet == 0);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -4553,7 +4556,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1000, Function | SmallTest
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     bool isEnable = false;
-    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4573,7 +4576,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1100, Function | SmallTest
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST;
     bool isEnable = false;
-    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet);
     EXPECT_TRUE(isEnable);
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4593,7 +4596,7 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1200, Function | SmallTest
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
     abilityInfo.moduleName = MODULE_NAME_TEST_1;
     bool isEnable = false;
-    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_NE(0, testRet);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -4608,11 +4611,11 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1300, Function | SmallTest
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     AbilityInfo abilityInfo = MockAbilityInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::DEFAULT_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::DEFAULT_USERID);
     EXPECT_EQ(0, testRet);
     AbilityInfo abilityInfoEmpty;
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfoEmpty, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfoEmpty, 0, isEnable);
     EXPECT_NE(0, testRet1);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -4651,10 +4654,10 @@ HWTEST_F(BmsBundleKitServiceTest, CheckAbilityEnabled_1500, Function | SmallTest
     AbilityInfo abilityInfo;
     abilityInfo.name = ABILITY_NAME_TEST;
     abilityInfo.bundleName = BUNDLE_NAME_TEST;
-    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, true, Constants::UNSPECIFIED_USERID);
+    int32_t testRet = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, Constants::UNSPECIFIED_USERID);
     EXPECT_NE(0, testRet);
     bool isEnable = false;
-    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, isEnable);
+    int32_t testRet1 = GetBundleDataMgr()->IsAbilityEnabled(abilityInfo, 0, isEnable);
     EXPECT_EQ(0, testRet1);
     EXPECT_TRUE(isEnable);
 
@@ -5856,6 +5859,48 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
 
 /**
  * @tc.number: skill match rules
+ * @tc.name: uri's scheme prefix match test with linkFeature
+ * @tc.desc: config only has scheme and host and port,
+ *           param has "scheme://host:port" prefix then match, otherwise not match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_004, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR;
+    Want want;
+    want.SetUri(uri);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(HOST_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PORT_SEPARATOR).append(PORT_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+
+    uri.append(PATH_SEPARATOR).append(PATH_001);
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+    // fail testCase
+    uri = SCHEME_002 + SCHEME_SEPARATOR;
+    want.SetUri(uri);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
  * @tc.name: uri with param match test
  * @tc.desc: want's uri has param, ignore param then match.
  */
@@ -5936,6 +5981,151 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_HOME_ACTION_001, Function | SmallTe
     skill.actions.emplace_back(Constants::WANT_ACTION_HOME);
     want.SetAction(Constants::ACTION_HOME);
     ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri empty, type not empty, linkFeature not empty; skill uri empty,
+ *           type not empty, linkFeature not empty.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.type = TYPE_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetType(TYPE_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri empty, type empty, linkFeature not empty;
+ *           skill uri empty, type empty, linkFeature not empty.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri not empty,
+ *           type empty, linkFeature not empty, uri path match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.path = PATH_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri empty,
+ *           type not empty, linkFeature not empty, file type match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_004, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    size_t uriIndex = 0;
+    SkillUri skillUri;
+    skillUri.type = URI_MIME_IMAGE;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(FILE_URI);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type empty, linkFeature not empty; skill uri not empty,
+ *           type empty, linkFeature not empty, uri pathRegex match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_005, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    size_t uriIndex = 0;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.pathRegex = PATH_REGEX_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetParam("linkFeature", ERROR_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(false, ret);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    ret = skill.Match(want, uriIndex);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri and type match test: want uri not empty, type not empty, linkFeature not empty; skill uri not empty,
+ *           type not empty, linkFeature not empty, uri and type match.
+ * @tc.desc: expect true
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_Link_Feature_006, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    size_t uriIndex = 0;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skillUri.port = PORT_001;
+    skillUri.pathRegex = PATH_REGEX_001;
+    skillUri.linkFeature = URI_LINK_FEATURE;
+    skillUri.type = TYPE_001;
+    skill.uris.emplace_back(skillUri);
+    Want want;
+    want.SetUri(URI_PATH_001);
+    want.SetType(TYPE_001);
+    want.SetParam("linkFeature", URI_LINK_FEATURE);
+    bool ret = skill.Match(want, uriIndex);
     EXPECT_EQ(true, ret);
 }
 
@@ -6742,7 +6932,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0200, Function | SmallTest
     ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_TRUE(abilityInfos.size() == 1);
-    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], false, 0);
+    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], 0, false, 0);
     EXPECT_EQ(ret, ERR_OK);
     ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
@@ -6838,7 +7028,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0600, Function | SmallTest
     ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
     for (const auto &abilityInfo : abilityInfos) {
-        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, 0);
+        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, 0);
         EXPECT_EQ(ret, ERR_OK);
     }
     abilityInfos.clear();
@@ -6976,7 +7166,7 @@ HWTEST_F(BmsBundleKitServiceTest, BatchQueryAbilityInfos_0200, Function | SmallT
     ErrCode ret = GetBundleDataMgr()->BatchQueryAbilityInfos(wants, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_TRUE(abilityInfos.size() == 1);
-    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], false, 0);
+    ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], 0, false, 0);
     EXPECT_EQ(ret, ERR_OK);
     ret = GetBundleDataMgr()->BatchQueryAbilityInfos(wants, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
@@ -7072,7 +7262,7 @@ HWTEST_F(BmsBundleKitServiceTest, BatchQueryAbilityInfos_0600, Function | SmallT
     ErrCode ret = GetBundleDataMgr()->BatchQueryAbilityInfos(wants, flags, 0, abilityInfos);
     EXPECT_EQ(ret, ERR_OK);
     for (const auto &abilityInfo : abilityInfos) {
-        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, false, 0);
+        ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, 0);
         EXPECT_EQ(ret, ERR_OK);
     }
     abilityInfos.clear();

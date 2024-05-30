@@ -42,10 +42,11 @@ public:
 
     static bool DeleteAllResourceInfo();
 
-    static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId);
+    static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId,
+        int32_t appIndex = 0);
 
     static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool enabled, const int32_t userId);
+        const std::string &abilityName, bool enabled, const int32_t userId, int32_t appIndex = 0);
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
 

@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_common_event.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -193,13 +194,13 @@ std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)
 }
 
 void BundleCommonEventMgr::NotifySetDiposedRule(
-    const std::string &appId, int32_t userId, const std::string &data)
+    const std::string &appId, int32_t userId, const std::string &data, int32_t appIndex)
 {
     OHOS::AAFwk::Want want;
     want.SetAction(DISPOSED_RULE_ADDED);
-
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(APP_ID, appId);
+    want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
@@ -208,12 +209,13 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
-void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int32_t userId)
+void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex)
 {
     OHOS::AAFwk::Want want;
     want.SetAction(DISPOSED_RULE_DELETED);
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(APP_ID, appId);
+    want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };

@@ -18,6 +18,7 @@
 
 #include "app_log_wrapper.h"
 #include "app_control_interface.h"
+#include "bundle_constants.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_errors.h"
@@ -43,6 +44,7 @@ const std::string SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
 const std::string DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 const std::string GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 const std::string APP_ID = "appId";
+const std::string APP_INDEX = "appIndex";
 const std::string DISPOSED_WANT = "disposedWant";
 const std::string DISPOSED_RULE = "disposedRule";
 const std::string DISPOSED_RULE_TYPE = "DisposedRule";
@@ -303,23 +305,10 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
     return promise;
 }
 
-napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
+static napi_value InnerDeleteDisposedStatusSync(napi_env env, std::string &appId, int32_t appIndex)
 {
-    APP_LOGD("begin to DeleteDisposedStatusSync.");
-    NapiArg args(env, info);
     napi_value nRet;
     napi_get_undefined(env, &nRet);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nRet;
-    }
-    std::string appId;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
-        return nRet;
-    }
     if (appId.size() == 0) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, DELETE_DISPOSED_STATUS_SYNC);
@@ -332,17 +321,56 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             DELETE_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
-        return nRet;
+        return nullptr;
     }
-    ErrCode ret = appControlProxy->DeleteDisposedStatus(appId);
+    ErrCode ret = ERR_OK;
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        ret = appControlProxy->DeleteDisposedStatus(appId);
+    } else {
+        ret = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex);
+    }
     ret = CommonFunc::ConvertErrCode(ret);
-    if (ret != NO_ERROR) {
-        APP_LOGE("DeleteDisposedStatusSync err = %{public}d", ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteDisposedStatusSync failed");
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, DELETE_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
+        return nullptr;
     }
-    APP_LOGD("call DeleteDisposedStatusSync done.");
+    return nRet;
+}
+
+napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to DeleteDisposedStatusSync.");
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nRet;
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
+        return InnerDeleteDisposedStatusSync(env, appId, Constants::MAIN_APP_INDEX);
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        int32_t appIndex;
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGE("appIndex invalid!");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nullptr;
+        }
+        return InnerDeleteDisposedStatusSync(env, appId, appIndex);
+    }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
     return nRet;
 }
 
@@ -586,21 +614,8 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     return true;
 }
 
-napi_value GetDisposedRule(napi_env env, napi_callback_info info)
+static napi_value InnerGetDisposedRule(napi_env env, std::string &appId, int32_t appIndex)
 {
-    APP_LOGD("NAPI GetDisposedRule called");
-    NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    std::string appId;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
-        return nullptr;
-    }
     if (appId.size() == 0) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
@@ -616,7 +631,12 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
         return nullptr;
     }
     DisposedRule disposedRule;
-    ErrCode ret = appControlProxy->GetDisposedRule(appId, disposedRule);
+    ErrCode ret = ERR_OK;
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        ret = appControlProxy->GetDisposedRule(appId, disposedRule);
+    } else {
+        ret = appControlProxy->GetDisposedRuleForCloneApp(appId, disposedRule, appIndex);
+    }
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
@@ -631,12 +651,73 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     return nRule;
 }
 
+napi_value GetDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetDisposedRule called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nullptr;
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
+        return InnerGetDisposedRule(env, appId, Constants::MAIN_APP_INDEX);
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        int32_t appIndex;
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
+            APP_LOGE("appIndex invalid!");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nullptr;
+        }
+        return InnerGetDisposedRule(env, appId, appIndex);
+    }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+    return nullptr;
+}
+
+static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, DisposedRule &rule, int32_t appIndex)
+{
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null.");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+    ErrCode ret = ERR_OK;
+    if (appIndex == Constants::MAIN_APP_INDEX) {
+        ret = appControlProxy->SetDisposedRule(appId, rule);
+    } else {
+        ret = appControlProxy->SetDisposedRuleForCloneApp(appId, rule, appIndex);
+    }
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    return nRet;
+}
+
 napi_value SetDisposedRule(napi_env env, napi_callback_info info)
 {
     NapiArg args(env, info);
     napi_value nRet;
     napi_get_undefined(env, &nRet);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("Napi func init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nRet;
@@ -659,22 +740,20 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return nRet;
     }
-    auto appControlProxy = GetAppControlProxy();
-    if (appControlProxy == nullptr) {
-        APP_LOGE("AppControlProxy is null.");
-        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-            SET_DISPOSED_STATUS_SYNC);
-        napi_throw(env, error);
-        return nRet;
+    if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+        return InnerSetDisposedRule(env, appId, rule, Constants::MAIN_APP_INDEX);
     }
-    ErrCode ret = appControlProxy->SetDisposedRule(appId, rule);
-    ret = CommonFunc::ConvertErrCode(ret);
-    if (ret != NO_ERROR) {
-        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
-        napi_throw(env, businessError);
+    if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        int32_t appIndex;
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
+            APP_LOGE("appIndex invalid!");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
+            return nRet;
+        }
+        return InnerSetDisposedRule(env, appId, rule, appIndex);
     }
+    APP_LOGE("parameter is invalid");
+    BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
     return nRet;
 }
 

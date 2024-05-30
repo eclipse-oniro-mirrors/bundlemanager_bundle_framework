@@ -523,6 +523,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
 
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
+            APP_LOGD("GetInnerModuleInfos is empty");
             continue;
         }
         // There is only one innerModuleInfo when installing
@@ -678,6 +679,7 @@ void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::V
     InnerBundleInfo &newInfo)
 {
     if (provisionMetadatas.empty()) {
+        APP_LOGE("provisionMetadatas is empty");
         return;
     }
     std::vector<Metadata> metadatas;
@@ -1209,7 +1211,7 @@ bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     std::vector<std::string> oldAppIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->GetOldAppIds(bundleName, oldAppIds)) {
-        APP_LOGE("Get OldAppIds failed.");
+        APP_LOGD("Get OldAppIds failed.");
         return false;
     }
     for (const auto &signature : appSignatures) {

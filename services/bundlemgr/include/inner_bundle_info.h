@@ -222,6 +222,7 @@ public:
         int32_t appIndex = 0) const;
 
     ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
+    ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
 
     void InsertInnerModuleInfo(const std::string &modulePackage, const InnerModuleInfo &innerModuleInfo)
     {
@@ -595,6 +596,8 @@ public:
         const std::string &abilityName,
         bool isEnabled,
         int32_t userId);
+    ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
+        bool isEnabled, int32_t userId, int32_t appIndex);
     ErrCode SetModuleUpgradeFlag(std::string moduleName, int32_t upgradeFlag);
     int32_t GetModuleUpgradeFlag(std::string moduleName) const;
     void GetApplicationInfo(int32_t flags, int32_t userId, ApplicationInfo &appInfo, int32_t appIndex = 0) const;
@@ -897,6 +900,16 @@ public:
         baseApplicationInfo_->applicationReservedFlag &= ~flag;
     }
 
+    int32_t GetMultiAppMaxCount() const
+    {
+        return baseApplicationInfo_->multiAppMode.maxCount;
+    }
+
+    MultiAppModeType GetMultiAppModeType() const
+    {
+        return baseApplicationInfo_->multiAppMode.multiAppModeType;
+    }
+
     std::set<std::string> GetAllExtensionDirsInSpecifiedModule(
         const std::string &moduleName, int32_t userId) const;
     std::set<std::string> GetAllExtensionDirs(int32_t userId) const;
@@ -983,6 +996,7 @@ public:
     bool IsGwpAsanEnabled() const;
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
+    void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
