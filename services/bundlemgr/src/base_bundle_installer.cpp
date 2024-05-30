@@ -5562,16 +5562,6 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
-    int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
-    if (mode == USER_MODE) {
-        BmsExtensionDataMgr bmsExtensionDataMgr;
-        bool pass = false;
-        ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
-        if ((res == ERR_OK) && !pass) {
-            APP_LOGE("machine be controlled, not allow to install app");
-            return false;
-        }
-    }
     // otherwise, pass
     return true;
 }
