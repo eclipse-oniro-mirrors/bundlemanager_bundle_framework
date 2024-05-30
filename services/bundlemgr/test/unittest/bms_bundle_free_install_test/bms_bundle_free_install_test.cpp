@@ -1937,4 +1937,40 @@ HWTEST_F(BmsBundleFreeInstallTest, ProcessPreloadRequestToServiceCenter_0002, Fu
     connectAbilityMgr->PreloadRequest(ServiceCenterFunction::CONNECT_PRELOAD_INSTALL, targetAbilityInfo);
     connectAbilityMgr->LoadDownloadService();
 }
+
+/**
+ * @tc.number: GetPreloadFlag_0001
+ * Function: GetPreloadFlag
+ * @tc.name: test GetPreloadFlag
+ * @tc.desc: test GetPreloadFlag success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, GetPreloadFlag_0001, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    ASSERT_NE(connectAbilityMgr, nullptr);
+
+    int32_t flag = connectAbilityMgr->GetPreloadFlag();
+    EXPECT_EQ(flag, 2);
+}
+
+/**
+ * @tc.number: OnDelayedHeartbeat_0001
+ * Function: OnDelayedHeartbeat
+ * @tc.name: test OnDelayedHeartbeat
+ * @tc.desc: test OnDelayedHeartbeat success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, OnDelayedHeartbeat_0001, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    FreeInstallParams freeInstallParams;
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    std::string transactId = "1";
+    connectAbilityMgr->OnDelayedHeartbeat(transactId);
+    EXPECT_EQ(transactId, "1");
+    EXPECT_EQ(connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end(),
+        true);
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
+}
 } // OHOS
