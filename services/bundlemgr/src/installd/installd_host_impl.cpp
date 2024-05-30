@@ -380,6 +380,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (createDirParam.createDirFlag == CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES) {
         return ChmodBundleDataDir(createDirParam);
     }
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
+        createDirParam.isDlpSandbox);
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
             (el == ServiceConstants::BUNDLE_EL[0])) {
@@ -413,8 +415,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
         }
-        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl,
-            createDirParam.isPreInstallApp, createDirParam.debug);
+        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -426,8 +427,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
-        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl,
-            createDirParam.isPreInstallApp, createDirParam.debug);
+        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -450,16 +450,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     std::string bundleBackupDir;
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL2);
-    ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+    ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL2 SetDirApl failed, errno is %{public}d", ret);
     }
 
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir,
         DirType::DIR_EL1);
-    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
-        createDirParam.isPreInstallApp, createDirParam.debug);
+    ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir DIR_EL1 SetDirApl failed, errno is %{public}d", ret);
     }
@@ -865,8 +863,26 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bund
     return ERR_OK;
 }
 
+unsigned int InstalldHostImpl::GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox)
+{
+    unsigned int hapFlags = 0;
+#ifdef WITH_SELINUX
+    hapFlags = isPreInstallApp ? SELINUX_HAP_RESTORECON_PREINSTALLED_APP : 0;
+    hapFlags |= debug ? SELINUX_HAP_DEBUGGABLE : 0;
+    hapFlags |= isDlpSandbox ? SELINUX_HAP_DLP : 0;
+#endif
+    return hapFlags;
+}
+
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
     bool isPreInstallApp, bool debug)
+{
+    unsigned int hapFlags = GetHapFlags(isPreInstallApp, debug, false);
+    return SetDirApl(dir, bundleName, apl, hapFlags);
+}
+
+ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+    unsigned int hapFlags)
 {
 #ifdef WITH_SELINUX
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -882,8 +898,7 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     hapFileInfo.apl = apl;
     hapFileInfo.packageName = bundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
-    hapFileInfo.hapFlags = isPreInstallApp ? SELINUX_HAP_RESTORECON_PREINSTALLED_APP : 0;
-    hapFileInfo.hapFlags |= debug ? SELINUX_HAP_DEBUGGABLE : 0;
+    hapFileInfo.hapFlags = hapFlags;
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {

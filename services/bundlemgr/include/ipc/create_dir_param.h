@@ -39,6 +39,7 @@ struct CreateDirParam : public Parcelable {
     std::string apl;
     bool isPreInstallApp = false;
     bool debug = false;
+    bool isDlpSandbox = false;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
 
     bool ReadFromParcel(Parcel &parcel);
