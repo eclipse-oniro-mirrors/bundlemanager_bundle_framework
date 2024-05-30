@@ -77,13 +77,13 @@ public:
     {
         return ERR_OK;
     }
-	
+
     virtual ErrCode ProcessBundleInstallNative(const std::string &userId, const std::string &hnpRootPath,
         const std::string &hapPath, const std::string &cpuAbi, const std::string &packageName)
     {
         return ERR_OK;
     }
-    
+
     virtual ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName)
     {
         return ERR_OK;
@@ -376,6 +376,21 @@ public:
     }
 
     virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam)
     {
         return ERR_OK;
     }

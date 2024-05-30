@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
 const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
 const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 }
@@ -120,6 +121,12 @@ void InstalldHost::Init()
         &InstalldHost::HandleSetEncryptionDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID),
         &InstalldHost::HandleDeleteEncryptionKeyId);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_EXTENSION_DIR),
+        &InstalldHost::HandleRemoveExtensionDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_EXTENSION_DIR),
+        &InstalldHost::HandleIsExistExtensionDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR),
+        &InstalldHost::HandleCreateExtensionDataDir);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -717,6 +724,51 @@ bool InstalldHost::HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParce
     std::string keyId = Str16ToStr8(data.ReadString16());
 
     ErrCode result = DeleteEncryptionKeyId(keyId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleRemoveExtensionDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    int32_t extensionBundleDirSize = data.ReadInt32();
+    if (extensionBundleDirSize <= 0 || extensionBundleDirSize > MAX_BATCH_QUERY_BUNDLE_SIZE) {
+        APP_LOGE("extensionBundleDirs count is error");
+        return false;
+    }
+    std::vector<std::string> extensionBundleDirs;
+    for (int32_t i = 0; i < extensionBundleDirSize; i++) {
+        std::string extensionBundleDir = data.ReadString();
+        if (extensionBundleDir.empty()) {
+            APP_LOGE("extensionBundleDirs %{public}d is empty", i);
+            return false;
+        }
+        extensionBundleDirs.push_back(extensionBundleDir);
+    }
+    ErrCode result = RemoveExtensionDir(userId, extensionBundleDirs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleIsExistExtensionDir(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    std::string extensionBundleDir = Str16ToStr8(data.ReadString16());
+
+    bool isExist = false;
+    ErrCode result = IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCreateExtensionDataDir(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+    ErrCode result = CreateExtensionDataDir(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

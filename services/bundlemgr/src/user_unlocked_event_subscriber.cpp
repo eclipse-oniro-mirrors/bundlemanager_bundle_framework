@@ -111,6 +111,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
         createDirParam.debug = bundleInfo.applicationInfo.debug;
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+        ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGE("failed to CreateBundleDataDir");
             return false;
@@ -137,6 +138,7 @@ void UpdateAppDataMgr::ChmodBundleDataDir(const std::vector<BundleInfo> &bundleI
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
         createDirParam.debug = bundleInfo.applicationInfo.debug;
         createDirParam.createDirFlag = CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES;
+        ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         createDirParams.emplace_back(createDirParam);
     }
     if (InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams) != ERR_OK) {
@@ -154,7 +156,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
         return;
     }
     std::vector<BundleInfo> bundleInfos;
-    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfos, userId)) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
@@ -198,6 +200,19 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             bundleInfo.applicationInfo.debug) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDataDir dir");
         }
+    }
+}
+
+void UpdateAppDataMgr::ProcessExtensionDir(const BundleInfo &bundleInfo, std::vector<std::string> &dirs)
+{
+    for (const ExtensionAbilityInfo &info : bundleInfo.extensionInfos) {
+        if (!info.needCreateSandbox) {
+            continue;
+        }
+        std::string extensionDir = ServiceConstants::EXTENSION_DIR + info.moduleName +
+            ServiceConstants::FILE_SEPARATOR_LINE + info.name +
+            ServiceConstants::FILE_SEPARATOR_PLUS + info.bundleName;
+        dirs.emplace_back(extensionDir);
     }
 }
 

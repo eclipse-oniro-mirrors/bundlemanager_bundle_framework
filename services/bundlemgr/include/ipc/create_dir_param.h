@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 
+#include <map>
 #include <string>
 #include "message_parcel.h"
 
@@ -33,6 +34,7 @@ enum class CreateDirFlag {
 
 struct CreateDirParam : public Parcelable {
     std::string bundleName;
+    std::vector<std::string> extensionDirs;
     int32_t userId;
     int32_t uid;
     int32_t gid;

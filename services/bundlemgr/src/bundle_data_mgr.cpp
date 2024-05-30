@@ -7176,6 +7176,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
         createDirParam.debug = info.GetBaseApplicationInfo().debug;
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+        createDirParam.extensionDirs = info.GetAllExtensionDirs();
         createDirParams.emplace_back(createDirParam);
     }
     lock.unlock();

@@ -515,7 +515,7 @@ private:
     ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
         int32_t userId) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
-    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
+    ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     ErrCode UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo);
@@ -696,16 +696,9 @@ private:
     void GetCreateExtensionDirs(std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     void GetRemoveExtensionDirs(
         std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
-    void CheckRemoveExtensionBundleDir(
-        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
-    void CheckRemoveExtensionModuleDir(
-        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
-    void CheckRemoveExtensionModuleDirWhenUpgrade(const std::vector<std::string> &oldModules,
-        std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
-    void CreateNewExtensionDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void CreateExtensionDataDir(InnerBundleInfo &info) const;
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
-    void RemoveBundleExtensionDir(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

@@ -394,6 +394,10 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 bundleDataDir.c_str(), createDirParam.bundleName.c_str());
             return ERR_OK;
         }
+        // create base extension dir
+        if (CreateExtensionDir(createDirParam, bundleDataDir, S_IRWXU, createDirParam.gid) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
+        }
         bundleDataDir += createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, createDirParam.uid, createDirParam.gid)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
@@ -407,12 +411,17 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
-            std::string logDir = GetBundleDataDir(el, createDirParam.userId) +
-                ServiceConstants::LOG + createDirParam.bundleName;
+            std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
+            std::string logDir = logParentDir + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
                 logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
                 LOG_E(BMS_TAG_INSTALLD, "create log dir failed errno:%{public}d", errno);
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+            }
+            // create log extension dir
+            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
+                Constants::LOG_DIR_GID, true) != ERR_OK) {
+                LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
@@ -420,8 +429,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
         }
-        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE
-            + createDirParam.bundleName;
+        std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
+        std::string databaseDir = databaseParentDir + createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(
             databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DATABASE_DIR_GID)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
@@ -431,6 +440,11 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
             return ret;
+        }
+        // create database extension dir
+        if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
+            Constants::DATABASE_DIR_GID) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
         }
     }
     std::string distributedfile = DISTRIBUTED_FILE;
@@ -464,6 +478,37 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
     CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, Constants::DFS_GID);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirParam, const std::string& parentDir,
+    int32_t mode, int32_t gid, bool isLog)
+{
+    if (createDirParam.extensionDirs.empty()) {
+        return ERR_OK;
+    }
+    unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
+        createDirParam.isDlpSandbox);
+    LOG_I(BMS_TAG_INSTALLD, "CreateExtensionDir parent dir %{public}s for bundle %{public}s",
+        parentDir.c_str(), createDirParam.bundleName.c_str());
+    for (const auto &item : createDirParam.extensionDirs) {
+        std::string extensionDir = parentDir + item;
+        LOG_I(BMS_TAG_INSTALLD, "begin to create extension dir %{public}s", extensionDir.c_str());
+        if (!InstalldOperator::MkOwnerDir(
+            extensionDir, mode, createDirParam.uid, gid)) {
+            LOG_E(BMS_TAG_INSTALLD, "CreateExtension dir %{public}s error %{public}s",
+                extensionDir.c_str(), strerror(errno));
+            return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
+        if (isLog) {
+            continue;
+        }
+        auto ret = SetDirApl(extensionDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "dir %{public}s SetDirApl failed", extensionDir.c_str());
+            return ret;
+        }
+    }
     return ERR_OK;
 }
 
@@ -1442,6 +1487,146 @@ ErrCode InstalldHostImpl::DeleteEncryptionKeyId(const std::string &keyId)
     if (!InstalldOperator::DeleteKeyId(keyId)) {
         LOG_E(BMS_TAG_INSTALLD, "EncryptionPaths fail");
         return ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
+{
+    LOG_I(BMS_TAG_INSTALLD, "RemoveExtensionDir userId: %{public}d, extensionBundleDir size: %{public}zu",
+        userId, extensionBundleDirs.size());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (extensionBundleDirs.empty() || userId < 0) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function RemoveExtensionDir with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    for (const std::string &extensionBundleDir : extensionBundleDirs) {
+        if (extensionBundleDir.empty()) {
+            LOG_E(BMS_TAG_INSTALLD, "RemoveExtensionDir failed for param invalid");
+            return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+        }
+        auto ret = RemoveExtensionDir(userId, extensionBundleDir);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLD, "remove dir failed: %{public}s", extensionBundleDir.c_str());
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveExtensionDir(int32_t userId, const std::string &extensionBundleDir)
+{
+    LOG_I(BMS_TAG_INSTALLD, "begin RemoveExtensionDir dir %{public}s", extensionBundleDir.c_str());
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        const std::string bundleDataDir = GetBundleDataDir(el, userId);
+        std::string baseDir = bundleDataDir + ServiceConstants::BASE + extensionBundleDir;
+        if (!InstalldOperator::DeleteDir(baseDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "remove base dir %{public}s failed errno:%{public}d", baseDir.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+
+        std::string databaseDir = bundleDataDir + ServiceConstants::DATABASE + extensionBundleDir;
+        if (!InstalldOperator::DeleteDir(databaseDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "remove database dir %{public}s failed errno:%{public}d",
+                databaseDir.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
+            std::string logDir = bundleDataDir + ServiceConstants::LOG + extensionBundleDir;
+            if (!InstalldOperator::DeleteDir(logDir)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove log dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist)
+{
+    LOG_I(BMS_TAG_INSTALLD, "IsExistExtensionDir called, userId %{public}d dir %{public}s",
+        userId, extensionBundleDir.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        const std::string bundleDataDir = GetBundleDataDir(el, userId);
+        std::string baseDir = bundleDataDir + ServiceConstants::BASE + extensionBundleDir;
+        if (!InstalldOperator::IsExistDir(baseDir)) {
+            LOG_I(BMS_TAG_INSTALLD, "dir %{public}s is not existed", baseDir.c_str());
+            isExist = false;
+            return ERR_OK;
+        }
+
+        std::string databaseDir = bundleDataDir + ServiceConstants::DATABASE + extensionBundleDir;
+        if (!InstalldOperator::IsExistDir(databaseDir)) {
+            LOG_I(BMS_TAG_INSTALLD, "dir %{public}s is not existed", databaseDir.c_str());
+            isExist = false;
+            return ERR_OK;
+        }
+
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
+            std::string logDir = bundleDataDir + ServiceConstants::LOG + extensionBundleDir;
+            if (!InstalldOperator::IsExistDir(logDir)) {
+                LOG_I(BMS_TAG_INSTALLD, "dir %{public}s is not existed", logDir.c_str());
+                isExist = false;
+                return ERR_OK;
+            }
+        }
+    }
+    isExist = true;
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
+        createDirParam.uid < 0 || createDirParam.gid < 0 || createDirParam.extensionDirs.empty()) {
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateExtensionDataDir with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "begin to create extension dir for bundle %{public}s, which has %{public}zu extension dir",
+        createDirParam.bundleName.c_str(), createDirParam.extensionDirs.size());
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
+            (el == ServiceConstants::BUNDLE_EL[0])) {
+            continue;
+        }
+
+        std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::BASE;
+        if (access(bundleDataDir.c_str(), F_OK) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, bundleName:%{public}s",
+                bundleDataDir.c_str(), createDirParam.bundleName.c_str());
+            return ERR_OK;
+        }
+        if (CreateExtensionDir(createDirParam, bundleDataDir, S_IRWXU, createDirParam.gid) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", bundleDataDir.c_str());
+            return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
+            std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
+            if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
+                Constants::LOG_DIR_GID, true) != ERR_OK) {
+                LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
+            }
+        }
+
+        std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
+        if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
+            Constants::DATABASE_DIR_GID) != ERR_OK) {
+            LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
+            return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+        }
     }
     return ERR_OK;
 }
