@@ -2483,7 +2483,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         }
         result = InstalldClient::GetInstance()->SetDirApl(
             baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
-            info.GetBaseApplicationInfo().debug);
+            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
             return result;
@@ -2491,7 +2491,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
             databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
-            info.GetBaseApplicationInfo().debug);
+            info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
@@ -2604,7 +2604,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
-    createDirParam.debug = info.GetBaseApplicationInfo().debug;
+    createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {

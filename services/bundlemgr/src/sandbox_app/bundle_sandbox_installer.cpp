@@ -258,7 +258,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
-    createDirParam.debug = info.GetBaseApplicationInfo().debug;
+    createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
