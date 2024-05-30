@@ -7032,7 +7032,7 @@ bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &old
     const InnerBundleInfo &newInfo) const
 {
     return newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK ||
-        !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
+        !oldInfo.HasEntry() || newInfo.HasEntry();
 }
 
 std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
