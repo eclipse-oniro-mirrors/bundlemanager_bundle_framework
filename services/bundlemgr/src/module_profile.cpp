@@ -1691,10 +1691,10 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
         APP_LOGE("bundleName size too long");
         return false;
     }
-    if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         return false;
     }
-    if (moduleName.find(Constants::MODULE_NAME_SEPARATOR) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::MODULE_NAME_SEPARATOR) != std::string::npos) {
         APP_LOGE("module name should not contain ,");
         return false;
     }
@@ -1741,15 +1741,15 @@ bool ParserNativeSo(
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
-    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
         APP_LOGD("Abi is empty");
         return false;
     }
 
     bool isDefault =
-        std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
-    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+        std::find(abiList.begin(), abiList.end(), ServiceConstants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64);
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
     std::string cpuAbi;
     std::string soRelativePath;
@@ -1889,15 +1889,15 @@ bool ParserArkNativeFilePath(
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
-    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
         APP_LOGD("Abi is empty");
         return false;
     }
 
     bool isDefault =
-        std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
-    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+        std::find(abiList.begin(), abiList.end(), ServiceConstants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64);
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
     bool anExist = bundleExtractor.IsDirExist(ServiceConstants::AN);
     if (!anExist) {
@@ -2062,7 +2062,7 @@ bool ToApplicationInfo(
         applicationInfo.multiAppMode.maxCount = app.multiAppMode.maxCount;
         if (applicationInfo.multiAppMode.multiAppModeType == MultiAppModeType::APP_CLONE) {
             int32_t maxNumber = applicationInfo.multiAppMode.maxCount;
-            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > Constants::CLONE_APP_INDEX_MAX) {
+            if (maxNumber <= Constants::INITIAL_APP_INDEX || maxNumber > ServiceConstants::CLONE_APP_INDEX_MAX) {
                 return false;
             }
         }
@@ -2358,7 +2358,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.isLibIsolated = moduleJson.module.isLibIsolated;
     innerModuleInfo.targetModuleName = moduleJson.module.targetModule;
     if (overlayMsg.type != NON_OVERLAY_TYPE && !overlayMsg.isModulePriorityExisted) {
-        innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY;
+        innerModuleInfo.targetPriority = ServiceConstants::OVERLAY_MINIMUM_PRIORITY;
     } else {
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
@@ -2481,7 +2481,7 @@ bool ToInnerBundleInfo(
                 innerModuleInfo.labelId = ability.labelId;
                 // get launcher application and ability
                 bool isLauncherEntity = std::find(skill.entities.begin(), skill.entities.end(),
-                    Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.end();
+                    ServiceConstants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.end();
                 if (isLauncherEntity && transformParam.isPreInstallApp) {
                     applicationInfo.isLauncherApp = true;
                     abilityInfo.isLauncherAbility = true;
@@ -2514,7 +2514,7 @@ bool ToInnerBundleInfo(
                 bool isEntryEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
                     Constants::ENTITY_HOME) != skill.entities.cend();
                 bool isLauncherEntity = std::find(skill.entities.cbegin(), skill.entities.cend(),
-                    Constants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.cend();
+                    ServiceConstants::FLAG_HOME_INTENT_FROM_SYSTEM) != skill.entities.cend();
                 if (isEntryAction && isEntryEntity && isLauncherEntity) {
                     applicationInfo.isLauncherApp = true;
                     break;
@@ -2533,7 +2533,7 @@ bool ToInnerBundleInfo(
     }
     if (!findEntry && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
-        if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
+        if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
         } else {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH;
@@ -2558,12 +2558,13 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetOverlayType(overlayMsg.type);
 
     if (overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE && !overlayMsg.isAppPriorityExisted) {
-        innerBundleInfo.SetTargetPriority(Constants::OVERLAY_MINIMUM_PRIORITY);
+        innerBundleInfo.SetTargetPriority(ServiceConstants::OVERLAY_MINIMUM_PRIORITY);
     } else {
         innerBundleInfo.SetTargetPriority(moduleJson.app.targetPriority);
     }
-    int32_t overlayState = overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE ? Constants::DEFAULT_OVERLAY_ENABLE_STATUS :
-        Constants::DEFAULT_OVERLAY_DISABLE_STATUS;
+    int32_t overlayState = overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE ?
+        ServiceConstants::DEFAULT_OVERLAY_ENABLE_STATUS :
+        ServiceConstants::DEFAULT_OVERLAY_DISABLE_STATUS;
     innerBundleInfo.SetOverlayState(overlayState);
     return true;
 }

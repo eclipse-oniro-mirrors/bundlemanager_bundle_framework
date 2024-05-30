@@ -1461,7 +1461,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
             size_t matchUriIndex = 0;
             if (isPrivateType || skill.Match(want, matchUriIndex)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
-                if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
+                if (abilityinfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                     continue;
                 }
                 if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_DISABLE)) {
@@ -1609,7 +1609,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
             const Skill &skill = skillsPair->second[skillIndex];
             size_t matchUriIndex = 0;
             if (skill.Match(want, matchUriIndex)) {
-                if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
+                if (abilityinfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                     continue;
                 }
                 EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
@@ -1792,7 +1792,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     if (!isExist && info.GetBaseApplicationInfo().needAppDetail) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "bundleName: %{public}s add detail ability info.", info.GetBundleName().c_str());
         std::string moduleName = "";
-        auto ability = info.FindAbilityInfo(moduleName, Constants::APP_DETAIL_ABILITY, responseUserId);
+        auto ability = info.FindAbilityInfo(moduleName, ServiceConstants::APP_DETAIL_ABILITY, responseUserId);
         if (!ability) {
             LOG_D(BMS_TAG_QUERY_ABILITY, "bundleName: %{public}s cant find ability.", info.GetBundleName().c_str());
             return;
@@ -1962,7 +1962,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &
 void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
 {
     AbilityInfo appDetailAbility;
-    appDetailAbility.name = Constants::APP_DETAIL_ABILITY;
+    appDetailAbility.name = ServiceConstants::APP_DETAIL_ABILITY;
     appDetailAbility.bundleName = info.GetBundleName();
     appDetailAbility.enabled = true;
     appDetailAbility.type = AbilityType::PAGE;
@@ -2118,7 +2118,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
     if (abilityUri.empty()) {
         return false;
     }
-    if (abilityUri.find(Constants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
+    if (abilityUri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
         return false;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -2126,7 +2126,7 @@ bool BundleDataMgr::QueryAbilityInfoByUri(
         LOG_W(BMS_TAG_QUERY_ABILITY, "bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+    std::string noPpefixUri = abilityUri.substr(strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -2172,7 +2172,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
     if (abilityUri.empty()) {
         return false;
     }
-    if (abilityUri.find(Constants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
+    if (abilityUri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
         return false;
     }
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -2180,7 +2180,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
         LOG_W(BMS_TAG_QUERY_ABILITY, "bundleInfos_ data is empty");
         return false;
     }
-    std::string noPpefixUri = abilityUri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+    std::string noPpefixUri = abilityUri.substr(strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX));
     auto posFirstSeparator = noPpefixUri.find(ServiceConstants::FILE_SEPARATOR_CHAR);
     if (posFirstSeparator == std::string::npos) {
         return false;
@@ -3500,7 +3500,7 @@ bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
 {
     // If the value of uid is 0 (ROOT_UID) or 1000 (BMS_UID),
     // the uid should be the system uid.
-    if (uid == Constants::ROOT_UID || uid == Constants::BMS_UID) {
+    if (uid == Constants::ROOT_UID || uid == ServiceConstants::BMS_UID) {
         return true;
     }
 
@@ -4161,8 +4161,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGD("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -4174,8 +4174,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -4239,8 +4239,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, ServiceConstants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -4261,8 +4261,9 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId,
+                    ServiceConstants::SHAREFS_CONFIG_PATH);
             }
             // appClone
             std::string bundleName = info.second.GetBundleName();
@@ -6307,7 +6308,7 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGW("bundleName %{public}s not exist", bundleName.c_str());
-        (void)InstalldClient::GetInstance()->RemoveDir(Constants::ARK_CACHE_PATH + bundleName);
+        (void)InstalldClient::GetInstance()->RemoveDir(ServiceConstants::ARK_CACHE_PATH + bundleName);
         return;
     }
     if (item->second.GetVersionCode() != versionCode) {

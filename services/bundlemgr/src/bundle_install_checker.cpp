@@ -343,7 +343,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         InnerBundleInfo newInfo;
         BundlePackInfo packInfo;
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
+        bool isSystemApp = provisionInfo.bundleInfo.appFeature == ServiceConstants::HOS_SYSTEM_APP;
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         } else {
@@ -1525,12 +1525,12 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
         APP_LOGE("code signature file dir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
-    if (!BundleUtil::CheckFileType(signatureFileDir, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(signatureFileDir, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("signatureFileDir is not suffixed with .sig");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     // signatureFileDir not support relevant dir
-    if (signatureFileDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (signatureFileDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("signatureFileDir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
@@ -1540,7 +1540,7 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
 ErrCode BundleInstallChecker::CheckDeveloperMode(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
-    if (system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, true)) {
+    if (system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, true)) {
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
@@ -1556,9 +1556,9 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
 ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
-    if (system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false) ||
-        system::GetBoolParameter(Constants::IS_ENTERPRISE_DEVICE, false) ||
-        system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, false)) {
+    if (system::GetBoolParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false) ||
+        system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false) ||
+        system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {

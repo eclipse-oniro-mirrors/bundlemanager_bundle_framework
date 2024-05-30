@@ -161,7 +161,7 @@ bool InstalldOperator::IsExistApFile(const std::string &path)
         return false;
     }
     for (const auto& entry : iter) {
-        if (entry.path().extension() == Constants::AP_SUFFIX) {
+        if (entry.path().extension() == ServiceConstants::AP_SUFFIX) {
             return true;
         }
     }
@@ -575,12 +575,12 @@ bool InstalldOperator::DetermineSuffix(const ExtractFileType &extractFileType, s
             break;
         }
         case ExtractFileType::AN: {
-            suffixes.emplace_back(Constants::AN_SUFFIX);
+            suffixes.emplace_back(ServiceConstants::AN_SUFFIX);
             suffixes.emplace_back(AI_SUFFIX);
             break;
         }
         case ExtractFileType::AP: {
-            suffixes.emplace_back(Constants::AP_SUFFIX);
+            suffixes.emplace_back(ServiceConstants::AP_SUFFIX);
             break;
         }
         case ExtractFileType::RES_FILE: {
@@ -920,7 +920,7 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
 
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
-    if (dir.empty() || (dir.size() > Constants::PATH_MAX_SIZE)) {
+    if (dir.empty() || (dir.size() > ServiceConstants::PATH_MAX_SIZE)) {
         LOG_E(BMS_TAG_INSTALLD, "GetDiskUsage dir path invalid");
         return 0;
     }
@@ -962,7 +962,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)
 {
-    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
+    if (currentPath.empty() || (currentPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
         LOG_E(BMS_TAG_INSTALLD, "TraverseCacheDirectory current path invaild");
         return;
     }
@@ -1070,7 +1070,7 @@ int64_t InstalldOperator::GetDiskUsageFromQuota(const int32_t uid)
 bool InstalldOperator::ScanDir(
     const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
 {
-    if (dirPath.empty() || (dirPath.size() > Constants::PATH_MAX_SIZE)) {
+    if (dirPath.empty() || (dirPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
         LOG_E(BMS_TAG_INSTALLD, "Scan dir path invaild");
         return false;
     }
@@ -1120,7 +1120,7 @@ bool InstalldOperator::ScanDir(
 bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::string &originPath,
     const std::string &currentPath, std::vector<std::string> &paths)
 {
-    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
+    if (currentPath.empty() || (currentPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
         LOG_E(BMS_TAG_INSTALLD, "ScanSoFiles current path invalid");
         return false;
     }
@@ -1475,7 +1475,7 @@ bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string
         if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
             std::string innerDesStr = destinationDir + ServiceConstants::PATH_SEPARATOR + currentName;
             if (CopyFile(curPath, innerDesStr)) {
-                ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, Constants::BMS_GID);
+                ChangeFileAttr(innerDesStr, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID);
             }
         }
     }
@@ -1648,7 +1648,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
 #if defined(CODE_ENCRYPTION_ENABLE)
     const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     std::unordered_map<std::string, std::string> entryMap;
-    entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
+    entryMap.emplace(ServiceConstants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
         const std::string prefix = ServiceConstants::LIBS + cpuAbi + ServiceConstants::PATH_SEPARATOR;
         std::for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
@@ -1679,7 +1679,7 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
         installBundleType, bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
     std::unordered_map<std::string, std::string> entryMap;
-    entryMap.emplace(Constants::CODE_SIGNATURE_HAP, hapPath);
+    entryMap.emplace(ServiceConstants::CODE_SIGNATURE_HAP, hapPath);
     if (!EnforceEncryption(entryMap, bundleId, isEncryption, installBundleType, isCompressNativeLibrary)) {
         return false;
     }
@@ -1884,7 +1884,7 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
                 innerOriginalDir.c_str());
             return false;
         }
-        std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
+        std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
         if (!CopyDriverSoFiles(extractor, innerOriginalDir, systemServiceDir + destinedDir)) {
             LOG_E(BMS_TAG_INSTALLD, "CopyDriverSoFiles failed");
             return false;
@@ -2222,9 +2222,9 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
     }
 
     std::vector<std::string> dirs;
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId) + ServiceConstants::BASE + bundleName);
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId) + ServiceConstants::DATABASE + bundleName);
     for (const auto &dir : dirs) {
         auto fd = open(dir.c_str(), O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);

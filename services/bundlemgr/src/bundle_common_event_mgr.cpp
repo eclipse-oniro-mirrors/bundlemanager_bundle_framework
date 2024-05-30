@@ -206,7 +206,7 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
-    std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
@@ -220,7 +220,7 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
-    std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
     publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
@@ -249,7 +249,7 @@ void BundleCommonEventMgr::NotifyBundleResourcesChanged(const int32_t userId, co
     want.SetParam(BUNDLE_RESOURCE_CHANGE_TYPE, static_cast<int32_t>(type));
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
-    std::vector<std::string> permissionVec { Constants::PERMISSION_GET_BUNDLE_RESOURCES };
+    std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES };
     publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }

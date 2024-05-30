@@ -78,7 +78,7 @@ bool BundleMgrHostImpl::GetApplicationInfo(
     LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfo bundleName:%{public}s flags:%{public}d userId:%{public}d",
         appName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
         return true;
     }
@@ -131,7 +131,7 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 {
     LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfos flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
         return true;
     }
@@ -140,7 +140,7 @@ bool BundleMgrHostImpl::GetApplicationInfos(
         return false;
     }
     if (!BundlePermissionMgr::IsNativeTokenType() &&
-        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_APPLICATION,
             "GetApplicationInfos return empty, not support target level greater than or equal to api9");
         return true;
@@ -195,7 +195,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
         bundleName.c_str(), flags, userId);
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
         return true;
     }
@@ -414,7 +414,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
     LOG_D(BMS_TAG_QUERY_BUNDLE, "start GetBundleInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
         return true;
     }
@@ -424,7 +424,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
     }
     LOG_D(BMS_TAG_QUERY_BUNDLE, "verify permission success, begin to GetBundleInfos");
     if (!BundlePermissionMgr::IsNativeTokenType() &&
-        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_BUNDLE,
             "GetBundleInfos return empty, not support target level greater than or equal to api9");
         return true;
@@ -484,7 +484,7 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
 {
     APP_LOGD("start GetBundleNameForUid, uid : %{public}d", uid);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -526,7 +526,7 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetNameForUid, uid : %{public}d", uid);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -740,7 +740,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
 {
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfo, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -778,7 +778,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -896,7 +896,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
 {
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAllAbilityInfos, userId : %{public}d", userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -924,7 +924,7 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, Abi
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfoByUri, uri : %{private}s", abilityUri.c_str());
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -946,7 +946,7 @@ bool BundleMgrHostImpl::QueryAbilityInfosByUri(const std::string &abilityUri, st
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfosByUri, uri : %{private}s", abilityUri.c_str());
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
@@ -967,7 +967,7 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
     LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfoByUri, uri : %{private}s, userId : %{public}d",
         abilityUri.c_str(), userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -1005,7 +1005,7 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
         bundleName.c_str(), abilityName.c_str());
     // API9 need to be system app otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return Constants::EMPTY_STRING;
     }
@@ -1061,11 +1061,11 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
     APP_LOGD("start GetBundleArchiveInfo, hapFilePath : %{private}s, flags : %{public}d",
         hapFilePath.c_str(), flags);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (hapFilePath.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("invalid hapFilePath");
         return false;
     }
@@ -1086,7 +1086,7 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         }
         APP_LOGD("verify permission success, begin to GetBundleArchiveInfo");
         SetProvisionInfoToInnerBundleInfo(realPath, info);
-        info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
+        info.GetBundleInfo(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
         return true;
     } else {
         return GetBundleArchiveInfoBySandBoxPath(hapFilePath, flags, bundleInfo) == ERR_OK;
@@ -1106,7 +1106,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (hapFilePath.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (hapFilePath.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGD("invalid hapFilePath");
         return ERR_BUNDLE_MANAGER_INVALID_HAP_PATH;
     }
@@ -1131,7 +1131,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoV9(
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         SetProvisionInfoToInnerBundleInfo(realPath, info);
     }
-    info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
+    info.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     return ERR_OK;
 }
 
@@ -1139,7 +1139,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     int32_t flags, BundleInfo &bundleInfo, bool fromV9)
 {
     std::string bundleName;
-    int32_t apiVersion = fromV9 ? Constants::INVALID_API_VERSION : Constants::API_VERSION_NINE;
+    int32_t apiVersion = fromV9 ? Constants::INVALID_API_VERSION : ServiceConstants::API_VERSION_NINE;
     if (!BundlePermissionMgr::IsSystemApp() && !BundlePermissionMgr::VerifyCallingBundleSdkVersion(apiVersion)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -1182,9 +1182,9 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
     SetProvisionInfoToInnerBundleInfo(realPath, info);
     BundleUtil::DeleteDir(tempHapPath);
     if (fromV9) {
-        info.GetBundleInfoV9(flags, bundleInfo, Constants::NOT_EXIST_USERID);
+        info.GetBundleInfoV9(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     } else {
-        info.GetBundleInfo(flags, bundleInfo, Constants::NOT_EXIST_USERID);
+        info.GetBundleInfo(flags, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     }
     return ERR_OK;
 }
@@ -1221,7 +1221,7 @@ ErrCode BundleMgrHostImpl::GetLaunchWantForBundle(const std::string &bundleName,
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start GetLaunchWantForBundle, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -1970,7 +1970,7 @@ ErrCode BundleMgrHostImpl::IsApplicationEnabled(const std::string &bundleName, b
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start IsApplicationEnabled, bundleName : %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2107,7 +2107,7 @@ ErrCode BundleMgrHostImpl::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start IsAbilityEnabled");
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2254,7 +2254,7 @@ sptr<IBundleInstaller> BundleMgrHostImpl::GetBundleInstaller()
 sptr<IBundleUserMgr> BundleMgrHostImpl::GetBundleUserMgr()
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::ACCOUNT_UID) {
+    if (callingUid != ServiceConstants::ACCOUNT_UID) {
         APP_LOGE("invalid calling uid %{public}d to GetbundleUserMgr", callingUid);
         return nullptr;
     }
@@ -2339,7 +2339,7 @@ bool BundleMgrHostImpl::GetShortcutInfos(
     APP_LOGD("start GetShortcutInfos, bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
     // API9 need to be system app otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
@@ -2425,7 +2425,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32
     LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos without type begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
         return true;
     }
@@ -2487,7 +2487,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
     LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
         return true;
     }
@@ -2563,7 +2563,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &e
     LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos with type begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
         return true;
     }
@@ -2661,7 +2661,7 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
     LOG_D(BMS_TAG_QUERY_EXTENSION, "uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
         return true;
     }
@@ -2800,7 +2800,7 @@ bool BundleMgrHostImpl::GetAbilityInfo(
     LOG_D(BMS_TAG_QUERY_ABILITY,
         "start GetAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!VerifySystemApi(ServiceConstants::API_VERSION_NINE)) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
         return true;
     }
@@ -2815,7 +2815,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t fl
 {
     APP_LOGD("start ImplicitQueryInfoByPriority, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
@@ -2838,7 +2838,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
 {
     APP_LOGD("begin to ImplicitQueryInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return true;
     }
@@ -3191,7 +3191,7 @@ ErrCode BundleMgrHostImpl::GetMediaData(const std::string &bundleName, const std
 {
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
-        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(Constants::API_VERSION_NINE)) {
+        !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -3218,7 +3218,7 @@ void BundleMgrHostImpl::NotifyBundleStatus(const NotifyBundleEvents &installRes)
 ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::ROOT_UID && callingUid != Constants::BMS_UID) {
+    if (callingUid != Constants::ROOT_UID && callingUid != ServiceConstants::BMS_UID) {
         APP_LOGE("invalid calling uid %{public}d to set debug mode", callingUid);
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED;
     }
@@ -3975,7 +3975,8 @@ ErrCode BundleMgrHostImpl::SwitchUninstallState(const std::string &bundleName, c
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(
+        ServiceConstants::PERMISSION_CHANGE_BUNDLE_UNINSTALL_STATE)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -3996,7 +3997,7 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
         return;
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyResult.GetProvisionInfo();
-    bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
+    bool isSystemApp = provisionInfo.bundleInfo.appFeature == ServiceConstants::HOS_SYSTEM_APP;
     info.SetAppType(isSystemApp ? Constants::AppType::SYSTEM_APP : Constants::AppType::THIRD_PARTY_APP);
     info.SetProvisionId(provisionInfo.appId);
     info.SetCertificateFingerprint(provisionInfo.fingerprint);

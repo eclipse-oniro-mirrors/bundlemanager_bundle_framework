@@ -267,7 +267,8 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
+    if (!InstalldOperator::MkOwnerDir(
+        bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, ServiceConstants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
             LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir MkOwnerDir(backup's home dir) failed errno:%{public}d",
@@ -324,32 +325,35 @@ ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirPara
         // data/app/el<>/<userId>/database/<bundleName>
         std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE
             + createDirParam.bundleName;
-        InstalldOperator::ChangeDirProperties(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
-        InstalldOperator::ChangeDirPropertiesRecursively(databaseDir, createDirParam.uid, Constants::DATABASE_DIR_GID);
+        InstalldOperator::ChangeDirProperties(databaseDir, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID);
+        InstalldOperator::ChangeDirPropertiesRecursively(databaseDir, createDirParam.uid,
+            ServiceConstants::DATABASE_DIR_GID);
     }
     std::string userId = std::to_string(createDirParam.userId);
 
     // /data/service/el2/%/hmdfs/account/data/
     std::string distributedfile = DISTRIBUTED_FILE + createDirParam.bundleName;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, Constants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
     // /data/service/el2/%/hmdfs/non_account/data/
     distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT + createDirParam.bundleName;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, Constants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
 
     // /data/service/el1/%/backup/bundles/
     std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL1 + createDirParam.bundleName;
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, ServiceConstants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid,
+        ServiceConstants::BACKU_HOME_GID);
     // /data/service/el2/%/backup/bundles/
     bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2 + createDirParam.bundleName;
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid, Constants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, ServiceConstants::BACKU_HOME_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid,
+        ServiceConstants::BACKU_HOME_GID);
 
     // /data/service/el2/%/share/
     std::string bundleShareDir = SHARE_FILE_PATH + createDirParam.bundleName;
@@ -360,8 +364,8 @@ ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirPara
     // /data/service/el2/%/hmdfs/cloud/data/
     std::string bundleCloudDir = CLOUD_FILE_PATH + createDirParam.bundleName;
     bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleCloudDir, createDirParam.uid, Constants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleCloudDir, createDirParam.uid, Constants::DFS_GID);
+    InstalldOperator::ChangeDirProperties(bundleCloudDir, createDirParam.uid, ServiceConstants::DFS_GID);
+    InstalldOperator::ChangeDirPropertiesRecursively(bundleCloudDir, createDirParam.uid, ServiceConstants::DFS_GID);
     LOG_I(BMS_TAG_INSTALLD, "end bundleName:%{public}s", createDirParam.bundleName.c_str());
     return ERR_OK;
 }
@@ -414,13 +418,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
             std::string logDir = logParentDir + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
-                logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
+                logDir, S_IRWXU | S_IRWXG, createDirParam.uid, ServiceConstants::LOG_DIR_GID)) {
                 LOG_E(BMS_TAG_INSTALLD, "create log dir failed errno:%{public}d", errno);
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
             // create log extension dir
             if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
-                Constants::LOG_DIR_GID, true) != ERR_OK) {
+                ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
@@ -432,7 +436,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         std::string databaseDir = databaseParentDir + createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(
-            databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DATABASE_DIR_GID)) {
+            databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID)) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
@@ -443,21 +447,21 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
         // create database extension dir
         if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
-            Constants::DATABASE_DIR_GID) != ERR_OK) {
+            ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
         }
     }
     std::string distributedfile = DISTRIBUTED_FILE;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
-        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
+        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DFS_GID)) {
         LOG_E(BMS_TAG_INSTALLD, "Failed to mk dir for distributedfile errno:%{public}d", errno);
     }
 
     distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
-        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
+        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, ServiceConstants::DFS_GID)) {
         LOG_E(BMS_TAG_INSTALLD, "Failed to mk dir for non account distributedfile errno:%{public}d", errno);
     }
 
@@ -477,7 +481,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
 
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
-    CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, Constants::DFS_GID);
+    CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, ServiceConstants::DFS_GID);
     return ERR_OK;
 }
 
@@ -1027,7 +1031,7 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
     }
 
 #if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, newPath }};
+    Security::CodeSign::EntryMap entryMap = {{ ServiceConstants::CODE_SIGNATURE_HAP, newPath }};
     ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLD, "hap or hsp code signature failed due to %{public}d", ret);
@@ -1445,7 +1449,7 @@ bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string
     if (path.empty()) {
         return true;
     }
-    if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (path.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         LOG_E(BMS_TAG_INSTALLD, "path(%{public}s) contain relevant path", path.c_str());
         return false;
     }
@@ -1616,14 +1620,14 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             std::string logParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::LOG;
             if (CreateExtensionDir(createDirParam, logParentDir, S_IRWXU | S_IRWXG,
-                Constants::LOG_DIR_GID, true) != ERR_OK) {
+                ServiceConstants::LOG_DIR_GID, true) != ERR_OK) {
                 LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", logParentDir.c_str());
             }
         }
 
         std::string databaseParentDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE;
         if (CreateExtensionDir(createDirParam, databaseParentDir, S_IRWXU | S_IRWXG | S_ISGID,
-            Constants::DATABASE_DIR_GID) != ERR_OK) {
+            ServiceConstants::DATABASE_DIR_GID) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLD, "create extension dir failed, parent dir %{public}s", databaseParentDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }

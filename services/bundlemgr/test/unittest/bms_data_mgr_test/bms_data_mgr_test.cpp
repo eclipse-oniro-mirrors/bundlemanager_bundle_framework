@@ -1501,7 +1501,7 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0002, Function | SmallTest
     EXPECT_TRUE(abilityInfos.empty());
 
     AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
@@ -1529,9 +1529,10 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
-    auto ability = innerBundleInfo.FindAbilityInfo(Constants::EMPTY_STRING, Constants::APP_DETAIL_ABILITY, USERID);
+    auto ability = innerBundleInfo.FindAbilityInfo(Constants::EMPTY_STRING,
+        ServiceConstants::APP_DETAIL_ABILITY, USERID);
     if (ability) {
-        EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
+        EXPECT_EQ(ability->name, ServiceConstants::APP_DETAIL_ABILITY);
     }
 
     InnerModuleInfo innerModuleInfo;
@@ -1544,9 +1545,9 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
     innerBundleInfo.SetIsNewVersion(true);
     dataMgr->AddAppDetailAbilityInfo(innerBundleInfo);
 
-    ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, Constants::APP_DETAIL_ABILITY, USERID);
+    ability = innerBundleInfo.FindAbilityInfo(BUNDLE_NAME, ServiceConstants::APP_DETAIL_ABILITY, USERID);
     if (ability) {
-        EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
+        EXPECT_EQ(ability->name, ServiceConstants::APP_DETAIL_ABILITY);
     }
 }
 

@@ -75,7 +75,7 @@ std::string BuildResourcePath(const std::string &bundleName)
     std::string filePath;
     filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
         .append(bundleName).append(ServiceConstants::PATH_SEPARATOR)
-        .append(Constants::EXT_RESOURCE_FILE_PATH).append(ServiceConstants::PATH_SEPARATOR);
+        .append(ServiceConstants::EXT_RESOURCE_FILE_PATH).append(ServiceConstants::PATH_SEPARATOR);
     return filePath;
 }
 
@@ -338,7 +338,7 @@ ErrCode ExtendResourceManagerHostImpl::RemoveExtResource(
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({
-        Constants::PERMISSION_INSTALL_BUNDLE, Constants::PERMISSION_UNINSTALL_BUNDLE})) {
+        Constants::PERMISSION_INSTALL_BUNDLE, ServiceConstants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }

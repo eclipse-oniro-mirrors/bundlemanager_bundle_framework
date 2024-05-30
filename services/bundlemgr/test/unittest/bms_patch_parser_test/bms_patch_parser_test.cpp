@@ -21,6 +21,7 @@
 #include "app_log_wrapper.h"
 #include "app_quick_fix.h"
 #include "bundle_constants.h"
+#include "bundle_service_constants.h"
 #include "json_constants.h"
 #include "quick_fix/patch_extractor.h"
 #include "quick_fix/patch_parser.h"
@@ -647,7 +648,7 @@ HWTEST_F(BmsPatchParserTest, PatchProfile_ToPatchInfo_0100, Function | SmallTest
     nlohmann::json errorProfileJson = PATCH_JSON;
     errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_APP].erase(BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME);
     errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_APP].emplace(
-        BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME, Constants::RELATIVE_PATH);
+        BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME, ServiceConstants::RELATIVE_PATH);
     std::ostringstream profileFileBuffer;
     profileFileBuffer << errorProfileJson.dump();
     PatchExtractor patchExtractor("");

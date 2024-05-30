@@ -72,7 +72,7 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
     if (!CheckFileType(bundlePath, ServiceConstants::INSTALL_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, ServiceConstants::HSP_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, ServiceConstants::QUICK_FIX_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        !CheckFileType(bundlePath, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not hap, hsp, hqf or sig");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
     }
@@ -161,7 +161,7 @@ bool BundleUtil::CheckFileName(const std::string &fileName)
         APP_LOGE("the file name is empty");
         return false;
     }
-    if (fileName.size() > Constants::PATH_MAX_SIZE) {
+    if (fileName.size() > ServiceConstants::PATH_MAX_SIZE) {
         APP_LOGE("bundle file path length %{public}zu too long", fileName.size());
         return false;
     }
@@ -235,7 +235,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
         hapFileList.emplace_back(realPath);
         APP_LOGD("find hap path %{public}s", realPath.c_str());
 
-        if (!hapFileList.empty() && (hapFileList.size() > Constants::MAX_HAP_NUMBER)) {
+        if (!hapFileList.empty() && (hapFileList.size() > ServiceConstants::MAX_HAP_NUMBER)) {
             APP_LOGE("reach the max hap number 128, stop to add more.");
             closedir(dir);
             return false;
@@ -363,7 +363,7 @@ std::string BundleUtil::CreateTempDir(const std::string &tempDir)
         APP_LOGE("mkdir %{public}s failed", tempDir.c_str());
         return "";
     }
-    if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
+    if (chown(tempDir.c_str(), Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != 0) {
         APP_LOGE("fail to change %{public}s ownership errno:%{public}d", tempDir.c_str(), errno);
         return "";
     }
@@ -384,13 +384,13 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     } else if (type == DirType::QUICK_FIX_DIR) {
         tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::QUICK_FIX_PATH;
     } else if (type == DirType::SIG_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::SIGNATURE_FILE_PATH;
     } else if (type == DirType::PGO_FILE_DIR) {
         tempDir += ServiceConstants::PATH_SEPARATOR + PGO_FILE_PATH;
     } else if (type == DirType::ABC_FILE_DIR) {
         tempDir += ServiceConstants::PATH_SEPARATOR + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + Constants::EXT_RESOURCE_FILE_PATH;
+        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::EXT_RESOURCE_FILE_PATH;
     } else {
         return "";
     }
@@ -418,7 +418,7 @@ std::string BundleUtil::CreateSharedBundleTempDir(uint32_t installerId, uint32_t
 int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long long offset)
 {
     int fd = -1;
-    if (bundlePath.length() > Constants::PATH_MAX_SIZE) {
+    if (bundlePath.length() > ServiceConstants::PATH_MAX_SIZE) {
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
@@ -435,7 +435,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
 int32_t BundleUtil::CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset)
 {
     int fd = -1;
-    if (bundlePath.length() > Constants::PATH_MAX_SIZE) {
+    if (bundlePath.length() > ServiceConstants::PATH_MAX_SIZE) {
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
@@ -646,7 +646,7 @@ bool BundleUtil::CreateDir(const std::string &dir)
         return false;
     }
 
-    if (chown(dir.c_str(), Constants::FOUNDATION_UID, Constants::BMS_GID) != 0) {
+    if (chown(dir.c_str(), Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != 0) {
         APP_LOGE("fail to change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
         return false;
     }
@@ -761,13 +761,13 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         destination.append(ServiceConstants::SECURITY_STREAM_INSTALL_PATH);
         mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
         if (InstalldClient::GetInstance()->Mkdir(
-            destination, mode, Constants::FOUNDATION_UID, Constants::BMS_GID) != ERR_OK) {
+            destination, mode, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != ERR_OK) {
             APP_LOGW("installd mkdir %{private}s failed", destination.c_str());
         }
     }
     if (dirType == DirType::SIG_FILE_DIR) {
-        subStr = Constants::SIGNATURE_FILE_PATH;
-        destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
+        subStr = ServiceConstants::SIGNATURE_FILE_PATH;
+        destination.append(ServiceConstants::SECURITY_SIGNATURE_FILE_PATH);
     }
     destination.append(ServiceConstants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeNs()));
     destination = CreateTempDir(destination);

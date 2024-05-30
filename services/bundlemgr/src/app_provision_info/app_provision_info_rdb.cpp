@@ -65,7 +65,7 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
 {
     APP_LOGD("create AppProvisionInfoManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = APP_PROVISION_INFO_RDB_TABLE_NAME;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "

@@ -86,8 +86,8 @@ ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const M
     // check dir and obtain name of the file which needs to be copied
     std::string originalDir = meta.resource;
     std::string destinedDir = meta.value;
-    if (originalDir.find(Constants::RELATIVE_PATH) != std::string::npos ||
-        destinedDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (originalDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos ||
+        destinedDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGW("metadata value %{public}s, resource %{public}s cannot support relevant path",
             destinedDir.c_str(), originalDir.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
@@ -155,7 +155,7 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
             std::string destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
                 meta.value, isModuleExisted);
             APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
-            std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
+            std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
             InstalldClient::GetInstance()->RemoveDir(systemServiceDir + destinedDir);
         }
     }
@@ -216,7 +216,7 @@ void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
                 meta.value, false);
             APP_LOGD("driver so file real path is %{public}s", realDestinedDir.c_str());
 
-            std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
+            std::string systemServiceDir = ServiceConstants::SYSTEM_SERVICE_DIR;
             InstalldClient::GetInstance()->MoveFile(systemServiceDir + tempDestinedDir,
                 systemServiceDir + realDestinedDir);
         }

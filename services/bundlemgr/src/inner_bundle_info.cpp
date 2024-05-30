@@ -645,7 +645,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
     }
     hapInfo.metadata = it->second.metadata;
     for (auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+        if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
         if (ability.first.find(key) != std::string::npos) {
@@ -748,7 +748,7 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
 
     std::vector<AbilityInfo> abilitys;
     for (const auto &ability : baseAbilityInfos_) {
-        if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+        if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             continue;
         }
         auto abilityInfo = ability.second;
@@ -947,7 +947,7 @@ void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
         baseApplicationInfo_->appDetailAbilityLibraryPath = Constants::EMPTY_STRING;
     }
     for (auto iter = baseAbilityInfos_.begin(); iter != baseAbilityInfos_.end(); ++iter) {
-        if (iter->second.name == Constants::APP_DETAIL_ABILITY) {
+        if (iter->second.name == ServiceConstants::APP_DETAIL_ABILITY) {
             baseAbilityInfos_.erase(iter);
             return;
         }
@@ -1640,7 +1640,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
     APP_LOGD("Get bundleInfo with abilities.");
     for (auto &ability : baseAbilityInfos_) {
         if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
-            (ability.second.name == Constants::APP_DETAIL_ABILITY)) {
+            (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY)) {
             continue;
         }
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
@@ -1698,7 +1698,7 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
         for (auto &ability : baseAbilityInfos_) {
-            if (ability.second.name == Constants::APP_DETAIL_ABILITY) {
+            if (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY) {
                 continue;
             }
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
@@ -1926,7 +1926,7 @@ void InnerBundleInfo::AddInnerBundleUserInfo(
 bool InnerBundleInfo::GetInnerBundleUserInfo(
     int32_t userId, InnerBundleUserInfo& innerBundleUserInfo) const
 {
-    if (userId == Constants::NOT_EXIST_USERID) {
+    if (userId == ServiceConstants::NOT_EXIST_USERID) {
         return true;
     }
 
@@ -2021,7 +2021,7 @@ void InnerBundleInfo::SetBundleUpdateTime(const int64_t time, int32_t userId)
 bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t userId, int32_t appIndex) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
-    if (userId == Constants::NOT_EXIST_USERID) {
+    if (userId == ServiceConstants::NOT_EXIST_USERID) {
         return true;
     }
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
@@ -2107,7 +2107,7 @@ void InnerBundleInfo::SetOverlayModuleState(const std::string &moduleName, int32
 bool InnerBundleInfo::GetOverlayModuleState(const std::string &moduleName, int32_t userId, int32_t &state) const
 {
     APP_LOGD("start to get overlay state of moduleName:%{public}s, userId:%{public}d", moduleName.c_str(), userId);
-    if (userId == Constants::NOT_EXIST_USERID) {
+    if (userId == ServiceConstants::NOT_EXIST_USERID) {
         APP_LOGE("invalid userId %{public}d", userId);
         return false;
     }
@@ -2155,7 +2155,7 @@ ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo,
     int32_t userId, bool &isEnable, int32_t appIndex) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
-    if (userId == Constants::NOT_EXIST_USERID) {
+    if (userId == ServiceConstants::NOT_EXIST_USERID) {
         isEnable = true;
         return ERR_OK;
     }
@@ -3252,11 +3252,11 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoByUri(const std::stri
     APP_LOGD("Uri is %{public}s", abilityUri.c_str());
     for (const auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
-        if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
+        if (abilityInfo.uri.size() < strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX)) {
             continue;
         }
 
-        auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+        auto configUri = abilityInfo.uri.substr(strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX));
         APP_LOGD("configUri is %{public}s", configUri.c_str());
         if (configUri == abilityUri) {
             return abilityInfo;
@@ -3286,11 +3286,11 @@ void InnerBundleInfo::FindAbilityInfosByUri(
     APP_LOGI("Uri is %{public}s", abilityUri.c_str());
     for (auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
-        if (abilityInfo.uri.size() < strlen(Constants::DATA_ABILITY_URI_PREFIX)) {
+        if (abilityInfo.uri.size() < strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX)) {
             continue;
         }
 
-        auto configUri = abilityInfo.uri.substr(strlen(Constants::DATA_ABILITY_URI_PREFIX));
+        auto configUri = abilityInfo.uri.substr(strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX));
         APP_LOGI("configUri is %{public}s", configUri.c_str());
         if (configUri == abilityUri) {
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION,
@@ -3516,7 +3516,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -3559,7 +3559,7 @@ ErrCode InnerBundleInfo::RemoveCloneBundle(const int32_t userId, const int32_t a
     InnerBundleUserInfo &userInfo = innerBundleUserInfos_.find(key)->second;
     std::map<std::string, InnerBundleCloneInfo> &cloneInfos = userInfo.cloneInfos;
 
-    if (appIndex < Constants::CLONE_APP_INDEX_MIN || appIndex > Constants::CLONE_APP_INDEX_MAX) {
+    if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
         APP_LOGE("Remove Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -3695,7 +3695,7 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
             return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
         }
     }
-    int32_t maxCount = std::min(multiAppModeData.maxCount, Constants::CLONE_APP_INDEX_MAX);
+    int32_t maxCount = std::min(multiAppModeData.maxCount, ServiceConstants::CLONE_APP_INDEX_MAX);
     if (appIndex > maxCount) {
         APP_LOGE("AppIndex %{public}d exceed the max limit %{public}d in userId: %{public}d",
             appIndex, maxCount, userId);

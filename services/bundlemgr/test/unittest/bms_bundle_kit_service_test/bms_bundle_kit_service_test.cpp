@@ -6868,7 +6868,7 @@ HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0200, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0300, Function | SmallTest | Level1)
 {
     bool isDebug = true;
-    setuid(Constants::SHELL_UID);
+    setuid(ServiceConstants::SHELL_UID);
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     int32_t result = hostImpl->SetDebugMode(isDebug);
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED);
@@ -9785,9 +9785,9 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0001, Function | S
 {
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->hideDesktopIcon = true;
-    std::string keyName = Constants::APP_DETAIL_ABILITY;
+    std::string keyName = ServiceConstants::APP_DETAIL_ABILITY;
     AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
 
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
@@ -9893,7 +9893,7 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0006, Function | S
     AbilityInfo abilityInfo;
     innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
 
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 
@@ -9915,7 +9915,7 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0007, Function | S
     AbilityInfo abilityInfo;
     innerBundleInfo.InsertAbilitiesInfo(MODULE_NAME, abilityInfo);
 
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 
@@ -9937,7 +9937,7 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     AbilityInfo abilityInfo;
     innerBundleInfo.InsertAbilitiesInfo(ABILITY_NAME, abilityInfo);
 
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
 

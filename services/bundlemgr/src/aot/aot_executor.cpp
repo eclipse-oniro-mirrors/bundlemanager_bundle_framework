@@ -83,7 +83,7 @@ bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
         APP_LOGE("aotArgs check failed");
         return false;
     }
-    if (aotArgs.compileMode == Constants::COMPILE_PARTIAL && aotArgs.arkProfilePath.empty()) {
+    if (aotArgs.compileMode == ServiceConstants::COMPILE_PARTIAL && aotArgs.arkProfilePath.empty()) {
         APP_LOGE("partial mode, arkProfilePath can't be empty");
         return false;
     }
@@ -215,7 +215,7 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
 #if defined(CODE_SIGNATURE_ENABLE)
     std::unordered_map<std::string, std::string> argsMap;
     MapArgs(aotArgs, argsMap);
-    std::string aotFilePath = Constants::ARK_CACHE_PATH + aotArgs.bundleName;
+    std::string aotFilePath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName;
     int32_t ret = InstalldHostImpl().Mkdir(aotFilePath, S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH,
         aotArgs.bundleUid, aotArgs.bundleGid);
     if (ret != ERR_OK) {

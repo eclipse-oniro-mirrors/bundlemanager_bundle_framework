@@ -99,7 +99,7 @@ bool InstalldService::InitDir(const std::string &path)
         LOG_I(BMS_TAG_INSTALLD, "Path already exists");
         return false;
     }
-    if (!InstalldOperator::MkOwnerDir(path, true, Constants::FOUNDATION_UID, Constants::BMS_GID)) {
+    if (!InstalldOperator::MkOwnerDir(path, true, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID)) {
         LOG_E(BMS_TAG_INSTALLD, "create path failed, errno : %{public}d", errno);
         return false;
     }

@@ -438,7 +438,7 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
         tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL ||
         callingUid == Constants::ROOT_UID ||
-        callingUid == Constants::SHELL_UID) {
+        callingUid == ServiceConstants::SHELL_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
@@ -500,8 +500,8 @@ bool BundlePermissionMgr::VerifyCallingUid()
     APP_LOGD("calling uid is %{public}d", callingUid);
     if (callingUid == Constants::ROOT_UID ||
         callingUid == Constants::FOUNDATION_UID ||
-        callingUid == Constants::SHELL_UID ||
-        callingUid == Constants::BMS_UID) {
+        callingUid == ServiceConstants::SHELL_UID ||
+        callingUid == ServiceConstants::BMS_UID) {
         APP_LOGD("caller is root or foundation, verify success");
         return true;
     }
@@ -549,7 +549,7 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
-        Constants::PERMISSION_UNINSTALL_BUNDLE})) {
+        ServiceConstants::PERMISSION_UNINSTALL_BUNDLE})) {
         APP_LOGE("uninstall bundle permission denied");
         return false;
     }
@@ -560,7 +560,7 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
 {
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
-        Constants::PERMISSION_RECOVER_BUNDLE})) {
+        ServiceConstants::PERMISSION_RECOVER_BUNDLE})) {
         APP_LOGE("recover bundle permission denied");
         return false;
     }
