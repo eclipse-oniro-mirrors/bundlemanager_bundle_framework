@@ -455,7 +455,10 @@ ohos_shared_library("installs") {
   defines = [ "APP_LOG_TAG = \"BundleMgrService\"" ]
 
   configs = [ ":bundlemgr_common_config" ]
-  cflags = []
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
