@@ -3289,6 +3289,22 @@ HWTEST_F(BmsBundleDataMgrTest, RegisterBundleEventCallback_0001, Function | Medi
 }
 
 /**
+ * @tc.number: RegisterBundleEventCallback_0002
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, RegisterBundleEventCallback_0002, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: UnregisterBundleEventCallback_0001
  * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
  * @tc.desc: 1. system run normally
@@ -3301,6 +3317,22 @@ HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleEventCallback_0001, Function | Me
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0002
+ * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleEventCallback_0002, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
+    auto saveuid = getuid();
+    setuid(Constants::FOUNDATION_UID);
+    bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
+    setuid(saveuid);
+    EXPECT_TRUE(ret);
 }
 
 /**
