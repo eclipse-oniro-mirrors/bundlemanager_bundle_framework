@@ -1212,7 +1212,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t 
 {
     LOG_D(BMS_TAG_QUERY_ABILITY, "begin ImplicitQueryCurCloneAbilityInfos.");
     std::string bundleName = want.GetElement().GetBundleName();
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
     if (cloneAppIndexes.empty()) {
         return false;
     }
@@ -1267,7 +1267,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfosV9(const Want &want, int32_
     LOG_D(BMS_TAG_QUERY_ABILITY, "begin ImplicitQueryCurCloneAbilityInfosV9.");
     std::string bundleName = want.GetElement().GetBundleName();
 
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
     if (cloneAppIndexes.empty()) {
         return false;
     }
@@ -1350,7 +1350,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
 
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(innerBundleInfo.GetBundleName(), userId);
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
         if (cloneAppIndexes.empty()) {
             continue;
         }
@@ -1417,7 +1417,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_
 {
     LOG_D(BMS_TAG_QUERY_ABILITY, "begin ImplicitQueryAllCloneAbilityInfosV9.");
     for (const auto &item : bundleInfos_) {
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(item.second.GetBundleName(), userId);
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(item.second.GetBundleName(), userId);
         if (cloneAppIndexes.empty()) {
             continue;
         }
@@ -1923,7 +1923,7 @@ std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundle
     return cloneAppIndexes;
 }
 
-std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesUnLock(const std::string &bundleName, int32_t userId) const
+std::vector<int32_t> BundleDataMgr::GetCloneAppIndexesNoLock(const std::string &bundleName, int32_t userId) const
 {
     std::vector<int32_t> cloneAppIndexes;
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
@@ -3162,8 +3162,8 @@ bool BundleDataMgr::HasUserInstallInBundle(
     return infoItem->second.HasInnerBundleUserInfo(userId);
 }
 
-bool BundleDataMgr::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
+bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
+    const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t appIndex) const
 {
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
@@ -3171,12 +3171,14 @@ bool BundleDataMgr::GetBundleStats(
         return false;
     }
     int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    int32_t uid = infoItem->second.GetUid(responseUserId);
-    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid) != ERR_OK) {
+    int32_t uid = infoItem->second.GetUid(responseUserId, appIndex);
+    ErrCode ret =
+        InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats, uid, appIndex);
+    if (ret != ERR_OK) {
         APP_LOGW("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
         return false;
     }
-    if (infoItem->second.GetIsPreInstallApp() && !bundleStats.empty()) {
+    if (appIndex == 0 && infoItem->second.GetIsPreInstallApp() && !bundleStats.empty()) {
         for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
             bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
         }
@@ -7715,7 +7717,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want,
         LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryCurCloneExtensionAbilityInfos failed");
         return false;
     }
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
     if (cloneAppIndexes.empty()) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit ImplicitQueryCurCloneExtensionAbilityInfos empty");
         return true;
@@ -7747,7 +7749,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &
         LOG_D(BMS_TAG_QUERY_EXTENSION, "ImplicitQueryCurCloneExtensionAbilityInfosV9 failed");
         return ret;
     }
-    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(bundleName, userId);
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(bundleName, userId);
     if (cloneAppIndexes.empty()) {
         LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit ImplicitQueryCurCloneExtensionAbilityInfosV9 empty");
         return ERR_OK;
@@ -7772,7 +7774,7 @@ bool BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want,
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(innerBundleInfo.GetBundleName(), userId);
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
         if (cloneAppIndexes.empty()) {
             continue;
         }
@@ -7798,7 +7800,7 @@ ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesUnLock(innerBundleInfo.GetBundleName(), userId);
+        std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
         if (cloneAppIndexes.empty()) {
             continue;
         }

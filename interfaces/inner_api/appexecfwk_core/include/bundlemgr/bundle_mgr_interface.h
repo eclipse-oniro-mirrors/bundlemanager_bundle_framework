@@ -1224,7 +1224,8 @@ public:
         return nullptr;
     }
 
-    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
+    virtual bool GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats,
+        int32_t appIndex = 0)
     {
         return false;
     }

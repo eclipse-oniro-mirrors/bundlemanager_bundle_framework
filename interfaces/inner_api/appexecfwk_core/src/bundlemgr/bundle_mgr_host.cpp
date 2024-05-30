@@ -2752,8 +2752,9 @@ ErrCode BundleMgrHost::HandleGetBundleStats(MessageParcel &data, MessageParcel &
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
     std::vector<int64_t> bundleStats;
-    bool ret = GetBundleStats(bundleName, userId, bundleStats);
+    bool ret = GetBundleStats(bundleName, userId, bundleStats, appIndex);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
