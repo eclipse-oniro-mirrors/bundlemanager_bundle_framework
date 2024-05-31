@@ -225,7 +225,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     BundleResourceInfo &bundleResourceInfo,
     int32_t appIndex)
 {
-    APP_LOGD("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -261,7 +261,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     const int32_t appIndex)
 {
-    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -310,7 +310,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
 bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
-    APP_LOGD("start");
+    APP_LOGI("start get all bundle resource");
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
@@ -348,7 +348,7 @@ bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
 bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
-    APP_LOGD("start");
+    APP_LOGI("start get all launcher resource");
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     absRdbPredicates.Contains(BundleResourceConstants::NAME, BundleResourceConstants::SEPARATOR);
     std::string systemState = BundleSystemState::GetInstance().ToString();

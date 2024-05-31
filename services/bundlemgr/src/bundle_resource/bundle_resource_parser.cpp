@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_resource_configuration.h"
+#include "bundle_resource_image_info.h"
 #include "bundle_system_state.h"
 #include "bundle_resource_drawable.h"
 #include "json_util.h"
@@ -28,6 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const char* TYPE_JSON = "json";
+const char* TYPE_PNG = "png";
 const char* FOREGROUND = "foreground";
 const char* BACKGROUND = "background";
 const char CHAR_COLON = ':';
@@ -251,16 +253,6 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         APP_LOGE("iconId is 0 or less than 0");
         return false;
     }
-    // density 0
-    BundleResourceDrawable drawable;
-    if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
-        APP_LOGE("key:%{public}s parse image failed iconId:%{public}d, ", resourceInfo.GetKey().c_str(),
-            resourceInfo.iconId_);
-        return false;
-    }
-    if (!resourceInfo.foreground_.empty() && !resourceInfo.background_.empty()) {
-        return true;
-    }
     // parse json
     std::string type;
     size_t len;
@@ -272,6 +264,27 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         return false;
     }
     transform(type.begin(), type.end(), type.begin(), ::tolower);
+    if (type == TYPE_PNG) {
+        resourceInfo.foreground_.resize(len);
+        for (size_t index = 0; index < len; ++index) {
+            resourceInfo.foreground_[index] = jsonBuf[index];
+        }
+        BundleResourceImageInfo bundleResourceImageInfo;
+        // encode base64
+        return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
+    }
+    APP_LOGI("bundleName:%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
+    // density 0
+    BundleResourceDrawable drawable;
+    if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
+        APP_LOGE("key:%{public}s parse image failed iconId:%{public}d, ", resourceInfo.GetKey().c_str(),
+            resourceInfo.iconId_);
+        return false;
+    }
+    if (!resourceInfo.foreground_.empty() && !resourceInfo.background_.empty()) {
+        return true;
+    }
+
     if (type == TYPE_JSON) {
         // first parse theme resource, if theme not exist, then parse normal resource
         if (ParseThemeIcon(resourceManager, 0, resourceInfo)) {
