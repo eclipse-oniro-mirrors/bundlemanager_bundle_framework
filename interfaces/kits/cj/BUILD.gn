@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
-ohos_shared_library("cj_bundle_manager") {
+ohos_shared_library("cj_bundle_manager_ffi") {
   sanitize = {
     cfi = true
     cfi_cross_dso = true
@@ -70,6 +70,7 @@ ohos_shared_library("cj_bundle_manager") {
     defines += [ "WINDOWS_PLATFORM" ]
   }
 
+  innerapi_tags = [ "platformsdk" ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
