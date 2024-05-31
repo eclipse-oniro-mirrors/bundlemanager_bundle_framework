@@ -218,6 +218,7 @@ bool BundleResourceManager::AddResourceInfos(
     if (needDeleteAllResourceInfo && !bundleResourceRdb_->DeleteAllResourceInfo()) {
         APP_LOGE("delete all bundle resource info failed, then add new resource info");
     }
+
     // parse default icon resource
     bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
     if (isExistDefaultIcon) {
@@ -225,6 +226,7 @@ bool BundleResourceManager::AddResourceInfos(
         parser.ParseResourceInfos(currentUserId, resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
         bundleResourceRdb_->AddResourceInfos(resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
     }
+
     for (const auto &item : resourceInfosMap) {
         if (tempTaskNumber != currentTaskNum_) {
             APP_LOGI("need stop current task, new first");
@@ -236,7 +238,6 @@ bool BundleResourceManager::AddResourceInfos(
             continue;
         }
         auto task = [currentUserId, bundleName, isExistDefaultIcon, &resourceInfosMap, this]() {
-            // need to parse label and icon
             if (resourceInfosMap.find(bundleName) == resourceInfosMap.end()) {
                 APP_LOGE("bundleName: %{public}s not exist", bundleName.c_str());
                 return;
