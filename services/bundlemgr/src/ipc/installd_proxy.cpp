@@ -26,6 +26,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t WAIT_TIME = 3000;
+constexpr int32_t MAX_VEC_SIZE = 1000;
+constexpr int32_t MAX_STRING_SIZE = 1024;
 }
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
@@ -770,6 +772,74 @@ ErrCode InstalldProxy::DeleteEncryptionKeyId(const std::string &keyId)
         return ret;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldProxy::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    const auto size = extensionBundleDirs.size();
+    if (size > MAX_VEC_SIZE) {
+        APP_LOGE("fail to RemoveExtensionDir due to extensionBundleDirs size %{public}zu is too big", size);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    INSTALLD_PARCEL_WRITE(data, Int32, size);
+    for (size_t i = 0; i < size; i++) {
+        if (extensionBundleDirs[i].size() > MAX_STRING_SIZE) {
+            APP_LOGE("extensionBundleDirs %{public}zu is too long", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!data.WriteString(extensionBundleDirs[i])) {
+            APP_LOGE("fail to RemoveExtensionDir due to write extensionBundleDirs %{public}zu fail", i);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::REMOVE_EXTENSION_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    if (extensionBundleDir.size() > MAX_STRING_SIZE) {
+        APP_LOGE("extensionBundleDir is too long");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(extensionBundleDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_EXTENSION_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&createDirParam)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

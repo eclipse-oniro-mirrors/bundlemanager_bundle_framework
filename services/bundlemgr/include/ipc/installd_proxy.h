@@ -82,7 +82,7 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirPara) override;
-    
+
     virtual ErrCode CreateBundleDataDirWithVector(const std::vector<CreateDirParam> &createDirParams) override;
     /**
      * @brief Remove a bundle data directory through a proxy object.
@@ -207,6 +207,12 @@ public:
         const int32_t userId, std::string &keyId) override;
 
     virtual ErrCode DeleteEncryptionKeyId(const std::string &keyId) override;
+
+    virtual ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs) override;
+
+    virtual ErrCode IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist) override;
+
+    virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

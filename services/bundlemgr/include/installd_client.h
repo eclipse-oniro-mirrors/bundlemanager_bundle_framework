@@ -213,6 +213,12 @@ public:
 
     ErrCode DeleteEncryptionKeyId(const std::string &keyId);
 
+    ErrCode RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs);
+
+    ErrCode IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist);
+
+    ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam);
+
 private:
     /**
      * @brief Get the installd proxy object.

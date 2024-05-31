@@ -522,5 +522,34 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
     }
     return CallService(&IInstalld::DeleteEncryptionKeyId, keyId);
 }
+
+ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
+{
+    if (extensionBundleDirs.empty() || userId < 0) {
+        APP_LOGI("extensionBundleDirs is empty or userId is invalid");
+        return ERR_OK;
+    }
+    return CallService(&IInstalld::RemoveExtensionDir, userId, extensionBundleDirs);
+}
+
+ErrCode InstalldClient::IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist)
+{
+    if (extensionBundleDir.empty() || userId < 0) {
+        APP_LOGE("extensionBundleDir is empty or userId is invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::IsExistExtensionDir, userId, extensionBundleDir, isExist);
+}
+
+ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0
+        || createDirParam.uid < 0 || createDirParam.gid < 0 || createDirParam.extensionDirs.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::CreateExtensionDataDir, createDirParam);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

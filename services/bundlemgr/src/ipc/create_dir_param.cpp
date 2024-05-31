@@ -24,6 +24,13 @@ namespace AppExecFwk {
 bool CreateDirParam::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
+    int32_t extensionDirsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionDirsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extensionDirsSize, &extensionDirs);
+    for (int32_t i = 0; i < extensionDirsSize; ++i) {
+        std::string extensionDir = Str16ToStr8(parcel.ReadString16());
+        extensionDirs.emplace_back(extensionDir);
+    }
     apl = Str16ToStr8(parcel.ReadString16());
     userId = parcel.ReadInt32();
     uid = parcel.ReadInt32();
@@ -38,6 +45,10 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
 bool CreateDirParam::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionDirs.size());
+    for (auto &item : extensionDirs) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item));
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(apl));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, userId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);

@@ -910,11 +910,9 @@ public:
         return baseApplicationInfo_->multiAppMode.multiAppModeType;
     }
 
-    std::set<std::string> GetAllExtensionDirsInSpecifiedModule(
-        const std::string &moduleName, int32_t userId) const;
-    std::set<std::string> GetAllExtensionDirs(int32_t userId) const;
-    void UpdateExtensionDirInfo(const std::string &key,
-        int32_t userId, const std::string &sandBoxPath, const std::vector<std::string>& dataGroupIds);
+    std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
+    std::vector<std::string> GetAllExtensionDirs() const;
+    void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string>& dataGroupIds);
     void SetAppDistributionType(const std::string &appDistributionType);
     std::string GetAppDistributionType() const;
     void SetAppProvisionType(const std::string &appProvisionType);

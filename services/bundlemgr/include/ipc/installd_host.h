@@ -199,6 +199,12 @@ private:
 
     bool HandleDeleteEncryptionKeyId(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleRemoveExtensionDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleIsExistExtensionDir(MessageParcel &data, MessageParcel &reply);
+
+    bool HandleCreateExtensionDataDir(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

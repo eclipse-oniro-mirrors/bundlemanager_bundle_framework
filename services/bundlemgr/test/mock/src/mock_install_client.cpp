@@ -274,5 +274,20 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -70,6 +70,9 @@ enum class InstalldInterfaceCode : uint32_t {
     EXTRACT_HNP_FILES,
     INSTALL_NATIVE,
     UNINSTALL_NATIVE,
+    REMOVE_EXTENSION_DIR,
+    IS_EXIST_EXTENSION_DIR,
+    CREATE_EXTENSION_DATA_DIR,
 };
 
 } // namespace AppExecFwk

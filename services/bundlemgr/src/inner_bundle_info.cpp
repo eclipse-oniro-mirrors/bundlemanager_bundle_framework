@@ -3459,51 +3459,48 @@ void InnerBundleInfo::SetUninstallState(const bool &uninstallState)
     uninstallState_ = uninstallState;
 }
 
-std::set<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(
-    const std::string &moduleName, int32_t userId) const
+std::vector<std::string> InnerBundleInfo::GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const
 {
-    std::set<std::string> dirSet;
+    std::vector<std::string> dirVec;
     auto extensionInfoMap = GetInnerExtensionInfos();
     for (auto item : extensionInfoMap) {
         if (item.second.moduleName != moduleName || !item.second.needCreateSandbox) {
             continue;
         }
-        auto iter = item.second.sandboxPath.find(std::to_string(userId));
-        if (iter == item.second.sandboxPath.end()) {
-            continue;
-        }
-        dirSet.emplace(iter->second);
+        std::string dir = ServiceConstants::EXTENSION_DIR + item.second.moduleName +
+            ServiceConstants::FILE_SEPARATOR_LINE + item.second.name +
+            ServiceConstants::FILE_SEPARATOR_PLUS + item.second.bundleName;
+        dirVec.emplace_back(dir);
     }
-    return dirSet;
+    return dirVec;
 }
 
-std::set<std::string> InnerBundleInfo::GetAllExtensionDirs(int32_t userId) const
+std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
 {
-    std::set<std::string> dirSet;
+    std::vector<std::string> dirVec;
     auto extensionInfoMap = GetInnerExtensionInfos();
     for (auto item : extensionInfoMap) {
         if (!item.second.needCreateSandbox) {
             continue;
         }
-        auto iter = item.second.sandboxPath.find(std::to_string(userId));
-        if (iter == item.second.sandboxPath.end()) {
-            continue;
-        }
-        dirSet.emplace(iter->second);
+        // eg: +extension-entry-inputMethodExtAbility+com.example.myapplication
+        std::string dir = ServiceConstants::EXTENSION_DIR + item.second.moduleName +
+            ServiceConstants::FILE_SEPARATOR_LINE + item.second.name +
+            ServiceConstants::FILE_SEPARATOR_PLUS + item.second.bundleName;
+        dirVec.emplace_back(dir);
     }
-    return dirSet;
+    return dirVec;
 }
 
-void InnerBundleInfo::UpdateExtensionDirInfo(const std::string &key,
-    int32_t userId, const std::string &sandBoxPath, const std::vector<std::string>& dataGroupIds)
+void InnerBundleInfo::UpdateExtensionDataGroupInfo(
+    const std::string &key, const std::vector<std::string>& dataGroupIds)
 {
     auto it = baseExtensionInfos_.find(key);
     if (it == baseExtensionInfos_.end()) {
-        APP_LOGW("UpdateExtensionSandboxPath not find key: %{public}s", key.c_str());
+        APP_LOGW("UpdateExtensionDataGroupInfo not find key: %{public}s", key.c_str());
         return;
     }
     it->second.validDataGroupIds = dataGroupIds;
-    it->second.sandboxPath[std::to_string(userId)] = sandBoxPath;
 }
 
 ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
