@@ -208,12 +208,25 @@ bool BundleResourceManager::AddResourceInfos(
         APP_LOGE("threadPool is nullptr");
         return false;
     }
-    threadPool->Start(std::thread::hardware_concurrency());
+    threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if ((currentUserId <= 0)) {
         currentUserId = Constants::START_USERID;
     }
+    // first delete all resource info, then add new resource
+    if (needDeleteAllResourceInfo && !bundleResourceRdb_->DeleteAllResourceInfo()) {
+        APP_LOGE("delete all bundle resource info failed, then add new resource info");
+    }
+
+    // parse default icon resource
+    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
+    if (isExistDefaultIcon) {
+        BundleResourceParser parser;
+        parser.ParseResourceInfos(currentUserId, resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
+        bundleResourceRdb_->AddResourceInfos(resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
+    }
+
     for (const auto &item : resourceInfosMap) {
         if (tempTaskNumber != currentTaskNum_) {
             APP_LOGI("need stop current task, new first");
@@ -221,12 +234,19 @@ bool BundleResourceManager::AddResourceInfos(
             return false;
         }
         std::string bundleName = item.first;
-        auto task = [currentUserId, bundleName, &resourceInfosMap]() {
-            // need to parse label and icon
-            if (resourceInfosMap.find(bundleName) != resourceInfosMap.end()) {
-                BundleResourceParser parser;
-                parser.ParseResourceInfos(currentUserId, resourceInfosMap[bundleName]);
+        if (bundleName == GLOBAL_RESOURCE_BUNDLE_NAME) {
+            continue;
+        }
+        auto task = [currentUserId, bundleName, isExistDefaultIcon, &resourceInfosMap, this]() {
+            if (resourceInfosMap.find(bundleName) == resourceInfosMap.end()) {
+                APP_LOGE("bundleName: %{public}s not exist", bundleName.c_str());
+                return;
             }
+            std::vector<ResourceInfo> resourceInfos = resourceInfosMap[bundleName];
+            BundleResourceParser parser;
+            parser.ParseResourceInfos(currentUserId, resourceInfos);
+            InnerProcessResourceInfos(resourceInfosMap, isExistDefaultIcon, resourceInfos);
+            bundleResourceRdb_->AddResourceInfos(resourceInfos);
         };
         threadPool->AddTask(task);
     }
@@ -234,14 +254,8 @@ bool BundleResourceManager::AddResourceInfos(
         std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL));
     }
     threadPool->Stop();
-    std::vector<ResourceInfo> resourceInfos;
-    InnerProcessResourceInfos(resourceInfosMap, resourceInfos);
-    APP_LOGI("All tasks has executed end, resource info size:%{public}zu", resourceInfos.size());
-    // first delete all resource info, then add new resource
-    if (needDeleteAllResourceInfo && !bundleResourceRdb_->DeleteAllResourceInfo()) {
-        APP_LOGE("delete all bundle resource info failed, then add new resource info");
-    }
-    return bundleResourceRdb_->AddResourceInfos(resourceInfos);
+    APP_LOGI("All tasks has executed end, resource info size:%{public}zu", resourceInfosMap.size());
+    return true;
 }
 
 void BundleResourceManager::ProcessResourceInfo(
@@ -482,17 +496,14 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
 }
 
 void BundleResourceManager::InnerProcessResourceInfos(
-    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    bool isExistDefaultIcon,
     std::vector<ResourceInfo> &resourceInfos)
 {
-    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
-    for (auto &item : resourceInfosMap) {
-        for (auto &resourceInfo : item.second) {
-            if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
-                ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME] :
-                    std::vector<ResourceInfo>(), resourceInfo);
-            }
-            resourceInfos.emplace_back(resourceInfo);
+    for (auto &resourceInfo : resourceInfos) {
+        if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
+            ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap.at(GLOBAL_RESOURCE_BUNDLE_NAME) :
+                std::vector<ResourceInfo>(), resourceInfo);
         }
     }
 }
