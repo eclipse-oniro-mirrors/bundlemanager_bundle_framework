@@ -132,7 +132,7 @@ bool BundleResourceImageInfo::ConvertToBase64(
     const std::unique_ptr<uint8_t[]> originalData, const size_t length, std::string &imageInfo)
 {
     APP_LOGD("start convert to base 64");
-    if ((originalData == nullptr) || (length == 0)){
+    if ((originalData == nullptr) || (length == 0)) {
         APP_LOGE("originalData is nullptr or length is 0");
         return false;
     }
