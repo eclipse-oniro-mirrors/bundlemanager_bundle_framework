@@ -3838,5 +3838,186 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0152, Function | SmallTest
     EXPECT_FALSE(ans);
     EXPECT_TRUE(resourceInfos.empty());
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0153
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfoWithSameHap
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0153, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 10;
+    resourceInfo.iconId_ = 10;
+    bool ans = parser.ParseResourceInfoWithSameHap(USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0154
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfoWithSameHap
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0154, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo resourceInfo;
+    resourceInfo.hapPath_ = HAP_FILE_PATH1;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.overlayHapPaths_ = {HAP_FILE_PATH1, HAP_NO_ICON};
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 10;
+    resourceInfo.iconId_ = 10;
+    bool ans = parser.ParseResourceInfoWithSameHap(USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0155
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfoByResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0155, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = nullptr;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    bool ans = parser.ParseResourceInfoByResourceManager(resourceManager, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0156
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfoByResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0156, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.moduleName_ = MODULE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelNeedParse_ = false;
+    resourceInfo.iconNeedParse_  = false;
+    bool ans = parser.ParseResourceInfoByResourceManager(resourceManager, resourceInfo);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0157
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test GetMediaDataById
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0157, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager = nullptr;
+    uint32_t iconId = 1;
+    int32_t density = 0;
+    std::vector<uint8_t> data;
+    bool ans = parser.GetMediaDataById(resourceManager, iconId, density, data);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0158
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseForegroundAndBackgroundResource
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0158, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo resourceInfo;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    std::string jsonBuff;
+    bool ans = parser.ParseForegroundAndBackgroundResource(resourceManager, jsonBuff, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0159
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ParseThemeIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0159, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo resourceInfo;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    bool ans = parser.ParseThemeIcon(resourceManager, 0, resourceInfo);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0160
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessResourceInfoWhenParseFailed
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo oldResourceInfo;
+    oldResourceInfo.label_ = "oldlabel";
+    oldResourceInfo.icon_ = "oldicon";
+    oldResourceInfo.foreground_.push_back(1);
+    oldResourceInfo.background_.push_back(1);
+    ResourceInfo newResourceInfo;
+    parser.ProcessResourceInfoWhenParseFailed(oldResourceInfo, newResourceInfo);
+    EXPECT_EQ(oldResourceInfo.label_, newResourceInfo.label_);
+    EXPECT_EQ(oldResourceInfo.icon_, newResourceInfo.icon_);
+    EXPECT_EQ(oldResourceInfo.foreground_, newResourceInfo.foreground_);
+    EXPECT_EQ(oldResourceInfo.background_, newResourceInfo.background_);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0161
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessResourceInfoWhenParseFailed
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0161, Function | SmallTest | Level0)
+{
+    BundleResourceParser parser;
+    ResourceInfo oldResourceInfo;
+    oldResourceInfo.label_ = "oldlabel";
+    oldResourceInfo.icon_ = "oldicon";
+    oldResourceInfo.foreground_.push_back(1);
+    oldResourceInfo.background_.push_back(1);
+    ResourceInfo newResourceInfo;
+    newResourceInfo.label_ = "newlabel";
+    newResourceInfo.icon_ = "newicon";
+    newResourceInfo.foreground_.push_back(2);
+    newResourceInfo.background_.push_back(2);
+    parser.ProcessResourceInfoWhenParseFailed(oldResourceInfo, newResourceInfo);
+    EXPECT_FALSE(newResourceInfo.label_.empty());
+    EXPECT_FALSE(newResourceInfo.icon_.empty());
+    EXPECT_FALSE(newResourceInfo.foreground_.empty());
+    EXPECT_FALSE(newResourceInfo.background_.empty());
+}
 #endif
 } // OHOS
