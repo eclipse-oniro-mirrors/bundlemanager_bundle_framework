@@ -32,6 +32,9 @@ ohos_shared_library("cj_bundle_manager") {
     defines = []
   }
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   if (product_name != "ohos-sdk") {
     sources = [
       "src/bundle_manager.cpp",

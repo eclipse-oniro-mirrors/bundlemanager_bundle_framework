@@ -32,6 +32,9 @@ ohos_shared_library("bundleresourcemanager") {
     "../common:bundle_napi_common",
   ]
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",

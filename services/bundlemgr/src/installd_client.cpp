@@ -167,15 +167,15 @@ ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, 
     return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid);
 }
 
-ErrCode InstalldClient::GetBundleStats(
-    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats, const int32_t uid)
+ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
+    std::vector<int64_t> &bundleStats, const int32_t uid, const int32_t appIndex)
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats, uid);
+    return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats, uid, appIndex);
 }
 
 ErrCode InstalldClient::GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,

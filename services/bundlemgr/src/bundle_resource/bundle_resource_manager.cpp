@@ -32,7 +32,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
-constexpr int32_t MAX_TASK_NUMBER = 10;
+constexpr int32_t MAX_TASK_NUMBER = 3;
 const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int32_t CHECK_INTERVAL = 50; // 50ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";

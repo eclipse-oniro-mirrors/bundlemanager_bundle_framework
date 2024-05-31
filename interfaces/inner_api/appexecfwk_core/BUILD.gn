@@ -68,7 +68,8 @@ ohos_shared_library("appexecfwk_core") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
-  cflags = []
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

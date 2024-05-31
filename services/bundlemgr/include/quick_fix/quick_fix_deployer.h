@@ -27,7 +27,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
-    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug = false);
+    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug = false,
+        const std::string &targetPath = "");
 
     virtual ~QuickFixDeployer() = default;
 
@@ -129,6 +130,7 @@ private:
     DeployQuickFixResult deployQuickFixResult_;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
     bool isDebug_ = false;
+    std::string targetPath_ = "";
 
 #define CHECK_QUICK_FIX_RESULT_RETURN_IF_FAIL(errcode)                           \
     do {                                                                           \

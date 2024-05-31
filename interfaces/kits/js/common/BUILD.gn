@@ -25,6 +25,10 @@ ohos_shared_library("bundle_napi_common") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   sources = [
     "base_cb_info.cpp",
     "business_error.cpp",

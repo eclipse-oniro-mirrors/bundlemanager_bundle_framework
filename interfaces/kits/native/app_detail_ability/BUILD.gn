@@ -22,6 +22,9 @@ ohos_shared_library("app_detail_ability") {
   sources = [ "src/app_detail_ability.cpp" ]
   deps = [ "${common_path}:libappexecfwk_common" ]
 
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_manager",

@@ -59,11 +59,11 @@ const std::string GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PERMISSION_NAME = "permissionName";
 const std::string INVALID_WANT_ERROR =
-    "implicit query condition, at least one query param(action entities uri type) non-empty.";
+    "implicit query condition, at least one query param(action entities uri type or linkFeature) non-empty.";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR =
     "BusinessError 401: Parameter error.Parameter extensionAbilityType is empty.";
-
+const std::string LINK_FEATURE = "linkFeature";
 bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
 {
     napi_valuetype valueType;
@@ -94,7 +94,7 @@ bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
     }
     bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
     if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
-        want.GetUriString().empty() && want.GetType().empty()) {
+        want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         APP_LOGW("implicit params all empty");
         return false;
     }
@@ -127,7 +127,7 @@ bool ParseWantListWithParameter(napi_env env, napi_value args, std::vector<Want>
         }
         bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
         if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
-            want.GetUriString().empty() && want.GetType().empty()) {
+            want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
             APP_LOGW("implicit params all empty of want %{public}d", i);
             continue;
         }

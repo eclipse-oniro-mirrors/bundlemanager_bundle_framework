@@ -889,31 +889,39 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     for (const auto &info : infos) {
         // check bundleName
         if (bundleName != info.second.GetBundleName()) {
+            APP_LOGE("bundleName not same");
             return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
         }
         // check version
         if (bundleType != BundleType::SHARED) {
             if (versionCode != info.second.GetVersionCode()) {
+                APP_LOGE("versionCode not same");
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
             if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
+                APP_LOGE("minCompatibleVersionCode not same");
                 return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
             }
         }
         // check release type
         if (target != info.second.GetTargetVersion()) {
+            APP_LOGE("target version not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
         }
         if (compatible != info.second.GetCompatibleVersion()) {
+            APP_LOGE("compatible version not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
         }
         if (releaseType != info.second.GetReleaseType()) {
+            APP_LOGE("releaseType not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
         }
         if (singleton != info.second.IsSingleton()) {
+            APP_LOGE("singleton not same");
             return ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME;
         }
         if (appType != info.second.GetAppType()) {
+            APP_LOGE("appType not same");
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         }
         // check model type(FA or stage)
@@ -922,12 +930,15 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
         }
         if (targetBundleName != info.second.GetTargetBundleName()) {
+            APP_LOGE("targetBundleName not same");
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
         }
         if (targetPriority != info.second.GetTargetPriority()) {
+            APP_LOGE("targetPriority not same");
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
         }
         if (bundleType != info.second.GetApplicationBundleType()) {
+            APP_LOGE("bundleType not same");
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
         if (isHmService != info.second.GetEntryInstallationFree()) {
@@ -935,6 +946,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
+            APP_LOGE("debug not same");
             isSameDebugType = false;
         }
         if (!hasEntry) {
@@ -944,6 +956,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     }
 
     if (hasEntry && !entryDebug && (debug || !isSameDebugType)) {
+        APP_LOGE("debug type not same");
         return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
     }
     APP_LOGD("finish check APP label");

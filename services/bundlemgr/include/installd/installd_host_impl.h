@@ -123,7 +123,8 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID) override;
+        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID,
+        const int32_t appIndex = 0) override;
 
     virtual ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids) override;
@@ -214,6 +215,13 @@ private:
     bool CheckPathValid(const std::string &path, const std::string &prefix);
 
     ErrCode ChmodBundleDataDir(const CreateDirParam &createDirParam);
+    ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+        unsigned int hapFlags);
+    unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
+    std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
+        const int32_t userId, const int32_t appIndex);
+    int64_t HandleAppDataSizeStats(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

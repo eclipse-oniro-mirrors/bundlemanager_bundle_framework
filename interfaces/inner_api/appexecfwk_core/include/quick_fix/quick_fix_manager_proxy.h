@@ -28,7 +28,8 @@ public:
     virtual ~QuickFixManagerProxy();
 
     virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false) override;
+        const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug = false,
+        const std::string &inputTargetPath = "") override;
 
     virtual ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback) override;

@@ -62,7 +62,9 @@ ohos_shared_library("zlib") {
     "src/zip_writer.cpp",
   ]
 
-  cflags = []
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }

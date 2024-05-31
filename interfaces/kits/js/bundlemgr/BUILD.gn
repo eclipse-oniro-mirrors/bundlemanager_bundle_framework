@@ -23,6 +23,10 @@ ohos_shared_library("bundle") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   sources = [
     "bundle_death_recipient.cpp",
     "bundle_mgr.cpp",

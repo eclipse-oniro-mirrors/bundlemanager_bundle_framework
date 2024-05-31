@@ -105,7 +105,7 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     ErrCode GetBundleStats(const std::string &bundleName, const int32_t userId,
-        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID);
+        std::vector<int64_t> &bundleStats, const int32_t uid = Constants::INVALID_UID, const int32_t appIndex = 0);
 
     ErrCode GetAllBundleStats(const std::vector<std::string> &bundleNames, const int32_t userId,
         std::vector<int64_t> &bundleStats, const std::vector<int32_t> &uids);

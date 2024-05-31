@@ -45,13 +45,21 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
 }
 
 ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
+    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug, const std::string &inputTargetPath)
 {
     LOG_I(BMS_TAG_QUICK_FIX, "begin to call DeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
         LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to params error.");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+
+    std::string targetPath = inputTargetPath;
+    if (targetPath.find(".") != std::string::npos ||
+        targetPath.find("..") != std::string::npos ||
+        targetPath.find("/") != std::string::npos) {
+        LOG_E(BMS_TAG_QUICK_FIX, "input targetPath is invalid.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
 
@@ -66,6 +74,10 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     }
     if (!data.WriteBool(isDebug)) {
         LOG_E(BMS_TAG_QUICK_FIX, "write isDebug failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(targetPath)) {
+        LOG_E(BMS_TAG_QUICK_FIX, "write targetPath failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteRemoteObject(statusCallback->AsObject())) {

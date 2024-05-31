@@ -52,8 +52,10 @@
 #include "app_mgr_interface.h"
 #include "system_ability_helper.h"
 #include "running_process_info.h"
+#ifdef DEVICE_USAGE_STATISTICS_ENABLED
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1272,6 +1274,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     int64_t startTime = 0;
     int64_t endTime = BundleUtil::GetCurrentTimeMs();
     const int32_t PERIOD_ANNUALLY = 4; // 4 is the number of the period ANN
+    uint32_t notRunningSum = 0; // The total amount of application that is not running
+#ifdef DEVICE_USAGE_STATISTICS_ENABLED
     std::vector<DeviceUsageStats::BundleActivePackageStats> useStats;
     DeviceUsageStats::BundleActiveClient::GetInstance().QueryBundleStatsInfoByInterval(
         useStats, PERIOD_ANNUALLY, startTime, endTime, currentUserId);
@@ -1308,7 +1312,6 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
         runningSet.insert(info.bundleNames.begin(), info.bundleNames.end());
     }
 
-    uint32_t notRunningSum = 0; // The total amount of application that is not running
     uint64_t cleanCacheSum = 0; // The total amount of application cache currently cleaned
     for (auto useStat : useStats) {
         if (runningSet.find(useStat.bundleName_) == runningSet.end()) {
@@ -1324,7 +1327,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             }
         }
     }
-
+#endif
     if (notRunningSum == 0) {
         APP_LOGE("All apps are running under the current active user");
         return ERR_BUNDLE_MANAGER_ALL_BUNDLES_ARE_RUNNING;
@@ -2979,7 +2982,7 @@ bool BundleMgrHostImpl::ObtainCallingBundleName(std::string &bundleName)
 }
 
 bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t userId,
-    std::vector<int64_t> &bundleStats)
+    std::vector<int64_t> &bundleStats, int32_t appIndex)
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
@@ -3002,7 +3005,7 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGI("ret : %{public}d", ret);
         return ret == ERR_OK;
     }
-    return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats, appIndex);
 }
 
 bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &bundleStats)

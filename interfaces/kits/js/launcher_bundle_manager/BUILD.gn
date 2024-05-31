@@ -20,6 +20,10 @@ ohos_shared_library("launcherbundlemanager") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
+
+  cflags = [ "-Os" ]
+  cflags_cc = [ "-Os" ]
+
   sources = [ "native_module.cpp" ]
 
   if (bundle_framework_launcher) {

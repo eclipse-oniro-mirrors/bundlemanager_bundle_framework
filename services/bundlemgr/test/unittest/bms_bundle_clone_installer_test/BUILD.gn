@@ -1,4 +1,4 @@
-# Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+# Copyright (c) 2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -15,33 +15,22 @@ import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
 import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
-config("private_config") {
-  include_dirs = [ "${services_path}/bundlemgr/test/mock/include" ]
-}
-
 module_output_path = "bundle_framework/bundlemgrservice"
 
-ohos_unittest("BmsAOTMgrTest") {
+ohos_unittest("BmsBundleCloneInstallerTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-    "${services_path}/bundlemgr/test/mock/include/parameter",
-  ]
+  include_dirs = [ "//third_party/jsoncpp/include" ]
+
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+
   sources += [
-    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
-    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
@@ -49,28 +38,47 @@ ohos_unittest("BmsAOTMgrTest") {
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
-  sources += [ "bms_data_aot_test.cpp" ]
+  sources += [ "bms_bundle_clone_installer_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-  ]
-  cflags = []
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+
+  cflags = [ "-frtti" ]
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${core_path}:appexecfwk_core" ]
+
+  deps = [
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/backupTest:backupTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/devicetype_error:devicetype_error",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/fifth_right:fifth_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/fourth_right:fourth_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/moduleJsonTest:moduleJsonTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/previewTest:previewTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/signatureTest:signatureTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/system_module:system_module",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest1:versionTest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+    "${core_path}:appexecfwk_core",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
-    "ability_runtime:app_manager",
-    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
-    "appspawn:hnpapi",
     "appverify:libhapverify",
-    "bounds_checking_function:libsec_shared",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
@@ -80,20 +88,42 @@ ohos_unittest("BmsAOTMgrTest") {
     "samgr:samgr_proxy",
   ]
   external_deps += bundle_install_external_deps
+
   defines = []
   if (code_signature_enable) {
     sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
-      "bounds_checking_function:libsec_shared",
       "code_signature:libcode_sign_utils",
       "ets_runtime:libcompiler_service",
     ]
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
+
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
+
+  if (build_selinux) {
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
+    cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
@@ -105,7 +135,6 @@ ohos_unittest("BmsAOTMgrTest") {
     sources += distributed_manager
     external_deps += [
       "ability_runtime:ability_manager",
-      "ability_runtime:ability_start_options",
       "ability_runtime:app_manager",
       "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",
@@ -119,13 +148,6 @@ ohos_unittest("BmsAOTMgrTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  if (bundle_framework_power_mgr_enable) {
-    defines += [ "BUNDLE_FRAMEWORK_POWER_MGR_ENABLE" ]
-  }
-  if (bundle_framework_user_status_awareness_enable) {
-    external_deps += user_status_external_deps
-    defines += [ "BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE" ]
-  }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
@@ -136,31 +158,27 @@ ohos_unittest("BmsAOTMgrTest") {
     external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
+
+  if (bundle_framework_quick_fix) {
+    include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
+    sources += quick_fix
+    defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+  }
+
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
+    "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
-    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
-  if (bundle_framework_app_control) {
-    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
-    sources += [
-      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
-      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
-      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
-      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
-      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
-    ]
-    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
-    external_deps += [ "c_utils:utils" ]
-  }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
@@ -173,12 +191,17 @@ ohos_unittest("BmsAOTMgrTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
-}
 
+  if (app_domain_verify_enabled) {
+    external_deps += [
+      "app_domain_verify:app_domain_verify_common",
+      "app_domain_verify:app_domain_verify_mgr_client",
+    ]
+    defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
+  }
+}
 group("unittest") {
   testonly = true
 
-  if (ability_runtime_enable) {
-    deps = [ ":BmsAOTMgrTest" ]
-  }
+  deps = [ ":BmsBundleCloneInstallerTest" ]
 }

@@ -2785,6 +2785,20 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: BundleMgrHostImpl_1901
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.query infos failed by data mgr is empty
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1901, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isEnabled = true;
+
+    auto retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID);
+    EXPECT_NE(retCode, ERR_OK);
+}
+
+/**
  * @tc.number: BundleMgrHostImpl_2000
  * @tc.name: test BundleMgrHostImpl
  * @tc.desc: 1.test GetBundleArchiveInfoV9
@@ -5762,6 +5776,60 @@ HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0001, Function | MediumTes
     ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
         GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetDependentBundleInfo_0002
+ * @tc.name: test GetDependentBundleInfo proxy
+ * @tc.desc: 1.query bundle infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0002, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataService = hostImpl->GetDataMgrFromService();
+    std::shared_ptr<BundleDataMgr> empty;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(empty);
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+        GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(savedDataMgr);
+}
+
+/**
+ * @tc.number: GetDependentBundleInfo_0003
+ * @tc.name: test GetDependentBundleInfo proxy
+ * @tc.desc: 1.query bundle infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0003, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+        static_cast<GetDependentBundleInfoFlag>(0x1000));
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+* @tc.number: GetBundleNameForUid_0010
+* @tc.name: test GetBundleNameForUid
+*/
+HWTEST_F(BmsBundleManagerTest, GetBundleNameForUid_0010, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto dataService = hostImpl->GetDataMgrFromService();
+    std::shared_ptr<BundleDataMgr> empty;
+    auto savedDataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(empty);
+
+    std::string bundleName;
+    bool testRet = hostImpl->GetBundleNameForUid(1, bundleName);
+    EXPECT_EQ(testRet, false);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(savedDataMgr);
 }
 
 /**

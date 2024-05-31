@@ -32,6 +32,7 @@
 #include "parameters.h"
 #include "parcel.h"
 #include "scope_guard.h"
+#include "installd/installd_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -58,6 +59,7 @@ constexpr uint32_t VIRTUAL_CHILD_PID = 12345678;
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
+constexpr const char* OTA_COMPILE_MODE = "persist.bm.ota.arkopt";
 constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_FULL = "full";
@@ -80,10 +82,14 @@ private:
     void CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo) const;
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<InstalldService> installdService_;
 };
 
 std::shared_ptr<BundleMgrService> BmsAOTMgrTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsAOTMgrTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsAOTMgrTest::BmsAOTMgrTest()
 {}
@@ -734,4 +740,149 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1700, Function | SmallTest | Level0)
     AOTHandler::GetInstance().ResetAOTFlags();
     AOTHandler::GetInstance().OTACompileInternal();
 }
+
+/**
+ * @tc.number: AOTHandler_1800
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleIdle function running normally if isOTA is false
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    bool isOTA = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    installer.ProcessAOT(isOTA, infos);
+
+    newInfo.SetIsNewVersion(isOTA);
+    infos.emplace("", newInfo);
+    installer.ProcessAOT(isOTA, infos);
+    bool res = newInfo.GetIsNewVersion();
+    EXPECT_EQ(res, isOTA);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        "", newInfo);
+    AOTHandler::GetInstance().HandleIdle();
+}
+
+/**
+ * @tc.number: AOTHandler_1900
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleIdle function running normally if isOTA is true
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    bool isOTA = true;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    installer.ProcessAOT(isOTA, infos);
+
+    newInfo.SetIsNewVersion(isOTA);
+    infos.emplace("", newInfo);
+    installer.ProcessAOT(isOTA, infos);
+    bool res = newInfo.GetIsNewVersion();
+    EXPECT_EQ(res, isOTA);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        "", newInfo);
+    AOTHandler::GetInstance().HandleIdle();
+}
+
+/**
+ * @tc.number: AOTHandler_2000
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleIdleWithSingleHap function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2000, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    info.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        "", info);
+    AOTHandler::GetInstance().HandleIdleWithSingleHap(info, AOT_MODULE_NAME, "");
+}
+
+/**
+ * @tc.number: AOTHandler_2100
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCopyAp function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2100, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    std::vector<std::string> results;
+    installdService_->Start();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(USERID_ONE);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    info.bundleUserInfo.userId = 1;
+    innerBundleUserInfos["_1"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        bundleName, innerBundleInfo);
+    auto ans = AOTHandler::GetInstance().HandleCopyAp(bundleName, false, results);
+    EXPECT_EQ(ans, ERR_OK);
+}
+
+/**
+ * @tc.number: AOTHandler_2200
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleOTA function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    bool isOTA = false;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo newInfo;
+    installer.ProcessAOT(isOTA, infos);
+
+    newInfo.SetIsNewVersion(true);
+    infos.emplace("", newInfo);
+    installer.ProcessAOT(isOTA, infos);
+    bool res = newInfo.GetIsNewVersion();
+    EXPECT_EQ(res, true);
+    system::SetParameter(OTA_COMPILE_SWITCH, "on");
+    system::SetParameter(OTA_COMPILE_MODE, "on");
+    system::SetParameter(UPDATE_TYPE, "manual");
+    AOTHandler::GetInstance().HandleOTA();
+}
+
+/**
+ * @tc.number: AOTHandler_2300
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileWithBundle function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    string compileMode = Constants::COMPILE_PARTIAL;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    innerBundleInfo.SetIsNewVersion(true);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        bundleName, innerBundleInfo);
+    std::map<std::string, EventInfo> sysEventMap;
+    EventInfo eventInfo = AOTHandler::GetInstance().HandleCompileWithBundle(bundleName, compileMode, dataMgr);
+    sysEventMap.emplace(bundleName, eventInfo);
+    AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
+}
+
 } // OHOS

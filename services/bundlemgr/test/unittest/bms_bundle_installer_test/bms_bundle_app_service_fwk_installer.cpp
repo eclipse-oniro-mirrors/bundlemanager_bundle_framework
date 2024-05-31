@@ -1024,12 +1024,11 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveLowerVersionSoDir_0010, Func
     AppServiceFwkInstaller appServiceFwkInstaller;
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
 
-    InnerBundleInfo oldInfo;
-    auto res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    auto res = appServiceFwkInstaller.RemoveLowerVersionSoDir(VERSION_LOW);
     EXPECT_EQ(res, ERR_OK);
 
     appServiceFwkInstaller.versionUpgrade_ = true;
-    res = appServiceFwkInstaller.RemoveLowerVersionSoDir(oldInfo);
+    res = appServiceFwkInstaller.RemoveLowerVersionSoDir(VERSION_LOW);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -1123,7 +1122,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetAllBundleInfoByDeveloperId_0100
     std::vector<BundleInfo> bundleInfos;
     auto ret1 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    
+
     auto ret2 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
     EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
