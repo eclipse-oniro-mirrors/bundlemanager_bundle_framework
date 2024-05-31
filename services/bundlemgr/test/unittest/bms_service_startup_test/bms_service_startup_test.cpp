@@ -39,6 +39,8 @@ const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 const std::string AVAILABLE_TYPE_NORMAL = "normal";
 const std::string AVAILABLE_TYPE_MDM = "MDM";
 const std::string AVAILABLE_TYPE_EMPTY = "";
+const std::string AVAILABLELEVEL_SYSTEM_CORE = "system_core";
+const std::string AVAILABLELEVEL_SYSTEM_BASIC = "system_basic";
 const std::string BUNDLE_PATH = "test.hap";
 const std::string STRING_TYPE = "string";
 } // namespace
@@ -586,6 +588,19 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0800, Function | SmallTest |
     EXPECT_EQ(ret, true);
     ret = BundlePermissionMgr::GetHapApiVersion();
     EXPECT_EQ(ret, Constants::INVALID_API_VERSION);
+
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_TEMP_NAME;
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 1;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        BUNDLE_TEMP_NAME, innerBundleInfo);
+    ret = BundlePermissionMgr::GetHapApiVersion();
+    EXPECT_EQ(ret, Constants::INVALID_API_VERSION);
 }
 
 /**
@@ -770,6 +785,206 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2000, Function | SmallTest |
     InnerBundleInfo innerBundleInfo;
     auto hapPolicy = BundlePermissionMgr::CreateHapPolicyParam(innerBundleInfo);
     EXPECT_EQ(hapPolicy.domain, "domain");
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2100
+ * @tc.name: test GetTokenApl
+ * @tc.desc: 1.test GetTokenApl of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2100, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    auto result = BundlePermissionMgr::GetTokenApl(AVAILABLELEVEL_SYSTEM_CORE);
+    EXPECT_EQ(result, AccessToken::ATokenAplEnum::APL_SYSTEM_CORE);
+    result = BundlePermissionMgr::GetTokenApl(AVAILABLELEVEL_SYSTEM_BASIC);
+    EXPECT_EQ(result, AccessToken::ATokenAplEnum::APL_SYSTEM_BASIC);
+    std::string apl = "";
+    result = BundlePermissionMgr::GetTokenApl(apl);
+    EXPECT_EQ(result, AccessToken::ATokenAplEnum::APL_NORMAL);
+    BundlePermissionMgr::UnInit();
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2200
+ * @tc.name: test GetPermissionDefList
+ * @tc.desc: 1.test GetPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2200, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    InnerBundleInfo innerBundleInfo;
+    std::vector<AccessToken::PermissionDef> permDef = BundlePermissionMgr::GetPermissionDefList(innerBundleInfo);
+    EXPECT_EQ(permDef.size(), 0);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2300
+ * @tc.name: test GetPermissionStateFullList
+ * @tc.desc: 1.test GetPermissionStateFullList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2300, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    InnerBundleInfo innerBundleInfo;
+    std::vector<AccessToken::PermissionStateFull> permFull
+        = BundlePermissionMgr::GetPermissionStateFullList(innerBundleInfo);
+    EXPECT_EQ(permFull.size(), 0);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2400
+ * @tc.name: test GetAllReqPermissionStateFull
+ * @tc.desc: 1.test GetAllReqPermissionStateFull of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2400, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    InnerBundleInfo innerBundleInfo;
+    AccessToken::AccessTokenID callerToken = 0;
+    std::vector<AccessToken::PermissionStateFull> newPermissionState;
+    bool result = BundlePermissionMgr::GetAllReqPermissionStateFull(callerToken, newPermissionState);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2500
+ * @tc.name: test GetPermissionDefList
+ * @tc.desc: 1.test AddPermissionUsedRecord of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2500, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    std::string permission = "";
+    int32_t successCount = 0;
+    int32_t failCount = 0;
+    BundlePermissionMgr::AddPermissionUsedRecord(permission, successCount, failCount);
+    EXPECT_EQ(failCount, 0);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2600
+ * @tc.name: test VerifyRecoverPermission
+ * @tc.desc: 1.test VerifyRecoverPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2600, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::VerifyRecoverPermission();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2700
+ * @tc.name: test VerifyUninstallPermission
+ * @tc.desc: 1.test VerifyUninstallPermission of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2700, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::VerifyUninstallPermission();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2800
+ * @tc.name: test IsSelfCalling
+ * @tc.desc: 1.test IsSelfCalling of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2800, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::IsSelfCalling();
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_2900
+ * @tc.name: test IsCallingUidValid
+ * @tc.desc: 1.test IsCallingUidValid of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_2900, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    int32_t uid = 100;
+    bool result = BundlePermissionMgr::IsCallingUidValid(uid);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3000
+ * @tc.name: test IsCallingUidValid
+ * @tc.desc: 1.test VerifyCallingUid of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3000, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::VerifyCallingUid();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3100
+ * @tc.name: test IsNativeTokenType
+ * @tc.desc: 1.test IsNativeTokenType of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3100, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::IsNativeTokenType();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3200
+ * @tc.name: test IsSystemApp
+ * @tc.desc: 1.test IsSystemApp of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3200, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    bool result = BundlePermissionMgr::IsSystemApp();
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3300
+ * @tc.name: test ClearUserGrantedPermissionState
+ * @tc.desc: 1.test ClearUserGrantedPermissionState of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3300, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    AccessToken::AccessTokenID tokenId = 100;
+    int32_t result = BundlePermissionMgr::ClearUserGrantedPermissionState(tokenId);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_3400
+ * @tc.name: test DeleteAccessTokenId
+ * @tc.desc: 1.test DeleteAccessTokenId of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_3400, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    AccessToken::AccessTokenID tokenId = 100;
+    int32_t result = BundlePermissionMgr::DeleteAccessTokenId(tokenId);
+    EXPECT_EQ(result, 0);
 }
 
 /**
