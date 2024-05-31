@@ -176,6 +176,8 @@ static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications);
 
 static void ConvertRouterItem(napi_env env, const RouterItem &routerItem, napi_value value);
+
+static void ConvertRouterDataInfos(napi_env env, const std::map<std::string, std::string> &data, napi_value objInfos);
 static void ConvertAbilitySkillUri(napi_env env, const SkillUri &skillUri, napi_value value, bool isExtension);
 static void ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value value, bool isExtension);
 

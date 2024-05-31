@@ -38,8 +38,6 @@ const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 static const std::string ROUTER_MAP = "routerMap";
-static const std::string DATA = "data";
-static const size_t DATA_MAX_LENGTH = 4096;
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -319,13 +317,6 @@ ErrCode BundleParser::ParseRouterArray(
         }
         RouterItem routerItem;
         from_json(object, routerItem);
-        if (object.find(DATA) != object.end()) {
-            if (object[DATA].dump().size() <= DATA_MAX_LENGTH) {
-                routerItem.data = object[DATA].dump();
-            } else {
-                APP_LOGE("data in routerMap profile is too long");
-            }
-        }
         routerArray.emplace_back(routerItem);
     }
     return ERR_OK;
