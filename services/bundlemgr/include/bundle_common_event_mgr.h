@@ -81,7 +81,7 @@ public:
     void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId, int32_t appIndex);
     void NotifyDynamicIconEvent(
         const std::string &bundleName, bool isEnableDynamicIcon);
-    void NotifyBundleResourcesChanged(int32_t userId);
+    void NotifyBundleResourcesChanged(const int32_t userId, const uint32_t type);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);

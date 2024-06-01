@@ -21,6 +21,7 @@
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_resource_manager.h"
 #include "bundle_resource_param.h"
 #include "bundle_system_state.h"
@@ -29,7 +30,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
+bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId, const uint32_t type)
 {
     APP_LOGI("start");
     if (userId != Constants::START_USERID) {
@@ -44,7 +45,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
         APP_LOGE("switch userId : %{public}d failed, manager is nullptr", userId);
         return false;
     }
-    if (!manager->AddAllResourceInfo(userId)) {
+    if (!manager->AddAllResourceInfo(userId, type)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
     }
@@ -52,7 +53,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
     return true;
 }
 
-bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMode)
+bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type)
 {
     APP_LOGI("start, colorMode: %{public}s", colorMode.c_str());
     if (colorMode == BundleSystemState::GetInstance().GetSystemColorMode()) {
@@ -70,7 +71,7 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
         currentUserId = Constants::START_USERID;
     }
 
-    if (!manager->AddResourceInfoByColorModeChanged(currentUserId)) {
+    if (!manager->AddResourceInfoByColorModeChanged(currentUserId, type)) {
         APP_LOGE("add colorMode : %{public}s failed, currentUserId :%{public}d", colorMode.c_str(), currentUserId);
         return false;
     }
@@ -78,7 +79,7 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
     return true;
 }
 
-bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
+bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language, const uint32_t type)
 {
     APP_LOGI("start, current language is %{public}s", language.c_str());
     if (language == BundleSystemState::GetInstance().GetSystemLanguage()) {
@@ -98,7 +99,7 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
         currentUserId = Constants::START_USERID;
     }
 
-    if (!manager->AddAllResourceInfo(currentUserId)) {
+    if (!manager->AddAllResourceInfo(currentUserId, type)) {
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;
     }
@@ -192,7 +193,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
     return true;
 }
 
-bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
+bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme, const uint32_t type)
 {
     APP_LOGI("start, theme:%{public}s", theme.c_str());
     if (theme.empty()) {
@@ -225,7 +226,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme)
         currentUserId = Constants::START_USERID;
     }
 
-    if (!manager->AddAllResourceInfo(currentUserId)) {
+    if (!manager->AddAllResourceInfo(currentUserId, type)) {
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;
     }

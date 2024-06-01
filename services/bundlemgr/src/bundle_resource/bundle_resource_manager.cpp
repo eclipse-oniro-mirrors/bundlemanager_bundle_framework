@@ -107,7 +107,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
     return true;
 }
 
-bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
+bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint32_t type)
 {
     EventReport::SendCpuSceneEvent(FOUNDATION_PROCESS_NAME, SCENE_ID_UPDATE_RESOURCE);
     ++currentTaskNum_;
@@ -133,7 +133,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
             }
         }
     }
-    SendBundleResourcesChangedEvent(userId);
+    SendBundleResourcesChangedEvent(userId, type);
     APP_LOGI("add all resource end");
     return true;
 }
@@ -285,7 +285,7 @@ bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyName
     return bundleResourceRdb_->GetAllResourceName(keyNames);
 }
 
-bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t userId)
+bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t userId, const uint32_t type)
 {
     ++currentTaskNum_;
     uint32_t tempTaskNum = currentTaskNum_;
@@ -307,7 +307,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
         }
         if (resourceInfos.empty()) {
             APP_LOGI("no need to add resource");
-            SendBundleResourcesChangedEvent(userId);
+            SendBundleResourcesChangedEvent(userId, type);
             return true;
         }
         for (const auto &info : resourceInfos) {
@@ -333,7 +333,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             }
         }
     }
-    SendBundleResourcesChangedEvent(userId);
+    SendBundleResourcesChangedEvent(userId, type);
     return true;
 }
 
@@ -436,11 +436,11 @@ void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
     resourceInfo.background_ = bundleResourceInfo.background;
 }
 
-void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
+void BundleResourceManager::SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type)
 {
-    APP_LOGD("send bundleResource event");
+    APP_LOGI("send bundleResource event, userId:%{public}d type:%{public}u", userId, type);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    commonEventMgr->NotifyBundleResourcesChanged(userId);
+    commonEventMgr->NotifyBundleResourcesChanged(userId, type);
 }
 
 void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName)
