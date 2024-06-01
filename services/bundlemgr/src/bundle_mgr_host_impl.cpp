@@ -882,7 +882,14 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
         LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+
+    auto ret = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
+        LOG_D(BMS_TAG_QUERY_ABILITY, "query launcher ability infos from bms extension successfully");
+        return ERR_OK;
+    }
+    return ret;
 }
 
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
