@@ -176,7 +176,7 @@ bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t file
         APP_LOGE("call stat error:%{public}d", errno);
         return false;
     }
-    if (std::max(fileInfo.st_size * SPACE_NEED_DOUBLE, HALF_GB) > fileSize) {
+    if (fileInfo.st_size > fileSize) {
         return false;
     }
     return true;
@@ -191,8 +191,15 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
     }
     int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
     APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize);
-
-    return CheckFileSize(bundlePath, freeSize);
+    struct stat fileInfo = { 0 };
+    if (stat(bundlePath.c_str(), &fileInfo) != 0) {
+        APP_LOGE("call stat error:%{public}d", errno);
+        return false;
+    }
+    if (std::max(fileInfo.st_size * SPACE_NEED_DOUBLE, HALF_GB) > freeSize) {
+        return false;
+    }
+    return true;
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
