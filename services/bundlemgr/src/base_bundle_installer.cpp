@@ -97,8 +97,12 @@ const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
 const int32_t USER_MODE = 0;
+const int32_t ROOT_MODE = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
+constexpr const char* BMS_TRUE = "true";
+const int32_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.sceneboard",
@@ -5446,6 +5450,27 @@ void BaseBundleInstaller::SetCheckResultMsg(const std::string checkResultMsg) co
 
 bool BaseBundleInstaller::VerifyActivationLock() const
 {
+    char enableActivationLock[BMS_ACTIVATION_LOCK_VAL_LEN] = {0};
+    int32_t ret = GetParameter(BMS_ACTIVATION_LOCK, "", enableActivationLock, BMS_ACTIVATION_LOCK_VAL_LEN);
+    if (ret <= 0) {
+        return true;
+    }
+    if (std::strcmp(enableActivationLock, BMS_TRUE) != 0) {
+        APP_LOGD("activation lock no check, because lock is off");
+        return true;
+    }
+
+    int32_t mode = GetIntParameter(IS_ROOT_MODE_PARAM, USER_MODE);
+    if (mode != USER_MODE) {
+        BmsExtensionDataMgr bmsExtensionDataMgr;
+        bool pass = false;
+        ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
+        if ((res == ERR_OK) && !pass) {
+            APP_LOGE("machine be controlled, not allow to install app");
+            return false;
+        }
+    }
+    APP_LOGD("activation lock pass");
     // otherwise, pass
     return true;
 }
