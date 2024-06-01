@@ -47,6 +47,7 @@ constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
 constexpr int32_t DEFAULT_INSTALLERID = -1;
 constexpr int32_t BACKUP_DEFAULT_APP_KEY = -2;
+constexpr int32_t DEFAULT_APP_INDEX = 0;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -132,6 +133,7 @@ constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* HAP_PATH = "hapPath";
+constexpr const char* APP_INDEX = "appIndex";
 constexpr int32_t MAX_LIMIT_SIZE = 4;
 
 constexpr const char* DATA_ABILITY_URI_PREFIX = "dataability://";

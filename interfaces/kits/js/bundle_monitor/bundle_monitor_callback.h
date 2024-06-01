@@ -45,8 +45,8 @@ private:
     void EventListenerDelete(napi_env env, napi_value handler,
         const std::vector<std::shared_ptr<EventListener>> &eventListeners);
     void EventListenerDeleteAll(napi_env env, const std::vector<std::shared_ptr<EventListener>> &eventListeners);
-    void BundleMonitorEmit(const std::string &type, std::string &bundleName, int32_t userId);
-    void EventListenerEmit(std::string &bundleName, int32_t userId,
+    void BundleMonitorEmit(const std::string &type, std::string &bundleName, int32_t userId, int32_t appIndex);
+    void EventListenerEmit(std::string &bundleName, int32_t userId, int32_t appIndex,
         const std::vector<std::shared_ptr<EventListener>> &eventListeners);
 private:
     std::vector<std::shared_ptr<EventListener>> addListeners;

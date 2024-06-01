@@ -141,7 +141,7 @@ static void ConvertDependency(napi_env env, const Dependency &dependency, napi_v
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
 
 static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
-    int32_t userId, napi_value bundleChangeInfo);
+    int32_t userId, int32_t appIndex, napi_value bundleChangeInfo);
 
 static void ConvertLauncherAbilityInfo(napi_env env, const LauncherAbilityInfo &launcherAbility, napi_value value);
 

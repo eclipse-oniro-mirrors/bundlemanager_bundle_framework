@@ -1878,7 +1878,7 @@ void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, n
 }
 
 void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
-    int32_t userId, napi_value bundleChangeInfo)
+    int32_t userId, int32_t appIndex, napi_value bundleChangeInfo)
 {
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
@@ -1887,6 +1887,10 @@ void CommonFunc::ConvertBundleChangeInfo(napi_env env, const std::string &bundle
     napi_value nUserId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, userId, &nUserId));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "userId", nUserId));
+
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, bundleChangeInfo, "appIndex", nAppIndex));
 }
 
 void CommonFunc::ConvertLauncherAbilityInfo(napi_env env,
