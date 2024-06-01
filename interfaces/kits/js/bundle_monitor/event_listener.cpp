@@ -78,16 +78,16 @@ bool EventListener::Find(napi_value handler)
 }
 
 // operator on js thread
-void EventListener::Emit(std::string &bundleName, int32_t userId)
+void EventListener::Emit(std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     APP_LOGD("EventListener Emit Init callback size is %{publuic}d",
         static_cast<int32_t>(callbackRefs_.size()));
     for (const auto &callbackRef : callbackRefs_) {
-        EmitOnUV(bundleName, userId, callbackRef);
+        EmitOnUV(bundleName, userId, appIndex, callbackRef);
     }
 }
 
-void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi_ref callbackRef)
+void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, int32_t appIndex, napi_ref callbackRef)
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -99,6 +99,7 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
         .env = env_,
         .bundleName = bundleName,
         .userId = userId,
+        .appIndex = appIndex,
         .callbackRef = callbackRef,
     };
     if (asyncCallbackInfo == nullptr) {
@@ -126,7 +127,7 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
             CHKRV_SCOPE(asyncCallbackInfo->env, napi_create_object(asyncCallbackInfo->env,
                 &result[ARGS_POS_ZERO]), scope);
             CommonFunc::ConvertBundleChangeInfo(asyncCallbackInfo->env, asyncCallbackInfo->bundleName,
-                asyncCallbackInfo->userId, result[0]);
+                asyncCallbackInfo->userId, asyncCallbackInfo->appIndex, result[0]);
             napi_call_function(asyncCallbackInfo->env, nullptr,
                 callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
             napi_close_handle_scope(asyncCallbackInfo->env, scope);

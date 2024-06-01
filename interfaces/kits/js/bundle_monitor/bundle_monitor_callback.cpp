@@ -134,7 +134,8 @@ void BundleMonitorCallback::EventListenerDeleteAll(napi_env env,
 }
 
 // operator on js thread
-void BundleMonitorCallback::BundleMonitorEmit(const std::string &type, std::string &bundleName, int32_t userId)
+void BundleMonitorCallback::BundleMonitorEmit(const std::string &type,
+    std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     APP_LOGD("BundleMonitorEmit enter type is %{public}s", type.c_str());
     if (type != ADD && type != UPDATE && type != REMOVE) {
@@ -142,21 +143,21 @@ void BundleMonitorCallback::BundleMonitorEmit(const std::string &type, std::stri
     }
     if (type == ADD) {
         std::unique_lock<std::shared_mutex> lock(g_addListenersMutex);
-        EventListenerEmit(bundleName, userId, addListeners);
+        EventListenerEmit(bundleName, userId, appIndex, addListeners);
     } else if (type == UPDATE) {
         std::unique_lock<std::shared_mutex> lock(g_updateListenersMutex);
-        EventListenerEmit(bundleName, userId, updateListeners);
+        EventListenerEmit(bundleName, userId, appIndex, updateListeners);
     } else {
         std::unique_lock<std::shared_mutex> lock(g_removeListenersMutex);
-        EventListenerEmit(bundleName, userId, removeListeners);
+        EventListenerEmit(bundleName, userId, appIndex, removeListeners);
     }
 }
 
-void BundleMonitorCallback::EventListenerEmit(std::string &bundleName, int32_t userId,
+void BundleMonitorCallback::EventListenerEmit(std::string &bundleName, int32_t userId, int32_t appIndex,
     const std::vector<std::shared_ptr<EventListener>> &eventListeners)
 {
     for (auto listener : eventListeners) {
-        listener->Emit(bundleName, userId);
+        listener->Emit(bundleName, userId, appIndex);
     }
 }
 
@@ -167,14 +168,15 @@ void BundleMonitorCallback::OnReceiveEvent(const EventFwk::CommonEventData &even
     std::string action = want.GetAction();
     std::string bundleName = want.GetElement().GetBundleName();
     int userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
-    APP_LOGD("OnReceiveEvent action = %{public}s, bundle = %{public}s, userId = %{public}d",
-        action.c_str(), bundleName.c_str(), userId);
+    int32_t appIndex = want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX);
+    APP_LOGD("OnReceiveEvent action = %{public}s, bundle = %{public}s, userId = %{public}d, appIndex = %{public}d",
+        action.c_str(), bundleName.c_str(), userId, appIndex);
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) {
-        BundleMonitorEmit(ADD, bundleName, userId);
+        BundleMonitorEmit(ADD, bundleName, userId, appIndex);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) {
-        BundleMonitorEmit(UPDATE, bundleName, userId);
+        BundleMonitorEmit(UPDATE, bundleName, userId, appIndex);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
-        BundleMonitorEmit(REMOVE, bundleName, userId);
+        BundleMonitorEmit(REMOVE, bundleName, userId, appIndex);
     } else {
         APP_LOGI("OnReceiveEvent action = %{public}s not support", action.c_str());
     }

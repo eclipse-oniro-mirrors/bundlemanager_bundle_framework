@@ -33,10 +33,10 @@ public:
     void Delete(napi_env env, napi_value handler);
     void DeleteAll();
     bool HasSameEnv(napi_env env) const;
-    void Emit(std::string &bundleName, int32_t userId);
+    void Emit(std::string &bundleName, int32_t userId, int32_t appIndex);
 private:
     bool Find(napi_value handler);
-    void EmitOnUV(const std::string &bundleName, int32_t userId, napi_ref callbackRef);
+    void EmitOnUV(const std::string &bundleName, int32_t userId, int32_t appIndex, napi_ref callbackRef);
 private:
     napi_env env_;
     std::string type_;
@@ -47,6 +47,7 @@ struct AsyncCallbackInfo {
     napi_env env;
     std::string bundleName;
     int32_t userId;
+    int32_t appIndex;
     napi_ref callbackRef;
 };
 }
