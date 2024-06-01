@@ -92,7 +92,7 @@ ErrCode CheckExtensionFromBundleInfo(const AppExecFwk::BundleInfo& bundleInfo, c
     int32_t res = SUCCESS_CODE;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
-            std:: tie(flag, res) = checkExtensionName(extensionInfo, moduleName, abilityName, targetExtensionInfo);
+            std::tie(flag, res) = checkExtensionName(extensionInfo, moduleName, abilityName, targetExtensionInfo);
             if (flag == true && res != ERROR_ABILITY_NOT_EXIST) {
                 return res;
             }
@@ -183,7 +183,7 @@ ErrCode CheckAbilityFromBundleInfo(const AppExecFwk::BundleInfo& bundleInfo, con
     int32_t res = SUCCESS_CODE;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
-            std:: tie(flag, res) = checkAbilityName(abilityInfo, moduleName, abilityName, targetAbilityInfo);
+            std::tie(flag, res) = checkAbilityName(abilityInfo, moduleName, abilityName, targetAbilityInfo);
             if (flag == true && res != ERROR_ABILITY_NOT_EXIST) {
                 return res;
             }
