@@ -26,6 +26,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceImageInfo {
 public:
+    bool ConvertToBase64(const std::unique_ptr<uint8_t[]> originalData, const size_t length, std::string &imageInfo);
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     bool ConvertToString(const std::shared_ptr<Media::PixelMap> pixelMap, std::string &imageInfo);
 

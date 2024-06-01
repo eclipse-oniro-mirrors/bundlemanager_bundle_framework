@@ -25,7 +25,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-#ifdef BUNDLE_FRAMEWORK_GRAPHICS
 namespace {
 constexpr uint8_t BIT_SIX = 6;
 constexpr uint8_t BIT_FOUR = 4;
@@ -39,10 +38,13 @@ const std::vector<char> g_codes = {
     'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
 };
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
 const std::string FORMAT = "image/png";
+#endif
 const std::string IMAGE_HEADER_INFO = "data:image/png;base64,";
 }
 
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
 bool BundleResourceImageInfo::ConvertToString(
     const std::shared_ptr<Media::PixelMap> pixelMap, std::string &imageInfo)
 {
@@ -125,5 +127,39 @@ bool BundleResourceImageInfo::EncodeBase64(
     return true;
 }
 #endif
+
+bool BundleResourceImageInfo::ConvertToBase64(
+    const std::unique_ptr<uint8_t[]> originalData, const size_t length, std::string &imageInfo)
+{
+    APP_LOGD("start convert to base 64");
+    if ((originalData == nullptr) || (length == 0)) {
+        APP_LOGE("originalData is nullptr or length is 0");
+        return false;
+    }
+    std::string base64data = IMAGE_HEADER_INFO;
+    size_t i = 0;
+    // encode in groups of every 3 bytes
+    for (i = 0; i < length - LEN_THREE; i += LEN_THREE) {
+        base64data += g_codes[originalData[i] >> BIT_TWO];
+        base64data += g_codes[((originalData[i] & 0x3) << BIT_FOUR) | (originalData[i + BIT_ONE] >> BIT_FOUR)];
+        base64data += g_codes[((originalData[i + BIT_ONE] & 0xF) << BIT_TWO) | (originalData[i + BIT_TWO] >> BIT_SIX)];
+        base64data += g_codes[originalData[i + BIT_TWO] & 0x3F];
+    }
+    // Handle the case where there is one element left
+    if (length % LEN_THREE == 1) {
+        base64data += g_codes[originalData[i] >> BIT_TWO];
+        base64data += g_codes[(originalData[i] & 0x3) << BIT_FOUR];
+        base64data += '=';
+        base64data += '=';
+    } else {
+        base64data += g_codes[originalData[i] >> BIT_TWO];
+        base64data += g_codes[((originalData[i] & 0x3) << BIT_FOUR) | (originalData[i + BIT_ONE] >> BIT_FOUR)];
+        base64data += g_codes[(originalData[i + BIT_ONE] & 0xF) << BIT_TWO];
+        base64data += '=';
+    }
+    imageInfo = base64data;
+    APP_LOGD("end");
+    return true;
+}
 } // AppExecFwk
 } // OHOS
