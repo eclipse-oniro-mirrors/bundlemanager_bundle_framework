@@ -97,6 +97,8 @@ const int32_t PERMS_INDEX_SEVEN = 7;
 const int32_t PERMS_INDEX_EIGHT = 8;
 const size_t ODID_LENGTH = 36;
 const int32_t TEST_INSTALLER_UID = 100;
+const int32_t TEST_APP_INDEX1 = 1;
+const int32_t TEST_APP_INDEX2 = 2;
 }  // namespace
 
 namespace OHOS {
@@ -5478,6 +5480,64 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0200, Function | MediumTest | L
 }
 
 /**
+ * @tc.number: QueryAbilityInfos_0300
+ * @tc.name: test QueryAbilityInfos proxy
+ * @tc.desc: 1.install clone app
+ *           2.query main and clone app's ability infos
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0300, Function | MediumTest | Level1)
+{
+    StartProcess();
+    std::cout << "START QueryAbilityInfos_0300" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr);
+    int appIndex1 = TEST_APP_INDEX1;
+    ErrCode ret = installerProxy->InstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+    int appIndex2 = TEST_APP_INDEX2;
+    ret = installerProxy->InstallCloneApp(appName, USERID, appIndex2);
+    EXPECT_EQ(ret, ERR_OK);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string abilityName = "MainAbility";
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<AbilityInfo> abilityInfos;
+    auto queryRes = bundleMgrProxy->QueryAbilityInfos(want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfos);
+    EXPECT_TRUE(queryRes);
+    size_t expectedSize = 3;
+    EXPECT_EQ(abilityInfos.size(), expectedSize);
+    int index = 0;
+    for (const auto &item : abilityInfos) {
+        EXPECT_EQ(item.appIndex, index++);
+    }
+
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END QueryAbilityInfos_0300" << std::endl;
+}
+
+/**
  * @tc.number: QueryAbilityInfosV9_0100
  * @tc.name: test QueryAbilityInfosV9 proxy
  * @tc.desc: 1.query ability infos
@@ -5512,6 +5572,64 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END QueryAbilityInfos_0100" << std::endl;
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_0200
+ * @tc.name: test QueryAbilityInfosV9 proxy
+ * @tc.desc: 1.query ability infos
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0200, Function | MediumTest | Level1)
+{
+    StartProcess();
+    std::cout << "START QueryAbilityInfosV9_0200" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr);
+    int appIndex1 = TEST_APP_INDEX1;
+    ErrCode ret = installerProxy->InstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+    int appIndex2 = TEST_APP_INDEX2;
+    ret = installerProxy->InstallCloneApp(appName, USERID, appIndex2);
+    EXPECT_EQ(ret, ERR_OK);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string abilityName = "MainAbility";
+    Want want;
+    ElementName name;
+    name.SetAbilityName(abilityName);
+    name.SetBundleName(appName);
+    want.SetElement(name);
+    std::vector<AbilityInfo> abilityInfos;
+    ret = bundleMgrProxy->QueryAbilityInfosV9(want, static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT), USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    size_t expectedSize = 3;
+    EXPECT_EQ(abilityInfos.size(), expectedSize);
+    int index = 0;
+    for (const auto &item : abilityInfos) {
+        EXPECT_EQ(item.appIndex, index++);
+    }
+
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex2);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END QueryAbilityInfosV9_0200" << std::endl;
 }
 
 /**
@@ -5967,6 +6085,46 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleStats_0100, Function | SmallTest | Level
     std::cout << "END GetBundleStats_0100" << std::endl;
 }
 
+/**
+ * @tc.number: GetBundleStats_0200
+ * @tc.name: test can get the bundle stats info
+ * @tc.desc: 1.system run normally
+ *           2.install the clone app
+ *           3.get bundle stats info with appIndex successfully
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleStats_0200, Function | SmallTest | Level1)
+{
+    StartProcess();
+    std::cout << "START GetBundleStats_0200" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    std::string appName = "com.example.ohosproject.hmservice";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr);
+    int appIndex1 = TEST_APP_INDEX1;
+    ErrCode ret = installerProxy->InstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::vector<int64_t> bundleStats;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    auto res = bundleMgrProxy->GetBundleStats(appName, USERID, bundleStats, appIndex1);
+    EXPECT_TRUE(res);
+
+    ret = installerProxy->UninstallCloneApp(appName, USERID, appIndex1);
+    EXPECT_EQ(ret, ERR_OK);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleStats_0200" << std::endl;
+}
 /**
  * @tc.number: GetStringById_0100
  * @tc.name: test can get the string info
@@ -6457,7 +6615,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneApp_0100, Function | MediumTest | Lev
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     std::string bundleName = "";
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     ErrCode ret = installerProxy->InstallCloneApp(bundleName, TEST_INSTALLER_UID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
 }
@@ -7131,7 +7289,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxAbilityInfo_0100, Function | SmallTest 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     Want want;
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     int32_t flags = 0;
     int32_t userId = 100;
     AbilityInfo abilityInfo;
@@ -7156,7 +7314,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxExtAbilityInfos_0100, Function | SmallT
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     Want want;
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     int32_t flags = 0;
     int32_t userId = 100;
     std::vector<ExtensionAbilityInfo> extensionInfos;
@@ -7181,7 +7339,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxHapModuleInfo_0100, Function | SmallTes
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     AbilityInfo abilityInfo;
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     int32_t userId = 100;
     HapModuleInfo hapModuleInfo;
     ErrCode ret = bundleMgrProxy->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
@@ -7594,7 +7752,7 @@ HWTEST_F(ActsBmsKitSystemTest, bundle_installer_0600, Function | MediumTest | Le
     std::string bundlePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     int32_t dlpType = 1;
     int32_t userId = 100;
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     auto res = installerProxy.InstallSandboxApp(bundlePath, dlpType, userId, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR);
     std::cout << "test bundle_installer_0600 done" << std::endl;
@@ -9086,7 +9244,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest001_AppNotExist, Function | Me
     }
     const std::string bundleName = "ohos.samples.appnotfound";
     const int32_t userId = 100;
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
 
     EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED
@@ -9108,7 +9266,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest002_UserNotFound, Function | M
     }
     const std::string bundleName = "ohos.samples.etsclock";
     const int32_t userId = 200; // ensure userId 200 not in system
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
     EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
         || result == ERR_APPEXECFWK_PERMISSION_DENIED);
@@ -9132,7 +9290,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetCloneAppIndexes_0001, Function | MediumTest | 
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
-    int32_t appIndex = 1;
+    int32_t appIndex = TEST_APP_INDEX1;
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     ASSERT_NE(installerProxy, nullptr);
     ErrCode ret = installerProxy->InstallCloneApp(appName, USERID, appIndex);
@@ -9188,6 +9346,5 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameAndIndexForUid_0100, Function | MediumTest
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetNameAndIndexForUid_0100" << std::endl;
 }
-
 }  // namespace AppExecFwk
 }  // namespace OHOS
