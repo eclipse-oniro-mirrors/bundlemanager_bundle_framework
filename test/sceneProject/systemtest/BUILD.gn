@@ -19,6 +19,7 @@ group("systemtest_hap") {
     # deps file
     "BundleClient:BundleClient",
     "bundle_hsp:bundle_hsp",
+    "extensionDirTest:extensionDirTest",
     "jsBundle/jsThirdBundle:jsThirdBundle",
     "multiUser:multiUser",
     "stSystemBundle:stSystemBundle",

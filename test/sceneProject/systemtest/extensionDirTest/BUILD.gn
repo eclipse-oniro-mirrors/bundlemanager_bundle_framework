@@ -1,0 +1,37 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+group("extensionDirTest") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    "oneExtensionDir/version1/entry:version1_oneExtension_entry_hap",
+    "oneExtensionDir/version1/entry_ex2:version1_oneExtension2_entry_hap",
+    "oneExtensionDir/version1/feature:version1_oneExtension_feature_hap",
+    "oneExtensionDir/version2/entry:version2_oneExtension_entry_hap",
+    "oneExtensionDir/version2/entry_ex2:version2_oneExtension2_entry_hap",
+    "oneExtensionDir/version2/feature:version2_oneExtension_feature_hap",
+    "twoExtensionDir/version1/entry:version1_twoExtension_entry_hap",
+    "twoExtensionDir/version1/feature:version1_twoExtension_feature_hap",
+    "twoExtensionDir/version2/entry:version2_twoExtension_entry_hap",
+    "twoExtensionDir/version2/feature:version2_twoExtension_feature_hap",
+    "withoutExtensionDir/version1/entry:version1_withoutExtension_entry_hap",
+    "withoutExtensionDir/version1/feature:version1_withoutExtension_feature_hap",
+    "withoutExtensionDir/version1_form/entry:version1_withoutExtension_entry_form_hap",
+    "withoutExtensionDir/version2/entry:version2_withoutExtension_entry_hap",
+    "withoutExtensionDir/version2/feature:version2_withoutExtension_feature_hap",
+    "withoutExtensionDir/version2_form/entry:version2_withoutExtension_entry_form_hap",
+  ]
+}

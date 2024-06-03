@@ -1,0 +1,53 @@
+{
+  "module": {
+    "name": "feature",
+    "type": "feature",
+    "description": "$string:module_desc",
+    "mainElement": "FeatureAbility",
+    "deviceTypes": [
+      "2in1",
+      "default",
+      "phone",
+      "tablet"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "abilities": [
+      {
+        "name": "FeatureAbility",
+        "srcEntrance": "./ets/featureability/FeatureAbility.ts",
+        "description": "$string:FeatureAbility_desc",
+        "icon": "$media:icon",
+        "label": "$string:FeatureAbility_label",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "visible": true
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "FeatureInputMethodEx1",
+        "srcEntry": "./ets/featureability/FeatureAbility.ts",
+        "label": "$string:FeatureAbility_label",
+        "description": "$string:FeatureAbility_desc",
+        "type": "inputMethod",
+        "dataGroupIds": [
+          "test1",
+          "test2"
+        ]
+      },
+      {
+        "name": "FeatureInputMethodEx2",
+        "srcEntry": "./ets/featureability/FeatureAbility.ts",
+        "label": "$string:FeatureAbility_label",
+        "description": "$string:FeatureAbility_desc",
+        "type": "inputMethod",
+        "dataGroupIds": [
+          "test1",
+          "test3"
+        ]
+      }
+    ]
+  }
+}
