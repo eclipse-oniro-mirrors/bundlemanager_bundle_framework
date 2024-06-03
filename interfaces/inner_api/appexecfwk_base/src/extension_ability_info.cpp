@@ -56,7 +56,6 @@ const std::string APP_INDEX = "appIndex";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
 const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
-const std::string EXTENSION_SANDBOX_PATH = "sandboxPath";
 const std::string DATA_GROUP_IDS = "dataGroupIds";
 const std::string JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
 const std::string SKILLS = "skills";
@@ -228,14 +227,6 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     }
     extensionProcessMode = static_cast<ExtensionProcessMode>(parcel.ReadInt32());
     needCreateSandbox = parcel.ReadBool();
-    int32_t sandboxPathMapSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sandboxPathMapSize);
-    CONTAINER_SECURITY_VERIFY(parcel, sandboxPathMapSize, &sandboxPath);
-    for (auto i = 0; i < sandboxPathMapSize; i++) {
-        std::string key = Str16ToStr8(parcel.ReadString16());
-        std::string sanBoxPaths = Str16ToStr8(parcel.ReadString16());
-        sandboxPath[key] = sanBoxPaths;
-    }
     int32_t dataGroupIdsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
     CONTAINER_SECURITY_VERIFY(parcel, dataGroupIdsSize, &dataGroupIds);
@@ -332,11 +323,6 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionProcessMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sandboxPath.size());
-    for (auto &item : sandboxPath) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel,  Str8ToStr16(item.first));
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(item.second));
-    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
@@ -384,7 +370,6 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {APP_INDEX, extensionInfo.appIndex},
         {EXTENSION_PROCESS_MODE, extensionInfo.extensionProcessMode},
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
-        {EXTENSION_SANDBOX_PATH, extensionInfo.sandboxPath},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
         {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
         {JSON_KEY_SKILLS, extensionInfo.skills},
@@ -617,14 +602,6 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         NEED_CREATE_SANDBOX,
         extensionInfo.needCreateSandbox,
         JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
-        jsonObjectEnd,
-        EXTENSION_SANDBOX_PATH,
-        extensionInfo.sandboxPath,
-        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

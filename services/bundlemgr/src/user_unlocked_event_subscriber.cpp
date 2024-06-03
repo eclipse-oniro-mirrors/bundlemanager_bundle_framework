@@ -33,6 +33,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 static constexpr int32_t MODE_BASE = 07777;
+static constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -117,7 +118,40 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             return false;
         }
     }
+    CreateDataGroupDir(bundleInfo, userId);
     return true;
+}
+
+void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("CreateDataGroupDir failed for DataMgr is nullptr");
+        return;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    if (!dataMgr->QueryDataGroupInfos(bundleInfo.name, userId, dataGroupInfos)) {
+        APP_LOGW("QueryDataGroupInfo for bundle %{public}s userId %{public}d failed", bundleInfo.name.c_str(), userId);
+        return;
+    }
+    if (dataGroupInfos.empty()) {
+        return;
+    }
+    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
+        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        if (result == ERR_OK && dirExist) {
+            continue;
+        }
+        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        result = InstalldClient::GetInstance()->Mkdir(dir,
+            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGW("create data group dir %{public}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId);
+        }
+    }
 }
 
 void UpdateAppDataMgr::ChmodBundleDataDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)

@@ -164,8 +164,6 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::vector<Skill> skills;
 
     bool needCreateSandbox = false;
-    // key:userId, value:dirPath
-    std::map<std::string, std::string> sandboxPath;
     std::vector<std::string> dataGroupIds;
     std::vector<std::string> validDataGroupIds;
 
