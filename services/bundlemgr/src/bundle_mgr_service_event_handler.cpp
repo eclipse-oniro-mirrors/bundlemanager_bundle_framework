@@ -1594,7 +1594,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (!updateSelinuxLabel) {
                     UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
                         hasInstalledInfo.isPreInstallApp,
-                        hasInstalledInfo.applicationInfo.debug);
+                        hasInstalledInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
                     updateSelinuxLabel = true;
                 }
                 // Used to judge whether the module has been installed.

@@ -109,7 +109,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         createDirParam.gid = bundleInfo.gid;
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
-        createDirParam.debug = bundleInfo.applicationInfo.debug;
+        createDirParam.debug = bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
@@ -136,7 +136,7 @@ void UpdateAppDataMgr::ChmodBundleDataDir(const std::vector<BundleInfo> &bundleI
         createDirParam.gid = bundleInfo.gid;
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
-        createDirParam.debug = bundleInfo.applicationInfo.debug;
+        createDirParam.debug = bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
         createDirParam.createDirFlag = CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES;
         ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
         createDirParams.emplace_back(createDirParam);
@@ -190,14 +190,14 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         std::string baseDir = baseBundleDataDir + ServiceConstants::BASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
-            bundleInfo.applicationInfo.debug) != ERR_OK) {
+            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDir dir");
             continue;
         }
         std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
-            bundleInfo.applicationInfo.debug) != ERR_OK) {
+            bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDataDir dir");
         }
     }
