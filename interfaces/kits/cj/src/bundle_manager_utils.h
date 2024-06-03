@@ -254,6 +254,7 @@ namespace BundleManager {
         RetSignatureInfo signInfo;
         int64_t installTime;
         int64_t updateTime;
+        int32_t uid;
     };
 
     enum BundleFlag {
