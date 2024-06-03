@@ -4931,7 +4931,7 @@ ErrCode BundleMgrProxy::QueryCloneAbilityInfo(const ElementName &element,
     }
     if (!data.WriteParcelable(&element)) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "write element fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(flags)) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "write flags failed");
@@ -4957,7 +4957,7 @@ ErrCode BundleMgrProxy::GetCloneBundleInfo(const std::string &bundleName, int32_
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetCloneBundleInfo due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
         APP_LOGE("failed to GetCloneBundleInfo due to write bundleName fail");
