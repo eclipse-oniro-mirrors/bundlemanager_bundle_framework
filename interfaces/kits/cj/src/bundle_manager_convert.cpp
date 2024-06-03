@@ -34,7 +34,7 @@ char *MallocCString(const std::string &origin)
         return nullptr;
     }
     auto len = origin.length() + 1;
-    char* res = (char*)malloc(sizeof(char) * len);
+    char* res = static_cast<char *>(malloc(sizeof(char) * len));
     if (res == nullptr) {
         return nullptr;
     }
@@ -43,10 +43,11 @@ char *MallocCString(const std::string &origin)
 
 CArrString g_convertArrString(std::vector<std::string> vecStr)
 {
-    char **retValue = (char **)malloc(sizeof(char *) * vecStr.size());
+    char **retValue = static_cast<char **>(malloc(sizeof(char *) * vecStr.size()));
     if (vecStr.size() > 0) {
         if (retValue != nullptr) {
-            for (int32_t i = 0; i < static_cast<int32_t>(vecStr.size()); i++) {
+            int32_t vecStrSize = static_cast<int32_t>(vecStr.size());
+            for (int32_t i = 0; i < vecStrSize; i++) {
                 retValue[i] = MallocCString(vecStr[i]);
             }
         }
@@ -84,8 +85,9 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
 {
     CArrMetadata data;
     data.size = static_cast<int64_t>(cdata.size());
+    data.head = nullptr;
     if (data.size > 0) {
-        RetMetadata *retValue = (RetMetadata *)malloc(sizeof(RetMetadata) * data.size);
+        RetMetadata *retValue = reinterpret_cast<RetMetadata *>(malloc(sizeof(RetMetadata) * data.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < data.size; i++) {
                 retValue[i] = ConvertMetadata(cdata[i]);
@@ -100,14 +102,14 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
 {
     CArrMoMeta arrMdata;
     arrMdata.size = static_cast<int64_t>(metadata.size());
+    arrMdata.head = nullptr;
     if (arrMdata.size > 0) {
-        ModuleMetadata* retValue = (ModuleMetadata*)malloc(sizeof(ModuleMetadata) * arrMdata.size);
-        int32_t i = 0;
+        ModuleMetadata* retValue = reinterpret_cast<ModuleMetadata *>(malloc(sizeof(ModuleMetadata) * arrMdata.size));
         if (retValue != nullptr) {
+            int32_t i = 0;
             for (const auto &item : metadata) {
                 retValue[i].moduleName = MallocCString(item.first);
-                retValue[i].metadata = ConvertArrMetadata(item.second);
-                i = i + 1;
+                retValue[i++].metadata = ConvertArrMetadata(item.second);
             }
         }
         arrMdata.head = retValue;
@@ -189,9 +191,10 @@ CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
 {
     CArrRetExtensionAbilityInfo exAbInfo;
     exAbInfo.size = static_cast<int64_t>(extensionInfos.size());
+    exAbInfo.head = nullptr;
     if (exAbInfo.size > 0) {
-        RetExtensionAbilityInfo *retValue = (RetExtensionAbilityInfo *)
-        malloc(sizeof(RetExtensionAbilityInfo) * exAbInfo.size);
+        RetExtensionAbilityInfo *retValue = reinterpret_cast<RetExtensionAbilityInfo *>
+        (malloc(sizeof(RetExtensionAbilityInfo) * exAbInfo.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < exAbInfo.size; i++) {
                 retValue[i] = ConvertExtensionAbilityInfo(extensionInfos[i]);
@@ -235,7 +238,7 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
 
     abInfo.supportWindowModes.size = static_cast<int64_t>(cAbilityInfos.windowModes.size());
     if (abInfo.supportWindowModes.size > 0) {
-        int32_t *retValue = (int32_t *)malloc(sizeof(int32_t) * abInfo.supportWindowModes.size);
+        int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * abInfo.supportWindowModes.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < abInfo.supportWindowModes.size; i++) {
                 retValue[i] = static_cast<int32_t>(cAbilityInfos.windowModes[i]);
@@ -257,8 +260,9 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> ab
 {
     CArrRetAbilityInfo abInfo;
     abInfo.size = static_cast<int64_t>(abilityInfos.size());
+    abInfo.head = nullptr;
     if (abInfo.size > 0) {
-        RetAbilityInfo *retValue = (RetAbilityInfo *)malloc(sizeof(RetAbilityInfo) * abInfo.size);
+        RetAbilityInfo *retValue = reinterpret_cast<RetAbilityInfo *>(malloc(sizeof(RetAbilityInfo) * abInfo.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < abInfo.size; i++) {
                 retValue[i] = ConvertAbilityInfo(abilityInfos[i]);
@@ -273,8 +277,9 @@ CArrRetPreloadItem ConvertPreloadItem(std::vector<AppExecFwk::PreloadItem> prelo
 {
     CArrRetPreloadItem pLoad;
     pLoad.size = static_cast<int64_t>(preloads.size());
+    pLoad.head = nullptr;
     if (pLoad.size > 0) {
-        RetPreloadItem *retValue = (RetPreloadItem *)malloc(sizeof(RetPreloadItem) * pLoad.size);
+        RetPreloadItem *retValue = reinterpret_cast<RetPreloadItem *>(malloc(sizeof(RetPreloadItem) * pLoad.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < pLoad.size; i++) {
                 retValue[i].moduleName = MallocCString(preloads[i].moduleName);
@@ -289,8 +294,9 @@ CArrRetDependency ConvertDependency(std::vector<AppExecFwk::Dependency> dependen
 {
     CArrRetDependency dep;
     dep.size = static_cast<int64_t>(dependencies.size());
+    dep.head = nullptr;
     if (dep.size > 0) {
-        RetDependency *retValue = (RetDependency *)malloc(sizeof(RetDependency) * dep.size);
+        RetDependency *retValue = reinterpret_cast<RetDependency *>(malloc(sizeof(RetDependency) * dep.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < dep.size; i++) {
                 retValue[i].bundleName = MallocCString(dependencies[i].bundleName);
@@ -334,6 +340,8 @@ RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
 
     if (!hapModuleInfo.fileContextMenu.empty()) {
         hapInfo.fileContextMenuConfig = MallocCString(hapModuleInfo.fileContextMenu);
+    } else {
+        hapInfo.fileContextMenuConfig = nullptr;
     }
     return hapInfo;
 }
@@ -342,7 +350,7 @@ CArrHapInfo ConvertArrHapInfo(std::vector<AppExecFwk::HapModuleInfo> hapModuleIn
 {
     CArrHapInfo hapInfos;
     hapInfos.size = static_cast<int64_t>(hapModuleInfos.size());
-    RetHapModuleInfo *retValue = (RetHapModuleInfo *)malloc(sizeof(RetHapModuleInfo) * hapInfos.size);
+    RetHapModuleInfo *retValue = reinterpret_cast<RetHapModuleInfo *>(malloc(sizeof(RetHapModuleInfo) * hapInfos.size));
     if (retValue == nullptr) {
         hapInfos.head = nullptr;
         return hapInfos;
@@ -358,9 +366,10 @@ CArrReqPerDetail ConvertArrReqPerDetail(std::vector<AppExecFwk::RequestPermissio
 {
     CArrReqPerDetail perDetail;
     perDetail.size = static_cast<int64_t>(reqPermissionDetails.size());
+    perDetail.head = nullptr;
     if (perDetail.size > 0) {
-        RetReqPermissionDetail *retValue = (RetReqPermissionDetail *)
-                                            malloc(sizeof(RetReqPermissionDetail) * perDetail.size);
+        RetReqPermissionDetail *retValue = reinterpret_cast<RetReqPermissionDetail *>
+                                            (malloc(sizeof(RetReqPermissionDetail) * perDetail.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < perDetail.size; i++) {
                 retValue[i] = ConvertRequestPermission(reqPermissionDetails[i]);
@@ -391,7 +400,7 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
 
     bundleInfo.state.size = static_cast<int64_t>(cBundleInfo.reqPermissionStates.size());
     if (bundleInfo.state.size > 0) {
-        int32_t *retValue = (int32_t *)malloc(sizeof(int32_t) * bundleInfo.state.size);
+        int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * bundleInfo.state.size));
         if (retValue != nullptr) {
             for (int32_t i = 0; i < bundleInfo.state.size; i++) {
                 retValue[i] = static_cast<int32_t>(cBundleInfo.reqPermissionStates[i]);
@@ -425,8 +434,12 @@ CArrRecoverableApplicationInfo CovertCArrRecoverableApplicationInfo(
 {
     CArrRecoverableApplicationInfo arr;
     arr.size = static_cast<int64_t>(info.size());
-    for (int32_t i = 0; i< arr.size; i++) {
-        arr.head[i] = CovertCRecoverableApplicationInfo(info[i]);
+    if (arr.size <= 0) {
+        arr.head = nullptr;
+    } else {
+        for (int32_t i = 0; i< arr.size; i++) {
+            arr.head[i] = CovertCRecoverableApplicationInfo(info[i]);
+        }
     }
     return arr;
 }
