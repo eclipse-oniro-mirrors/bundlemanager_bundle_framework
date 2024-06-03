@@ -372,13 +372,12 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
     const OPTIONS &options, FilterCallback filterCB)
 {
     FilePath destPath = destFile;
-    if (FilePath::DirectoryExists(destFile)) {
-        if (!FilePath::PathIsValid(destFile)) {
-            APP_LOGI("%{public}s called fail, destFile isn't Exist.", __func__);
-            return ERR_ZLIB_DEST_FILE_DISABLED;
-        }
-    } else if (!FilePath::PathIsValid(destPath.DirName())) {
-        APP_LOGI("%{public}s called fail, The path where destFile is located doesn't exist.", __func__);
+    if (!FilePath::DirectoryExists(destPath.DirName())) {
+        APP_LOGE("The destPath not exist.");
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+    if (!FilePath::PathIsWriteable(destPath.DirName())) {
+        APP_LOGE("The destPath not writeable.");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -407,13 +406,12 @@ ErrCode ZipsWithFilterCallback(const std::vector<FilePath> &srcFiles, const File
     const OPTIONS &options, FilterCallback filterCB)
 {
     FilePath destPath = destFile;
-    if (FilePath::DirectoryExists(destFile)) {
-        if (!FilePath::PathIsValid(destFile)) {
-            APP_LOGI("%{public}s called fail, destFile isn't Exist.", __func__);
-            return ERR_ZLIB_DEST_FILE_DISABLED;
-        }
-    } else if (!FilePath::PathIsValid(destPath.DirName())) {
-        APP_LOGI("%{public}s called fail, The path where destFile is located doesn't exist.", __func__);
+    if (!FilePath::DirectoryExists(destPath.DirName())) {
+        APP_LOGE("The destPath not exist.");
+        return ERR_ZLIB_DEST_FILE_DISABLED;
+    }
+    if (!FilePath::PathIsWriteable(destPath.DirName())) {
+        APP_LOGE("The destPath not writeable.");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
