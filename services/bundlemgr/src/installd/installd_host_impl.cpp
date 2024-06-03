@@ -15,6 +15,7 @@
 
 #include "installd/installd_host_impl.h"
 
+#include <cinttypes>
 #include <cstdio>
 #include <fstream>
 #include <map>
@@ -834,7 +835,7 @@ int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
     }
     int64_t bundleLocalSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
     LOG_D(BMS_TAG_INSTALLD,
-        "GetBundleStats, allBundleLocalSize = %{public}lld, bundleLocalSize = %{public}lld",
+        "GetBundleStats, allBundleLocalSize = %{public}" PRId64 ", bundleLocalSize = %{public}" PRId64,
         allBundleLocalSize, bundleLocalSize);
     int64_t systemFolderSize = allBundleLocalSize - bundleLocalSize;
     if (appIndex == 0) {
@@ -859,7 +860,7 @@ ErrCode InstalldHostImpl::GetBundleStats(const std::string &bundleName, const in
 
     std::vector<std::string> cachePath;
     int64_t appDataSize = HandleAppDataSizeStats(bundleName, userId, appIndex, cachePath);
-    LOG_D(BMS_TAG_INSTALLD, "cachePath.size() = %{public}u", cachePath.size());
+    LOG_D(BMS_TAG_INSTALLD, "cachePath.size() = %{public}zu", cachePath.size());
     // index 0 : bundle data size
     bundleStats.push_back(appDataSize);
     // index 1 : local bundle data size
