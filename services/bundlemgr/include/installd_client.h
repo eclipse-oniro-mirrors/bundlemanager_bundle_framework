@@ -85,6 +85,13 @@ public:
      */
     ErrCode RemoveDir(const std::string &dir);
     /**
+     * @brief Get disk usage for dir.
+     * @param dir Indicates the directory.
+     * @param isRealPath Indicates isRealPath.
+     * @return Returns true if successfully; returns false otherwise.
+     */
+    int64_t GetDiskUsage(const std::string &dir, bool isRealPath = false);
+    /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.

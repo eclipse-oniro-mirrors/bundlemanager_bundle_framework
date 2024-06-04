@@ -127,6 +127,8 @@ void InstalldHost::Init()
         &InstalldHost::HandleIsExistExtensionDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR),
         &InstalldHost::HandleCreateExtensionDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE),
+        &InstalldHost::HandleGetDiskUsage);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -323,6 +325,16 @@ bool InstalldHost::HandleRemoveDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string removedDir = Str16ToStr8(data.ReadString16());
     ErrCode result = RemoveDir(removedDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply)
+{
+    std::string dir = Str16ToStr8(data.ReadString16());
+    bool isRealPath = data.ReadBool();
+
+    ErrCode result = GetDiskUsage(dir, isRealPath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
