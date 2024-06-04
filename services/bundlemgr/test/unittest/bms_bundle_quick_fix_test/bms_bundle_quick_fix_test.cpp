@@ -370,22 +370,7 @@ AppQuickFix BmsBundleQuickFixTest::CreateAppQuickFix()
 
 sptr<IQuickFixManager> BmsBundleQuickFixTest::GetQuickFixManagerProxy()
 {
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        APP_LOGE("GetSystemAbilityManager failed.");
-        return nullptr;
-    }
-    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (bundleMgrSa == nullptr) {
-        APP_LOGE("GetSystemAbility failed.");
-        return nullptr;
-    }
-    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-    if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
-        return nullptr;
-    }
-    return bundleMgr->GetQuickFixManagerProxy();
+    return bundleMgrService_->GetQuickFixManagerProxy();
 }
 
 void BmsBundleQuickFixTest::CreateFiles(const std::vector<std::string>& sourceFiles)
@@ -1043,7 +1028,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0026, Function | SmallTest
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0027, Function | SmallTest | Level0)
 {
-    auto quickFixProxy= GetQuickFixManagerProxy();
+    auto quickFixProxy = GetQuickFixManagerProxy();
     EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
@@ -3606,7 +3591,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0003, Function | SmallTest | 
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles = {"hello.hqf"};
     ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
     DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
 }
@@ -3881,6 +3866,48 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixer_0100, Function | SmallTest | Level0)
     EXPECT_EQ(fixer.statusCallback_, nullptr);
     fixer.DeleteQuickFix("");
     EXPECT_EQ(fixer.statusCallback_, nullptr);
+}
+
+/**
+ * @tc.number: QuickFixMgr_0100
+ * @tc.name: Test QuickFixMgr
+ * @tc.desc: 1.Test QuickFixMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMgr_0100, Function | SmallTest | Level0)
+{
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixMgr quickFixMgr;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgr.DeployQuickFix(bundleFilePaths, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = quickFixMgr.SwitchQuickFix("", false, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = quickFixMgr.DeleteQuickFix("", statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0100
+ * @tc.name: Test QuickFixManagerHostImpl
+ * @tc.desc: 1.Test the failed scene of QuickFixManagerHostImpl
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0100, Function | SmallTest | Level0)
+{
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgrHostImpl.DeployQuickFix(bundleFilePaths, statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    ret = quickFixMgrHostImpl.SwitchQuickFix("", false, statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    ret = quickFixMgrHostImpl.DeleteQuickFix("", statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    std::string fileName = "";
+    int32_t fd = 0;
+    std::string path;
+    auto res = quickFixMgrHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
 /**
