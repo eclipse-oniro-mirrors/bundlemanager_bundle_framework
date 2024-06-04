@@ -1366,7 +1366,7 @@ HWTEST_F(BmsBundleManagerTest, GetApplicationInfosV9_0200, Function | MediumTest
     data.emplace_back(data1);
     innerModuleInfo.metadata = data;
     info.InsertInnerModuleInfo("module", innerModuleInfo);
-    int32_t notExistUserId = Constants::NOT_EXIST_USERID;
+    int32_t notExistUserId = ServiceConstants::NOT_EXIST_USERID;
     ret = info.GetApplicationInfoV9(permissionFlag, notExistUserId, appInfo);
     EXPECT_EQ(ret, ERR_OK);
     auto metaDataFlag =
@@ -1454,7 +1454,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0003, Function | SmallTest | Lev
     AbilityInfo abilityInfo;
     GetBundleDataMgr()->bundleInfos_.clear();
     bool testRet = GetBundleDataMgr()->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX, 100, abilityInfo);
+        ServiceConstants::DATA_ABILITY_URI_PREFIX, 100, abilityInfo);
     EXPECT_EQ(testRet, false);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
@@ -1470,7 +1470,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0004, Function | SmallTest | Lev
     std::vector<AbilityInfo> abilityInfos;
     GetBundleDataMgr()->bundleInfos_.clear();
     bool testRet = GetBundleDataMgr()->QueryAbilityInfosByUri(
-        Constants::DATA_ABILITY_URI_PREFIX, abilityInfos);
+        ServiceConstants::DATA_ABILITY_URI_PREFIX, abilityInfos);
     EXPECT_EQ(testRet, false);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
@@ -2058,7 +2058,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0007, Function | SmallTest |
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
     bool isEnable;
-    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, Constants::NOT_EXIST_USERID, isEnable);
+    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, ServiceConstants::NOT_EXIST_USERID, isEnable);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -2086,7 +2086,7 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0009, Function | SmallTest |
     InnerBundleInfo info;
     bool isEnabled = true;
     ErrCode ret = info.SetAbilityEnabled(
-        Constants::MODULE_NAME, Constants::ABILITY_NAME, isEnabled, Constants::NOT_EXIST_USERID);
+        Constants::MODULE_NAME, Constants::ABILITY_NAME, isEnabled, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
 }
 
@@ -3255,7 +3255,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0014, Function | SmallTest | Leve
 {
     AbilityInfo abilityInfo;
     bool testRet = GetBundleDataMgr()->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX, Constants::INVALID_USERID, abilityInfo);
+        ServiceConstants::DATA_ABILITY_URI_PREFIX, Constants::INVALID_USERID, abilityInfo);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3985,7 +3985,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0012, Function | SmallTest | Lev
 {
     bool testRet = GetBundleDataMgr()->CheckIsSystemAppByUid(Constants::ROOT_UID);
     EXPECT_EQ(testRet, true);
-    testRet = GetBundleDataMgr()->CheckIsSystemAppByUid(Constants::BMS_UID);
+    testRet = GetBundleDataMgr()->CheckIsSystemAppByUid(ServiceConstants::BMS_UID);
     EXPECT_EQ(testRet, true);
 }
 

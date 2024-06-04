@@ -28,7 +28,7 @@ SandboxManagerRdb::SandboxManagerRdb()
 {
     APP_LOGI("create SandboxManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = SAND_BOX_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

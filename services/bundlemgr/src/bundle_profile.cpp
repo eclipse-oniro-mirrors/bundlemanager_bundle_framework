@@ -1927,10 +1927,10 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
     if (moduleName.empty()) {
         return false;
     }
-    if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         return false;
     }
-    if (moduleName.find(Constants::MODULE_NAME_SEPARATOR) != std::string::npos) {
+    if (moduleName.find(ServiceConstants::MODULE_NAME_SEPARATOR) != std::string::npos) {
         APP_LOGE("module name should not contain ,");
         return false;
     }
@@ -2086,15 +2086,15 @@ bool ParserNativeSo(
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
-    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
         APP_LOGD("Abi is empty");
         return false;
     }
 
     bool isDefault =
-        std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
-    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+        std::find(abiList.begin(), abiList.end(), ServiceConstants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64);
     APP_LOGD("abi list : %{public}s, isDefault : %{public}d", abis.c_str(), isDefault);
     std::string cpuAbi;
     std::string soRelativePath;
@@ -2421,7 +2421,7 @@ bool ToAbilityInfo(
     abilityInfo.deviceTypes = configJson.module.deviceType;
     abilityInfo.deviceCapabilities = ability.deviceCapability;
     if (iterType->second == AbilityType::DATA &&
-        ability.uri.find(Constants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
+        ability.uri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
         APP_LOGE("ability uri invalid.");
         return false;
     }
@@ -2582,7 +2582,8 @@ bool ToInnerBundleInfo(
                         configJson.app.bundleName, configJson.module.distro.moduleName, ability.labelId);
                     find = true;
                 }
-                if (std::find(skill.entities.begin(), skill.entities.end(), Constants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
+                if (std::find(skill.entities.begin(), skill.entities.end(),
+                    ServiceConstants::FLAG_HOME_INTENT_FROM_SYSTEM) !=
                     skill.entities.end() && transformParam.isPreInstallApp &&
                     (abilityInfo.type == AbilityType::PAGE)) {
                     applicationInfo.isLauncherApp = true;
@@ -2594,7 +2595,7 @@ bool ToInnerBundleInfo(
     }
     if ((!find || !isExistPageAbility) && !transformParam.isPreInstallApp) {
         applicationInfo.needAppDetail = true;
-        if (BundleUtil::IsExistDir(Constants::SYSTEM_LIB64)) {
+        if (BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64)) {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH_64;
         } else {
             applicationInfo.appDetailAbilityLibraryPath = Profile::APP_DETAIL_ABILITY_LIBRARY_PATH;

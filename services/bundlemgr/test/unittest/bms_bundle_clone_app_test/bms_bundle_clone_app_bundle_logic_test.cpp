@@ -471,7 +471,7 @@ HWTEST_F(BmsBundleCloneAppBundleLogicTest, VerifyAndAckCloneAppIndex_0003, Funct
     auto res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX);
 
-    appIndex = Constants::CLONE_APP_INDEX_MAX + 1;
+    appIndex = ServiceConstants::CLONE_APP_INDEX_MAX + 1;
     res = innerBundleInfo.VerifyAndAckCloneAppIndex(userId, appIndex);
     EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER);
 }

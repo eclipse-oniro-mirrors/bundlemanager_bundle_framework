@@ -123,7 +123,7 @@ bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames) const
             std::string suffixStr = entry.first.substr(position);
             isHqfFile = suffixStr == ServiceConstants::QUICK_FIX_FILE_SUFFIX;
         }
-        if ((entry.first.find(Constants::RELATIVE_PATH) == std::string::npos) && !isHqfFile) {
+        if ((entry.first.find(ServiceConstants::RELATIVE_PATH) == std::string::npos) && !isHqfFile) {
             fileNames.emplace_back(entry.first);
         }
     };

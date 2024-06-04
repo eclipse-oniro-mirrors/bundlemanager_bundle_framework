@@ -92,9 +92,9 @@ ErrCode QuickFixDeployer::DeployQuickFix()
         std::string oldPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR +
             appQuick.bundleName + ServiceConstants::PATH_SEPARATOR;
         if (appQuick.deployingAppqfInfo.type == QuickFixType::HOT_RELOAD) {
-            oldPath += Constants::HOT_RELOAD_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
+            oldPath += ServiceConstants::HOT_RELOAD_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
         } else {
-            oldPath += Constants::PATCH_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
+            oldPath += ServiceConstants::PATCH_PATH + std::to_string(appQuick.deployingAppqfInfo.versionCode);
         }
         if (InstalldClient::GetInstance()->RemoveDir(oldPath)) {
             LOG_E(BMS_TAG_QUICK_FIX, "delete %{private}s failed", oldPath.c_str());
@@ -328,8 +328,9 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
         if (!targetPath_.empty()) {
             nativeLibraryPath = PATCH_DIR + targetPath_ + ServiceConstants::PATH_SEPARATOR + libraryPath;
         } else {
-            nativeLibraryPath = Constants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode) +
-                ServiceConstants::PATH_SEPARATOR + libraryPath;
+            nativeLibraryPath = ServiceConstants::PATCH_PATH
+                + std::to_string(appQuickFix.deployingAppqfInfo.versionCode)
+                + ServiceConstants::PATH_SEPARATOR + libraryPath;
         }
     } else {
         LOG_I(BMS_TAG_QUICK_FIX, "So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
@@ -345,7 +346,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
             + ServiceConstants::PATH_SEPARATOR + PATCH_DIR + targetPath_;
     } else {
         patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName
-            + ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH
+            + ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH
             + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     }
     if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
@@ -378,7 +379,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
 ErrCode QuickFixDeployer::ProcessHotReloadDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
 {
     patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + appQuickFix.bundleName +
-        ServiceConstants::PATH_SEPARATOR + Constants::HOT_RELOAD_PATH +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::HOT_RELOAD_PATH +
         std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
     ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
     if (ret != ERR_OK) {
@@ -673,7 +674,7 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
     std::vector<std::string> &realFilePaths)
 {
     for (const auto &path : bundleFilePaths) {
-        if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        if (path.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
             LOG_E(BMS_TAG_QUICK_FIX, "ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }

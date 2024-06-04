@@ -411,7 +411,7 @@ bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId
 ErrCode DefaultAppMgr::GetBundleInfoByAppType(
     int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
-    int32_t key = backup ? Constants::BACKUP_DEFAULT_APP_KEY : userId;
+    int32_t key = backup ? ServiceConstants::BACKUP_DEFAULT_APP_KEY : userId;
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(key, type, element);
     if (!ret) {
@@ -430,7 +430,7 @@ ErrCode DefaultAppMgr::GetBundleInfoByAppType(
 ErrCode DefaultAppMgr::GetBundleInfoByFileType(
     int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
-    int32_t key = backup ? Constants::BACKUP_DEFAULT_APP_KEY : userId;
+    int32_t key = backup ? ServiceConstants::BACKUP_DEFAULT_APP_KEY : userId;
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(key, infos);
     if (!ret) {

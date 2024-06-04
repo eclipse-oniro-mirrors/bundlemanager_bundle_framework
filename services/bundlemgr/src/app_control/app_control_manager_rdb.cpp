@@ -54,7 +54,7 @@ AppControlManagerRdb::AppControlManagerRdb()
 {
     LOG_D(BMS_TAG_APP_CONTROL, "create AppControlManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = APP_CONTROL_RDB_TABLE_NAME;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "

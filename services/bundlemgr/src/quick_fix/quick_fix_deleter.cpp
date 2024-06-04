@@ -126,11 +126,11 @@ ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const s
             appqfInfo.nativeLibraryPath.find(ServiceConstants::PATH_SEPARATOR)) == PATCH_DIR) {
             patchPath += PATCH_DIR;
         } else {
-            patchPath += Constants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
+            patchPath += ServiceConstants::PATCH_PATH + std::to_string(appqfInfo.versionCode);
         }
     }
     if (appqfInfo.type == QuickFixType::HOT_RELOAD) {
-        patchPath += Constants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
+        patchPath += ServiceConstants::HOT_RELOAD_PATH + std::to_string(appqfInfo.versionCode);
     }
 
     LOG_D(BMS_TAG_QUICK_FIX, "patch path is %{public}s", patchPath.c_str());

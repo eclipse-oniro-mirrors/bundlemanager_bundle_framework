@@ -33,7 +33,7 @@ DefaultAppRdb::DefaultAppRdb()
 {
     LOG_D(BMS_TAG_DEFAULT_APP, "create DefaultAppRdb.");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = DEFAULT_APP_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
@@ -227,7 +227,7 @@ void DefaultAppRdb::LoadBackUpDefaultApplicationConfig()
         return;
     }
     // save default app config to db
-    SetDefaultApplicationInfos(Constants::BACKUP_DEFAULT_APP_KEY, defaultAppData.infos);
+    SetDefaultApplicationInfos(ServiceConstants::BACKUP_DEFAULT_APP_KEY, defaultAppData.infos);
     LOG_D(BMS_TAG_DEFAULT_APP, "end");
 }
 

@@ -187,7 +187,7 @@ bool CheckNameIsValid(const std::string &name)
         LOG_E(BMS_TAG_QUICK_FIX, "CheckNameIsValid: name is empty");
         return false;
     }
-    if (name.find(Constants::RELATIVE_PATH) != std::string::npos) {
+    if (name.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
         return false;
     }
     return true;
@@ -265,13 +265,13 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
 {
     std::string abis = GetAbiList();
     std::vector<std::string> abiList;
-    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
         LOG_E(BMS_TAG_QUICK_FIX, "Abi is empty");
         return false;
     }
-    bool isDefault = std::find(abiList.begin(), abiList.end(), Constants::ABI_DEFAULT) != abiList.end();
-    bool isSystemLib64Exist = BundleUtil::IsExistDir(Constants::SYSTEM_LIB64);
+    bool isDefault = std::find(abiList.begin(), abiList.end(), ServiceConstants::ABI_DEFAULT) != abiList.end();
+    bool isSystemLib64Exist = BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64);
     LOG_D(BMS_TAG_QUICK_FIX, "abi list : %{public}s, isDefault : %{public}d, isSystemLib64Exist : %{public}d",
         abis.c_str(), isDefault, isSystemLib64Exist);
     bool soExist = patchExtractor.IsDirExist(ServiceConstants::LIBS);

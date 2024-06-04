@@ -193,7 +193,7 @@ ErrCode BundleOverlayInstallChecker::CheckBundleType(const InnerBundleInfo &info
 ErrCode BundleOverlayInstallChecker::CheckTargetPriority(int32_t priority) const
 {
     APP_LOGD("start");
-    if ((priority < Constants::OVERLAY_MINIMUM_PRIORITY) || (priority > OVERLAY_MAXIMUM_PRIORITY)) {
+    if ((priority < ServiceConstants::OVERLAY_MINIMUM_PRIORITY) || (priority > OVERLAY_MAXIMUM_PRIORITY)) {
         APP_LOGE("overlay hap has invalid module priority %{public}d", priority);
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY;
     }

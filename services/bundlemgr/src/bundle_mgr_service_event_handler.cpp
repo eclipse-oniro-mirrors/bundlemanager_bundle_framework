@@ -1113,18 +1113,18 @@ void BMSEventHandler::ProcessRebootDeleteArkAp()
 void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
 {
     std::string arkProfilePath;
-    arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleInfo.name).append(ServiceConstants::PATH_SEPARATOR);
     for (const auto &moduleName : bundleInfo.moduleNames) {
         std::string runtimeAp = arkProfilePath;
         std::string mergedAp = arkProfilePath;
         runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
-            .append(Constants::PGO_FILE_SUFFIX);
+            .append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
             APP_LOGE("delete aot dir %{public}s failed!", runtimeAp.c_str());
             continue;
         }
-        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(Constants::PGO_FILE_SUFFIX);
+        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
             APP_LOGE("delete aot dir %{public}s failed!", mergedAp.c_str());
             continue;
@@ -1134,7 +1134,7 @@ void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &u
 
 void BMSEventHandler::ProcessRebootDeleteAotPath()
 {
-    std::string removeAotPath = Constants::ARK_CACHE_PATH;
+    std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
     removeAotPath.append("*");
     if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
         APP_LOGE("delete aot dir %{public}s failed!", removeAotPath.c_str());
@@ -1361,7 +1361,7 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
     }
     for (const auto &bundleInfo : bundleInfos) {
         std::string shaderCachePath;
-        shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleInfo.name);
+        shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
         ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
         if (res != ERR_OK) {
             APP_LOGI("create shader cache failed: %{public}s ", shaderCachePath.c_str());
@@ -1385,7 +1385,7 @@ void BMSEventHandler::ProcessCheckCloudShaderDir()
 void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 {
     bool cloudExist = true;
-    ErrCode result = InstalldClient::GetInstance()->IsExistDir(Constants::CLOUD_SHADER_PATH, cloudExist);
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_PATH, cloudExist);
     if (result != ERR_OK) {
         APP_LOGW("IsExistDir failed, error is %{public}d", result);
         return;
@@ -1395,7 +1395,7 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
         return;
     }
 
-    const std::string bundleName = OHOS::system::GetParameter(Constants::CLOUD_SHADER_OWNER, "");
+    const std::string bundleName = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
     if (bundleName.empty()) {
         return;
     }
@@ -1415,7 +1415,7 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     }
 
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-    result = InstalldClient::GetInstance()->Mkdir(Constants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
+    result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
     APP_LOGI("Create cloud shader cache result: %{public}d", result);
 }
 
@@ -2643,14 +2643,15 @@ void BMSEventHandler::HandleSceneBoard() const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(Constants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
+    dataMgr->SetApplicationEnabled(ServiceConstants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable,
+        Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
         if (userId == 0) {
             return;
         }
         dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
-        dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });
 #endif
 }

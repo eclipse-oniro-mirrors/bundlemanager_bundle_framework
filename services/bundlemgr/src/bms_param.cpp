@@ -26,7 +26,7 @@ BmsParam::BmsParam()
 {
     APP_LOGD("BmsParam instance is created");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = BMS_PARAM_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

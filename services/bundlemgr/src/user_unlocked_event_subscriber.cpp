@@ -95,7 +95,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
             return false;
         }
         uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
-        if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != Constants::DATABASE_DIR_GID) ||
+        if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != ServiceConstants::DATABASE_DIR_GID) ||
             ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID))) {
             APP_LOGW("path: %{public}s uid or gid or mode not same", baseBundleDataDir.c_str());
             isExist = false;
@@ -276,7 +276,7 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         return false;
     }
     if (InstalldClient::GetInstance()->Mkdir(
-        bundleLogDir, S_IRWXU | S_IRWXG, bundleInfo.uid, Constants::LOG_DIR_GID) != ERR_OK) {
+        bundleLogDir, S_IRWXU | S_IRWXG, bundleInfo.uid, ServiceConstants::LOG_DIR_GID) != ERR_OK) {
         APP_LOGE("CreateBundleLogDir failed");
         return false;
     }
@@ -308,7 +308,7 @@ bool UpdateAppDataMgr::CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_
         return false;
     }
     if (!InstalldClient::GetInstance()->Mkdir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID,
-        bundleInfo.uid, Constants::DFS_GID)) {
+        bundleInfo.uid, ServiceConstants::DFS_GID)) {
         static std::once_flag cloudOnce;
         std::call_once(cloudOnce, [bundleInfo]() {
             APP_LOGW("CreateCloudDir failed for bundle %{private}s errno:%{public}d",

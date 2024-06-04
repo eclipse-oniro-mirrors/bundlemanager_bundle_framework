@@ -1053,8 +1053,8 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0200, Function | SmallTest 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    bool res = GetBundleDataMgr()->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
+    bool res = GetBundleDataMgr()->QueryAbilityInfoByUri(ServiceConstants::DATA_ABILITY_URI_PREFIX +
+        ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1070,8 +1070,8 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0300, Function | SmallTest 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
-    bool res = bundleMgrHostImpl_->QueryAbilityInfoByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
+    bool res = bundleMgrHostImpl_->QueryAbilityInfoByUri(ServiceConstants::DATA_ABILITY_URI_PREFIX
+        + ServiceConstants::FILE_SEPARATOR_CHAR, Constants::ALL_USERID, abilityInfo);
     EXPECT_EQ(res, false);
 }
 /**
@@ -1083,7 +1083,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0300, Function | SmallTest 
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0100, Function | SmallTest | Level1)
 {
     std::vector<AbilityInfo> abilityInfo;
-    bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(Constants::DATA_ABILITY_URI_PREFIX, abilityInfo);
+    bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(ServiceConstants::DATA_ABILITY_URI_PREFIX, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1100,7 +1100,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0200, Function | SmallTest
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(
-        Constants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, abilityInfo);
+        ServiceConstants::DATA_ABILITY_URI_PREFIX + ServiceConstants::FILE_SEPARATOR_CHAR, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -1669,7 +1669,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetInnerBundleInfoWithBundleFlagsV9_0200, Functio
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     ErrCode res = GetBundleDataMgr()->GetInnerBundleInfoWithBundleFlagsV9(
-        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, Constants::NOT_EXIST_USERID);
+        BUNDLE_NAME_TEST, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
@@ -2256,7 +2256,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetSharedDependencies_0100, Function | SmallTest 
 HWTEST_F(BmsBundleDataMgrTest, CheckHspVersionIsRelied_0100, Function | SmallTest | Level1)
 {
     InnerBundleInfo innerBundleInfo;
-    bool res = GetBundleDataMgr()->CheckHspVersionIsRelied(Constants::API_VERSION_NINE, innerBundleInfo);
+    bool res = GetBundleDataMgr()->CheckHspVersionIsRelied(ServiceConstants::API_VERSION_NINE, innerBundleInfo);
     EXPECT_EQ(res, false);
 }
 
@@ -2688,7 +2688,7 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0400, Function | MediumTest 
     InnerBundleInfo info;
     InnerModuleInfo moduleInfo;
     AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     moduleInfo.moduleName = MODULE_NAME1;
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
     info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
@@ -2729,7 +2729,7 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0600, Function | MediumTest 
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
 
     AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
@@ -2810,7 +2810,7 @@ HWTEST_F(BmsBundleDataMgrTest, TestIsAbilityEnabledV9_0100, Function | MediumTes
     InnerBundleInfo info;
     AbilityInfo abilityInfo;
     bool isEnable;
-    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, Constants::NOT_EXIST_USERID, isEnable);
+    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, ServiceConstants::NOT_EXIST_USERID, isEnable);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -3137,7 +3137,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleUserMgr_0100, Function | MediumTest | Le
  */
 HWTEST_F(BmsBundleDataMgrTest, GetBundleUserMgr_0200, Function | MediumTest | Level1)
 {
-    setuid(Constants::ACCOUNT_UID);
+    setuid(ServiceConstants::ACCOUNT_UID);
     sptr<IBundleUserMgr> ret = bundleMgrHostImpl_->GetBundleUserMgr();
     EXPECT_NE(ret, nullptr);
 }
@@ -3161,7 +3161,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllSharedBundleInfo_0100, Function | MediumTes
  */
 HWTEST_F(BmsBundleDataMgrTest, VerifyDependency_0100, Function | MediumTest | Level1)
 {
-    setuid(Constants::ACCOUNT_UID);
+    setuid(ServiceConstants::ACCOUNT_UID);
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->VerifyDependency("");

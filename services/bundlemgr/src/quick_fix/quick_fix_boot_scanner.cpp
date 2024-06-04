@@ -294,9 +294,9 @@ void QuickFixBootScanner::RemoveInvalidDir() const
     std::string tempSecureQuickFixDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
         ServiceConstants::SECURITY_QUICK_FIX_PATH;
     std::string tempSignatureFileDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-        Constants::SIGNATURE_FILE_PATH;
+        ServiceConstants::SIGNATURE_FILE_PATH;
     std::string tempSecureSignatureFileDir = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
-        Constants::SECURITY_SIGNATURE_FILE_PATH;
+        ServiceConstants::SECURITY_SIGNATURE_FILE_PATH;
     BundleUtil::DeleteDir(tempInstallDir);
     BundleUtil::DeleteDir(tempQuickFixDir);
     BundleUtil::DeleteDir(tempSecureInstallDir);

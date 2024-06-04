@@ -100,7 +100,7 @@ bool AOTHandler::IsSupportARM64() const
     std::string abis = GetAbiList();
     APP_LOGD("abi list : %{public}s", abis.c_str());
     std::vector<std::string> abiList;
-    SplitStr(abis, Constants::ABI_SEPARATOR, abiList, false, false);
+    SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
         APP_LOGD("abiList empty");
         return false;
@@ -122,9 +122,9 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
         return Constants::EMPTY_STRING;
     }
     std::string path;
-    path.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+    path.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
-        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
+        .append(ServiceConstants::PATH_SEPARATOR).append(moduleName).append(ServiceConstants::AP_SUFFIX);
     APP_LOGD("path : %{public}s", path.c_str());
     bool isExistFile = false;
     (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
@@ -141,7 +141,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     AOTArgs aotArgs;
     aotArgs.bundleName = info.GetBundleName();
     aotArgs.moduleName = moduleName;
-    if (compileMode == Constants::COMPILE_PARTIAL) {
+    if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
         aotArgs.arkProfilePath = GetArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
         if (aotArgs.arkProfilePath.empty()) {
             APP_LOGI("compile mode is partial, but ap not exist, no need to AOT");
@@ -151,7 +151,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.compileMode = compileMode;
     aotArgs.hapPath = info.GetModuleHapPath(aotArgs.moduleName);
     aotArgs.coreLibPath = Constants::EMPTY_STRING;
-    aotArgs.outputPath = Constants::ARK_CACHE_PATH + aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR
+    aotArgs.outputPath = ServiceConstants::ARK_CACHE_PATH + aotArgs.bundleName + ServiceConstants::PATH_SEPARATOR
         + ServiceConstants::ARM64;
     // handle internal hsp
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -183,7 +183,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
     aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName
-        + Constants::AN_SUFFIX;
+        + ServiceConstants::AN_SUFFIX;
 
     // key rule is start:end,start:end......
     std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
@@ -261,7 +261,7 @@ void AOTHandler::ClearArkCacheDir() const
     }
     std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
     std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleName) {
-        std::string removeDir = Constants::ARK_CACHE_PATH + bundleName;
+        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleName;
         ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
         APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
     });
@@ -281,7 +281,7 @@ void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle)
         bundleNames = {bundleName};
     }
     std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleToReset) {
-        std::string removeDir = Constants::ARK_CACHE_PATH + bundleToReset;
+        std::string removeDir = ServiceConstants::ARK_CACHE_PATH + bundleToReset;
         ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
         APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
         dataMgr->ResetAOTFlagsCommand(bundleToReset);
@@ -302,7 +302,7 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
     }
     mode_t mode = S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP;
     errCode = InstalldClient::GetInstance()->Mkdir(
-        COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, Constants::SHELL_UID);
+        COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, ServiceConstants::SHELL_UID);
     if (errCode != ERR_OK) {
         APP_LOGE("fail to create dir, error is %{public}d", errCode);
         return errCode;
@@ -378,12 +378,12 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
     const int32_t userId, std::vector<std::string> &results) const
 {
     std::string arkProfilePath;
-    arkProfilePath.append(Constants::ARK_PROFILE_PATH).append(std::to_string(userId))
+    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName).append(ServiceConstants::PATH_SEPARATOR);
     ErrCode errCode;
     for (const auto &moduleName : bundleInfo.moduleNames) {
-        std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + Constants::AP_SUFFIX;
-        std::string rtAp = arkProfilePath + PGO_RT_AP_PREFIX + moduleName + Constants::AP_SUFFIX;
+        std::string mergedAp = arkProfilePath + PGO_MERGED_AP_PREFIX + moduleName + ServiceConstants::AP_SUFFIX;
+        std::string rtAp = arkProfilePath + PGO_RT_AP_PREFIX + moduleName + ServiceConstants::AP_SUFFIX;
         std::string sourceAp = GetSouceAp(mergedAp, rtAp);
         std::string result;
         if (sourceAp.empty()) {
@@ -391,10 +391,10 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
             results.emplace_back(result);
             continue;
         }
-        if (sourceAp.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        if (sourceAp.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
             return;
         }
-        std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + Constants::AP_SUFFIX;
+        std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + ServiceConstants::AP_SUFFIX;
         if (sourceAp.find(destAp) == std::string::npos) {
             return;
         }
@@ -671,7 +671,7 @@ void AOTHandler::HandleIdle() const
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;
     }
-    std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, Constants::COMPILE_PARTIAL);
+    std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, ServiceConstants::COMPILE_PARTIAL);
     APP_LOGI("%{public}s = %{public}s", IDLE_COMPILE_MODE, compileMode.c_str());
     if (compileMode == COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);

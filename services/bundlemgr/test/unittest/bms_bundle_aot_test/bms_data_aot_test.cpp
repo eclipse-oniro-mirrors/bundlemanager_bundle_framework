@@ -175,7 +175,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0200, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    aotArgs.compileMode = Constants::COMPILE_PARTIAL;
+    aotArgs.compileMode = ServiceConstants::COMPILE_PARTIAL;
     AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -220,7 +220,7 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0500, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    aotArgs.compileMode = Constants::COMPILE_PARTIAL;
+    aotArgs.compileMode = ServiceConstants::COMPILE_PARTIAL;
     aotArgs.hapPath = ABC_RELATIVE_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
@@ -418,7 +418,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0400, Function | SmallTest | Level0)
 HWTEST_F(BmsAOTMgrTest, AOTHandler_0500, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    AOTHandler::GetInstance().HandleInstallWithSingleHap(info, Constants::COMPILE_PARTIAL);
+    AOTHandler::GetInstance().HandleInstallWithSingleHap(info, ServiceConstants::COMPILE_PARTIAL);
     std::string res = info.GetBundleName();
     EXPECT_EQ(res, Constants::EMPTY_STRING);
 }
@@ -544,16 +544,16 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ClearDataMgr();
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
     EXPECT_EQ(ret, std::nullopt);
     AOTHandler::GetInstance().ClearArkCacheDir();
     ResetDataMgr();
     dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
     ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
     EXPECT_EQ(ret, std::nullopt);
     ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
-        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+        AOT_MODULE_NAME, ServiceConstants::COMPILE_PARTIAL);
     EXPECT_EQ(ret, std::nullopt);
     auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
     if (iterator != dataMgr->bundleInfos_.end()) {
@@ -587,10 +587,10 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1200, Function | SmallTest | Level0)
     EXPECT_EQ(bundleName, "");
     ResetDataMgr();
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, true, results);
+    AOTHandler::GetInstance().HandleCompile(bundleName, ServiceConstants::COMPILE_PARTIAL, true, results);
     EXPECT_EQ(bundleName, "");
 
-    AOTHandler::GetInstance().HandleCompile(bundleName, Constants::COMPILE_PARTIAL, false, results);
+    AOTHandler::GetInstance().HandleCompile(bundleName, ServiceConstants::COMPILE_PARTIAL, false, results);
     EXPECT_EQ(bundleName, "");
 }
 
@@ -864,7 +864,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2200, Function | SmallTest | Level0)
 HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
 {
     std::string bundleName = "bundleName";
-    string compileMode = Constants::COMPILE_PARTIAL;
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     AOTHandler::GetInstance().OTACompileDeadline_ = false;
     InnerBundleInfo innerBundleInfo;

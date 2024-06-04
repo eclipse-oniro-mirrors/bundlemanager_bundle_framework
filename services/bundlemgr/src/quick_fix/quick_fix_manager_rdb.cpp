@@ -29,7 +29,7 @@ QuickFixManagerRdb::QuickFixManagerRdb()
 {
     LOG_I(BMS_TAG_QUICK_FIX, "create QuickFixManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
-    bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
+    bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = QUICK_FIX_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

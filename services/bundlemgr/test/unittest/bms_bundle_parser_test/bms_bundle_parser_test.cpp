@@ -2446,7 +2446,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5300, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson[MODULE][NAME] = Constants::RELATIVE_PATH;
+    profileJson[MODULE][NAME] = ServiceConstants::RELATIVE_PATH;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);
@@ -2700,7 +2700,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6400, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson[MODULE][NAME] = NAME + Constants::MODULE_NAME_SEPARATOR;
+    profileJson[MODULE][NAME] = NAME + ServiceConstants::MODULE_NAME_SEPARATOR;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);
@@ -2767,7 +2767,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6700, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = Constants::RELATIVE_PATH;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = ServiceConstants::RELATIVE_PATH;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);
@@ -2791,7 +2791,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6800, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = Constants::MODULE_NAME_SEPARATOR;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = ServiceConstants::MODULE_NAME_SEPARATOR;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);

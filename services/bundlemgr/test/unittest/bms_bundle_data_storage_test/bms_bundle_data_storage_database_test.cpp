@@ -2080,7 +2080,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1400, Function | Smal
     InnerBundleInfo info;
     InnerBundleUserInfo userInfo;
     userInfo.bundleUserInfo.userId = 100;
-    int32_t userId = Constants::NOT_EXIST_USERID;
+    int32_t userId = ServiceConstants::NOT_EXIST_USERID;
     auto ret = info.GetInnerBundleUserInfo(userId, userInfo);
     EXPECT_EQ(ret, true);
     userId = 100;
@@ -2115,7 +2115,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1500, Function | Smal
     info.SetBundleInstallTime(time, userId);
     info.SetAccessTokenId(accessToken, userId);
     info.SetBundleUpdateTime(time, userId);
-    userId = Constants::NOT_EXIST_USERID;
+    userId = ServiceConstants::NOT_EXIST_USERID;
     AbilityInfo abilityInfo;
     ret = info.IsAbilityEnabled(abilityInfo, userId);
     EXPECT_EQ(ret, true);
@@ -2255,7 +2255,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2400, Function | Smal
     innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     info.AddInnerModuleInfo(innerModuleInfos);
     info.InsertInnerModuleInfo(TEST_PACK_AGE, moduleInfo);
-    info.ProcessBundleWithHapModuleInfoFlag(flag, bundleInfo, Constants::NOT_EXIST_USERID);
+    info.ProcessBundleWithHapModuleInfoFlag(flag, bundleInfo, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
 }
 
@@ -2279,11 +2279,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | Smal
     info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
 
-    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::NOT_EXIST_USERID);
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, ServiceConstants::NOT_EXIST_USERID);
     EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), false);
 
     abilityInfo.moduleName = BUNDLE_NAME;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.name = ServiceConstants::APP_DETAIL_ABILITY;
     hapModuleInfo.moduleName = MODULE_NAME;
     info.InsertAbilitiesInfo(TEST_KEY, abilityInfo);
     info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
@@ -2641,7 +2641,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0200, Function 
 HWTEST_F(BmsBundleDataStorageDatabaseTest, GetOverlayModuleStateTest, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    int userId = Constants::NOT_EXIST_USERID;
+    int userId = ServiceConstants::NOT_EXIST_USERID;
     bool ret = info.GetOverlayModuleState("", userId, state);
     EXPECT_EQ(ret, false);
 

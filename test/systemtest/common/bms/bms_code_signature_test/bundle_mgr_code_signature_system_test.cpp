@@ -60,6 +60,7 @@ const std::string INVALID_THIRD_PATH = "/data/test/test_code_signature/";
 const std::string BUNDLE_NAME_WITHOUT_LIBS = "com.example.codeSignature1";
 const std::string BUNDLE_NAME_WITH_LIBS = "com.example.codeSignature2";
 const int32_t TIMEOUT = 10; // 10s
+constexpr int PATH_MAX_SIZE = 256;
 } // namespace
 
 class StatusReceiverImpl : public StatusReceiverHost {
@@ -248,7 +249,7 @@ HWTEST_F(BundleMgrCodeSignatureSystemTest, InstallCodeSignatureTest002, TestSize
 {
     auto name = std::string("InstallCodeSignatureTest_002");
     GTEST_LOG_(INFO) << name << " start";
-    std::string bundlePath(Constants::PATH_MAX_SIZE + 1, 'a');
+    std::string bundlePath(PATH_MAX_SIZE + 1, 'a');
     std::vector<std::string> bundlePathVec { bundlePath };
     InstallParam installParam;
 
@@ -417,7 +418,7 @@ HWTEST_F(BundleMgrCodeSignatureSystemTest, InstallCodeSignatureTest010, TestSize
     std::string bundlePath1 = THIRD_PATH + CODE_SIGNATURE_WITHOUT_LIBS;
     std::vector<std::string> bundlePathVec { bundlePath1 };
     InstallParam installParam;
-    std::string codeSignatureFilePath1(Constants::PATH_MAX_SIZE + 1, 'a');
+    std::string codeSignatureFilePath1(PATH_MAX_SIZE + 1, 'a');
     installParam.verifyCodeParams.emplace(MODULE_NAME1, codeSignatureFilePath1);
 
     auto ret = InstallBundle(bundlePathVec, installParam);

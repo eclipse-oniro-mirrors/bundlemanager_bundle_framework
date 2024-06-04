@@ -534,7 +534,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
     int32_t numberOfSignatureFile = 0;
     for (const auto &path : inBundlePaths) {
         if ((path.find(ServiceConstants::HSP_FILE_SUFFIX) == std::string::npos) &&
-            (path.find(Constants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
+            (path.find(ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
             APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
@@ -542,7 +542,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
             numberOfHsp++;
             bundlePaths.emplace_back(path);
         }
-        if (BundleUtil::EndWith(path, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        if (BundleUtil::EndWith(path, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
             numberOfSignatureFile++;
             signatureFilePath = path;
         }

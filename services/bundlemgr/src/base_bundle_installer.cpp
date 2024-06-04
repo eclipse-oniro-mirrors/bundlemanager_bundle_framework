@@ -2235,7 +2235,7 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
     }
 
     std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
-        ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
     if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
@@ -2289,7 +2289,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
     }
 
     std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
-        ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+        ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
     if ((InstalldClient::GetInstance()->IsExistDir(newSoPath, isExist) != ERR_OK) || !isExist) {
@@ -2316,7 +2316,7 @@ ErrCode BaseBundleInstaller::UpdateLibAttrs(const InnerBundleInfo &newInfo,
     const std::string &cpuAbi, const std::string &nativeLibraryPath, AppqfInfo &appQfInfo) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    auto newNativeLibraryPath = Constants::PATCH_PATH +
+    auto newNativeLibraryPath = ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     auto moduleName = newInfo.GetCurModuleName();
     bool isLibIsolated = newInfo.IsLibIsolated(moduleName);
@@ -2333,7 +2333,7 @@ ErrCode BaseBundleInstaller::UpdateLibAttrs(const InnerBundleInfo &newInfo,
 
         hqfInfo.nativeLibraryPath = newNativeLibraryPath;
         hqfInfo.cpuAbi = cpuAbi;
-        if (!BundleUtil::StartWith(appQfInfo.nativeLibraryPath, Constants::PATCH_PATH)) {
+        if (!BundleUtil::StartWith(appQfInfo.nativeLibraryPath, ServiceConstants::PATCH_PATH)) {
             appQfInfo.nativeLibraryPath.clear();
         }
 
@@ -2454,7 +2454,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         }
 
         std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
-            ServiceConstants::PATH_SEPARATOR + Constants::PATCH_PATH +
+            ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
             std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath, bundleUid);
         if (ret != ERR_OK) {
@@ -2621,7 +2621,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
-            GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+            GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
             newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
             info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
@@ -2718,9 +2718,9 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
         APP_LOGE("bundleName is empty");
         return dirs;
     }
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId_) + ServiceConstants::BASE + bundleName);
-    dirs.emplace_back(Constants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId_) + ServiceConstants::DATABASE + bundleName);
     return dirs;
 }
@@ -3010,7 +3010,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
 {
     APP_LOGD("ExtractResourceFiles begin");
     int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
-    if (info.GetIsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
+    if (info.GetIsPreInstallApp() || apiTargetVersion > ServiceConstants::API_VERSION_NINE) {
         APP_LOGD("no need to extract resource files");
         return;
     }
@@ -3149,7 +3149,7 @@ ErrCode BaseBundleInstaller::CopyPgoFile(
     targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName)
         .append(ServiceConstants::PATH_SEPARATOR).append(moduleName)
-        .append(Constants::AP_SUFFIX);
+        .append(ServiceConstants::AP_SUFFIX);
     if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
         APP_LOGE("copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
@@ -3264,7 +3264,7 @@ std::string BaseBundleInstaller::GetModuleNames(const std::unordered_map<std::st
     }
     std::string moduleNames;
     for (const auto &item : infos) {
-        moduleNames.append(item.second.GetCurrentModulePackage()).append(Constants::MODULE_NAME_SEPARATOR);
+        moduleNames.append(item.second.GetCurrentModulePackage()).append(ServiceConstants::MODULE_NAME_SEPARATOR);
     }
     moduleNames.pop_back();
     APP_LOGD("moduleNames : %{public}s", moduleNames.c_str());
@@ -3753,9 +3753,9 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
     if (!installParam.isSelfUpdate) {
         return ERR_OK;
     }
-    if (!OHOS::system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false) &&
-        !OHOS::system::GetBoolParameter(Constants::IS_ENTERPRISE_DEVICE, false) &&
-        !OHOS::system::GetBoolParameter(Constants::DEVELOPERMODE_STATE, false)) {
+    if (!OHOS::system::GetBoolParameter(ServiceConstants::ALLOW_ENTERPRISE_BUNDLE, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::IS_ENTERPRISE_DEVICE, false) &&
+        !OHOS::system::GetBoolParameter(ServiceConstants::DEVELOPERMODE_STATE, false)) {
         APP_LOGE("not enterprise device or developer mode is off");
         return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
     }
@@ -4548,7 +4548,7 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
             int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
-                GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+                GetIntParameter(BMS_KEY_SHELL_UID, ServiceConstants::SHELL_UID) :
                 oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
                 CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
@@ -4913,7 +4913,7 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
         APP_LOGE("copy file %{public}s to security dir failed", signatureFileDir.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
-    if (signatureFileDir.find(Constants::SIGNATURE_FILE_PATH) != std::string::npos) {
+    if (signatureFileDir.find(ServiceConstants::SIGNATURE_FILE_PATH) != std::string::npos) {
         BundleUtil::DeleteDir(signatureFileDir);
     }
     signatureFileDir = destinationStr;
@@ -5408,7 +5408,7 @@ void BaseBundleInstaller::ClearDomainVerifyStatus(const std::string &appIdentifi
 ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const
 {
     std::string shaderCachePath;
-    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     bool isExist = true;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
     if (result != ERR_OK) {
@@ -5426,20 +5426,20 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
 ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) const
 {
     std::string shaderCachePath;
-    shaderCachePath.append(Constants::SHADER_CACHE_PATH).append(bundleName);
+    shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
     APP_LOGI("DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
 void BaseBundleInstaller::CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const
 {
-    const std::string cloudShaderOwner = OHOS::system::GetParameter(Constants::CLOUD_SHADER_OWNER, "");
+    const std::string cloudShaderOwner = OHOS::system::GetParameter(ServiceConstants::CLOUD_SHADER_OWNER, "");
     if (cloudShaderOwner.empty() || (bundleName != cloudShaderOwner)) {
         return;
     }
 
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
-    ErrCode result = InstalldClient::GetInstance()->Mkdir(Constants::CLOUD_SHADER_PATH, mode, uid, gid);
+    ErrCode result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, uid, gid);
     APP_LOGI("Create cloud shader cache result: %{public}d", result);
 }
 

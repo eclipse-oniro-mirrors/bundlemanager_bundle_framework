@@ -358,8 +358,8 @@ void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string
             } else {
                 bundleIdMap[bundleId] = info.first;
             }
-            BundleUtil::MakeFsConfig(info.first, bundleId, Constants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(info.first, bundleId, Constants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, bundleId, ServiceConstants::SHAREFS_CONFIG_PATH);
         }
     }
     APP_LOGD("RestoreSandboxUidAndGid finish");
