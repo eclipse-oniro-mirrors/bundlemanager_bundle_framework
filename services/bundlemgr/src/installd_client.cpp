@@ -147,6 +147,16 @@ ErrCode InstalldClient::RemoveDir(const std::string &dir)
     return CallService(&IInstalld::RemoveDir, dir);
 }
 
+int64_t InstalldClient::GetDiskUsage(const std::string &dir, bool isRealPath)
+{
+    if (dir.empty()) {
+        APP_LOGE("bundle dir is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    return CallService(&IInstalld::GetDiskUsage, dir, isRealPath);
+}
+
 ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
 {
     if (bundleDir.empty()) {

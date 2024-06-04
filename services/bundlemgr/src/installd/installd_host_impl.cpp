@@ -735,6 +735,16 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
     return ERR_OK;
 }
 
+int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    
+    return InstalldOperator::GetDiskUsage(dir, isRealPath);
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDir start");

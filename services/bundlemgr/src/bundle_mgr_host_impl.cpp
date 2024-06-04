@@ -1328,6 +1328,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             if (ret != ERR_OK) {
                 return ret;
             }
+            APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRId64 "",
+                useStat.bundleName_.c_str(), cleanCacheSize);
             cleanCacheSum += cleanCacheSize;
             if (cleanCacheSum >= cacheSize) {
                 return ERR_OK;
@@ -1388,12 +1390,11 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesGetCleanSize(const std::string &
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    CleanBundleCacheTaskGetCleanSize(bundleName, dataMgr, userId, cleanCacheSize);
+    CleanBundleCacheTaskGetCleanSize(bundleName, userId, cleanCacheSize);
     return ERR_OK;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-    const std::shared_ptr<BundleDataMgr> &dataMgr,
     int32_t userId, uint64_t &cleanCacheSize)
 {
     std::vector<std::string> rootDir;
@@ -1403,44 +1404,42 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
         rootDir.emplace_back(dataDir);
     }
 
-    auto cleanCache = [bundleName, userId, &cleanCacheSize, rootDir, dataMgr, this]() {
-        std::vector<std::string> caches;
-        for (const auto &st : rootDir) {
-            std::vector<std::string> cache;
-            if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
-                APP_LOGE("GetBundleCachePath failed, path: %{public}s", st.c_str());
-            }
-            std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+    std::vector<std::string> caches;
+    for (const auto &st : rootDir) {
+        std::vector<std::string> cache;
+        if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
+            APP_LOGE("GetBundleCachePath failed, path: %{public}s", st.c_str());
         }
+        std::copy(cache.begin(), cache.end(), std::back_inserter(caches));
+    }
 
-        bool succeed = true;
-        if (!caches.empty()) {
-            for (const auto& cache : caches) {
-                cleanCacheSize += BundleUtil::GetTotalSizeOfFilesInDirectory(cache);
-                ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
-                if (ret != ERR_OK) {
-                    APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
-                    succeed = false;
-                }
+    bool succeed = true;
+    if (!caches.empty()) {
+        for (const auto& cache : caches) {
+            int64_t cacheSize = InstalldClient::GetInstance()->GetDiskUsage(cache, true);
+            ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
+            if (ret != ERR_OK) {
+                APP_LOGE("CleanBundleDataDir failed, path: %{public}s", cache.c_str());
+                succeed = false;
             }
+            cleanCacheSize += static_cast<uint64_t>(cacheSize);
         }
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
-        APP_LOGE("CleanBundleCacheFiles with succeed %{public}d", succeed);
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
-            APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
-            return;
-        }
-        NotifyBundleEvents installRes = {
-            .bundleName = bundleName,
-            .resultCode = ERR_OK,
-            .type = NotifyType::BUNDLE_CACHE_CLEARED,
-            .uid = innerBundleUserInfo.uid,
-            .accessTokenId = innerBundleUserInfo.accessTokenId
-        };
-        NotifyBundleStatus(installRes);
+    }
+    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, !succeed);
+    APP_LOGI("CleanBundleCacheFiles with succeed %{public}d", succeed);
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!this->GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
+        APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
+        return;
+    }
+    NotifyBundleEvents installRes = {
+        .bundleName = bundleName,
+        .resultCode = ERR_OK,
+        .type = NotifyType::BUNDLE_CACHE_CLEARED,
+        .uid = innerBundleUserInfo.uid,
+        .accessTokenId = innerBundleUserInfo.accessTokenId
     };
-    ffrt::submit(cleanCache);
+    NotifyBundleStatus(installRes);
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
