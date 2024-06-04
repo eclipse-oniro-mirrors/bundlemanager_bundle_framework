@@ -92,7 +92,7 @@ struct RouterItem : public Parcelable {
     std::string name;
     std::string pageSourceFile;
     std::string buildFunction;
-    std::string data;
+    std::map<std::string, std::string> data;
     std::string ohmurl;
     std::string bundleName;
     std::string moduleName;
