@@ -3521,7 +3521,7 @@ void BaseBundleInstaller::GetRemoveExtensionDirs(
             if (newModules.find(oldModuleName) == newModules.end()) {
                 // module does not exist in the later version, so it's extension dir needs to be removed
                 const auto oldExtensionDirs = oldInfo.GetAllExtensionDirsInSpecifiedModule(oldModuleName);
-                APP_LOGI("oldExtensionDirs size %{public}d need to be removed", oldExtensionDirs.size());
+                APP_LOGI("oldExtensionDirs size %{public}zu need to be removed", oldExtensionDirs.size());
                 std::copy(oldExtensionDirs.begin(), oldExtensionDirs.end(), std::back_inserter(removeExtensionDirs_));
             }
         }

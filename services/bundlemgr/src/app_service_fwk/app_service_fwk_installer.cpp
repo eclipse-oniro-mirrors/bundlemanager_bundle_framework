@@ -712,7 +712,7 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
-    APP_LOGI("bundleName: %{public}s moduleVec size: %{public}d", bundleName_.c_str(), moduleVec.size());
+    APP_LOGI("bundleName: %{public}s moduleVec size: %{public}zu", bundleName_.c_str(), moduleVec.size());
     InnerBundleInfo oldInfo = info;
     for (const auto &package : moduleVec) {
         if (find(moduleNameList.begin(), moduleNameList.end(), package) == moduleNameList.end()) {
