@@ -2660,7 +2660,9 @@ ErrCode BaseBundleInstaller::CreateDataGroupDirs(
         CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
     }
     auto result = CreateGroupDirs();
-    CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    if (result != ERR_OK) {
+        APP_LOGW("CreateGroupDirs failed %{public}d", result);
+    }
     return ERR_OK;
 }
 
@@ -3451,6 +3453,9 @@ void BaseBundleInstaller::GetExtensionDirsChange(std::unordered_map<std::string,
 
 void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
 {
+    if (createExtensionDirs_.empty()) {
+        return;
+    }
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
