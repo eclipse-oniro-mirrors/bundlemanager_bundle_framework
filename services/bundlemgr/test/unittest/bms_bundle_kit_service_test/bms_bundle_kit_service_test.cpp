@@ -6537,6 +6537,26 @@ HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_003, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: Unmarshalling_004
+ * @tc.name: Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of HnpPackage
+ */
+HWTEST_F(BmsBundleKitServiceTest, Unmarshalling_004, Function | SmallTest | Level1)
+{
+    HnpPackage param1;
+    param1.package = "package";
+    param1.type = "type";
+    Parcel parcel;
+    HnpPackage param2;
+    auto ret1 = param1.Marshalling(parcel);
+    EXPECT_EQ(ret1, true);
+    auto ret2 = param2.Unmarshalling(parcel);
+    EXPECT_NE(ret2, nullptr);
+    EXPECT_EQ(param1.type, ret2->type);
+    EXPECT_EQ(param1.package, ret2->package);
+}
+
+/**
  * @tc.number: ReadFromParcelOfAppqfInfo_001
  * @tc.name: ReadFromParcel
  * @tc.desc: 1.Test ReadFromParcel of AppqfInfo
