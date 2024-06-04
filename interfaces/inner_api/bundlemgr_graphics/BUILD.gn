@@ -15,10 +15,7 @@ import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
 config("bundlemgr_graphics_config") {
-  include_dirs = [
-    "include",
-    "../../inner_api/appexecfwk_base/include",
-  ]
+  include_dirs = [ "include" ]
 }
 
 ohos_shared_library("bundlemgr_graphics") {
@@ -39,13 +36,11 @@ ohos_shared_library("bundlemgr_graphics") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
   ]
 
   external_deps = [
-    "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
     "image_framework:image_native",
@@ -53,7 +48,6 @@ ohos_shared_library("bundlemgr_graphics") {
     "samgr:samgr_proxy",
   ]
 
-  public_external_deps = [ "json:nlohmann_json_static" ]
   subsystem_name = "bundlemanager"
   innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"
