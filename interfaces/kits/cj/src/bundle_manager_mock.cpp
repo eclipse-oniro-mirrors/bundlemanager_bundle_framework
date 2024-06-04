@@ -16,6 +16,7 @@
 #include "cj_common_ffi.h"
 
 extern "C" {
+FFI_EXPORT int32_t FfiOHOSGetCallingUid = 0;
 FFI_EXPORT int32_t FfiOHOSGetBundleInfoForSelf = 0;
 FFI_EXPORT int32_t FfiOHOSVerifyAbc = 0;
 FFI_EXPORT int32_t FfiGetProfileByExtensionAbility = 0;

@@ -22,6 +22,7 @@
 #include "bundle_mgr_proxy.h"
 #include "common_func.h"
 #include "bundle_manager_convert.h"
+#include "bundle_manager_log.h"
 
 namespace OHOS {
 namespace CJSystemapi {
@@ -36,12 +37,13 @@ char *MallocCString(const std::string &origin)
     auto len = origin.length() + 1;
     char* res = static_cast<char *>(malloc(sizeof(char) * len));
     if (res == nullptr) {
+        LOGE("MallocCString malloc failed");
         return nullptr;
     }
     return std::char_traits<char>::copy(res, origin.c_str(), len);
 }
 
-CArrString g_convertArrString(std::vector<std::string> vecStr)
+CArrString ConvertArrString(std::vector<std::string> vecStr)
 {
     char **retValue = static_cast<char **>(malloc(sizeof(char *) * vecStr.size()));
     if (vecStr.size() > 0) {
@@ -50,6 +52,9 @@ CArrString g_convertArrString(std::vector<std::string> vecStr)
             for (int32_t i = 0; i < vecStrSize; i++) {
                 retValue[i] = MallocCString(vecStr[i]);
             }
+        } else {
+            LOGE("ConvertArrString malloc failed");
+            return {retValue, vecStr.size()};
         }
     }
     return {retValue, vecStr.size()};
@@ -58,7 +63,7 @@ CArrString g_convertArrString(std::vector<std::string> vecStr)
 RetUsedScene ConvertUsedScene(AppExecFwk::RequestPermissionUsedScene usedScence)
 {
     RetUsedScene uScene;
-    uScene.abilities = g_convertArrString(usedScence.abilities);
+    uScene.abilities = ConvertArrString(usedScence.abilities);
     uScene.when = MallocCString(usedScence.when);
     return uScene;
 }
@@ -94,6 +99,10 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
             }
             data.head = retValue;
         }
+    } else {
+        LOGE("ConvertArrMetadata malloc failed");
+        data.head = nullptr;
+        return data;
     }
     return data;
 }
@@ -111,6 +120,10 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
                 retValue[i].moduleName = MallocCString(item.first);
                 retValue[i++].metadata = ConvertArrMetadata(item.second);
             }
+        } else {
+            LOGE("ConvertArrMoMeta malloc failed");
+            arrMdata.head = nullptr;
+            return arrMdata;
         }
         arrMdata.head = retValue;
     }
@@ -142,7 +155,7 @@ RetApplicationInfo ConvertApplicationInfo(AppExecFwk::ApplicationInfo cAppInfo)
     appInfo.iconId = cAppInfo.iconId;
     appInfo.process = MallocCString(cAppInfo.process);
 
-    appInfo.permissions = g_convertArrString(cAppInfo.permissions);
+    appInfo.permissions = ConvertArrString(cAppInfo.permissions);
 
     appInfo.codePath = MallocCString(cAppInfo.codePath);
 
@@ -176,7 +189,7 @@ RetExtensionAbilityInfo ConvertExtensionAbilityInfo(AppExecFwk::ExtensionAbility
     exInfo.iconId = extensionInfos.iconId;
     exInfo.exported = extensionInfos.visible;
     exInfo.extensionAbilityType = static_cast<int32_t>(extensionInfos.type);
-    exInfo.permissions = g_convertArrString(extensionInfos.permissions);
+    exInfo.permissions = ConvertArrString(extensionInfos.permissions);
     exInfo.applicationInfo = ConvertApplicationInfo(extensionInfos.applicationInfo);
     exInfo.metadata = ConvertArrMetadata(extensionInfos.metadata);
     exInfo.enabled = extensionInfos.enabled;
@@ -200,6 +213,9 @@ CArrRetExtensionAbilityInfo ConvertArrExtensionAbilityInfo(
                 retValue[i] = ConvertExtensionAbilityInfo(extensionInfos[i]);
             }
             exAbInfo.head = retValue;
+        } else {
+            LOGE("ConvertArrExtensionAbilityInfo malloc failed");
+            return exAbInfo;
         }
     }
     return exAbInfo;
@@ -230,8 +246,8 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
     abInfo.exported = cAbilityInfos.visible;
     abInfo.orientation = static_cast<int32_t>(cAbilityInfos.orientation);
     abInfo.launchType = static_cast<int32_t>(cAbilityInfos.launchMode);
-    abInfo.permissions = g_convertArrString(cAbilityInfos.permissions);
-    abInfo.deviceTypes = g_convertArrString(cAbilityInfos.deviceTypes);
+    abInfo.permissions = ConvertArrString(cAbilityInfos.permissions);
+    abInfo.deviceTypes = ConvertArrString(cAbilityInfos.deviceTypes);
     abInfo.applicationInfo = ConvertApplicationInfo(cAbilityInfos.applicationInfo);
     abInfo.metadata = ConvertArrMetadata(cAbilityInfos.metadata);
     abInfo.enabled = cAbilityInfos.enabled;
@@ -244,6 +260,10 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
                 retValue[i] = static_cast<int32_t>(cAbilityInfos.windowModes[i]);
             }
             abInfo.supportWindowModes.head = retValue;
+        } else {
+            LOGE("ConvertAbilityInfo malloc failed");
+            abInfo.supportWindowModes.head = nullptr;
+            return abInfo;
         }
     }
 
@@ -268,6 +288,10 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> ab
                 retValue[i] = ConvertAbilityInfo(abilityInfos[i]);
             }
             abInfo.head = retValue;
+        } else {
+            LOGE("ConvertArrAbilityInfo malloc failed");
+            abInfo.head = nullptr;
+            return abInfo;
         }
     }
     return abInfo;
@@ -285,6 +309,9 @@ CArrRetPreloadItem ConvertPreloadItem(std::vector<AppExecFwk::PreloadItem> prelo
                 retValue[i].moduleName = MallocCString(preloads[i].moduleName);
             }
             pLoad.head = retValue;
+        } else {
+            LOGE("ConvertPreloadItem malloc failed");
+            return pLoad;
         }
     }
     return pLoad;
@@ -304,6 +331,9 @@ CArrRetDependency ConvertDependency(std::vector<AppExecFwk::Dependency> dependen
                 retValue[i].versionCode = dependencies[i].versionCode;
             }
             dep.head = retValue;
+        } else {
+            LOGE("ConvertDependency malloc failed");
+            return dep;
         }
     }
     return dep;
@@ -328,7 +358,7 @@ RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
 
     hapInfo.metadata = ConvertArrMetadata(hapModuleInfo.metadata);
 
-    hapInfo.deviceTypes = g_convertArrString(hapModuleInfo.deviceTypes);
+    hapInfo.deviceTypes = ConvertArrString(hapModuleInfo.deviceTypes);
 
     hapInfo.installationFree = hapModuleInfo.installationFree;
     hapInfo.hashValue = MallocCString(hapModuleInfo.hashValue);
@@ -352,6 +382,7 @@ CArrHapInfo ConvertArrHapInfo(std::vector<AppExecFwk::HapModuleInfo> hapModuleIn
     hapInfos.size = static_cast<int64_t>(hapModuleInfos.size());
     RetHapModuleInfo *retValue = reinterpret_cast<RetHapModuleInfo *>(malloc(sizeof(RetHapModuleInfo) * hapInfos.size));
     if (retValue == nullptr) {
+        LOGE("ConvertArrHapInfo malloc failed");
         hapInfos.head = nullptr;
         return hapInfos;
     }
@@ -375,6 +406,9 @@ CArrReqPerDetail ConvertArrReqPerDetail(std::vector<AppExecFwk::RequestPermissio
                 retValue[i] = ConvertRequestPermission(reqPermissionDetails[i]);
             }
             perDetail.head = retValue;
+        } else {
+            LOGE("ConvertArrReqPerDetail malloc failed");
+            return perDetail;
         }
     }
     return perDetail;
@@ -406,6 +440,10 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
                 retValue[i] = static_cast<int32_t>(cBundleInfo.reqPermissionStates[i]);
             }
             bundleInfo.state.head = retValue;
+        } else {
+            LOGE("ConvertBundleInfo malloc failed");
+            bundleInfo.state.head = nullptr;
+            return bundleInfo;
         }
     }
 
@@ -416,32 +454,8 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
     }
     bundleInfo.installTime = cBundleInfo.installTime;
     bundleInfo.updateTime = cBundleInfo.updateTime;
+    bundleInfo.uid = cBundleInfo.uid;
     return bundleInfo;
-}
-
-CRecoverableApplicationInfo CovertCRecoverableApplicationInfo(AppExecFwk::RecoverableApplicationInfo info)
-{
-    CRecoverableApplicationInfo cinfo;
-    cinfo.bundleName = MallocCString(info.bundleName);
-    cinfo.moduleName = MallocCString(info.moduleName);
-    cinfo.labelId = info.labelId;
-    cinfo.iconId = info.iconId;
-    return cinfo;
-}
- 
-CArrRecoverableApplicationInfo CovertCArrRecoverableApplicationInfo(
-    std::vector<AppExecFwk::RecoverableApplicationInfo> info)
-{
-    CArrRecoverableApplicationInfo arr;
-    arr.size = static_cast<int64_t>(info.size());
-    if (arr.size <= 0) {
-        arr.head = nullptr;
-    } else {
-        for (int32_t i = 0; i< arr.size; i++) {
-            arr.head[i] = CovertCRecoverableApplicationInfo(info[i]);
-        }
-    }
-    return arr;
 }
 
 } // Convert
