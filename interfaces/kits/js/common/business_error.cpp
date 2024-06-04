@@ -101,7 +101,7 @@ constexpr const char* ERR_MSG_DISALLOW_UNINSTALL =
 constexpr const char* ERR_MSG_ALREADY_EXIST =
     "Failed to install the HAP because the VersionCode to be updated is not greater than the current VersionCode";
 constexpr const char* ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG =
-    "The input source file is not ZIP format or damaged.";
+    "The input source file is not in ZIP format or is damaged.";
 constexpr const char* ERR_MSG_CODE_SIGNATURE_FAILED =
     "Failed to install the HAP because the code signature verification failed.";
 constexpr const char* ERR_MSG_SELF_UPDATE_NOT_MDM =
