@@ -1851,7 +1851,7 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     }
 }
 
-void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId,
+void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
     BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const
 {
     // get clone bundle info
@@ -1863,8 +1863,13 @@ void BundleDataMgr::GetCloneBundleInfos(const InnerBundleInfo& info, int32_t use
     LOG_D(BMS_TAG_QUERY_BUNDLE, "app %{public}s start get bundle clone info",
         info.GetBundleName().c_str());
     for (const auto &item : bundleUserInfo.cloneInfos) {
-        ModifyBundleInfoByCloneInfo(item.second, bundleInfo);
-        bundleInfos.emplace_back(bundleInfo);
+        BundleInfo cloneBundleInfo;
+        ErrCode ret = info.GetBundleInfoV9(flags, cloneBundleInfo, userId, item.second.appIndex);
+        if (ret == ERR_OK) {
+            ProcessBundleMenu(cloneBundleInfo, flags, true);
+            ProcessBundleRouterMap(cloneBundleInfo, flags);
+            bundleInfos.emplace_back(cloneBundleInfo);
+        }
     }
 }
 
@@ -2828,7 +2833,8 @@ bool BundleDataMgr::GetBundleInfos(
         bundleInfos.emplace_back(bundleInfo);
         find = true;
         // add clone bundle info
-        GetCloneBundleInfos(innerBundleInfo, responseUserId, bundleInfo, bundleInfos);
+        // flags convert
+        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
     }
 
     LOG_D(BMS_TAG_QUERY_BUNDLE, "get bundleInfos result(%{public}d) in user(%{public}d).", find, userId);
@@ -2952,7 +2958,7 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
         bundleInfos.emplace_back(bundleInfo);
         find = true;
         // add clone bundle info
-        GetCloneBundleInfos(info, Constants::ALL_USERID, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
     }
 
     APP_LOGD("get all bundleInfos result(%{public}d).", find);
@@ -3002,7 +3008,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         ProcessBundleRouterMap(bundleInfo, flags);
         bundleInfos.emplace_back(bundleInfo);
         // add clone bundle info
-        GetCloneBundleInfos(innerBundleInfo, responseUserId, bundleInfo, bundleInfos);
+        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
     }
     if (bundleInfos.empty()) {
         LOG_W(BMS_TAG_QUERY_BUNDLE, "bundleInfos is empty");
@@ -3034,7 +3040,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         if (ret == ERR_OK) {
             bundleInfos.emplace_back(bundleInfo);
             // add clone bundle info
-            GetCloneBundleInfos(info, Constants::ALL_USERID, bundleInfo, bundleInfos);
+            GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
         }
     }
     if (bundleInfos.empty()) {
