@@ -1328,7 +1328,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
             if (ret != ERR_OK) {
                 return ret;
             }
-            APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRId64 "",
+            APP_LOGI("bundleName : %{public}s, cleanCacheSize: %{public}" PRIu64 "",
                 useStat.bundleName_.c_str(), cleanCacheSize);
             cleanCacheSum += cleanCacheSize;
             if (cleanCacheSum >= cacheSize) {
