@@ -96,6 +96,7 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
         &InstalldHost::HandGetNativeLibraryFileNames);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::PEND_SIGN_AOT), &InstalldHost::HandlePendSignAOT);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_AP_FILE),
         &InstalldHost::HandleIsExistApFile);
@@ -248,7 +249,25 @@ bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
         return false;
     }
 
-    ErrCode result = ExecuteAOT(*aotArgs);
+    std::vector<uint8_t> pendSignData;
+    ErrCode result = ExecuteAOT(*aotArgs, pendSignData);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteUInt8Vector(pendSignData)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable ExecuteAOT failed");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandlePendSignAOT(MessageParcel &data, MessageParcel &reply)
+{
+    std::string anFileName = Str16ToStr8(data.ReadString16());
+    std::vector<uint8_t> signData;
+    if (!data.ReadUInt8Vector(&signData)) {
+        LOG_E(BMS_TAG_INSTALLD, "ReadUInt8Vector PendSignAOT failed");
+        return false;
+    }
+    ErrCode result = PendSignAOT(anFileName, signData);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

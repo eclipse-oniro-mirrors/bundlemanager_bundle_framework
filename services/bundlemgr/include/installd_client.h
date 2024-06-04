@@ -186,7 +186,9 @@ public:
     ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
-    ErrCode ExecuteAOT(const AOTArgs &aotArgs);
+    ErrCode ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData);
+
+    ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData);
 
     ErrCode StopAOT();
 

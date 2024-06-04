@@ -74,6 +74,7 @@ enum class InstalldInterfaceCode : uint32_t {
     IS_EXIST_EXTENSION_DIR,
     CREATE_EXTENSION_DATA_DIR,
     GET_DISK_USAGE,
+    PEND_SIGN_AOT,
 };
 
 } // namespace AppExecFwk

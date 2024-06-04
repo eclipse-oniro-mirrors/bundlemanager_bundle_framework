@@ -205,7 +205,12 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
+ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
 {
     return ERR_OK;
 }
