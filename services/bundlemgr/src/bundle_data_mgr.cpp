@@ -3732,7 +3732,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     APP_LOGD("GetInnerBundleInfoWithFlagsV9: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW("GetInnerBundleInfoWithFlagsV9: bundleName %{public}s not find", bundleName.c_str());
+        APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
@@ -6400,7 +6400,7 @@ bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBun
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW("QueryInnerBundleInfo failed, bundleName:%{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("Query failed: %{public}s", bundleName.c_str());
         return false;
     }
     info = item->second;
