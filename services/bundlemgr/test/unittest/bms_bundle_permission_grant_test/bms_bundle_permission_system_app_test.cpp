@@ -1436,4 +1436,50 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetCloneBundleInfoTest, Function
     auto result = bundleMgrProxy->GetCloneBundleInfo("", FLAGS, FLAGS, bundleInfo, USERID);
     EXPECT_NE(result, ERR_OK);
 }
+
+/**
+ * @tc.number: CleanBundleCacheFilesAutomaticTest
+ * @tc.name: test CleanBundleCacheFilesAutomatic of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, CleanBundleCacheFilesAutomaticTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    uint64_t cacheSize = 0;
+    auto result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoByDeveloperIdTest
+ * @tc.name: test GetAllBundleInfoByDeveloperId of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetAllBundleInfoByDeveloperIdTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string developerId = "testDev";
+    std::vector<BundleInfo> bundleInfos;
+    int32_t userId = 100;
+    auto result = bundleMgrProxy->GetAllBundleInfoByDeveloperId(developerId, bundleInfos, userId);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDeveloperIdsTest
+ * @tc.name: test GetDeveloperIds of BundleMgrProxy
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, GetDeveloperIdsTest, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string appDistributionType = "none";
+    std::vector<std::string> developerIdList;
+    int32_t userId = 100;
+    auto result = bundleMgrProxy->GetDeveloperIds(appDistributionType, developerIdList, userId);
+    EXPECT_EQ(result, ERR_OK);
+}
 } // OHOS

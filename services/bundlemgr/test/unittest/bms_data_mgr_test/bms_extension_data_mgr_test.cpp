@@ -380,6 +380,19 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0015, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsExtensionDataMgr_0016
+ * @tc.name: GetBundleNameByUid
+ * @tc.desc: GetBundleNameByUid
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0016, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool pass = false;
+    ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
  * @tc.number: BmsExtensionProfile_0001
  * @tc.name: TransformTo
  * @tc.desc: TransformTo
