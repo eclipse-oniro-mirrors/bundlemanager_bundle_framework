@@ -70,6 +70,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
 #endif
     std::string colorMode = BundleSystemState::GetInstance().GetSystemColorMode();
     resConfig->SetColorMode(ConvertColorMode(colorMode));
+    resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
@@ -105,6 +106,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
 #endif
     std::string colorMode = BundleSystemState::GetInstance().GetSystemColorMode();
     resConfig->SetColorMode(ConvertColorMode(colorMode));
+    resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
