@@ -257,4 +257,24 @@
     <option name="push" value="multiUser/lower_versionCode_entry_hapB.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BmsInstallExtensionSystemTest">
+    <preparer>
+      <option name="push" value="extensionDirTest/version1_withoutExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_withoutExtension_entry_form_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_withoutExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_withoutExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_withoutExtension_entry_form_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_withoutExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_oneExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_oneExtension2_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_oneExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_oneExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_oneExtension2_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_oneExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_twoExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version1_twoExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_twoExtension_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+      <option name="push" value="extensionDirTest/version2_twoExtension_feature_hap.hap -> /data/test/bms_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>

@@ -228,10 +228,54 @@ ohos_systemtest("BmsInstallMultiUserTest") {
   ]
 }
 
+ohos_systemtest("BmsInstallExtensionSystemTest") {
+  module_out_path = module_output_path
+
+  sources = [ "bms_install_extension_system_test.cpp" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version1/entry:version1_oneExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version1/entry_ex2:version1_oneExtension2_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version1/feature:version1_oneExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version2/entry:version2_oneExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version2/entry_ex2:version2_oneExtension2_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/oneExtensionDir/version2/feature:version2_oneExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/twoExtensionDir/version1/entry:version1_twoExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/twoExtensionDir/version1/feature:version1_twoExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/twoExtensionDir/version2/entry:version2_twoExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/twoExtensionDir/version2/feature:version2_twoExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version1/entry:version1_withoutExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version1/feature:version1_withoutExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version1_form/entry:version1_withoutExtension_entry_form_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version2/entry:version2_withoutExtension_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version2/feature:version2_withoutExtension_feature_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/extensionDirTest/withoutExtensionDir/version2_form/entry:version2_withoutExtension_entry_form_hap",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("systemtest") {
   testonly = true
 
   deps = [
+    ":BmsInstallExtensionSystemTest",
     ":BmsInstallExternalHspSoTest",
     ":BmsInstallHapSoTest",
     ":BmsInstallMultiUserTest",
