@@ -140,7 +140,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 
@@ -342,7 +342,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 
@@ -468,7 +468,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 
@@ -596,7 +596,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 
@@ -724,7 +724,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 

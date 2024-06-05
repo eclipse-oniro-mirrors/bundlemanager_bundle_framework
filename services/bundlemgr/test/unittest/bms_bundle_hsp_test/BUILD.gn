@@ -158,7 +158,7 @@ ohos_unittest("BmsBundleHspTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   if (bms_device_info_manager_part_enabled) {
@@ -314,7 +314,7 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   if (bms_device_info_manager_part_enabled) {
@@ -465,7 +465,7 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   if (bms_device_info_manager_part_enabled) {

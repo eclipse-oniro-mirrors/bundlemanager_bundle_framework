@@ -133,7 +133,7 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   sources += [ "bundleinstalldhost_fuzzer.cpp" ]

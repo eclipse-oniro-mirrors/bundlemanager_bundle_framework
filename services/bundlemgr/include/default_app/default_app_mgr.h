@@ -67,6 +67,16 @@ private:
     std::string GetType(const AAFwk::Want& want) const;
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
     bool GetBrokerBundleInfo(const Element& element, BundleInfo& bundleInfo) const;
+    bool IsSameDefaultApp(const std::vector<BundleInfo>& bundleInfos) const;
+    bool IsSameAbilityInfo(const std::vector<BundleInfo>& bundleInfos) const;
+    bool IsSameExtensionInfo(const std::vector<BundleInfo>& bundleInfos) const;
+    std::vector<std::string> GetMimeTypes(const std::string& utd) const;
+
+    ErrCode IsDefaultApplicationInternal(int32_t userId, const std::string& type, bool& isDefaultApp) const;
+    ErrCode GetDefaultApplicationInternal(
+        int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup = false) const;
+    ErrCode SetDefaultApplicationInternal(int32_t userId, const std::string& type, const Element& element) const;
+    ErrCode ResetDefaultApplicationInternal(int32_t userId, const std::string& type) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     mutable std::mutex mutex_;
