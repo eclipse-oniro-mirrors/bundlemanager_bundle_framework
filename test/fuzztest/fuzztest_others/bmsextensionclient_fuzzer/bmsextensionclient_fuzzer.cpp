@@ -26,7 +26,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     constexpr uint8_t ENABLE = 2;
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
-    {   
+    {  
         Want want;
         std::string bundleName (reinterpret_cast<const char*>(data), size);
         bool boolParam = *data % ENABLE;
@@ -43,14 +43,16 @@ namespace OHOS {
         bmsExtensionClient.QueryLauncherAbility(want, reinterpret_cast<uintptr_t>(data),
         abilityInfos);
         bmsExtensionClient.QueryAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
-                                            reinterpret_cast<uintptr_t>(data),
-                                            abilityInfos);
+                                             reinterpret_cast<uintptr_t>(data), abilityInfos);
         bmsExtensionClient.BatchQueryAbilityInfos(wants, reinterpret_cast<uintptr_t>(data),
                                                   reinterpret_cast<uintptr_t>(data),
                                                   abilityInfos);
-        bmsExtensionClient.QueryAbilityInfo(want, reinterpret_cast<uintptr_t>(data), reinterpret_cast<uintptr_t>(data), abilityInfo);
-        bmsExtensionClient.GetBundleInfos(reinterpret_cast<uintptr_t>(data), bundleInfos, reinterpret_cast<uintptr_t>(data));
-        bmsExtensionClient.GetBundleInfo(bundleName, reinterpret_cast<uintptr_t>(data), bundleInfo, reinterpret_cast<uintptr_t>(data), boolParam);
+        bmsExtensionClient.QueryAbilityInfo(want, reinterpret_cast<uintptr_t>(data),
+                                            reinterpret_cast<uintptr_t>(data), abilityInfo);
+        bmsExtensionClient.GetBundleInfos(reinterpret_cast<uintptr_t>(data), bundleInfos,
+                                          reinterpret_cast<uintptr_t>(data));
+        bmsExtensionClient.GetBundleInfo(bundleName, reinterpret_cast<uintptr_t>(data), bundleInfo,
+                                         reinterpret_cast<uintptr_t>(data), boolParam);
         bmsExtensionClient.BatchGetBundleInfo(bundleNames, reinterpret_cast<uintptr_t>(data),
                                               bundleInfos, reinterpret_cast<uintptr_t>(data));
         bmsExtensionClient.ImplicitQueryAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
@@ -65,8 +67,7 @@ namespace OHOS {
         bmsExtensionClient.GetBundleNameByUid(reinterpret_cast<uintptr_t>(data), bundleName);
                                              
         return true;
-
-    }   
+    }
 }
 
 // Fuzzer entry point.
