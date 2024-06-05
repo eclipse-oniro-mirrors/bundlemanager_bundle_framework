@@ -24,7 +24,7 @@ using Want = OHOS::AAFwk::Want;
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    constexpr uint8_t ENABLE = 2;
+constexpr uint8_t ENABLE = 2;
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {  
         Want want;
