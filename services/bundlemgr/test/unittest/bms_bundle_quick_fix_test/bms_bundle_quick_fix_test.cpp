@@ -81,6 +81,8 @@ const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
 const std::string INVALID_FILE_PATH_1 = "/data/service/el1/public/bms/bundle_manager_service/hello.hqf";
 const std::string INVALID_FILE_PATH_2 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/../hello.hqf";
 const std::string VALID_FILE_PATH_3 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/hello.hqf";
+const std::string INVALID_FILE_NAME = "..hello.hqf";
+const std::string VALID_FILE_NAME = "hello.hqf";
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -3908,6 +3910,38 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0100, Function | SmallTe
     std::string path;
     auto res = quickFixMgrHostImpl.CreateFd(fileName, fd, path);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0200
+ * @tc.name: Test QuickFixManagerHostImpl.IsFileNameValid
+ * @tc.desc: 1.Test QuickFixManagerHostImpl.IsFileNameValid
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+
+    auto ret = quickFixMgrHostImpl.IsFileNameValid(INVALID_FILE_NAME);
+    EXPECT_FALSE(ret);
+    ret = quickFixMgrHostImpl.IsFileNameValid(VALID_FILE_NAME);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0300
+ * @tc.name: Test QuickFixManagerHostImpl.IsFileNameValid
+ * @tc.desc: 1.Test QuickFixManagerHostImpl.IsFileNameValid
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0300, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(VALID_FILE_PATH_3);
+
+    std::vector<std::string> securityFilePaths;
+
+    auto ret = quickFixMgrHostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED);
 }
 
 /**
