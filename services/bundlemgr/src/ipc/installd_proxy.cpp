@@ -230,6 +230,18 @@ ErrCode InstalldProxy::RemoveDir(const std::string &dir)
     return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_DIR, data, reply, option);
 }
 
+int64_t InstalldProxy::GetDiskUsage(const std::string &dir, bool isRealPath)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
+    INSTALLD_PARCEL_WRITE(data, Bool, isRealPath);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
+    return TransactInstalldCmd(InstalldInterfaceCode::GET_DISK_USAGE, data, reply, option);
+}
+
 ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
 {
     MessageParcel data;

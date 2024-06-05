@@ -108,6 +108,13 @@ private:
      */
     bool HandleRemoveDir(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetDiskUsage function called from a IInstalld proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns true if called successfully; returns false otherwise.
+     */
+    bool HandleGetDiskUsage(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the CleanBundleDataDir function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;

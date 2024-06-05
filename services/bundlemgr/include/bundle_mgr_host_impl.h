@@ -1019,7 +1019,6 @@ private:
     ErrCode CleanBundleCacheFilesGetCleanSize(const std::string &bundleName,
         int32_t userId, uint64_t &cleanCacheSize);
     void CleanBundleCacheTaskGetCleanSize(const std::string &bundleName,
-        const std::shared_ptr<BundleDataMgr> &dataMgr,
         int32_t userId, uint64_t &cleanCacheSize);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(

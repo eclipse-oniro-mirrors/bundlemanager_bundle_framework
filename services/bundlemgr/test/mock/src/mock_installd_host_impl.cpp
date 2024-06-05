@@ -86,6 +86,11 @@ ErrCode InstalldHostImpl::RemoveDir(const std::string &dir)
     return ERR_OK;
 }
 
+int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
+{
+    return 0;
+}
+
 ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
 {
     return ERR_OK;
