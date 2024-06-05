@@ -4493,7 +4493,8 @@ HWTEST_F(BmsBundleDataMgrTest, GetCloneBundleInfos_0001, Function | MediumTest |
     bundleInfo.name = BUNDLE_NAME_DEMO;
     bundleInfo.applicationInfo.bundleName = BUNDLE_NAME_DEMO;
     std::vector<BundleInfo> bundleInfos;
-    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, USERID, bundleInfo, bundleInfos);
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
     EXPECT_TRUE(bundleInfos.empty());
 
     InnerBundleUserInfo userInfo;
@@ -4506,7 +4507,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetCloneBundleInfos_0001, Function | MediumTest |
     cloneInfo.appIndex = 1;
     cloneInfo.accessTokenId = 20000;
     innerBundleInfo.AddCloneBundle(cloneInfo);
-    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, USERID, bundleInfo, bundleInfos);
+    GetBundleDataMgr()->GetCloneBundleInfos(innerBundleInfo, flags, USERID, bundleInfo, bundleInfos);
     EXPECT_FALSE(bundleInfos.empty());
 
     if (!bundleInfos.empty()) {

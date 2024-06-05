@@ -1087,7 +1087,7 @@ private:
     void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
         ApplicationInfo &applicationInfo) const;
     void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
-    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t userId,
+    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
         BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
