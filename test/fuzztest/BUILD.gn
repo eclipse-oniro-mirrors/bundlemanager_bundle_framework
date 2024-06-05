@@ -109,6 +109,7 @@ group("fuzztest") {
   if (bundle_framework_app_control) {
     deps += [
       "fuzztest_application/addappInstallcontrolrule_fuzzer:AddAppInstallControlRuleFuzzTest",
+      "fuzztest_application/addappjumpcontrolrule_fuzzer:AddAppJumpControlRuleFuzzTest",
       "fuzztest_application/addapprunningcontrolrule_fuzzer:AddAppRunningControlRuleFuzzTest",
       "fuzztest_application/apprunningcontrolrule_fuzzer:AppRunningControlRuleFuzzTest",
       "fuzztest_application/apprunningcontrolruleresult_fuzzer:AppRunningControlRuleResultFuzzTest",
