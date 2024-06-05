@@ -28,6 +28,7 @@
 #include "mock_status_receiver.h"
 #include "nlohmann/json.hpp"
 #include "system_bundle_installer.h"
+#include "quick_fix_switcher.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -595,5 +596,57 @@ HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1500, Func
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_1600
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixSwitcher
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>("", false);
+    ErrCode result = quickFixSwitcher->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_1700
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixSwitcher
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>("", true);
+    ErrCode result = quickFixSwitcher->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_1800
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixSwitcher
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>(BUNDLE_NAME, false);
+    ErrCode result = quickFixSwitcher->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixSwitcherTest_1900
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixSwitcher
+ */
+HWTEST_F(BmsBundleQuickFixSwitcherTest, BmsBundleQuickFixSwitcherTest_1900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixSwitcher> quickFixSwitcher = std::make_shared<QuickFixSwitcher>(BUNDLE_NAME, true);
+    ErrCode result = quickFixSwitcher->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_NO_PATCH_IN_DATABASE);
 }
 } // OHOS
