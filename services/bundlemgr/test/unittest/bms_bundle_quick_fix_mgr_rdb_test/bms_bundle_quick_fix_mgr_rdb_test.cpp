@@ -907,4 +907,135 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, RestoreQuickFix_0010, Function | SmallTest
         EXPECT_EQ(scanner->state_, nullptr);
     }
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0013
+ * @tc.name: SaveInnerAppQuickFix
+ * @tc.desc: rdbDataManager_ is nullptr, verify SaveInnerAppQuickFix failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0013, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    rdb->rdbDataManager_ = nullptr;
+    EXPECT_TRUE(rdb->rdbDataManager_ == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    bool result = rdb->SaveInnerAppQuickFix(innerAppQuickFix);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0014
+ * @tc.name: DeleteInnerAppQuickFix
+ * @tc.desc: rdbDataManager_is nullptr, verify DeleteInnerAppQuickFix failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0014, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    EXPECT_TRUE(rdb->rdbDataManager_ != nullptr);
+    auto result = rdb->DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0015
+ * @tc.name: GetAllDataFromDb
+ * @tc.desc: rdbDataManager_is nullptr, verify GetAllDataFromDb failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0015, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    rdb->rdbDataManager_ = nullptr;
+    EXPECT_TRUE(rdb->rdbDataManager_ == nullptr);
+    std::map<std::string, InnerAppQuickFix> innerAppQuickFixes;
+    auto result = rdb->GetAllDataFromDb(innerAppQuickFixes);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0016
+ * @tc.name: SaveDataToDb
+ * @tc.desc: rdbDataManager_is nullptr, verify SaveDataToDb failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0016, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    rdb->rdbDataManager_ = nullptr;
+    EXPECT_TRUE(rdb->rdbDataManager_ == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    auto result = rdb->SaveDataToDb(innerAppQuickFix);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0017
+ * @tc.name: DeleteDataFromDb
+ * @tc.desc: rdbDataManager_is nullptr, verify DeleteDataFromDb failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0017, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    rdb->rdbDataManager_ = nullptr;
+    EXPECT_TRUE(rdb->rdbDataManager_ == nullptr);
+    auto result = rdb->DeleteDataFromDb(BUNDLE_NAME);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixMgrRdbTest_0018
+ * @tc.name: GetDataFromDb
+ * @tc.desc: rdbDataManager_is nullptr, verify GetDataFromDb failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0018, Function | SmallTest | Level0)
+{
+    auto rdb = std::make_shared<QuickFixManagerRdb>();
+    rdb->rdbDataManager_ = nullptr;
+    EXPECT_TRUE(rdb->rdbDataManager_ == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    auto result = rdb->GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
+    EXPECT_FALSE(result);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0019
+ * @tc.name: QueryInnerAppQuickFix
+ * @tc.desc: DataManager_is nullptr.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0019, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    dataMgr.quickFixManagerDb_ = nullptr;
+    EXPECT_TRUE(dataMgr.quickFixManagerDb_ == nullptr);
+    InnerAppQuickFix fixInfo;
+    auto result = dataMgr.QueryInnerAppQuickFix(BUNDLE_NAME, fixInfo);
+    EXPECT_FALSE(result);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0020
+ * @tc.name: SaveInnerAppQuickFix
+ * @tc.desc: DataManager_is nullptr.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0020, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    dataMgr.quickFixManagerDb_ = nullptr;
+    EXPECT_TRUE(dataMgr.quickFixManagerDb_ == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    auto result = dataMgr.SaveInnerAppQuickFix(innerAppQuickFix);
+    EXPECT_FALSE(result);
+}
+
+/*
+ * @tc.number: BmsBundleQuickFixDataMgrTest_0021
+ * @tc.name: DeleteInnerAppQuickFix
+ * @tc.desc: DataManager_is nullptr.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixDataMgrTest_0021, Function | SmallTest | Level0)
+{
+    QuickFixDataMgr dataMgr;
+    dataMgr.quickFixManagerDb_ = nullptr;
+    EXPECT_TRUE(dataMgr.quickFixManagerDb_ == nullptr);
+    auto result = dataMgr.DeleteInnerAppQuickFix(BUNDLE_NAME);
+    EXPECT_FALSE(result);
+}
 } // OHOS
