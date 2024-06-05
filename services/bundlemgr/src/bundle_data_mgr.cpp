@@ -99,6 +99,7 @@ constexpr const char* PKG_CONTEXT_PROFILE_PATH = "pkgContextInfo.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
+constexpr const char* SCHEME_HTTPS = "https";
 const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 const std::string ENTRY = "entry";
 const std::string CLONE_BUNDLE_PREFIX = "clone_";
@@ -7429,6 +7430,10 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     APP_LOGD("FilterAbility start");
     if (abilityInfos.empty()) {
         APP_LOGD("abilityInfos is empty");
+        return;
+    }
+    if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
+        APP_LOGD("scheme is not https");
         return;
     }
     std::vector<AbilityInfo> filteredAbilityInfos;
