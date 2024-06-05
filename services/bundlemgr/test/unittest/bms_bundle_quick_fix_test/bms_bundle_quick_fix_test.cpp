@@ -2737,6 +2737,94 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0104, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0105
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0105, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+
+        appQuickFix = CreateAppQuickFix();
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+
+        HapModuleInfo info;
+        info.moduleName = "entry";
+        bundleInfo.hapModuleInfos.emplace_back(info);
+
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+        // so exist
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0106
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0106, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        appQuickFix = CreateAppQuickFix();
+        appQuickFix.bundleName = "error";
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0107
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0107, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        appQuickFix = CreateAppQuickFix();
+        auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+        for (auto &hqf : appQfInfo.hqfInfos) {
+            hqf.moduleName = "name";
+        }
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: BmsBundleQuickFixTest_0110
  * Function: DefaultNativeSo
  * @tc.name: test DefaultNativeSo
@@ -3839,7 +3927,6 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0200, Function | SmallTest | Le
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
-
 /**
  * @tc.number: QuickFixDeployer_0400
  * @tc.name: Test ProcessHotReloadDeployEnd with Execute
@@ -4624,6 +4711,35 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0490, Function | SmallTest
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
 
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0610
+ * Function: PrepareCodeSignatureParam
+ * @tc.name: test PrepareCodeSignatureParam
+ * @tc.require: issueI5N7AD
+ * @tc.desc: PrepareCodeSignatureParam
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0610, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME_DEMO);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.bundleName = BUNDLE_NAME_DEMO;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+
+        HqfInfo hqf;
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.compileSdkType = "";
+        std::string hqfSoPath = "/data/test/";
+        CodeSignatureParam codeSignatureParam;
+        deployer->PrepareCodeSignatureParam(appQuickFix, hqf, bundleInfo, hqfSoPath, codeSignatureParam);
+        EXPECT_EQ(codeSignatureParam.isCompileSdkOpenHarmony, false);
+    }
+    UninstallBundleInfo(BUNDLE_NAME_DEMO);
 }
 
 /**
