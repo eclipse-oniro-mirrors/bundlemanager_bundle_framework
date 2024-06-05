@@ -40,7 +40,8 @@ const char* BACKGROUND = "background";
 const char CHAR_COLON = ':';
 const char* LAYERED_IMAGE = "layered-image";
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "ohos_clone_app_badge_";
+const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+const int32_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {
@@ -58,6 +59,49 @@ void from_json(const nlohmann::json &jsonObject, LayeredImage &layeredImage)
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BACKGROUND, layeredImage.background,
         JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
 }
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+bool GetBadgeResource(const std::string &resourceName, std::shared_ptr<Media::PixelMap> &badgePixelMap)
+{
+    std::shared_ptr<Global::Resource::ResourceManager> resMgr(Global::Resource::CreateResourceManager());
+    if (resMgr == nullptr) {
+        APP_LOGE("resMgr is nullptr");
+        return false;
+    }
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (resConfig == nullptr) {
+        APP_LOGE("resConfig is nullptr");
+        return false;
+    }
+    resMgr->UpdateResConfig(*resConfig);
+
+    std::unique_ptr<uint8_t[]> badgeResourceData;
+    size_t badgeResourceDataLength = 0;
+    auto ret = resMgr->GetMediaDataByName(resourceName.c_str(), badgeResourceDataLength, badgeResourceData);
+    if (ret != Global::Resource::RState::SUCCESS) {
+        APP_LOGE("get (%{public}s) failed, errorCode:%{public}d", resourceName.c_str(), static_cast<int32_t>(ret));
+        return false;
+    }
+
+    Media::SourceOptions opts;
+    uint32_t errorCode = 0;
+    std::unique_ptr<Media::ImageSource> imageSource =
+        Media::ImageSource::CreateImageSource(badgeResourceData.get(), badgeResourceDataLength, opts, errorCode);
+    Media::DecodeOptions decodeOpts;
+    decodeOpts.desiredPixelFormat = Media::PixelFormat::BGRA_8888;
+    decodeOpts.desiredSize.width = BADGE_SIZE;
+    decodeOpts.desiredSize.height = BADGE_SIZE;
+    if (imageSource) {
+        auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
+        badgePixelMap = std::shared_ptr<Media::PixelMap>(pixelMapPtr.release());
+    }
+    if (errorCode != 0 || (badgePixelMap == nullptr)) {
+        APP_LOGE("get badge failed, errorCode:%{public}u", errorCode);
+        return false;
+    }
+    return true;
+}
+#endif
 }
 
 BundleResourceParser::BundleResourceParser()
@@ -440,50 +484,19 @@ bool BundleResourceParser::ParserCloneResourceInfo(
     const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos)
 {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-    APP_LOGI("wtt parse clone resource info appIndex:%{public}d start", appIndex);
     // 1. get badge resource media
     std::string resourceName = OHOS_CLONE_APP_BADGE_RESOURCE + std::to_string(appIndex);
-    APP_LOGI("wtt resource Name:%{public}s", resourceName.c_str());
-    std::shared_ptr<Global::Resource::ResourceManager> resMgr(Global::Resource::CreateResourceManager());
-    if (!resMgr) {
-        APP_LOGE("wtt InitResMgr resMgr is nullptr");
-        return false;
-    }
-    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
-    if (!resConfig) {
-        APP_LOGE("wtt InitResMgr resConfig is nullptr");
-        return false;
-    }
-    resMgr->UpdateResConfig(*resConfig);
-    std::unique_ptr<uint8_t[]> badgeResourceData;
-    size_t badgeResourceDataLength = 0;
-    auto ret = resMgr->GetMediaDataByName(resourceName.c_str(), badgeResourceDataLength, badgeResourceData);
-    if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGE("wtt get badge resource(%{public}s) failed, code:%{public}d",
-            resourceName.c_str(), static_cast<int32_t>(ret));
-        return false;
-    }
-
-    Media::SourceOptions opts;
-    uint32_t errorCode = 0;
-    std::unique_ptr<Media::ImageSource> imageSource =
-        Media::ImageSource::CreateImageSource(
-            badgeResourceData.get(), badgeResourceDataLength, opts, errorCode);
-    Media::DecodeOptions decodeOpts;
-    decodeOpts.desiredPixelFormat = Media::PixelFormat::BGRA_8888;
+    APP_LOGI("parse clone info appIndex:%{public}d resourceName:%{public}s start", appIndex, resourceName.c_str());
     std::shared_ptr<Media::PixelMap> badgePixelMap;
-    if (imageSource) {
-        auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
-        badgePixelMap = std::shared_ptr<Media::PixelMap>(pixelMapPtr.release());
-    }
-    if (errorCode != 0 || (badgePixelMap == nullptr)) {
-        APP_LOGE("wtt Get badge failed, errorCode:%{public}u", errorCode);
+    if (!GetBadgeResource(resourceName, badgePixelMap) || (badgePixelMap == nullptr)) {
+        APP_LOGE("resourceName:%{public}s get failed", resourceName.c_str());
         return false;
     }
     bool ans = true;
     // 2. base64 to pixelMap
     for (auto &resourceInfo : resourceInfos) {
-        APP_LOGI("wtt start");
+        uint32_t errorCode = 0;
+        Media::SourceOptions opts;
         std::unique_ptr<Media::ImageSource> imageSource =
             Media::ImageSource::CreateImageSource(resourceInfo.icon_, opts, errorCode); // base64 to image
         Media::DecodeOptions decodeOpts;
@@ -493,22 +506,22 @@ bool BundleResourceParser::ParserCloneResourceInfo(
             auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
             baseIconResource = std::shared_ptr<Media::PixelMap>(pixelMapPtr.release());
         }
-        if (errorCode != 0 || !baseIconResource) {
-            APP_LOGE("wtt Get base icon resource failed");
+        if ((errorCode != 0) || (baseIconResource == nullptr)) {
+            APP_LOGW("get base icon resource failed, key:%{public}s", resourceInfo.GetKey().c_str());
             ans = false;
             continue;
         }
         // base icon and badge icon resource
         BundleResourceDrawable drawable;
         if (!drawable.GetBadgedIconResource(baseIconResource, badgePixelMap, resourceInfo)) {
-            APP_LOGE("wtt failed");
+            APP_LOGE("get badge failed, key:%{public}s", resourceInfo.GetKey().c_str());
             ans = false;
         }
     }
-    APP_LOGI("wtt parse clone resource info appIndex:%{public}d end", appIndex);
+    APP_LOGI("parse clone resource info appIndex:%{public}d end", appIndex);
     return ans;
 #else
-    APP_LOGI("wtt not support pixel map");
+    APP_LOGI("not support pixel map");
     return false;
 #endif
 }

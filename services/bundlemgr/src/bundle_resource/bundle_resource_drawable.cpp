@@ -81,19 +81,19 @@ bool BundleResourceDrawable::GetBadgedIconResource(
     ResourceInfo &resourceInfo)
 {
     if ((layeredPixelMap == nullptr) || (badgedPixelMap == nullptr)) {
-        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s layered or badge pixelMap are nullptr",
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s layered or badge pixelMap are nullptr",
             resourceInfo.bundleName_.c_str());
         return false;
     }
     Ace::Napi::LayeredDrawableDescriptor layeredDrawableDescriptor;
     std::shared_ptr<Media::PixelMap> compositePixelMap;
     if (!layeredDrawableDescriptor.GetCompositePixelMapWithBadge(layeredPixelMap, badgedPixelMap, compositePixelMap)) {
-        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s GetCompositePixelMapWithBadge failed",
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s GetCompositePixelMapWithBadge failed",
             resourceInfo.bundleName_.c_str());
         return false;
     }
     if (compositePixelMap == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "wtt bundleName:%{public}s compositePixelMap is nullptr",
+        LOG_E(BMS_TAG_DEFAULT, "bundleName:%{public}s compositePixelMap is nullptr",
             resourceInfo.bundleName_.c_str());
         return false;
     }
