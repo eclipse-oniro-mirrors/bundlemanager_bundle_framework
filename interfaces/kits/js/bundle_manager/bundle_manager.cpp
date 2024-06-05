@@ -4549,6 +4549,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInfoForSelfSync called");
     NapiArg args(env, info);
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
