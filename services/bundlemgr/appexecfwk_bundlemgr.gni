@@ -149,11 +149,15 @@ quick_fix +=
     [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
 
 bundle_install_deps = [
+  "${extension_path}:bundlemgr_extension",
   "${services_path}/bundlemgr:bundle_parser",
   "${services_path}/bundlemgr:parser_common",
 ]
 
-bundle_install_external_deps = [ "ffrt:libffrt" ]
+bundle_install_external_deps = [
+  "ffrt:libffrt",
+  "zlib:shared_libz",
+]
 
 if (bundle_framework_power_mgr_enable) {
   aot_external_deps = [

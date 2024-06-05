@@ -80,14 +80,12 @@ ohos_shared_library("zlib") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
-    "hilog:libhilog_base",
     "napi:ace_napi",
     "zlib:shared_libz",
   ]
   public_external_deps = [
     "libuv:uv",
     "node:node_header_notice",
-    "zlib:libz",
   ]
   install_enable = true
   subsystem_name = "bundlemanager"

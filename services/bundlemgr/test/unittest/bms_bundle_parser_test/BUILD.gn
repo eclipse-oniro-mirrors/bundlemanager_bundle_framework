@@ -60,6 +60,7 @@ ohos_unittest("BmsBundleParserTest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "zlib:shared_libz",
   ]
   defines = []
   if (ability_runtime_enable) {

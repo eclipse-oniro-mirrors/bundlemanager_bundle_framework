@@ -15,10 +15,7 @@ import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
 config("bundlemgr_extension_config") {
-  include_dirs = [
-    "include",
-    "../../inner_api/appexecfwk_base/include",
-  ]
+  include_dirs = [ "include" ]
 }
 
 ohos_shared_library("bundlemgr_extension") {
