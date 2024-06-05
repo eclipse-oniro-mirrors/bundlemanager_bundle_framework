@@ -3532,7 +3532,6 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     // copy from user
     cloneInfo.enabled = userInfo.bundleUserInfo.enabled;
     cloneInfo.disabledAbilities = userInfo.bundleUserInfo.disabledAbilities;
-    cloneInfo.overlayModulesState = userInfo.bundleUserInfo.overlayModulesState;
     cloneInfo.accessTokenId = attr.accessTokenId;
     cloneInfo.accessTokenIdEx = attr.accessTokenIdEx;
     cloneInfo.uid = attr.uid;
@@ -3540,7 +3539,6 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     int64_t now = BundleUtil::GetCurrentTime();
     cloneInfo.installTime = now;
     cloneInfo.updateTime = now;
-    cloneInfo.isRemovable = userInfo.isRemovable;
 
     cloneInfos[appIndexKey] = cloneInfo;
     APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
@@ -3625,9 +3623,6 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     if (iter == innerBundleUserInfo.cloneInfos.end()) {
         APP_LOGE("appIndex %{public}d not exist", appIndex);
         return false;
-    }
-    if (appInfo.removable && !iter->second.isRemovable) {
-        appInfo.removable = false;
     }
     appInfo.accessTokenId = iter->second.accessTokenId;
     appInfo.accessTokenIdEx = iter->second.accessTokenIdEx;
