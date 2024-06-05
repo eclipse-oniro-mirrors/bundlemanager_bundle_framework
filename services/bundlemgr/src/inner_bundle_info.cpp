@@ -1351,6 +1351,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     if (!appInfo.permissions.empty()) {
         RemoveDuplicateName(appInfo.permissions);
     }
+    appInfo.appIndex = appIndex;
 }
 
 ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -1464,8 +1465,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
-    GetBundleWithAbilities(flags, bundleInfo, userId);
-    GetBundleWithExtension(flags, bundleInfo, userId);
+    GetBundleWithAbilities(flags, bundleInfo, appIndex, userId);
+    GetBundleWithExtension(flags, bundleInfo, appIndex, userId);
     return true;
 }
 
@@ -1524,6 +1525,7 @@ void InnerBundleInfo::ProcessBundleFlags(
                 bundleInfo.applicationInfo, appIndex);
         }
     }
+    bundleInfo.applicationInfo.appIndex = appIndex;
     GetBundleWithReqPermissionsV9(flags, userId, bundleInfo, appIndex);
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, userId, appIndex);
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
@@ -1623,7 +1625,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
             }
 
             GetBundleWithAbilitiesV9(flags, hapModuleInfo, userId, appIndex);
-            GetBundleWithExtensionAbilitiesV9(flags, hapModuleInfo);
+            GetBundleWithExtensionAbilitiesV9(flags, hapModuleInfo, appIndex);
             bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
         }
     }
@@ -1651,6 +1653,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         }
         AbilityInfo abilityInfo = ability.second;
         abilityInfo.enabled = isEnabled;
+        abilityInfo.appIndex = appIndex;
 
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
@@ -1666,7 +1669,8 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
     }
 }
 
-void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const
+void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
+    int32_t flags, HapModuleInfo &hapModuleInfo, int32_t appIndex) const
 {
     hapModuleInfo.extensionInfos.clear();
     if ((static_cast<uint32_t>(flags) &
@@ -1680,6 +1684,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModule
             continue;
         }
         ExtensionAbilityInfo info = extensionInfo.second;
+        info.appIndex = appIndex;
 
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA))
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA)) {
@@ -1693,7 +1698,8 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModule
     }
 }
 
-void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+void InnerBundleInfo::GetBundleWithAbilities(
+    int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId) const
 {
     APP_LOGD("bundleName:%{public}s userid:%{public}d", bundleInfo.name.c_str(), userId);
     if (static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_ABILITIES) {
@@ -1712,12 +1718,14 @@ void InnerBundleInfo::GetBundleWithAbilities(int32_t flags, BundleInfo &bundleIn
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 abilityInfo.skills.clear();
             }
+            abilityInfo.appIndex = appIndex;
             bundleInfo.abilityInfos.emplace_back(abilityInfo);
         }
     }
 }
 
-void InnerBundleInfo::GetBundleWithExtension(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
+void InnerBundleInfo::GetBundleWithExtension(
+    int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId) const
 {
     APP_LOGD("get bundleInfo with extensionInfo begin");
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_EXTENSION_INFO) == GET_BUNDLE_WITH_EXTENSION_INFO) {
@@ -1729,6 +1737,7 @@ void InnerBundleInfo::GetBundleWithExtension(int32_t flags, BundleInfo &bundleIn
             if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_SKILL) != GET_BUNDLE_WITH_SKILL) {
                 info.skills.clear();
             }
+            info.appIndex = appIndex;
             bundleInfo.extensionInfos.emplace_back(info);
         }
     }
