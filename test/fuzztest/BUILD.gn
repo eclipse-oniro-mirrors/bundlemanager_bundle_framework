@@ -79,6 +79,7 @@ group("fuzztest") {
     "fuzztest_information/querykeepalivebundleinfos_fuzzer:QueryKeepAliveBundleInfosFuzzTest",
     "fuzztest_information/remoteabilityinfo_fuzzer:RemoteAbilityInfoFuzzTest",
     "fuzztest_others/bmsextensionclient_fuzzer:BmsExtensionClientFuzzTest",
+    "fuzztest_others/bundlecloneinstaller_fuzzer:BundlecloneinstallerFuzzTest",
     "fuzztest_others/commonevent_fuzzer:CommonEventFuzzTest",
     "fuzztest_others/copyfiles_fuzzer:CopyFilesFuzzTest",
     "fuzztest_others/deletequickfix_fuzzer:DeleteQuickFixFuzzTest",

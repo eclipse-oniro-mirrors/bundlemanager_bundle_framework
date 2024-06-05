@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -49,6 +50,14 @@ constexpr uint8_t ENABLE = 2;
         std::unordered_map<std::string, InnerBundleInfo> newInfos;
         InnerBundleInfo oldInfo;
         driverInstaller->CopyAllDriverFile(newInfos, oldInfo);
+
+        std::string srcPath(reinterpret_cast<const char*>(data), size);
+        driverInstaller->CopyDriverSoFile(info, srcPath, isModuleExisted);
+
+        driverInstaller->RemoveAndReNameDriverFile(newInfos, oldInfo);
+
+        driverInstaller->RenameDriverFile(info);
+
         return true;
     }
 }

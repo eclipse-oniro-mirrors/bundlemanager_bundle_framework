@@ -26,7 +26,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr uint8_t ENABLE = 2;
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
-    {  
+    {
         Want want;
         std::string bundleName (reinterpret_cast<const char*>(data), size);
         bool boolParam = *data % ENABLE;
@@ -41,7 +41,7 @@ constexpr uint8_t ENABLE = 2;
         BmsExtensionClient bmsExtensionClient;
         BundleInfo bundleInfo;
         bmsExtensionClient.QueryLauncherAbility(want, reinterpret_cast<uintptr_t>(data),
-        abilityInfos);
+                                                abilityInfos);
         bmsExtensionClient.QueryAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
                                              reinterpret_cast<uintptr_t>(data), abilityInfos);
         bmsExtensionClient.BatchQueryAbilityInfos(wants, reinterpret_cast<uintptr_t>(data),
