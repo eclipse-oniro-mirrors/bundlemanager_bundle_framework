@@ -61,7 +61,7 @@ constexpr uint8_t ENABLE = 2;
         bmsExtensionClient.GetBundleStats(bundleName, reinterpret_cast<uintptr_t>(data), bundleStats);
         bmsExtensionClient.ClearCache(bundleName, callback, reinterpret_cast<uintptr_t>(data));
         bmsExtensionClient.ClearData(bundleName, reinterpret_cast<uintptr_t>(data));
-        int32_t uid =  reinterpret_cast<int32_t>(data);
+        int32_t uid =  3024;
         bmsExtensionClient.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data),
                                               uid);
         bmsExtensionClient.GetBundleNameByUid(reinterpret_cast<uintptr_t>(data), bundleName);

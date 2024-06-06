@@ -37,6 +37,7 @@ namespace OHOS {
         constexpr size_t OFFSET_ZERO = 24;
         constexpr size_t OFFSET_ONE = 16;
         constexpr size_t OFFSET_TWO = 8;
+        constexpr int32_t UID = 3024;
     }
 
     void SetBundleDataMgr()
@@ -56,12 +57,15 @@ namespace OHOS {
         BundleCloneInstaller bundleCloneInstall;
 
         std::string bundleName(data, size);
+        InnerBundleInfo info;
         int32_t userId = static_cast<int32_t>(GetU32Data(data));
         int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
         SetBundleDataMgr();
         bundleCloneInstall.InstallCloneApp(bundleName, userId, appIndex);
         bundleCloneInstall.UninstallCloneApp(bundleName, userId, appIndex);
         bundleCloneInstall.UninstallAllCloneApps(bundleName, userId);
+        bundleCloneInstall.CreateCloneDataDir(info, userId, UID, appIndex);
+        bundleCloneInstall.RemoveCloneDataDir(bundleName, userId, appIndex);
         return true;
     }
 }

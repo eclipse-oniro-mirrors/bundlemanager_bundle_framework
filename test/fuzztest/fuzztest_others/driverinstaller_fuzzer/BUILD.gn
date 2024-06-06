@@ -43,7 +43,12 @@ ohos_fuzztest("DriverInstallerFuzzTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = bundle_install_deps
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
+  deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
@@ -66,7 +71,15 @@ ohos_fuzztest("DriverInstallerFuzzTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
-
+  if (code_signature_enable) {
+    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -85,6 +98,9 @@ ohos_fuzztest("DriverInstallerFuzzTest") {
     external_deps += [ "c_utils:utils" ]
   }
 
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
