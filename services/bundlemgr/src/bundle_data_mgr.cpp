@@ -1829,9 +1829,6 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
 void BundleDataMgr::ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
     ApplicationInfo &applicationInfo) const
 {
-    if (applicationInfo.removable && !cloneInfo.isRemovable) {
-        applicationInfo.removable = false;
-    }
     applicationInfo.accessTokenId = cloneInfo.accessTokenId;
     applicationInfo.accessTokenIdEx = cloneInfo.accessTokenIdEx;
     applicationInfo.enabled = cloneInfo.enabled;
