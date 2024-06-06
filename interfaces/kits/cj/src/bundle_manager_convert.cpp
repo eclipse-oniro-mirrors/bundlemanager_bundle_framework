@@ -101,7 +101,6 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
         }
     } else {
         LOGE("ConvertArrMetadata malloc failed");
-        data.head = nullptr;
         return data;
     }
     return data;
@@ -122,7 +121,6 @@ CArrMoMeta ConvertArrMoMeta(std::map<std::string, std::vector<AppExecFwk::Metada
             }
         } else {
             LOGE("ConvertArrMoMeta malloc failed");
-            arrMdata.head = nullptr;
             return arrMdata;
         }
         arrMdata.head = retValue;
@@ -290,7 +288,6 @@ CArrRetAbilityInfo ConvertArrAbilityInfo(std::vector<AppExecFwk::AbilityInfo> ab
             abInfo.head = retValue;
         } else {
             LOGE("ConvertArrAbilityInfo malloc failed");
-            abInfo.head = nullptr;
             return abInfo;
         }
     }
@@ -371,7 +368,7 @@ RetHapModuleInfo ConvertHapModuleInfo(AppExecFwk::HapModuleInfo hapModuleInfo)
     if (!hapModuleInfo.fileContextMenu.empty()) {
         hapInfo.fileContextMenuConfig = MallocCString(hapModuleInfo.fileContextMenu);
     } else {
-        hapInfo.fileContextMenuConfig = nullptr;
+        hapInfo.fileContextMenuConfig = MallocCString("");
     }
     return hapInfo;
 }
