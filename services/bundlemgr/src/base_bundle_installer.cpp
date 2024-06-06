@@ -1712,7 +1712,10 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             if (result != ERR_OK) {
                 return result;
             }
-
+            std::vector<std::string> extensionDirs = oldInfo.GetAllExtensionDirs();
+            createExtensionDirs_.assign(extensionDirs.begin(), extensionDirs.end());
+            CreateExtensionDataDir(oldInfo);
+            CreateDataGroupDir(oldInfo);
             // extract ap file
             result = ExtractAllArkProfileFile(oldInfo);
             if (result != ERR_OK) {
@@ -3475,6 +3478,39 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
     auto result = InstalldClient::GetInstance()->CreateExtensionDataDir(createDirParam);
     if (result != ERR_OK) {
         APP_LOGE("fail to create bundle extension data dir, error is %{public}d", result);
+    }
+}
+
+void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
+{
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return;
+    }
+    std::vector<DataGroupInfo> dataGroupInfos;
+    if (!dataMgr_->QueryDataGroupInfos(info.GetBundleName(), userId_, dataGroupInfos)) {
+        APP_LOGW("query group info for bundle %{public}s userId %{public}d failed",
+            info.GetBundleName().c_str(), userId_);
+        return;
+    }
+    if (dataGroupInfos.empty()) {
+        return;
+    }
+
+    for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
+        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        if (result == ERR_OK && dirExist) {
+            continue;
+        }
+        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        result = InstalldClient::GetInstance()->Mkdir(dir,
+            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGW("create data group dir %{public}s userId %{public}d failed", dataGroupInfo.uuid.c_str(), userId_);
+        }
     }
 }
 
