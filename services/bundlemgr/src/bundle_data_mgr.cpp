@@ -739,9 +739,12 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         return ERR_OK;
     }
     // implicit query
-    (void)ImplicitQueryAbilityInfosV9(want, flags, requestUserId, abilityInfos);
+    ErrCode ret = ImplicitQueryAbilityInfosV9(want, flags, requestUserId, abilityInfos);
     ImplicitQueryCloneAbilityInfosV9(want, flags, requestUserId, abilityInfos);
     if (abilityInfos.empty()) {
+        if (ret != ERR_OK) {
+            return ret;
+        }
         LOG_W(BMS_TAG_QUERY_ABILITY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s",
             want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;

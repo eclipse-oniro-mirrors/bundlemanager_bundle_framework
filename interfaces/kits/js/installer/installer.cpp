@@ -88,6 +88,7 @@ constexpr int32_t SECOND_PARAM = 1;
 
 constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+constexpr int32_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
 bool g_isSystemApp = false;
@@ -663,7 +664,7 @@ static bool ParseAppIndex(napi_env env, napi_value args, int32_t &appIndex)
     APP_LOGD("start to parse appIndex");
     PropertyInfo propertyInfo = {
         .propertyName = APP_INDEX,
-        .isNecessary = false,
+        .isNecessary = true,
         .propertyType = napi_number
     };
     napi_value property = nullptr;
@@ -1643,7 +1644,12 @@ void ParseAppCloneParam(napi_env env, napi_value args, int32_t &userId, int32_t 
     if (!ParseUserId(env, args, userId)) {
         APP_LOGI("parse userId failed. assign a default value = %{public}d.", userId);
     }
-    if (!ParseAppIndex(env, args, appIndex)) {
+    if (ParseAppIndex(env, args, appIndex)) {
+        if (appIndex == 0) {
+            APP_LOGI("parse appIndex success, but appIndex is 0, assign a value: %{public}d.", ILLEGAL_APP_INDEX);
+            appIndex = ILLEGAL_APP_INDEX;
+        }
+    } else {
         APP_LOGI("parse appIndex failed. assign a default value = %{public}d.", appIndex);
     }
 }
@@ -1677,7 +1683,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
                 ParseAppCloneParam(env, args[i], asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
             }
         } else {
-            APP_LOGE("The number of parameters is incorrect.");
+            APP_LOGW("The number of parameters is incorrect.");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
