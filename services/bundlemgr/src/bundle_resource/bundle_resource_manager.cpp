@@ -22,6 +22,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
 #include "bundle_promise.h"
+#include "bundle_util.h"
 #include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
@@ -37,6 +38,9 @@ const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int32_t CHECK_INTERVAL = 50; // 50ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
+const std::string SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
+const std::string THEME_ICONS_A = "/a/app/icons/";
+const std::string THEME_ICONS_B = "/b/app/icons/";
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -119,8 +123,26 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
+    bool needDeleteAllResource = true;
+    if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
+        // judge whether the bundle theme  exists
+        for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
+            if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+                !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+                iter = resourceInfosMap.erase(iter);
+            } else {
+                ++iter;
+            }
+        }
+        needDeleteAllResource = false;
+    }
+    if (resourceInfosMap.empty()) {
+        SendBundleResourcesChangedEvent(userId, type);
+        APP_LOGI("add all resource end, no theme changed");
+        return true;
+    }
 
-    if (!AddResourceInfos(resourceInfosMap, true, tempTaskNum)) {
+    if (!AddResourceInfos(resourceInfosMap, needDeleteAllResource, tempTaskNum)) {
         APP_LOGE("add all resource info failed, userId:%{public}d", userId);
         return false;
     }
