@@ -171,6 +171,7 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
     argsMap.emplace("compiler-external-pkg-info", objectArray.dump());
     argsMap.emplace("compiler-opt-bc-range", aotArgs.optBCRangeList);
     argsMap.emplace("compiler-device-state", std::to_string(aotArgs.isScreenOff));
+    argsMap.emplace("compiler-baseline-pgo", std::to_string(aotArgs.isEnanleBaselinePgo));
     argsMap.emplace("ABC-Path", aotArgs.hapPath + ServiceConstants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
     argsMap.emplace("BundleUid", std::to_string(aotArgs.bundleUid));
     argsMap.emplace("BundleGid", std::to_string(aotArgs.bundleGid));
