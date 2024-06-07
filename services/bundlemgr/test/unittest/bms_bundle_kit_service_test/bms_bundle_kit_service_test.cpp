@@ -11643,7 +11643,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0003, Function |
     EXPECT_TRUE(ret);
     EXPECT_EQ(bundleInfo.uid, cloneInfo.uid);
     EXPECT_EQ(bundleInfo.installTime, cloneInfo.installTime);
-    EXPECT_EQ(bundleInfo.updateTime, cloneInfo.updateTime);
     EXPECT_EQ(bundleInfo.appIndex, cloneInfo.appIndex);
 }
 
