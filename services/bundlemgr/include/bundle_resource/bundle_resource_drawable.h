@@ -21,6 +21,10 @@
 #include "resource_manager.h"
 #include "resource_info.h"
 
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+#include "pixel_map.h"
+#endif
+
 namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceDrawable {
@@ -30,6 +34,13 @@ public:
         const int32_t density,
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
+
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    bool GetBadgedIconResource(
+        const std::shared_ptr<Media::PixelMap> layeredPixelMap,
+        const std::shared_ptr<Media::PixelMap> badgedPixelMap,
+        ResourceInfo &resourceInfo);
+#endif
 };
 } // AppExecFwk
 } // OHOS

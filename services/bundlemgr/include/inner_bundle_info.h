@@ -1008,9 +1008,9 @@ public:
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(
-        int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GetBundleWithExtension(
-        int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void RemoveDuplicateName(std::vector<std::string> &name) const;
     void GetBundleWithReqPermissionsV9(
         int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex = 0) const;
@@ -1020,7 +1020,7 @@ private:
         int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex = 0) const;
     void GetBundleWithAbilitiesV9(
         int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId, int32_t appIndex = 0) const;
-    void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
+    void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t appIndex = 0) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;

@@ -24,6 +24,7 @@
 #include "mock_quick_fix_callback.h"
 #include "nlohmann/json.hpp"
 #include "system_bundle_installer.h"
+#include "quick_fix_deleter.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -219,5 +220,108 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0500, Functi
     ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_0600
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixDeleter
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0600, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixDeleter> quickFixDeleter = std::make_shared<QuickFixDeleter>("");
+    ErrCode result = quickFixDeleter->Execute();
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_0700
+ * Function: Execute
+ * @tc.desc: 1. system running normally
+ *           2. test QuickFixDeleter
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0700, Function | SmallTest | Level0)
+{
+    std::shared_ptr<QuickFixDeleter> quickFixDeleter = std::make_shared<QuickFixDeleter>(BUNDLE_NAME);
+    ErrCode result = quickFixDeleter->Execute();
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_0800
+ * Function: AddHqfInfo
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0800, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    QuickFixMark mark;
+    std::shared_ptr<InnerAppQuickFix> innerAppQuickFix = std::make_shared<InnerAppQuickFix>(appQuickFix, mark);
+    ErrCode result = innerAppQuickFix->AddHqfInfo(appQuickFix);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_0900
+ * Function: AddHqfInfo
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0900, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "moduleName";
+    hqfInfo.hapSha256 = "hapSha256";
+    hqfInfo.hqfFilePath = "/data/test/";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
+    QuickFixMark mark;
+    std::shared_ptr<InnerAppQuickFix> innerAppQuickFix = std::make_shared<InnerAppQuickFix>(appQuickFix, mark);
+    ErrCode result = innerAppQuickFix->AddHqfInfo(appQuickFix);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1000
+ * Function: RemoveHqfInfo
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1000, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "moduleName";
+    hqfInfo.hapSha256 = "hapSha256";
+    hqfInfo.hqfFilePath = "/data/test/";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
+    QuickFixMark mark;
+    std::shared_ptr<InnerAppQuickFix> innerAppQuickFix = std::make_shared<InnerAppQuickFix>(appQuickFix, mark);
+    innerAppQuickFix->SetAppQuickFix(appQuickFix);
+    ErrCode result = innerAppQuickFix->RemoveHqfInfo("moduleNameNo");
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixDeleterTest_1100
+ * Function: RemoveHqfInfo
+ * @tc.desc: 1. system running normally
+ *           2. test InnerAppQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_1100, Function | SmallTest | Level0)
+{
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "moduleName";
+    hqfInfo.hapSha256 = "hapSha256";
+    hqfInfo.hqfFilePath = "/data/test/";
+    appQuickFix.deployingAppqfInfo.hqfInfos.emplace_back(hqfInfo);
+    QuickFixMark mark;
+    std::shared_ptr<InnerAppQuickFix> innerAppQuickFix = std::make_shared<InnerAppQuickFix>(appQuickFix, mark);
+    innerAppQuickFix->SetAppQuickFix(appQuickFix);
+    ErrCode result = innerAppQuickFix->RemoveHqfInfo("moduleName");
+    EXPECT_EQ(result, true);
 }
 } // OHOS

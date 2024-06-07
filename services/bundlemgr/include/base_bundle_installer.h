@@ -636,6 +636,7 @@ private:
     ErrCode GetRemoveDataGroupDirs(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     ErrCode RemoveOldGroupDirs() const;
     ErrCode CreateGroupDirs() const;
+    void CreateDataGroupDir(InnerBundleInfo &info) const;
     ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
     ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
     void DeleteGroupDirsForException() const;

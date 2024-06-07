@@ -4549,6 +4549,7 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInfoForSelfSync called");
     NapiArg args(env, info);
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -5115,7 +5116,7 @@ static ErrCode InnerGetAppCloneBundleInfo(const std::string &bundleName, int32_t
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo);
+    ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
     APP_LOGD("GetCloneBundleInfo result is %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -5150,7 +5151,8 @@ void GetAppCloneBundleInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertBundleInfo(env, asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], true);
+        CommonFunc::ConvertBundleInfo(env, asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE],
+            asyncCallbackInfo->bundleFlags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);
@@ -5209,26 +5211,28 @@ static ErrCode InnerGetAllAppCloneBundleInfo(const std::string &bundleName, int3
     }
     BundleInfo bundleInfoMain;
     ErrCode ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, 0, bundleInfoMain, userId);
-    APP_LOGD("InnerGetAllAppCloneBundleInfo: GetMainBundleInfo ret=%{public}d", ret);
-    if (ret != NO_ERROR) {
+    APP_LOGD("GetMainBundleInfo appIndex = 0, ret=%{public}d", ret);
+    if (ret == ERR_OK) {
+        bundleInfos.emplace_back(bundleInfoMain);
+    }
+    if (ret != ERR_OK && ret != ERR_BUNDLE_MANAGER_APPLICATION_DISABLED) {
         return CommonFunc::ConvertErrCode(ret);
     }
-    bundleInfos.emplace_back(bundleInfoMain);
     // handle clone apps
     std::vector<int32_t> appIndexes;
     ret = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
-    if (ret != NO_ERROR) {
+    if (ret != ERR_OK) {
         return CommonFunc::ConvertErrCode(ret);
-    }
-    if (appIndexes.empty()) {
-        return SUCCESS;
     }
     for (int32_t appIndex : appIndexes) {
         BundleInfo bundleInfo;
         ret = iBundleMgr->GetCloneBundleInfo(bundleName, bundleFlags, appIndex, bundleInfo, userId);
-        if (ret == NO_ERROR) {
+        if (ret == ERR_OK) {
             bundleInfos.emplace_back(bundleInfo);
         }
+    }
+    if (bundleInfos.empty()) {
+        return ERROR_BUNDLE_IS_DISABLED;
     }
     return SUCCESS;
 }
@@ -5251,7 +5255,7 @@ void GetAllAppCloneBundleInfoExec(napi_env env, void *data)
 }
 
 static void CloneAppBundleInfos(
-    napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos)
+    napi_env env, napi_value result, const std::vector<BundleInfo> &bundleInfos, int32_t flags)
 {
     if (bundleInfos.size() == 0) {
         APP_LOGD("bundleInfos is null");
@@ -5259,10 +5263,9 @@ static void CloneAppBundleInfos(
     }
     size_t index = 0;
     for (const auto &item : bundleInfos) {
-        APP_LOGD("name: %{public}s ", item.name.c_str());
         napi_value objBundleInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objBundleInfo));
-        CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, true);
+        CommonFunc::ConvertBundleInfo(env, item, objBundleInfo, flags);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, result, index++, objBundleInfo));
     }
 }
@@ -5279,7 +5282,7 @@ void GetAllAppCloneBundleInfoComplete(napi_env env, napi_status status, void *da
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
-        CloneAppBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos);
+        CloneAppBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->bundleFlags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_ALL_APP_CLONE_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO);

@@ -119,8 +119,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001
     bundleCloneInfo.disabledAbilities = {"a", "b"};
     bundleCloneInfo.enabled = true;
     bundleCloneInfo.installTime = 10;
-    bundleCloneInfo.isRemovable = true;
-    bundleCloneInfo.overlayModulesState = {"c", "d"};
     bundleCloneInfo.uid = 20;
     bundleCloneInfo.updateTime = 21;
 
@@ -139,11 +137,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001
     );
     EXPECT_EQ(bundleCloneInfo.enabled, bundleCloneInfo2.enabled);
     EXPECT_EQ(bundleCloneInfo.installTime, bundleCloneInfo2.installTime);
-    EXPECT_EQ(bundleCloneInfo.isRemovable, bundleCloneInfo2.isRemovable);
-    EXPECT_TRUE(
-        std::equal(bundleCloneInfo.overlayModulesState.begin(), bundleCloneInfo.overlayModulesState.end(),
-        bundleCloneInfo2.overlayModulesState.begin())
-    );
     EXPECT_EQ(bundleCloneInfo.uid, bundleCloneInfo2.uid);
     EXPECT_EQ(bundleCloneInfo.updateTime, bundleCloneInfo2.updateTime);
 }
@@ -166,8 +159,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     bundleCloneInfo.disabledAbilities = {"a", "b"};
     bundleCloneInfo.enabled = true;
     bundleCloneInfo.installTime = 10;
-    bundleCloneInfo.isRemovable = true;
-    bundleCloneInfo.overlayModulesState = {"c", "d"};
     bundleCloneInfo.uid = 20;
     bundleCloneInfo.updateTime = 21;
 
@@ -194,11 +185,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     );
     EXPECT_EQ(bundleCloneInfo.enabled, bundleCloneInfo2.enabled);
     EXPECT_EQ(bundleCloneInfo.installTime, bundleCloneInfo2.installTime);
-    EXPECT_EQ(bundleCloneInfo.isRemovable, bundleCloneInfo2.isRemovable);
-    EXPECT_TRUE(
-        std::equal(bundleCloneInfo.overlayModulesState.begin(), bundleCloneInfo.overlayModulesState.end(),
-        bundleCloneInfo2.overlayModulesState.begin())
-    );
     EXPECT_EQ(bundleCloneInfo.uid, bundleCloneInfo2.uid);
     EXPECT_EQ(bundleCloneInfo.updateTime, bundleCloneInfo2.updateTime);
 }

@@ -89,9 +89,14 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs)
+    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
     {
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+
+    virtual ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
+    {
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
     }
 
     virtual ErrCode StopAOT()

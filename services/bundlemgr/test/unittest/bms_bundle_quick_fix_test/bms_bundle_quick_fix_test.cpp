@@ -81,6 +81,8 @@ const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
 const std::string INVALID_FILE_PATH_1 = "/data/service/el1/public/bms/bundle_manager_service/hello.hqf";
 const std::string INVALID_FILE_PATH_2 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/../hello.hqf";
 const std::string VALID_FILE_PATH_3 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/hello.hqf";
+const std::string INVALID_FILE_NAME = "..hello.hqf";
+const std::string VALID_FILE_NAME = "hello.hqf";
 }  // namespace
 
 class BmsBundleQuickFixTest : public testing::Test {
@@ -370,22 +372,7 @@ AppQuickFix BmsBundleQuickFixTest::CreateAppQuickFix()
 
 sptr<IQuickFixManager> BmsBundleQuickFixTest::GetQuickFixManagerProxy()
 {
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        APP_LOGE("GetSystemAbilityManager failed.");
-        return nullptr;
-    }
-    auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    if (bundleMgrSa == nullptr) {
-        APP_LOGE("GetSystemAbility failed.");
-        return nullptr;
-    }
-    auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-    if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
-        return nullptr;
-    }
-    return bundleMgr->GetQuickFixManagerProxy();
+    return bundleMgrService_->GetQuickFixManagerProxy();
 }
 
 void BmsBundleQuickFixTest::CreateFiles(const std::vector<std::string>& sourceFiles)
@@ -1066,7 +1053,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0026, Function | SmallTest
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0027, Function | SmallTest | Level0)
 {
-    auto quickFixProxy= GetQuickFixManagerProxy();
+    auto quickFixProxy = GetQuickFixManagerProxy();
     EXPECT_NE(quickFixProxy, nullptr) << "the quickFixProxy is nullptr";
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
@@ -2737,6 +2724,94 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0104, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0105
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0105, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+
+        appQuickFix = CreateAppQuickFix();
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+
+        HapModuleInfo info;
+        info.moduleName = "entry";
+        bundleInfo.hapModuleInfos.emplace_back(info);
+
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+        // so exist
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0106
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0106, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        appQuickFix = CreateAppQuickFix();
+        appQuickFix.bundleName = "error";
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0107
+ * Function: ExtractQuickFixSoFile
+ * @tc.name: test ExtractQuickFixSoFile
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractQuickFixSoFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0107, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME);
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix;
+        std::string patchPath = "data/test";
+        BundleInfo bundleInfo;
+        appQuickFix = CreateAppQuickFix();
+        auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+        for (auto &hqf : appQfInfo.hqfInfos) {
+            hqf.moduleName = "name";
+        }
+        auto ret = deployer->ExtractSoAndApplyDiff(appQuickFix, bundleInfo, patchPath);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: BmsBundleQuickFixTest_0110
  * Function: DefaultNativeSo
  * @tc.name: test DefaultNativeSo
@@ -3629,7 +3704,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleCopyFiles_0003, Function | SmallTest | 
     CreateFiles(sourceFiles);
     std::vector<std::string> destFiles = {"hello.hqf"};
     ErrCode ret = quickFixProxy->CopyFiles(sourceFiles, destFiles);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
     DeleteFiles(sourceFiles);
     DeleteFiles(destFiles);
 }
@@ -3839,7 +3914,6 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0200, Function | SmallTest | Le
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
-
 /**
  * @tc.number: QuickFixDeployer_0400
  * @tc.name: Test ProcessHotReloadDeployEnd with Execute
@@ -3968,6 +4042,80 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixer_0100, Function | SmallTest | Level0)
     EXPECT_EQ(fixer.statusCallback_, nullptr);
     fixer.DeleteQuickFix("");
     EXPECT_EQ(fixer.statusCallback_, nullptr);
+}
+
+/**
+ * @tc.number: QuickFixMgr_0100
+ * @tc.name: Test QuickFixMgr
+ * @tc.desc: 1.Test QuickFixMgr
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixMgr_0100, Function | SmallTest | Level0)
+{
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixMgr quickFixMgr;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgr.DeployQuickFix(bundleFilePaths, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = quickFixMgr.SwitchQuickFix("", false, statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = quickFixMgr.DeleteQuickFix("", statusCallback);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0100
+ * @tc.name: Test QuickFixManagerHostImpl
+ * @tc.desc: 1.Test the failed scene of QuickFixManagerHostImpl
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0100, Function | SmallTest | Level0)
+{
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+    const std::vector<std::string> bundleFilePaths;
+    auto ret = quickFixMgrHostImpl.DeployQuickFix(bundleFilePaths, statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    ret = quickFixMgrHostImpl.SwitchQuickFix("", false, statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    ret = quickFixMgrHostImpl.DeleteQuickFix("", statusCallback);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    std::string fileName = "";
+    int32_t fd = 0;
+    std::string path;
+    auto res = quickFixMgrHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0200
+ * @tc.name: Test QuickFixManagerHostImpl.IsFileNameValid
+ * @tc.desc: 1.Test QuickFixManagerHostImpl.IsFileNameValid
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0200, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+
+    auto ret = quickFixMgrHostImpl.IsFileNameValid(INVALID_FILE_NAME);
+    EXPECT_FALSE(ret);
+    ret = quickFixMgrHostImpl.IsFileNameValid(VALID_FILE_NAME);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: QuickFixManagerHostImpl_0300
+ * @tc.name: Test QuickFixManagerHostImpl.IsFileNameValid
+ * @tc.desc: 1.Test QuickFixManagerHostImpl.IsFileNameValid
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0300, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(VALID_FILE_PATH_3);
+
+    std::vector<std::string> securityFilePaths;
+
+    auto ret = quickFixMgrHostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED);
 }
 
 /**
@@ -4624,6 +4772,35 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0490, Function | SmallTest
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
 
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0610
+ * Function: PrepareCodeSignatureParam
+ * @tc.name: test PrepareCodeSignatureParam
+ * @tc.require: issueI5N7AD
+ * @tc.desc: PrepareCodeSignatureParam
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0610, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME_DEMO);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.bundleName = BUNDLE_NAME_DEMO;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+
+        HqfInfo hqf;
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.compileSdkType = "";
+        std::string hqfSoPath = "/data/test/";
+        CodeSignatureParam codeSignatureParam;
+        deployer->PrepareCodeSignatureParam(appQuickFix, hqf, bundleInfo, hqfSoPath, codeSignatureParam);
+        EXPECT_EQ(codeSignatureParam.isCompileSdkOpenHarmony, false);
+    }
+    UninstallBundleInfo(BUNDLE_NAME_DEMO);
 }
 
 /**

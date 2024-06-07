@@ -124,6 +124,11 @@ ohos_unittest("BmsEventHandlerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsEventHandlerUnLockedTest") {
@@ -227,6 +232,11 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 

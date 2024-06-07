@@ -38,6 +38,9 @@ public:
     // parse icon resource by hapPath
     bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, ResourceInfo &resourceInfo);
 
+    // parse clone bundle resource info
+    bool ParserCloneResourceInfo(const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
+
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
     bool ParseResourceInfoWithSameHap(const int32_t userId, ResourceInfo &resourceInfo);

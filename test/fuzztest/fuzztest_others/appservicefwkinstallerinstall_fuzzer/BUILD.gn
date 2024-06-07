@@ -12,8 +12,8 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("${services_path}/bundlemgr/appexecfwk_bundlemgr.gni")
 import("../../../../appexecfwk.gni")
+import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = fuzz_test_path
 

@@ -69,6 +69,8 @@ private:
 
     bool HandleExecuteAOT(MessageParcel &data, MessageParcel &reply);
 
+    bool HandlePendSignAOT(MessageParcel &data, MessageParcel &reply);
+
     bool HandleStopAOT(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the RenameModuleDir function called from a IInstalld proxy object.

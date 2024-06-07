@@ -590,7 +590,8 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2700, Function | SmallTest |
     EXPECT_NE(installdProxy, nullptr);
 
     AOTArgs aotArgs;
-    auto ret = installdProxy->ExecuteAOT(aotArgs);
+    std::vector<uint8_t> pendSignData;
+    auto ret = installdProxy->ExecuteAOT(aotArgs, pendSignData);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

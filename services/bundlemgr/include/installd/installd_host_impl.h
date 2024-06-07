@@ -63,7 +63,9 @@ public:
 
     virtual ErrCode ProcessBundleUnInstallNative(const std::string &userId, const std::string &bundleName) override;
 
-    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs) override;
+    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData) override;
+
+    virtual ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) override;
 
     virtual ErrCode StopAOT() override;
     /**

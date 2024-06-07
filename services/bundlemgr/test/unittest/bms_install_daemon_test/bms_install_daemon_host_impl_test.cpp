@@ -810,7 +810,8 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4500, Function | Sma
 {
     InstalldHostImpl impl;
     AOTArgs aotArgs;
-    auto ret = impl.ExecuteAOT(aotArgs);
+    std::vector<uint8_t> pendSignData;
+    auto ret = impl.ExecuteAOT(aotArgs, pendSignData);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

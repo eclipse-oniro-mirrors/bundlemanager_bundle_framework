@@ -4631,7 +4631,8 @@ HWTEST_F(BmsBundleInstallerTest, ExecuteAOT_0100, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
     AOTArgs aotArgs;
-    auto ret = impl.ExecuteAOT(aotArgs);
+    std::vector<uint8_t> pendSignData;
+    auto ret = impl.ExecuteAOT(aotArgs, pendSignData);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

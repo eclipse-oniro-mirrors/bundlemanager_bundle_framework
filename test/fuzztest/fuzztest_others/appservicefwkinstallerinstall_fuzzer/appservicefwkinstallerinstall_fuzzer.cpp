@@ -25,18 +25,9 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
-    constexpr size_t MESSAGE_SIZE = 4;
-    constexpr size_t DCAMERA_SHIFT_24 = 24;
-    constexpr size_t DCAMERA_SHIFT_16 = 16;
-    constexpr size_t DCAMERA_SHIFT_8 = 8;
 
-    uint32_t GetU32Data(const char* ptr)
-    {
-        return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-    }
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
-        uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
         InstallParam installParam;
         installParam.isPreInstallApp = true;
         installParam.removable = false;

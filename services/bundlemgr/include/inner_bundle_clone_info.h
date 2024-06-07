@@ -37,10 +37,6 @@ struct InnerBundleCloneInfo {
     // disabled abilities of the user.
     std::vector<std::string> disabledAbilities;
 
-    // overlay module state
-    // element is moduleName_state
-    std::vector<std::string> overlayModulesState;
-
     uint32_t accessTokenId = 0;
 
     uint64_t accessTokenIdEx = 0;
@@ -52,9 +48,6 @@ struct InnerBundleCloneInfo {
     // The time(unix time) will be recalculated
     // if the application is uninstalled after being installed.
     int64_t updateTime = 0;
-
-    // app install control
-    bool isRemovable = true;
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleCloneInfo);

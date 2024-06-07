@@ -161,7 +161,8 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0100, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    std::vector<uint8_t> pendSignData;
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -175,8 +176,9 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0200, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.compileMode = ServiceConstants::COMPILE_PARTIAL;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -190,8 +192,9 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0300, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.hapPath = HAP_PATH;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -205,8 +208,9 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0400, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.outputPath = OUT_PUT_PATH;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -220,10 +224,11 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0500, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.compileMode = ServiceConstants::COMPILE_PARTIAL;
     aotArgs.hapPath = ABC_RELATIVE_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -237,11 +242,12 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0600, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = NOHAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -255,12 +261,13 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0700, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = HAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
 
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -274,12 +281,13 @@ HWTEST_F(BmsAOTMgrTest, AOTExecutor_0800, Function | SmallTest | Level0)
 {
     AOTArgs aotArgs;
     ErrCode ret;
+    std::vector<uint8_t> pendSignData;
     aotArgs.compileMode = COMPILE_FULL;
     aotArgs.hapPath = HAP_PATH;
     aotArgs.outputPath = OUT_PUT_PATH;
     aotArgs.arkProfilePath = OUT_PUT_PATH;
 
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     EXPECT_NE(ret, ERR_OK);
 }
 

@@ -6614,6 +6614,7 @@ HWTEST_F(ActsBmsKitSystemTest, UninstallAndRecover_0200, Function | MediumTest |
 HWTEST_F(ActsBmsKitSystemTest, InstallCloneApp_0100, Function | MediumTest | Level1)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    ASSERT_NE(installerProxy, nullptr);
     std::string bundleName = "";
     int32_t appIndex = TEST_APP_INDEX1;
     ErrCode ret = installerProxy->InstallCloneApp(bundleName, TEST_INSTALLER_UID, appIndex);

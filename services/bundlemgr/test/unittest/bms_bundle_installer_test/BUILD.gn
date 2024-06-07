@@ -205,6 +205,11 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {
@@ -378,6 +383,11 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 
@@ -562,6 +572,11 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
@@ -717,6 +732,11 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallCheckerTest") {
@@ -853,6 +873,11 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {
@@ -988,6 +1013,11 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 
@@ -1128,6 +1158,11 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 
@@ -1313,6 +1348,11 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
@@ -1479,6 +1519,11 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
+  }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 

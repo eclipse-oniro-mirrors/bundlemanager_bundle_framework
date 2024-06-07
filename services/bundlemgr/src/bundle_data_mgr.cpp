@@ -99,6 +99,7 @@ constexpr const char* PKG_CONTEXT_PROFILE_PATH = "pkgContextInfo.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
+constexpr const char* SCHEME_HTTPS = "https";
 const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 const std::string ENTRY = "entry";
 const std::string CLONE_BUNDLE_PREFIX = "clone_";
@@ -738,9 +739,12 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         return ERR_OK;
     }
     // implicit query
-    (void)ImplicitQueryAbilityInfosV9(want, flags, requestUserId, abilityInfos);
+    ErrCode ret = ImplicitQueryAbilityInfosV9(want, flags, requestUserId, abilityInfos);
     ImplicitQueryCloneAbilityInfosV9(want, flags, requestUserId, abilityInfos);
     if (abilityInfos.empty()) {
+        if (ret != ERR_OK) {
+            return ret;
+        }
         LOG_W(BMS_TAG_QUERY_ABILITY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s",
             want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
@@ -1828,9 +1832,6 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
 void BundleDataMgr::ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
     ApplicationInfo &applicationInfo) const
 {
-    if (applicationInfo.removable && !cloneInfo.isRemovable) {
-        applicationInfo.removable = false;
-    }
     applicationInfo.accessTokenId = cloneInfo.accessTokenId;
     applicationInfo.accessTokenIdEx = cloneInfo.accessTokenIdEx;
     applicationInfo.enabled = cloneInfo.enabled;
@@ -7429,6 +7430,10 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     APP_LOGD("FilterAbility start");
     if (abilityInfos.empty()) {
         APP_LOGD("abilityInfos is empty");
+        return;
+    }
+    if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
+        APP_LOGD("scheme is not https");
         return;
     }
     std::vector<AbilityInfo> filteredAbilityInfos;
