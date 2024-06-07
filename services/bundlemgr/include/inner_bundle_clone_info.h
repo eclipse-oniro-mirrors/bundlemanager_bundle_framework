@@ -44,10 +44,6 @@ struct InnerBundleCloneInfo {
     // The time(unix time) will be recalculated
     // if the application is reinstalled after being uninstalled.
     int64_t installTime = 0;
-
-    // The time(unix time) will be recalculated
-    // if the application is uninstalled after being installed.
-    int64_t updateTime = 0;
 };
 
 void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleCloneInfo);

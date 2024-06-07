@@ -1845,7 +1845,6 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     bundleInfo.uid = cloneInfo.uid;
     bundleInfo.gid = cloneInfo.uid; // no gids, need add
     bundleInfo.installTime = cloneInfo.installTime;
-    bundleInfo.updateTime = cloneInfo.updateTime;
     bundleInfo.appIndex = cloneInfo.appIndex;
     if (!bundleInfo.applicationInfo.bundleName.empty()) {
         ModifyApplicationInfoByCloneInfo(cloneInfo, bundleInfo.applicationInfo);
