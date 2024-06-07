@@ -357,15 +357,13 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
-        return InnerDeleteDisposedStatusSync(env, appId, Constants::MAIN_APP_INDEX);
+        return InnerDeleteDisposedStatusSync(env, appId, appIndex);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-        int32_t appIndex;
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
-            APP_LOGE("appIndex invalid!");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-            return nullptr;
+            APP_LOGW("parse appIndex falied");
         }
         return InnerDeleteDisposedStatusSync(env, appId, appIndex);
     }
@@ -666,15 +664,13 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_ONE) {
-        return InnerGetDisposedRule(env, appId, Constants::MAIN_APP_INDEX);
+        return InnerGetDisposedRule(env, appId, appIndex);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-        int32_t appIndex;
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], appIndex)) {
-            APP_LOGE("appIndex invalid!");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-            return nullptr;
+            APP_LOGW("parse appIndex falied");
         }
         return InnerGetDisposedRule(env, appId, appIndex);
     }
@@ -740,15 +736,13 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return nRet;
     }
+    int32_t appIndex = Constants::MAIN_APP_INDEX;
     if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
-        return InnerSetDisposedRule(env, appId, rule, Constants::MAIN_APP_INDEX);
+        return InnerSetDisposedRule(env, appId, rule, appIndex);
     }
     if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
-        int32_t appIndex;
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
-            APP_LOGE("appIndex invalid!");
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
-            return nRet;
+            APP_LOGW("parse appIndex falied");
         }
         return InnerSetDisposedRule(env, appId, rule, appIndex);
     }
