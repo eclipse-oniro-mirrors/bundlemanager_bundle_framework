@@ -1116,7 +1116,7 @@ private:
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
-    mutable std::mutex bundleIdMapMutex_;
+    mutable std::shared_mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
     mutable ffrt::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
