@@ -124,7 +124,7 @@ ErrCode InstalldProxy::ProcessBundleUnInstallNative(const std::string &userId, c
 }
 
 
-ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
+ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
@@ -135,7 +135,31 @@ ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(InstalldInterfaceCode::EXECUTE_AOT, data, reply, option);
+    ErrCode ret = TransactInstalldCmd(InstalldInterfaceCode::EXECUTE_AOT, data, reply, option);
+    if (ret != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd ExecuteAOT failed");
+        if (!reply.ReadUInt8Vector(&pendSignData)) {
+            LOG_E(BMS_TAG_INSTALLD, "ReadUInt8Vector ExecuteAOT failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(anFileName));
+    if (!data.WriteUInt8Vector(signData)) {
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable PendSignAOT failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(InstalldInterfaceCode::PEND_SIGN_AOT, data, reply, option);
 }
 
 ErrCode InstalldProxy::StopAOT()

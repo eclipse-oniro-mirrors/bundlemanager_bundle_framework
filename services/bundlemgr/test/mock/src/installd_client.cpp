@@ -72,9 +72,14 @@ ErrCode InstalldClient::ProcessBundleUnInstallNative(const std::string &userId, 
     return CallService(&IInstalld::ProcessBundleUnInstallNative, userId, packageName);
 }
 
-ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
-    return CallService(&IInstalld::ExecuteAOT, aotArgs);
+    return CallService(&IInstalld::ExecuteAOT, aotArgs, pendSignData);
+}
+
+ErrCode InstalldClient::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
+{
+    return CallService(&IInstalld::PendSignAOT, anFileName, signData);
 }
 
 ErrCode InstalldClient::StopAOT()

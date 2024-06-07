@@ -186,6 +186,11 @@ ohos_unittest("BmsBundleUpdaterTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
+
+  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
+    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
+    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  }
 }
 
 group("unittest") {

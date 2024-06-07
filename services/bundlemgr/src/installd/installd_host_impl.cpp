@@ -200,7 +200,7 @@ ErrCode InstalldHostImpl::ProcessBundleUnInstallNative(const std::string &userId
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
+ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
     LOG_D(BMS_TAG_INSTALLD, "begin to execute AOT, args : %{public}s", aotArgs.ToString().c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -208,8 +208,20 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     ErrCode ret = ERR_OK;
-    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret, pendSignData);
     LOG_D(BMS_TAG_INSTALLD, "execute AOT ret : %{public}d", ret);
+    return ret;
+}
+
+ErrCode InstalldHostImpl::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
+{
+    LOG_D(BMS_TAG_INSTALLD, "begin to pend sign AOT, anFileName : %{public}s", anFileName.c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = AOTExecutor::GetInstance().PendSignAOT(anFileName, signData);
+    LOG_D(BMS_TAG_INSTALLD, "pend sign AOT ret : %{public}d", ret);
     return ret;
 }
 

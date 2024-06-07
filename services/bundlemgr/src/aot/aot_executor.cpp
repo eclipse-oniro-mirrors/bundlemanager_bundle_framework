@@ -182,25 +182,26 @@ void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string
     }
 }
 
-ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<int16_t> &sigData) const
+ErrCode AOTExecutor::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) const
+{
+    return EnforceCodeSign(anFileName, signData);
+}
+
+ErrCode AOTExecutor::EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const
 {
 #if defined(CODE_SIGNATURE_ENABLE)
-    if (sigData.empty()) {
+    if (signData.empty()) {
         APP_LOGI("not enforce code sign if no aot file save");
         return ERR_OK;
     }
-    uint32_t byteSize = static_cast<uint32_t>(sigData.size());
-    std::vector<uint8_t> byteData;
-    for (uint32_t i = 0; i < byteSize; ++i) {
-        byteData.emplace_back(static_cast<uint8_t>(sigData[i]));
+    uint32_t dataSize = static_cast<uint32_t>(signData.size());
+    auto retCS =
+        Security::CodeSign::CodeSignUtils::EnforceCodeSignForFile(anFileName, signData.data(), dataSize);
+    if (retCS == VerifyErrCode::CS_ERR_ENABLE) {
+        APP_LOGI("pending enforce code sign as screen not first unlock after reboot");
+        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
     }
-    Security::CodeSign::ByteBuffer sigBuffer;
-    if (!sigBuffer.CopyFrom(byteData.data(), byteSize)) {
-        APP_LOGE("fail to receive code signature ByteBuffer");
-        return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-    }
-    if (Security::CodeSign::CodeSignUtils::EnforceCodeSignForFile(aotArgs.anFileName, sigBuffer)
-        != CommonErrCode::CS_SUCCESS) {
+    if (retCS != CommonErrCode::CS_SUCCESS) {
         APP_LOGE("fail to enable code signature for the aot file");
         return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
     }
@@ -212,7 +213,7 @@ ErrCode AOTExecutor::EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<i
 #endif
 }
 
-ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_t> &sigData)
+ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
     std::unordered_map<std::string, std::string> argsMap;
@@ -225,7 +226,8 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     APP_LOGI("start to aot compiler");
-    ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, sigData);
+    std::vector<int16_t> fileData;
+    ret = ArkCompiler::AotCompilerClient::GetInstance().AotCompiler(argsMap, fileData);
     if (ret == ERR_AOT_COMPILER_SIGN_FAILED) {
         APP_LOGE("aot compiler local signature fail");
         return ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
@@ -233,6 +235,10 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
     if (ret != ERR_OK) {
         APP_LOGE("aot compiler fail");
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
+    uint32_t byteSize = static_cast<uint32_t>(fileData.size());
+    for (uint32_t i = 0; i < byteSize; ++i) {
+        signData.emplace_back(static_cast<uint8_t>(fileData[i]));
     }
     APP_LOGI("aot compiler success");
     return ERR_OK;
@@ -242,7 +248,7 @@ ErrCode AOTExecutor::StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_
 #endif
 }
 
-void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
+void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret, std::vector<uint8_t> &pendSignData)
 {
 #if defined(CODE_SIGNATURE_ENABLE)
     APP_LOGI("begin to execute AOT");
@@ -265,10 +271,13 @@ void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret)
         InitState(aotArgs);
     }
     APP_LOGI("begin to call aot compiler");
-    std::vector<int16_t> fileData;
-    ret = StartAOTCompiler(completeArgs, fileData);
+    std::vector<uint8_t> signData;
+    ret = StartAOTCompiler(completeArgs, signData);
     if (ret == ERR_OK) {
-        ret = EnforceCodeSign(completeArgs, fileData);
+        ret = EnforceCodeSign(completeArgs.anFileName, signData);
+    }
+    if (ret == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+        pendSignData = signData;
     }
     APP_LOGI("aot compiler finish");
     {

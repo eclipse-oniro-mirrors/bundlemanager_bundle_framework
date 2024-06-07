@@ -49,7 +49,12 @@ ErrCode InstalldClient::ProcessBundleUnInstallNative(const std::string &userId, 
     return 0;
 }
 
-ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
 {
     return 0;
 }

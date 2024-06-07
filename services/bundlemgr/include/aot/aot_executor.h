@@ -34,7 +34,8 @@ struct AOTState {
 class AOTExecutor final {
 public:
     static AOTExecutor& GetInstance();
-    void ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret);
+    void ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret, std::vector<uint8_t> &pendSignData);
+    ErrCode PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
     ErrCode StopAOT();
 private:
     AOTExecutor() = default;
@@ -47,8 +48,8 @@ private:
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
     nlohmann::json GetSubjectInfo(const AOTArgs &aotArgs) const;
     void MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap);
-    ErrCode EnforceCodeSign(const AOTArgs &aotArgs, const std::vector<int16_t> &sigData) const;
-    ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<int16_t> &sigData);
+    ErrCode EnforceCodeSign(const std::string &anFileName, const std::vector<uint8_t> &signData) const;
+    ErrCode StartAOTCompiler(const AOTArgs &aotArgs, std::vector<uint8_t> &signData);
     void InitState(const AOTArgs &aotArgs);
     void ResetState();
 private:
