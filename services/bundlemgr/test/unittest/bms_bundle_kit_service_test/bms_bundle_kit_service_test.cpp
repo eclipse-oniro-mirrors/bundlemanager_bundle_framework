@@ -6954,7 +6954,9 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0200, Function | SmallTest
     EXPECT_TRUE(abilityInfos.size() == 1);
     ret = GetBundleDataMgr()->SetAbilityEnabled(abilityInfos[0], 0, false, 0);
     EXPECT_EQ(ret, ERR_OK);
-    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfos);
+
+    std::vector<AbilityInfo> abilityInfosWhenDisabled;
+    ret = GetBundleDataMgr()->QueryAbilityInfosV9(want, flags, 0, abilityInfosWhenDisabled);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_DISABLED);
     MockUninstallBundle(BUNDLE_NAME_TEST);
     APP_LOGI("QueryAbilityInfosV9_0200 finish");

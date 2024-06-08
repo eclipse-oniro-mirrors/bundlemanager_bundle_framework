@@ -689,15 +689,14 @@ bool BundleDataMgr::QueryAbilityInfos(
     if (!bundleName.empty() && !abilityName.empty()) {
         AbilityInfo abilityInfo;
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo);
-        if (!ret) {
-            LOG_D(BMS_TAG_QUERY_ABILITY, "explicit query error bundleName:%{public}s abilityName:%{public}s",
-                bundleName.c_str(), abilityName.c_str());
-            return false;
+        LOG_D(BMS_TAG_QUERY_ABILITY, "explicit query ret:%{public}d bundleName:%{public}s abilityName:%{public}s",
+            ret, bundleName.c_str(), abilityName.c_str());
+        if (ret) {
+            abilityInfos.emplace_back(abilityInfo);
         }
-        abilityInfos.emplace_back(abilityInfo);
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
-        return true;
+        return !abilityInfos.empty();
     }
     // implicit query
     (void)ImplicitQueryAbilityInfos(want, flags, requestUserId, abilityInfos);
@@ -728,14 +727,16 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
     if (!bundleName.empty() && !abilityName.empty()) {
         AbilityInfo abilityInfo;
         ErrCode ret = ExplicitQueryAbilityInfoV9(want, flags, requestUserId, abilityInfo);
-        if (ret != ERR_OK) {
-            LOG_D(BMS_TAG_QUERY_ABILITY, "explicit queryV9 error bundleName:%{public}s abilityName:%{public}s",
-                bundleName.c_str(), abilityName.c_str());
-            return ret;
+        LOG_D(BMS_TAG_QUERY_ABILITY, "explicit queryV9 ret:%{public}d, bundleName:%{public}s abilityName:%{public}s",
+            ret, bundleName.c_str(), abilityName.c_str());
+        if (ret == ERR_OK) {
+            abilityInfos.emplace_back(abilityInfo);
         }
-        abilityInfos.emplace_back(abilityInfo);
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
+        if (abilityInfos.empty()) {
+            return ret;
+        }
         return ERR_OK;
     }
     // implicit query
@@ -7585,7 +7586,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     LOG_D(BMS_TAG_QUERY_ABILITY,
         "QueryCloneAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
-    LOG_D(BMS_TAG_QUERY_ABILITY, "flags:%{public}d userId:%{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY_ABILITY, "flags:%{public}d userId:%{public}d appIndex:%{public}d", flags, userId, appIndex);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -7593,7 +7594,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 
-    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId);
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail bundleName:%{public}s", bundleName.c_str());
         return ret;
