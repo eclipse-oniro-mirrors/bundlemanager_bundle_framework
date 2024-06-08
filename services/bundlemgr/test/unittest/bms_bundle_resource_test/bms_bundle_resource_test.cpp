@@ -2063,7 +2063,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0088, Function | SmallTest
 
     std::vector<std::string> resourceNames;
     std::vector<ResourceInfo> resourceInfos;
-    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames,USERID, resourceInfos);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_NE(resourceInfos.size(), 0);
 
