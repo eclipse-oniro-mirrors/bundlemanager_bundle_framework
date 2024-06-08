@@ -1903,8 +1903,8 @@ HWTEST_F(BmsInstallSystemTest, CompileProcessAOT_0100, Function | SmallTest | Le
         EXPECT_EQ(bundleMgrProxy, nullptr);
     }
     std::vector<std::string> results;
-    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "", false, results);
-    EXPECT_EQ(ret, ERR_OK);
+    ErrCode ret = bundleMgrProxy->CompileProcessAOT("", "none", false, results);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
 }
 
 /**

@@ -391,7 +391,9 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
     if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
         createDirParam.uid < 0 || createDirParam.gid < 0) {
-        LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDataDir with invalid param");
+        LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDataDir with invalid param, bundleName %{public}s "
+            "userId %{public}d uid %{public}d gid %{public}d", createDirParam.bundleName.c_str(),
+            createDirParam.userId, createDirParam.uid, createDirParam.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (createDirParam.createDirFlag == CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES) {
@@ -753,7 +755,7 @@ int64_t InstalldHostImpl::GetDiskUsage(const std::string &dir, bool isRealPath)
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    
+
     return InstalldOperator::GetDiskUsage(dir, isRealPath);
 }
 
