@@ -269,7 +269,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         InstallScene::CREATE_USER,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    APP_LOGD("finish to process %{public}s bundle install", bundleName.c_str());
+    APP_LOGI("finish to process %{public}s bundle install, resultCode: %{public}d", bundleName.c_str(), result);
     return result;
 }
 
