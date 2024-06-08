@@ -323,7 +323,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             return false;
         }
         std::vector<ResourceInfo> resourceInfos;
-        if (!BundleResourceProcess::GetResourceInfoByColorModeChanged(names, resourceInfos)) {
+        if (!BundleResourceProcess::GetResourceInfoByColorModeChanged(names, userId, resourceInfos)) {
             APP_LOGE("GetResourceInfoByColorModeChanged failed");
             return false;
         }
