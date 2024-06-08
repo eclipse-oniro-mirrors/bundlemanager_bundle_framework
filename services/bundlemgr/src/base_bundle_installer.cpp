@@ -3586,12 +3586,8 @@ void BaseBundleInstaller::RemoveCreatedExtensionDirsForException() const
         APP_LOGI("no need to remove extension sandbox dir");
         return;
     }
-    for (const std::string &dir : createExtensionDirs_) {
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
-        if (result != ERR_OK) {
-            APP_LOGW("remove created extension sandbox dir %{public}s failed.", dir.c_str());
-            continue;
-        }
+    if (InstalldClient::GetInstance()->RemoveExtensionDir(userId_, createExtensionDirs_) != ERR_OK) {
+        APP_LOGW("remove created extension sandbox dir failed.");
     }
 }
 
