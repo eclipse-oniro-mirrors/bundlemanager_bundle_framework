@@ -22,6 +22,10 @@
 #include "json_util.h"
 #include <fcntl.h>
 #include "nlohmann/json.hpp"
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+#include "type_descriptor.h"
+#include "utd_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -416,6 +420,13 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     if (type.empty() || skillUriType.empty()) {
         return false;
     }
+
+    bool containsUtd = false;
+    bool matchUtdRet = MatchUtd(type, skillUriType, containsUtd);
+    if (containsUtd) {
+        return matchUtdRet;
+    }
+
     // only match */*
     if (type == TYPE_ONLY_MATCH_WILDCARD) {
         return skillUriType == TYPE_WILDCARD;
@@ -438,6 +449,73 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     } else {
         return type == skillUriType;
     }
+}
+
+bool Skill::MatchUtd(const std::string &paramType, const std::string &skillUriType, bool &containsUtd) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    bool isParamUtd = IsUtd(paramType);
+    bool isSkillUtd = IsUtd(skillUriType);
+
+    containsUtd = isParamUtd || isSkillUtd;
+
+    if (!isParamUtd && !isSkillUtd) {
+        // 1.param : mimeType, skill : mimeType
+        return false;
+    } else if (isParamUtd && isSkillUtd) {
+        // 2.param : utd, skill : utd
+        return IsUtdMatch(paramType, skillUriType);
+    } else if (!isParamUtd && isSkillUtd) {
+        // 3.param : mimeType, skill : utd
+        std::string paramUtd;
+        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(paramType, paramUtd);
+        if (ret != ERR_OK) {
+            return false;
+        }
+        return IsUtdMatch(paramUtd, skillUriType);
+    } else {
+        // 4.param : utd, skill : mimeType
+        std::string skillUtd;
+        auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(skillUriType, skillUtd);
+        if (ret != ERR_OK) {
+            return false;
+        }
+        return IsUtdMatch(paramType, skillUtd);
+    }
+#else
+    containsUtd = false;
+    return false;
+#endif
+}
+
+bool Skill::IsUtdMatch(const std::string &paramUtd, const std::string &skillUtd) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    std::shared_ptr<UDMF::TypeDescriptor> paramTypeDescriptor;
+    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(paramUtd, paramTypeDescriptor);
+    if (ret != ERR_OK || paramTypeDescriptor == nullptr) {
+        return false;
+    }
+    bool isMatch = false;
+    ret = paramTypeDescriptor->BelongsTo(skillUtd, isMatch);
+    if (ret != ERR_OK) {
+        return false;
+    }
+    return isMatch;
+#else
+    return false;
+#endif
+}
+
+bool Skill::IsUtd(const std::string &param) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    bool isUtd = false;
+    auto ret = UDMF::UtdClient::GetInstance().IsUtd(param, isUtd);
+    return ret == ERR_OK && isUtd;
+#else
+    return false;
+#endif
 }
 
 bool Skill::MatchMimeType(const std::string & uriString) const

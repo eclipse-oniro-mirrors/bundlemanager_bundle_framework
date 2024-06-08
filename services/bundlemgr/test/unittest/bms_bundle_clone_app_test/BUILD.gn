@@ -154,7 +154,7 @@ ohos_unittest("BmsBundleCloneAppBundleLogicTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   if (bms_device_info_manager_part_enabled) {
@@ -226,7 +226,7 @@ ohos_unittest("BmsBundleCloneAppDataStructTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 }
 
@@ -372,7 +372,7 @@ ohos_unittest("BmsBundleCloneAppIpcTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
 
   if (bms_device_info_manager_part_enabled) {
