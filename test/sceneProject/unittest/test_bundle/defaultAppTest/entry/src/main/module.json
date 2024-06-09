@@ -410,6 +410,66 @@
             ]
             },
             {
+                "name": "GeneralVideo",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "description": "$string:MainAbility_desc",
+                "icon": "$media:icon",
+                "label": "$string:MainAbility_label",
+                "exported": true,
+                "skills": [
+                    {
+                    "actions": [
+                        "ohos.want.action.viewData"
+                    ],
+                    "uris": [
+                        {
+                        "type": "general.video"
+                        }
+                    ]
+                    }
+                ]
+            },
+            {
+                "name": "GeneralAvi",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "description": "$string:MainAbility_desc",
+                "icon": "$media:icon",
+                "label": "$string:MainAbility_label",
+                "exported": true,
+                "skills": [
+                    {
+                    "actions": [
+                        "ohos.want.action.viewData"
+                    ],
+                    "uris": [
+                        {
+                        "type": "general.avi"
+                        }
+                    ]
+                    }
+                ]
+            },
+            {
+                "name": "VideoMsVideo",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "description": "$string:MainAbility_desc",
+                "icon": "$media:icon",
+                "label": "$string:MainAbility_label",
+                "exported": true,
+                "skills": [
+                    {
+                    "actions": [
+                        "ohos.want.action.viewData"
+                    ],
+                    "uris": [
+                        {
+                        "type": "video/x-msvideo"
+                        }
+                    ]
+                    }
+                ]
+            },
+            {
             "name": "MainAbility",
             "srcEntry": "./ets/MainAbility/MainAbility.ts",
             "description": "$string:MainAbility_desc",

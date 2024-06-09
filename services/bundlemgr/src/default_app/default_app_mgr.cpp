@@ -24,6 +24,10 @@
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
 #include "string_ex.h"
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+#include "type_descriptor.h"
+#include "utd_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -98,6 +102,29 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
+    LOG_I(BMS_TAG_DEFAULT_APP,
+        "IsDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    if (!BundleUtil::IsUtd(type)) {
+        return IsDefaultApplicationInternal(userId, type, isDefaultApp);
+    }
+    std::vector<std::string> mimeTypes = GetMimeTypes(type);
+    if (mimeTypes.empty()) {
+        LOG_E(BMS_TAG_DEFAULT_APP, "get mimeTypes by utd failed");
+        isDefaultApp = false;
+        return ERR_OK;
+    }
+    LOG_I(BMS_TAG_DEFAULT_APP, "mimeTypes : %{public}s", BundleUtil::ToString(mimeTypes).c_str());
+    for (const auto& mimeType : mimeTypes) {
+        (void)IsDefaultApplicationInternal(userId, mimeType, isDefaultApp);
+        if (!isDefaultApp) {
+            break;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::IsDefaultApplicationInternal(int32_t userId, const std::string& type, bool& isDefaultApp) const
+{
     std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
@@ -123,12 +150,14 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_W(BMS_TAG_DEFAULT_APP, "get BundleDataMgr failed.");
+        isDefaultApp = false;
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string callingBundleName;
     ret = dataMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
     if (!ret) {
         LOG_W(BMS_TAG_DEFAULT_APP, "GetBundleNameForUid failed.");
+        isDefaultApp = false;
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     LOG_D(BMS_TAG_DEFAULT_APP, "callingBundleName : %{public}s", callingBundleName.c_str());
@@ -137,6 +166,36 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 }
 
 ErrCode DefaultAppMgr::GetDefaultApplication(
+    int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
+{
+    LOG_I(BMS_TAG_DEFAULT_APP, "GetDefaultApplication begin, userId : %{public}d, \
+        type : %{public}s, backup : %{public}d", userId, type.c_str(), backup);
+    if (!BundleUtil::IsUtd(type)) {
+        return GetDefaultApplicationInternal(userId, type, bundleInfo, backup);
+    }
+    std::vector<std::string> mimeTypes = GetMimeTypes(type);
+    if (mimeTypes.empty()) {
+        LOG_E(BMS_TAG_DEFAULT_APP, "get mimeTypes by utd failed");
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
+    }
+    LOG_I(BMS_TAG_DEFAULT_APP, "mimeTypes : %{public}s", BundleUtil::ToString(mimeTypes).c_str());
+    std::vector<BundleInfo> bundleInfos;
+    for (const auto& mimeType : mimeTypes) {
+        BundleInfo info;
+        ErrCode ret = GetDefaultApplicationInternal(userId, mimeType, info, backup);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+        bundleInfos.emplace_back(info);
+    }
+    if (bundleInfos.empty() || !IsSameDefaultApp(bundleInfos)) {
+        return ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST;
+    }
+    bundleInfo = bundleInfos[0];
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::GetDefaultApplicationInternal(
     int32_t userId, const std::string& type, BundleInfo& bundleInfo, bool backup) const
 {
     LOG_D(BMS_TAG_DEFAULT_APP, "begin, backup(bool) : %{public}d", backup);
@@ -169,7 +228,31 @@ ErrCode DefaultAppMgr::GetDefaultApplication(
     }
 }
 
-ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
+ErrCode DefaultAppMgr::SetDefaultApplication(
+    int32_t userId, const std::string& type, const Element& element) const
+{
+    LOG_I(BMS_TAG_DEFAULT_APP,
+        "SetDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    if (!BundleUtil::IsUtd(type)) {
+        return SetDefaultApplicationInternal(userId, type, element);
+    }
+    std::vector<std::string> mimeTypes = GetMimeTypes(type);
+    if (mimeTypes.empty()) {
+        LOG_E(BMS_TAG_DEFAULT_APP, "get mimeTypes by utd failed");
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
+    }
+    LOG_I(BMS_TAG_DEFAULT_APP, "mimeTypes : %{public}s", BundleUtil::ToString(mimeTypes).c_str());
+    for (const auto& mimeType : mimeTypes) {
+        ErrCode ret = SetDefaultApplicationInternal(userId, mimeType, element);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::SetDefaultApplicationInternal(
+    int32_t userId, const std::string& type, const Element& element) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
@@ -217,6 +300,28 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 }
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
+{
+    LOG_I(BMS_TAG_DEFAULT_APP,
+        "ResetDefaultApplication begin, userId : %{public}d, type : %{public}s", userId, type.c_str());
+    if (!BundleUtil::IsUtd(type)) {
+        return ResetDefaultApplicationInternal(userId, type);
+    }
+    std::vector<std::string> mimeTypes = GetMimeTypes(type);
+    if (mimeTypes.empty()) {
+        LOG_E(BMS_TAG_DEFAULT_APP, "get mimeTypes by utd failed");
+        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
+    }
+    LOG_I(BMS_TAG_DEFAULT_APP, "mimeTypes : %{public}s", BundleUtil::ToString(mimeTypes).c_str());
+    for (const auto& mimeType : mimeTypes) {
+        ErrCode ret = ResetDefaultApplicationInternal(userId, mimeType);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode DefaultAppMgr::ResetDefaultApplicationInternal(int32_t userId, const std::string& type) const
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
@@ -778,6 +883,103 @@ bool DefaultAppMgr::GetBrokerBundleInfo(const Element& element, BundleInfo& bund
     bundleInfo.abilityInfos.emplace_back(abilityInfo);
     LOG_I(BMS_TAG_DEFAULT_APP, "get broker bundleInfo success");
     return true;
+}
+
+bool DefaultAppMgr::IsSameDefaultApp(const std::vector<BundleInfo>& bundleInfos) const
+{
+    size_t size = bundleInfos.size();
+    if (size == 0) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "size empty");
+        return false;
+    }
+    if (size == 1) {
+        return true;
+    }
+    return IsSameAbilityInfo(bundleInfos) || IsSameExtensionInfo(bundleInfos);
+}
+
+bool DefaultAppMgr::IsSameAbilityInfo(const std::vector<BundleInfo>& bundleInfos) const
+{
+    const BundleInfo& firstBundleInfo = bundleInfos[0];
+    if (firstBundleInfo.name.empty()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "bundleName empty");
+        return false;
+    }
+    if (firstBundleInfo.abilityInfos.empty()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "abilityInfos empty");
+        return false;
+    }
+    std::string bundleName = firstBundleInfo.name;
+    std::string moduleName = firstBundleInfo.abilityInfos[0].moduleName;
+    std::string abilityName = firstBundleInfo.abilityInfos[0].name;
+    for (size_t i = 1; i < bundleInfos.size(); ++i) {
+        if (bundleInfos[i].name != bundleName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "bundleName not equal");
+            return false;
+        }
+        if (bundleInfos[i].abilityInfos.empty()) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "abilityInfos empty");
+            return false;
+        }
+        if (bundleInfos[i].abilityInfos[0].moduleName != moduleName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "moduleName not equal");
+            return false;
+        }
+        if (bundleInfos[i].abilityInfos[0].name != abilityName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "abilityName not equal");
+            return false;
+        }
+    }
+    return true;
+}
+
+bool DefaultAppMgr::IsSameExtensionInfo(const std::vector<BundleInfo>& bundleInfos) const
+{
+    const BundleInfo& firstBundleInfo = bundleInfos[0];
+    if (firstBundleInfo.name.empty()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "bundleName empty");
+        return false;
+    }
+    if (firstBundleInfo.extensionInfos.empty()) {
+        LOG_W(BMS_TAG_DEFAULT_APP, "extensionInfos empty");
+        return false;
+    }
+    std::string bundleName = firstBundleInfo.name;
+    std::string moduleName = firstBundleInfo.extensionInfos[0].moduleName;
+    std::string extensionName = firstBundleInfo.extensionInfos[0].name;
+    for (size_t i = 1; i < bundleInfos.size(); ++i) {
+        if (bundleInfos[i].name != bundleName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "bundleName not equal");
+            return false;
+        }
+        if (bundleInfos[i].extensionInfos.empty()) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "extensionInfos empty");
+            return false;
+        }
+        if (bundleInfos[i].extensionInfos[0].moduleName != moduleName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "moduleName not equal");
+            return false;
+        }
+        if (bundleInfos[i].extensionInfos[0].name != extensionName) {
+            LOG_W(BMS_TAG_DEFAULT_APP, "extensionName not equal");
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<std::string> DefaultAppMgr::GetMimeTypes(const std::string& utd) const
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    std::shared_ptr<UDMF::TypeDescriptor> typeDescriptor;
+    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(utd, typeDescriptor);
+    if (ret != ERR_OK || typeDescriptor == nullptr) {
+        return {};
+    }
+    return typeDescriptor->GetMimeTypes();
+#else
+    return {};
+#endif
 }
 }
 }

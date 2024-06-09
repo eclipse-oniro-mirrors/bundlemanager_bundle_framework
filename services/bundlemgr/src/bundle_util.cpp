@@ -39,6 +39,10 @@
 #include "ipc_skeleton.h"
 #include "parameter.h"
 #include "string_ex.h"
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+#include "type_descriptor.h"
+#include "utd_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -532,6 +536,17 @@ bool BundleUtil::DeleteDir(const std::string &path)
     }
 
     return true;
+}
+
+bool BundleUtil::IsUtd(const std::string &param)
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    bool isUtd = false;
+    auto ret = UDMF::UtdClient::GetInstance().IsUtd(param, isUtd);
+    return ret == ERR_OK && isUtd;
+#else
+    return false;
+#endif
 }
 
 std::string BundleUtil::GetBoolStrVal(bool val)

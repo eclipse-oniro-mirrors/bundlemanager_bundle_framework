@@ -105,11 +105,14 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     }
 
     if (installResult.resultCode != ERR_OK || installResult.isBmsExtensionUninstalled) {
+        APP_LOGI("install ret: %{public}d, extension: %{public}d",
+            installResult.resultCode, installResult.isBmsExtensionUninstalled);
         return;
     }
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
         AccountHelper::GetCurrentActiveUserId() : bundleUserId;
+    APP_LOGI("%{public}s publish event", installResult.bundleName.c_str());
     EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
 }
 

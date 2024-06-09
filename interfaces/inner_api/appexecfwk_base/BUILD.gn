@@ -109,6 +109,11 @@ ohos_shared_library("appexecfwk_base") {
     "ipc:ipc_single",
   ]
 
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:utd_client" ]
+  }
+
   public_external_deps = [ "json:nlohmann_json_static" ]
 
   subsystem_name = "bundlemanager"
