@@ -160,7 +160,7 @@ ohos_unittest("BmsBundleNavigationTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]

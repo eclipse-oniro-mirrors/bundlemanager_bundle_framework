@@ -75,6 +75,10 @@ const std::string ABILITY_EXCEL = "EXCEL";
 const std::string ABILITY_EXCEL_ERROR = "EXCEL-ERROR";
 const std::string ABILITY_PPT = "PPT";
 const std::string ABILITY_PPT_ERROR = "PPT-ERROR";
+const std::string ABILITY_GENERAL_VIDEO = "GeneralVideo";
+const std::string ABILITY_GENERAL_AVI = "GeneralAvi";
+const std::string ABILITY_VIDEO_MS_VIDEO = "VideoMsVideo";
+const std::string UTD_GENERAL_AVI = "general.avi";
 const std::string LABEL = "$string:MainAbility_label";
 const std::string ICON = "$media:icon";
 const std::string DESCRIPTION = "$string:MainAbility_desc";
@@ -258,6 +262,81 @@ ErrCode BmsBundleDefaultAppTest::SetDefaultApplicationWrap(sptr<IDefaultApp> def
     ElementName elementName("", BUNDLE_NAME, abilityName, MODULE_NAME);
     want.SetElement(elementName);
     return defaultAppProxy->SetDefaultApplication(USER_ID, type, want);
+}
+
+
+/**
+ * @tc.number: UTD_0100
+ * @tc.name: test SetDefaultApplication and GetDefaultApplication, param is general.avi, config is general.avi
+ * @tc.desc: 1. call SetDefaultApplication, return true
+ *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
+ */
+HWTEST_F(BmsBundleDefaultAppTest, UTD_0100, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, UTD_GENERAL_AVI, ABILITY_GENERAL_AVI);
+    EXPECT_EQ(result, ERR_OK);
+
+    BundleInfo bundleInfo;
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_GENERAL_AVI);
+    }
+
+    result = defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
+    EXPECT_EQ(result, ERR_OK);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: UTD_0200
+ * @tc.name: test SetDefaultApplication and GetDefaultApplication, param is general.avi, config is general.video
+ * @tc.desc: 1. call SetDefaultApplication, return true
+ *           2. call GetDefaultApplication, return true and the ability is same with SetDefaultApplication's ability
+ */
+HWTEST_F(BmsBundleDefaultAppTest, UTD_0200, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, UTD_GENERAL_AVI, ABILITY_GENERAL_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
+
+    BundleInfo bundleInfo;
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_GENERAL_VIDEO);
+    }
+
+    result = defaultAppProxy->ResetDefaultApplication(USER_ID, UTD_GENERAL_AVI);
+    EXPECT_EQ(result, ERR_OK);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: UTD_0300
+ * @tc.name: test SetDefaultApplication, param is general.avi, config is video/x-msvideo
+ * @tc.desc: 1. call SetDefaultApplication, return error
+ *           2. call GetDefaultApplication, return error
+ */
+HWTEST_F(BmsBundleDefaultAppTest, UTD_0300, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, UTD_GENERAL_AVI, ABILITY_VIDEO_MS_VIDEO);
+    EXPECT_NE(result, ERR_OK);
+
+    BundleInfo bundleInfo;
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
+    EXPECT_NE(result, ERR_OK);
 }
 
 /**
@@ -1431,6 +1510,21 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6600, Function | SmallTest
     EXPECT_NE(defaultAppProxy, nullptr);
     ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_EMAIL, ABILITY_EMAIL_ERROR);
     EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6700
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. call IsDefaultApplication, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6700, Function | SmallTest | Level1)
+{
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    bool isDefaultApp = false;
+    ErrCode result = defaultAppProxy->IsDefaultApplication("general.video", isDefaultApp);
+    EXPECT_EQ(result, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
 }
 
 /**

@@ -140,7 +140,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
@@ -346,7 +346,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
@@ -476,7 +476,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
@@ -608,7 +608,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
@@ -740,7 +740,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
-    external_deps += [ "udmf:udmf_client" ]
+    external_deps += [ "udmf:utd_client" ]
   }
   if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
     defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
