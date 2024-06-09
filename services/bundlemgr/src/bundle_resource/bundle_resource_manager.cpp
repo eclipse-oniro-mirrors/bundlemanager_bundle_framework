@@ -550,11 +550,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
         APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
             bundleName.c_str(), appIndex);
     }
-    // 3. need delete old clone resource info
-    if (!DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
-        APP_LOGW("delete bundleName:%{public}s appIndex:%{public}d resource failed", bundleName.c_str(), appIndex);
-    }
-    // 4. save clone bundle resource info
+    // 3. save clone bundle resource info
     if (!bundleResourceRdb_->AddResourceInfos(resourceInfos)) {
         APP_LOGE("add resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
         return false;
