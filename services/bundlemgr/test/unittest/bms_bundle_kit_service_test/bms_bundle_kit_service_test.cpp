@@ -249,6 +249,10 @@ const std::string ERROR_LINK_FEATURE = "ERROR_LINK";
 const std::string FILE_URI = "test.jpg";
 const std::string URI_MIME_IMAGE = "image/jpeg";
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+const std::string TYPE_VIDEO_AVI = "video/avi";
+const std::string TYPE_VIDEO_MS_VIDEO = "video/x-msvideo";
+const std::string UTD_GENERAL_AVI = "general.avi";
+const std::string UTD_GENERAL_VIDEO = "general.video";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -5986,6 +5990,61 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_HOME_ACTION_001, Function | SmallTe
 
 /**
  * @tc.number: skill match rules
+ * @tc.name: utd match test
+ * @tc.desc: param : utd, skill : utd
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UTD_001, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    // success testCase
+    bool ret = skill.MatchType(UTD_GENERAL_AVI, UTD_GENERAL_AVI);
+    EXPECT_TRUE(ret);
+    ret = skill.MatchType(UTD_GENERAL_AVI, UTD_GENERAL_VIDEO);
+    EXPECT_TRUE(ret);
+    // failed testCase
+    ret = skill.MatchType(UTD_GENERAL_VIDEO, UTD_GENERAL_AVI);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: utd match test
+ * @tc.desc: param : mimeType, skill : utd
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UTD_002, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    // success testCase
+    bool ret = skill.MatchType(TYPE_VIDEO_AVI, UTD_GENERAL_AVI);
+    EXPECT_TRUE(ret);
+    ret = skill.MatchType(TYPE_VIDEO_MS_VIDEO, UTD_GENERAL_AVI);
+    EXPECT_TRUE(ret);
+    ret = skill.MatchType(TYPE_VIDEO_AVI, UTD_GENERAL_VIDEO);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: utd match test
+ * @tc.desc: param : utd, skill : mimeType
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UTD_003, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    // success testCase
+    bool ret = skill.MatchType(UTD_GENERAL_AVI, TYPE_VIDEO_AVI);
+    EXPECT_TRUE(ret);
+    ret = skill.MatchType(UTD_GENERAL_AVI, TYPE_VIDEO_MS_VIDEO);
+    EXPECT_TRUE(ret);
+    // failed testCase
+    ret = skill.MatchType(UTD_GENERAL_VIDEO, TYPE_VIDEO_AVI);
+    EXPECT_FALSE(ret);
+    ret = skill.MatchType(UTD_GENERAL_VIDEO, TYPE_VIDEO_MS_VIDEO);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: skill match rules
  * @tc.name: uri and type match test: want uri empty, type not empty, linkFeature not empty; skill uri empty,
  *           type not empty, linkFeature not empty.
  * @tc.desc: expect true
@@ -11643,7 +11702,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfoAdaptBundleClone_0003, Function |
     EXPECT_TRUE(ret);
     EXPECT_EQ(bundleInfo.uid, cloneInfo.uid);
     EXPECT_EQ(bundleInfo.installTime, cloneInfo.installTime);
-    EXPECT_EQ(bundleInfo.updateTime, cloneInfo.updateTime);
     EXPECT_EQ(bundleInfo.appIndex, cloneInfo.appIndex);
 }
 

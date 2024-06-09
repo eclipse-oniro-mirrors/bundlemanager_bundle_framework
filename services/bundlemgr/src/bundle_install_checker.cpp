@@ -193,7 +193,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
-            APP_LOGE("hap file verify failed");
+            APP_LOGE("hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
             return verifyRes;
         }
 #endif

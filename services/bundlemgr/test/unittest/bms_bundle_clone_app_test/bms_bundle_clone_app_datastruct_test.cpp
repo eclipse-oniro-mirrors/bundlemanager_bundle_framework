@@ -120,7 +120,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001
     bundleCloneInfo.enabled = true;
     bundleCloneInfo.installTime = 10;
     bundleCloneInfo.uid = 20;
-    bundleCloneInfo.updateTime = 21;
 
     nlohmann::json bundleCloneInfoJson;
     to_json(bundleCloneInfoJson, bundleCloneInfo);
@@ -138,7 +137,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleCloneInfoJsonSerializer_0001
     EXPECT_EQ(bundleCloneInfo.enabled, bundleCloneInfo2.enabled);
     EXPECT_EQ(bundleCloneInfo.installTime, bundleCloneInfo2.installTime);
     EXPECT_EQ(bundleCloneInfo.uid, bundleCloneInfo2.uid);
-    EXPECT_EQ(bundleCloneInfo.updateTime, bundleCloneInfo2.updateTime);
 }
 
 /**
@@ -160,7 +158,6 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     bundleCloneInfo.enabled = true;
     bundleCloneInfo.installTime = 10;
     bundleCloneInfo.uid = 20;
-    bundleCloneInfo.updateTime = 21;
 
     userInfo.cloneInfos[strAppIndex] = bundleCloneInfo;
 
@@ -186,6 +183,5 @@ HWTEST_F(BmsBundleCloneAppDataStructTest, OTA_BundleUserInfoJsonSerializer_0001,
     EXPECT_EQ(bundleCloneInfo.enabled, bundleCloneInfo2.enabled);
     EXPECT_EQ(bundleCloneInfo.installTime, bundleCloneInfo2.installTime);
     EXPECT_EQ(bundleCloneInfo.uid, bundleCloneInfo2.uid);
-    EXPECT_EQ(bundleCloneInfo.updateTime, bundleCloneInfo2.updateTime);
 }
 } // OHOS

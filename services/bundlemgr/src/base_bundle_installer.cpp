@@ -269,7 +269,7 @@ ErrCode BaseBundleInstaller::InstallBundleByBundleName(
         InstallScene::CREATE_USER,
         result);
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
-    APP_LOGD("finish to process %{public}s bundle install", bundleName.c_str());
+    APP_LOGI("finish to process %{public}s bundle install, resultCode: %{public}d", bundleName.c_str(), result);
     return result;
 }
 
@@ -280,6 +280,9 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
+    APP_LOGI("recover result: %{public}d, needSendEvent: %{public}d, dataMgr: %{public}d, bundle: %{public}d"
+        ", modulePackage: %{public}d", result, installParam.needSendEvent, (dataMgr_ == nullptr), bundleName_.empty(),
+        modulePackage_.empty());
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
@@ -3586,12 +3589,8 @@ void BaseBundleInstaller::RemoveCreatedExtensionDirsForException() const
         APP_LOGI("no need to remove extension sandbox dir");
         return;
     }
-    for (const std::string &dir : createExtensionDirs_) {
-        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
-        if (result != ERR_OK) {
-            APP_LOGW("remove created extension sandbox dir %{public}s failed.", dir.c_str());
-            continue;
-        }
+    if (InstalldClient::GetInstance()->RemoveExtensionDir(userId_, createExtensionDirs_) != ERR_OK) {
+        APP_LOGW("remove created extension sandbox dir failed.");
     }
 }
 

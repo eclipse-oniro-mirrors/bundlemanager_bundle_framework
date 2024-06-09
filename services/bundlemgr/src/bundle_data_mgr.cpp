@@ -1845,7 +1845,6 @@ void BundleDataMgr::ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &clon
     bundleInfo.uid = cloneInfo.uid;
     bundleInfo.gid = cloneInfo.uid; // no gids, need add
     bundleInfo.installTime = cloneInfo.installTime;
-    bundleInfo.updateTime = cloneInfo.updateTime;
     bundleInfo.appIndex = cloneInfo.appIndex;
     if (!bundleInfo.applicationInfo.bundleName.empty()) {
         ModifyApplicationInfoByCloneInfo(cloneInfo, bundleInfo.applicationInfo);
@@ -3087,7 +3086,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoAndIndexByUid(const int32_t uid, InnerB
 
     std::string keyName;
     {
-        std::lock_guard<std::mutex> bundleIdLock(bundleIdMapMutex_);
+        std::shared_lock<std::shared_mutex> bundleIdLock(bundleIdMapMutex_);
         auto bundleIdIter = bundleIdMap_.find(bundleId);
         if (bundleIdIter == bundleIdMap_.end()) {
             APP_LOGW("uid %{public}d is not existed.", uid);
@@ -3972,6 +3971,11 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
         APP_LOGW("can not find bundle %{public}s", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    std::vector<int32_t> appIndexVec = GetCloneAppIndexes(abilityInfo.bundleName, Constants::ALL_USERID);
+    if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end())) {
+        APP_LOGE("appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
+    }
     InnerBundleInfo innerBundleInfo = infoItem->second;
     auto ability = innerBundleInfo.FindAbilityInfoV9(
         abilityInfo.moduleName, abilityInfo.name);
@@ -4148,7 +4152,7 @@ bool BundleDataMgr::GenerateUidAndGid(InnerBundleUserInfo &innerBundleUserInfo)
 
 bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bundleId)
 {
-    std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
     if (bundleIdMap_.empty()) {
         APP_LOGD("first app install");
         bundleId = baseAppUid_;
@@ -4239,7 +4243,7 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     auto innerBundleUserInfo = userInfos.begin()->second;
     int32_t bundleId = innerBundleUserInfo.uid -
         innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-    std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+    std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
     auto infoItem = bundleIdMap_.find(bundleId);
     if (infoItem == bundleIdMap_.end()) {
         return;
@@ -4261,7 +4265,7 @@ bool BundleDataMgr::RestoreUidAndGid()
                 onlyInsertOne = true;
                 int32_t bundleId = innerBundleUserInfo.uid -
                     innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
-                std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, innerBundleUserInfo.bundleName);
@@ -4280,7 +4284,7 @@ bool BundleDataMgr::RestoreUidAndGid()
                 int32_t bundleId = cloneInfo.uid - cloneInfo.userId * Constants::BASE_USER_RANGE;
                 std::string cloneBundleName =
                     BundleCloneCommonHelper::GetCloneBundleIdKey(bundleName, cloneInfo.appIndex);
-                std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+                std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
                 auto item = bundleIdMap_.find(bundleId);
                 if (item == bundleIdMap_.end()) {
                     bundleIdMap_.emplace(bundleId, cloneBundleName);
@@ -4296,7 +4300,7 @@ bool BundleDataMgr::RestoreUidAndGid()
 void BundleDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
 {
     if (sandboxAppHelper_ != nullptr) {
-        std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+        std::unique_lock<std::shared_mutex> lock(bundleIdMapMutex_);
         sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap);
     }
 }
@@ -5093,7 +5097,7 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
             LOG_D(BMS_TAG_QUERY_EXTENSION, "GetSandboxAppInfo failed errCode %{public}d", ret);
             return false;
         }
-    } 
+    }
     if (appIndex > 0 && appIndex <= Constants::INITIAL_SANDBOX_APP_INDEX) {
         bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId, appIndex);
         if (!ret) {

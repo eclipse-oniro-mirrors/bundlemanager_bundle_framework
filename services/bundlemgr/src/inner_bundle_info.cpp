@@ -3547,7 +3547,6 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     cloneInfo.gids = attr.gids;
     int64_t now = BundleUtil::GetCurrentTime();
     cloneInfo.installTime = now;
-    cloneInfo.updateTime = now;
 
     cloneInfos[appIndexKey] = cloneInfo;
     APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
@@ -3665,7 +3664,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     bundleInfo.uid = iter->second.uid;
     bundleInfo.gid = iter->second.uid; // no gids, need add
     bundleInfo.installTime = iter->second.installTime;
-    bundleInfo.updateTime = iter->second.updateTime;
+    bundleInfo.updateTime = innerBundleUserInfo.updateTime;
     bundleInfo.appIndex = appIndex;
     return true;
 }

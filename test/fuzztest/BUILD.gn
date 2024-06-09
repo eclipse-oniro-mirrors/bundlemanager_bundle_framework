@@ -79,6 +79,7 @@ group("fuzztest") {
     "fuzztest_information/querykeepalivebundleinfos_fuzzer:QueryKeepAliveBundleInfosFuzzTest",
     "fuzztest_information/remoteabilityinfo_fuzzer:RemoteAbilityInfoFuzzTest",
     "fuzztest_others/appservicefwkinstallerbeforeinstall_fuzzer:AppServiceFwkInstallerBeforeInstallFuzzTest",
+    "fuzztest_others/appservicefwkinstallerinstall_fuzzer:AppServiceFwkInstallerInstallFuzzTest",
     "fuzztest_others/bmsextensionclient_fuzzer:BmsExtensionClientFuzzTest",
     "fuzztest_others/bundlecloneinstaller_fuzzer:BundlecloneinstallerFuzzTest",
     "fuzztest_others/commonevent_fuzzer:CommonEventFuzzTest",
@@ -88,6 +89,7 @@ group("fuzztest") {
     "fuzztest_others/deployquickfix_fuzzer:DeployQuickFixFuzzTest",
     "fuzztest_others/driverinstaller_fuzzer:DriverInstallerFuzzTest",
     "fuzztest_others/elementname_fuzzer:ElementNameFuzzTest",
+    "fuzztest_others/filenamevalid_fuzzer:FileNameValidFuzzTest",
     "fuzztest_others/installparamunmarshalling_fuzzer:InstallParamUnmarshallingFuzzTest",
     "fuzztest_others/launcherservice_fuzzer:LauncherServiceFuzzTest",
     "fuzztest_others/moduleinfo_fuzzer:ModuleInfoFuzzTest",
@@ -116,6 +118,7 @@ group("fuzztest") {
   if (bundle_framework_app_control) {
     deps += [
       "fuzztest_application/addappInstallcontrolrule_fuzzer:AddAppInstallControlRuleFuzzTest",
+      "fuzztest_application/addappjumpcontrolrule_fuzzer:AddAppJumpControlRuleFuzzTest",
       "fuzztest_application/addapprunningcontrolrule_fuzzer:AddAppRunningControlRuleFuzzTest",
       "fuzztest_application/apprunningcontrolrule_fuzzer:AppRunningControlRuleFuzzTest",
       "fuzztest_application/apprunningcontrolruleresult_fuzzer:AppRunningControlRuleResultFuzzTest",

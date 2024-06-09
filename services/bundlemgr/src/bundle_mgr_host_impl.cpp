@@ -2131,11 +2131,6 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
         APP_LOGE("DataMgr is nullptr");
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
-    std::vector<int32_t> appIndexVec = dataMgr->GetCloneAppIndexes(abilityInfo.bundleName, Constants::ALL_USERID);
-    if (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end()) {
-        APP_LOGE("appIndex %{public}d is invalid", appIndex);
-        return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
-    }
     return dataMgr->IsAbilityEnabled(abilityInfo, appIndex, isEnable);
 }
 
