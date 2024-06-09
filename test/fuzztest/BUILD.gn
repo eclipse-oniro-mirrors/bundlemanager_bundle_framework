@@ -81,6 +81,7 @@ group("fuzztest") {
     "fuzztest_others/appservicefwkinstallercheckandparsefiles_fuzzer:AppServiceFwkInstallerCheckAndParseFilesFuzzTest",
     "fuzztest_others/appservicefwkinstallercheckapplabelinfo_fuzzer:AppServiceFwkInstallerCheckAppLabelInfoFuzzTest",
     "fuzztest_others/appservicefwkinstallerinnerprocessinstall_fuzzer:AppServiceFwkInstallerInnerProcessInstallFuzzTest",
+    "fuzztest_others/appservicefwkinstallerbeforeinstall_fuzzer:AppServiceFwkInstallerBeforeInstallFuzzTest",
     "fuzztest_others/appservicefwkinstallerinstall_fuzzer:AppServiceFwkInstallerInstallFuzzTest",
     "fuzztest_others/appservicefwkinstallerprocessinstall_fuzzer:AppServiceFwkInstallerProcessInstallFuzzTest",
     "fuzztest_others/bmsextensionclient_fuzzer:BmsExtensionClientFuzzTest",
@@ -88,6 +89,7 @@ group("fuzztest") {
     "fuzztest_others/commonevent_fuzzer:CommonEventFuzzTest",
     "fuzztest_others/copyfiles_fuzzer:CopyFilesFuzzTest",
     "fuzztest_others/deletequickfix_fuzzer:DeleteQuickFixFuzzTest",
+    "fuzztest_others/deleterulebycallerbundlename_fuzzer:DeleteRuleByCallerBundleNameFuzzTest",
     "fuzztest_others/deleterulebytargetbundlename_fuzzer:DeleteRuleByTargetBundleNameFuzzTest",
     "fuzztest_others/deployquickfix_fuzzer:DeployQuickFixFuzzTest",
     "fuzztest_others/driverinstaller_fuzzer:DriverInstallerFuzzTest",
@@ -104,6 +106,8 @@ group("fuzztest") {
     "fuzztest_others/switchquickfix_fuzzer:SwitchQuickFixFuzzTest",
     "fuzztest_others/upgradeatomicservice_fuzzer:UpgradeAtomicServiceFuzzTest",
     "fuzztest_others/verifycallingpermission_fuzzer:VerifyCallingPermissionFuzzTest",
+    "fuzztest_others/verifymanagerhostimpldeleteabc_fuzzer/:VerifyManagerHostImplDeleteAbcFuzzTest",
+    "fuzztest_others/verifymanagerhostimplverify_fuzzer/:VerifyManagerHostImplVerifyFuzzTest",
     "fuzztest_others/zip_fuzzer:ZipFuzzTest",
   ]
 
