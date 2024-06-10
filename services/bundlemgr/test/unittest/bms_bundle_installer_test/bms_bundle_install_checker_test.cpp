@@ -1274,7 +1274,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0011, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1292,7 +1292,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0012, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 5;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1310,7 +1310,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0013, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 1;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_MULTI_APP_MAX_COUNT_DECREASE);
 }
 
@@ -1328,7 +1328,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0014, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1346,7 +1346,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0015, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 5;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1364,7 +1364,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0016, Function | SmallTest |
     oldInfo.baseApplicationInfo_->multiAppMode.maxCount = 3;
     newInfo.baseApplicationInfo_->multiAppMode.maxCount = 1;
     BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    auto ret = baseBundleInstaller.CheckMaxCountForClone(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
