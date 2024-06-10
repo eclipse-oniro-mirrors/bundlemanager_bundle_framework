@@ -144,6 +144,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     std::string systemState = BundleSystemState::GetInstance().ToString();
     absRdbPredicates.EqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    APP_LOGI("start get all resource name:%{public}s", systemState.c_str());
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("QueryByStep failed, systemState:%{public}s", systemState.c_str());
