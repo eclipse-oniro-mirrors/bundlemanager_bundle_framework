@@ -309,6 +309,11 @@ void QuickFixDeployer::ProcessNativeLibraryPath(const std::string &patchPath, In
         }
     }
 
+    if (appQuickFix.deployingAppqfInfo.nativeLibraryPath.empty() && !targetPath_.empty()) {
+        LOG_I(BMS_TAG_QUICK_FIX, "nativeLibraryPath is empty, set nativeLibraryPath to targetPath");
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = PATCH_DIR + targetPath_;
+    }
+
     innerAppQuickFix.SetAppQuickFix(appQuickFix);
 }
 
