@@ -51,7 +51,8 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
     tempDir_ = tempDir;
 
     installParam_.sharedBundleDirPaths.clear();
-    for (size_t i = 0; i < installParam.sharedBundleDirPaths.size(); ++i) {
+    uint32_t size = static_cast<uint32_t>(installParam.sharedBundleDirPaths.size());
+    for (uint32_t i = 0; i < size; ++i) {
         tempDir = BundleUtil::CreateSharedBundleTempDir(installerId_, i);
         if (tempDir.empty()) {
             APP_LOGE("create temp dir for hsp failed");
