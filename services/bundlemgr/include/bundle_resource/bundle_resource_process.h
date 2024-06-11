@@ -43,7 +43,7 @@ public:
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap);
     // get LauncherAbilityResourceInfo when colorMode changed
     static bool GetResourceInfoByColorModeChanged(const std::vector<std::string> &resourceNames,
-        std::vector<ResourceInfo> &resourceInfos);
+        const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
 

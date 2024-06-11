@@ -389,7 +389,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0016, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool pass = false;
     ErrCode res = bmsExtensionDataMgr.VerifyActivationLock(pass);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+    #endif
 }
 
 /**

@@ -195,6 +195,7 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
 
 bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
     const std::vector<std::string> &resourceNames,
+    const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -202,11 +203,26 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    std::vector<std::string> needAddResourceBundles;
+    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
+    std::vector<std::string> bundleNames;
+    for (const auto &item : bundleInfos) {
+        bundleNames.emplace_back(item.first);
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (item.second.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
+            !innerBundleUserInfo.cloneInfos.empty()) {
+            // need process clone app resource
+            APP_LOGI("bundleName:%{public}s has clone info", item.first.c_str());
+            for (const auto &clone : innerBundleUserInfo.cloneInfos) {
+                bundleNames.emplace_back(std::to_string(clone.second.appIndex) + INNER_UNDER_LINE + item.first);
+            }
+        }
+    }
+    std::set<std::string> needAddResourceBundles;
     for (const auto &bundleName : bundleNames) {
         if (std::find(resourceNames.begin(), resourceNames.end(), bundleName) == resourceNames.end()) {
-            needAddResourceBundles.push_back(bundleName);
+            ResourceInfo info;
+            info.ParseKey(bundleName);
+            needAddResourceBundles.insert(info.bundleName_);
         }
     }
     if (needAddResourceBundles.empty()) {
@@ -214,12 +230,8 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
         return true;
     }
 
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        currentUserId = Constants::START_USERID;
-    }
     for (const auto &bundleName : needAddResourceBundles) {
-        if (!GetResourceInfoByBundleName(bundleName, currentUserId, resourceInfos)) {
+        if (!GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
             APP_LOGW("bundleName: %{public}s GetResourceInfoByBundleName failed.", bundleName.c_str());
         }
     }

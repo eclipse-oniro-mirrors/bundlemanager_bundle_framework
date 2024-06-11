@@ -115,7 +115,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
     { "vpn", ExtensionAbilityType::VPN },
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
-    { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN }
+    { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
+    { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
+    { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR }
 };
 
 // the new extension type does not need to be added here

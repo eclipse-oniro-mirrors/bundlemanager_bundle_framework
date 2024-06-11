@@ -2063,7 +2063,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0088, Function | SmallTest
 
     std::vector<std::string> resourceNames;
     std::vector<ResourceInfo> resourceInfos;
-    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_NE(resourceInfos.size(), 0);
 
@@ -2082,7 +2082,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0089, Function | SmallTest
 {
     std::vector<std::string> resourceNames;
     std::vector<ResourceInfo> resourceInfos;
-    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_NE(resourceInfos.size(), 0);
 }
@@ -3805,7 +3805,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0150, Function | SmallTest
     std::vector<std::string> resourceNames;
     std::vector<ResourceInfo> resourceInfos;
     bundleMgrService_->RegisterDataMgr(nullptr);
-    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, USERID, resourceInfos);
     EXPECT_FALSE(ans);
     EXPECT_EQ(resourceInfos.size(), 0);
 }
