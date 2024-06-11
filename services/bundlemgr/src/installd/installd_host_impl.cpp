@@ -634,19 +634,23 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
     }
 }
 
-static void CleanBundleDataForEl2(const std::string &bundleName, const int userid)
+static void CleanBundleDataForEl2(const std::string &bundleName, const int userid, const int appIndex)
 {
+    std::string suffixName = bundleName;
+    if (appIndex > 0) {
+        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
     std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userid);
-    std::string databaseDir = dataDir + ServiceConstants::DATABASE + bundleName;
+    std::string databaseDir = dataDir + ServiceConstants::DATABASE + suffixName;
     if (!InstalldOperator::DeleteFiles(databaseDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
     }
-    std::string logDir = dataDir + ServiceConstants::LOG + bundleName;
+    std::string logDir = dataDir + ServiceConstants::LOG + suffixName;
     if (!InstalldOperator::DeleteFiles(logDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
     }
-    std::string bundleDataDir = dataDir + ServiceConstants::BASE + bundleName;
+    std::string bundleDataDir = dataDir + ServiceConstants::BASE + suffixName;
     for (const auto &dir : BUNDLE_DATA_DIR) {
         std::string subDir = bundleDataDir + dir;
         if (!InstalldOperator::DeleteFiles(subDir)) {
@@ -776,27 +780,33 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
 {
-    LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLD,
+        "InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s,userid:%{public}d,appIndex:%{public}d",
+        bundleName.c_str(), userid, appIndex);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CleanBundleDataDirByName with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    std::string suffixName = bundleName;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
-            CleanBundleDataForEl2(bundleName, userid);
+            CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
         }
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + bundleName;
+        if (appIndex > 0) {
+            suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+        }
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + suffixName;
         if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
         }
-        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + bundleName;
+        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + suffixName;
         if (!InstalldOperator::DeleteFiles(databaseDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
         }
