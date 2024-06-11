@@ -409,7 +409,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to batch get bundle info, bundle name count=%{public}u", bundleNames.size());
+    APP_LOGD("begin to batch get bundle info, bundle name count=%{public}lu", bundleNames.size());
     if (bundleNames.empty()) {
         APP_LOGE("fail to BatchGetBundleInfo due to params empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
