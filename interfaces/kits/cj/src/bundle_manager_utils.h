@@ -58,19 +58,19 @@ namespace BundleManager {
     struct RetApplicationInfo {
         char* name;
         char* description;
-        int64_t descriptionId;
+        int32_t descriptionId;
         bool enabled;
         char* label;
-        int64_t labelId;
+        int32_t labelId;
         char* icon;
-        int64_t iconId;
+        int32_t iconId;
         char* process;
         CArrString permissions;
         char* codePath;
         CArrMoMeta metadataArray;
         bool removable;
-        int64_t accessTokenId;
-        int64_t uid;
+        uint32_t accessTokenId;
+        int32_t uid;
         CResource iconResource;
         CResource labelResource;
         CResource descriptionResource;
@@ -102,11 +102,11 @@ namespace BundleManager {
         char* moduleName;
         char* name;
         char* label;
-        int64_t labelId;
+        int32_t labelId;
         char* description;
-        int64_t descriptionId;
+        int32_t descriptionId;
         char* icon;
-        int64_t iconId;
+        int32_t iconId;
         char* process;
         bool exported;
         int32_t orientation;
@@ -129,9 +129,9 @@ namespace BundleManager {
         char* bundleName;
         char* moduleName;
         char* name;
-        int64_t labelId;
-        int64_t descriptionId;
-        int64_t iconId;
+        int32_t labelId;
+        int32_t descriptionId;
+        int32_t iconId;
         bool exported;
         int32_t extensionAbilityType;
         CArrString permissions;
@@ -203,7 +203,7 @@ namespace BundleManager {
         char* name;
         char* moduleName;
         char* reason;
-        int64_t reasonId;
+        int32_t reasonId;
         RetUsedScene usedScence;
     };
 
@@ -243,10 +243,10 @@ namespace BundleManager {
     struct RetBundleInfo {
         char* name;
         char* vendor;
-        int64_t versionCode;
+        uint32_t versionCode;
         char* versionName;
-        int64_t minCompatibleVersionCode;
-        int64_t targetVersion;
+        uint32_t minCompatibleVersionCode;
+        uint32_t targetVersion;
         RetApplicationInfo appInfo;
         CArrHapInfo hapInfo;
         CArrReqPerDetail perDetail;
