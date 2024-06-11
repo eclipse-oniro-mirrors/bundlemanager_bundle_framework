@@ -154,6 +154,17 @@ void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &re
 #endif
 }
 
+std::string BundleResourceHelper::ParseBundleName(const std::string &keyName)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    ResourceInfo info;
+    info.ParseKey(keyName);
+    return info.bundleName_;
+#else
+    return keyName;
+#endif
+}
+
 void BundleResourceHelper::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
     bool isEnabled, int32_t userId)
 {
