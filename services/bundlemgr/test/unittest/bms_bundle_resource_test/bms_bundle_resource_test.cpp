@@ -2659,10 +2659,11 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, true, 0, USERID);
+        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, 0, 0, USERID);
         EXPECT_FALSE(ret);
         resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-        ret = manager->AddResourceInfosByMap(resourceInfosMap, false, manager->currentTaskNum_, USERID);
+        ret = manager->AddResourceInfosByMap(resourceInfosMap, manager->currentTaskNum_,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID);
         EXPECT_TRUE(ret);
     }
 
