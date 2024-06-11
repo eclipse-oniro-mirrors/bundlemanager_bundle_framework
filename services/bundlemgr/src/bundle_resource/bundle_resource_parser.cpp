@@ -158,7 +158,8 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             }
         }
     }
-    if (resourceInfos[0].label_.empty() || resourceInfos[0].icon_.empty()) {
+    if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
+        (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
         APP_LOGE("bundleName:%{public}s moduleName:%{public}s prase resource failed",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;

@@ -26,6 +26,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
+#include "bundle_system_state.h"
 #include "event_report.h"
 #include "thread_pool.h"
 
@@ -33,9 +34,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
-constexpr int32_t MAX_TASK_NUMBER = 3;
+constexpr int32_t MAX_TASK_NUMBER = 2;
 const std::string THREAD_POOL_NAME = "BundleResourceThreadPool";
-constexpr int32_t CHECK_INTERVAL = 50; // 50ms
+constexpr int32_t CHECK_INTERVAL = 30; // 30ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
 const std::string SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
@@ -46,6 +47,10 @@ const std::string THEME_ICONS_B = "/b/app/icons/";
 BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
+    std::string systemState;
+    if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
+        APP_LOGI("current resource rdb system state:%{public}s when rdb create", systemState.c_str());
+    }
 }
 
 BundleResourceManager::~BundleResourceManager()
@@ -123,26 +128,11 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
-    bool needDeleteAllResource = true;
-    if (type == static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) {
-        // judge whether the bundle theme  exists
-        for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-            if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-                !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
-                iter = resourceInfosMap.erase(iter);
-            } else {
-                ++iter;
-            }
-        }
-        needDeleteAllResource = false;
+    if (tempTaskNum != currentTaskNum_) {
+        APP_LOGI("need stop current task, new first");
+        return false;
     }
-    if (resourceInfosMap.empty()) {
-        SendBundleResourcesChangedEvent(userId, type);
-        APP_LOGI("add all resource end, no theme changed");
-        return true;
-    }
-
-    if (!AddResourceInfos(resourceInfosMap, needDeleteAllResource, tempTaskNum)) {
+    if (!AddResourceInfosByMap(resourceInfosMap, tempTaskNum, type, userId)) {
         APP_LOGE("add all resource info failed, userId:%{public}d", userId);
         return false;
     }
@@ -156,6 +146,10 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         }
     }
     SendBundleResourcesChangedEvent(userId, type);
+    std::string systemState;
+    if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
+        APP_LOGI("current resource rdb system state:%{public}s", systemState.c_str());
+    }
     APP_LOGI("add all resource end");
     return true;
 }
@@ -212,18 +206,64 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
-bool BundleResourceManager::AddResourceInfos(
+void BundleResourceManager::InnerProcessResourceInfoByResourceUpdateType(
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    bool needDeleteAllResourceInfo,
-    uint32_t tempTaskNumber)
+    const uint32_t type, const int32_t userId, bool &needDeleteAllResource)
+{
+    APP_LOGI("current resource update, code:%{public}u", type);
+    switch (type) {
+        case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) : {
+            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
+                for (auto &resourceInfo : iter->second) {
+                    resourceInfo.iconNeedParse_ = false;
+                }
+            }
+            needDeleteAllResource = false;
+            break;
+        }
+        case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) : {
+            // judge whether the bundle theme exists
+            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
+                if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+                    !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+                    iter = resourceInfosMap.erase(iter);
+                } else {
+                    ++iter;
+                }
+            }
+            // process labelNeedParse_
+            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
+                for (auto &resourceInfo : iter->second) {
+                    // theme changed no need parse label
+                    resourceInfo.labelNeedParse_ = false;
+                    resourceInfo.label_ = Constants::EMPTY_STRING;
+                }
+            }
+            needDeleteAllResource = false;
+            break;
+        }
+        default: {
+            needDeleteAllResource = true;
+            break;
+        }
+    }
+}
+
+bool BundleResourceManager::AddResourceInfosByMap(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    const uint32_t tempTaskNumber,
+    const uint32_t type,
+    const int32_t userId)
 {
     if (resourceInfosMap.empty()) {
         APP_LOGE("resourceInfosMap is empty.");
         return false;
     }
-    if (tempTaskNumber != currentTaskNum_) {
-        APP_LOGI("need stop current task, new first");
-        return false;
+    bool needDeleteAllResource = false;
+    InnerProcessResourceInfoByResourceUpdateType(resourceInfosMap, type, userId, needDeleteAllResource);
+    if (resourceInfosMap.empty()) {
+        APP_LOGI("resourceInfosMap is empty, no need to parse");
+        return true;
     }
     std::shared_ptr<ThreadPool> threadPool = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
     if (threadPool == nullptr) {
@@ -232,21 +272,9 @@ bool BundleResourceManager::AddResourceInfos(
     }
     threadPool->Start(MAX_TASK_NUMBER);
     threadPool->SetMaxTaskNum(MAX_TASK_NUMBER);
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if ((currentUserId <= 0)) {
-        currentUserId = Constants::START_USERID;
-    }
     // first delete all resource info, then add new resource
-    if (needDeleteAllResourceInfo && !bundleResourceRdb_->DeleteAllResourceInfo()) {
+    if (needDeleteAllResource && !bundleResourceRdb_->DeleteAllResourceInfo()) {
         APP_LOGE("delete all bundle resource info failed, then add new resource info");
-    }
-
-    // parse default icon resource
-    bool isExistDefaultIcon = (resourceInfosMap.find(GLOBAL_RESOURCE_BUNDLE_NAME) != resourceInfosMap.end());
-    if (isExistDefaultIcon) {
-        BundleResourceParser parser;
-        parser.ParseResourceInfos(currentUserId, resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
-        bundleResourceRdb_->AddResourceInfos(resourceInfosMap[GLOBAL_RESOURCE_BUNDLE_NAME]);
     }
 
     for (const auto &item : resourceInfosMap) {
@@ -256,19 +284,15 @@ bool BundleResourceManager::AddResourceInfos(
             return false;
         }
         std::string bundleName = item.first;
-        if (bundleName == GLOBAL_RESOURCE_BUNDLE_NAME) {
-            continue;
-        }
-        auto task = [currentUserId, bundleName, isExistDefaultIcon, &resourceInfosMap, this]() {
+        auto task = [userId, bundleName, &resourceInfosMap, this]() {
             if (resourceInfosMap.find(bundleName) == resourceInfosMap.end()) {
                 APP_LOGE("bundleName: %{public}s not exist", bundleName.c_str());
                 return;
             }
             std::vector<ResourceInfo> resourceInfos = resourceInfosMap[bundleName];
             BundleResourceParser parser;
-            parser.ParseResourceInfos(currentUserId, resourceInfos);
-            InnerProcessResourceInfos(resourceInfosMap, isExistDefaultIcon, resourceInfos);
-            bundleResourceRdb_->AddResourceInfos(resourceInfos);
+            parser.ParseResourceInfos(userId, resourceInfos);
+            bundleResourceRdb_->AddResourceForSystemStateChanged(resourceInfos);
         };
         threadPool->AddTask(task);
     }
@@ -305,58 +329,6 @@ bool BundleResourceManager::DeleteResourceInfo(const std::string &key)
 bool BundleResourceManager::GetAllResourceName(std::vector<std::string> &keyNames)
 {
     return bundleResourceRdb_->GetAllResourceName(keyNames);
-}
-
-bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t userId, const uint32_t type)
-{
-    ++currentTaskNum_;
-    uint32_t tempTaskNum = currentTaskNum_;
-    std::lock_guard<std::mutex> guard(mutex_);
-    std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-    // to judge whether the current colorMode exists in the database
-    bool isExist = bundleResourceRdb_->IsCurrentColorModeExist();
-    if (isExist) {
-        // exist then update new install bundles
-        std::vector<std::string> names;
-        if (!bundleResourceRdb_->GetAllResourceName(names)) {
-            APP_LOGE("GetAllResourceName failed");
-            return false;
-        }
-        std::vector<ResourceInfo> resourceInfos;
-        if (!BundleResourceProcess::GetResourceInfoByColorModeChanged(names, userId, resourceInfos)) {
-            APP_LOGE("GetResourceInfoByColorModeChanged failed");
-            return false;
-        }
-        if (resourceInfos.empty()) {
-            APP_LOGI("no need to add resource");
-            SendBundleResourcesChangedEvent(userId, type);
-            return true;
-        }
-        for (const auto &info : resourceInfos) {
-            resourceInfosMap[info.bundleName_].emplace_back(info);
-        }
-    } else {
-        // not exist then update all resource info
-        if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfosMap)) {
-            APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
-            return false;
-        }
-    }
-    if (!AddResourceInfos(resourceInfosMap, false, tempTaskNum)) {
-        APP_LOGE("add resource infos failed, userId:%{public}d", userId);
-        return false;
-    }
-    // process clone bundle resource info
-    for (const auto &item : resourceInfosMap) {
-        if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
-            APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
-            if (!AddCloneBundleResourceInfo(item.first, item.second[0].appIndexes_)) {
-                APP_LOGW("bundle:%{public}s add clone resource failed", item.first.c_str());
-            }
-        }
-    }
-    SendBundleResourcesChangedEvent(userId, type);
-    return true;
 }
 
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -515,19 +487,6 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
 
     APP_LOGI("UpdateBundleIcon %{public}s, size: %{public}zu", bundleName.c_str(), resourceInfos.size());
     return SaveResourceInfos(resourceInfos);
-}
-
-void BundleResourceManager::InnerProcessResourceInfos(
-    const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-    bool isExistDefaultIcon,
-    std::vector<ResourceInfo> &resourceInfos)
-{
-    for (auto &resourceInfo : resourceInfos) {
-        if (resourceInfo.label_.empty() || resourceInfo.icon_.empty()) {
-            ProcessResourceInfo(isExistDefaultIcon ? resourceInfosMap.at(GLOBAL_RESOURCE_BUNDLE_NAME) :
-                std::vector<ResourceInfo>(), resourceInfo);
-        }
-    }
 }
 
 bool BundleResourceManager::AddCloneBundleResourceInfo(

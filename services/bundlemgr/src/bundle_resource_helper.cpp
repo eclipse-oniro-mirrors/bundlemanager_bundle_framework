@@ -36,6 +36,7 @@ void BundleResourceHelper::BundleSystemStateInit()
     // init language and colorMode
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
+    APP_LOGI("current system state: %{public}s", BundleSystemState::GetInstance().ToString().c_str());
     // init resource manager
     if (Global::Resource::GetSystemResourceManagerNoSandBox() == nullptr) {
         APP_LOGE("init no sand box resource manager failed");
@@ -150,6 +151,17 @@ void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &re
     if (!manager->GetAllResourceName(resourceNames)) {
         APP_LOGE("failed");
     }
+#endif
+}
+
+std::string BundleResourceHelper::ParseBundleName(const std::string &keyName)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    ResourceInfo info;
+    info.ParseKey(keyName);
+    return info.bundleName_;
+#else
+    return keyName;
 #endif
 }
 

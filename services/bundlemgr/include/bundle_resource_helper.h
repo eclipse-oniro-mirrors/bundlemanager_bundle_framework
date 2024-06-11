@@ -50,6 +50,8 @@ public:
 
     static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
 
+    static std::string ParseBundleName(const std::string &keyName);
+
     static void SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId);
 

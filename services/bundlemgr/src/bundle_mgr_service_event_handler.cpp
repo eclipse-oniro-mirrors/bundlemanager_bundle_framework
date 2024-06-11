@@ -104,6 +104,7 @@ constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/te
 
 constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
 constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
+constexpr const char* INNER_UNDER_LINE = "_";
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -2786,24 +2787,44 @@ void BMSEventHandler::ProcessBundleResourceInfo()
     APP_LOGI("ProcessBundleResourceInfo start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        APP_LOGE("dataMgr is nullptr");
         return;
     }
-    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
-    if (bundleNames.empty()) {
-        APP_LOGE("bundleNames is empty");
-        return;
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        userId = Constants::START_USERID;
+    }
+    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
+    std::vector<std::string> bundleNames;
+    for (const auto &item : bundleInfos) {
+        bundleNames.emplace_back(item.first);
+        InnerBundleUserInfo innerBundleUserInfo;
+        if (item.second.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
+            !innerBundleUserInfo.cloneInfos.empty()) {
+            // need process clone app resource
+            APP_LOGI("bundleName:%{public}s has clone info", item.first.c_str());
+            for (const auto &clone : innerBundleUserInfo.cloneInfos) {
+                bundleNames.emplace_back(std::to_string(clone.second.appIndex) + INNER_UNDER_LINE + item.first);
+            }
+        }
     }
     std::vector<std::string> resourceNames;
     BundleResourceHelper::GetAllBundleResourceName(resourceNames);
-    if (resourceNames.empty()) {
-        APP_LOGI("rdb has no resource info, need add all");
-    }
+
+    std::set<std::string> needAddResourceBundles;
     for (const auto &bundleName : bundleNames) {
         if (std::find(resourceNames.begin(), resourceNames.end(), bundleName) == resourceNames.end()) {
-            APP_LOGD("need add bundleName: %{public}s resource", bundleName.c_str());
-            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
+            needAddResourceBundles.insert(BundleResourceHelper::ParseBundleName(bundleName));
         }
+    }
+    if (needAddResourceBundles.empty()) {
+        APP_LOGI("needAddResourceBundles is empty, no need to add resource");
+        return;
+    }
+
+    for (const auto &bundleName : needAddResourceBundles) {
+        APP_LOGI("bundleName: %{public}s add resource when reboot", bundleName.c_str());
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
     }
     APP_LOGI("ProcessBundleResourceInfo end");
 }

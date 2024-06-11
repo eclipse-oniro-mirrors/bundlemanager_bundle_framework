@@ -65,11 +65,6 @@ public:
         const std::string &abilityName, const int32_t userId);
 
     bool GetAllResourceName(std::vector<std::string> &keyNames);
-    /**
-     * add resource info by colorMode changed
-     */
-    bool AddResourceInfoByColorModeChanged(const int32_t userId,
-        const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
@@ -99,8 +94,12 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
-    bool AddResourceInfos(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        bool needDeleteAllResourceInfo, uint32_t tempTaskNumber);
+    bool AddResourceInfosByMap(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const uint32_t tempTaskNumber, const uint32_t type, const int32_t userId);
+
+    void InnerProcessResourceInfoByResourceUpdateType(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, const uint32_t type,
+        const int32_t userId, bool &needDeleteAllResource);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 
@@ -111,9 +110,6 @@ private:
     uint32_t CheckResourceFlags(const uint32_t flags);
 
     void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type);
-
-    void InnerProcessResourceInfos(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        bool isExistDefaultIcon, std::vector<ResourceInfo> &resourceInfos);
 
     bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
         const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);

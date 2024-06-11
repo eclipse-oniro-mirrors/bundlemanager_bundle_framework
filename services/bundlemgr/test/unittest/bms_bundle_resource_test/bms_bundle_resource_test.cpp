@@ -450,34 +450,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0007, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0008
- * Function: BundleResourceRdb
- * @tc.name: test BundleResourceRdb
- * @tc.desc: 1. system running normally
- *           2. test IsCurrentColorModeExist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0008, Function | SmallTest | Level0)
-{
-    BundleResourceRdb resourceRdb;
-    ResourceInfo resourceInfo;
-    resourceInfo.bundleName_ = "bundleName";
-    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
-    EXPECT_TRUE(ans);
-
-    ans = resourceRdb.IsCurrentColorModeExist();
-    EXPECT_TRUE(ans);
-
-    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
-    BundleSystemState::GetInstance().SetSystemColorMode("aaaaaa");
-    ans = resourceRdb.IsCurrentColorModeExist();
-    EXPECT_FALSE(ans);
-    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
-
-    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
-    EXPECT_TRUE(ans);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0009
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -2602,32 +2574,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0104
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfoByColorModeChanged
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0104, Function | SmallTest | Level0)
-{
-    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
-    std::string colorMode = "dark";
-    BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    bool ans = manager->AddResourceInfoByColorModeChanged(200);
-    EXPECT_FALSE(ans);
-
-    ans = manager->AddResourceInfoByColorModeChanged(USERID);
-    EXPECT_TRUE(ans);
-
-    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
-    ans = manager->AddResourceInfoByColorModeChanged(USERID);
-    EXPECT_TRUE(ans);
-}
-
-/**
  * @tc.number: ProcessBundleResourceInfo_0001
  * @tc.name: test the start function of ProcessBundleResourceInfo
  * @tc.desc: 1. test ProcessBundleResourceInfo
@@ -2713,10 +2659,11 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfos(resourceInfosMap, true, 0);
+        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, 0, 0, USERID);
         EXPECT_FALSE(ret);
         resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
-        ret = manager->AddResourceInfos(resourceInfosMap, false, manager->currentTaskNum_);
+        ret = manager->AddResourceInfosByMap(resourceInfosMap, manager->currentTaskNum_,
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID);
         EXPECT_TRUE(ret);
     }
 

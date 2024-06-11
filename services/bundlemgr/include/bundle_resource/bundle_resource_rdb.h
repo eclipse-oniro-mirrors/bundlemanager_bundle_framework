@@ -39,9 +39,6 @@ public:
 
     bool AddResourceInfos(const std::vector<ResourceInfo> &resourceInfos);
 
-    // whether the current color mode exists
-    bool IsCurrentColorModeExist();
-
     bool GetAllResourceName(std::vector<std::string> &keyName);
 
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -54,6 +51,10 @@ public:
 
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+
+    bool AddResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos);
+
+    bool GetCurrentSystemState(std::string &systemState);
 
 private:
     bool ConvertToBundleResourceInfo(
