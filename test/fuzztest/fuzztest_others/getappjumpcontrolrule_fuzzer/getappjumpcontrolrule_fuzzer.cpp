@@ -13,24 +13,27 @@
  * limitations under the License.
  */
 
+#include "getappjumpcontrolrule_fuzzer.h"
+
 #include <cstddef>
 #include <cstdint>
 
 #include "app_control_proxy.h"
 
-#include "deleterulebytargetbundlename_fuzzer.h"
-
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
-    {
-        sptr<IRemoteObject> object;
-        AppControlProxy appControl(object);
-        std::string targetBundleName;
-        appControl.DeleteRuleByTargetBundleName(targetBundleName, reinterpret_cast<uintptr_t>(data));
-        return true;
-    }
+bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
+{
+    sptr<IRemoteObject> object;
+    AppControlProxy appControl(object);
+    std::string callerBundleName;
+    std::string targetBundleName;
+    AppJumpControlRule controlRules;
+    appControl.GetAppJumpControlRule(
+        callerBundleName, targetBundleName, reinterpret_cast<uintptr_t>(data), controlRules);
+    return true;
 }
+} // namespace OHOS
 
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)

@@ -18,7 +18,7 @@
 
 #include "app_control_proxy.h"
 
-#include "deleterulebytargetbundlename_fuzzer.h"
+#include "deleteappjumpcontrolrule_fuzzer.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
@@ -26,8 +26,8 @@ namespace OHOS {
     {
         sptr<IRemoteObject> object;
         AppControlProxy appControl(object);
-        std::string targetBundleName;
-        appControl.DeleteRuleByTargetBundleName(targetBundleName, reinterpret_cast<uintptr_t>(data));
+        std::vector<AppJumpControlRule> controlRules;
+        appControl.DeleteAppJumpControlRule(controlRules, reinterpret_cast<uintptr_t>(data));
         return true;
     }
 }
