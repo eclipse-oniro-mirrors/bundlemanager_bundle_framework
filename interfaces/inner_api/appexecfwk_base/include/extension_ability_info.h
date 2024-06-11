@@ -66,6 +66,7 @@ enum class ExtensionAbilityType {
     ADS_SERVICE = 20,
     EMBEDDED_UI = 21,
     INSIGHT_INTENT_UI = 22,
+    PHOTO_EDITOR = 23,
     UNSPECIFIED = 255,
     UI = 256,
     HMS_ACCOUNT = 257,
@@ -98,7 +99,8 @@ enum class ExtensionAbilityType {
     SYS_COMMON_UI = 500,
     AUTO_FILL_PASSWORD = 501,
     VPN = 502,
-    AUTO_FILL_SMART = 503
+    AUTO_FILL_SMART = 503,
+    SYSPICKER_PHOTOEDITOR = 504
 };
 
 enum class CompileMode {
