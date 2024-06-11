@@ -61,20 +61,6 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
         return true;
     }
     BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    if (manager == nullptr) {
-        APP_LOGE("manager is nullptr");
-        return false;
-    }
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId <= 0) {
-        currentUserId = Constants::START_USERID;
-    }
-
-    if (!manager->AddResourceInfoByColorModeChanged(currentUserId, type)) {
-        APP_LOGE("add colorMode : %{public}s failed, currentUserId :%{public}d", colorMode.c_str(), currentUserId);
-        return false;
-    }
     APP_LOGI("end, colorMode: %{public}s", colorMode.c_str());
     return true;
 }
