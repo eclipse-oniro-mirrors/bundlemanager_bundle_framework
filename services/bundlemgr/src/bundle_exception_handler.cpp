@@ -93,7 +93,7 @@ bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
         APP_LOGD("bundleName:%{public}s no need to check", info.GetBundleName().c_str());
         return true;
     }
-    APP_LOGI("start, need to check bundleName:%{public}s hap file", info.GetBundleName().c_str());
+    APP_LOGD("start, need to check bundleName:%{public}s hap file", info.GetBundleName().c_str());
     const auto innerModuleInfos = info.GetInnerModuleInfos();
     for (const auto &item : innerModuleInfos) {
         if (!item.second.hapPath.empty()) {
@@ -117,7 +117,7 @@ void BundleExceptionHandler::InnerHandleInvalidBundle(InnerBundleInfo &info, boo
     if (mark.status == InstallExceptionStatus::INSTALL_FINISH) {
         return;
     }
-    APP_LOGI("bundle: %{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
+    APP_LOGI_NOFUNC("%{public}s status is %{public}d", info.GetBundleName().c_str(), mark.status);
     std::string appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + info.GetBundleName();
     auto moduleDir = appCodePath + ServiceConstants::PATH_SEPARATOR + mark.packageName;
     auto moduleDataDir = info.GetBundleName() + ServiceConstants::HAPS + mark.packageName;

@@ -70,8 +70,12 @@ private:
     ((void)HILOG_IMPL(LOG_CORE, LOG_FATAL, LOG_DOMAIN, APP_LOG_TAG, \
     "[%{public}s(%{public}s:%{public}d)]" fmt, FILENAME, __FUNCTION__, __LINE__, ##__VA_ARGS__))
 
+#define APP_LOGI_NOFUNC(fmt, ...)            \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_INFO, LOG_DOMAIN, APP_LOG_TAG, fmt, ##__VA_ARGS__))
 #define APP_LOGW_NOFUNC(fmt, ...)            \
     ((void)HILOG_IMPL(LOG_CORE, LOG_WARN, LOG_DOMAIN, APP_LOG_TAG, fmt, ##__VA_ARGS__))
+#define APP_LOGE_NOFUNC(fmt, ...)            \
+    ((void)HILOG_IMPL(LOG_CORE, LOG_ERROR, LOG_DOMAIN, APP_LOG_TAG, fmt, ##__VA_ARGS__))
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_STANDARD_COMMON_LOG_INCLUDE_APP_LOG_WRAPPER_H
