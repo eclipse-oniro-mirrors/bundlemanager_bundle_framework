@@ -374,7 +374,8 @@ bool BundleResourceParser::ParseIconIdFromJson(
     auto pos = layerImage.foreground.find(CHAR_COLON);
     if (pos != std::string::npos) {
         int32_t foregroundLength = static_cast<int32_t>(layerImage.foreground.length());
-        foregroundId = atoi(layerImage.foreground.substr(pos + 1, foregroundLength - pos - 1).c_str());
+        foregroundId = static_cast<uint32_t>(
+            atoi(layerImage.foreground.substr(pos + 1, foregroundLength - pos - 1).c_str()));
     }
     pos = layerImage.background.find(CHAR_COLON);
     if (pos != std::string::npos) {
