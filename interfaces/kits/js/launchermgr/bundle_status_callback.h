@@ -29,11 +29,14 @@ public:
     BundleStatusCallback() = default;
     BundleStatusCallback(napi_env env, napi_ref addedCallback, napi_ref updatedCallback, napi_ref removeCallback);
     virtual ~BundleStatusCallback();
-    virtual void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode, const std::string &resultMsg,
-                                      const std::string &bundleName) override {};
-    virtual void OnBundleAdded(const std::string &bundleName, const int userId) override;
-    virtual void OnBundleUpdated(const std::string &bundleName, const int userId) override;
-    virtual void OnBundleRemoved(const std::string &bundleName, const int userId) override;
+    void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode, const std::string &resultMsg,
+        const std::string &bundleName) override {};
+    void OnBundleAdded(const std::string &bundleName, const int userId) override {};
+    void OnBundleUpdated(const std::string &bundleName, const int userId) override {};
+    void OnBundleRemoved(const std::string &bundleName, const int userId) override {};
+    void OnBundleAdded(const std::string &bundleName, const int userId, const int32_t appIndex) override;
+    void OnBundleUpdated(const std::string &bundleName, const int userId, const int32_t appIndex) override;
+    void OnBundleRemoved(const std::string &bundleName, const int userId, const int32_t appIndex) override;
 
 private:
     napi_env env_;
@@ -48,6 +51,7 @@ struct AsyncCallbackInfo {
     napi_ref callback_ = 0;
     std::string bundleName_;
     int32_t userId_;
+    int32_t appIndex_ = 0;
 };
 
 struct DelRefCallbackInfo {
