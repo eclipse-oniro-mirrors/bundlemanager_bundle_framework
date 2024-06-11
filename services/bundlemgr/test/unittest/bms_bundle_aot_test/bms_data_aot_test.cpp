@@ -838,6 +838,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2100, Function | SmallTest | Level0)
         bundleName, innerBundleInfo);
     auto ans = AOTHandler::GetInstance().HandleCopyAp(bundleName, false, results);
     EXPECT_EQ(ans, ERR_OK);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
 }
 
 /**
@@ -891,6 +892,6 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
     EventInfo eventInfo = AOTHandler::GetInstance().HandleCompileWithBundle(bundleName, compileMode, dataMgr);
     sysEventMap.emplace(bundleName, eventInfo);
     AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
 }
-
 } // OHOS

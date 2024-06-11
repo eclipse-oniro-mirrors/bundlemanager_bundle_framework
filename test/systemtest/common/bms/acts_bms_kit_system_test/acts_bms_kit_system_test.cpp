@@ -6536,7 +6536,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetDeveloperIds_0001, Function | MediumTest | Lev
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
-    std::string appDistributionType = "none";
+    std::string appDistributionType = "invalidType";
     std::vector<std::string> developerIdList;
     auto res = bundleMgrProxy->GetDeveloperIds(appDistributionType, developerIdList, USERID);
     EXPECT_EQ(res, ERR_OK);

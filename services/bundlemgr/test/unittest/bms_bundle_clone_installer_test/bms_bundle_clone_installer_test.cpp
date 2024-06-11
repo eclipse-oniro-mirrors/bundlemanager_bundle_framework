@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,6 +23,7 @@
 #include "bundle_installer.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
+#include "scope_guard.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -48,7 +49,7 @@ public:
     void TearDown() override;
     void SetInnerBundleInfo(const std::string &bundleName);
     BundlePackInfo CreateBundlePackInfo(const std::string &bundleName);
-    void InstallApp(const std::string bundleName);
+    void DeleteBundle(const std::string &bundleName);
     void SetBundleDataMgr();
     void UnsetBundleDataMgr();
     void SetUserIdToDataMgr(const std::int32_t userId);
@@ -126,6 +127,16 @@ void BmsBundleCloneInstallerTest::SetInnerBundleInfo(const std::string &bundleNa
     dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
 }
 
+void BmsBundleCloneInstallerTest::DeleteBundle(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        return;
+    }
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START);
+    dataMgr->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS);
+}
+
 void BmsBundleCloneInstallerTest::SetUp()
 {
     bundleCloneInstall_ = std::make_shared<AppExecFwk::BundleCloneInstaller>();
@@ -168,6 +179,7 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_001, TestSize.
         ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
 
     SetInnerBundleInfo(BUNDLE_NAME);
+    ScopeGuard deleteGuard([this] { DeleteBundle(BUNDLE_NAME); });
     EXPECT_EQ(bundleCloneInstall_->ProcessCloneBundleInstall(BUNDLE_NAME, -1, appIdx_),
         ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST);
 
