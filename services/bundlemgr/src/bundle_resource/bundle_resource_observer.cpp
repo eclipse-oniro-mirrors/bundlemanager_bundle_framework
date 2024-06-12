@@ -38,15 +38,12 @@ BundleResourceObserver::~BundleResourceObserver()
 void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configuration& configuration)
 {
     APP_LOGI("called");
-    uint32_t type = 0;
     std::string colorMode = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE);
     if (!colorMode.empty() && (colorMode != BundleSystemState::GetInstance().GetSystemColorMode())) {
         APP_LOGI("OnSystemColorModeChanged colorMode:%{public}s", colorMode.c_str());
-        type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE) :
-            (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
-        std::thread colorModeChangedThread(OnSystemColorModeChanged, colorMode, type);
-        colorModeChangedThread.detach();
+        OnSystemColorModeChanged(colorMode, static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_COLOR_MODE_CHANGE));
     }
+    uint32_t type = 0;
     std::string language = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE);
     if (!language.empty() && (language != BundleSystemState::GetInstance().GetSystemLanguage())) {
         APP_LOGI("OnSystemLanguageChange language:%{public}s", language.c_str());

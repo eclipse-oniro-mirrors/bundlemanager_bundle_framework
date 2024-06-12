@@ -87,8 +87,10 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
-        if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, resourceInfos[0].appIndexes_)) {
-            APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
+        for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
+            if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
+                APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
+            }
         }
     }
     APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
@@ -140,8 +142,8 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     for (const auto &item : resourceInfosMap) {
         if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
             APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
-            if (!AddCloneBundleResourceInfo(item.first, item.second[0].appIndexes_)) {
-                APP_LOGW("bundleName:%{public}s add clone resource failed", item.second[0].bundleName_.c_str());
+            for (const int32_t appIndex : item.second[0].appIndexes_) {
+                UpdateCloneBundleResourceInfo(item.first, appIndex, type);
             }
         }
     }
@@ -213,33 +215,15 @@ void BundleResourceManager::InnerProcessResourceInfoByResourceUpdateType(
     APP_LOGI("current resource update, code:%{public}u", type);
     switch (type) {
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE) : {
-            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
-                for (auto &resourceInfo : iter->second) {
-                    resourceInfo.iconNeedParse_ = false;
-                }
-            }
-            needDeleteAllResource = false;
+            InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap, needDeleteAllResource);
             break;
         }
         case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) : {
-            // judge whether the bundle theme exists
-            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-                if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-                    !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
-                    iter = resourceInfosMap.erase(iter);
-                } else {
-                    ++iter;
-                }
-            }
-            // process labelNeedParse_
-            for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
-                for (auto &resourceInfo : iter->second) {
-                    // theme changed no need parse label
-                    resourceInfo.labelNeedParse_ = false;
-                    resourceInfo.label_ = Constants::EMPTY_STRING;
-                }
-            }
-            needDeleteAllResource = false;
+            InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, userId, needDeleteAllResource);
+            break;
+        }
+        case static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE) : {
+            InnerProcessResourceInfoByUserIdChanged(resourceInfosMap, userId, needDeleteAllResource);
             break;
         }
         default: {
@@ -247,6 +231,62 @@ void BundleResourceManager::InnerProcessResourceInfoByResourceUpdateType(
             break;
         }
     }
+}
+
+void BundleResourceManager::InnerProcessResourceInfoBySystemLanguageChanged(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    bool &needDeleteAllResource)
+{
+    for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
+        for (auto &resourceInfo : iter->second) {
+            resourceInfo.iconNeedParse_ = false;
+        }
+    }
+    needDeleteAllResource = false;
+}
+
+void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    const int32_t userId, bool &needDeleteAllResource)
+{
+    // judge whether the bundle theme exists
+    for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
+        if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+            !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+            iter = resourceInfosMap.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+    // process labelNeedParse_
+    for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
+        for (auto &resourceInfo : iter->second) {
+            // theme changed no need parse label
+            resourceInfo.labelNeedParse_ = false;
+            resourceInfo.label_ = Constants::EMPTY_STRING;
+        }
+    }
+    needDeleteAllResource = false;
+}
+
+void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
+    std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    const int32_t userId, bool &needDeleteAllResource)
+{
+    std::vector<std::string> existResourceNames;
+    GetAllResourceName(existResourceNames);
+    if (existResourceNames.empty()) {
+        needDeleteAllResource = true;
+        return;
+    }
+    for (const auto &name : existResourceNames) {
+        if (resourceInfosMap.find(name) == resourceInfosMap.end()) {
+            if (!DeleteResourceInfo(name)) {
+                APP_LOGW("delete name:%{public}s failed", name.c_str());
+            }
+        }
+    }
+    needDeleteAllResource = false;
 }
 
 bool BundleResourceManager::AddResourceInfosByMap(
@@ -292,7 +332,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
             std::vector<ResourceInfo> resourceInfos = resourceInfosMap[bundleName];
             BundleResourceParser parser;
             parser.ParseResourceInfos(userId, resourceInfos);
-            bundleResourceRdb_->AddResourceForSystemStateChanged(resourceInfos);
+            bundleResourceRdb_->UpdateResourceForSystemStateChanged(resourceInfos);
         };
         threadPool->AddTask(task);
     }
@@ -529,22 +569,6 @@ bool BundleResourceManager::DeleteCloneBundleResourceInfo(const std::string &bun
     return bundleResourceRdb_->DeleteResourceInfo(info.GetKey());
 }
 
-bool BundleResourceManager::AddCloneBundleResourceInfo(
-    const std::string &bundleName,
-    const std::vector<int32_t> appIndexes)
-{
-    APP_LOGD("start add clone resource info, bundleName:%{public}s", bundleName.c_str());
-    bool result = true;
-    for (const auto index : appIndexes) {
-        result = AddCloneBundleResourceInfo(bundleName, index);
-        if (!result) {
-            APP_LOGW("bundleName:%{public}s appIndex:%{public}d add clone bundle resource failed", bundleName.c_str(),
-                index);
-        }
-    }
-    return result;
-}
-
 bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
     const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos)
 {
@@ -574,6 +598,40 @@ bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::strin
     }
     APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
         resourceInfos.size());
+    return true;
+}
+
+bool BundleResourceManager::UpdateCloneBundleResourceInfo(
+    const std::string &bundleName,
+    const int32_t appIndex,
+    const uint32_t type)
+{
+    APP_LOGD("start update clone bundle resource info, bundleName:%{public}s appIndex:%{public}d",
+        bundleName.c_str(), appIndex);
+    // 1. get main bundle resource info
+    std::vector<ResourceInfo> resourceInfos;
+    if (!GetBundleResourceInfoForCloneBundle(bundleName, appIndex, resourceInfos)) {
+        APP_LOGE("add clone bundle resource failed, bundleName:%{public}s appIndex:%{public}d",
+            bundleName.c_str(), appIndex);
+        return false;
+    }
+    // 2. need to process base icon and badge icon when userId or theme changed
+    if (((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) ==
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE)) ||
+        ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE)) ==
+        static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE))) {
+        BundleResourceParser parser;
+        if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+            APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
+                bundleName.c_str(), appIndex);
+        }
+    }
+    // 3. save clone bundle resource info
+    if (!bundleResourceRdb_->UpdateResourceForSystemStateChanged(resourceInfos)) {
+        APP_LOGE("add resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        return false;
+    }
+    APP_LOGD("end, add clone bundle resource succeed");
     return true;
 }
 } // AppExecFwk

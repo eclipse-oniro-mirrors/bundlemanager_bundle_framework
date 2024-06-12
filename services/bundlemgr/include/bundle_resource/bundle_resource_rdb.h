@@ -52,7 +52,7 @@ public:
     bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
 
-    bool AddResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos);
+    bool UpdateResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos);
 
     bool GetCurrentSystemState(std::string &systemState);
 
