@@ -100,7 +100,7 @@ private:
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;
     std::mutex appRunningControlMutex_;
     std::unordered_map<std::string, std::vector<DisposedRule>> abilityRunningControlRuleCache_;
-    std::shared_mutex abilityRunningControlRuleMutex_;
+    std::mutex abilityRunningControlRuleMutex_;
 };
 } // AppExecFwk
 } // OHOS

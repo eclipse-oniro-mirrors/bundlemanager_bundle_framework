@@ -345,7 +345,7 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     }
     std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
     {
-        std::unique_lock<std::shared_mutex> lock(abilityRunningControlRuleMutex_);
+        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
         auto iter = abilityRunningControlRuleCache_.find(key);
         if (iter != abilityRunningControlRuleCache_.end()) {
             abilityRunningControlRuleCache_.erase(iter);
@@ -376,7 +376,7 @@ ErrCode AppControlManager::DeleteDisposedRule(
     }
     std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
     {
-        std::unique_lock<std::shared_mutex> lock(abilityRunningControlRuleMutex_);
+        std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
         auto iter = abilityRunningControlRuleCache_.find(key);
         if (iter != abilityRunningControlRuleCache_.end()) {
             abilityRunningControlRuleCache_.erase(iter);
@@ -431,7 +431,7 @@ void AppControlManager::DeleteAppRunningRuleCache(std::string &key)
 
 void AppControlManager::DeleteAbilityRunningRuleCache(std::string &key)
 {
-    std::unique_lock<std::shared_mutex> lock(abilityRunningControlRuleMutex_);
+    std::lock_guard<std::mutex> cacheLock(abilityRunningControlRuleMutex_);
     auto cacheIter = abilityRunningControlRuleCache_.find(key);
     if (cacheIter != abilityRunningControlRuleCache_.end()) {
         abilityRunningControlRuleCache_.erase(cacheIter);
@@ -465,7 +465,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId) + std::string("_")
         + std::to_string(appIndex);
-    std::shared_lock<std::shared_mutex> lock(abilityRunningControlRuleMutex_);
+    std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
     auto iter = abilityRunningControlRuleCache_.find(key);
     if (iter != abilityRunningControlRuleCache_.end()) {
         disposedRules = iter->second;
