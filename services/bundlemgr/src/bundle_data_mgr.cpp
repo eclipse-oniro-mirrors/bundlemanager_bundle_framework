@@ -2303,6 +2303,26 @@ ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
     return ret;
 }
 
+void BundleDataMgr::GetCloneAppInfo(const InnerBundleInfo &info, int32_t userId, int32_t flags,
+    std::vector<ApplicationInfo> &appInfos) const
+{
+    std::vector<int32_t> appIndexVec = GetCloneAppIndexesNoLock(info.GetBundleName(), userId);
+    for (int32_t appIndex : appIndexVec) {
+        bool isEnabled = false;
+        ErrCode ret = info.GetApplicationEnabledV9(userId, isEnabled, appIndex);
+        if (ret != ERR_OK) {
+            continue;
+        }
+        if (isEnabled || (static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)) {
+            ApplicationInfo cloneAppInfo;
+            info.GetApplicationInfo(flags, userId, cloneAppInfo, appIndex);
+            if (cloneAppInfo.appIndex == appIndex) {
+                appInfos.emplace_back(cloneAppInfo);
+            }
+        }
+    }
+}
+
 bool BundleDataMgr::GetApplicationInfos(
     int32_t flags, const int userId, std::vector<ApplicationInfo> &appInfos) const
 {
@@ -2317,7 +2337,6 @@ bool BundleDataMgr::GetApplicationInfos(
         return false;
     }
 
-    bool find = false;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
@@ -2325,19 +2344,16 @@ bool BundleDataMgr::GetApplicationInfos(
             continue;
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
-        if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
-            && !info.GetApplicationEnabled(responseUserId)) {
-            LOG_D(BMS_TAG_QUERY_APPLICATION, "bundleName: %{public}s userId: %{public}d incorrect",
-                info.GetBundleName().c_str(), responseUserId);
-            continue;
+        if (info.GetApplicationEnabled(responseUserId) ||
+            (static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)) {
+            ApplicationInfo appInfo;
+            info.GetApplicationInfo(flags, responseUserId, appInfo);
+            appInfos.emplace_back(appInfo);
         }
-        ApplicationInfo appInfo;
-        info.GetApplicationInfo(flags, responseUserId, appInfo);
-        appInfos.emplace_back(appInfo);
-        find = true;
+        GetCloneAppInfo(info, responseUserId, flags, appInfos);
     }
     LOG_D(BMS_TAG_QUERY_APPLICATION, "get installed bundles success");
-    return find;
+    return !appInfos.empty();
 }
 
 bool BundleDataMgr::UpateExtResources(const std::string &bundleName,
@@ -2418,6 +2434,27 @@ bool BundleDataMgr::UpateCurDynamicIconModule(
     return true;
 }
 
+void BundleDataMgr::GetCloneAppInfoV9(const InnerBundleInfo &info, int32_t userId, int32_t flags,
+    std::vector<ApplicationInfo> &appInfos) const
+{
+    std::vector<int32_t> appIndexVec = GetCloneAppIndexesNoLock(info.GetBundleName(), userId);
+    for (int32_t appIndex : appIndexVec) {
+        bool isEnabled = false;
+        ErrCode ret = info.GetApplicationEnabledV9(userId, isEnabled, appIndex);
+        if (ret != ERR_OK) {
+            continue;
+        }
+        if (isEnabled || (static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+            ApplicationInfo cloneAppInfo;
+            ret = info.GetApplicationInfoV9(flags, userId, cloneAppInfo, appIndex);
+            if (ret == ERR_OK) {
+                appInfos.emplace_back(cloneAppInfo);
+            }
+        }
+    }
+}
+
 ErrCode BundleDataMgr::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos) const
 {
@@ -2438,18 +2475,15 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
             continue;
         }
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
-        if (!(static_cast<uint32_t>(flags) &
-            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
-            && !info.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
-                info.GetBundleName().c_str(), responseUserId);
-            continue;
+        if (info.GetApplicationEnabled(responseUserId) ||
+            (static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))) {
+            ApplicationInfo appInfo;
+            if (info.GetApplicationInfoV9(flags, responseUserId, appInfo) == ERR_OK) {
+                appInfos.emplace_back(appInfo);
+            }
         }
-        ApplicationInfo appInfo;
-        if (info.GetApplicationInfoV9(flags, responseUserId, appInfo) != ERR_OK) {
-            continue;
-        }
-        appInfos.emplace_back(appInfo);
+        GetCloneAppInfoV9(info, responseUserId, flags, appInfos);
     }
     APP_LOGD("get installed bundles success");
     return ERR_OK;
