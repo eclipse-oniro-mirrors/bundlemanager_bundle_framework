@@ -85,8 +85,6 @@ public:
 
     bool AddCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
-    bool AddCloneBundleResourceInfo(const std::string &bundleName, const std::vector<int32_t> appIndexes);
-
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
 private:
@@ -111,8 +109,22 @@ private:
 
     void SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type);
 
+    void InnerProcessResourceInfoBySystemLanguageChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        bool &needDeleteAllResource);
+
+    void InnerProcessResourceInfoBySystemThemeChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const int32_t userId, bool &needDeleteAllResource);
+
+    void InnerProcessResourceInfoByUserIdChanged(
+        std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const int32_t userId, bool &needDeleteAllResource);
+
     bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
         const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);
+
+    bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex, const uint32_t type);
 
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;

@@ -458,7 +458,7 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
     return true;
 }
 
-bool BundleResourceRdb::AddResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos)
+bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos)
 {
     std::string systemState = BundleSystemState::GetInstance().ToString();
     int64_t timeStamp = BundleUtil::GetCurrentTimeMs();
