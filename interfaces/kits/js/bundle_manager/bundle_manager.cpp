@@ -3482,7 +3482,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetApplicationInfo failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+        APP_LOGE_NOFUNC("GetApplicationInfo failed, bundleName: %{public}s, flags: %{public}d, userId: %{public}d",
             bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
@@ -4537,7 +4537,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
     if (ret != SUCCESS) {
-        APP_LOGE("GetAdditionalInfo call error, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGE_NOFUNC("GetAdditionalInfo %{public}s error", bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

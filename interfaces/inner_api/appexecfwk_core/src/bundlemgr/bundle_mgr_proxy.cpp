@@ -4492,7 +4492,7 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply ErrCode : %{public}d", ret);
+        APP_LOGE_NOFUNC("reply ErrCode: %{public}d", ret);
         return ret;
     }
     size_t dataSize = reply.ReadUint32();

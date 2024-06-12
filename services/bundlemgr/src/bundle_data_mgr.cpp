@@ -3635,7 +3635,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     APP_LOGD("GetInnerBundleInfoWithFlags: %{public}s", bundleName.c_str());
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW("bundleName %{public}s not find", bundleName.c_str());
+        APP_LOGW_NOFUNC("%{public}s not find", bundleName.c_str());
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
@@ -4701,7 +4701,7 @@ bool BundleDataMgr::GetInnerBundleUserInfos(
 
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundleName:%{public}s not exist", bundleName.c_str());
+        APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
         return false;
     }
     if (infoItem->second.IsDisabled()) {
@@ -6471,7 +6471,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("bundleName: %{public}s does not exist", bundleName.c_str());
+        APP_LOGW_NOFUNC("%{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {

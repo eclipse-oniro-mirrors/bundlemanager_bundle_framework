@@ -157,7 +157,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     if (compileMode == ServiceConstants::COMPILE_PARTIAL) {
         aotArgs.arkProfilePath = GetArkProfilePath(aotArgs.bundleName, aotArgs.moduleName);
         if (aotArgs.arkProfilePath.empty()) {
-            APP_LOGI("compile mode is partial, but ap not exist, no need to AOT");
+            APP_LOGD("compile mode is partial, but ap not exist, no need to AOT");
             return std::nullopt;
         }
     }
@@ -212,7 +212,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
 ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode)
 {
     if (!aotArgs) {
-        APP_LOGI("aotArgs empty");
+        APP_LOGD("aotArgs empty");
         return ERR_APPEXECFWK_AOT_ARGS_EMPTY;
     }
     ErrCode ret = ERR_OK;

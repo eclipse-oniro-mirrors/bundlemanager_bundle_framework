@@ -2745,7 +2745,7 @@ int32_t BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, con
         uid = bundleInfo.uid;
         APP_LOGD("get bundle uid success, uid is %{public}d", uid);
     } else {
-        APP_LOGE("can not get bundleInfo uid");
+        APP_LOGE_NOFUNC("get bundleInfo uid fail");
     }
     return uid;
 }
