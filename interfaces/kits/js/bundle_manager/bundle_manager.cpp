@@ -5225,8 +5225,11 @@ static ErrCode InnerGetAllAppCloneBundleInfo(const std::string &bundleName, int3
     }
     // handle clone apps
     std::vector<int32_t> appIndexes;
-    ret = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
-    if (ret != ERR_OK) {
+    ErrCode getCloneIndexesRet = iBundleMgr->GetCloneAppIndexes(bundleName, appIndexes, userId);
+    if (getCloneIndexesRet != ERR_OK) {
+        if (ret == ERR_OK) {
+            return SUCCESS;
+        }
         return CommonFunc::ConvertErrCode(ret);
     }
     for (int32_t appIndex : appIndexes) {
