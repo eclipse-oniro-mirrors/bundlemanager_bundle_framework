@@ -410,7 +410,8 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     // write shared bundles
-    for (size_t i = 0; i < installParam.sharedBundleDirPaths.size(); ++i) {
+    uint32_t size = static_cast<uint32_t>(installParam.sharedBundleDirPaths.size());
+    for (uint32_t i = 0; i < size; ++i) {
         realPaths.clear();
         std::vector<std::string> sharedBundleDir = {installParam.sharedBundleDirPaths[i]};
         if (!BundleFileUtil::CheckFilePath(sharedBundleDir, realPaths)) {
