@@ -5733,7 +5733,9 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     bool extensionRet =
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
     APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}zu", extensionRet, extensionInfos.size());
-    return abilityRet || extensionRet;
+
+    ImplicitQueryCloneAbilityInfos(want, flags, userId, abilityInfos);
+    return abilityRet || extensionRet || abilityInfos.size() > 0;
 }
 
 bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
