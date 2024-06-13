@@ -250,7 +250,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     if (!InstalldOperator::RenameDir(oldPath, newPath)) {
-        LOG_E(BMS_TAG_INSTALLD, "rename module dir %{public}s to %{public}s failed errno:%{public}d",
+        LOG_D(BMS_TAG_INSTALLD, "rename module dir %{public}s to %{public}s failed errno:%{public}d",
             oldPath.c_str(), newPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED;
     }

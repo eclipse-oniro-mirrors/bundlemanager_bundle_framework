@@ -21,6 +21,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_file_util.h"
@@ -38,12 +39,12 @@ const std::string SEPARATOR = "/";
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)
 {
-    APP_LOGD("create bundle installer proxy instance");
+    LOG_D(BMS_TAG_INSTALLER, "create bundle installer proxy instance");
 }
 
 BundleInstallerProxy::~BundleInstallerProxy()
 {
-    APP_LOGD("destroy bundle installer proxy instance");
+    LOG_D(BMS_TAG_INSTALLER, "destroy bundle installer proxy instance");
 }
 
 bool BundleInstallerProxy::Install(
@@ -59,11 +60,11 @@ bool BundleInstallerProxy::Install(
     PARCEL_WRITE(data, Parcelable, &installParam);
 
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to install, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to install, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -87,11 +88,11 @@ bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePat
     PARCEL_WRITE(data, Parcelable, &installParam);
 
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to install, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to install, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -111,11 +112,11 @@ bool BundleInstallerProxy::Recover(const std::string &bundleName,
     PARCEL_WRITE(data, Parcelable, &installParam);
 
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to install, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to install, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -135,11 +136,11 @@ bool BundleInstallerProxy::Uninstall(
     PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     PARCEL_WRITE(data, Parcelable, &installParam);
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -159,11 +160,11 @@ bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::s
     PARCEL_WRITE(data, String16, Str8ToStr16(modulePackage));
     PARCEL_WRITE(data, Parcelable, &installParam);
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -179,11 +180,11 @@ bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
     PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
     PARCEL_WRITE(data, Parcelable, &uninstallParam);
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to uninstall, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
     return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM, data, reply, option);
@@ -198,26 +199,26 @@ ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, i
     MessageOption option(MessageOption::TF_SYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to InstallSandboxApp due to write MessageParcel fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        APP_LOGE("failed to InstallSandboxApp due to write bundleName fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write bundleName fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(dlpType)) {
-        APP_LOGE("failed to InstallSandboxApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write appIndex fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to InstallSandboxApp due to write userId fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write userId fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
     auto ret =
         SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_SANDBOX_APP, data, reply, option);
     if (!ret) {
-        APP_LOGE("install sandbox app failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "install sandbox app failed due to send request fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR;
     }
 
@@ -236,26 +237,26 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
     MessageOption option(MessageOption::TF_SYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to InstallSandboxApp due to write MessageParcel fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        APP_LOGE("failed to InstallSandboxApp due to write bundleName fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write bundleName fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("failed to InstallSandboxApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write appIndex fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to InstallSandboxApp due to write userId fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallSandboxApp due to write userId fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
     auto ret =
         SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_SANDBOX_APP, data, reply, option);
     if (!ret) {
-        APP_LOGE("uninstall sandbox app failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "uninstall sandbox app failed due to send request fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR;
     }
     return reply.ReadInt32();
@@ -264,63 +265,63 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
 sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
-    APP_LOGD("create stream installer begin");
+    LOG_D(BMS_TAG_INSTALLER, "create stream installer begin");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
 
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to install, for receiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to install, for receiver is nullptr");
         return nullptr;
     }
 
     bool ret = data.WriteInterfaceToken(GetDescriptor());
     if (!ret) {
-        APP_LOGE("fail to write interface token into the parcel!");
+        LOG_E(BMS_TAG_INSTALLER, "fail to write interface token into the parcel!");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     ret = data.WriteParcelable(&installParam);
     if (!ret) {
-        APP_LOGE("fail to write parameter into the parcel!");
+        LOG_E(BMS_TAG_INSTALLER, "fail to write parameter into the parcel!");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     bool res = SendInstallRequest(BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER, data, reply, option);
     if (!res) {
-        APP_LOGE("CreateStreamInstaller failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed due to send request fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("CreateStreamInstaller failed");
+        LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed");
         return nullptr;
     }
     uint32_t streamInstallerId = reply.ReadUint32();
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("CreateStreamInstaller create nullptr remote object");
+        LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller create nullptr remote object");
         return nullptr;
     }
     sptr<IBundleStreamInstaller> streamInstaller = iface_cast<IBundleStreamInstaller>(object);
     if (streamInstaller == nullptr) {
-        APP_LOGE("CreateStreamInstaller failed");
+        LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed");
         return streamInstaller;
     }
     streamInstaller->SetInstallerId(streamInstallerId);
-    APP_LOGD("create stream installer successfully");
+    LOG_D(BMS_TAG_INSTALLER, "create stream installer successfully");
     return streamInstaller;
 }
 
 bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
-    APP_LOGD("destory stream installer begin");
+    LOG_D(BMS_TAG_INSTALLER, "destory stream installer begin");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     MessageParcel reply;
@@ -330,10 +331,10 @@ bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstaller
     PARCEL_WRITE(data, Uint32, streamInstallerId);
     bool res = SendInstallRequest(BundleInstallerInterfaceCode::DESTORY_STREAM_INSTALLER, data, reply, option);
     if (!res) {
-        APP_LOGE("CreateStreamInstaller failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "CreateStreamInstaller failed due to send request fail");
         return false;
     }
-    APP_LOGD("destory stream installer successfully");
+    LOG_D(BMS_TAG_INSTALLER, "destory stream installer successfully");
     return true;
 }
 
@@ -349,11 +350,11 @@ bool BundleInstallerProxy::UninstallAndRecover(const std::string &bundleName, co
     PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     PARCEL_WRITE(data, Parcelable, &installParam);
     if (statusReceiver == nullptr) {
-        APP_LOGE("fail to uninstall quick fix, for statusReceiver is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to uninstall quick fix, for statusReceiver is nullptr");
         return false;
     }
     if (!data.WriteRemoteObject(statusReceiver->AsObject())) {
-        APP_LOGE("write parcel failed");
+        LOG_E(BMS_TAG_INSTALLER, "write parcel failed");
         return false;
     }
 
@@ -364,21 +365,21 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("stream install start");
+    LOG_D(BMS_TAG_INSTALLER, "stream install start");
     if (statusReceiver == nullptr) {
-        APP_LOGE("stream install failed due to nullptr status receiver");
+        LOG_E(BMS_TAG_INSTALLER, "stream install failed due to nullptr status receiver");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
     std::vector<std::string> realPaths;
     if (!bundleFilePaths.empty() && !BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
-        APP_LOGE("stream install failed due to check file failed");
+        LOG_E(BMS_TAG_INSTALLER, "stream install failed due to check file failed");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
     sptr<IBundleStreamInstaller> streamInstaller = CreateStreamInstaller(installParam, statusReceiver);
     if (streamInstaller == nullptr) {
-        APP_LOGE("stream install failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "stream install failed due to nullptr stream installer");
         return ERR_OK;
     }
     ErrCode res = ERR_OK;
@@ -387,7 +388,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         res = WriteHapFileToStream(streamInstaller, path);
         if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            APP_LOGE("WriteHapFileToStream failed due to %{public}d", res);
+            LOG_E(BMS_TAG_INSTALLER, "WriteHapFileToStream failed due to %{public}d", res);
             return res;
         }
     }
@@ -395,18 +396,18 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     if (!realPaths.empty() && !installParam.verifyCodeParams.empty() &&
         (realPaths.size() != installParam.verifyCodeParams.size())) {
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-        APP_LOGE("size of hapFiles is not same with size of verifyCodeParams");
+        LOG_E(BMS_TAG_INSTALLER, "size of hapFiles is not same with size of verifyCodeParams");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     if ((res = CopySignatureFileToService(streamInstaller, installParam)) != ERR_OK) {
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-        APP_LOGE("CopySignatureFileToService failed due to %{public}d", res);
+        LOG_E(BMS_TAG_INSTALLER, "CopySignatureFileToService failed due to %{public}d", res);
         return res;
     }
     // copy pgo file to bms service
     res = CopyPgoFileToService(streamInstaller, installParam);
     if (res != ERR_OK) {
-        APP_LOGW("CopyPgoFileToService failed due to %{public}d", res);
+        LOG_W(BMS_TAG_INSTALLER, "CopyPgoFileToService failed due to %{public}d", res);
     }
 
     // write shared bundles
@@ -415,7 +416,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         realPaths.clear();
         std::vector<std::string> sharedBundleDir = {installParam.sharedBundleDirPaths[i]};
         if (!BundleFileUtil::CheckFilePath(sharedBundleDir, realPaths)) {
-            APP_LOGE("stream install failed due to check shared package files failed");
+            LOG_E(BMS_TAG_INSTALLER, "stream install failed due to check shared package files failed");
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
@@ -423,7 +424,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
             res = WriteSharedFileToStream(streamInstaller, path, i);
             if (res != ERR_OK) {
                 DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-                APP_LOGE("WriteSharedFileToStream(sharedBundleDirPaths) failed due to %{public}d", res);
+                LOG_E(BMS_TAG_INSTALLER, "WriteSharedFileToStream(sharedBundleDirPaths) failed due to %{public}d", res);
                 return res;
             }
         }
@@ -431,37 +432,37 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
 
     // start install haps
     if (!streamInstaller->Install()) {
-        APP_LOGE("stream install failed");
+        LOG_E(BMS_TAG_INSTALLER, "stream install failed");
         DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    APP_LOGD("stream install end");
+    LOG_D(BMS_TAG_INSTALLER, "stream install end");
     return ERR_OK;
 }
 
 ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputFd)
 {
-    APP_LOGD("write file stream to service terminal start");
+    LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal start");
     std::string realPath;
     if (!PathToRealPath(path, realPath)) {
-        APP_LOGE("file is not real path, file path: %{private}s", path.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "file is not real path, file path: %{private}s", path.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     int32_t inputFd = open(realPath.c_str(), O_RDONLY);
     if (inputFd < 0) {
-        APP_LOGE("write file to stream failed due to open the hap file, errno:%{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to open the hap file, errno:%{public}d", errno);
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
     struct stat sourceStat;
     if (fstat(inputFd, &sourceStat) == -1) {
-        APP_LOGE("fstat failed, errno : %{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLER, "fstat failed, errno : %{public}d", errno);
         close(inputFd);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
     if (sourceStat.st_size < 0) {
-        APP_LOGE("invalid st_size");
+        LOG_E(BMS_TAG_INSTALLER, "invalid st_size");
         close(inputFd);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
     }
@@ -474,7 +475,7 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     }
 
     if (singleTransfer == -1 || transferCount != static_cast<size_t>(sourceStat.st_size)) {
-        APP_LOGE("sendfile failed, errno : %{public}d, send count : %{public}zu , file size : %{public}zu",
+        LOG_E(BMS_TAG_INSTALLER, "errno: %{public}d, send count: %{public}zu, file size: %{public}zu",
             errno, transferCount, static_cast<size_t>(sourceStat.st_size));
         close(inputFd);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
@@ -483,7 +484,7 @@ ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputF
     close(inputFd);
     fsync(outputFd);
 
-    APP_LOGD("write file stream to service terminal end");
+    LOG_D(BMS_TAG_INSTALLER, "write file stream to service terminal end");
     return ERR_OK;
 }
 
@@ -491,21 +492,21 @@ ErrCode BundleInstallerProxy::WriteHapFileToStream(sptr<IBundleStreamInstaller> 
     const std::string &path)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     std::string fileName;
     ErrCode ret = ERR_OK;
     ret = GetFileNameByFilePath(path, fileName);
     if (ret != ERR_OK) {
-        APP_LOGE("invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "invalid file path");
         return ret;
     }
-    APP_LOGD("write file stream of hap path %{public}s", path.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "write file stream of hap path %{public}s", path.c_str());
 
     int32_t outputFd = streamInstaller->CreateStream(fileName);
     if (outputFd < 0) {
-        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
@@ -519,21 +520,21 @@ ErrCode BundleInstallerProxy::WriteSignatureFileToStream(sptr<IBundleStreamInsta
     const std::string &path, const std::string &moduleName)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     std::string fileName;
     ErrCode ret = ERR_OK;
     ret = GetFileNameByFilePath(path, fileName);
     if (ret != ERR_OK) {
-        APP_LOGE("invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "invalid file path");
         return ret;
     }
-    APP_LOGD("write file stream of signature path %{public}s", path.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "write file stream of signature path %{public}s", path.c_str());
 
     int32_t outputFd = streamInstaller->CreateSignatureFileStream(moduleName, fileName);
     if (outputFd < 0) {
-        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
@@ -547,7 +548,7 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
     const std::string &path, uint32_t index)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
@@ -555,14 +556,14 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
     ErrCode ret = ERR_OK;
     ret = GetFileNameByFilePath(path, hspName);
     if (ret != ERR_OK) {
-        APP_LOGE("invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "invalid file path");
         return ret;
     }
 
-    APP_LOGD("write file stream of shared path %{public}s", path.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "write file stream of shared path %{public}s", path.c_str());
     int32_t outputFd = streamInstaller->CreateSharedBundleStream(hspName, index);
     if (outputFd < 0) {
-        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
@@ -576,7 +577,7 @@ ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> 
     const std::string &path, const std::string &moduleName)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
@@ -584,14 +585,14 @@ ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> 
     ErrCode ret = ERR_OK;
     ret = GetFileNameByFilePath(path, fileName);
     if (ret != ERR_OK) {
-        APP_LOGE("invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "invalid file path");
         return ret;
     }
-    APP_LOGD("write file stream of pgo path %{public}s", path.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "write file stream of pgo path %{public}s", path.c_str());
     
     int32_t outputFd = streamInstaller->CreatePgoFileStream(moduleName, fileName);
     if (outputFd < 0) {
-        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
@@ -605,7 +606,7 @@ ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInsta
     const InstallParam &installParam)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("copy file failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "copy file failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
@@ -615,14 +616,14 @@ ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInsta
     for (const auto &param : installParam.verifyCodeParams) {
         std::string realPath;
         if (param.first.empty() || !BundleFileUtil::CheckFilePath(param.second, realPath)) {
-            APP_LOGE("CheckFilePath signature file dir %{public}s failed", param.second.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "CheckFilePath signature file dir %{public}s failed", param.second.c_str());
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
             return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
         }
         ErrCode res = WriteSignatureFileToStream(streamInstaller, realPath, param.first);
         if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            APP_LOGE("WriteSignatureFileToStream failed due to %{public}d", res);
+            LOG_E(BMS_TAG_INSTALLER, "WriteSignatureFileToStream failed due to %{public}d", res);
             return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
         }
     }
@@ -634,7 +635,7 @@ ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> 
     const InstallParam &installParam)
 {
     if (streamInstaller == nullptr) {
-        APP_LOGE("copy file failed due to nullptr stream installer");
+        LOG_E(BMS_TAG_INSTALLER, "copy file failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (installParam.pgoParams.empty()) {
@@ -643,12 +644,12 @@ ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> 
     for (const auto &param : installParam.pgoParams) {
         std::string realPath;
         if (param.first.empty() || !BundleFileUtil::CheckFilePath(param.second, realPath)) {
-            APP_LOGW("CheckFilePath pgo file path %{public}s failed", param.second.c_str());
+            LOG_W(BMS_TAG_INSTALLER, "CheckFilePath pgo file path %{public}s failed", param.second.c_str());
             continue;
         }
         ErrCode res = WritePgoFileToStream(streamInstaller, realPath, param.first);
         if (res != ERR_OK) {
-            APP_LOGW("WritePgoFileToStream failed due to %{public}d", res);
+            LOG_W(BMS_TAG_INSTALLER, "WritePgoFileToStream failed due to %{public}d", res);
             continue;
         }
     }
@@ -660,12 +661,12 @@ ErrCode BundleInstallerProxy::GetFileNameByFilePath(const std::string &filePath,
 {
     size_t pos = filePath.find_last_of(SEPARATOR);
     if (pos == std::string::npos) {
-        APP_LOGE("write file to stream failed due to invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file path");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     fileName = filePath.substr(pos + 1);
     if (fileName.empty()) {
-        APP_LOGE("write file to stream failed due to invalid file path");
+        LOG_E(BMS_TAG_INSTALLER, "write file to stream failed due to invalid file path");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     return ERR_OK;
@@ -676,13 +677,13 @@ bool BundleInstallerProxy::SendInstallRequest(
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail to uninstall, for Remote() is nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "fail to uninstall, for Remote() is nullptr");
         return false;
     }
 
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGE("fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
+        LOG_E(BMS_TAG_INSTALLER, "fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
         return false;
     }
     return true;
@@ -696,26 +697,26 @@ ErrCode BundleInstallerProxy::InstallCloneApp(const std::string &bundleName, int
     MessageOption option(MessageOption::TF_SYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to InstallCloneApp due to write MessageParcel fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        APP_LOGE("failed to InstallCloneApp due to write bundleName fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write bundleName fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to InstallCloneApp due to write userId fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write userId fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("failed to InstallCloneApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to InstallCloneApp due to write appIndex fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_WRITE_PARCEL_ERROR;
     }
 
     auto ret =
         SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_CLONE_APP, data, reply, option);
     if (!ret) {
-        APP_LOGE("install clone app failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "install clone app failed due to send request fail");
         return ERR_APPEXECFWK_CLONE_INSTALL_SEND_REQUEST_ERROR;
     }
 
@@ -734,26 +735,26 @@ ErrCode BundleInstallerProxy::UninstallCloneApp(const std::string &bundleName, i
     MessageOption option(MessageOption::TF_SYNC);
 
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to UninstallCloneApp due to write MessageParcel fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallCloneApp due to write MessageParcel fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteString16(Str8ToStr16(bundleName))) {
-        APP_LOGE("failed to UninstallCloneApp due to write bundleName fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallCloneApp due to write bundleName fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to UninstallCloneApp due to write userId fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallCloneApp due to write userId fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        APP_LOGE("failed to UninstallCloneApp due to write appIndex fail");
+        LOG_E(BMS_TAG_INSTALLER, "failed to UninstallCloneApp due to write appIndex fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_WRITE_PARCEL_ERROR;
     }
 
     auto ret =
         SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP, data, reply, option);
     if (!ret) {
-        APP_LOGE("uninstall clone app failed due to send request fail");
+        LOG_E(BMS_TAG_INSTALLER, "uninstall clone app failed due to send request fail");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_SEND_REQUEST_ERROR;
     }
     return reply.ReadInt32();

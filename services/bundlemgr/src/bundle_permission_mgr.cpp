@@ -15,6 +15,7 @@
 
 #include "bundle_permission_mgr.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -44,7 +45,7 @@ bool BundlePermissionMgr::Init()
     std::vector<std::string> rootDirList;
     BMSEventHandler::GetPreInstallRootDirList(rootDirList);
     if (rootDirList.empty()) {
-        APP_LOGE("rootDirList is empty");
+        LOG_E(BMS_TAG_SECURE, "rootDirList is empty");
         return false;
     }
     for (const auto &item : rootDirList) {
@@ -57,7 +58,7 @@ bool BundlePermissionMgr::Init()
     std::set<DefaultPermission> permissions;
     for (const auto &permissionFile : permissionFileList) {
         if (bundleParser.ParseDefaultPermission(permissionFile, permissions) != ERR_OK) {
-            APP_LOGD("BundlePermissionMgr::Init failed");
+            LOG_D(BMS_TAG_SECURE, "BundlePermissionMgr::Init failed");
             continue;
         }
     }
@@ -66,13 +67,13 @@ bool BundlePermissionMgr::Init()
     for (const auto &permission : permissions) {
         defaultPermissions_.try_emplace(permission.bundleName, permission);
     }
-    APP_LOGD("BundlePermissionMgr::Init success");
+    LOG_D(BMS_TAG_SECURE, "BundlePermissionMgr::Init success");
     return true;
 }
 
 void BundlePermissionMgr::UnInit()
 {
-    APP_LOGD("BundlePermissionMgr::UnInit");
+    LOG_D(BMS_TAG_SECURE, "BundlePermissionMgr::UnInit");
     defaultPermissions_.clear();
 }
 
@@ -146,7 +147,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     hapPolicy.permList = permDef;
     hapPolicy.permStateList = GetPermissionStateFullList(innerBundleInfo);
     hapPolicy.aclRequestedList = innerBundleInfo.GetAllowedAcls();
-    APP_LOGI("bundleName: %{public}s, apl:%{public}s, req permission size:%{public}zu, acls size:%{public}zu",
+    LOG_I(BMS_TAG_SECURE, "%{public}s apl:%{public}s req permission size:%{public}zu, acls size:%{public}zu",
         innerBundleInfo.GetBundleName().c_str(), apl.c_str(), hapPolicy.permStateList.size(),
         hapPolicy.aclRequestedList.size());
     // default permission list
@@ -160,7 +161,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
         !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
         !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
         !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
-        APP_LOGW("bundleName:%{public}s MatchSignature failed", innerBundleInfo.GetBundleName().c_str());
+        LOG_W(BMS_TAG_SECURE, "bundleName:%{public}s MatchSignature failed", innerBundleInfo.GetBundleName().c_str());
         return hapPolicy;
     }
 #endif
@@ -174,7 +175,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
         preAuthorizationInfo.userCancelable = userCancellable;
         hapPolicy.preAuthorizationInfo.emplace_back(preAuthorizationInfo);
     }
-    APP_LOGI("end, preAuthorizationInfo size :%{public}zu", hapPolicy.preAuthorizationInfo.size());
+    LOG_I(BMS_TAG_SECURE, "end, preAuthorizationInfo size :%{public}zu", hapPolicy.preAuthorizationInfo.size());
     return hapPolicy;
 }
 
@@ -197,7 +198,7 @@ std::vector<AccessToken::PermissionDef> BundlePermissionMgr::GetPermissionDefLis
     if (!defPermissions.empty()) {
         for (const auto &defPermission : defPermissions) {
             AccessToken::PermissionDef perm;
-            APP_LOGD("defPermission %{public}s", defPermission.name.c_str());
+            LOG_D(BMS_TAG_SECURE, "defPermission %{public}s", defPermission.name.c_str());
             ConvertPermissionDef(perm, defPermission, bundleName);
             permList.emplace_back(perm);
         }
@@ -209,7 +210,7 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
     const InnerBundleInfo &innerBundleInfo)
 {
     auto reqPermissions = innerBundleInfo.GetAllRequestPermissions();
-    APP_LOGI("bundleName:%{public}s requestPermission size :%{public}zu",
+    LOG_I(BMS_TAG_SECURE, "bundleName:%{public}s requestPermission size :%{public}zu",
         innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::vector<AccessToken::PermissionStateFull> permStateFullList;
     if (!reqPermissions.empty()) {
@@ -223,7 +224,7 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
             permStateFullList.emplace_back(perState);
         }
     } else {
-        APP_LOGD("BundlePermissionMgr::GetPermissionStateFullList requestPermission is empty");
+        LOG_D(BMS_TAG_SECURE, "BundlePermissionMgr::GetPermissionStateFullList requestPermission is empty");
     }
     return permStateFullList;
 }
@@ -234,13 +235,13 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenI
     std::vector<AccessToken::PermissionStateFull> userGrantReqPermList;
     int32_t ret = AccessToken::AccessTokenKit::GetReqPermissions(tokenId, userGrantReqPermList, false);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("GetAllReqPermissionStateFull get user grant failed errcode: %{public}d", ret);
+        LOG_E(BMS_TAG_SECURE, "GetAllReqPermissionStateFull get user grant failed errcode: %{public}d", ret);
         return false;
     }
     std::vector<AccessToken::PermissionStateFull> systemGrantReqPermList;
     ret = AccessToken::AccessTokenKit::GetReqPermissions(tokenId, systemGrantReqPermList, true);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("GetAllReqPermissionStateFull get system grant failed errcode: %{public}d", ret);
+        LOG_E(BMS_TAG_SECURE, "GetAllReqPermissionStateFull get system grant failed errcode: %{public}d", ret);
         return false;
     }
     newPermissionState = userGrantReqPermList;
@@ -253,12 +254,12 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
 {
     std::vector<std::string> requestPermission = bundleInfo.reqPermissions;
     if (requestPermission.empty()) {
-        APP_LOGD("GetRequestPermissionStates requestPermission empty");
+        LOG_D(BMS_TAG_SECURE, "GetRequestPermissionStates requestPermission empty");
         return true;
     }
     std::vector<Security::AccessToken::PermissionStateFull> allPermissionState;
     if (!GetAllReqPermissionStateFull(tokenId, allPermissionState)) {
-        APP_LOGW("BundlePermissionMgr::GetRequestPermissionStates failed");
+        LOG_W(BMS_TAG_SECURE, "BundlePermissionMgr::GetRequestPermissionStates failed");
     }
     for (auto &req : requestPermission) {
         auto iter = std::find_if(allPermissionState.begin(), allPermissionState.end(),
@@ -266,7 +267,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
                 return perm.permissionName == req;
             });
         if (iter != allPermissionState.end()) {
-            APP_LOGD("GetRequestPermissionStates request permission name: %{public}s", req.c_str());
+            LOG_D(BMS_TAG_SECURE, "GetRequestPermissionStates request permission name: %{public}s", req.c_str());
             for (std::vector<std::string>::size_type i = 0; i < iter->resDeviceID.size(); i++) {
                 if (iter->resDeviceID[i] == deviceId) {
                     bundleInfo.reqPermissionStates.emplace_back(iter->grantStatus[i]);
@@ -274,7 +275,7 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
                 }
             }
         } else {
-            APP_LOGE("request permission name : %{public}s is not exit in AccessTokenMgr", req.c_str());
+            LOG_E(BMS_TAG_SECURE, "request permission name : %{public}s is not exit in AccessTokenMgr", req.c_str());
             bundleInfo.reqPermissionStates.emplace_back(
                 static_cast<int32_t>(AccessToken::PermissionState::PERMISSION_DENIED));
         }
@@ -285,14 +286,13 @@ bool BundlePermissionMgr::GetRequestPermissionStates(
 bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
 {
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
+    LOG_D(BMS_TAG_SECURE, "VerifyCallingPermission permission %{public}s, callerToken : %{public}u",
         permissionName.c_str(), callerToken);
     if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    APP_LOGE("permission %{public}s denied, callerToken : %{public}u", permissionName.c_str(),
-        callerToken);
+    LOG_E(BMS_TAG_SECURE, "%{public}s denied callerToken:%{public}u", permissionName.c_str(), callerToken);
     return false;
 }
 
@@ -302,7 +302,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
     for (auto permissionName : permissionNames) {
         if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
             AccessToken::PermissionState::PERMISSION_GRANTED) {
-                APP_LOGD("verify success");
+                LOG_D(BMS_TAG_SECURE, "verify success");
                 return true;
             }
     }
@@ -310,15 +310,15 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
     for (auto deniedPermission : permissionNames) {
         errorMessage += deniedPermission + " ";
     }
-    APP_LOGE("permission %{public}s denied, callerToken : %{public}u", errorMessage.c_str(), callerToken);
+    LOG_E(BMS_TAG_SECURE, "%{public}s denied callerToken:%{public}u", errorMessage.c_str(), callerToken);
     return false;
 }
 
 int32_t BundlePermissionMgr::VerifyPermission(
     const std::string &bundleName, const std::string &permissionName, const int32_t userId)
 {
-    APP_LOGD("VerifyPermission bundleName %{public}s, permission %{public}s", bundleName.c_str(),
-             permissionName.c_str());
+    LOG_D(BMS_TAG_SECURE, "VerifyPermission bundleName %{public}s, permission %{public}s", bundleName.c_str(),
+        permissionName.c_str());
     AccessToken::AccessTokenID tokenId = AccessToken::AccessTokenKit::GetHapTokenID(userId,
         bundleName, 0);
     return AccessToken::AccessTokenKit::VerifyAccessToken(tokenId, permissionName);
@@ -326,7 +326,7 @@ int32_t BundlePermissionMgr::VerifyPermission(
 
 ErrCode BundlePermissionMgr::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
-    APP_LOGD("BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());
+    LOG_D(BMS_TAG_SECURE, "BundlePermissionMgr::GetPermissionDef permission %{public}s", permissionName.c_str());
     AccessToken::PermissionDef accessTokenPermDef;
     int32_t ret = AccessToken::AccessTokenKit::GetDefPermission(permissionName, accessTokenPermDef);
     if (ret == AccessToken::AccessTokenKitRet::RET_SUCCESS) {
@@ -344,7 +344,7 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
             return defPerm.name == permissionName;
         });
     if (iter == grantPermission.end()) {
-        APP_LOGD("can not find permission(%{public}s)", permissionName.c_str());
+        LOG_D(BMS_TAG_SECURE, "can not find permission(%{public}s)", permissionName.c_str());
         return false;
     }
 
@@ -357,7 +357,7 @@ bool BundlePermissionMgr::GetDefaultPermission(
 {
     auto iter = defaultPermissions_.find(bundleName);
     if (iter == defaultPermissions_.end()) {
-        APP_LOGW("bundleName: %{public}s does not exist in defaultPermissions",
+        LOG_W(BMS_TAG_SECURE, "bundleName: %{public}s does not exist in defaultPermissions",
             bundleName.c_str());
         return false;
     }
@@ -370,7 +370,7 @@ bool BundlePermissionMgr::MatchSignature(
     const DefaultPermission &permission, const std::vector<std::string> &signatures)
 {
     if (permission.appSignature.empty()) {
-        APP_LOGW("appSignature is empty");
+        LOG_W(BMS_TAG_SECURE, "appSignature is empty");
         return false;
     }
     for (const auto &signature : permission.appSignature) {
@@ -386,7 +386,7 @@ bool BundlePermissionMgr::MatchSignature(
     const DefaultPermission &permission, const std::string &signature)
 {
     if (permission.appSignature.empty() || signature.empty()) {
-        APP_LOGW("appSignature or signature is empty");
+        LOG_W(BMS_TAG_SECURE, "appSignature or signature is empty");
         return false;
     }
     return std::find(permission.appSignature.begin(), permission.appSignature.end(),
@@ -401,23 +401,23 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
     auto userId = uid / Constants::BASE_USER_RANGE;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_SECURE, "DataMgr is nullptr");
         return Constants::INVALID_API_VERSION;
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
     if (!ret) {
-        APP_LOGE("getBundleName failed, uid : %{public}d", uid);
+        LOG_E(BMS_TAG_SECURE, "getBundleName failed, uid : %{public}d", uid);
         return Constants::INVALID_API_VERSION;
     }
     ApplicationInfo applicationInfo;
     auto res = dataMgr->GetApplicationInfoV9(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (res != ERR_OK) {
-        APP_LOGE("getApplicationInfo failed");
+        LOG_E(BMS_TAG_SECURE, "getApplicationInfo failed");
         return Constants::INVALID_API_VERSION;
     }
     auto appApiVersion = applicationInfo.apiTargetVersion;
-    APP_LOGD("appApiVersion is %{public}d", appApiVersion);
+    LOG_D(BMS_TAG_SECURE, "appApiVersion is %{public}d", appApiVersion);
     auto systemApiVersion = GetSdkApiVersion();
     // api version is the minimum value of {appApiVersion, systemApiVersion}
     return systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion;
@@ -426,40 +426,40 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
 // if the api has been system api since it is published, then beginSystemApiVersion can be omitted
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
 {
-    APP_LOGD("verifying systemApp");
+    LOG_D(BMS_TAG_SECURE, "verifying systemApp");
     uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
     if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
         return true;
     }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("tokenType is %{private}d", tokenType);
+    LOG_D(BMS_TAG_SECURE, "tokenType is %{private}d", tokenType);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
         tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL ||
         callingUid == Constants::ROOT_UID ||
         callingUid == ServiceConstants::SHELL_UID) {
-        APP_LOGD("caller tokenType is native, verify success");
+        LOG_D(BMS_TAG_SECURE, "caller tokenType is native, verify success");
         return true;
     }
     if (beginSystemApiVersion != Constants::ALL_VERSIONCODE) {
         auto apiVersion = GetHapApiVersion();
         if (apiVersion == Constants::INVALID_API_VERSION) {
-            APP_LOGE("get api version failed, system app verification failed");
+            LOG_E(BMS_TAG_SECURE, "get api version failed, system app verification failed");
             return false;
         }
         if (apiVersion < beginSystemApiVersion) {
-            APP_LOGI("previous app calling, verify success");
+            LOG_I(BMS_TAG_SECURE, "previous app calling, verify success");
             return true;
         }
     }
-    APP_LOGE("system app verification failed");
+    LOG_E(BMS_TAG_SECURE, "system app verification failed");
     return false;
 }
 
 bool BundlePermissionMgr::IsSystemApp()
 {
-    APP_LOGD("verifying systemApp");
+    LOG_D(BMS_TAG_SECURE, "verifying systemApp");
     uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
     if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
         return true;
@@ -467,45 +467,45 @@ bool BundlePermissionMgr::IsSystemApp()
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        APP_LOGE("system app verification failed");
+        LOG_E(BMS_TAG_SECURE, "system app verification failed");
         return false;
     }
-    APP_LOGD("caller tokenType is not hap, ignore");
+    LOG_D(BMS_TAG_SECURE, "caller tokenType is not hap, ignore");
     return true;
 }
 
 bool BundlePermissionMgr::IsNativeTokenType()
 {
-    APP_LOGD("begin to verify token type");
+    LOG_D(BMS_TAG_SECURE, "begin to verify token type");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("tokenType is %{private}d", tokenType);
+    LOG_D(BMS_TAG_SECURE, "tokenType is %{private}d", tokenType);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        APP_LOGD("caller tokenType is native, verify success");
+        LOG_D(BMS_TAG_SECURE, "caller tokenType is native, verify success");
         return true;
     }
     if (VerifyCallingUid()) {
-        APP_LOGD("caller is root or foundation or BMS_UID, verify success");
+        LOG_D(BMS_TAG_SECURE, "caller is root or foundation or BMS_UID, verify success");
         return true;
     }
-    APP_LOGE("caller tokenType not native, verify failed");
+    LOG_E(BMS_TAG_SECURE, "caller tokenType not native, verify failed");
     return false;
 }
 
 bool BundlePermissionMgr::VerifyCallingUid()
 {
-    APP_LOGD("begin to verify calling uid");
+    LOG_D(BMS_TAG_SECURE, "begin to verify calling uid");
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("calling uid is %{public}d", callingUid);
+    LOG_D(BMS_TAG_SECURE, "calling uid is %{public}d", callingUid);
     if (callingUid == Constants::ROOT_UID ||
         callingUid == Constants::FOUNDATION_UID ||
         callingUid == ServiceConstants::SHELL_UID ||
         callingUid == ServiceConstants::BMS_UID) {
-        APP_LOGD("caller is root or foundation, verify success");
+        LOG_D(BMS_TAG_SECURE, "caller is root or foundation, verify success");
         return true;
     }
-    APP_LOGE("verify calling uid failed");
+    LOG_E(BMS_TAG_SECURE, "verify calling uid failed");
     return false;
 }
 
@@ -515,7 +515,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
     auto uid = IPCSkeleton::GetCallingUid();
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_SECURE, "DataMgr is nullptr");
         return false;
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
@@ -532,7 +532,7 @@ bool BundlePermissionMgr::IsCallingUidValid(int32_t uid)
     if (callingUid == uid) {
         return true;
     }
-    APP_LOGE("IsCallingUidValid failed, uid = %{public}d, calling uid = %{public}d", uid, callingUid);
+    LOG_E(BMS_TAG_SECURE, "IsCallingUidValid failed, uid = %{public}d, calling uid = %{public}d", uid, callingUid);
     return false;
 }
 
@@ -550,7 +550,7 @@ bool BundlePermissionMgr::VerifyUninstallPermission()
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
         ServiceConstants::PERMISSION_UNINSTALL_BUNDLE})) {
-        APP_LOGE("uninstall bundle permission denied");
+        LOG_E(BMS_TAG_SECURE, "uninstall bundle permission denied");
         return false;
     }
     return true;
@@ -561,7 +561,7 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_INSTALL_BUNDLE,
         ServiceConstants::PERMISSION_RECOVER_BUNDLE})) {
-        APP_LOGE("recover bundle permission denied");
+        LOG_E(BMS_TAG_SECURE, "recover bundle permission denied");
         return false;
     }
     return true;
@@ -570,7 +570,7 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
 void BundlePermissionMgr::AddPermissionUsedRecord(
     const std::string &permission, int32_t successCount, int32_t failCount)
 {
-    APP_LOGD("AddPermissionUsedRecord permission:%{public}s", permission.c_str());
+    LOG_D(BMS_TAG_SECURE, "AddPermissionUsedRecord permission:%{public}s", permission.c_str());
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
@@ -582,22 +582,22 @@ bool BundlePermissionMgr::IsBundleSelfCalling(const std::string &bundleName)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_SECURE, "DataMgr is nullptr");
         return false;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("start, callingUid: %{public}d", callingUid);
+    LOG_D(BMS_TAG_SECURE, "start, callingUid: %{public}d", callingUid);
     std::string callingBundleName;
     if (dataMgr->GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
         return false;
     }
-    APP_LOGD("bundleName :%{public}s, callingBundleName : %{public}s",
+    LOG_D(BMS_TAG_SECURE, "bundleName :%{public}s, callingBundleName : %{public}s",
         bundleName.c_str(), callingBundleName.c_str());
     if (bundleName != callingBundleName) {
-        APP_LOGW("failed, callingUid: %{public}d", callingUid);
+        LOG_W(BMS_TAG_SECURE, "failed, callingUid: %{public}d", callingUid);
         return false;
     }
-    APP_LOGD("end, verify success");
+    LOG_D(BMS_TAG_SECURE, "end, verify success");
     return true;
 }
 
@@ -605,11 +605,11 @@ bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_SECURE, "DataMgr is nullptr");
         return false;
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("start, callingUid: %{public}d", callingUid);
+    LOG_D(BMS_TAG_SECURE, "start, callingUid: %{public}d", callingUid);
     std::string callingBundleName;
     if (dataMgr->GetNameForUid(callingUid, callingBundleName) != ERR_OK) {
         return false;
@@ -619,17 +619,17 @@ bool BundlePermissionMgr::VerifyCallingBundleSdkVersion(int32_t beginApiVersion)
     auto res = dataMgr->GetApplicationInfoV9(callingBundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (res != ERR_OK) {
-        APP_LOGE("getApplicationInfo failed, callingBundleName:%{public}s", callingBundleName.c_str());
+        LOG_E(BMS_TAG_SECURE, "getApplicationInfo failed, callingBundleName:%{public}s", callingBundleName.c_str());
         return false;
     }
     auto systemApiVersion = GetSdkApiVersion();
     auto appApiVersion = applicationInfo.apiTargetVersion;
     // api version is the minimum value of {appApiVersion, systemApiVersion}
     appApiVersion = systemApiVersion < appApiVersion ? systemApiVersion : appApiVersion;
-    APP_LOGD("appApiVersion: %{public}d", appApiVersion);
+    LOG_D(BMS_TAG_SECURE, "appApiVersion: %{public}d", appApiVersion);
 
     if ((appApiVersion % BASE_API_VERSION) < beginApiVersion) {
-        APP_LOGI("previous app calling, verify success");
+        LOG_I(BMS_TAG_SECURE, "previous app calling, verify success");
         return true;
     }
     return false;
@@ -653,16 +653,16 @@ Security::AccessToken::HapInfoParams BundlePermissionMgr::CreateHapInfoParams(co
 int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
     const int32_t dlpType, Security::AccessToken::AccessTokenIDEx& tokenIdeEx)
 {
-    APP_LOGI("start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_I(BMS_TAG_SECURE, "start, init hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::HapInfoParams hapInfo = CreateHapInfoParams(innerBundleInfo, userId, dlpType);
     AccessToken::HapPolicyParams hapPolicy = CreateHapPolicyParam(innerBundleInfo);
     auto ret = AccessToken::AccessTokenKit::InitHapToken(hapInfo, hapPolicy, tokenIdeEx);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
+        LOG_E(BMS_TAG_SECURE, "InitHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
-    APP_LOGI("end, init hap token bundleName: %{public}s tokenId:%{public}u", innerBundleInfo.GetBundleName().c_str(),
+    LOG_I(BMS_TAG_SECURE, "bundleName: %{public}s tokenId:%{public}u", innerBundleInfo.GetBundleName().c_str(),
         tokenIdeEx.tokenIdExStruct.tokenID);
     return ERR_OK;
 }
@@ -670,7 +670,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 int32_t BundlePermissionMgr::UpdateHapToken(
     Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("start, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_I(BMS_TAG_SECURE, "start, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
     updateHapInfoParams.appIDDesc = innerBundleInfo.GetAppId();
     updateHapInfoParams.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
@@ -681,11 +681,11 @@ int32_t BundlePermissionMgr::UpdateHapToken(
 
     auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        APP_LOGE("UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
+        LOG_E(BMS_TAG_SECURE, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
-    APP_LOGI("end, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_I(BMS_TAG_SECURE, "end, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

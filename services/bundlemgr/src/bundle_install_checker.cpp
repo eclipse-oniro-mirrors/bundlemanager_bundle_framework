@@ -17,6 +17,7 @@
 
 #include <regex>
 
+#include "app_log_tag_wrapper.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
@@ -120,7 +121,7 @@ std::string GetAppDistributionType(const Security::Verify::AppDistType &type)
 {
     auto typeIter = APP_DISTRIBUTION_TYPE_MAPS.find(type);
     if (typeIter == APP_DISTRIBUTION_TYPE_MAPS.end()) {
-        APP_LOGE("wrong AppDistType");
+        LOG_E(BMS_TAG_INSTALLER, "wrong AppDistType");
         return Constants::APP_DISTRIBUTION_TYPE_NONE;
     }
 
@@ -149,9 +150,9 @@ bool IsSystemExtensionAbilityType(ExtensionAbilityType type)
 
 ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
-    APP_LOGD("check hap syscaps start.");
+    LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start.");
     if (bundlePaths.empty()) {
-        APP_LOGE("check hap syscaps failed due to empty bundlePaths!");
+        LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
@@ -161,21 +162,21 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
         std::vector<std::string> bundleSysCaps;
         result = bundleParser.ParseSysCap(bundlePath, bundleSysCaps);
         if (result != ERR_OK) {
-            APP_LOGE("parse bundle syscap failed, error: %{public}d", result);
+            LOG_E(BMS_TAG_INSTALLER, "parse bundle syscap failed, error: %{public}d", result);
             return result;
         }
 
         for (const auto &bundleSysCapItem : bundleSysCaps) {
-            APP_LOGD("check syscap(%{public}s)", bundleSysCapItem.c_str());
+            LOG_D(BMS_TAG_INSTALLER, "check syscap(%{public}s)", bundleSysCapItem.c_str());
             if (!HasSystemCapability(bundleSysCapItem.c_str())) {
-                APP_LOGE("check syscap failed which %{public}s is not exsit",
+                LOG_E(BMS_TAG_INSTALLER, "check syscap failed which %{public}s is not exsit",
                     bundleSysCapItem.c_str());
                 return ERR_APPEXECFWK_INSTALL_CHECK_SYSCAP_FAILED;
             }
         }
     }
 
-    APP_LOGD("finish check hap syscaps");
+    LOG_D(BMS_TAG_INSTALLER, "finish check hap syscaps");
     return result;
 }
 
@@ -183,9 +184,9 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     const std::vector<std::string> &bundlePaths,
     std::vector<Security::Verify::HapVerifyResult>& hapVerifyRes)
 {
-    APP_LOGD("Check multiple haps signInfo");
+    LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
-        APP_LOGE("check hap sign info failed due to empty bundlePaths!");
+        LOG_E(BMS_TAG_INSTALLER, "check hap sign info failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
     for (const std::string &bundlePath : bundlePaths) {
@@ -193,7 +194,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
 #ifndef X86_EMULATOR_MODE
         if (verifyRes != ERR_OK) {
-            APP_LOGE("hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "hap file verify failed, bundlePath: %{public}s", bundlePath.c_str());
             return verifyRes;
         }
 #endif
@@ -201,7 +202,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
 
     if (hapVerifyRes.empty()) {
-        APP_LOGE("no sign info in the all haps!");
+        LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps!");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
@@ -217,7 +218,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         }
 #endif
     }
-    APP_LOGD("finish check multiple haps signInfo");
+    LOG_D(BMS_TAG_INSTALLER, "finish check multiple haps signInfo");
     return ERR_OK;
 }
 
@@ -232,23 +233,23 @@ bool BundleInstallChecker::CheckProvisionInfoIsValid(
     bool isInvalid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(),
         [appId, apl, appDistributionType, appProvisionType, appIdentifier](const auto &hapVerifyResult) {
             if (appId != hapVerifyResult.GetProvisionInfo().appId) {
-                APP_LOGE("error: hap files have different appId");
+                LOG_E(BMS_TAG_INSTALLER, "error: hap files have different appId");
                 return true;
             }
             if (apl != hapVerifyResult.GetProvisionInfo().bundleInfo.apl) {
-                APP_LOGE("error: hap files have different apl");
+                LOG_E(BMS_TAG_INSTALLER, "error: hap files have different apl");
                 return true;
             }
             if (appDistributionType != hapVerifyResult.GetProvisionInfo().distributionType) {
-                APP_LOGE("error: hap files have different appDistributionType");
+                LOG_E(BMS_TAG_INSTALLER, "error: hap files have different appDistributionType");
                 return true;
             }
             if (appProvisionType != hapVerifyResult.GetProvisionInfo().type) {
-                APP_LOGE("error: hap files have different appProvisionType");
+                LOG_E(BMS_TAG_INSTALLER, "error: hap files have different appProvisionType");
                 return true;
             }
             if (appIdentifier != hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier) {
-                APP_LOGE("error: hap files have different appIdentifier");
+                LOG_E(BMS_TAG_INSTALLER, "error: hap files have different appIdentifier");
                 return true;
             }
         return false;
@@ -272,11 +273,11 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("enterprise bundle can not be installed by shell");
+                LOG_E(BMS_TAG_INSTALLER, "enterprise bundle can not be installed by shell");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-                APP_LOGE("install enterprise bundle permission denied");
+                LOG_E(BMS_TAG_INSTALLER, "install enterprise bundle permission denied");
                 return false;
             }
             continue;
@@ -290,7 +291,7 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
             continue;
         }
         if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-            APP_LOGE("install permission denied");
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
             return false;
         }
     }
@@ -302,30 +303,30 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermission(const InstallParam &
 {
     if (installParam.isSelfUpdate) {
         if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
-            APP_LOGI("Mdm self update");
+            LOG_I(BMS_TAG_INSTALLER, "Mdm self update");
             return true;
         }
-        APP_LOGE("Self update not MDM");
+        LOG_E(BMS_TAG_INSTALLER, "Self update not MDM");
         return false;
     }
     bool isCallByShell = installParam.isCallByShell;
     PermissionStatus installEtpNormalBundleStatus = installParam.installEtpNormalBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
     if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-        APP_LOGE("enterprise normal/mdm bundle can not be installed by shell");
+        LOG_E(BMS_TAG_INSTALLER, "enterprise normal/mdm bundle can not be installed by shell");
         return false;
     }
     if (!isCallByShell &&
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
         installEtpNormalBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-        APP_LOGE("install enterprise normal bundle permission denied");
+        LOG_E(BMS_TAG_INSTALLER, "install enterprise normal bundle permission denied");
         return false;
     }
     if (!isCallByShell &&
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM &&
         installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-        APP_LOGE("install enterprise mdm bundle permission denied");
+        LOG_E(BMS_TAG_INSTALLER, "install enterprise mdm bundle permission denied");
         return false;
     }
     return true;
@@ -337,7 +338,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("Parse hap file");
+    LOG_D(BMS_TAG_INSTALLER, "Parse hap file");
     ErrCode result = ERR_OK;
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
@@ -352,20 +353,20 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);
         result = ParseBundleInfo(bundlePaths[i], newInfo, packInfo);
         if (result != ERR_OK) {
-            APP_LOGE("bundle parse failed %{public}d", result);
+            LOG_E(BMS_TAG_INSTALLER, "bundle parse failed %{public}d", result);
             return result;
         }
         newInfo.SetOrganization(provisionInfo.organization);
 #ifndef X86_EMULATOR_MODE
         result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
         if (result != ERR_OK) {
-            APP_LOGE("check provision bundleName failed");
+            LOG_E(BMS_TAG_INSTALLER, "check provision bundleName failed");
             return result;
         }
 #endif
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
-                APP_LOGE("more than one entry hap in the direction!");
+                LOG_E(BMS_TAG_INSTALLER, "more than one entry hap in the direction!");
                 return ERR_APPEXECFWK_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP;
             }
             isContainEntry_ = true;
@@ -406,17 +407,17 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
         }
         if ((result = CheckSystemSize(bundlePaths[i], checkParam.appType)) != ERR_OK) {
-            APP_LOGE("install failed due to insufficient disk memory");
+            LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
             return result;
         }
 
         infos.emplace(bundlePaths[i], newInfo);
     }
     if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
-        APP_LOGE("install failed due to duplicated moduleName");
+        LOG_E(BMS_TAG_INSTALLER, "install failed due to duplicated moduleName");
         return result;
     }
-    APP_LOGD("finish parse hap file");
+    LOG_D(BMS_TAG_INSTALLER, "finish parse hap file");
     return result;
 }
 
@@ -425,11 +426,11 @@ ErrCode BundleInstallChecker::CheckHspInstallCondition(
 {
     ErrCode result = ERR_OK;
     if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
-        APP_LOGE("install failed due to debug mode");
+        LOG_E(BMS_TAG_INSTALLER, "install failed due to debug mode");
         return result;
     }
     if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
-        APP_LOGE("install failed due to non-enterprise device");
+        LOG_E(BMS_TAG_INSTALLER, "install failed due to non-enterprise device");
         return result;
     }
     return ERR_OK;
@@ -444,7 +445,7 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
         checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
         // need vaild permission
-        APP_LOGE("install permission denied");
+        LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     return ERR_OK;
@@ -466,11 +467,11 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("enterprise bundle can not be installed by shell");
+                LOG_E(BMS_TAG_INSTALLER, "enterprise bundle can not be installed by shell");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-                APP_LOGE("install enterprise bundle permission denied");
+                LOG_E(BMS_TAG_INSTALLER, "install enterprise bundle permission denied");
                 return false;
             }
             continue;
@@ -484,7 +485,7 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
             continue;
         }
         if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-            APP_LOGE("install permission denied");
+            LOG_E(BMS_TAG_INSTALLER, "install permission denied");
             return false;
         }
     }
@@ -498,20 +499,20 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermissionForShare(const Instal
     PermissionStatus installEtpNormalBundleStatus = checkParam.installEtpNormalBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = checkParam.installEtpMdmBundlePermissionStatus;
     if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-        APP_LOGE("enterprise normal/mdm bundle can not be installed by shell");
+        LOG_E(BMS_TAG_INSTALLER, "enterprise normal/mdm bundle can not be installed by shell");
         return false;
     }
     if (!isCallByShell &&
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
         installEtpNormalBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-        APP_LOGE("install enterprise normal bundle permission denied");
+        LOG_E(BMS_TAG_INSTALLER, "install enterprise normal bundle permission denied");
         return false;
     }
     if (!isCallByShell &&
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM &&
         installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
-        APP_LOGE("install enterprise mdm bundle permission denied");
+        LOG_E(BMS_TAG_INSTALLER, "install enterprise mdm bundle permission denied");
         return false;
     }
     return true;
@@ -519,21 +520,21 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermissionForShare(const Instal
 
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("CheckDependency");
+    LOG_D(BMS_TAG_INSTALLER, "CheckDependency");
 
     for (const auto &info : infos) {
         if (info.second.GetInnerModuleInfos().empty()) {
-            APP_LOGD("GetInnerModuleInfos is empty");
+            LOG_D(BMS_TAG_INSTALLER, "GetInnerModuleInfos is empty");
             continue;
         }
         // There is only one innerModuleInfo when installing
         InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
-        APP_LOGD("current module:%{public}s, dependencies = %{public}s", moduleInfo.moduleName.c_str(),
+        LOG_D(BMS_TAG_INSTALLER, "current module:%{public}s, dependencies = %{public}s", moduleInfo.moduleName.c_str(),
             GetJsonStrFromInfo(moduleInfo.dependencies).c_str());
         bool isModuleExist = false;
         for (const auto &dependency : moduleInfo.dependencies) {
             if (!NeedCheckDependency(dependency, info.second)) {
-                APP_LOGD("deliveryWithInstall is false, do not check whether the dependency exists.");
+                LOG_D(BMS_TAG_INSTALLER, "deliveryWithInstall is false, do not check whether the dependency exists.");
                 continue;
             }
 
@@ -541,12 +542,12 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
             isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
             if (!isModuleExist) {
-                APP_LOGW("The depend module:%{public}s is not exist in installing package.",
+                LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package.",
                     dependency.moduleName.c_str());
                 isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName,
                     info.second.GetVersionCode());
                 if (!isModuleExist) {
-                    APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
+                    LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist.", dependency.moduleName.c_str());
                     SetCheckResultMsg(
                         moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist.");
                     return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
@@ -560,16 +561,16 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
 
 bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, const InnerBundleInfo &info)
 {
-    APP_LOGD("NeedCheckDependency the moduleName is %{public}s, the bundleName is %{public}s.",
+    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the moduleName is %{public}s, the bundleName is %{public}s.",
         dependency.moduleName.c_str(), dependency.bundleName.c_str());
 
     if (!dependency.bundleName.empty() && dependency.bundleName != info.GetBundleName()) {
-        APP_LOGD("Cross-app dependencies, check dependency with shared bundle installer.");
+        LOG_D(BMS_TAG_INSTALLER, "Cross-app dependencies, check dependency with shared bundle installer.");
         return false;
     }
     std::vector<PackageModule> modules = info.GetBundlePackInfo().summary.modules;
     if (modules.empty()) {
-        APP_LOGD("NeedCheckDependency modules is empty, need check dependency.");
+        LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency modules is empty, need check dependency.");
         return true;
     }
     for (const auto &module : modules) {
@@ -578,7 +579,7 @@ bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, con
         }
     }
 
-    APP_LOGD("NeedCheckDependency the module not found, need check dependency.");
+    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the module not found, need check dependency.");
     return true;
 }
 
@@ -587,7 +588,7 @@ bool BundleInstallChecker::FindModuleInInstallingPackage(
     const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("FindModuleInInstallingPackage the moduleName is %{public}s, the bundleName is %{public}s.",
+    LOG_D(BMS_TAG_INSTALLER, "moduleName is %{public}s, the bundleName is %{public}s.",
         moduleName.c_str(), bundleName.c_str());
     for (const auto &info : infos) {
         if (info.second.GetBundleName() == bundleName) {
@@ -609,11 +610,11 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
     const std::string &bundleName,
     uint32_t versionCode)
 {
-    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s",
+    LOG_D(BMS_TAG_INSTALLER, "FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s",
         moduleName.c_str(), bundleName.c_str());
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
         return false;
     }
 
@@ -621,15 +622,15 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
     InnerBundleInfo bundleInfo;
     bool isBundleExist = dataMgr->GetInnerBundleInfo(bundleName, bundleInfo);
     if (!isBundleExist) {
-        APP_LOGE("the bundle: %{public}s is not install", bundleName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "the bundle: %{public}s is not install", bundleName.c_str());
         return false;
     }
     if (!bundleInfo.FindModule(moduleName)) {
-        APP_LOGE("the module: %{public}s is not install", moduleName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "the module: %{public}s is not install", moduleName.c_str());
         return false;
     }
     if (bundleInfo.GetVersionCode() != versionCode) {
-        APP_LOGE("the versionCode %{public}d of dependency is not consistent with the installed module",
+        LOG_E(BMS_TAG_INSTALLER, "the versionCode %{public}d of dependency is not consistent with the installed module",
             bundleInfo.GetVersionCode());
         return false;
     }
@@ -638,17 +639,17 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
 
 ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundleName, const std::string &bundleName)
 {
-    APP_LOGD("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
+    LOG_D(BMS_TAG_INSTALLER, "CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s",
         provisionBundleName.c_str(), bundleName.c_str());
     if (provisionBundleName.empty() || bundleName.empty()) {
-        APP_LOGE("CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed",
+        LOG_E(BMS_TAG_INSTALLER, "CheckBundleName provisionBundleName:%{public}s, bundleName:%{public}s failed",
             provisionBundleName.c_str(), bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
     }
     if (provisionBundleName == bundleName) {
         return ERR_OK;
     }
-    APP_LOGE("CheckBundleName failed provisionBundleName:%{public}s, bundleName:%{public}s",
+    LOG_E(BMS_TAG_INSTALLER, "CheckBundleName failed provisionBundleName:%{public}s, bundleName:%{public}s",
         provisionBundleName.c_str(), bundleName.c_str());
     return ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE;
 }
@@ -679,7 +680,7 @@ void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::V
     InnerBundleInfo &newInfo)
 {
     if (provisionMetadatas.empty()) {
-        APP_LOGE("provisionMetadatas is empty");
+        LOG_E(BMS_TAG_INSTALLER, "provisionMetadatas is empty");
         return;
     }
     std::vector<Metadata> metadatas;
@@ -703,7 +704,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = newInfo.GetBundleName();
     if (!BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo)) {
-        APP_LOGD("bundleName: %{public}s not exist in pre install capability list", newInfo.GetBundleName().c_str());
+        LOG_D(BMS_TAG_INSTALLER, "%{public}s not exist in preinstall capability list", newInfo.GetBundleName().c_str());
         return;
     }
 
@@ -711,7 +712,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
         !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppId()) &&
         !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppIdentifier()) &&
         !MatchOldSignatures(newInfo.GetBundleName(), preBundleConfigInfo.appSignature)) {
-        APP_LOGE("bundleName:%{public}s signature not match the capability list", newInfo.GetBundleName().c_str());
+        LOG_E(BMS_TAG_INSTALLER, "%{public}s signature not match the capability list", newInfo.GetBundleName().c_str());
         return;
     }
 
@@ -748,7 +749,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
     BundleParser bundleParser;
     ErrCode result = bundleParser.Parse(bundleFilePath, info);
     if (result != ERR_OK) {
-        APP_LOGE("parse bundle info failed, error: %{public}d", result);
+        LOG_E(BMS_TAG_INSTALLER, "parse bundle info failed, error: %{public}d", result);
         return result;
     }
 
@@ -756,14 +757,14 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
     for (const auto &item : extensions) {
         if (item.second.type == ExtensionAbilityType::UNSPECIFIED &&
             !BMSEventHandler::CheckExtensionTypeInConfig(item.second.extensionTypeName)) {
-            APP_LOGW("Parse error, There is no corresponding type in the configuration");
+            LOG_W(BMS_TAG_INSTALLER, "Parse error, There is no corresponding type in the configuration");
         }
     }
 
     if (!packInfo.GetValid()) {
         result = bundleParser.ParsePackInfo(bundleFilePath, packInfo);
         if (result != ERR_OK) {
-            APP_LOGE("parse bundle pack info failed, error: %{public}d", result);
+            LOG_E(BMS_TAG_INSTALLER, "parse bundle pack info failed, error: %{public}d", result);
             return result;
         }
 
@@ -780,7 +781,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
     InnerBundleInfo &innerBundleInfo)
 {
     if (!bundlePackInfo.GetValid()) {
-        APP_LOGW("no pack.info in the hap file");
+        LOG_W(BMS_TAG_INSTALLER, "no pack.info in the hap file");
         return;
     }
 
@@ -789,7 +790,7 @@ void BundleInstallChecker::SetEntryInstallationFree(
         return module.distro.moduleType == "entry" && module.distro.installationFree;
     });
     if (installationFree) {
-        APP_LOGI("install or update hm service");
+        LOG_I(BMS_TAG_INSTALLER, "install or update hm service");
     }
     if (innerBundleInfo.GetIsNewVersion()) {
         installationFree = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
@@ -820,7 +821,7 @@ ErrCode BundleInstallChecker::CheckSystemSize(
         return ERR_OK;
     }
 
-    APP_LOGE("install failed due to insufficient disk memory");
+    LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
     return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
 }
 
@@ -829,7 +830,7 @@ ErrCode BundleInstallChecker::CheckHapHashParams(
     std::map<std::string, std::string> hashParams)
 {
     if (hashParams.empty()) {
-        APP_LOGD("hashParams is empty");
+        LOG_D(BMS_TAG_INSTALLER, "hashParams is empty");
         return ERR_OK;
     }
 
@@ -838,12 +839,12 @@ ErrCode BundleInstallChecker::CheckHapHashParams(
         std::vector<std::string> moduleNames;
         info.second.GetModuleNames(moduleNames);
         if (moduleNames.empty()) {
-            APP_LOGE("hap(%{public}s) moduleName is empty", info.first.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "hap(%{public}s) moduleName is empty", info.first.c_str());
             return ERR_APPEXECFWK_INSTALL_FAILED_MODULE_NAME_EMPTY;
         }
 
         if (std::find(hapModuleNames.begin(), hapModuleNames.end(), moduleNames[0]) != hapModuleNames.end()) {
-            APP_LOGE("hap moduleName(%{public}s) duplicate", moduleNames[0].c_str());
+            LOG_E(BMS_TAG_INSTALLER, "hap moduleName(%{public}s) duplicate", moduleNames[0].c_str());
             return ERR_APPEXECFWK_INSTALL_FAILED_MODULE_NAME_DUPLICATE;
         }
 
@@ -856,7 +857,7 @@ ErrCode BundleInstallChecker::CheckHapHashParams(
     }
 
     if (!hashParams.empty()) {
-        APP_LOGE("Some hashParam moduleName is not exist in hap moduleNames");
+        LOG_E(BMS_TAG_INSTALLER, "Some hashParam moduleName is not exist in hap moduleNames");
         return ERR_APPEXECFWK_INSTALL_FAILED_CHECK_HAP_HASH_PARAM;
     }
 
@@ -866,7 +867,7 @@ ErrCode BundleInstallChecker::CheckHapHashParams(
 ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    APP_LOGD("Check APP label");
+    LOG_D(BMS_TAG_INSTALLER, "Check APP label");
     ErrCode ret = ERR_OK;
     std::string bundleName = (infos.begin()->second).GetBundleName();
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
@@ -889,64 +890,64 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     for (const auto &info : infos) {
         // check bundleName
         if (bundleName != info.second.GetBundleName()) {
-            APP_LOGE("bundleName not same");
+            LOG_E(BMS_TAG_INSTALLER, "bundleName not same");
             return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
         }
         // check version
         if (bundleType != BundleType::SHARED) {
             if (versionCode != info.second.GetVersionCode()) {
-                APP_LOGE("versionCode not same");
+                LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
             if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
-                APP_LOGE("minCompatibleVersionCode not same");
+                LOG_E(BMS_TAG_INSTALLER, "minCompatibleVersionCode not same");
                 return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
             }
         }
         // check release type
         if (target != info.second.GetTargetVersion()) {
-            APP_LOGE("target version not same");
+            LOG_E(BMS_TAG_INSTALLER, "target version not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
         }
         if (compatible != info.second.GetCompatibleVersion()) {
-            APP_LOGE("compatible version not same");
+            LOG_E(BMS_TAG_INSTALLER, "compatible version not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
         }
         if (releaseType != info.second.GetReleaseType()) {
-            APP_LOGE("releaseType not same");
+            LOG_E(BMS_TAG_INSTALLER, "releaseType not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
         }
         if (singleton != info.second.IsSingleton()) {
-            APP_LOGE("singleton not same");
+            LOG_E(BMS_TAG_INSTALLER, "singleton not same");
             return ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME;
         }
         if (appType != info.second.GetAppType()) {
-            APP_LOGE("appType not same");
+            LOG_E(BMS_TAG_INSTALLER, "appType not same");
             return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
         }
         // check model type(FA or stage)
         if (isStage != info.second.GetIsNewVersion()) {
-            APP_LOGE("must be all FA model or all stage model");
+            LOG_E(BMS_TAG_INSTALLER, "must be all FA model or all stage model");
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
         }
         if (targetBundleName != info.second.GetTargetBundleName()) {
-            APP_LOGE("targetBundleName not same");
+            LOG_E(BMS_TAG_INSTALLER, "targetBundleName not same");
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
         }
         if (targetPriority != info.second.GetTargetPriority()) {
-            APP_LOGE("targetPriority not same");
+            LOG_E(BMS_TAG_INSTALLER, "targetPriority not same");
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
         }
         if (bundleType != info.second.GetApplicationBundleType()) {
-            APP_LOGE("bundleType not same");
+            LOG_E(BMS_TAG_INSTALLER, "bundleType not same");
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
         if (isHmService != info.second.GetEntryInstallationFree()) {
-            APP_LOGE("application and hm service are not allowed installed simultaneously.");
+            LOG_E(BMS_TAG_INSTALLER, "application and hm service are not allowed installed simultaneously.");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
-            APP_LOGE("debug not same");
+            LOG_E(BMS_TAG_INSTALLER, "debug not same");
             isSameDebugType = false;
         }
         if (!hasEntry) {
@@ -956,10 +957,10 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     }
 
     if (hasEntry && !entryDebug && (debug || !isSameDebugType)) {
-        APP_LOGE("debug type not same");
+        LOG_E(BMS_TAG_INSTALLER, "debug type not same");
         return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
     }
-    APP_LOGD("finish check APP label");
+    LOG_D(BMS_TAG_INSTALLER, "finish check APP label");
     return ret;
 }
 
@@ -968,13 +969,13 @@ ErrCode BundleInstallChecker::CheckMultiNativeFile(
 {
     ErrCode result = CheckMultiNativeSo(infos);
     if (result != ERR_OK) {
-        APP_LOGE("Check multi nativeSo failed, result: %{public}d", result);
+        LOG_E(BMS_TAG_INSTALLER, "Check multi nativeSo failed, result: %{public}d", result);
         return result;
     }
 
     result = CheckMultiArkNativeFile(infos);
     if (result != ERR_OK) {
-        APP_LOGE("Check multi arkNativeFile failed, result: %{public}d", result);
+        LOG_E(BMS_TAG_INSTALLER, "Check multi arkNativeFile failed, result: %{public}d", result);
         return result;
     }
 
@@ -1061,7 +1062,7 @@ void BundleInstallChecker::ParseAppPrivilegeCapability(
         appPrivilegeCapability.formVisibleNotify = false;
     }
 
-    APP_LOGD("AppPrivilegeCapability %{public}s",
+    LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s",
         appPrivilegeCapability.ToString().c_str());
 #ifndef USE_PRE_BUNDLE_PROFILE
     appPrivilegeCapability.allowMultiProcess = true;
@@ -1076,11 +1077,11 @@ ErrCode BundleInstallChecker::CheckModuleNameForMulitHaps(
     for (const auto &info : infos) {
         std::vector<std::string> moduleVec = info.second.GetDistroModuleName();
         if (moduleVec.empty()) {
-            APP_LOGE("moduleName vector is empty");
+            LOG_E(BMS_TAG_INSTALLER, "moduleName vector is empty");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
         if (moduleSet.count(moduleVec[0])) {
-            APP_LOGE("the moduleName: %{public}s is not unique in the haps", moduleVec[0].c_str());
+            LOG_E(BMS_TAG_INSTALLER, "the moduleName: %{public}s is not unique in the haps", moduleVec[0].c_str());
             SetCheckResultMsg("the moduleName: " + moduleVec[0] + " is not unique in the haps");
             return ERR_APPEXECFWK_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME;
         }
@@ -1094,7 +1095,7 @@ bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo,
     std::string moduleName = newInfo.GetCurModuleName();
     std::string packageName = newInfo.GetCurrentModulePackage();
     if (packageName.empty() || moduleName.empty()) {
-        APP_LOGE("IsExistedDistroModule failed due to invalid packageName or moduleName");
+        LOG_E(BMS_TAG_INSTALLER, "IsExistedDistroModule failed due to invalid packageName or moduleName");
         return false;
     }
     std::string oldModuleName = info.GetModuleNameByPackage(packageName);
@@ -1103,7 +1104,7 @@ bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo,
     if (!isFAToStage) {
         // if not FA update to Stage, check consistency of module name
         if (moduleName.compare(oldModuleName) != 0) {
-            APP_LOGE("no moduleName in the innerModuleInfo");
+            LOG_E(BMS_TAG_INSTALLER, "no moduleName in the innerModuleInfo");
             return false;
         }
     }
@@ -1111,7 +1112,7 @@ bool BundleInstallChecker::IsExistedDistroModule(const InnerBundleInfo &newInfo,
     std::string newModuleType = newInfo.GetModuleTypeByPackage(packageName);
     std::string oldModuleType = info.GetModuleTypeByPackage(packageName);
     if (newModuleType.compare(oldModuleType) != 0) {
-        APP_LOGE("moduleType is different between the new hap and the original hap");
+        LOG_E(BMS_TAG_INSTALLER, "moduleType is different between the new hap and the original hap");
         return false;
     }
 
@@ -1123,7 +1124,7 @@ bool BundleInstallChecker::IsContainModuleName(const InnerBundleInfo &newInfo, c
     std::string moduleName = newInfo.GetCurModuleName();
     std::vector<std::string> moduleVec = info.GetDistroModuleName();
     if (moduleName.empty() || moduleVec.empty()) {
-        APP_LOGE("IsContainModuleName failed due to invalid moduleName or modulevec");
+        LOG_E(BMS_TAG_INSTALLER, "IsContainModuleName failed due to invalid moduleName or modulevec");
         return false;
     }
     return (find(moduleVec.cbegin(), moduleVec.cend(), moduleName) == moduleVec.cend()) ? false : true;
@@ -1139,7 +1140,7 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
         return ERR_OK;
     }
     if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
-        APP_LOGE("atomic service's mainElement can't be empty.");
+        LOG_E(BMS_TAG_INSTALLER, "atomic service's mainElement can't be empty.");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;
@@ -1163,16 +1164,18 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     AppPrivilegeCapability &appPrivilegeCapability)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
-    APP_LOGD("bundleName: %{public}s, FetchPrivilegeCapabilityFromPreConfig start", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s, FetchPrivilegeCapabilityFromPreConfig start", bundleName.c_str());
     PreBundleConfigInfo configInfo;
     configInfo.bundleName = bundleName;
     if (!BMSEventHandler::GetPreInstallCapability(configInfo)) {
-        APP_LOGD("bundleName: %{public}s is not exist in pre install capability list", bundleName.c_str());
+        LOG_D(BMS_TAG_INSTALLER, "bundleName: %{public}s is not exist in pre install capability list",
+            bundleName.c_str());
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
         if (!MatchOldSignatures(bundleName, configInfo.appSignature)) {
-            APP_LOGE("bundleName: %{public}s signature verify failed in capability list", bundleName.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s signature verify failed in capability list",
+                bundleName.c_str());
             return;
         }
     }
@@ -1214,7 +1217,7 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_ENABLE_NOTIFICATION,
         configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
-    APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
+    LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }
 
@@ -1224,7 +1227,7 @@ bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     std::vector<std::string> oldAppIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->GetOldAppIds(bundleName, oldAppIds)) {
-        APP_LOGD("Get OldAppIds failed.");
+        LOG_D(BMS_TAG_INSTALLER, "Get OldAppIds failed.");
         return false;
     }
     for (const auto &signature : appSignatures) {
@@ -1240,7 +1243,7 @@ bool BundleInstallChecker::MatchSignature(
     const std::vector<std::string> &appSignatures, const std::string &signature)
 {
     if (appSignatures.empty() || signature.empty()) {
-        APP_LOGW("appSignature of signature is empty");
+        LOG_W(BMS_TAG_INSTALLER, "appSignature of signature is empty");
         return false;
     }
 
@@ -1262,7 +1265,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
     if (applicationInfo.bundleType == BundleType::SHARED && !appPrivilegeCapability.appShareLibrary) {
-        APP_LOGE("not allow app share library");
+        LOG_E(BMS_TAG_INSTALLER, "not allow app share library");
         return ERR_APPEXECFWK_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED;
     }
     // process ability
@@ -1290,13 +1293,13 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     for (auto iter = extensionAbilityInfos.begin(); iter != extensionAbilityInfos.end(); ++iter) {
         bool privilegeType = IsPrivilegeExtensionAbilityType(iter->second.type);
         if (privilegeType && !appPrivilegeCapability.allowUsePrivilegeExtension) {
-            APP_LOGE("not allow use privilege extension");
+            LOG_E(BMS_TAG_INSTALLER, "not allow use privilege extension");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
         }
 
         bool systemType = IsSystemExtensionAbilityType(iter->second.type);
         if (systemType && !applicationInfo.isSystemApp) {
-            APP_LOGE("not allow use system extension");
+            LOG_E(BMS_TAG_INSTALLER, "not allow use system extension");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
         }
 
@@ -1310,7 +1313,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         }
 #endif
         if (appPrivilegeCapability.allowMultiProcess) {
-            APP_LOGD("bundleName: %{public}s support allowMultiProcess", iter->second.bundleName.c_str());
+            LOG_D(BMS_TAG_INSTALLER, "%{public}s support allowMultiProcess", iter->second.bundleName.c_str());
             auto hapModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(iter->second.moduleName);
             if (hapModuleInfo && !hapModuleInfo->process.empty()) {
                 iter->second.process = hapModuleInfo->process;
@@ -1330,7 +1333,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
 bool BundleInstallChecker::CheckSupportAppTypes(
     const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const
 {
-    APP_LOGD("CheckSupportAppTypes begin, supportAppTypes: %{public}s", supportAppTypes.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CheckSupportAppTypes begin, supportAppTypes: %{public}s", supportAppTypes.c_str());
     std::vector<std::string> appTypesVec;
     OHOS::SplitStr(supportAppTypes, SUPPORT_APP_TYPES_SEPARATOR, appTypesVec);
     if (find(appTypesVec.begin(), appTypesVec.end(), DEVICE_TYPE_OF_DEFAULT) != appTypesVec.end() &&
@@ -1349,7 +1352,7 @@ bool BundleInstallChecker::CheckSupportAppTypes(
         set_intersection(appTypesVec.begin(), appTypesVec.end(),
             devVec.begin(), devVec.end(), back_inserter(intersectionVec));
         if (intersectionVec.empty()) {
-            APP_LOGW("check supportAppTypes failed");
+            LOG_W(BMS_TAG_INSTALLER, "check supportAppTypes failed");
             return false;
         }
     }
@@ -1363,28 +1366,28 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
         return ERR_OK;
     }
     std::string deviceType = GetDeviceType();
-    APP_LOGD("deviceType is %{public}s", deviceType.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "deviceType is %{public}s", deviceType.c_str());
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
-            APP_LOGW("deviceTypes is empty");
+            LOG_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_PHONE) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
-            APP_LOGW("current deviceType is phone and bundle is matched with default");
+            LOG_W(BMS_TAG_INSTALLER, "current deviceType is phone and bundle is matched with default");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_DEFAULT) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) != devVec.end())) {
-            APP_LOGW("current deviceType is default and bundle is matched with phone");
+            LOG_W(BMS_TAG_INSTALLER, "current deviceType is default and bundle is matched with phone");
             continue;
         }
 
         if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
-            APP_LOGE("%{public}s is not supported", deviceType.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
@@ -1421,13 +1424,13 @@ std::string GetBundleNameFromUri(const std::string &uri)
 {
     std::size_t firstSlashPos = uri.find(DOUBLE_SLASH);
     if (firstSlashPos == std::string::npos) {
-        APP_LOGE("dataproxy uri is invalid");
+        LOG_E(BMS_TAG_INSTALLER, "dataproxy uri is invalid");
         return Constants::EMPTY_STRING;
     }
 
     std::size_t secondSlashPos = uri.find(SLASH, firstSlashPos + SLAH_OFFSET);
     if (secondSlashPos == std::string::npos) {
-        APP_LOGE("dataproxy uri is invalid");
+        LOG_E(BMS_TAG_INSTALLER, "dataproxy uri is invalid");
         return Constants::EMPTY_STRING;
     }
 
@@ -1444,11 +1447,11 @@ bool BundleInstallChecker::CheckProxyPermissionLevel(const std::string &permissi
     PermissionDef permissionDef;
     ErrCode ret = BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
     if (ret != ERR_OK) {
-        APP_LOGE("getPermissionDef failed");
+        LOG_E(BMS_TAG_INSTALLER, "getPermissionDef failed");
         return false;
     }
     if (permissionDef.availableLevel < Security::AccessToken::ATokenAplEnum::APL_SYSTEM_BASIC) {
-        APP_LOGE("permission %{public}s level too low", permissionName.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "permission %{public}s level too low", permissionName.c_str());
         return false;
     }
     return true;
@@ -1465,7 +1468,7 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
         for (const auto &proxyData : moduleInfo.second.proxyDatas) {
             auto name = GetBundleNameFromUri(proxyData.uri);
             if (bundleName != name) {
-                APP_LOGE("bundleName from uri %{public}s different from origin bundleName %{public}s",
+                LOG_E(BMS_TAG_INSTALLER, "bundleName from uri %{public}s different from origin bundleName %{public}s",
                     name.c_str(), bundleName.c_str());
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
             }
@@ -1486,12 +1489,12 @@ bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::st
     if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) ||
         (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL.c_str()) == 0)) {
         if (isolationMode == NONISOLATION_ONLY) {
-            APP_LOGE("check isolation mode failed.");
+            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
             return false;
         }
     } else {
         if (isolationMode == ISOLATION_ONLY) {
-            APP_LOGE("check isolation mode failed.");
+            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
             return false;
         }
     }
@@ -1508,10 +1511,10 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
             int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
-                APP_LOGW("GetParameter failed");
+                LOG_W(BMS_TAG_INSTALLER, "GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
-                APP_LOGE("check isolation mode failed.");
+                LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
                 return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }
@@ -1522,16 +1525,16 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
 ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signatureFileDir) const
 {
     if (!BundleUtil::CheckFileName(signatureFileDir)) {
-        APP_LOGE("code signature file dir is invalid");
+        LOG_E(BMS_TAG_INSTALLER, "code signature file dir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     if (!BundleUtil::CheckFileType(signatureFileDir, ServiceConstants::CODE_SIGNATURE_FILE_SUFFIX)) {
-        APP_LOGE("signatureFileDir is not suffixed with .sig");
+        LOG_E(BMS_TAG_INSTALLER, "signatureFileDir is not suffixed with .sig");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     // signatureFileDir not support relevant dir
     if (signatureFileDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
-        APP_LOGE("signatureFileDir is invalid");
+        LOG_E(BMS_TAG_INSTALLER, "signatureFileDir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     return ERR_OK;
@@ -1546,7 +1549,7 @@ ErrCode BundleInstallChecker::CheckDeveloperMode(
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-            APP_LOGE("debug bundle can only be installed in developer mode");
+            LOG_E(BMS_TAG_INSTALLER, "debug bundle can only be installed in developer mode");
             return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
         }
     }
@@ -1565,7 +1568,7 @@ ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
             provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
-            APP_LOGE("enterprise normal/mdm bundle cannot be installed on non-enterprise device");
+            LOG_E(BMS_TAG_INSTALLER, "enterprise normal/mdm bundle cannot be installed on non-enterprise device");
             return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
         }
     }

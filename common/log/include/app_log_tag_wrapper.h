@@ -89,7 +89,7 @@
 #endif
 
 #ifndef APPEXECFWK_FUNC_FMT
-#define APPEXECFWK_FUNC_FMT "[%{public}s(%{public}s:%{public}d)]"
+#define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
 #endif
 
 #ifndef APPEXECFWK_FILE_NAME

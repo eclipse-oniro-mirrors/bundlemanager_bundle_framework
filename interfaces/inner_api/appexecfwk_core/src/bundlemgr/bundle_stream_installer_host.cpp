@@ -15,6 +15,7 @@
 
 #include "bundle_stream_installer_host.h"
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_framework_core_ipc_interface_code.h"
@@ -25,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 BundleStreamInstallerHost::BundleStreamInstallerHost()
 {
-    APP_LOGD("create bundle stream installer host instance");
+    LOG_D(BMS_TAG_INSTALLER, "create bundle stream installer host instance");
     init();
 }
 
@@ -33,16 +34,16 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
     MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGD("bundle stream installer host onReceived message, the message code is %{public}u", code);
+    LOG_D(BMS_TAG_INSTALLER, "bundle stream installer host onReceived message, the message code is %{public}u", code);
     std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        APP_LOGW("[OnRemoteRequest] fail: invalid interface token!");
+        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: invalid interface token!");
         return OBJECT_NULL;
     }
 
     if (funcMap_.find(code) == funcMap_.end()) {
-        APP_LOGW("[OnRemoteRequest] fail: unknown code!");
+        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: unknown code!");
         return IRemoteStub<IBundleStreamInstaller>::OnRemoteRequest(code, data, reply, option);
     }
 
@@ -54,7 +55,7 @@ ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, Messa
     std::string fileName = data.ReadString();
     int32_t fd = CreateStream(fileName);
     if (!reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("write fd failed");
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -66,7 +67,7 @@ ErrCode BundleStreamInstallerHost::HandleCreateSignatureFileStream(MessageParcel
     std::string fileName = data.ReadString();
     int32_t fd = CreateSignatureFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("write fd failed");
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -78,7 +79,7 @@ ErrCode BundleStreamInstallerHost::HandleCreateSharedBundleStream(MessageParcel 
     uint32_t sharedBundleIdx = data.ReadUint32();
     int32_t fd = CreateSharedBundleStream(hspName, sharedBundleIdx);
     if (!reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("write fd failed");
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -90,7 +91,7 @@ ErrCode BundleStreamInstallerHost::HandleCreatePgoFileStream(MessageParcel &data
     std::string fileName = data.ReadString();
     int32_t fd = CreatePgoFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
-        APP_LOGE("write fd failed");
+        LOG_E(BMS_TAG_INSTALLER, "write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -100,7 +101,7 @@ ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessagePar
 {
     if (!Install()) {
         reply.WriteBool(false);
-        APP_LOGE("stream install failed");
+        LOG_E(BMS_TAG_INSTALLER, "stream install failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     reply.WriteBool(true);
