@@ -545,7 +545,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     // 2. need to process base icon and badge icon
     // BundleResourceParser
     BundleResourceParser parser;
-    if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+    if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
         APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
             bundleName.c_str(), appIndex);
     }
@@ -621,7 +621,7 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(
         ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE)) ==
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE))) {
         BundleResourceParser parser;
-        if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+        if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
             APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
                 bundleName.c_str(), appIndex);
         }
