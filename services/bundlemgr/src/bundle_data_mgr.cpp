@@ -119,6 +119,7 @@ constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr int32_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
+constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -7169,6 +7170,30 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
     }
 }
 
+void BundleDataMgr::CreateGroupDir(int32_t userId, const std::string &bundleName) const
+{
+    std::vector<DataGroupInfo> infos;
+    if (!QueryDataGroupInfos(bundleName, userId, infos) || infos.empty()) {
+        return;
+    }
+    for (const DataGroupInfo &dataGroupInfo : infos) {
+        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+            + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        if (result == ERR_OK && dirExist) {
+            continue;
+        }
+        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        result = InstalldClient::GetInstance()->Mkdir(dir,
+            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+        if (result != ERR_OK) {
+            APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
+                bundleName.c_str(), dataGroupInfo.uuid.c_str(), userId);
+        }
+    }
+}
+
 ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
 {
     APP_LOGI("CreateBundleDataDir with userId %{public}d begin", userId);
@@ -7193,6 +7218,8 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         createDirParam.extensionDirs = info.GetAllExtensionDirs();
         createDirParams.emplace_back(createDirParam);
+
+        CreateGroupDir(responseUserId, info.GetBundleName());
     }
     lock.unlock();
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);
