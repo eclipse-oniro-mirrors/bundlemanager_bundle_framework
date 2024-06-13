@@ -131,8 +131,7 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId <= 0) {
-        APP_LOGE("userId %{public}d is invalid", userId);
-        return Constants::EMPTY_STRING;
+        userId = Constants::START_USERID;
     }
     std::string path;
     path.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
@@ -148,8 +147,8 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
     return Constants::EMPTY_STRING;
 }
 
-std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
-    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
+std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
+    const std::string &compileMode, bool isEnanleBaselinePgo) const
 {
     AOTArgs aotArgs;
     aotArgs.bundleName = info.GetBundleName();
@@ -180,11 +179,8 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
 
     InnerBundleUserInfo newInnerBundleUserInfo;
-    int32_t activeUserId = AccountHelper::GetCurrentActiveUserId();
-    if (activeUserId <= 0) {
-        APP_LOGE("activeUserId is invalid");
-        return std::nullopt;
-    }
+    int32_t curActiveUserId = AccountHelper::GetCurrentActiveUserId();
+    int32_t activeUserId = curActiveUserId <= 0 ? Constants::START_USERID : curActiveUserId;
     if (!installedInfo.GetInnerBundleUserInfo(activeUserId, newInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user (%{public}d) failed",
             installedInfo.GetBundleName().c_str(), activeUserId);
@@ -198,13 +194,13 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.anFileName = aotArgs.outputPath + ServiceConstants::PATH_SEPARATOR + aotArgs.moduleName
         + ServiceConstants::AN_SUFFIX;
 
-    // key rule is start:end,start:end......
     std::string optBCRange = system::GetParameter(COMPILE_OPTCODE_RANGE_KEY, "");
     aotArgs.optBCRangeList = optBCRange;
 
     bool deviceIsScreenOff = CheckDeviceState();
     aotArgs.isScreenOff = static_cast<uint32_t>(deviceIsScreenOff);
 
+    aotArgs.isEnanleBaselinePgo = static_cast<uint32_t>(isEnanleBaselinePgo);
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
@@ -243,7 +239,7 @@ ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t version
 
 void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode)
 {
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode);
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode, true);
     (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
@@ -353,8 +349,7 @@ ErrCode AOTHandler::HandleCopyAp(const std::string &bundleName, bool isAllBundle
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     if (userId <= 0) {
-        APP_LOGE("userId %{public}d is invalid", userId);
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        userId = Constants::START_USERID;
     }
     for (const auto &bundleName : bundleNames) {
         BundleInfo bundleInfo;
@@ -607,7 +602,7 @@ EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, con
             eventInfo.costTimeSeconds = BundleUtil::GetCurrentTime() - beginTimeSeconds;
             return eventInfo;
         }
-        ErrCode ret = HandleCompileWithSingleHap(info, moduleName, compileMode);
+        ErrCode ret = HandleCompileWithSingleHap(info, moduleName, compileMode, true);
         APP_LOGI("moduleName : %{public}s, ret : %{public}d", moduleName.c_str(), ret);
         if (ret != ERR_OK) {
             compileRet = false;
@@ -657,11 +652,11 @@ void AOTHandler::HandleIdleWithSingleHap(
     (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
-ErrCode AOTHandler::HandleCompileWithSingleHap(
-    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode)
+ErrCode AOTHandler::HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
+    const std::string &compileMode, bool isEnanleBaselinePgo)
 {
     APP_LOGI("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnanleBaselinePgo);
     return AOTInternal(aotArgs, info.GetVersionCode());
 }
 

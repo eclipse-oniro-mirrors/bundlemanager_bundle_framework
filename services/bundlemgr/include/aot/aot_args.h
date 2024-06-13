@@ -52,6 +52,7 @@ struct AOTArgs : public Parcelable {
     uint32_t isEncryptedBundle = 0;
     std::string optBCRangeList;
     uint32_t isScreenOff = 0;
+    uint32_t isEnanleBaselinePgo = 0;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

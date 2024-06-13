@@ -57,11 +57,11 @@ private:
     std::string GetSouceAp(const std::string &mergedAp, const std::string &rtAp) const;
     bool IsSupportARM64() const;
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
-    std::optional<AOTArgs> BuildAOTArgs(
-        const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
+    std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
+        const std::string &compileMode, bool isEnanleBaselinePgo = false) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode);
-    ErrCode HandleCompileWithSingleHap(
-        const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode);
+    ErrCode HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
+        const std::string &compileMode, bool isEnanleBaselinePgo = false);
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
         std::shared_ptr<BundleDataMgr> dataMgr);
     ErrCode HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
