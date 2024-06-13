@@ -625,6 +625,10 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(
             APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
                 bundleName.c_str(), appIndex);
         }
+    } else {
+        for (auto &resourceInfo : resourceInfos) {
+            resourceInfo.icon_ = Constants::EMPTY_STRING;
+        }
     }
     // 3. save clone bundle resource info
     if (!bundleResourceRdb_->UpdateResourceForSystemStateChanged(resourceInfos)) {
