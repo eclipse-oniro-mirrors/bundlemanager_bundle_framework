@@ -2241,6 +2241,7 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         }
         close(fd);
     }
+    LOG_I(BMS_TAG_INSTALLD, "GenerateKeyIdAndSetPolicy success for %{public}s", bundleName.c_str());
     return true;
 }
 

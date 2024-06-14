@@ -2011,6 +2011,7 @@ void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("SetkeyId failed, cannot find userInfo for userId %{public}d", userId);
         return;
     }
     infoItem->second.keyId = keyId;
