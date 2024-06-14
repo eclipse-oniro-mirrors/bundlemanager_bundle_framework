@@ -45,8 +45,9 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
             APP_LOGE("OnRegenerateAppKey bundleInfo is not exist");
             continue;
         }
-        userInfo.SetKeyId(info.userId, keyId);
-        if (!dataMgr_->UpdateInnerBundleInfo(info)) {
+        InnerBundleInfo bundleInfo;
+        bundleInfo.SetKeyId(info.userId, keyId);
+        if (!dataMgr->UpdateInnerBundleInfo(info)) {
             APP_LOGE("save keyId failed");
             continue;
         }
