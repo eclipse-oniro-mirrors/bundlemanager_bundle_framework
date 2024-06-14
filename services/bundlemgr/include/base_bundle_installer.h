@@ -639,7 +639,7 @@ private:
     ErrCode CreateGroupDirs() const;
     void CreateDataGroupDir(InnerBundleInfo &info) const;
     ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
-    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
+    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
     void DeleteGroupDirsForException() const;
     ErrCode CreateDataGroupDirs(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
