@@ -18,6 +18,7 @@
 #include <cinttypes>
 
 #include "appexecfwk_errors.h"
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
@@ -39,12 +40,12 @@ constexpr int32_t DELAY_INTERVAL_SECONDS = 60;
 
 BundleInstallerManager::BundleInstallerManager()
 {
-    APP_LOGI("create bundle installer manager instance");
+    LOG_I(BMS_TAG_INSTALLER, "create bundle installer manager instance");
 }
 
 BundleInstallerManager::~BundleInstallerManager()
 {
-    APP_LOGI("destroy bundle installer manager instance");
+    LOG_I(BMS_TAG_INSTALLER, "destroy bundle installer manager instance");
 }
 
 void BundleInstallerManager::CreateInstallTask(
@@ -52,7 +53,7 @@ void BundleInstallerManager::CreateInstallTask(
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleFilePath, installParam] {
@@ -69,7 +70,7 @@ void BundleInstallerManager::CreateRecoverTask(
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleName, installParam] {
@@ -86,7 +87,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleFilePaths, installParam] {
@@ -107,7 +108,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
 
@@ -125,7 +126,7 @@ void BundleInstallerManager::CreateUninstallTask(
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleName, installParam] {
@@ -142,7 +143,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleName, modulePackage, installParam] {
@@ -159,7 +160,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
 {
     auto installer = CreateInstaller(statusReceive);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, uninstallParam] {
@@ -176,7 +177,7 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
 {
     auto installer = CreateInstaller(statusReceiver);
     if (installer == nullptr) {
-        APP_LOGE("create installer failed");
+        LOG_E(BMS_TAG_INSTALLER, "create installer failed");
         return;
     }
     auto task = [installer, bundleName, installParam] {
@@ -199,9 +200,9 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
     std::lock_guard<std::mutex> guard(mutex_);
-    APP_LOGI("hold mutex");
+    LOG_I(BMS_TAG_INSTALLER, "hold mutex");
     if (threadPool_ == nullptr) {
-        APP_LOGI("begin to start InstallerThreadPool");
+        LOG_I(BMS_TAG_INSTALLER, "begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
         threadPool_->Start(THREAD_NUMBER);
         threadPool_->SetMaxTaskNum(MAX_TASK_NUMBER);
@@ -209,29 +210,29 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         std::thread t(delayCloseTask);
         t.detach();
     }
-    APP_LOGI("add task, taskName : %{public}s", taskName.c_str());
+    LOG_I(BMS_TAG_INSTALLER, "add task, taskName : %{public}s", taskName.c_str());
     threadPool_->AddTask(task);
 }
 
 void BundleInstallerManager::DelayStopThreadPool()
 {
-    APP_LOGI("DelayStopThreadPool begin");
+    LOG_I(BMS_TAG_INSTALLER, "DelayStopThreadPool begin");
     BundleMemoryGuard memoryGuard;
 
     do {
-        APP_LOGI("sleep for 60s");
+        LOG_I(BMS_TAG_INSTALLER, "sleep for 60s");
         std::this_thread::sleep_for(std::chrono::seconds(DELAY_INTERVAL_SECONDS));
     } while (threadPool_ != nullptr && threadPool_->GetCurTaskNum() != 0);
 
     std::lock_guard<std::mutex> guard(mutex_);
     if (threadPool_ == nullptr) {
-        APP_LOGI("InstallerThreadPool is null, no need to stop");
+        LOG_I(BMS_TAG_INSTALLER, "InstallerThreadPool is null, no need to stop");
         return;
     }
-    APP_LOGI("begin to stop InstallerThreadPool");
+    LOG_I(BMS_TAG_INSTALLER, "begin to stop InstallerThreadPool");
     threadPool_->Stop();
     threadPool_ = nullptr;
-    APP_LOGI("DelayStopThreadPool end");
+    LOG_I(BMS_TAG_INSTALLER, "DelayStopThreadPool end");
 }
 
 size_t BundleInstallerManager::GetCurTaskNum()

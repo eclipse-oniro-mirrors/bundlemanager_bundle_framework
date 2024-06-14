@@ -17,6 +17,7 @@
 
 #include <cinttypes>
 
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 
@@ -25,12 +26,12 @@ namespace AppExecFwk {
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
     : installerId_(installerId), statusReceiver_(statusReceiver)
 {
-    APP_LOGI("create bundle installer instance, the installer id is %{public}" PRId64 "", installerId_);
+    LOG_I(BMS_TAG_INSTALLER, "create bundle installer instance, the installer id is %{public}" PRId64 "", installerId_);
 }
 
 BundleInstaller::~BundleInstaller()
 {
-    APP_LOGI("destroy bundle installer instance, the installer id is %{public}" PRId64 "", installerId_);
+    LOG_I(BMS_TAG_INSTALLER, "destroy installer id is %{public}" PRId64 "", installerId_);
 }
 
 void BundleInstaller::Install(const std::string &bundleFilePath, const InstallParam &installParam)
@@ -191,7 +192,7 @@ void BundleInstaller::Uninstall(
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    APP_LOGI("state: %{public}d", state);
+    LOG_I(BMS_TAG_INSTALLER, "state: %{public}d", state);
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));
@@ -203,7 +204,7 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
     std::set<int32_t> userIds;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
         return userIds;
     }
 

@@ -22,6 +22,7 @@
 #include "access_token.h"
 #include "account_helper.h"
 #include "aot/aot_handler.h"
+#include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
@@ -120,7 +121,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
     std::string tempDir =
         ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName;
     if (!BundleUtil::CreateDir(tempDir)) {
-        APP_LOGE("create tempdir failed %{public}s", tempDir.c_str());
+        LOG_E(BMS_TAG_START, "create tempdir failed %{public}s", tempDir.c_str());
         return;
     }
 
@@ -130,7 +131,7 @@ void MoveTempPath(const std::vector<std::string> &fromPaths,
             + std::to_string(hapIndex) + ServiceConstants::INSTALL_FILE_SUFFIX;
         hapIndex++;
         if (InstalldClient::GetInstance()->MoveFile(path, toPath) != ERR_OK) {
-            APP_LOGW("move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
+            LOG_W(BMS_TAG_START, "move from %{public}s to %{public}s failed", path.c_str(), toPath.c_str());
             continue;
         }
 
@@ -153,13 +154,13 @@ public:
         const int32_t resultCode, const std::string &resultMsg) override
     {
         if (bundleName_.empty()) {
-            APP_LOGD("bundleName_ is empty");
+            LOG_D(BMS_TAG_START, "bundleName_ is empty");
             return;
         }
 
         std::string tempDir = ServiceConstants::HAP_COPY_PATH
             + ServiceConstants::PATH_SEPARATOR + TEMP_PREFIX + bundleName_;
-        APP_LOGD("delete tempDir %{public}s", tempDir.c_str());
+        LOG_D(BMS_TAG_START, "delete tempDir %{public}s", tempDir.c_str());
         BundleUtil::DeleteDir(tempDir);
     }
 
@@ -170,28 +171,28 @@ private:
 
 BMSEventHandler::BMSEventHandler()
 {
-    APP_LOGD("instance is created");
+    LOG_D(BMS_TAG_START, "instance is created");
 }
 
 BMSEventHandler::~BMSEventHandler()
 {
-    APP_LOGD("instance is destroyed");
+    LOG_D(BMS_TAG_START, "instance is destroyed");
 }
 
 void BMSEventHandler::BmsStartEvent()
 {
-    APP_LOGI("BMSEventHandler BmsStartEvent start");
+    LOG_I(BMS_TAG_START, "BMSEventHandler BmsStartEvent start");
     BeforeBmsStart();
     OnBmsStarting();
     AfterBmsStart();
-    APP_LOGI("BMSEventHandler BmsStartEvent end");
+    LOG_I(BMS_TAG_START, "BMSEventHandler BmsStartEvent end");
 }
 
 void BMSEventHandler::BeforeBmsStart()
 {
     needNotifyBundleScanStatus_ = false;
     if (!BundlePermissionMgr::Init()) {
-        APP_LOGW("BundlePermissionMgr::Init failed");
+        LOG_W(BMS_TAG_START, "BundlePermissionMgr::Init failed");
     }
 
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_START);
@@ -199,10 +200,10 @@ void BMSEventHandler::BeforeBmsStart()
 
 void BMSEventHandler::OnBmsStarting()
 {
-    APP_LOGI("BMSEventHandler OnBmsStarting start");
+    LOG_I(BMS_TAG_START, "BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
-        APP_LOGI("OnBmsStarting Load install info from db success");
+        LOG_I(BMS_TAG_START, "OnBmsStarting Load install info from db success");
         BundleRebootStartEvent();
         return;
     }
@@ -210,7 +211,7 @@ void BMSEventHandler::OnBmsStarting()
     // If the preInstall infos does not exist in preInstall db,
     // all preInstall directory applications will be reinstalled.
     if (!LoadAllPreInstallBundleInfos()) {
-        APP_LOGE("OnBmsStarting Load all preInstall bundleInfos failed.");
+        LOG_E(BMS_TAG_START, "OnBmsStarting Load all preInstall bundleInfos failed.");
         needRebootOta_ = true;
     }
 
@@ -228,7 +229,7 @@ void BMSEventHandler::OnBmsStarting()
     ResultCode resultCode = GuardAgainstInstallInfosLossedStrategy();
     switch (resultCode) {
         case ResultCode::RECOVER_OK: {
-            APP_LOGI("OnBmsStarting Guard against install infos lossed strategy take effect.");
+            LOG_I(BMS_TAG_START, "OnBmsStarting Guard against install infos lossed strategy take effect.");
             if (needRebootOta_) {
                 BundleRebootStartEvent();
             } else {
@@ -238,28 +239,28 @@ void BMSEventHandler::OnBmsStarting()
             break;
         }
         case ResultCode::REINSTALL_OK: {
-            APP_LOGI("OnBmsStarting ReInstall all haps.");
+            LOG_I(BMS_TAG_START, "OnBmsStarting ReInstall all haps.");
             needNotifyBundleScanStatus_ = true;
             break;
         }
         case ResultCode::NO_INSTALLED_DATA: {
             // First boot
-            APP_LOGI("OnBmsStarting first boot.");
+            LOG_I(BMS_TAG_START, "OnBmsStarting first boot.");
             BundleBootStartEvent();
             break;
         }
         default:
-            APP_LOGE("System internal error, install informations missing.");
+            LOG_E(BMS_TAG_START, "System internal error, install informations missing.");
             break;
     }
 
     SaveSystemFingerprint();
-    APP_LOGI("BMSEventHandler OnBmsStarting end");
+    LOG_I(BMS_TAG_START, "BMSEventHandler OnBmsStarting end");
 }
 
 void BMSEventHandler::AfterBmsStart()
 {
-    APP_LOGI("BMSEventHandler AfterBmsStart start");
+    LOG_I(BMS_TAG_START, "BMSEventHandler AfterBmsStart start");
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     DelayedSingleton<QuickFixBootScanner>::GetInstance()->ProcessQuickFixBootUp();
 #endif
@@ -280,7 +281,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
-    APP_LOGI("BMSEventHandler AfterBmsStart end");
+    LOG_I(BMS_TAG_START, "BMSEventHandler AfterBmsStart end");
 }
 
 void BMSEventHandler::ClearCache()
@@ -292,10 +293,10 @@ void BMSEventHandler::ClearCache()
 
 bool BMSEventHandler::LoadInstallInfosFromDb()
 {
-    APP_LOGI("Load install infos from db");
+    LOG_I(BMS_TAG_START, "Load install infos from db");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return false;
     }
 
@@ -340,12 +341,12 @@ void BMSEventHandler::BundleRebootStartEvent()
 
 ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
 {
-    APP_LOGI("GuardAgainstInstallInfosLossedStrategy start");
+    LOG_I(BMS_TAG_START, "GuardAgainstInstallInfosLossedStrategy start");
     // Check user path, and parse userData to InnerBundleUserInfo
     std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     ScanResultCode scanResultCode = ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
     if (scanResultCode == ScanResultCode::SCAN_NO_DATA) {
-        APP_LOGE("Scan the user data directory failed");
+        LOG_E(BMS_TAG_START, "Scan the user data directory failed");
         return ResultCode::NO_INSTALLED_DATA;
     }
 
@@ -362,13 +363,13 @@ ResultCode BMSEventHandler::GuardAgainstInstallInfosLossedStrategy()
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
     ScanAndAnalyzeInstallInfos(installInfos);
     if (installInfos.empty()) {
-        APP_LOGE("check bundle path failed due to hap lossd or parse failed");
+        LOG_E(BMS_TAG_START, "check bundle path failed due to hap lossd or parse failed");
         return ResultCode::SYSTEM_ERROR;
     }
 
     // Combine InnerBundleInfo and InnerBundleUserInfo
     if (!CombineBundleInfoAndUserInfo(installInfos, innerBundleUserInfoMaps)) {
-        APP_LOGE("System internal error");
+        LOG_E(BMS_TAG_START, "System internal error");
         return ResultCode::SYSTEM_ERROR;
     }
 
@@ -381,21 +382,21 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
     ScanResultCode scanResultCode = ScanResultCode::SCAN_NO_DATA;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
+        LOG_E(BMS_TAG_START, "dataMgr is null");
         return scanResultCode;
     }
 
     std::string baseDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0];
     std::vector<std::string> userIds;
     if (!ScanDir(baseDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userIds)) {
-        APP_LOGD("Check the base user directory(%{public}s) failed", baseDataDir.c_str());
+        LOG_D(BMS_TAG_START, "Check the base user directory(%{public}s) failed", baseDataDir.c_str());
         return scanResultCode;
     }
 
     for (const auto &userId : userIds) {
         int32_t userIdInt = Constants::INVALID_USERID;
         if (!StrToInt(userId, userIdInt)) {
-            APP_LOGE("UserId(%{public}s) strToInt failed", userId.c_str());
+            LOG_E(BMS_TAG_START, "UserId(%{public}s) strToInt failed", userId.c_str());
             continue;
         }
 
@@ -403,7 +404,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
         std::vector<std::string> userDataBundleNames;
         std::string userDataDir = baseDataDir + ServiceConstants::PATH_SEPARATOR + userId + ServiceConstants::BASE;
         if (!ScanDir(userDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userDataBundleNames)) {
-            APP_LOGD("Check the user installation directory(%{public}s) failed", userDataDir.c_str());
+            LOG_D(BMS_TAG_START, "Check the user installation directory(%{public}s) failed", userDataDir.c_str());
             continue;
         }
 
@@ -426,21 +427,21 @@ bool BMSEventHandler::AnalyzeUserData(
     std::map<std::string, std::vector<InnerBundleUserInfo>> &userMaps)
 {
     if (userDataDir.empty() || userDataBundleName.empty()) {
-        APP_LOGE("UserDataDir or UserDataBundleName is empty");
+        LOG_E(BMS_TAG_START, "UserDataDir or UserDataBundleName is empty");
         return false;
     }
 
     std::string userDataBundlePath = userDataDir + userDataBundleName;
-    APP_LOGD("Analyze user data path(%{public}s)", userDataBundlePath.c_str());
+    LOG_D(BMS_TAG_START, "Analyze user data path(%{public}s)", userDataBundlePath.c_str());
     FileStat fileStat;
     if (InstalldClient::GetInstance()->GetFileStat(userDataBundlePath, fileStat) != ERR_OK) {
-        APP_LOGE("GetFileStat path(%{public}s) failed", userDataBundlePath.c_str());
+        LOG_E(BMS_TAG_START, "GetFileStat path(%{public}s) failed", userDataBundlePath.c_str());
         return false;
     }
 
     // It should be a bundleName dir
     if (!fileStat.isDir) {
-        APP_LOGE("UserDataBundlePath(%{public}s) is not dir", userDataBundlePath.c_str());
+        LOG_E(BMS_TAG_START, "UserDataBundlePath(%{public}s) is not dir", userDataBundlePath.c_str());
         return false;
     }
 
@@ -454,7 +455,7 @@ bool BMSEventHandler::AnalyzeUserData(
     auto accessTokenIdEx = OHOS::Security::AccessToken::AccessTokenKit::GetHapTokenIDEx(
         innerBundleUserInfo.bundleUserInfo.userId, userDataBundleName, 0);
     if (accessTokenIdEx.tokenIdExStruct.tokenID == 0) {
-        APP_LOGE("get tokenId failed.");
+        LOG_E(BMS_TAG_START, "get tokenId failed.");
         return false;
     }
 
@@ -481,7 +482,7 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         bool removable = IsPreInstallRemovable(preInstallDir);
         if (!OTAInstallSystemBundle(
             filePaths, Constants::AppType::SYSTEM_APP, removable)) {
-            APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
+            LOG_E(BMS_TAG_START, "Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
             SavePreInstallException(preInstallDir);
             continue;
         }
@@ -489,7 +490,7 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
 
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (installer == nullptr) {
-        APP_LOGE("installer is nullptr");
+        LOG_E(BMS_TAG_START, "installer is nullptr");
         return ResultCode::SYSTEM_ERROR;
     }
 
@@ -527,10 +528,10 @@ void BMSEventHandler::ScanAndAnalyzeInstallInfos(
 void BMSEventHandler::ScanInstallDir(
     std::map<std::string, std::vector<std::string>> &hapPathsMap)
 {
-    APP_LOGD("Scan the installed directory start");
+    LOG_D(BMS_TAG_START, "Scan the installed directory start");
     std::vector<std::string> bundleNameList;
     if (!ScanDir(Constants::BUNDLE_CODE_DIR, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, bundleNameList)) {
-        APP_LOGE("Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR);
+        LOG_E(BMS_TAG_START, "Check the bundle directory(%{public}s) failed", Constants::BUNDLE_CODE_DIR);
         return;
     }
 
@@ -538,12 +539,12 @@ void BMSEventHandler::ScanInstallDir(
         std::vector<std::string> hapPaths;
         auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
         if (!ScanDir(appCodePath, ScanMode::SUB_FILE_FILE, ResultMode::ABSOLUTE_PATH, hapPaths)) {
-            APP_LOGE("Scan the appCodePath(%{public}s) failed", appCodePath.c_str());
+            LOG_E(BMS_TAG_START, "Scan the appCodePath(%{public}s) failed", appCodePath.c_str());
             continue;
         }
 
         if (hapPaths.empty()) {
-            APP_LOGD("The directory(%{public}s) scan result is empty", appCodePath.c_str());
+            LOG_D(BMS_TAG_START, "The directory(%{public}s) scan result is empty", appCodePath.c_str());
             continue;
         }
 
@@ -551,7 +552,7 @@ void BMSEventHandler::ScanInstallDir(
         hapPathsMap.emplace(bundleName, checkHapPaths);
     }
 
-    APP_LOGD("Scan the installed directory end");
+    LOG_D(BMS_TAG_START, "Scan the installed directory end");
 }
 
 std::vector<std::string> BMSEventHandler::CheckHapPaths(
@@ -560,7 +561,7 @@ std::vector<std::string> BMSEventHandler::CheckHapPaths(
     std::vector<std::string> checkHapPaths;
     for (const auto &hapPath : hapPaths) {
         if (!BundleUtil::CheckFileType(hapPath, ServiceConstants::INSTALL_FILE_SUFFIX)) {
-            APP_LOGE("Check hapPath(%{public}s) failed", hapPath.c_str());
+            LOG_E(BMS_TAG_START, "Check hapPath(%{public}s) failed", hapPath.c_str());
             continue;
         }
 
@@ -580,7 +581,7 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
                 continue;
             }
 
-            APP_LOGI("cfgDir: %{public}s ", cfgDir);
+            LOG_I(BMS_TAG_START, "cfgDir: %{public}s ", cfgDir);
             rootDirList.emplace_back(cfgDir);
         }
 
@@ -617,7 +618,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
     std::vector<std::string> rootDirList;
     GetPreInstallRootDirList(rootDirList);
     if (rootDirList.empty()) {
-        APP_LOGE("dirList is empty");
+        LOG_E(BMS_TAG_START, "dirList is empty");
         return false;
     }
 
@@ -667,7 +668,7 @@ void BMSEventHandler::GetPreInstallDirFromLoadProFile(std::vector<std::string> &
 {
     for (const auto &installInfo : installList_) {
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed", installInfo.bundleDir.c_str());
+            LOG_W(BMS_TAG_START, "bundle(%{public}s) not allowed installed", installInfo.bundleDir.c_str());
             continue;
         }
 
@@ -700,7 +701,7 @@ void BMSEventHandler::AnalyzeHaps(
     for (const auto &bundleDir : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> hapInfos;
         if (!CheckAndParseHapFiles(bundleDir, isPreInstallApp, hapInfos) || hapInfos.empty()) {
-            APP_LOGE("Parse bundleDir(%{public}s) failed", bundleDir.c_str());
+            LOG_E(BMS_TAG_START, "Parse bundleDir(%{public}s) failed", bundleDir.c_str());
             continue;
         }
 
@@ -728,15 +729,15 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
     const std::map<std::string, std::vector<InnerBundleInfo>> &installInfos,
     const std::map<std::string, std::vector<InnerBundleUserInfo>> &userInfoMaps)
 {
-    APP_LOGD("Combine code information and user data start");
+    LOG_D(BMS_TAG_START, "Combine code information and user data start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
+        LOG_E(BMS_TAG_START, "dataMgr is null");
         return false;
     }
 
     if (installInfos.empty() || userInfoMaps.empty()) {
-        APP_LOGE("bundleInfos or userInfos is empty");
+        LOG_E(BMS_TAG_START, "bundleInfos or userInfos is empty");
         return false;
     }
 
@@ -744,7 +745,7 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
         auto bundleName = hasInstallInfo.first;
         auto userIter = userInfoMaps.find(bundleName);
         if (userIter == userInfoMaps.end()) {
-            APP_LOGE("User data directory missing with bundle %{public}s ", bundleName.c_str());
+            LOG_E(BMS_TAG_START, "User data directory missing with bundle %{public}s ", bundleName.c_str());
             needRebootOta_ = true;
             continue;
         }
@@ -762,7 +763,7 @@ bool BMSEventHandler::CombineBundleInfoAndUserInfo(
     dataMgr->RestoreUidAndGid();
     // Load all bundle state data from jsonDb
     dataMgr->LoadAllBundleStateDataFromJsonDb();
-    APP_LOGD("Combine code information and user data end");
+    LOG_D(BMS_TAG_START, "Combine code information and user data end");
     return true;
 }
 
@@ -770,7 +771,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
+        LOG_E(BMS_TAG_START, "dataMgr is null");
         return;
     }
 
@@ -809,7 +810,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
     dbInfo.GetModuleNames(dbModuleNames);
     auto iter = std::find(dbModuleNames.begin(), dbModuleNames.end(), hapModuleName);
     if (iter != dbModuleNames.end()) {
-        APP_LOGE("module(%{public}s) has install", hapModuleName.c_str());
+        LOG_E(BMS_TAG_START, "module(%{public}s) has install", hapModuleName.c_str());
         return;
     }
 
@@ -821,10 +822,10 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
 bool BMSEventHandler::ScanDir(
     const std::string& dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &resultList)
 {
-    APP_LOGD("Scan the directory(%{public}s) start", dir.c_str());
+    LOG_D(BMS_TAG_START, "Scan the directory(%{public}s) start", dir.c_str());
     ErrCode result = InstalldClient::GetInstance()->ScanDir(dir, scanMode, resultMode, resultList);
     if (result != ERR_OK) {
-        APP_LOGE("Scan the directory(%{public}s) failed", dir.c_str());
+        LOG_E(BMS_TAG_START, "Scan the directory(%{public}s) failed", dir.c_str());
         return false;
     }
 
@@ -835,7 +836,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
-        APP_LOGI("Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
+        LOG_I(BMS_TAG_START, "Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
         InnerProcessBootSystemHspInstall();
         InnerProcessBootPreBundleProFileInstall(userId);
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -849,7 +850,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 
 void BMSEventHandler::ProcessBootBundleInstallFromScan(int32_t userId)
 {
-    APP_LOGD("Process boot bundle install from scan");
+    LOG_D(BMS_TAG_START, "Process boot bundle install from scan");
     std::list<std::string> bundleDirs;
     GetBundleDirFromScan(bundleDirs);
     for (auto item : bundleDirs) {
@@ -862,7 +863,7 @@ void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
     std::vector<std::string> rootDirList;
     GetPreInstallRootDirList(rootDirList);
     if (rootDirList.empty()) {
-        APP_LOGE("rootDirList is empty");
+        LOG_E(BMS_TAG_START, "rootDirList is empty");
         return;
     }
 
@@ -898,14 +899,14 @@ void BMSEventHandler::InnerProcessBootSystemHspInstall()
 
 void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
 {
-    APP_LOGI("Install systemHsp by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
+    LOG_I(BMS_TAG_START, "Install systemHsp by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;
     AppServiceFwkInstaller installer;
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
     if (ret != ERR_OK) {
-        APP_LOGW("Install systemHsp %{public}s error", preScanInfo.bundleDir.c_str());
+        LOG_W(BMS_TAG_START, "Install systemHsp %{public}s error", preScanInfo.bundleDir.c_str());
     }
 }
 
@@ -915,9 +916,10 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     std::map<int32_t, std::vector<PreScanInfo>, std::greater<int32_t>> taskMap;
     std::list<std::string> hspDirs;
     for (const auto &installInfo : installList_) {
-        APP_LOGD("Inner process boot preBundle proFile install %{public}s", installInfo.ToString().c_str());
+        LOG_D(BMS_TAG_START, "Inner process boot preBundle proFile install %{public}s",
+            installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            APP_LOGI("bundle(%{public}s) not allowed installed when boot", installInfo.bundleDir.c_str());
+            LOG_I(BMS_TAG_START, "bundle(%{public}s) not allowed installed when boot", installInfo.bundleDir.c_str());
             continue;
         }
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
@@ -932,7 +934,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     }
 
     if (taskMap.size() <= 0) {
-        APP_LOGW("taskMap is empty.");
+        LOG_W(BMS_TAG_START, "taskMap is empty.");
         return;
     }
     AddTasks(taskMap, userId);
@@ -951,24 +953,24 @@ void BMSEventHandler::AddTaskParallel(
 {
     int32_t taskTotalNum = static_cast<int32_t>(tasks.size());
     if (taskTotalNum <= 0) {
-        APP_LOGE("The number of tasks is empty.");
+        LOG_E(BMS_TAG_START, "The number of tasks is empty.");
         return;
     }
 
     auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bundleMgrService == nullptr) {
-        APP_LOGE("bundleMgrService is nullptr");
+        LOG_E(BMS_TAG_START, "bundleMgrService is nullptr");
         return;
     }
 
     sptr<BundleInstallerHost> installerHost = bundleMgrService->GetBundleInstaller();
     if (installerHost == nullptr) {
-        APP_LOGE("installerHost is nullptr");
+        LOG_E(BMS_TAG_START, "installerHost is nullptr");
         return;
     }
 
     size_t threadsNum = static_cast<size_t>(installerHost->GetThreadsNum());
-    APP_LOGI("priority: %{public}d, tasks: %{public}zu, userId: %{public}d, threadsNum: %{public}zu.",
+    LOG_I(BMS_TAG_START, "priority: %{public}d, tasks: %{public}zu, userId: %{public}d, threadsNum: %{public}zu.",
         taskPriority, tasks.size(), userId, threadsNum);
     std::atomic_uint taskEndNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
@@ -984,7 +986,7 @@ void BMSEventHandler::AddTaskParallel(
             taskEndNum++;
             if (bundlePromise && static_cast<int32_t>(taskEndNum) >= taskTotalNum) {
                 bundlePromise->NotifyAllTasksExecuteFinished();
-                APP_LOGI("All tasks has executed and notify promise in priority(%{public}d).",
+                LOG_I(BMS_TAG_START, "All tasks has executed and notify promise in priority(%{public}d).",
                     installInfo.priority);
             }
         };
@@ -994,14 +996,14 @@ void BMSEventHandler::AddTaskParallel(
 
     if (static_cast<int32_t>(taskEndNum) < taskTotalNum) {
         bundlePromise->WaitForAllTasksExecute();
-        APP_LOGI("Wait for all tasks execute in priority(%{public}d).", taskPriority);
+        LOG_I(BMS_TAG_START, "Wait for all tasks execute in priority(%{public}d).", taskPriority);
     }
 }
 
 void BMSEventHandler::ProcessSystemBundleInstall(
     const PreScanInfo &preScanInfo, Constants::AppType appType, int32_t userId)
 {
-    APP_LOGD("Process system bundle install by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
+    LOG_D(BMS_TAG_START, "Process system bundle install by bundleDir(%{public}s)", preScanInfo.bundleDir.c_str());
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
@@ -1013,7 +1015,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
     if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
-        APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
+        LOG_W(BMS_TAG_START, "Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
         SavePreInstallException(preScanInfo.bundleDir);
     }
 }
@@ -1021,7 +1023,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
 void BMSEventHandler::ProcessSystemBundleInstall(
     const std::string &bundleDir, Constants::AppType appType, int32_t userId)
 {
-    APP_LOGI("Process system bundle install by bundleDir(%{public}s)", bundleDir.c_str());
+    LOG_I(BMS_TAG_START, "Process system bundle install by bundleDir(%{public}s)", bundleDir.c_str());
     InstallParam installParam;
     installParam.userId = userId;
     installParam.isPreInstallApp = true;
@@ -1033,14 +1035,14 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     SystemBundleInstaller installer;
     ErrCode ret = installer.InstallSystemBundle(bundleDir, installParam, appType);
     if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
-        APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
+        LOG_W(BMS_TAG_START, "Install System app:%{public}s error", bundleDir.c_str());
         SavePreInstallException(bundleDir);
     }
 }
 
 void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, Constants::AppType appType)
 {
-    APP_LOGI("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
+    LOG_I(BMS_TAG_START, "Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
@@ -1050,7 +1052,7 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     installParam.sharedBundleDirPaths = {sharedBundlePath};
     SystemBundleInstaller installer;
     if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
-        APP_LOGW("install system shared bundle: %{public}s error", sharedBundlePath.c_str());
+        LOG_W(BMS_TAG_START, "install system shared bundle: %{public}s error", sharedBundlePath.c_str());
     }
 }
 
@@ -1058,7 +1060,7 @@ void BMSEventHandler::SetAllInstallFlag() const
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -1072,7 +1074,7 @@ void BMSEventHandler::OnBundleRebootStart()
 
 void BMSEventHandler::ProcessRebootBundle()
 {
-    APP_LOGI("BMSEventHandler Process reboot bundle start");
+    LOG_I(BMS_TAG_START, "BMSEventHandler Process reboot bundle start");
     ProcessRebootDeleteAotPath();
     ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
@@ -1094,24 +1096,24 @@ void BMSEventHandler::ProcessRebootBundle()
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
 {
-    APP_LOGI("DeleteArkAp start");
+    LOG_I(BMS_TAG_START, "DeleteArkAp start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
         if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            LOG_W(BMS_TAG_START, "UpdateAppDataDir GetAllBundleInfos failed");
             continue;
         }
         for (const auto &bundleInfo : bundleInfos) {
             DeleteArkAp(bundleInfo, userId);
         }
     }
-    APP_LOGI("DeleteArkAp end");
+    LOG_I(BMS_TAG_START, "DeleteArkAp end");
 }
 
 void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
@@ -1125,12 +1127,12 @@ void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &u
         runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
             .append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
-            APP_LOGE("delete aot dir %{public}s failed!", runtimeAp.c_str());
+            LOG_E(BMS_TAG_START, "delete aot dir %{public}s failed!", runtimeAp.c_str());
             continue;
         }
         mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
-            APP_LOGE("delete aot dir %{public}s failed!", mergedAp.c_str());
+            LOG_E(BMS_TAG_START, "delete aot dir %{public}s failed!", mergedAp.c_str());
             continue;
         }
     }
@@ -1141,7 +1143,7 @@ void BMSEventHandler::ProcessRebootDeleteAotPath()
     std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
     removeAotPath.append("*");
     if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
-        APP_LOGE("delete aot dir %{public}s failed!", removeAotPath.c_str());
+        LOG_E(BMS_TAG_START, "delete aot dir %{public}s failed!", removeAotPath.c_str());
         return;
     }
 }
@@ -1150,19 +1152,19 @@ bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
 {
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
+        LOG_E(BMS_TAG_START, "bmsPara is nullptr");
         return false;
     }
 
     std::string val;
     if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
-        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        LOG_I(BMS_TAG_START, "GetBmsParam OTA_FLAG failed.");
         return false;
     }
 
     int32_t valInt = 0;
     if (!StrToInt(val, valInt)) {
-        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        LOG_E(BMS_TAG_START, "val(%{public}s) strToInt failed", val.c_str());
         return false;
     }
 
@@ -1174,19 +1176,19 @@ bool BMSEventHandler::UpdateOtaFlag(OTAFlag flag)
 {
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
+        LOG_E(BMS_TAG_START, "bmsPara is nullptr");
         return false;
     }
 
     std::string val;
     if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
-        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        LOG_I(BMS_TAG_START, "GetBmsParam OTA_FLAG failed.");
         return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
     }
 
     int32_t valInt = 0;
     if (!StrToInt(val, valInt)) {
-        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        LOG_E(BMS_TAG_START, "val(%{public}s) strToInt failed", val.c_str());
         return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
     }
 
@@ -1199,11 +1201,11 @@ void BMSEventHandler::ProcessCheckAppDataDir()
     bool checkElDir = false;
     CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkElDir);
     if (checkElDir) {
-        APP_LOGI("Not need to check data dir due to has checked.");
+        LOG_I(BMS_TAG_START, "Not need to check data dir due to has checked.");
         return;
     }
 
-    APP_LOGI("Need to check data dir.");
+    LOG_I(BMS_TAG_START, "Need to check data dir.");
     InnerProcessCheckAppDataDir();
     UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
 }
@@ -1212,7 +1214,7 @@ void BMSEventHandler::InnerProcessCheckAppDataDir()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -1220,7 +1222,7 @@ void BMSEventHandler::InnerProcessCheckAppDataDir()
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
         if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            LOG_W(BMS_TAG_START, "UpdateAppDataDir GetAllBundleInfos failed");
             continue;
         }
 
@@ -1236,10 +1238,10 @@ void BMSEventHandler::ProcessCheckPreinstallData()
     bool checkPreinstallData = false;
     CheckOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA, checkPreinstallData);
     if (checkPreinstallData) {
-        APP_LOGI("Not need to check preinstall app data due to has checked.");
+        LOG_I(BMS_TAG_START, "Not need to check preinstall app data due to has checked.");
         return;
     }
-    APP_LOGI("Need to check preinstall data.");
+    LOG_I(BMS_TAG_START, "Need to check preinstall data.");
     InnerProcessCheckPreinstallData();
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
 }
@@ -1248,7 +1250,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
@@ -1267,7 +1269,7 @@ void BMSEventHandler::InnerProcessCheckPreinstallData()
         auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
         for (auto preinstalledAppPath: preinstalledAppPaths) {
             if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
-                APP_LOGE("Get bundle archive info fail.");
+                LOG_E(BMS_TAG_START, "Get bundle archive info fail.");
                 break;
             }
             preInstallBundleInfo.SetLabelId(resultBundleInfo.applicationInfo.labelResource.id);
@@ -1287,10 +1289,10 @@ void BMSEventHandler::ProcessCheckAppLogDir()
     bool checkLogDir = false;
     CheckOtaFlag(OTAFlag::CHECK_LOG_DIR, checkLogDir);
     if (checkLogDir) {
-        APP_LOGI("Not need to check log dir due to has checked.");
+        LOG_I(BMS_TAG_START, "Not need to check log dir due to has checked.");
         return;
     }
-    APP_LOGI("Need to check log dir.");
+    LOG_I(BMS_TAG_START, "Need to check log dir.");
     InnerProcessCheckAppLogDir();
     UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
 }
@@ -1299,12 +1301,12 @@ void BMSEventHandler::InnerProcessCheckAppLogDir()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
-        APP_LOGE("GetAllBundleInfos failed");
+        LOG_E(BMS_TAG_START, "GetAllBundleInfos failed");
         return;
     }
     UpdateAppDataMgr::ProcessUpdateAppLogDir(bundleInfos, Constants::DEFAULT_USERID);
@@ -1315,10 +1317,10 @@ void BMSEventHandler::ProcessCheckAppFileManagerDir()
     bool checkDir = false;
     CheckOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR, checkDir);
     if (checkDir) {
-        APP_LOGI("Not need to check file manager dir due to has checked.");
+        LOG_I(BMS_TAG_START, "Not need to check file manager dir due to has checked.");
         return;
     }
-    APP_LOGI("Need to check file manager dir.");
+    LOG_I(BMS_TAG_START, "Need to check file manager dir.");
     InnerProcessCheckAppFileManagerDir();
     UpdateOtaFlag(OTAFlag::CHECK_FILE_MANAGER_DIR);
 }
@@ -1327,12 +1329,12 @@ void BMSEventHandler::InnerProcessCheckAppFileManagerDir()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
-        APP_LOGE("GetAllBundleInfos failed");
+        LOG_E(BMS_TAG_START, "GetAllBundleInfos failed");
         return;
     }
     UpdateAppDataMgr::ProcessFileManagerDir(bundleInfos, Constants::DEFAULT_USERID);
@@ -1343,10 +1345,10 @@ void BMSEventHandler::ProcessCheckShaderCacheDir()
     bool checkShaderCache = false;
     CheckOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR, checkShaderCache);
     if (checkShaderCache) {
-        APP_LOGI("Not need to check shader cache dir due to has checked.");
+        LOG_I(BMS_TAG_START, "Not need to check shader cache dir due to has checked.");
         return;
     }
-    APP_LOGI("Need to check shader cache dir.");
+    LOG_I(BMS_TAG_START, "Need to check shader cache dir.");
     InnerProcessCheckShaderCacheDir();
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
 }
@@ -1355,12 +1357,12 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::ALL_USERID)) {
-        APP_LOGE("GetAllBundleInfos failed");
+        LOG_E(BMS_TAG_START, "GetAllBundleInfos failed");
         return;
     }
     for (const auto &bundleInfo : bundleInfos) {
@@ -1368,7 +1370,7 @@ void BMSEventHandler::InnerProcessCheckShaderCacheDir()
         shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleInfo.name);
         ErrCode res = InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, bundleInfo.uid, bundleInfo.gid);
         if (res != ERR_OK) {
-            APP_LOGI("create shader cache failed: %{public}s ", shaderCachePath.c_str());
+            LOG_I(BMS_TAG_START, "create shader cache failed: %{public}s ", shaderCachePath.c_str());
         }
     }
 }
@@ -1378,10 +1380,10 @@ void BMSEventHandler::ProcessCheckCloudShaderDir()
     bool checkCloudShader = false;
     CheckOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR, checkCloudShader);
     if (checkCloudShader) {
-        APP_LOGD("Not need to check cloud shader cache dir due to has checked.");
+        LOG_D(BMS_TAG_START, "Not need to check cloud shader cache dir due to has checked.");
         return;
     }
-    APP_LOGD("Need to check cloud shader cache dir.");
+    LOG_D(BMS_TAG_START, "Need to check cloud shader cache dir.");
     InnerProcessCheckCloudShaderDir();
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
 }
@@ -1391,11 +1393,11 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     bool cloudExist = true;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(ServiceConstants::CLOUD_SHADER_PATH, cloudExist);
     if (result != ERR_OK) {
-        APP_LOGW("IsExistDir failed, error is %{public}d", result);
+        LOG_W(BMS_TAG_START, "IsExistDir failed, error is %{public}d", result);
         return;
     }
     if (cloudExist) {
-        APP_LOGD("CLOUD_SHADER_PATH is exist");
+        LOG_D(BMS_TAG_START, "CLOUD_SHADER_PATH is exist");
         return;
     }
 
@@ -1406,7 +1408,7 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGW("DataMgr is nullptr");
+        LOG_W(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -1414,31 +1416,31 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     auto hasBundleInstalled = dataMgr->GetBundleInfo(
         bundleName, BundleFlag::GET_BUNDLE_DEFAULT, info, Constants::ANY_USERID);
     if (!hasBundleInstalled) {
-        APP_LOGD("Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
+        LOG_D(BMS_TAG_START, "Obtain bundleInfo failed, bundleName: %{public}s not exist", bundleName.c_str());
         return;
     }
 
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
     result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
-    APP_LOGI("Create cloud shader cache result: %{public}d", result);
+    LOG_I(BMS_TAG_START, "Create cloud shader cache result: %{public}d", result);
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 {
     if (hasLoadAllPreInstallBundleInfosFromDb_) {
-        APP_LOGI("Has load all preInstall bundleInfos from db");
+        LOG_I(BMS_TAG_START, "Has load all preInstall bundleInfos from db");
         return true;
     }
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return false;
     }
 
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
     for (auto &iter : preInstallBundleInfos) {
-        APP_LOGD("load preInstallBundleInfos: %{public}s ", iter.GetBundleName().c_str());
+        LOG_D(BMS_TAG_START, "load preInstallBundleInfos: %{public}s ", iter.GetBundleName().c_str());
         loadExistData_.emplace(iter.GetBundleName(), iter);
     }
 
@@ -1448,7 +1450,7 @@ bool BMSEventHandler::LoadAllPreInstallBundleInfos()
 
 void BMSEventHandler::ProcessRebootBundleInstall()
 {
-    APP_LOGI("BMSEventHandler Process reboot bundle install start");
+    LOG_I(BMS_TAG_START, "BMSEventHandler Process reboot bundle install start");
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
         ProcessReBootPreBundleProFileInstall();
@@ -1464,14 +1466,14 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     std::list<std::string> bundleDirs;
     std::list<std::string> sharedBundleDirs;
     for (const auto &installInfo : installList_) {
-        APP_LOGI("Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
+        LOG_I(BMS_TAG_START, "Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            APP_LOGW("bundle(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
+            LOG_W(BMS_TAG_START, "bundle(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
             continue;
         }
 
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
-            APP_LOGI("found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
+            LOG_I(BMS_TAG_START, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
             sharedBundleDirs.emplace_back(installInfo.bundleDir);
         } else {
             bundleDirs.emplace_back(installInfo.bundleDir);
@@ -1491,7 +1493,7 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
 
 void BMSEventHandler::ProcessRebootBundleInstallFromScan()
 {
-    APP_LOGD("Process reboot bundle install from scan");
+    LOG_D(BMS_TAG_START, "Process reboot bundle install from scan");
     std::list<std::string> bundleDirs;
     GetBundleDirFromScan(bundleDirs);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
@@ -1503,16 +1505,16 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
     for (auto &scanPathIter : scanPathList) {
-        APP_LOGI("InnerProcessRebootBundleInstall reboot scan bundle path: %{public}s ", scanPathIter.c_str());
+        LOG_I(BMS_TAG_START, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
-            APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            LOG_E(BMS_TAG_START, "obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
             SavePreInstallException(scanPathIter);
             continue;
         }
@@ -1522,29 +1524,29 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            APP_LOGI("OTA Install new bundle(%{public}s) by path(%{public}s).",
+            LOG_I(BMS_TAG_START, "OTA Install new bundle(%{public}s) by path(%{public}s).",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
+                LOG_E(BMS_TAG_START, "OTA Install new bundle(%{public}s) error.", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
 
             continue;
         }
 
-        APP_LOGI("OTA process bundle(%{public}s) by path(%{public}s).",
+        LOG_I(BMS_TAG_START, "OTA process bundle(%{public}s) by path(%{public}s).",
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled && mapIter->second.GetIsUninstalled()) {
-            APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.",
+            LOG_W(BMS_TAG_START, "app(%{public}s) has been uninstalled and do not OTA install.",
                 bundleName.c_str());
             if (!removable) {
                 std::vector<std::string> filePaths { scanPathIter };
                 if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                    APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                    LOG_E(BMS_TAG_START, "OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
                     SavePreInstallException(scanPathIter);
                 }
             } else {
@@ -1554,11 +1556,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (HotPatchAppProcessing(bundleName)) {
-            APP_LOGI("OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPath upgrade.",
+            LOG_I(BMS_TAG_START, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPath upgrade.",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                LOG_E(BMS_TAG_START, "OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
                 SavePreInstallException(scanPathIter);
             }
 
@@ -1571,13 +1573,13 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
             if (parserModuleNames.empty()) {
-                APP_LOGE("module is empty when parser path(%{public}s).", item.first.c_str());
+                LOG_E(BMS_TAG_START, "module is empty when parser path(%{public}s).", item.first.c_str());
                 continue;
             }
             // Generally, when the versionCode of Hap is greater than the installed versionCode,
             // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
             if (hasInstalledInfo.versionCode < hapVersionCode) {
-                APP_LOGI("OTA update module(%{public}s) by path(%{public}s)",
+                LOG_I(BMS_TAG_START, "OTA update module(%{public}s) by path(%{public}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
                 updateBundle = true;
                 break;
@@ -1585,7 +1587,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
             // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
             if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
-                APP_LOGI("OTA update module(%{public}s) by path(%{public}s), accessTokenIdEx is equal to 0",
+                LOG_I(BMS_TAG_START, "OTA update module(%{public}s) by path(%{public}s), accessTokenIdEx is equal to 0",
                     parserModuleNames[0].c_str(), item.first.c_str());
                 updateBundle = true;
                 break;
@@ -1610,19 +1612,19 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                         updateBundle = true;
                         break;
                     }
-                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
+                    LOG_D(BMS_TAG_START, "module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
                     continue;
                 }
 
-                APP_LOGI("OTA install module(%{public}s) by path(%{public}s)",
+                LOG_I(BMS_TAG_START, "OTA install module(%{public}s) by path(%{public}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
                 updateBundle = true;
                 break;
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
-                APP_LOGE("bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
+                LOG_E(BMS_TAG_START, "bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
                     "installed bundle(%{public}d)", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
@@ -1642,7 +1644,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (!OTAInstallSystemBundleNeedCheckUser(filePaths, bundleName, appType, removable)) {
-            APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+            LOG_E(BMS_TAG_START, "OTA bundle(%{public}s) failed", bundleName.c_str());
             SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
@@ -1662,11 +1664,11 @@ bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const 
     }
     std::string curModuleHash;
     if (!newInfo.GetModuleBuildHash(moduleName, curModuleHash)) {
-        APP_LOGD("module(%{public}s) is not existed.", moduleName.c_str());
+        LOG_D(BMS_TAG_START, "module(%{public}s) is not existed.", moduleName.c_str());
         return false;
     }
     if (existModuleHash != curModuleHash) {
-        APP_LOGD("module(%{public}s) buildHash changed, so update corresponding hap or hsp.", moduleName.c_str());
+        LOG_D(BMS_TAG_START, "(%{public}s) buildHash changed, so update corresponding hap or hsp.", moduleName.c_str());
         return true;
     }
     return false;
@@ -1675,17 +1677,17 @@ bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const 
 void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     const std::list<std::string> &scanPathList, Constants::AppType appType)
 {
-    APP_LOGI("InnerProcessRebootSharedBundleInstall");
+    LOG_I(BMS_TAG_START, "InnerProcessRebootSharedBundleInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     for (const auto &scanPath : scanPathList) {
         bool removable = IsPreInstallRemovable(scanPath);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
-            APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            LOG_E(BMS_TAG_START, "obtain bundleinfo failed : %{public}s ", scanPath.c_str());
             continue;
         }
 
@@ -1694,10 +1696,10 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            APP_LOGI("OTA Install new shared bundle(%{public}s) by path(%{public}s).",
+            LOG_I(BMS_TAG_START, "OTA Install new shared bundle(%{public}s) by path(%{public}s).",
                 bundleName.c_str(), scanPath.c_str());
             if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
-                APP_LOGE("OTA Install new shared bundle(%{public}s) error.", bundleName.c_str());
+                LOG_E(BMS_TAG_START, "OTA Install new shared bundle(%{public}s) error.", bundleName.c_str());
             }
             continue;
         }
@@ -1705,39 +1707,39 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         InnerBundleInfo oldBundleInfo;
         bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
         if (!hasInstalled) {
-            APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
             continue;
         }
 
         if (oldBundleInfo.GetVersionCode() > versionCode) {
-            APP_LOGD("the installed version is up-to-date");
+            LOG_D(BMS_TAG_START, "the installed version is up-to-date");
             continue;
         }
         if (oldBundleInfo.GetVersionCode() == versionCode) {
             if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
-                APP_LOGD("the installed version is up-to-date");
+                LOG_D(BMS_TAG_START, "the installed version is up-to-date");
                 continue;
             }
         }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
-            APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
+            LOG_E(BMS_TAG_START, "OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
 }
 
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
-    APP_LOGI("InnerProcessRebootSystemHspInstall");
+    LOG_I(BMS_TAG_START, "InnerProcessRebootSystemHspInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     for (const auto &scanPath : scanPathList) {
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
-            APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            LOG_E(BMS_TAG_START, "obtain bundleinfo failed : %{public}s ", scanPath.c_str());
             continue;
         }
         auto bundleName = infos.begin()->second.GetBundleName();
@@ -1745,33 +1747,33 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            APP_LOGI("OTA Install new system hsp(%{public}s) by path(%{public}s).",
+            LOG_I(BMS_TAG_START, "OTA Install new system hsp(%{public}s) by path(%{public}s).",
                 bundleName.c_str(), scanPath.c_str());
             if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
-                APP_LOGE("OTA Install new system hsp(%{public}s) error.", bundleName.c_str());
+                LOG_E(BMS_TAG_START, "OTA Install new system hsp(%{public}s) error.", bundleName.c_str());
             }
             continue;
         }
         InnerBundleInfo oldBundleInfo;
         bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
         if (!hasInstalled) {
-            APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
             continue;
         }
         if (oldBundleInfo.GetVersionCode() > versionCode) {
-            APP_LOGD("the installed version is up-to-date");
+            LOG_D(BMS_TAG_START, "the installed version is up-to-date");
             continue;
         }
         if (oldBundleInfo.GetVersionCode() == versionCode) {
             for (const auto &item : infos) {
                 if (!IsNeedToUpdateSharedHspByHash(oldBundleInfo, item.second)) {
-                    APP_LOGD("the installed version is up-to-date");
+                    LOG_D(BMS_TAG_START, "the installed version is up-to-date");
                     continue;
                 }
             }
         }
         if (OTAInstallSystemHsp({scanPath}) != ERR_OK) {
-            APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
+            LOG_E(BMS_TAG_START, "OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
 }
@@ -1792,14 +1794,14 @@ bool BMSEventHandler::IsNeedToUpdateSharedHspByHash(
     std::string moduleName = newInfo.GetCurrentModulePackage();
     std::string newModuleBuildHash;
     if (!newInfo.GetModuleBuildHash(moduleName, newModuleBuildHash)) {
-        APP_LOGE("internal error, can not find module %{public}s", moduleName.c_str());
+        LOG_E(BMS_TAG_START, "internal error, can not find module %{public}s", moduleName.c_str());
         return false;
     }
 
     std::string oldModuleBuildHash;
     if (!oldInfo.GetModuleBuildHash(moduleName, oldModuleBuildHash) ||
         newModuleBuildHash != oldModuleBuildHash) {
-        APP_LOGD("module %{public}s need to be updated", moduleName.c_str());
+        LOG_D(BMS_TAG_START, "module %{public}s need to be updated", moduleName.c_str());
         return true;
     }
     return false;
@@ -1829,7 +1831,7 @@ bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
 {
     InnerBundleInfo innerBundleInfo;
     if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGE("can not get InnerBundleInfo, bundleName=%{public}s", bundleName.c_str());
+        LOG_E(BMS_TAG_START, "can not get InnerBundleInfo, bundleName=%{public}s", bundleName.c_str());
         return false;
     }
 
@@ -1839,15 +1841,15 @@ bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
 bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName)
 {
     if (bundleName.empty()) {
-        APP_LOGW("bundleName:%{public}s empty", bundleName.c_str());
+        LOG_W(BMS_TAG_START, "bundleName:%{public}s empty", bundleName.c_str());
         return false;
     }
 
     if (IsHotPatchApp(bundleName)) {
-        APP_LOGI("get hotpatch meta-data success, bundleName=%{public}s", bundleName.c_str());
+        LOG_I(BMS_TAG_START, "get hotpatch meta-data success, bundleName=%{public}s", bundleName.c_str());
         SystemBundleInstaller installer;
         if (!installer.UninstallSystemBundle(bundleName, true)) {
-            APP_LOGE("keep data to uninstall app(%{public}s) error", bundleName.c_str());
+            LOG_E(BMS_TAG_START, "keep data to uninstall app(%{public}s) error", bundleName.c_str());
             return false;
         }
         return true;
@@ -1859,12 +1861,12 @@ void BMSEventHandler::SaveSystemFingerprint()
 {
     auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
     if (bmsPara == nullptr) {
-        APP_LOGE("bmsPara is nullptr");
+        LOG_E(BMS_TAG_START, "bmsPara is nullptr");
         return;
     }
 
     std::string curSystemFingerprint = GetCurSystemFingerprint();
-    APP_LOGI("curSystemFingerprint(%{public}s)", curSystemFingerprint.c_str());
+    LOG_I(BMS_TAG_START, "curSystemFingerprint(%{public}s)", curSystemFingerprint.c_str());
     if (curSystemFingerprint.empty()) {
         return;
     }
@@ -1884,7 +1886,7 @@ bool BMSEventHandler::IsTestSystemUpgrade()
         return false;
     }
 
-    APP_LOGI("TestSystemUpgrade value is %{public}s", paramValue.c_str());
+    LOG_I(BMS_TAG_START, "TestSystemUpgrade value is %{public}s", paramValue.c_str());
     return paramValue == VALUE_TRUE;
 }
 
@@ -1892,12 +1894,12 @@ bool BMSEventHandler::IsSystemFingerprintChanged()
 {
     std::string oldSystemFingerprint = GetOldSystemFingerprint();
     if (oldSystemFingerprint.empty()) {
-        APP_LOGD("System should be upgraded due to oldSystemFingerprint is empty");
+        LOG_D(BMS_TAG_START, "System should be upgraded due to oldSystemFingerprint is empty");
         return true;
     }
 
     std::string curSystemFingerprint = GetCurSystemFingerprint();
-    APP_LOGD("oldSystemFingerprint(%{public}s), curSystemFingerprint(%{public}s)",
+    LOG_D(BMS_TAG_START, "oldSystemFingerprint(%{public}s), curSystemFingerprint(%{public}s)",
         oldSystemFingerprint.c_str(), curSystemFingerprint.c_str());
     return curSystemFingerprint != oldSystemFingerprint;
 }
@@ -1926,7 +1928,7 @@ bool BMSEventHandler::GetSystemParameter(const std::string &key, std::string &va
     char firmware[VERSION_LEN] = {0};
     int32_t ret = GetParameter(key.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter failed!");
+        LOG_E(BMS_TAG_START, "GetParameter failed!");
         return false;
     }
 
@@ -1964,10 +1966,10 @@ void BMSEventHandler::AddParseInfosToMap(
 
 void BMSEventHandler::ProcessRebootBundleUninstall()
 {
-    APP_LOGI("Reboot scan and OTA uninstall start");
+    LOG_I(BMS_TAG_START, "Reboot scan and OTA uninstall start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -1975,12 +1977,12 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         std::string bundleName = loadIter.first;
         auto listIter = hapParseInfoMap_.find(bundleName);
         if (listIter == hapParseInfoMap_.end()) {
-            APP_LOGI("ProcessRebootBundleUninstall OTA uninstall app(%{public}s).", bundleName.c_str());
+            LOG_I(BMS_TAG_START, "ProcessRebootBundleUninstall OTA uninstall app(%{public}s).", bundleName.c_str());
             SystemBundleInstaller installer;
             if (!installer.UninstallSystemBundle(bundleName)) {
-                APP_LOGE("OTA uninstall app(%{public}s) error", bundleName.c_str());
+                LOG_E(BMS_TAG_START, "OTA uninstall app(%{public}s) error", bundleName.c_str());
             } else {
-                APP_LOGI("OTA uninstall preInstall bundleName:%{public}s succeed.", bundleName.c_str());
+                LOG_I(BMS_TAG_START, "OTA uninstall preInstall bundleName:%{public}s succeed.", bundleName.c_str());
                 std::string moduleName;
                 DeletePreInfoInDb(bundleName, moduleName, true);
             }
@@ -1992,12 +1994,12 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
-            APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "app(%{public}s) maybe has been uninstall.", bundleName.c_str());
             continue;
         }
         // Check the installed module
         if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second)) {
-            APP_LOGI("bundleName:%{public}s need delete module", bundleName.c_str());
+            LOG_I(BMS_TAG_START, "bundleName:%{public}s need delete module", bundleName.c_str());
         }
         // Check the preInstall path in Db.
         // If the corresponding Hap does not exist, it should be deleted.
@@ -2005,29 +2007,29 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         for (auto preBundlePath : loadIter.second.GetBundlePaths()) {
             auto parserInfoIter = parserInfoMap.find(preBundlePath);
             if (parserInfoIter != parserInfoMap.end()) {
-                APP_LOGI("OTA uninstall app(%{public}s) module path(%{public}s) exits.",
+                LOG_I(BMS_TAG_START, "OTA uninstall app(%{public}s) module path(%{public}s) exits.",
                     bundleName.c_str(), preBundlePath.c_str());
                 continue;
             }
 
-            APP_LOGI("OTA app(%{public}s) delete path(%{public}s).",
+            LOG_I(BMS_TAG_START, "OTA app(%{public}s) delete path(%{public}s).",
                 bundleName.c_str(), preBundlePath.c_str());
             DeletePreInfoInDb(bundleName, preBundlePath, false);
         }
     }
 
-    APP_LOGI("Reboot scan and OTA uninstall success");
+    LOG_I(BMS_TAG_START, "Reboot scan and OTA uninstall success");
 }
 
 bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (infos.empty()) {
-        APP_LOGI("bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
+        LOG_I(BMS_TAG_START, "bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
         return false;
     }
     if (bundleInfo.versionCode > infos.begin()->second.GetVersionCode()) {
-        APP_LOGI("bundleName:%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
+        LOG_I(BMS_TAG_START, "bundleName:%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
         return false;
     }
     for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
@@ -2036,7 +2038,8 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         }
     }
     if (bundleInfo.hapModuleNames.size() == 1) {
-        APP_LOGI("bundleName:%{public}s only has one module, can not be uninstalled", bundleInfo.name.c_str());
+        LOG_I(BMS_TAG_START, "bundleName:%{public}s only has one module, can not be uninstalled",
+            bundleInfo.name.c_str());
         return false;
     }
     bool needUninstallModule = false;
@@ -2053,12 +2056,12 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         }
 
         if (!hasModuleHapExist) {
-            APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
+            LOG_I(BMS_TAG_START, "ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
                 bundleInfo.name.c_str(), moduleName.c_str());
             needUninstallModule = true;
             SystemBundleInstaller installer;
             if (!installer.UninstallSystemBundle(bundleInfo.name, moduleName)) {
-                APP_LOGE("OTA app(%{public}s) uninstall module(%{public}s) error.",
+                LOG_E(BMS_TAG_START, "OTA app(%{public}s) uninstall module(%{public}s) error.",
                     bundleInfo.name.c_str(), moduleName.c_str());
             }
         }
@@ -2071,19 +2074,19 @@ void BMSEventHandler::DeletePreInfoInDb(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (bundleLevel) {
-        APP_LOGI("DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
+        LOG_I(BMS_TAG_START, "DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
         dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
         return;
     }
 
-    APP_LOGI("DeletePreInfoInDb bundle %{public}s not bundleLevel with path(%{public}s)",
+    LOG_I(BMS_TAG_START, "DeletePreInfoInDb bundle %{public}s not bundleLevel with path(%{public}s)",
         bundleName.c_str(), bundlePath.c_str());
     dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     preInstallBundleInfo.DeleteBundlePath(bundlePath);
@@ -2099,7 +2102,7 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(
 {
     auto preInstallIter = loadExistData_.find(bundleName);
     if (preInstallIter == loadExistData_.end()) {
-        APP_LOGE("app(%{public}s) does not save in PreInstalledDb.", bundleName.c_str());
+        LOG_E(BMS_TAG_START, "app(%{public}s) does not save in PreInstalledDb.", bundleName.c_str());
         return false;
     }
 
@@ -2111,11 +2114,11 @@ void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
     auto preInstallExceptionMgr =
         DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
     if (preInstallExceptionMgr == nullptr) {
-        APP_LOGE("preInstallExceptionMgr is nullptr");
+        LOG_E(BMS_TAG_START, "preInstallExceptionMgr is nullptr");
         return;
     }
 
-    APP_LOGI("Starting to save pre-install exception for bundle: %{public}s", bundleDir.c_str());
+    LOG_I(BMS_TAG_START, "Starting to save pre-install exception for bundle: %{public}s", bundleDir.c_str());
     preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
 }
 
@@ -2124,7 +2127,7 @@ void BMSEventHandler::HandlePreInstallException()
     auto preInstallExceptionMgr =
         DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
     if (preInstallExceptionMgr == nullptr) {
-        APP_LOGE("preInstallExceptionMgr is nullptr");
+        LOG_E(BMS_TAG_START, "preInstallExceptionMgr is nullptr");
         return;
     }
 
@@ -2132,34 +2135,34 @@ void BMSEventHandler::HandlePreInstallException()
     std::set<std::string> exceptionBundleNames;
     if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
         exceptionPaths, exceptionBundleNames)) {
-        APP_LOGI("No pre-install exception information found");
+        LOG_I(BMS_TAG_START, "No pre-install exception information found");
         return;
     }
 
-    APP_LOGI("HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
+    LOG_I(BMS_TAG_START, "HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size());
     for (const auto &pathIter : exceptionPaths) {
-        APP_LOGI("HandlePreInstallException path: %{public}s", pathIter.c_str());
+        LOG_I(BMS_TAG_START, "HandlePreInstallException path: %{public}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
         bool removable = IsPreInstallRemovable(pathIter);
         if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
-            APP_LOGW("HandlePreInstallException path(%{public}s) error.", pathIter.c_str());
+            LOG_W(BMS_TAG_START, "HandlePreInstallException path(%{public}s) error.", pathIter.c_str());
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
-        APP_LOGI("Deleted pre-install exception path: %{public}s", pathIter.c_str());
+        LOG_I(BMS_TAG_START, "Deleted pre-install exception path: %{public}s", pathIter.c_str());
     }
 
     if (exceptionBundleNames.size() > 0) {
-        APP_LOGI("Loading all pre-install bundle infos");
+        LOG_I(BMS_TAG_START, "Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
 
     for (const auto &bundleNameIter : exceptionBundleNames) {
-        APP_LOGI("HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
+        LOG_I(BMS_TAG_START, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
         auto iter = loadExistData_.find(bundleNameIter);
         if (iter == loadExistData_.end()) {
-            APP_LOGW("HandlePreInstallException no bundleName(%{public}s) in PreInstallDb.",
+            LOG_W(BMS_TAG_START, "HandlePreInstallException no bundleName(%{public}s) in PreInstallDb.",
                 bundleNameIter.c_str());
             continue;
         }
@@ -2167,15 +2170,15 @@ void BMSEventHandler::HandlePreInstallException()
         const auto &preInstallBundleInfo = iter->second;
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
             Constants::AppType::SYSTEM_APP, preInstallBundleInfo.GetRemovable())) {
-            APP_LOGW("HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
+            LOG_W(BMS_TAG_START, "HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
         }
 
-        APP_LOGI("Deleting bundle name %{public}s from pre-install exception list", bundleNameIter.c_str());
+        LOG_I(BMS_TAG_START, "Deleting bundle name %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 
     preInstallExceptionMgr->ClearAll();
-    APP_LOGI("Pre-install exception information cleared successfully");
+    LOG_I(BMS_TAG_START, "Pre-install exception information cleared successfully");
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
@@ -2184,7 +2187,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     bool removable)
 {
     if (filePaths.empty()) {
-        APP_LOGE("File path is empty");
+        LOG_E(BMS_TAG_START, "File path is empty");
         return false;
     }
 
@@ -2212,7 +2215,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     bool removable)
 {
     if (filePaths.empty()) {
-        APP_LOGE("File path is empty");
+        LOG_E(BMS_TAG_START, "File path is empty");
         return false;
     }
 
@@ -2227,8 +2230,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
-    APP_LOGI("OTAInstallSystemBundleNeedCheckUser called for bundle %{public}s with return code: %{public}d",
-             bundleName.c_str(), ret);
+    LOG_I(BMS_TAG_START, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }
@@ -2241,7 +2243,7 @@ bool BMSEventHandler::OTAInstallSystemSharedBundle(
     bool removable)
 {
     if (filePaths.empty()) {
-        APP_LOGE("File path is empty");
+        LOG_E(BMS_TAG_START, "File path is empty");
         return false;
     }
 
@@ -2268,20 +2270,20 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
     if (ret != ERR_OK) {
-        APP_LOGE("File path %{public}s invalid", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "File path %{public}s invalid", hapFilePath.c_str());
         return false;
     }
 
     ret = bundleInstallChecker->CheckSysCap(realPaths);
     if (ret != ERR_OK) {
-        APP_LOGE("hap(%{public}s) syscap check failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "hap(%{public}s) syscap check failed", hapFilePath.c_str());
         return false;
     }
 
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     ret = bundleInstallChecker->CheckMultipleHapsSignInfo(realPaths, hapVerifyResults);
     if (ret != ERR_OK) {
-        APP_LOGE("CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "CheckMultipleHapsSignInfo %{public}s failed", hapFilePath.c_str());
         return false;
     }
 
@@ -2294,19 +2296,19 @@ bool BMSEventHandler::CheckAndParseHapFiles(
     ret = bundleInstallChecker->ParseHapFiles(
         realPaths, checkParam, hapVerifyResults, infos);
     if (ret != ERR_OK) {
-        APP_LOGE("parse haps file(%{public}s) failed", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "parse haps file(%{public}s) failed", hapFilePath.c_str());
         return false;
     }
 
     ret = bundleInstallChecker->CheckHspInstallCondition(hapVerifyResults);
     if (ret != ERR_OK) {
-        APP_LOGE("CheckHspInstallCondition failed %{public}d", ret);
+        LOG_E(BMS_TAG_START, "CheckHspInstallCondition failed %{public}d", ret);
         return false;
     }
 
     ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
-        APP_LOGE("Check APP label failed %{public}d", ret);
+        LOG_E(BMS_TAG_START, "Check APP label failed %{public}d", ret);
         return false;
     }
 
@@ -2326,7 +2328,7 @@ bool BMSEventHandler::ParseHapFiles(
     std::vector<std::string> realPaths;
     auto ret = BundleUtil::CheckFilePath(hapFilePathVec, realPaths);
     if (ret != ERR_OK) {
-        APP_LOGE("File path %{public}s invalid", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "File path %{public}s invalid", hapFilePath.c_str());
         return false;
     }
 
@@ -2335,7 +2337,7 @@ bool BMSEventHandler::ParseHapFiles(
         InnerBundleInfo innerBundleInfo;
         ret = bundleParser.Parse(realPath, innerBundleInfo);
         if (ret != ERR_OK) {
-            APP_LOGE("Parse bundle info failed, error: %{public}d", ret);
+            LOG_E(BMS_TAG_START, "Parse bundle info failed, error: %{public}d", ret);
             continue;
         }
 
@@ -2343,7 +2345,7 @@ bool BMSEventHandler::ParseHapFiles(
     }
 
     if (infos.empty()) {
-        APP_LOGE("Parse hap(%{public}s) empty ", hapFilePath.c_str());
+        LOG_E(BMS_TAG_START, "Parse hap(%{public}s) empty ", hapFilePath.c_str());
         return false;
     }
 
@@ -2358,12 +2360,12 @@ bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
     }
 
     if (!hasLoadPreInstallProFile_) {
-        APP_LOGE("Not load preInstall proFile or release.");
+        LOG_E(BMS_TAG_START, "Not load preInstall proFile or release.");
         return false;
     }
 
     if (path.empty() || installList_.empty()) {
-        APP_LOGE("path or installList is empty.");
+        LOG_E(BMS_TAG_START, "path or installList is empty.");
         return false;
     }
     auto installInfo = std::find_if(installList_.begin(), installList_.end(),
@@ -2382,18 +2384,18 @@ bool BMSEventHandler::IsPreInstallRemovable(const std::string &path)
 bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo)
 {
     if (!hasLoadPreInstallProFile_) {
-        APP_LOGE("Not load preInstall proFile or release.");
+        LOG_E(BMS_TAG_START, "Not load preInstall proFile or release.");
         return false;
     }
 
     if (preBundleConfigInfo.bundleName.empty() || installListCapabilities_.empty()) {
-        APP_LOGE("BundleName or installListCapabilities is empty.");
+        LOG_E(BMS_TAG_START, "BundleName or installListCapabilities is empty.");
         return false;
     }
 
     auto iter = installListCapabilities_.find(preBundleConfigInfo);
     if (iter == installListCapabilities_.end()) {
-        APP_LOGD("BundleName(%{public}s) no has preinstall capability.",
+        LOG_D(BMS_TAG_START, "BundleName(%{public}s) no has preinstall capability.",
             preBundleConfigInfo.bundleName.c_str());
         return false;
     }
@@ -2405,18 +2407,18 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
 bool BMSEventHandler::CheckExtensionTypeInConfig(const std::string &typeName)
 {
     if (!hasLoadPreInstallProFile_) {
-        APP_LOGE("Not load typeName proFile or release.");
+        LOG_E(BMS_TAG_START, "Not load typeName proFile or release.");
         return false;
     }
 
     if (typeName.empty() || extensiontype_.empty()) {
-        APP_LOGE("TypeName or typeName configuration file is empty.");
+        LOG_E(BMS_TAG_START, "TypeName or typeName configuration file is empty.");
         return false;
     }
 
     auto iter = extensiontype_.find(typeName);
     if (iter == extensiontype_.end()) {
-        APP_LOGE("ExtensionTypeConfig does not have '(%{public}s)' type",
+        LOG_E(BMS_TAG_START, "ExtensionTypeConfig does not have '(%{public}s)' type",
             typeName.c_str());
         return false;
     }
@@ -2429,7 +2431,7 @@ void BMSEventHandler::UpdateRemovable(const std::string &bundleName, bool remova
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -2449,7 +2451,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
     auto &bundleName = preBundleConfigInfo.bundleName;
     InnerBundleInfo innerBundleInfo;
     if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
+        LOG_W(BMS_TAG_START, "App(%{public}s) is not installed.", bundleName.c_str());
         return;
     }
     // match both fingerprint and appId
@@ -2457,7 +2459,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
         !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppId()) &&
         !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppIdentifier()) &&
         !MatchOldSignatures(preBundleConfigInfo, innerBundleInfo.GetOldAppIds())) {
-        APP_LOGE("bundleName: %{public}s no match pre bundle config info", bundleName.c_str());
+        LOG_E(BMS_TAG_START, "bundleName: %{public}s no match pre bundle config info", bundleName.c_str());
         return;
     }
 
@@ -2468,7 +2470,7 @@ bool BMSEventHandler::MatchSignature(
     const PreBundleConfigInfo &configInfo, const std::string &signature)
 {
     if (configInfo.appSignature.empty() || signature.empty()) {
-        APP_LOGW("appSignature or signature is empty");
+        LOG_W(BMS_TAG_START, "appSignature or signature is empty");
         return false;
     }
 
@@ -2480,7 +2482,7 @@ bool BMSEventHandler::MatchOldSignatures(const PreBundleConfigInfo &configInfo,
     const std::vector<std::string> &oldSignatures)
 {
     if (configInfo.appSignature.empty() || oldSignatures.empty()) {
-        APP_LOGW("appSignature or oldSignatures is empty");
+        LOG_W(BMS_TAG_START, "appSignature or oldSignatures is empty");
         return false;
     }
     for (const auto &signature : oldSignatures) {
@@ -2498,7 +2500,7 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
 
@@ -2519,7 +2521,7 @@ bool BMSEventHandler::FetchInnerBundleInfo(
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return false;
     }
 
@@ -2528,7 +2530,7 @@ bool BMSEventHandler::FetchInnerBundleInfo(
 
 void BMSEventHandler::ListeningUserUnlocked() const
 {
-    APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
+    LOG_I(BMS_TAG_START, "BMSEventHandler listen the unlock of someone user start.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
@@ -2537,7 +2539,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
-        APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
+        LOG_W(BMS_TAG_START, "BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
     }
 }
@@ -2545,22 +2547,22 @@ void BMSEventHandler::ListeningUserUnlocked() const
 void BMSEventHandler::RemoveUnreservedSandbox() const
 {
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
-    APP_LOGI("Start to RemoveUnreservedSandbox");
+    LOG_I(BMS_TAG_START, "Start to RemoveUnreservedSandbox");
     const int32_t WAIT_TIMES = 40;
     const int32_t EACH_TIME = 1000; // 1000ms
     auto execFunc = [](int32_t waitTimes, int32_t eachTime) {
         int32_t currentUserId = Constants::INVALID_USERID;
         while (waitTimes--) {
             std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
-            APP_LOGD("wait for account started");
+            LOG_D(BMS_TAG_START, "wait for account started");
             if (currentUserId == Constants::INVALID_USERID) {
                 currentUserId = AccountHelper::GetCurrentActiveUserId();
-                APP_LOGD("current active userId is %{public}d", currentUserId);
+                LOG_D(BMS_TAG_START, "current active userId is %{public}d", currentUserId);
                 if (currentUserId == Constants::INVALID_USERID) {
                     continue;
                 }
             }
-            APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
+            LOG_I(BMS_TAG_START, "RemoveUnreservedSandbox call ClearUnreservedSandbox");
             Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
             break;
         }
@@ -2568,17 +2570,17 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
     std::thread removeThread(execFunc, WAIT_TIMES, EACH_TIME);
     removeThread.detach();
 #endif
-    APP_LOGI("RemoveUnreservedSandbox finish");
+    LOG_I(BMS_TAG_START, "RemoveUnreservedSandbox finish");
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
 {
-    APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_START, "AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
     // parse profile info
     Security::Verify::HapVerifyResult hapVerifyResult;
     auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult);
     if (ret != ERR_OK) {
-        APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
+        LOG_E(BMS_TAG_START, "BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
             bundleName.c_str(), ret);
         return;
     }
@@ -2588,17 +2590,17 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(
         hapVerifyResult.GetProvisionInfo());
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
-        APP_LOGE("AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
+        LOG_E(BMS_TAG_START, "AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
     }
 }
 
 void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
     bool isPreInstall, bool debug)
 {
-    APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s start.", bundleName.c_str());
+    LOG_D(BMS_TAG_START, "UpdateAppDataSelinuxLabel bundleName: %{public}s start.", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::set<int32_t> userIds = dataMgr->GetAllUser();
@@ -2612,7 +2614,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
             bool isExist = true;
             ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
             if (result != ERR_OK) {
-                APP_LOGE("IsExistDir failed, error is %{public}d", result);
+                LOG_E(BMS_TAG_START, "IsExistDir failed, error is %{public}d", result);
                 continue;
             }
             if (!isExist) {
@@ -2623,18 +2625,18 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
             }
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, isPreInstall, debug);
             if (result != ERR_OK) {
-                APP_LOGW("bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
+                LOG_W(BMS_TAG_START, "bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
                     bundleName.c_str(), result);
             }
             std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleName;
             result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, isPreInstall, debug);
             if (result != ERR_OK) {
-                APP_LOGW("bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
+                LOG_W(BMS_TAG_START, "bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
                     bundleName.c_str(), result);
             }
         }
     }
-    APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s end.", bundleName.c_str());
+    LOG_D(BMS_TAG_START, "UpdateAppDataSelinuxLabel bundleName: %{public}s end.", bundleName.c_str());
 }
 
 void BMSEventHandler::HandleSceneBoard() const
@@ -2642,11 +2644,11 @@ void BMSEventHandler::HandleSceneBoard() const
 #ifdef WINDOW_ENABLE
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
+        LOG_E(BMS_TAG_START, "dataMgr is null");
         return;
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
-    APP_LOGI("HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
+    LOG_I(BMS_TAG_START, "HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
     dataMgr->SetApplicationEnabled(ServiceConstants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable,
         Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
@@ -2662,30 +2664,30 @@ void BMSEventHandler::HandleSceneBoard() const
 
 void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
 {
-    APP_LOGD("InnerProcessStockBundleProvisionInfo start.");
+    LOG_D(BMS_TAG_START, "InnerProcessStockBundleProvisionInfo start.");
     std::unordered_set<std::string> allBundleNames;
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
-        APP_LOGE("GetAllAppProvisionInfoBundleName failed");
+        LOG_E(BMS_TAG_START, "GetAllAppProvisionInfoBundleName failed");
         return;
     }
     // process normal bundle
     ProcessBundleProvisionInfo(allBundleNames);
     // process shared bundle
     ProcessSharedBundleProvisionInfo(allBundleNames);
-    APP_LOGD("InnerProcessStockBundleProvisionInfo end.");
+    LOG_D(BMS_TAG_START, "InnerProcessStockBundleProvisionInfo end.");
 }
 
 void BMSEventHandler::ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<BundleInfo> bundleInfos;
     if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
         bundleInfos, Constants::ALL_USERID) != ERR_OK) {
-        APP_LOGE("GetBundleInfos failed");
+        LOG_E(BMS_TAG_START, "GetBundleInfos failed");
         return;
     }
     for (const auto &bundleInfo : bundleInfos) {
@@ -2701,12 +2703,12 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     std::vector<SharedBundleInfo> shareBundleInfos;
     if (dataMgr->GetAllSharedBundleInfo(shareBundleInfos) != ERR_OK) {
-        APP_LOGE("GetAllSharedBundleInfo failed");
+        LOG_E(BMS_TAG_START, "GetAllSharedBundleInfo failed");
         return;
     }
     for (const auto &sharedBundleInfo : shareBundleInfos) {
@@ -2725,22 +2727,22 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
 
 void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta)
 {
-    APP_LOGI("ProcessRebootQuickFixBundleInstall start, isOta:%{public}d", isOta);
+    LOG_I(BMS_TAG_START, "ProcessRebootQuickFixBundleInstall start, isOta:%{public}d", isOta);
     std::list<std::string> bundleDirs;
     ProcessScanDir(path, bundleDirs);
     if (bundleDirs.empty()) {
-        APP_LOGI("end, bundleDirs is empty");
+        LOG_I(BMS_TAG_START, "end, bundleDirs is empty");
         return;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "DataMgr is nullptr");
         return;
     }
     for (auto &scanPathIter : bundleDirs) {
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
-            APP_LOGE("ParseHapFiles failed : %{public}s ", scanPathIter.c_str());
+            LOG_E(BMS_TAG_START, "ParseHapFiles failed : %{public}s ", scanPathIter.c_str());
             continue;
         }
         auto bundleName = infos.begin()->second.GetBundleName();
@@ -2749,15 +2751,16 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
-            APP_LOGW("obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
             continue;
         }
         if (hapVersionCode <= hasInstalledInfo.versionCode) {
-            APP_LOGW("bundleName: %{public}s: hapVersionCode is less than old hap versionCode.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode.",
+                bundleName.c_str());
             continue;
         }
         if (!hasInstalledInfo.isKeepAlive) {
-            APP_LOGW("bundleName: %{public}s: is not keep alive bundle", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "bundleName: %{public}s: is not keep alive bundle", bundleName.c_str());
             continue;
         }
         InstallParam installParam;
@@ -2769,25 +2772,25 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         SystemBundleInstaller installer;
         std::vector<std::string> filePaths { scanPathIter };
         if (!installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP)) {
-            APP_LOGW("bundleName: %{public}s: install failed.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "bundleName: %{public}s: install failed.", bundleName.c_str());
         }
     }
-    APP_LOGI("ProcessRebootQuickFixBundleInstall end");
+    LOG_I(BMS_TAG_START, "ProcessRebootQuickFixBundleInstall end");
 }
 
 void BMSEventHandler::CheckALLResourceInfo()
 {
-    APP_LOGI("start");
+    LOG_I(BMS_TAG_START, "start");
     std::thread ProcessBundleResourceThread(ProcessBundleResourceInfo);
     ProcessBundleResourceThread.detach();
 }
 
 void BMSEventHandler::ProcessBundleResourceInfo()
 {
-    APP_LOGI("ProcessBundleResourceInfo start");
+    LOG_I(BMS_TAG_START, "ProcessBundleResourceInfo start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "dataMgr is nullptr");
         return;
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
@@ -2802,7 +2805,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         if (item.second.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
             !innerBundleUserInfo.cloneInfos.empty()) {
             // need process clone app resource
-            APP_LOGI("bundleName:%{public}s has clone info", item.first.c_str());
+            LOG_I(BMS_TAG_START, "bundleName:%{public}s has clone info", item.first.c_str());
             for (const auto &clone : innerBundleUserInfo.cloneInfos) {
                 bundleNames.emplace_back(std::to_string(clone.second.appIndex) + INNER_UNDER_LINE + item.first);
             }
@@ -2818,20 +2821,20 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         }
     }
     if (needAddResourceBundles.empty()) {
-        APP_LOGI("needAddResourceBundles is empty, no need to add resource");
+        LOG_I(BMS_TAG_START, "needAddResourceBundles is empty, no need to add resource");
         return;
     }
 
     for (const auto &bundleName : needAddResourceBundles) {
-        APP_LOGI("bundleName: %{public}s add resource when reboot", bundleName.c_str());
+        LOG_I(BMS_TAG_START, "bundleName: %{public}s add resource when reboot", bundleName.c_str());
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
     }
-    APP_LOGI("ProcessBundleResourceInfo end");
+    LOG_I(BMS_TAG_START, "ProcessBundleResourceInfo end");
 }
 
 void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
 {
-    APP_LOGI("SendBundleUpdateFailedEvent start, bundleName:%{public}s", bundleInfo.name.c_str());
+    LOG_I(BMS_TAG_START, "SendBundleUpdateFailedEvent start, bundleName:%{public}s", bundleInfo.name.c_str());
     EventInfo eventInfo;
     eventInfo.userId = Constants::ANY_USERID;
     eventInfo.bundleName = bundleInfo.name;
@@ -2843,11 +2846,11 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
 
 void BMSEventHandler::DeleteAllBundleResourceInfo()
 {
-    APP_LOGI("delete all bundle resource when ota start");
+    LOG_I(BMS_TAG_START, "delete all bundle resource when ota start");
     if (!BundleResourceHelper::DeleteAllResourceInfo()) {
-        APP_LOGE("delete all bundle resource failed");
+        LOG_E(BMS_TAG_START, "delete all bundle resource failed");
     }
-    APP_LOGI("delete all bundle resource when ota end");
+    LOG_I(BMS_TAG_START, "delete all bundle resource when ota end");
 }
 
 bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
@@ -2876,7 +2879,7 @@ bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read bundleNameList from json file error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_START, "read bundleNameList from json file error, error code : %{public}d", parseResult);
         return false;
     }
     return true;
@@ -2884,30 +2887,30 @@ bool BMSEventHandler::GetValueFromJson(nlohmann::json &jsonObject)
 
 void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string &path)
 {
-    APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover start");
+    LOG_I(BMS_TAG_START, "ProcessRebootQuickFixUnInstallAndRecover start");
     if (!BundleUtil::IsExistFile(QUICK_FIX_APP_RECOVER_FILE)) {
-        APP_LOGE("end, reinstall json file is empty");
+        LOG_E(BMS_TAG_START, "end, reinstall json file is empty");
         return;
     }
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     if (installer == nullptr) {
-        APP_LOGE("installer is nullptr");
+        LOG_E(BMS_TAG_START, "installer is nullptr");
         return;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr");
+        LOG_E(BMS_TAG_START, "dataMgr is nullptr");
         return;
     }
     sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
     if (innerReceiverImpl == nullptr) {
-        APP_LOGE("innerReceiverImpl is nullptr");
+        LOG_E(BMS_TAG_START, "innerReceiverImpl is nullptr");
         return;
     }
     nlohmann::json jsonObject;
     if (!BundleParser::ReadFileIntoJson(QUICK_FIX_APP_RECOVER_FILE, jsonObject) || !jsonObject.is_object() ||
         !GetValueFromJson(jsonObject)) {
-        APP_LOGE("get jsonObject from path failed or get value failed");
+        LOG_E(BMS_TAG_START, "get jsonObject from path failed or get value failed");
         return;
     }
     for (const std::string &bundleName : bundleNameList_) {
@@ -2915,7 +2918,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
         auto hasBundleInstalled =
             dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
         if (!hasBundleInstalled) {
-            APP_LOGW("obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
+            LOG_W(BMS_TAG_START, "obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
             continue;
         }
         if (IsQuickfixFlagExsit(hasInstalledInfo)) {
@@ -2927,31 +2930,31 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
             installer->UninstallAndRecover(bundleName, installParam, innerReceiverImpl);
         }
     }
-    APP_LOGI("ProcessRebootQuickFixUnInstallAndRecover end");
+    LOG_I(BMS_TAG_START, "ProcessRebootQuickFixUnInstallAndRecover end");
 }
 
 void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
 {
     if (innerBundleInfos.empty()) {
-        APP_LOGW("innerBundleInfos is empty");
+        LOG_W(BMS_TAG_START, "innerBundleInfos is empty");
         return;
     }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGW("dataMgr is nullptr");
+        LOG_W(BMS_TAG_START, "dataMgr is nullptr");
         return;
     }
     PreInstallBundleInfo preInstallBundleInfo;
     if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        APP_LOGW("get preinstalled bundle info failed :%{public}s", bundleName.c_str());
+        LOG_W(BMS_TAG_START, "get preinstalled bundle info failed :%{public}s", bundleName.c_str());
         return;
     }
     if (innerBundleInfos.begin()->second.GetBaseBundleInfo().versionCode <= preInstallBundleInfo.GetVersionCode()) {
-        APP_LOGI("bundle no change");
+        LOG_I(BMS_TAG_START, "bundle no change");
         return;
     }
-    APP_LOGI("begin update preinstall DB for %{public}s", bundleName.c_str());
+    LOG_I(BMS_TAG_START, "begin update preinstall DB for %{public}s", bundleName.c_str());
     preInstallBundleInfo.ClearBundlePath();
     bool findEntry = false;
     for (const auto &item : innerBundleInfos) {
