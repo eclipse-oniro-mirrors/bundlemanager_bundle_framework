@@ -388,7 +388,7 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::stri
         mimeTypes.push_back(it->second);
     }
     if (mimeTypes.empty()) {
-        APP_LOGE("Suffix %{public}s has no corresponding type", suffix.c_str());
+        APP_LOGD("Suffix %{public}s has no corresponding type", suffix.c_str());
         return false;
     }
     return true;

@@ -3649,7 +3649,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     if (appIndex == 0) {
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-            APP_LOGW("bundleName: %{public}s userId: %{public}d incorrect",
+            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
                 innerBundleInfo.GetBundleName().c_str(), requestUserId);
             return false;
         }
