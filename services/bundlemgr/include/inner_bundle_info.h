@@ -950,6 +950,10 @@ public:
     void SetOverlayModuleState(const std::string &moduleName, int32_t state);
     void ClearOverlayModuleStates(const std::string &moduleName);
 
+    void SetInnerModuleNeedDelete(const std::string &moduleName, const bool needDelete);
+
+    bool GetInnerModuleNeedDelete(const std::string &moduleName);
+
     bool GetBaseSharedBundleInfo(const std::string &moduleName, uint32_t versionCode,
         BaseSharedBundleInfo &baseSharedBundleInfo) const;
     bool GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
