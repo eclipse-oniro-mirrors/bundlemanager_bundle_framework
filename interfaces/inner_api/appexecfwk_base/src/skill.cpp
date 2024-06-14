@@ -242,6 +242,18 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
 {
     std::string paramUriString = want.GetUriString();
     std::string paramType = want.GetType();
+    // only linkFeature
+    if (paramUriString.empty() && paramType.empty()) {
+        for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
+            const SkillUri &skillUri = uris[uriIndex];
+            if (linkFeature == skillUri.linkFeature) {
+                matchUriIndex = uriIndex;
+                return true;
+            }
+        }
+        return false;
+    }
+    // linkFeature + uri + type
     bool onlyUri = !paramUriString.empty() && paramType.empty();
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
