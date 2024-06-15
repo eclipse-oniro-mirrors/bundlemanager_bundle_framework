@@ -15,6 +15,7 @@
 
 #include "aot/aot_handler.h"
 
+#include <dlfcn.h>
 #include <sys/stat.h>
 #include <thread>
 #include <vector>
@@ -32,9 +33,6 @@
 #ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
 #include "display_power_mgr_client.h"
 #endif
-#ifdef BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE
-#include "user_status_client.h"
-#endif
 
 #ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
 #include "datetime_ex.h"
@@ -44,6 +42,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+using UserStatusFunc = ErrCode (*)(int32_t, std::vector<std::string>&, std::vector<std::string>&);
 // ark compile option parameter key
 constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* IDLE_COMPILE_MODE = "persist.bm.idle.arkopt";
@@ -87,6 +86,9 @@ constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* PGO_RT_AP_PREFIX = "rt_";
 constexpr const char* COPY_AP_DEST_PATH  = "/data/local/pgo/";
 constexpr const char* COMPILE_NONE = "none";
+
+constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
+constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
 
 #ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
 constexpr int32_t SLEEP_TIME_FOR_COMMON_EVENT_MGR = 500 * 1000; // 500 ms
@@ -550,16 +552,22 @@ bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
 bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const
 {
     APP_LOGI("GetUserBehaviourAppList begin, size : %{public}d", size);
-#ifdef BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE
+    void* handle = dlopen(USER_STATUS_SO_NAME, RTLD_NOW);
+    if (handle == nullptr) {
+        APP_LOGE("user status dlopen failed : %{public}s", dlerror());
+        return false;
+    }
+    UserStatusFunc userStatusFunc = reinterpret_cast<UserStatusFunc>(dlsym(handle, USER_STATUS_FUNC_NAME));
+    if (userStatusFunc == nullptr) {
+        APP_LOGE("user status dlsym failed : %{public}s", dlerror());
+        dlclose(handle);
+        return false;
+    }
     std::vector<std::string> interestedApps;
-    ErrCode ret = OHOS::Msdp::UserStatusAwareness::UserStatusClient::GetInstance().GetUserPreferenceApp(
-        OHOS::Msdp::UserStatusAwareness::UserPreferenceAppType::TOP_N, size, interestedApps, bundleNames);
+    ErrCode ret = userStatusFunc(size, interestedApps, bundleNames);
     APP_LOGI("GetUserPreferenceApp ret : %{public}d, bundleNames size : %{public}zu", ret, bundleNames.size());
+    dlclose(handle);
     return ret == ERR_OK;
-#else
-    APP_LOGI("user status awareness not exist");
-    return false;
-#endif
 }
 
 EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
