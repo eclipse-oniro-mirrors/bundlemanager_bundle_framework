@@ -41,7 +41,7 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
     MessageParcel& reply, MessageOption& option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGI("ExtendResourceManagerHost OnRemoteRequest, message code : %{public}u", code);
+    APP_LOGI("message %{public}u", code);
     std::u16string descriptor = ExtendResourceManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
@@ -65,7 +65,7 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
         case static_cast<uint32_t>(ExtendResourceManagerInterfaceCode::CREATE_FD):
             return HandleCreateFd(data, reply);
         default:
-            APP_LOGW("ExtendResourceManagerHost receive unknown code, code = %{public}d", code);
+            APP_LOGW("receive unknown %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }

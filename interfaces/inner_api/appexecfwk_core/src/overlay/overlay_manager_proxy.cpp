@@ -256,7 +256,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabledForSelf(const std::string &moduleN
     }
     auto res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("failed to SetOverlayEnabledForSelf due to error %{public}d", res);
+        APP_LOGE("failed: %{public}d", res);
     }
     return res;
 }
@@ -300,7 +300,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, co
     }
     auto res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("failed to SetOverlayEnabled due to error %{public}d", res);
+        APP_LOGE("failed SetOverlayEnabled due error %{public}d", res);
     }
     return res;
 }
@@ -347,7 +347,7 @@ ErrCode OverlayManagerProxy::GetParcelableInfo(
 
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("GetParcelableInfo failed due to %{public}d", res);
+        APP_LOGE("failed %{public}d", res);
         return res;
     }
 
@@ -395,12 +395,12 @@ bool OverlayManagerProxy::SendTransactCmd(OverlayManagerInterfaceCode code, Mess
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
+        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
+        APP_LOGE("receive error transact %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

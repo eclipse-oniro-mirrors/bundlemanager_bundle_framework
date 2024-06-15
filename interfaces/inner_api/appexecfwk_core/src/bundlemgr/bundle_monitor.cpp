@@ -60,7 +60,7 @@ void BundleMonitor::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
     std::string bundleName = want.GetElement().GetBundleName();
     int userId = want.GetIntParam(Constants::USER_ID, Constants::INVALID_USERID);
     int32_t appIndex = want.GetIntParam(Constants::APP_INDEX, Constants::DEFAULT_APP_INDEX);
-    APP_LOGI("OnReceiveEvent action = %{public}s, bundle = %{public}s, userId = %{public}d, appIndex = %{public}d",
+    APP_LOGI("OnReceiveEvent action %{public}s, bundle %{public}s, userId %{public}d, appIndex %{public}d",
         action.c_str(), bundleName.c_str(), userId, appIndex);
     std::lock_guard<std::mutex> lock(mutex_);
     if ((action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED) && (callback_ != nullptr)) {
@@ -70,7 +70,7 @@ void BundleMonitor::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
     } else if ((action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) && (callback_ != nullptr)) {
         callback_->OnBundleRemoved(bundleName, userId, appIndex);
     } else {
-        APP_LOGI("OnReceiveEvent action = %{public}s not support", action.c_str());
+        APP_LOGI("%{public}s not support", action.c_str());
     }
 }
 }  // namespace AppExecFwk

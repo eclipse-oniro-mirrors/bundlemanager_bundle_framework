@@ -404,7 +404,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         errCode = (this->*funcMap_[code])(data, reply);
     } else {
-        APP_LOGW("bundleMgr host receives unknown code, code = %{public}u", code);
+        APP_LOGW("receives unknown %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundleMgr host finish to process message, errCode: %{public}d", errCode);
@@ -1564,9 +1564,9 @@ ErrCode BundleMgrHost::HandleCompileProcessAOT(MessageParcel &data, MessageParce
     bool isAllBundle = data.ReadBool();
     std::vector<std::string> compileResults;
 
-    APP_LOGI("compile info name %{public}s", bundleName.c_str());
+    APP_LOGI("compile info %{public}s", bundleName.c_str());
     ErrCode ret = CompileProcessAOT(bundleName, compileMode, isAllBundle, compileResults);
-    APP_LOGI("ret is %{public}d", ret);
+    APP_LOGI("ret %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1586,9 +1586,9 @@ ErrCode BundleMgrHost::HandleCompileReset(MessageParcel &data, MessageParcel &re
     std::string bundleName = data.ReadString();
     bool isAllBundle = data.ReadBool();
 
-    APP_LOGI("reset info name %{public}s", bundleName.c_str());
+    APP_LOGI("reset info %{public}s", bundleName.c_str());
     ErrCode ret = CompileReset(bundleName, isAllBundle);
-    APP_LOGI("ret is %{public}d", ret);
+    APP_LOGI("ret %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1603,7 +1603,7 @@ ErrCode BundleMgrHost::HandleCopyAp(MessageParcel &data, MessageParcel &reply)
     bool isAllBundle = data.ReadBool();
     std::vector<std::string> results;
     ErrCode ret = CopyAp(bundleName, isAllBundle, results);
-    APP_LOGI("ret is %{public}d", ret);
+    APP_LOGI("ret %{public}d", ret);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("HandleCopyAp write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -1623,7 +1623,7 @@ ErrCode BundleMgrHost::HandleDumpInfos(MessageParcel &data, MessageParcel &reply
     int32_t userId = data.ReadInt32();
 
     std::string result;
-    APP_LOGI("dump info name %{public}s", bundleName.c_str());
+    APP_LOGI("dump info %{public}s", bundleName.c_str());
     bool ret = DumpInfos(flag, bundleName, userId, result);
     (void)reply.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!reply.WriteBool(ret)) {
@@ -3424,7 +3424,7 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (useAshMem) {
-        APP_LOGI("reply size %{public}lu, writing into ashmem", static_cast<unsigned long>(size));
+        APP_LOGI("reply size %{public}lu, writing ashmem", static_cast<unsigned long>(size));
         if (!WriteParcelableIntoAshmem(parcelable, ashmemName, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;

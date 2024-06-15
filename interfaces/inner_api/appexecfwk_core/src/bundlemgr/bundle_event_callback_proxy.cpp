@@ -56,7 +56,7 @@ void BundleEventCallbackProxy::OnReceiveEvent(const EventFwk::CommonEventData ev
     int32_t ret = remote->SendRequest(
         static_cast<int32_t>(BundleEventCallbackInterfaceCode::ON_RECEIVE_EVENT), data, reply, option);
     if (ret != ERR_OK) {
-        APP_LOGW("failed to SendRequest, errorCode : %{public}d", ret);
+        APP_LOGW("SendRequest failed %{public}d", ret);
     }
 }
 }  // namespace AppExecFwk

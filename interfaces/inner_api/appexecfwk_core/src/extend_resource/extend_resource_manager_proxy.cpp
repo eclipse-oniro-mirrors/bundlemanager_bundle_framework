@@ -315,7 +315,7 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
         APP_LOGD("sourcePath : %{private}s, fileName : %{private}s", sourcePath.c_str(), fileName.c_str());
         int32_t sourceFd = open(sourcePath.c_str(), O_RDONLY);
         if (sourceFd < 0) {
-            APP_LOGE("open file failed, errno:%{public}d", errno);
+            APP_LOGE("failed :%{public}d", errno);
             return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
         }
         int32_t destFd = -1;
@@ -330,7 +330,7 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
         int offset = -1;
         while ((offset = read(sourceFd, buffer, sizeof(buffer))) > 0) {
             if (write(destFd, buffer, offset) < 0) {
-                APP_LOGE("write file to the temp dir failed, errno %{public}d", errno);
+                APP_LOGE("write file to the temp dir failed, %{public}d", errno);
                 close(sourceFd);
                 close(destFd);
                 return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
@@ -356,7 +356,7 @@ bool ExtendResourceManagerProxy::SendRequest(
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
+        APP_LOGE("receive error %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

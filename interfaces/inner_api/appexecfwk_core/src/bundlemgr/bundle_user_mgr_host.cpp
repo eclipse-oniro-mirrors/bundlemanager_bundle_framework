@@ -67,7 +67,7 @@ ErrCode BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
     const int32_t userId = data.ReadInt32();
     const int32_t vectorSize = data.ReadInt32();
     if (vectorSize > DISALLOWLISTMAXSIZE) {
-        APP_LOGE("Abnormal data size reading form parcel, size is %{public}d", vectorSize);
+        APP_LOGE("Abnormal data size reading form parcel, size %{public}d", vectorSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     std::vector<std::string> disallowList;
