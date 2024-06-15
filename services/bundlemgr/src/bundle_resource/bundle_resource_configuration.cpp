@@ -87,7 +87,8 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
 
 bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &hapPath,
     const std::vector<std::string> &overlayHaps,
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+    bool needParseIcon, bool needParseLabel)
 {
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
@@ -115,8 +116,9 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     }
     // adapt overlay
     if (overlayHaps.empty()) {
-        if (!resourceManager->AddResource(hapPath.c_str(),
-            Global::Resource::SELECT_STRING | Global::Resource::SELECT_MEDIA)) {
+        uint32_t selectType = needParseIcon ? Global::Resource::SELECT_MEDIA : 0;
+        selectType = needParseLabel ? (selectType | Global::Resource::SELECT_STRING) : selectType;
+        if (!resourceManager->AddResource(hapPath.c_str(), selectType)) {
             APP_LOGW("AddResource failed, hapPath: %{public}s", hapPath.c_str());
         }
     } else {
