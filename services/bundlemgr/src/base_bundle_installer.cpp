@@ -112,6 +112,8 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
+const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
+const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -3438,6 +3440,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
+    SetInstallSourceToAppInfo(infos, installParam);
     return ret;
 }
 
@@ -3633,6 +3636,34 @@ void BaseBundleInstaller::RemoveOldExtensionDirs() const
     auto result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, removeExtensionDirs_);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove old extension sandbox dirfailed");
+    }
+}
+
+std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installParam) const
+{
+    if (installParam.isPreInstallApp) {
+        return INSTALL_SOURCE_PREINSTALL;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_I(BMS_TAG_INSTALLER, "dataMgr is nullptr return unknown");
+        return INSTALL_SOURCE_UNKNOWN;
+    }
+    std::string callingBundleName;
+    ErrCode ret = dataMgr->GetNameForUid(sysEventInfo_.callingUid, callingBundleName);
+    if (ret != ERR_OK) {
+        LOG_I(BMS_TAG_INSTALLER, "get bundle name failed return unknown");
+        return INSTALL_SOURCE_UNKNOWN;
+    }
+    return callingBundleName;
+}
+
+void BaseBundleInstaller::SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InstallParam &installParam) const
+{
+    std::string installSource = GetInstallSource(installParam);
+    for (auto &info : infos) {
+        info.second.SetInstallSource(installSource);
     }
 }
 

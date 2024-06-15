@@ -910,6 +910,11 @@ public:
         return baseApplicationInfo_->multiAppMode.multiAppModeType;
     }
 
+    void SetInstallSource(const std::string &installSource)
+    {
+        baseApplicationInfo_->installSource = installSource;
+    }
+
     std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
     std::vector<std::string> GetAllExtensionDirs() const;
     void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string>& dataGroupIds);

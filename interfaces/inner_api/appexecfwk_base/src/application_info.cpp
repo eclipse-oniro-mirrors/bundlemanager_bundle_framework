@@ -131,6 +131,7 @@ const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string APPLICATION_APP_INDEX = "appIndex";
 const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
+const std::string APPLICATION_INSTALL_SOURCE = "installSource";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -578,6 +579,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
 
     appIndex = parcel.ReadInt32();
     maxChildProcess = parcel.ReadInt32();
+    installSource = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -747,6 +749,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &multiAppMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxChildProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
     return true;
 }
 
@@ -995,7 +998,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
-        {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess}
+        {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess},
+        {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource}
     };
 }
 
@@ -1187,6 +1191,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.appIndex, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MAX_CHILD_PROCESS,
         applicationInfo.maxChildProcess, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
+        applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }
