@@ -146,7 +146,8 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
                     resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, *resConfig, 0, userId));
             resourceManagerMap[resourceInfos[index].moduleName_] = resourceManager;
             if (!BundleResourceConfiguration::InitResourceGlobalConfig(
-                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager)) {
+                resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
+                resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_)) {
                 APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             }
         }
