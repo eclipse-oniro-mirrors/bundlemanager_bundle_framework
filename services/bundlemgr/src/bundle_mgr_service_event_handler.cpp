@@ -2234,6 +2234,9 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }
+    if (ret != ERR_OK) {
+        APP_LOGE("OTA bundle(%{public}s) failed, errCode:%{public}d", bundleName.c_str(), ret);
+    }
     return ret == ERR_OK;
 }
 
