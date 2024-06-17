@@ -77,7 +77,7 @@ void DistributedModuleInfo::Dump(const std::string &prefix, int fd)
     }
     int flags = fcntl(fd, F_GETFL);
     if (flags < 0) {
-        APP_LOGE("dump DistributedModuleInfo fcntl error %{public}d", errno);
+        APP_LOGE("fcntl error %{public}d", errno);
         return;
     }
     uint uflags = static_cast<uint>(flags);
@@ -89,7 +89,7 @@ void DistributedModuleInfo::Dump(const std::string &prefix, int fd)
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
-            APP_LOGE("dump DistributedModuleInfo write error %{public}d", errno);
+            APP_LOGE("write error %{public}d", errno);
         }
     }
 }
@@ -123,7 +123,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedModuleInfo& distribu
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module distributedModuleInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read distributedModuleInfo jsonObject error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

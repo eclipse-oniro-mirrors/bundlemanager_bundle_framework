@@ -64,7 +64,7 @@ void from_json(const nlohmann::json &jsonObject, TargetExtSetting &targetExtSett
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetExtSetting from jsonObject error: %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetExtSetting from jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -248,7 +248,7 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetInfo from jsonObject error: %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetInfo from jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -365,7 +365,7 @@ void from_json(const nlohmann::json &jsonObject, TargetAbilityInfo &targetAbilit
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetAbilityInfo from jsonObject error: %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module targetAbilityInfo from jsonObject error : %{public}d", parseResult);
     }
 }
 

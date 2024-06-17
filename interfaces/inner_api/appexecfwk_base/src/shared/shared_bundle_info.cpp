@@ -110,7 +110,7 @@ void from_json(const nlohmann::json &jsonObject, SharedBundleInfo &sharedBundleI
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read SharedBundleInfo error, error code : %{public}d", parseResult);
+        APP_LOGE("read SharedBundleInfo error : %{public}d", parseResult);
     }
 }
 } // AppExecFwk

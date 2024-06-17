@@ -25,7 +25,7 @@ namespace AppExecFwk {
 #define READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(type, parcel, data)         \
     do {                                                                 \
         if (!(parcel).Read##type(data)) {                                \
-            APP_LOGE("fail to read %{public}s type from parcel", #type); \
+            APP_LOGE("fail %{public}s parcel", #type); \
             return false;                                                \
         }                                                                \
     } while (0)
@@ -33,7 +33,7 @@ namespace AppExecFwk {
 #define WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(type, parcel, data)         \
     do {                                                                  \
         if (!(parcel).Write##type(data)) {                                \
-            APP_LOGE("fail to write %{public}s type into parcel", #type); \
+            APP_LOGE("fail %{public}s parcel", #type); \
             return false;                                                 \
         }                                                                 \
     } while (0)
@@ -41,7 +41,7 @@ namespace AppExecFwk {
 #define WRITE_PARCEL_AND_RETURN(type, parcel, data)                       \
     do {                                                                  \
         if (!(parcel).Write##type(data)) {                                \
-            APP_LOGE("fail to write %{public}s type into parcel", #type); \
+            APP_LOGE("fail %{public}s parcel", #type); \
             return;                                                       \
         }                                                                 \
     } while (0)
@@ -49,20 +49,20 @@ namespace AppExecFwk {
 #define CHECK_PARCEL_CAPACITY(parcel, capacity)                               \
     while ((parcel).GetMaxCapacity() - (parcel).GetDataSize() < (capacity)) { \
         size_t newMaxCapacity = (parcel).GetMaxCapacity() * 2;                \
-        APP_LOGD("parcel capacity expansion %{public}zu", newMaxCapacity);    \
+        APP_LOGD("parcel expansion %{public}zu", newMaxCapacity);    \
         (parcel).SetMaxCapacity(newMaxCapacity);                              \
     }
 
 #define CONTAINER_SECURITY_VERIFY(parcel, readContainerSize, val)                                         \
     do {                                                                                                  \
         if ((val) == nullptr) {                                                                           \
-            APP_LOGE("Failed to read container due to val is nullptr");                                   \
+            APP_LOGE("Failed container nullptr");                                   \
             return false;                                                                                 \
         }                                                                                                 \
         size_t readAbleDataSize = (parcel).GetReadableBytes();                                            \
         size_t readSize = static_cast<size_t>(readContainerSize);                                         \
         if ((readSize > readAbleDataSize) || ((val)->max_size() < readSize)) {                            \
-            APP_LOGE("Failed to read container, readSize = %{public}zu, readAbleDataSize = %{public}zu",  \
+            APP_LOGE("Failed container readSize = %{public}zu  readAbleDataSize = %{public}zu",  \
                 readSize, readAbleDataSize);                                                              \
             return false;                                                                                 \
         }                                                                                                 \

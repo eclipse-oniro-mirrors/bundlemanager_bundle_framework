@@ -362,7 +362,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
             std::end(dimensionMap),
             [&dimension](const auto &item) { return item.first == dimension; });
         if (dimensionRes == dimensionMap.end()) {
-            APP_LOGW("dimension is invalid, form name is %{public}s", form.name.c_str());
+            APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
         supportDimensionSet.emplace(dimensionRes->second);
@@ -372,11 +372,11 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
         std::end(dimensionMap),
         [&form](const auto &item) { return item.first == form.defaultDimension; });
     if (dimensionRes == dimensionMap.end()) {
-        APP_LOGW("defaultDimension is invalid, form name is %{public}s", form.name.c_str());
+        APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;
     }
     if (supportDimensionSet.find(dimensionRes->second) == supportDimensionSet.end()) {
-        APP_LOGW("defaultDimension is not in supportDimensions, form name is %{public}s", form.name.c_str());
+        APP_LOGW("defaultDimension not supportDimensions form %{public}s", form.name.c_str());
         return false;
     }
 
@@ -394,7 +394,7 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
         auto formShape = std::find_if(std::begin(shapeMap), std::end(shapeMap),
             [&shape](const auto &item) { return item.first == shape; });
         if (formShape == shapeMap.end()) {
-            APP_LOGW("shape is invalid, form name is %{public}s", form.name.c_str());
+            APP_LOGW("shape invalid form %{public}s", form.name.c_str());
             continue;
         }
         supportShapeSet.emplace(formShape->second);
@@ -499,7 +499,7 @@ ErrCode ExtensionFormProfile::TransformTo(
         profileInfo = jsonObject.get<ExtensionFormProfileInfoStruct>();
         privacyLevel = profileInfo.privacyLevel;
         if (g_parseResult != ERR_OK) {
-            APP_LOGE("g_parseResult is %{public}d", g_parseResult);
+            APP_LOGE("g_parseResult %{public}d", g_parseResult);
             int32_t ret = g_parseResult;
             // need recover parse result to ERR_OK
             g_parseResult = ERR_OK;

@@ -148,7 +148,7 @@ void from_json(const nlohmann::json &jsonObject, InstallResult &installResult)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module installResult from jsonObject error: %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module installResult from jsonObject error : %{public}d", parseResult);
     }
 }
 
