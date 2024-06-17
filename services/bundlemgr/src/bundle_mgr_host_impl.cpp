@@ -2465,10 +2465,14 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
         LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    (void)dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
+    ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
     dataMgr->QueryAllCloneExtensionInfosV9(want, flags, userId, extensionInfos);
 
     if (extensionInfos.empty()) {
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_QUERY_EXTENSION, "query extension ability fail, %{public}d", ret);
+            return ret;
+        }
         LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
