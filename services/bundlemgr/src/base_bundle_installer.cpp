@@ -860,6 +860,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    bool isOldSystemApp = bundleInfo.IsSystemApp();
 
     InnerBundleUserInfo innerBundleUserInfo;
     if (!bundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
@@ -899,9 +900,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             break;
         }
     }
-
-    result = InnerProcessUpdateHapToken(bundleInfo);
-    CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
+    if (result == ERR_OK) {
+        result = InnerProcessUpdateHapToken(isOldSystemApp);
+        CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
+    }
 
     if (result == ERR_OK) {
         userGuard.Dismiss();
@@ -912,7 +914,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     return result;
 }
 
-ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const InnerBundleInfo &oldBundleInfo)
+ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
 {
     InnerBundleInfo newBundleInfo;
     bool isBundleExist = false;
@@ -934,12 +936,12 @@ ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const InnerBundleInfo &o
             }
         }
     }
-    ErrCode result = UpdateHapToken(oldBundleInfo.GetAppType() != newBundleInfo.GetAppType(), newBundleInfo);
+    ErrCode result = UpdateHapToken(isOldSystemApp != newBundleInfo.IsSystemApp(), newBundleInfo);
     if (result != ERR_OK) {
         APP_LOGE("bundleName:%{public}s update hapToken failed, errCode:%{public}d", bundleName_.c_str(), result);
         return result;
     }
-    if (isAppExist_) {
+    if (isAppExist_ && isModuleUpdate_) {
         result = SetDirApl(newBundleInfo);
         if (result != ERR_OK) {
             APP_LOGE("bundleName:%{public}s setDirApl failed:%{public}d", bundleName_.c_str(), result);
@@ -5359,7 +5361,8 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
 
 ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start", bundleName_.c_str());
+    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdateToken:%{public}d",
+        bundleName_.c_str(), needUpdateToken);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
