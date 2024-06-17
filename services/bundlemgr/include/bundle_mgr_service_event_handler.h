@@ -471,18 +471,6 @@ private:
      * @return Returns true if the preInstall is removable; returns false otherwise.
      */
     bool IsPreInstallRemovable(const std::string &path);
-    /**
-     * @brief Ota upgrade scenario, uninstall the hap application updated by the app hot patch and retain the data.
-     * @param bundleName Indicates the bundleName.
-     * @return Returns true if this function called successfully; returns false otherwise.
-     */
-    bool HotPatchAppProcessing(const std::string &bundleName);
-    /**
-     * @brief Judge whether hot patch application.
-     * @param bundleName Indicates the bundleName.
-     * @return Returns true if called successfully; returns false code otherwise.
-     */
-    bool IsHotPatchApp(const std::string &bundleName);
 
     void AddTasks(const std::map<int32_t, std::vector<PreScanInfo>,
         std::greater<int32_t>> &taskMap, int32_t userId);
