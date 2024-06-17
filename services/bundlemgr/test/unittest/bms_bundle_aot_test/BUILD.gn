@@ -122,10 +122,6 @@ ohos_unittest("BmsAOTMgrTest") {
   if (bundle_framework_power_mgr_enable) {
     defines += [ "BUNDLE_FRAMEWORK_POWER_MGR_ENABLE" ]
   }
-  if (bundle_framework_user_status_awareness_enable) {
-    external_deps += user_status_external_deps
-    defines += [ "BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE" ]
-  }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
