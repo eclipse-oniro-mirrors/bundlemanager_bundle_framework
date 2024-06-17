@@ -42,6 +42,7 @@ ohos_unittest("BmsEventHandlerTest") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
@@ -157,6 +158,7 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",

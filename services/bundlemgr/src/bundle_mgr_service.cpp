@@ -29,6 +29,8 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "datetime_ex.h"
+#include "el5_filekey_callback.h"
+#include "el5_filekey_manager_kit.h"
 #include "ffrt.h"
 #include "installd_client.h"
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
@@ -46,6 +48,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
+const int32_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
 } // namespace
 
 const bool REGISTER_RESULT =
@@ -88,6 +91,7 @@ void BundleMgrService::OnStart()
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
+    AddSystemAbilityListener(EL5_FILEKEY_SERVICE_ABILITY_ID);
     APP_LOGI("BundleMgrService OnStart end");
 }
 
@@ -509,6 +513,10 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
             isBrokerServiceStarted_ = true;
             host_->SetBrokerServiceStatus(true);
         }
+    }
+    if (EL5_FILEKEY_SERVICE_ABILITY_ID == systemAbilityId) {
+        int32_t reg = Security::AccessToken::El5FilekeyManagerKit::RegisterCallback(sptr(new El5FilekeyCallback()));
+        APP_LOGI("Register El5FilekeyCallback result: %{public}d", reg);
     }
 }
 

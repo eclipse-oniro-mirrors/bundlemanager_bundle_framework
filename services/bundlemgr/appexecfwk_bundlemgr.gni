@@ -187,6 +187,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
   "${services_path}/bundlemgr/src/clone/bundle_clone_installer.cpp",
   "${services_path}/bundlemgr/src/common/serial_queue.cpp",
+  "${services_path}/bundlemgr/src/el5_filekey_callback.cpp",
   "${services_path}/bundlemgr/src/extend_resource/extend_resource_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/hidump_helper.cpp",
   "${services_path}/bundlemgr/src/navigation/router_item_compare.cpp",
