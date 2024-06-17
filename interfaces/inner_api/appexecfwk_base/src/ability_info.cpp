@@ -704,7 +704,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("Metadata database error : %{public}d", parseResult);
+        APP_LOGE("read database error : %{public}d", parseResult);
     }
 }
 
@@ -1314,7 +1314,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("AbilityInfo error : %{public}d", parseResult);
+        APP_LOGE("AbilityInfo from_json error : %{public}d", parseResult);
     }
 }
 

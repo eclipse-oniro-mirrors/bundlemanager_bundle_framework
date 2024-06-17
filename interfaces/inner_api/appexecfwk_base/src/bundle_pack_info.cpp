@@ -123,7 +123,7 @@ void from_json(const nlohmann::json &jsonObject, Version &version)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("version jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read version error %{public}d", parseResult);
     }
 }
 
@@ -156,7 +156,7 @@ void from_json(const nlohmann::json &jsonObject, PackageApp &app)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("package jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read package app error %{public}d", parseResult);
     }
 }
 
@@ -189,7 +189,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilities &extensionAb
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -240,7 +240,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleAbilityInfo &abilityinfo)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -276,7 +276,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityFormInfo &abilityFormInf
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, PACK_SUMMARY_MODULE_ABILITY_FORMS_DEFAULT_DIMENSION,
         abilityFormInfo.defaultDimension, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("BundleConfigInfo database error : %{public}d", parseResult);
+        APP_LOGE("read BundleConfigInfo error %{public}d", parseResult);
     }
 }
 
@@ -327,7 +327,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleDistro &distro)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -369,7 +369,7 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -438,7 +438,7 @@ void from_json(const nlohmann::json &jsonObject, PackageModule &packageModule)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -471,7 +471,7 @@ void from_json(const nlohmann::json &jsonObject, Summary &summary)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -522,7 +522,7 @@ void from_json(const nlohmann::json &jsonObject, Packages &packages)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 
@@ -555,7 +555,7 @@ void from_json(const nlohmann::json &jsonObject, BundlePackInfo &bundlePackInfo)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("module abilityinfo jsonObject error : %{public}d", parseResult);
+        APP_LOGE("read abilityinfo error %{public}d", parseResult);
     }
 }
 

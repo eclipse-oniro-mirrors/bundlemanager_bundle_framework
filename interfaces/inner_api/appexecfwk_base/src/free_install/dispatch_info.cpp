@@ -48,7 +48,7 @@ void from_json(const nlohmann::json &jsonObject, DispatcherInfo &dispatcherInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module dispatcherInfo from jsonObject error : %{public}d", parseResult);
+        LOG_E(BMS_TAG_FREE_INSTALL, "read module dispatcherInfo from jsonObject error: %{public}d", parseResult);
     }
 }
 

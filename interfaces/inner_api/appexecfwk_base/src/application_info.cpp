@@ -350,7 +350,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applica
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("ApplicationEnvironment error : %{public}d", parseResult);
+        APP_LOGE("read database error : %{public}d", parseResult);
     }
 }
 
@@ -845,7 +845,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("Resource error : %{public}d", parseResult);
+        APP_LOGE("read Resource error : %{public}d", parseResult);
     }
 }
 
@@ -899,7 +899,7 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("Resource error : %{public}d", parseResult);
+        APP_LOGE("read Resource error %{public}d", parseResult);
     }
 }
 

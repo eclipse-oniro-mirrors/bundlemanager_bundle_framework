@@ -1339,33 +1339,6 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, F
 }
 
 /**
- * @tc.number: ProcessSharedBundleProvisionInfo_0005
- * @tc.name: test the start function of HotPatchAppProcessing
- * @tc.desc: 1. install hap
- *           2. call HotPatchAppProcessing
- */
-HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    ASSERT_NE(handler, nullptr);
-    std::vector<std::string> bundlePath;
-    InstallParam installParam;
-    installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
-    installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
-    ErrCode installResult = InstallBundle(bundlePath, installParam);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    std::list<std::string> scanPathList {HSP_FILE_PATH1};
-    handler->InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::THIRD_PARTY_APP);
-    auto iter = handler->HotPatchAppProcessing(HSP_BUNDLE_NAME);
-    EXPECT_EQ(iter, false);
-
-    ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: ParseHapFiles_0001
  * @tc.name: test the start function of ParseHapFiles
  * @tc.desc: 1. install hap

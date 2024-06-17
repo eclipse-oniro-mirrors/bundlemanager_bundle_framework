@@ -72,8 +72,6 @@ const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
-// this metadata used to indicate those system application update by hotpatch upgrade.
-const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
 const std::string FINGERPRINT = "fingerprint";
 const std::string UNKNOWN = "";
 const std::string VALUE_TRUE = "true";
@@ -1555,18 +1553,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        if (HotPatchAppProcessing(bundleName)) {
-            LOG_I(BMS_TAG_START, "OTA Install prefab bundle(%{public}s) by path(%{public}s) for hotPath upgrade.",
-                bundleName.c_str(), scanPathIter.c_str());
-            std::vector<std::string> filePaths { scanPathIter };
-            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-                LOG_E(BMS_TAG_START, "OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
-                SavePreInstallException(scanPathIter);
-            }
-
-            continue;
-        }
-
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
         bool updateBundle = false;
@@ -1823,36 +1809,6 @@ bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
         } else {
             return true;
         }
-    }
-    return false;
-}
-
-bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
-{
-    InnerBundleInfo innerBundleInfo;
-    if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_E(BMS_TAG_START, "can not get InnerBundleInfo, bundleName=%{public}s", bundleName.c_str());
-        return false;
-    }
-
-    return innerBundleInfo.CheckSpecialMetaData(HOT_PATCH_METADATA);
-}
-
-bool BMSEventHandler::HotPatchAppProcessing(const std::string &bundleName)
-{
-    if (bundleName.empty()) {
-        LOG_W(BMS_TAG_START, "bundleName:%{public}s empty", bundleName.c_str());
-        return false;
-    }
-
-    if (IsHotPatchApp(bundleName)) {
-        LOG_I(BMS_TAG_START, "get hotpatch meta-data success, bundleName=%{public}s", bundleName.c_str());
-        SystemBundleInstaller installer;
-        if (!installer.UninstallSystemBundle(bundleName, true)) {
-            LOG_E(BMS_TAG_START, "keep data to uninstall app(%{public}s) error", bundleName.c_str());
-            return false;
-        }
-        return true;
     }
     return false;
 }

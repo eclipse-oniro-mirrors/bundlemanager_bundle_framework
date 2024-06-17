@@ -376,7 +376,7 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
         return false;
     }
     if (supportDimensionSet.find(dimensionRes->second) == supportDimensionSet.end()) {
-        APP_LOGW("defaultDimension not supportDimensions form %{public}s", form.name.c_str());
+        APP_LOGW("defaultDimension not in supportDimensions form %{public}s", form.name.c_str());
         return false;
     }
 

@@ -253,19 +253,6 @@ HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_002, Function | Sma
 }
 
 /**
-* @tc.number: IsHotPatchApp_00001
-* @tc.name: test IsHotPatchApp
-* @tc.desc: 1. test empty installinfos and userInfoMaps
-*/
-HWTEST_F(BmsServiceStartupTest, InnerProcessBootPreBundleProFileInstall_001, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    std::string bundleName = "com.ohos.tes1";
-    bool ret = handler->IsHotPatchApp(bundleName);
-    EXPECT_EQ(ret, false);
-}
-
-/**
 * @tc.number: OTAInstallSystemBundle_001
 * @tc.name: test OTAInstallSystemBundle_001
 * @tc.desc: 1. test is failed

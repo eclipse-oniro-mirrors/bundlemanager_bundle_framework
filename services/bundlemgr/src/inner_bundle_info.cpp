@@ -2036,7 +2036,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGD("innerBundleUserInfos find key:%{public}s, error", key.c_str());
         return false;
     }
 
