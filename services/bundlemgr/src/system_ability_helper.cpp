@@ -35,7 +35,7 @@ sptr<IRemoteObject> SystemAbilityHelper::GetSystemAbility(const int32_t systemAb
 {
     sptr<ISystemAbilityManager> systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
-        APP_LOGE("fail to get the system ability manager to get %{public}d proxy", systemAbilityId);
+        APP_LOGE("fail get system ability manager to get %{public}d proxy", systemAbilityId);
         return nullptr;
     }
     return systemAbilityMgr->GetSystemAbility(systemAbilityId);
@@ -47,7 +47,7 @@ bool SystemAbilityHelper::AddSystemAbility(const int32_t systemAbilityId, const 
     if (systemAbilityMgr && (systemAbilityMgr->AddSystemAbility(systemAbilityId, systemAbility) == 0)) {
         return true;
     }
-    APP_LOGE("fail to register %{public}d to system ability manager", systemAbilityId);
+    APP_LOGE("fail register %{public}d to system ability manager", systemAbilityId);
     return false;
 }
 
@@ -57,7 +57,7 @@ bool SystemAbilityHelper::RemoveSystemAbility(const int32_t systemAbilityId)
     if (systemAbilityMgr && (systemAbilityMgr->RemoveSystemAbility(systemAbilityId) == 0)) {
         return true;
     }
-    APP_LOGE("fail to remove %{public}d from system ability manager", systemAbilityId);
+    APP_LOGE("fail remove %{public}d from system ability manager", systemAbilityId);
     return false;
 }
 
@@ -103,7 +103,7 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
     if (systemAbilityMgr != nullptr && (systemAbilityMgr->UnloadSystemAbility(systemAbilityId) == 0)) {
         return true;
     }
-    APP_LOGE("fail to unload %{public}d from system ability manager", systemAbilityId);
+    APP_LOGE("fail unload %{public}d from system ability manager", systemAbilityId);
     return false;
 }
 }  // namespace AppExecFwk

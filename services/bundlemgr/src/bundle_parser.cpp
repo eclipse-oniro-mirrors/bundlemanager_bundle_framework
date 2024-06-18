@@ -78,14 +78,14 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
+        APP_LOGE("file open failed due to %{public}s, errno:%{public}d", errBuf, errno);
         return false;
     }
 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("the file is an empty file, errno:%{public}d", errno);
+        APP_LOGE("file empty, errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -300,7 +300,7 @@ ErrCode BundleParser::ParseRouterArray(
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
     nlohmann::json jsonBuf = nlohmann::json::parse(jsonString, nullptr, false);
     if (jsonBuf.is_discarded()) {
-        APP_LOGE("json file %{private}s is discarded", jsonString.c_str());
+        APP_LOGE("json file %{private}s discarded", jsonString.c_str());
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
     if (jsonBuf.find(ROUTER_MAP) == jsonBuf.end()) {

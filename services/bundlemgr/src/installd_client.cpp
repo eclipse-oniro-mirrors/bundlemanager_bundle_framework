@@ -541,7 +541,7 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
 {
     if (extensionBundleDirs.empty() || userId < 0) {
-        APP_LOGI("extensionBundleDirs is empty or userId is invalid");
+        APP_LOGI("extensionBundleDirs empty or userId invalid");
         return ERR_OK;
     }
     return CallService(&IInstalld::RemoveExtensionDir, userId, extensionBundleDirs);

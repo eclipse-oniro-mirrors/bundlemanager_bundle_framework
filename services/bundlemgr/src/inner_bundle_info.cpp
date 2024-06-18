@@ -132,7 +132,7 @@ void from_json(const nlohmann::json &jsonObject, ExtendResourceInfo &extendResou
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read ExtendResourceInfo from json error, error code : %{public}d", parseResult);
+        APP_LOGE("read ExtendResourceInfo from json error code : %{public}d", parseResult);
     }
 }
 
@@ -577,7 +577,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read InnerBundleInfo from database error code : %{public}d", parseResult);
     }
     return parseResult;
 }
@@ -587,7 +587,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
 {
     auto it = innerModuleInfos_.find(modulePackage);
     if (it == innerModuleInfos_.end()) {
-        APP_LOGE("can not find module %{public}s", modulePackage.c_str());
+        APP_LOGE("not find module %{public}s", modulePackage.c_str());
         return std::nullopt;
     }
     HapModuleInfo hapInfo;
@@ -814,7 +814,7 @@ bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
         return false;
     }
     if (FindModule(newInfo.currentPackage_)) {
-        APP_LOGE("current package %{public}s is exist", currentPackage_.c_str());
+        APP_LOGE("current package %{public}s exist", currentPackage_.c_str());
         return false;
     }
     AddInnerModuleInfo(newInfo.innerModuleInfos_);
@@ -1037,7 +1037,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
 {
     auto it = innerSharedModuleInfos_.find(moduleName);
     if (it == innerSharedModuleInfos_.end()) {
-        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
+        APP_LOGE("The shared module(%{public}s) infomation not exist", moduleName.c_str());
         return false;
     }
     auto sharedModuleInfoVector = it->second;
@@ -1065,7 +1065,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
 {
     auto it = innerSharedModuleInfos_.find(moduleName);
     if (it == innerSharedModuleInfos_.end()) {
-        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
+        APP_LOGE("The shared module(%{public}s) infomation not exist", moduleName.c_str());
         return false;
     }
     auto sharedModuleInfoVector = it->second;
@@ -1089,7 +1089,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             return true;
         }
     }
-    APP_LOGE("GetBaseSharedBundleInfo failed, the version(%{public}d) is not exists for this module(%{public}s)",
+    APP_LOGE("GetBaseSharedBundleInfo failed, the version(%{public}d) not exists for this module(%{public}s)",
         versionCode, moduleName.c_str());
     return false;
 }
@@ -1134,7 +1134,7 @@ void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &native
     auto moduleInfoIterator = innerModuleInfos_.find(currentPackage_);
     if ((sharedModuleInfoIterator == innerSharedModuleInfos_.end()) ||
         (moduleInfoIterator == innerModuleInfos_.end())) {
-        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
+        APP_LOGE("The shared module(%{public}s) infomation not exist", currentPackage_.c_str());
         return;
     }
     auto &innerModuleInfoVector = sharedModuleInfoIterator->second;
@@ -1178,7 +1178,7 @@ bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
         dependencies = innerModuleInfos_.at(moduleName).dependencies;
         return true;
     }
-    APP_LOGE("GetSharedDependencies can not find module %{public}s", moduleName.c_str());
+    APP_LOGE("GetSharedDependencies not find module %{public}s", moduleName.c_str());
     return false;
 }
 
@@ -1217,7 +1217,7 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 {
     auto it = innerModuleInfos_.find(modulePackage);
     if (it == innerModuleInfos_.end()) {
-        APP_LOGE("The module(%{public}s) infomation does not exist", modulePackage.c_str());
+        APP_LOGE("The module(%{public}s) infomation not exist", modulePackage.c_str());
         return;
     }
 
@@ -1559,7 +1559,7 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
     }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when get applicationInfo", userId);
+        APP_LOGE("not find userId %{public}d when get applicationInfo", userId);
         return;
     }
     uint32_t tokenId = innerBundleUserInfo.accessTokenId;
@@ -1591,7 +1591,7 @@ void InnerBundleInfo::GetModuleWithHashValue(
 
     auto it = innerModuleInfos_.find(modulePackage);
     if (it == innerModuleInfos_.end()) {
-        APP_LOGE("can not find module %{public}s", modulePackage.c_str());
+        APP_LOGE("not find module %{public}s", modulePackage.c_str());
         return;
     }
 
@@ -1612,7 +1612,7 @@ void InnerBundleInfo::ProcessBundleWithHapModuleInfoFlag(
             HapModuleInfo hapModuleInfo = *hapmoduleinfo;
             auto it = innerModuleInfos_.find(info.second.modulePackage);
             if (it == innerModuleInfos_.end()) {
-                APP_LOGE("can not find module %{public}s", info.second.modulePackage.c_str());
+                APP_LOGE("not find module %{public}s", info.second.modulePackage.c_str());
             } else {
                 hapModuleInfo.hashValue = it->second.hashValue;
             }
@@ -1648,7 +1648,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
-            APP_LOGW("%{public}s is disabled,", ability.second.name.c_str());
+            APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
             continue;
         }
         AbilityInfo abilityInfo = ability.second;
@@ -1710,7 +1710,7 @@ void InnerBundleInfo::GetBundleWithAbilities(
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
-                APP_LOGW("%{public}s is disabled,", ability.second.name.c_str());
+                APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
                 continue;
             }
             AbilityInfo abilityInfo = ability.second;
@@ -2011,7 +2011,7 @@ void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetkeyId failed, cannot find userInfo for userId %{public}d", userId);
+        APP_LOGE("SetkeyId failed, not find userInfo for userId %{public}d", userId);
         return;
     }
     infoItem->second.keyId = keyId;
@@ -2251,7 +2251,7 @@ ErrCode InnerBundleInfo::SetCloneAbilityEnabled(const std::string &moduleName, c
 
             auto cloneIter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
             if (cloneIter == infoItem->second.cloneInfos.end()) {
-                APP_LOGW("appIndex %{public}d is invalid", appIndex);
+                APP_LOGW("appIndex %{public}d invalid", appIndex);
                 return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
             }
 
@@ -2332,7 +2332,7 @@ ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
+        APP_LOGE("SetApplicationEnabled not find:%{public}s bundleUserInfo in userId: %{public}d",
             GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -2346,14 +2346,14 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetApplicationEnabled can not find:%{public}s bundleUserInfo in userId: %{public}d",
+        APP_LOGE("SetApplicationEnabled not find:%{public}s bundleUserInfo in userId: %{public}d",
             GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
     if (iter == infoItem->second.cloneInfos.end()) {
-        APP_LOGE("SetApplicationEnabled can not find:%{public}d appIndex in userId: %{public}d",
+        APP_LOGE("SetApplicationEnabled not find:%{public}d appIndex in userId: %{public}d",
             appIndex, userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
@@ -2450,7 +2450,7 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
-        APP_LOGE("userId:%{public}d has not moduleName:%{public}s", userId, moduleName.c_str());
+        APP_LOGE("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
         return false;
     }
 
@@ -2470,7 +2470,7 @@ ErrCode InnerBundleInfo::IsModuleRemovable(
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
-        APP_LOGW("userId:%{public}d has not moduleName:%{public}s", userId, moduleName.c_str());
+        APP_LOGW("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
         isRemovable = false;
         return ERR_OK;
     }
@@ -2602,7 +2602,7 @@ bool InnerBundleInfo::GetDependentModuleNames(const std::string &moduleName,
             return true;
         }
     }
-    APP_LOGE("GetDependentModuleNames can not find module %{public}s", moduleName.c_str());
+    APP_LOGE("GetDependentModuleNames not find module %{public}s", moduleName.c_str());
     return false;
 }
 
@@ -2744,7 +2744,7 @@ bool InnerBundleInfo::FetchNativeSoAttrs(
 {
     auto moduleIter = innerModuleInfos_.find(requestPackage);
     if (moduleIter == innerModuleInfos_.end()) {
-        APP_LOGE("requestPackage(%{public}s) is not exist", requestPackage.c_str());
+        APP_LOGE("requestPackage(%{public}s) not exist", requestPackage.c_str());
         return false;
     }
 
@@ -2781,7 +2781,7 @@ std::vector<std::string> InnerBundleInfo::GetDeviceType(const std::string &packa
 {
     auto it = innerModuleInfos_.find(packageName);
     if (it == innerModuleInfos_.end()) {
-        APP_LOGW("%{public}s is not existed", packageName.c_str());
+        APP_LOGW("%{public}s not existed", packageName.c_str());
         return std::vector<std::string>();
     }
     return innerModuleInfos_.at(packageName).deviceTypes;
@@ -2913,7 +2913,7 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
     const std::vector<std::string> &fileNames)
 {
     if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-        APP_LOGE("innerBundleInfo does not contain the module: %{public}s.", moduleName.c_str());
+        APP_LOGE("innerBundleInfo not contain the module: %{public}s.", moduleName.c_str());
         return;
     }
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
@@ -2925,7 +2925,7 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
     auto moduleInfoIter = innerModuleInfos_.find(currentPackage_);
     if ((sharedModuleInfoIter == innerSharedModuleInfos_.end()) ||
         (moduleInfoIter == innerModuleInfos_.end())) {
-        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
+        APP_LOGE("The shared module(%{public}s) infomation not exist", currentPackage_.c_str());
         return;
     }
     auto &innerModuleInfoVector = sharedModuleInfoIter->second;
@@ -3044,7 +3044,7 @@ ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
         }
     }
     if (bundleInfo.hapModuleInfos.empty()) {
-        APP_LOGE("bundleName:%{public}s has no hsp module info", baseApplicationInfo_->bundleName.c_str());
+        APP_LOGE("bundleName:%{public}s no hsp module info", baseApplicationInfo_->bundleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     return ERR_OK;
@@ -3293,7 +3293,7 @@ bool InnerBundleInfo::FindExtensionAbilityInfoByUri(
 void InnerBundleInfo::FindAbilityInfosByUri(
     const std::string &abilityUri, std::vector<AbilityInfo> &abilityInfos,  int32_t userId)
 {
-    APP_LOGI("Uri is %{public}s", abilityUri.c_str());
+    APP_LOGI("Uri %{public}s", abilityUri.c_str());
     for (auto &ability : baseAbilityInfos_) {
         auto abilityInfo = ability.second;
         if (abilityInfo.uri.size() < strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX)) {
@@ -3301,7 +3301,7 @@ void InnerBundleInfo::FindAbilityInfosByUri(
         }
 
         auto configUri = abilityInfo.uri.substr(strlen(ServiceConstants::DATA_ABILITY_URI_PREFIX));
-        APP_LOGI("configUri is %{public}s", configUri.c_str());
+        APP_LOGI("configUri %{public}s", configUri.c_str());
         if (configUri == abilityUri) {
             GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION,
                 userId, abilityInfo.applicationInfo);
@@ -3532,7 +3532,7 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     }
     std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
     if (cloneInfos.find(appIndexKey) != cloneInfos.end()) {
-        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d had existed", appIndex);
+        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d existed", appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
     }
 
@@ -3674,7 +3674,7 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
 {
     auto multiAppModeData = this->baseApplicationInfo_->multiAppMode;
     if (multiAppModeData.multiAppModeType != MultiAppModeType::APP_CLONE) {
-        APP_LOGE("bundleName:%{public}s is not clone app", GetBundleName().c_str());
+        APP_LOGE("bundleName:%{public}s not clone app", GetBundleName().c_str());
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE;
     }
 
@@ -3695,13 +3695,13 @@ ErrCode InnerBundleInfo::VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appI
             return isExistedRes;
         }
         if (found == true) {
-            APP_LOGE("AppIndex %{public}d had been existed in userId %{public}d", appIndex, userId);
+            APP_LOGE("AppIndex %{public}d existed in userId %{public}d", appIndex, userId);
             return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED;
         }
     }
     int32_t maxCount = std::min(multiAppModeData.maxCount, ServiceConstants::CLONE_APP_INDEX_MAX);
     if (appIndex > maxCount) {
-        APP_LOGE("AppIndex %{public}d exceed the max limit %{public}d in userId: %{public}d",
+        APP_LOGE("AppIndex %{public}d exceed max limit %{public}d in userId: %{public}d",
             appIndex, maxCount, userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER;
     }
