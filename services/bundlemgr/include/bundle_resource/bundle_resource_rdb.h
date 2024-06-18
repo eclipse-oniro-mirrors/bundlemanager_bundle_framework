@@ -41,6 +41,10 @@ public:
 
     bool GetAllResourceName(std::vector<std::string> &keyName);
 
+    bool GetResourceNameByBundleName(const std::string &bundleName,
+        const int32_t appIndex,
+        std::vector<std::string> &keyName);
+
     bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0);
 
