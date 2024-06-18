@@ -7502,6 +7502,12 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     }
     if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
         APP_LOGD("scheme is not https");
+        if ((static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+            static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+            APP_LOGI("using app linking flag and scheme is not https, return empty list");
+            abilityInfos.clear();
+        }
         return;
     }
     std::vector<AbilityInfo> filteredAbilityInfos;
