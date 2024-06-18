@@ -2385,7 +2385,7 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     return ERR_OK;
 }
 
-const std::string &InnerBundleInfo::GetCurModuleName() const
+const std::string InnerBundleInfo::GetCurModuleName() const
 {
     if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
         return innerModuleInfos_.at(currentPackage_).moduleName;
