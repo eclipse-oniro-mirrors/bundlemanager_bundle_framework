@@ -444,7 +444,7 @@ public:
         return Constants::EMPTY_STRING;
     }
 
-    const std::string &GetCurModuleName() const;
+    const std::string GetCurModuleName() const;
 
     std::vector<DefinePermission> GetDefinePermissions() const
     {
