@@ -216,6 +216,9 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t TEST_APP_INDEX1 = 1;
+const int32_t TEST_APP_INDEX2 = 2;
+const int32_t TEST_APP_INDEX3 = 3;
+const int32_t TOTAL_APP_NUMS = 4;
 const int32_t TEST_ACCESS_TOKENID = 1;
 const int32_t TEST_ACCESS_TOKENID_EX = 2;
 const std::string BUNDLE_NAME = "bundleName";
@@ -333,8 +336,12 @@ public:
         bool userDataClearable, bool isSystemApp) const;
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
     void ClearBundleInfo(const std::string &bundleName);
-    void AddCloneInfo(const std::string &bundleName, int32_t userId);
+    void AddCloneInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
     void ClearCloneInfo(const std::string &bundleName, int32_t userId);
+    bool ChangeAppDisabledStatus(const std::string &bundleName, int32_t userId, int32_t appIndex, bool isEnabled);
+    void QueryCloneApplicationInfosWithDisable();
+    void QueryCloneApplicationInfosV9WithDisable();
+    void QueryCloneAbilityInfosV9WithDisable(const Want &want);
     Skill MockAbilitySkillInfo() const;
     Skill MockExtensionSkillInfo() const;
 
@@ -1314,29 +1321,23 @@ void BmsBundleKitServiceTest::ClearBundleInfo(const std::string &bundleName)
     }
 }
 
-void BmsBundleKitServiceTest::AddCloneInfo(const std::string &bundleName, int32_t userId)
+void BmsBundleKitServiceTest::AddCloneInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
 {
     auto bundleInfoMapIter = GetBundleDataMgr()->bundleInfos_.find(bundleName);
     EXPECT_NE(bundleInfoMapIter, GetBundleDataMgr()->bundleInfos_.end());
     InnerBundleInfo &bundleInfoTest = bundleInfoMapIter->second;
-    InnerBundleUserInfo bundleUserInfoTest;
-    bool getBundleUserInfoRes = bundleInfoTest.GetInnerBundleUserInfo(userId, bundleUserInfoTest);
-    EXPECT_TRUE(getBundleUserInfoRes);
 
     InnerBundleCloneInfo innerBundleCloneInfo;
     innerBundleCloneInfo.userId = userId;
-    innerBundleCloneInfo.appIndex = TEST_APP_INDEX1;
+    innerBundleCloneInfo.appIndex = appIndex;
     innerBundleCloneInfo.uid = TEST_UID;
     innerBundleCloneInfo.gids = {0};
     innerBundleCloneInfo.accessTokenId = TEST_ACCESS_TOKENID;
     innerBundleCloneInfo.accessTokenIdEx = TEST_ACCESS_TOKENID_EX;
-    std::string appIndexKey = bundleUserInfoTest.AppIndexToKey(innerBundleCloneInfo.appIndex);
-    std::map<std::string, InnerBundleCloneInfo> testCloneInfos;
-    testCloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
-    bundleUserInfoTest.cloneInfos = testCloneInfos;
 
+    std::string appIndexKey = std::to_string(innerBundleCloneInfo.appIndex);
     std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
-    bundleInfoTest.innerBundleUserInfos_[key] = bundleUserInfoTest;
+    bundleInfoTest.innerBundleUserInfos_[key].cloneInfos.insert(make_pair(appIndexKey, innerBundleCloneInfo));
 }
 
 void BmsBundleKitServiceTest::ClearCloneInfo(const std::string &bundleName, int32_t userId)
@@ -1352,6 +1353,75 @@ void BmsBundleKitServiceTest::ClearCloneInfo(const std::string &bundleName, int3
     bundleUserInfoTest.cloneInfos = emptyCloneInfos;
     std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
     bundleInfoTest.innerBundleUserInfos_[key] = bundleUserInfoTest;
+}
+
+bool BmsBundleKitServiceTest::ChangeAppDisabledStatus(const std::string &bundleName, int32_t userId, int32_t appIndex,
+    bool isEnabled)
+{
+    auto bundleInfoMapIter = GetBundleDataMgr()->bundleInfos_.find(bundleName);
+    EXPECT_NE(bundleInfoMapIter, GetBundleDataMgr()->bundleInfos_.end());
+    InnerBundleInfo &bundleInfoTest = bundleInfoMapIter->second;
+
+    std::string key = bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
+    bool isExists = bundleInfoTest.innerBundleUserInfos_.find(key) != bundleInfoTest.innerBundleUserInfos_.cend();
+    if (!isExists) {
+        return false;
+    }
+    if (appIndex == 0) {
+        bundleInfoTest.innerBundleUserInfos_[key].bundleUserInfo.enabled = isEnabled;
+    } else {
+        std::map<std::string, InnerBundleCloneInfo> cloneInfos = bundleInfoTest.innerBundleUserInfos_[key].cloneInfos;
+        std::string cloneKey = std::to_string(appIndex);
+        bool isCloneIsExists = cloneInfos.find(cloneKey) != cloneInfos.cend();
+        if (!isCloneIsExists) {
+            return false;
+        }
+        bundleInfoTest.innerBundleUserInfos_[key].cloneInfos[cloneKey].enabled = isEnabled;
+    }
+    return true;
+}
+
+void BmsBundleKitServiceTest::QueryCloneApplicationInfosWithDisable()
+{
+    std::vector<ApplicationInfo> appInfos;
+    int index = 0;
+    int32_t flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    bool ret = GetBundleDataMgr()->GetApplicationInfos(flags, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.name == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+}
+
+void BmsBundleKitServiceTest::QueryCloneApplicationInfosV9WithDisable()
+{
+    std::vector<ApplicationInfo> appInfos;
+    int index = 0;
+    int32_t flags = static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    ErrCode ret = GetBundleDataMgr()->GetApplicationInfosV9(flags, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.name == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+}
+
+void BmsBundleKitServiceTest::QueryCloneAbilityInfosV9WithDisable(const Want &want)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    int index = 0;
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    for (AbilityInfo info : abilityInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(info.appIndex, index++);
+        }
+    }
 }
 
 /**
@@ -1858,7 +1928,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfo_0700, Function | SmallTest 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
-
 /**
  * @tc.number: GetApplicationInfos_0100
  * @tc.name: test can get the installed bundles's application info with basic info flag
@@ -1942,6 +2011,149 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0400, Function | SmallTest
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0500
+ * @tc.name: test can get the installed bundles's application info with basic info flag
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = dataMgr->GetApplicationInfos(
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, true);
+    EXPECT_GT(appInfos.size(), 0);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0600
+ * @tc.name: test can get the installed bundles's application info with basic info flag
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = dataMgr->GetApplicationInfosV9(0, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(appInfos.size(), 0);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0700
+ * @tc.name: test can get the installed bundles and cloneApp's application info with basic info flag
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0700, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = GetBundleDataMgr()->GetApplicationInfos(
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
+    int index = 0;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0800
+ * @tc.name: test can get the installed bundles and cloneApp's application info
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = GetBundleDataMgr()->GetApplicationInfos(
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
+    int index = 1;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+    QueryCloneApplicationInfosWithDisable();
+    
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0900
+ * @tc.name: test can get the installed bundles and cloneApp's application info
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable clone app
+ *           4.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0900, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2, false));
+
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = GetBundleDataMgr()->GetApplicationInfos(
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_TRUE(ret);
+    int index = 0;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+        if (index == 2) {
+            index++;
+        }
+    }
+    QueryCloneApplicationInfosWithDisable();
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -2473,14 +2685,14 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0800, Function | SmallTest |
 
 /**
  * @tc.number: QueryAbilityInfos_0900
- * @tc.name: test can get the ability info by want with implicit query
+ * @tc.name: test can get the main and clone app's abilityInfos by want with explicit query
  * @tc.desc: 1.system run normally
- *           2.get cloneApp's abilityInfos
+ *           2.get main and cloneApp's abilityInfos
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_0900, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
     Want want;
     want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
     std::vector<AbilityInfo> result;
@@ -7144,14 +7356,15 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0700, Function | SmallTest
 /**
  * @tc.number: QueryAbilityInfosV9_0800
  * @tc.name: test QueryAbilityInfosV9
- * @tc.desc: 1.explicit query cur bundle, get ability info. 2.get cloneApp's abilityInfos
+ * @tc.desc: 1.explicit query ability info. 2.get abilityInfos
  * @tc.require: issueI56WFH
  */
 HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0800, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of QueryAbilityInfosV9_0800");
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    int appIndex = TEST_APP_INDEX1;
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, appIndex);
     int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
     Want want;
     want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
@@ -7188,7 +7401,7 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_0900, Function | SmallTest
 }
 
 /**
- * @tc.number: QueryAbilityInfosV9_0900
+ * @tc.number: QueryAbilityInfosV9_1000
  * @tc.name:  test can get the ability info with skill by implicit query
  * @tc.desc: 1.Test the QueryAbilityInfosV9 by BundleMgrHostImpl with skill flag
  */
@@ -7206,6 +7419,160 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_1000, Function | SmallTest
     ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, 0, result);
     CheckAbilityInfos(BUNDLE_NAME_TEST, ABILITY_NAME_TEST, flags, result);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_1100
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.explicit query ability info. 2.add cloneInfo. 3.disable main app. 4.get abilityInfos
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_1100, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_1100");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(abilityInfos.size(), 3);
+    int index = 1;
+    for (AbilityInfo info : abilityInfos) {
+        EXPECT_EQ(info.appIndex, index++);
+    }
+    QueryCloneAbilityInfosV9WithDisable(want);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_1100 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_1200
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.explicit query ability info. 2.add cloneInfo. 3.disable clone app. 4.get abilityInfos
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_1200, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_1200");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2, false));
+
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(abilityInfos.size(), 3);
+    int index = 0;
+    for (AbilityInfo info : abilityInfos) {
+        EXPECT_EQ(info.appIndex, index++);
+        if (index == 2) {
+            index++;
+        }
+    }
+    QueryCloneAbilityInfosV9WithDisable(want);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_1200 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_1300
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query ability info. 2. add cloneInfo. 3.disable main app. 4.get abilityInfos
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_1300, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_1300");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    std::vector<AbilityInfo> abilityInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    int index = 1;
+    for (AbilityInfo info : abilityInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(info.appIndex, index++);
+        }
+    }
+    QueryCloneAbilityInfosV9WithDisable(want);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_1300 finish");
+}
+
+/**
+ * @tc.number: QueryAbilityInfosV9_1400
+ * @tc.name: test QueryAbilityInfosV9
+ * @tc.desc: 1.implicit query ability info. 2. add cloneInfo. 3.disable one clone app. 4.get abilityInfos
+ * @tc.require: issueI56WFH
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosV9_1400, Function | SmallTest | Level1)
+{
+    APP_LOGI("begin of QueryAbilityInfosV9_1400");
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2, false));
+
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    std::vector<AbilityInfo> abilityInfos;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    int32_t flags = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_DEFAULT);
+    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, flags, DEFAULT_USERID, abilityInfos);
+    EXPECT_EQ(ret, 0);
+    int index = 0;
+    for (AbilityInfo info : abilityInfos) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(info.appIndex, index++);
+        }
+        if (index == 2) {
+            index++;
+        }
+    }
+    QueryCloneAbilityInfosV9WithDisable(want);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryAbilityInfosV9_1400 finish");
 }
 
 /**
@@ -8182,6 +8549,110 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0100, Function | SmallTe
     auto flag = ApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION;
     ErrCode ret = hostImpl->GetApplicationInfosV9(flag, DEFAULT_USER_ID_TEST, appInfos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetApplicationInfosV9_0200
+ * @tc.name: Test the GetApplicationInfosV9 by BundleMgrHostImpl
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<ApplicationInfo> appInfos;
+    int32_t flags = static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
+    ErrCode ret = hostImpl->GetApplicationInfosV9(flags, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    int index = 0;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetApplicationInfosV9_0300
+ * @tc.name: test can get the installed bundles and cloneApp's application info
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable main app
+ *           4.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<ApplicationInfo> appInfos;
+    int32_t flags = static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
+    ErrCode ret = hostImpl->GetApplicationInfosV9(flags, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    int index = 1;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+    }
+    QueryCloneApplicationInfosV9WithDisable();
+    
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetApplicationInfosV9_0400
+ * @tc.name: test can get the installed bundles and cloneApp's application info
+ * @tc.desc: 1.system run normally
+ *           2.add cloneInfo
+ *           3.disable clone app
+ *           4.get all installed application info and the clones successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX3);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, TEST_APP_INDEX2, false));
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<ApplicationInfo> appInfos;
+    int32_t flags = static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT);
+    ErrCode ret = hostImpl->GetApplicationInfosV9(flags, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    int index = 0;
+    for (ApplicationInfo appInfo : appInfos) {
+        if (appInfo.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(appInfo.appIndex, index++);
+        }
+        if (index == 2) {
+            index++;
+        }
+    }
+    QueryCloneApplicationInfosV9WithDisable();
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -11302,51 +11773,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0400, Function | SmallT
 }
 
 /**
- * @tc.number: GetApplicationInfos_0500
- * @tc.name: test can get the installed bundles's application info with basic info flag
- * @tc.desc: 1.system run normally
- *           2.get all installed application info successfully
- * @tc.require: issueI7FMPK
- */
-HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0500, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
-    dataMgr->bundleInfos_.insert(
-        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
-    std::vector<ApplicationInfo> appInfos;
-    bool ret = dataMgr->GetApplicationInfos(
-        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
-    EXPECT_EQ(ret, true);
-    EXPECT_GT(appInfos.size(), 0);
-    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
-}
-
-/**
- * @tc.number: GetApplicationInfos_0600
- * @tc.name: test can get the installed bundles's application info with basic info flag
- * @tc.desc: 1.system run normally
- *           2.get all installed application info successfully
- * @tc.require: issueI7FMPK
- */
-HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0600, Function | SmallTest | Level1)
-{
-    auto dataMgr = GetBundleDataMgr();
-    EXPECT_NE(dataMgr, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
-    dataMgr->bundleInfos_.insert(
-        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
-    std::vector<ApplicationInfo> appInfos;
-    bool ret = dataMgr->GetApplicationInfosV9(0, DEFAULT_USER_ID_TEST, appInfos);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_GT(appInfos.size(), 0);
-    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
-}
-
-/**
  * @tc.number: SetModuleRemovable_0300
  * @tc.name: test can check module removable is able by not find bundleName in bundleInfos_
  * @tc.desc: 1.system run normally
@@ -11772,5 +12198,39 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameAndIndexByName_0001, Function | S
         EXPECT_EQ(bundleName, "com.ohos_example");
         EXPECT_EQ(appIndex, 1);
     }
+}
+
+/**
+ * @tc.number: GetCloneAppIndexes_0001
+ * @tc.name: GetCloneAppIndexes
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0001, Function | SmallTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string moduleName = MODULE_NAME_TEST;
+    std::string abilityName = ABILITY_NAME_TEST;
+    int32_t userId = DEFAULT_USERID;
+    MockInstallBundle(bundleName, moduleName, abilityName);
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<int32_t> appCloneIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+    EXPECT_TRUE(appCloneIndexes.empty());
+    int32_t userIdInvalid = 101;
+    appCloneIndexes = dataMgr->GetCloneAppIndexes(bundleName, userIdInvalid);
+    EXPECT_TRUE(appCloneIndexes.empty());
+    appCloneIndexes = dataMgr->GetCloneAppIndexes("", userId);
+    EXPECT_TRUE(appCloneIndexes.empty());
+
+    int appIndex1 = TEST_APP_INDEX1;
+    AddCloneInfo(bundleName, userId, appIndex1);
+    int appIndex2 = TEST_APP_INDEX2;
+    AddCloneInfo(bundleName, userId, appIndex2);
+    appCloneIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+    EXPECT_EQ(appCloneIndexes.size(), 2);
+
+    ClearCloneInfo(bundleName, userId);
+    MockUninstallBundle(bundleName);
 }
 }
