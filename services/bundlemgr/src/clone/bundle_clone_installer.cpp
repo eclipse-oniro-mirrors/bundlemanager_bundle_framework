@@ -115,7 +115,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -133,7 +133,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     ErrCode result = ERR_OK;
     for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
         if (UninstallCloneApp(bundleName, userId, std::stoi(it->first)) != ERR_OK) {
-            APP_LOGE("UninstallCloneApp failed, appIndex: %{public}s", it->first.c_str());
+            APP_LOGE("UninstallCloneApp failed, appIndex %{public}s", it->first.c_str());
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
     }
@@ -162,11 +162,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) is invalid.", userId);
+        APP_LOGE("userId(%{public}d) invalid.", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     if (!dataMgr->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
 
@@ -179,7 +179,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     ErrCode ackRes = info.VerifyAndAckCloneAppIndex(userId, appIndex);
     if (ackRes != ERR_OK) {
-        APP_LOGE("installCloneApp fail for verifyAndAck res: %{public}d", ackRes);
+        APP_LOGE("installCloneApp fail for verifyAndAck res %{public}d", ackRes);
         return ackRes;
     }
 
@@ -195,7 +195,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     info.SetAppIndex(appIndex);
     Security::AccessToken::AccessTokenIDEx newTokenIdEx;
     if (BundlePermissionMgr::InitHapToken(info, userId, 0, newTokenIdEx) != ERR_OK) {
-        APP_LOGE("bundleName:%{public}s InitHapToken failed", bundleName.c_str());
+        APP_LOGE("bundleName %{public}s InitHapToken failed", bundleName.c_str());
         return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
     }
     ScopeGuard applyAccessTokenGuard([&] {
@@ -214,7 +214,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
     ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
     if (addRes != ERR_OK) {
-        APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
+        APP_LOGE("add bundle fail, bundleName %{public}s, userId %{public}d, appIndex %{public}d",
             bundleName.c_str(), userId, appIndex);
         return addRes;
     }
@@ -229,7 +229,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     // process icon and label
     if (!BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
-        APP_LOGW("add clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
+        APP_LOGW("add info failed, bundleName %{public}s appIndex %{public}d",
             bundleName.c_str(), appIndex);
     }
     // total to commit, avoid rollback
@@ -248,7 +248,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
     }
     if (appIndex < ServiceConstants::CLONE_APP_INDEX_MIN || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
-        APP_LOGE("Add Clone Bundle Fail, appIndex: %{public}d not in valid range", appIndex);
+        APP_LOGE("Add Bundle Fail, appIndex %{public}d not in valid range", appIndex);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX;
     }
     if (GetDataMgr() != ERR_OK) {
@@ -256,7 +256,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -287,7 +287,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     // process icon and label
     if (!BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId)) {
-        APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
+        APP_LOGW("delete info failed, bundleName %{public}s appIndex %{public}d",
             bundleName.c_str(), appIndex);
     }
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
@@ -316,7 +316,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
-        APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
+        APP_LOGE("fail to create dir %{public}d", result);
         return result;
     }
     APP_LOGI("CreateCloneDataDir successfully");

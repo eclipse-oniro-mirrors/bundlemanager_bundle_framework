@@ -60,7 +60,7 @@ bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, Target
     std::string bundleName = elementName.GetBundleName();
     std::string moduleName = elementName.GetModuleName();
     std::string abilityName = elementName.GetAbilityName();
-    APP_LOGI("ConvertTargetAbilityInfo: %{public}s, %{public}s, %{public}s",
+    APP_LOGI("ConvertTargetAbilityInfo %{public}s, %{public}s, %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     AppExecFwk::TargetInfo targetInfo;
     targetInfo.transactId = std::to_string(this->GetTransactId());
@@ -78,11 +78,11 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
     int32_t result = DistributedDeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
         want.GetElement().GetDeviceID(), profile);
     if (result != 0) {
-        APP_LOGE("GetDeviceProfile failed result:%{public}d", result);
+        APP_LOGE("GetDeviceProfile failed %{public}d", result);
         return ErrorCode::GET_DEVICE_PROFILE_FAILED;
     }
     std::string jsonData = profile.GetOsSysCap();
-    APP_LOGI("CharacteristicProfileJson:%{public}s", jsonData.c_str());
+    APP_LOGI("CharacteristicProfileJson %{public}s", jsonData.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(jsonData, nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("jsonObject is_discarded");
@@ -110,7 +110,7 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         CompareError compareError = {{0}, 0, 0};
         int32_t ret = ComparePcidString(pcId.c_str(), rpcId.c_str(), &compareError);
         if (ret != 0) {
-            APP_LOGE("ComparePcIdString failed errCode:%{public}d", ret);
+            APP_LOGE("ComparePcIdString failed %{public}d", ret);
             return ErrorCode::COMPARE_PC_ID_FAILED;
         }
     }
@@ -137,7 +137,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     ApplicationInfo applicationInfo;
     if (!dataMgr->GetApplicationInfo(
         targetAbilityInfo.targetInfo.bundleName, 0, userId, applicationInfo)) {
-        APP_LOGE("fail to get bundleName:%{public}s application", targetAbilityInfo.targetInfo.bundleName.c_str());
+        APP_LOGE("fail get bundleName %{public}s", targetAbilityInfo.targetInfo.bundleName.c_str());
         return false;
     }
     sptr<QueryRpcIdParams> queryRpcIdParams = new(std::nothrow) QueryRpcIdParams();
@@ -199,7 +199,7 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
         return true;
     }
     const std::string targetInfo = GetJsonStrFromInfo(targetAbilityInfo);
-    APP_LOGI("queryRpcId param :%{public}s", targetInfo.c_str());
+    APP_LOGI("param %{public}s", targetInfo.c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -235,7 +235,7 @@ void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
     APP_LOGI("BundleDistributedManager::OutTimeMonitor");
     auto registerEventListenerFunc = [this, transactId]() {
         BundleMemoryGuard memoryGuard;
-        APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
+        APP_LOGI("RegisterEventListenerFunc transactId %{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };
     serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, registerEventListenerFunc);
@@ -254,7 +254,7 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         std::shared_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
-            APP_LOGE("Can not find node in %{public}s function", __func__);
+            APP_LOGE("no node in %{public}s", __func__);
             return;
         }
         want = queryAbilityParams->second.want;
@@ -274,13 +274,13 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
 
 void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std::string &transactId)
 {
-    APP_LOGI("sendCallbackRequest resultCode:%{public}d, transactId:%{public}s", resultCode, transactId.c_str());
+    APP_LOGI("sendCallbackRequest resultCode %{public}d, transactId %{public}s", resultCode, transactId.c_str());
     QueryRpcIdParams queryRpcIdParams;
     {
         std::shared_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
-            APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
+            APP_LOGE("not find transactId %{public}s", transactId.c_str());
             return;
         }
         queryRpcIdParams = queryAbilityParams->second;
@@ -332,7 +332,7 @@ void BundleDistributedManager::SendCallback(int32_t resultCode, const QueryRpcId
     MessageOption option(MessageOption::TF_SYNC);
     int32_t result = remoteObject->SendRequest(CHECK_ABILITY_ENABLE_INSTALL, data, reply, option);
     if (result != 0) {
-        APP_LOGE("failed to send request code:%{public}d", result);
+        APP_LOGE("failed send request code %{public}d", result);
     }
 }
 }  // namespace AppExecFwk
