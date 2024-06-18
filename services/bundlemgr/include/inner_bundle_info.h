@@ -426,7 +426,7 @@ public:
     }
 
     void SetModuleHapPath(const std::string &hapPath);
-    const std::string &GetModuleHapPath(const std::string &modulePackage) const
+    const std::string GetModuleHapPath(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).hapPath;
@@ -435,7 +435,7 @@ public:
         return Constants::EMPTY_STRING;
     }
 
-    const std::string &GetModuleName(const std::string &modulePackage) const
+    const std::string GetModuleName(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).moduleName;
