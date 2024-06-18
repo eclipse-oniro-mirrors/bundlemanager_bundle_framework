@@ -57,12 +57,12 @@ bool SystemAbilityHelper::RemoveSystemAbility(const int32_t systemAbilityId)
     return true;
 }
 
-int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
     return 0;
 }
 
-int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
     return 0;
 }

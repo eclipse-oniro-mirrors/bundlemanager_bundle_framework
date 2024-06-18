@@ -61,7 +61,7 @@ bool SystemAbilityHelper::RemoveSystemAbility(const int32_t systemAbilityId)
     return false;
 }
 
-int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
     sptr<AAFwk::IAbilityManager> abilityMgrProxy =
@@ -71,7 +71,7 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
         return -1;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    auto ret = abilityMgrProxy->UninstallApp(bundleName, uid);
+    auto ret = abilityMgrProxy->UninstallApp(bundleName, uid, appIndex);
     IPCSkeleton::SetCallingIdentity(identity);
     return ret;
 #else
@@ -79,7 +79,7 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
 #endif
 }
 
-int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
     sptr<AAFwk::IAbilityManager> abilityMgrProxy =
@@ -89,7 +89,7 @@ int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
         return -1;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    auto ret = abilityMgrProxy->UpgradeApp(bundleName, uid, KILL_REASON);
+    auto ret = abilityMgrProxy->UpgradeApp(bundleName, uid, KILL_REASON, appIndex);
     IPCSkeleton::SetCallingIdentity(identity);
     return ret;
 #else
