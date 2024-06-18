@@ -281,10 +281,7 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
-    LOG_I(BMS_TAG_INSTALLER, "result: %{public}d, needSendEvent: %{public}d, dataMgr: %{public}d, bundle: %{public}d"
-        ", modulePackage: %{public}d", result, installParam.needSendEvent, (dataMgr_ == nullptr), bundleName_.empty(),
-        modulePackage_.empty());
-    if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
+    if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
             .resultCode = result,
