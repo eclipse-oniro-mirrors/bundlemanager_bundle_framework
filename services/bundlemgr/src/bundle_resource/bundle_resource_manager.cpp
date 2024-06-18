@@ -62,7 +62,7 @@ bool BundleResourceManager::AddResourceInfo(const InnerBundleInfo &innerBundleIn
 {
     std::vector<ResourceInfo> resourceInfos;
     if (!BundleResourceProcess::GetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
-        APP_LOGE("bundleName: %{public}s failed to GetResourceInfo", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGE("bundleName %{public}s GetResourceInfo failed", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
 
@@ -79,11 +79,11 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     std::vector<ResourceInfo> resourceInfos;
     if (!BundleResourceProcess::GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
-        APP_LOGE("bundleName: %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
+        APP_LOGE("bundleName %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         return false;
     }
     if (!AddResourceInfos(resourceInfos)) {
-        APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
+        APP_LOGE("error, bundleName %{public}s", bundleName.c_str());
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
@@ -104,12 +104,12 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
     ResourceInfo resourceInfo;
     if (!BundleResourceProcess::GetLauncherResourceInfoByAbilityName(bundleName, moduleName, abilityName,
         userId, resourceInfo)) {
-        APP_LOGE("bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
+        APP_LOGE("bundleName %{public}s, moduleName %{public}s, abilityName %{public}s failed",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
     if (!AddResourceInfo(resourceInfo)) {
-        APP_LOGE("error, bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
+        APP_LOGE("error, bundleName %{public}s, moduleName %{public}s, abilityName %{public}s failed",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
@@ -127,7 +127,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     APP_LOGI("bundle resource hold mutex");
     std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
     if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfosMap)) {
-        APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
+        APP_LOGE("GetAllResourceInfo failed userId %{public}d", userId);
         return false;
     }
     if (tempTaskNum != currentTaskNum_) {
@@ -135,7 +135,7 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
         return false;
     }
     if (!AddResourceInfosByMap(resourceInfosMap, tempTaskNum, type, userId)) {
-        APP_LOGE("add all resource info failed, userId:%{public}d", userId);
+        APP_LOGE("add failed userId %{public}d", userId);
         return false;
     }
     // process clone bundle resource info
@@ -170,7 +170,7 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfo(currentUserId, resourceInfo)) {
-        APP_LOGW("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
+        APP_LOGW("key %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
         BundleResourceInfo bundleResourceInfo;
         if (GetBundleResourceInfo(resourceInfo.bundleName_,
             static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo)) {
@@ -326,7 +326,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
         std::string bundleName = item.first;
         auto task = [userId, bundleName, &resourceInfosMap, this]() {
             if (resourceInfosMap.find(bundleName) == resourceInfosMap.end()) {
-                APP_LOGE("bundleName: %{public}s not exist", bundleName.c_str());
+                APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
                 return;
             }
             std::vector<ResourceInfo> resourceInfos = resourceInfosMap[bundleName];
@@ -340,7 +340,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
         std::this_thread::sleep_for(std::chrono::milliseconds(CHECK_INTERVAL));
     }
     threadPool->Stop();
-    APP_LOGI("All tasks has executed end, resource info size:%{public}zu", resourceInfosMap.size());
+    APP_LOGI("end, size %{public}zu", resourceInfosMap.size());
     return true;
 }
 
@@ -380,7 +380,7 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("bundleName:%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
     return false;
 }
 
@@ -394,7 +394,7 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("bundleName:%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
     return false;
 }
 
@@ -438,7 +438,7 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
         resourceInfo.label_ = resourceInfo.bundleName_;
     }
     if (resourceInfo.bundleName_ == GLOBAL_RESOURCE_BUNDLE_NAME) {
-        APP_LOGE("bundleName: %{public}s default resource parse failed", resourceInfo.bundleName_.c_str());
+        APP_LOGE("bundleName %{public}s parse failed", resourceInfo.bundleName_.c_str());
         return;
     }
     if (resourceInfo.icon_.empty()) {
@@ -472,7 +472,7 @@ void BundleResourceManager::GetDefaultIcon(ResourceInfo &resourceInfo)
 
 void BundleResourceManager::SendBundleResourcesChangedEvent(const int32_t userId, const uint32_t type)
 {
-    APP_LOGI("send bundleResource event, userId:%{public}d type:%{public}u", userId, type);
+    APP_LOGI("send event, userId %{public}d type %{public}u", userId, type);
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleResourcesChanged(userId, type);
 }
@@ -485,13 +485,13 @@ void BundleResourceManager::GetTargetBundleName(const std::string &bundleName, s
 
 bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, ResourceInfo &resourceInfo)
 {
-    APP_LOGI("bundleName:%{public}s update icon", bundleName.c_str());
+    APP_LOGI("bundleName %{public}s update icon", bundleName.c_str());
     std::vector<ResourceInfo> resourceInfos;
     BundleResourceInfo bundleResourceInfo;
     if (!GetBundleResourceInfo(bundleName,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
         bundleResourceInfo)) {
-        APP_LOGW("GetBundleResourceInfo failed, bundleName:%{public}s", bundleName.c_str());
+        APP_LOGW("get info failed, bundleName %{public}s", bundleName.c_str());
     } else {
         resourceInfo.bundleName_ = bundleResourceInfo.bundleName;
         resourceInfo.moduleName_ = Constants::EMPTY_STRING;
@@ -504,7 +504,7 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
     if (!GetLauncherAbilityResourceInfo(bundleName,
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL),
         launcherAbilityResourceInfos)) {
-        APP_LOGW("GetLauncherAbilityResourceInfo failed, bundleName:%{public}s",
+        APP_LOGW("get info failed, bundleName %{public}s",
             bundleName.c_str());
     } else {
         for (const auto &launcherAbilityResourceInfo : launcherAbilityResourceInfos) {
@@ -516,7 +516,7 @@ bool BundleResourceManager::UpdateBundleIcon(const std::string &bundleName, Reso
         }
     }
     if (resourceInfos.empty()) {
-        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
+        APP_LOGI("%{public}s build new resourceInfo",
             bundleName.c_str());
         resourceInfo.bundleName_ = bundleName;
         resourceInfo.moduleName_ = Constants::EMPTY_STRING;
@@ -538,7 +538,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     // 1. get main bundle resource info
     std::vector<ResourceInfo> resourceInfos;
     if (!GetBundleResourceInfoForCloneBundle(bundleName, appIndex, resourceInfos)) {
-        APP_LOGE("add clone bundle resource failed, bundleName:%{public}s appIndex:%{public}d",
+        APP_LOGE("add failed, bundleName %{public}s appIndex %{public}d",
             bundleName.c_str(), appIndex);
         return false;
     }
@@ -546,12 +546,11 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     // BundleResourceParser
     BundleResourceParser parser;
     if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
-        APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
-            bundleName.c_str(), appIndex);
+        APP_LOGE("bundleName %{public}s appIndex %{public}d parse failed", bundleName.c_str(), appIndex);
     }
     // 3. save clone bundle resource info
     if (!bundleResourceRdb_->AddResourceInfos(resourceInfos)) {
-        APP_LOGE("add resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        APP_LOGE("add failed, bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
         return false;
     }
     APP_LOGD("end, add clone bundle resource succeed");
@@ -577,7 +576,7 @@ bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::strin
     uint32_t flags = static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_DRAWABLE_DESCRIPTOR);
     if (!bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo)) {
-        APP_LOGE("get bundle resource failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+        APP_LOGE("get failed, bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
         return false;
     }
     bundleResourceInfo.appIndex = appIndex;
@@ -587,7 +586,7 @@ bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::strin
     // 2. get main launcher ability resource info
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
     if (!bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos)) {
-        APP_LOGW("get ability resource failed, bundleName:%{public}s appIndex:%{public}d",
+        APP_LOGW("get failed, bundleName %{public}s appIndex %{public}d",
             bundleName.c_str(), appIndex);
     }
     for (auto &launcherAbility : launcherAbilityResourceInfos) {
@@ -596,7 +595,7 @@ bool BundleResourceManager::GetBundleResourceInfoForCloneBundle(const std::strin
         launcherResource.ConvertFromLauncherAbilityResourceInfo(launcherAbility);
         resourceInfos.emplace_back(launcherResource);
     }
-    APP_LOGI("bundleName:%{public}s appIndex:%{public}d add resource size:%{public}zu", bundleName.c_str(), appIndex,
+    APP_LOGI("bundleName %{public}s appIndex %{public}d size %{public}zu", bundleName.c_str(), appIndex,
         resourceInfos.size());
     return true;
 }

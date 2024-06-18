@@ -36,17 +36,17 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId, const uint32
     if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if (currentUserId != userId) {
-            APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
+            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
             return false;
         }
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
-        APP_LOGE("switch userId : %{public}d failed, manager is nullptr", userId);
+        APP_LOGE("switch userId %{public}d failed", userId);
         return false;
     }
     if (!manager->AddAllResourceInfo(userId, type)) {
-        APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
+        APP_LOGE("AddAllResourceInfo userId %{public}d failed", userId);
         return false;
     }
     APP_LOGI("end");
@@ -67,7 +67,7 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
 
 bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language, const uint32_t type)
 {
-    APP_LOGI("start, current language is %{public}s", language.c_str());
+    APP_LOGI("start, language %{public}s", language.c_str());
     if (language == BundleSystemState::GetInstance().GetSystemLanguage()) {
         APP_LOGD("current language is %{public}s no change", language.c_str());
         return true;
@@ -86,10 +86,10 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
     }
 
     if (!manager->AddAllResourceInfo(currentUserId, type)) {
-        APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
+        APP_LOGE("AddAllResourceInfo currentUserId %{public}d failed", currentUserId);
         return false;
     }
-    APP_LOGI("end, current language is %{public}s", language.c_str());
+    APP_LOGI("end, language %{public}s", language.c_str());
     return true;
 }
 
@@ -106,7 +106,7 @@ bool BundleResourceCallback::OnBundleStatusChanged(
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
+            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
             return false;
         }
     }
@@ -117,21 +117,21 @@ bool BundleResourceCallback::OnBundleStatusChanged(
     }
     if (appIndex == 0) {
         if (enabled && !manager->AddResourceInfoByBundleName(bundleName, userId)) {
-            APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
+            APP_LOGE("add failed bundleName %{public}s", bundleName.c_str());
             return false;
         }
         if (!enabled && !manager->DeleteResourceInfo(bundleName)) {
-            APP_LOGE("delete bundleName : %{public}s resource failed", bundleName.c_str());
+            APP_LOGE("delete failed bundleName %{public}s", bundleName.c_str());
             return false;
         }
         return true;
     }
     if (enabled && !manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
-        APP_LOGE("add bundleName : %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
+        APP_LOGE("add failed bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
         return false;
     }
     if (!enabled && !manager->DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
-        APP_LOGE("delete bundleName: %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
+        APP_LOGE("delete failed bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
         return false;
     }
     APP_LOGI("end, bundleName: %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
@@ -141,7 +141,7 @@ bool BundleResourceCallback::OnBundleStatusChanged(
 bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, bool enabled, const int32_t userId)
 {
-    APP_LOGI("start, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s",
+    APP_LOGI("start, bundleName %{public}s, moduleName %{public}s, abilityName %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("bundleName or moduleName or abilityName is empty");
@@ -150,7 +150,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
+            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
             return false;
         }
     }
@@ -163,7 +163,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
 
     if (enabled) {
         if (!manager->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId)) {
-            APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
+            APP_LOGE("add failed bundleName %{public}s", bundleName.c_str());
             return false;
         }
     } else {
@@ -172,7 +172,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
         info.moduleName_ = moduleName;
         info.abilityName_ = abilityName;
         if (!manager->DeleteResourceInfo(info.GetKey())) {
-            APP_LOGE("delete key : %{public}s resource failed", info.GetKey().c_str());
+            APP_LOGE("delete failed key %{public}s", info.GetKey().c_str());
             return false;
         }
     }
@@ -189,7 +189,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
 
     nlohmann::json jsonObject = nlohmann::json::parse(theme, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse theme: %{public}s.", theme.c_str());
+        APP_LOGE("failed parse theme %{public}s.", theme.c_str());
         return false;
     }
     const auto &jsonObjectEnd = jsonObject.end();
@@ -213,7 +213,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
     }
 
     if (!manager->AddAllResourceInfo(currentUserId, type)) {
-        APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
+        APP_LOGE("AddAllResourceInfo currentUserId %{public}d failed", currentUserId);
         return false;
     }
     APP_LOGI("end, theme:%{public}s", theme.c_str());
@@ -229,7 +229,7 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
         bundleName.c_str(), isEnabled, userId);
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if ((currentUserId > 0) && (userId != currentUserId)) {
-        APP_LOGW("userId not same, currentUserId:%{public}d, userId:%{public}d", currentUserId, userId);
+        APP_LOGW("%{public}d, %{public}d userId not same", currentUserId, userId);
         return false;
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
@@ -242,11 +242,11 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     APP_LOGI("bundleName:%{public}s, targetBundleName:%{public}s overlay changed", bundleName.c_str(),
         targetBundleName.c_str());
     if (!manager->DeleteResourceInfo(targetBundleName)) {
-        APP_LOGW("delete targetBundleName : %{public}s resource failed", targetBundleName.c_str());
+        APP_LOGW("delete failed targetBundleName %{public}s", targetBundleName.c_str());
     }
 
     if (!manager->AddResourceInfoByBundleName(targetBundleName, userId)) {
-        APP_LOGE("add targetBundleName : %{public}s resource failed", targetBundleName.c_str());
+        APP_LOGE("add failed targetBundleName %{public}s", targetBundleName.c_str());
         return false;
     }
     APP_LOGI("end, targetBundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",

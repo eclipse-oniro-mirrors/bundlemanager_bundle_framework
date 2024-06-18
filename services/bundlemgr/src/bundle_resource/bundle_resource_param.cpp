@@ -45,7 +45,7 @@ std::string BundleResourceParam::GetSystemParam(const std::string &key)
     char value[MAX_LEN] = {0};
     int32_t ret = GetParameter(key.c_str(), "", value, MAX_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter:%{public}s failed!", key.c_str());
+        APP_LOGE("GetParameter %{public}s failed!", key.c_str());
         return "";
     }
     return std::string(value);
