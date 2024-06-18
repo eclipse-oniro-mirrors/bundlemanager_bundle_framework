@@ -860,6 +860,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    bool isOldSystemApp = bundleInfo.IsSystemApp();
 
     InnerBundleUserInfo innerBundleUserInfo;
     if (!bundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
@@ -899,6 +900,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             break;
         }
     }
+    if (result == ERR_OK) {
+        result = InnerProcessUpdateHapToken(isOldSystemApp);
+        CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
+    }
 
     if (result == ERR_OK) {
         userGuard.Dismiss();
@@ -907,6 +912,43 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     uid = bundleInfo.GetUid(userId_);
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
+}
+
+ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
+{
+    InnerBundleInfo newBundleInfo;
+    bool isBundleExist = false;
+    if (!GetInnerBundleInfo(newBundleInfo, isBundleExist) || !isBundleExist) {
+        APP_LOGE("bundleName:%{public}s not exist", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    std::vector<std::string> moduleVec = newBundleInfo.GetModuleNameVec();
+    if (!isAppExist_ && (moduleVec.size() == 1)) {
+        APP_LOGD("bundleName:%{public}s only has one module, no need update", bundleName_.c_str());
+        return ERR_OK;
+    }
+
+    if (!uninstallModuleVec_.empty()) {
+        for (const auto &package : moduleVec) {
+            if (std::find(uninstallModuleVec_.begin(), uninstallModuleVec_.end(), package)
+                == uninstallModuleVec_.end()) {
+                newBundleInfo.SetInnerModuleNeedDelete(package, true);
+            }
+        }
+    }
+    ErrCode result = UpdateHapToken(isOldSystemApp != newBundleInfo.IsSystemApp(), newBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("bundleName:%{public}s update hapToken failed, errCode:%{public}d", bundleName_.c_str(), result);
+        return result;
+    }
+    if (isAppExist_ && isModuleUpdate_) {
+        result = SetDirApl(newBundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("bundleName:%{public}s setDirApl failed:%{public}d", bundleName_.c_str(), result);
+            return result;
+        }
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo)
@@ -2034,18 +2076,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    auto bundleUserInfos = oldInfo.GetInnerBundleUserInfos();
-    for (const auto &info : bundleUserInfos) {
-        if (info.second.accessTokenId == 0) {
-            continue;
-        }
-        Security::AccessToken::AccessTokenIDEx tokenIdEx;
-        tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(tokenIdEx, oldInfo) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
-    }
     moduleGuard.Dismiss();
     return ERR_OK;
 }
@@ -2157,16 +2187,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    bool needUpdateToken = newInfo.GetAppType() != oldInfo.GetAppType();
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    result = UpdateHapToken(needUpdateToken, oldInfo);
-    CHECK_RESULT(result, "UpdateHapToken failed %{public}d");
-
-    result = SetDirApl(oldInfo);
-    CHECK_RESULT(result, "SetDirApl failed %{public}d");
 
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
@@ -3941,10 +3965,6 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             }
         }
     }
-    // need to delete lower version feature hap definePermissions and requestPermissions
-    LOG_D(BMS_TAG_INSTALLER, "delete lower version feature hap definePermissions and requestPermissions");
-    ErrCode ret = UpdateHapToken(oldInfo.GetAppType() != info.GetAppType(), info);
-    CHECK_RESULT(ret, "UpdateHapToken failed %{public}d");
     needDeleteQuickFixInfo_ = true;
     LOG_D(BMS_TAG_INSTALLER, "finish to uninstall lower version feature hap");
     return ERR_OK;
@@ -5341,7 +5361,8 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
 
 ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start", bundleName_.c_str());
+    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdateToken:%{public}d",
+        bundleName_.c_str(), needUpdateToken);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
