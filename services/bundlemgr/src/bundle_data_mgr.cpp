@@ -665,7 +665,24 @@ void BundleDataMgr::GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
     }
     for (int32_t appIndex: cloneAppIndexes) {
         AbilityInfo cloneAbilityInfo;
-        auto ret = QueryCloneAbilityInfo(element, flags, userId, appIndex, cloneAbilityInfo);
+        bool ret = ExplicitQueryCloneAbilityInfo(element, flags, userId, appIndex, cloneAbilityInfo);
+        if (ret) {
+            abilityInfos.emplace_back(cloneAbilityInfo);
+        }
+    }
+}
+
+void BundleDataMgr::GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
+    const ElementName &element, int32_t flags, int32_t userId) const
+{
+    std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexes(element.GetBundleName(), userId);
+    if (cloneAppIndexes.empty()) {
+        APP_LOGI("clone app index is empty");
+        return;
+    }
+    for (int32_t appIndex: cloneAppIndexes) {
+        AbilityInfo cloneAbilityInfo;
+        ErrCode ret = ExplicitQueryCloneAbilityInfoV9(element, flags, userId, appIndex, cloneAbilityInfo);
         if (ret == ERR_OK) {
             abilityInfos.emplace_back(cloneAbilityInfo);
         }
@@ -734,7 +751,7 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
             abilityInfos.emplace_back(abilityInfo);
         }
         // get cloneApp's abilityInfos
-        GetCloneAbilityInfos(abilityInfos, element, flags, userId);
+        GetCloneAbilityInfosV9(abilityInfos, element, flags, userId);
         if (abilityInfos.empty()) {
             return ret;
         }
@@ -1091,16 +1108,18 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfosV9(
 }
 
 bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
-    const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const
+    const InnerBundleInfo &innerBundleInfo, AbilityInfo &info, int32_t appIndex) const
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "begin to QueryAbilityInfoWithFlags.");
+    LOG_D(BMS_TAG_QUERY_ABILITY,
+        "begin to QueryAbilityInfoWithFlags flags=%{public}d,userId=%{public}d,appIndex=%{public}d.",
+        flags, userId, appIndex);
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_SYSTEMAPP_ONLY) == GET_ABILITY_INFO_SYSTEMAPP_ONLY &&
         !innerBundleInfo.IsSystemApp()) {
         LOG_W(BMS_TAG_QUERY_ABILITY, "no system app ability info for this calling");
         return false;
     }
     if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)) {
-        if (!innerBundleInfo.IsAbilityEnabled((*option), userId)) {
+        if (!innerBundleInfo.IsAbilityEnabled((*option), userId, appIndex)) {
             LOG_W(BMS_TAG_QUERY_ABILITY, "bundleName:%{public}s ability:%{public}s is disabled",
                 option->bundleName.c_str(), option->name.c_str());
             return false;
@@ -1124,7 +1143,19 @@ bool BundleDataMgr::QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &
     // set uid for NAPI cache use
     InnerBundleUserInfo innerBundleUserInfo;
     if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        info.uid = innerBundleUserInfo.uid;
+        if (appIndex == 0) {
+            info.uid = innerBundleUserInfo.uid;
+        } else {
+            std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
+            if (innerBundleUserInfo.cloneInfos.find(appIndexKey) != innerBundleUserInfo.cloneInfos.end()) {
+                auto cloneInfo = innerBundleUserInfo.cloneInfos.at(appIndexKey);
+                info.uid = cloneInfo.uid;
+                info.appIndex = cloneInfo.appIndex;
+            } else {
+                LOG_W(BMS_TAG_QUERY_ABILITY, "can't find cloneInfos.");
+                return false;
+            }
+        }
     }
     return true;
 }
@@ -3691,6 +3722,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
         bool isEnabled = false;
         ErrCode ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
         if (ret != ERR_OK) {
+            APP_LOGE("GetApplicationEnabledV9 failed, ret = %{public}d", ret);
             return false;
         }
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE) && !isEnabled) {
@@ -3729,7 +3761,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         APP_LOGD("bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    APP_LOGD("GetInnerBundleInfoWithFlagsV9: %{public}s", bundleName.c_str());
+    APP_LOGD(
+        "GetInnerBundleInfoWithFlagsV9:bundleName:%{public}s,flags:%{public}d,userId:%{public}d,appIndex:%{public}d",
+        bundleName.c_str(), flags, userId, appIndex);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGD("GetInnerBundleInfoWithFlagsV9: bundleName %{public}s not find", bundleName.c_str());
@@ -3745,6 +3779,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     bool isEnabled = false;
     auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled, appIndex);
     if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationEnabledV9 failed, ret = %{public}d", ret);
         return ret;
     }
     if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))
@@ -7666,6 +7701,72 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
     if (ret != ERR_OK) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail bundleName:%{public}s", bundleName.c_str());
+        return ret;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
+    if (!ability) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "not found bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return QueryAbilityInfoWithFlagsV9(ability, flags, responseUserId, innerBundleInfo, abilityInfo, appIndex);
+}
+
+ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+    int32_t appIndex, AbilityInfo &abilityInfo) const
+{
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    std::string moduleName = element.GetModuleName();
+    LOG_D(BMS_TAG_QUERY_ABILITY,
+        "ExplicitQueryCloneAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    LOG_D(BMS_TAG_QUERY_ABILITY, "flags:%{public}d userId:%{public}d appIndex:%{public}d", flags, userId, appIndex);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+
+    bool ret = GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
+    if (!ret) {
+        LOG_D(BMS_TAG_QUERY_ABILITY, "ExplicitQueryCloneAbilityInfo fail bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
+    if (!ability) {
+        LOG_W(BMS_TAG_QUERY_ABILITY, "not found bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        return false;
+    }
+    return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo, appIndex);
+}
+
+ErrCode BundleDataMgr::ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
+    int32_t appIndex, AbilityInfo &abilityInfo) const
+{
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    std::string moduleName = element.GetModuleName();
+    LOG_D(BMS_TAG_QUERY_ABILITY,
+        "ExplicitQueryCloneAbilityInfoV9 bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+    LOG_D(BMS_TAG_QUERY_ABILITY, "flags:%{public}d userId:%{public}d appIndex:%{public}d", flags, userId, appIndex);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+
+    ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, requestUserId, appIndex);
+    if (ret != ERR_OK) {
+        LOG_D(BMS_TAG_QUERY_ABILITY, "ExplicitQueryCloneAbilityInfoV9 fail bundleName:%{public}s", bundleName.c_str());
         return ret;
     }
 
