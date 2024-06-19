@@ -2799,9 +2799,20 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
             info.GetBundleName().c_str(), userId_);
         return;
     }
-    if (InstalldClient::GetInstance()->Mkdir(
-        dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
+    int32_t mode = S_IRWXU;
+    int32_t gid = newInnerBundleUserInfo.uid;
+    if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
+        mode = S_IRWXU | S_IRWXG | S_ISGID;
+        gid = ServiceConstants::DATABASE_DIR_GID;
+    }
+    if (InstalldClient::GetInstance()->Mkdir(dir, mode, newInnerBundleUserInfo.uid, gid) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "create Screen Lock Protection dir %{public}s failed.", dir.c_str());
+    }
+    ErrCode result = InstalldClient::GetInstance()->SetDirApl(
+        dir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
+        info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
     }
 }
 
