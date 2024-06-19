@@ -68,10 +68,6 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
         APP_LOGE("failed, manager is nullptr");
         return;
     }
-    // need delete current resource info
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
-    }
     int32_t currentUserId = userId;
     // 0 and 100 exist
     if ((userId != Constants::DEFAULT_USERID) && (userId != Constants::START_USERID)) {
