@@ -45,21 +45,18 @@ public:
      * @param userId Indicates the id of the bundle whose state has been installed.
      */
     virtual void OnBundleAdded(const std::string &bundleName, const int userId) override {};
-    virtual void OnBundleAdded(const std::string &bundleName, const int userId, const int32_t appIndex) override {};
     /**
      * @brief Called when a new application package has been Updated on the device.
      * @param bundleName Indicates the name of the bundle whose state has been Updated.
      * @param userId Indicates the id of the bundle whose state has been Updated.
      */
     virtual void OnBundleUpdated(const std::string &bundleName, const int userId) override {};
-    virtual void OnBundleUpdated(const std::string &bundleName, const int userId, const int32_t appIndex) override {};
     /**
      * @brief Called when a new application package has been Removed on the device.
      * @param bundleName Indicates the name of the bundle whose state has been Removed.
      * @param userId Indicates the id of the bundle whose state has been Removed.
      */
     virtual void OnBundleRemoved(const std::string &bundleName, const int userId) override {};
-    virtual void OnBundleRemoved(const std::string &bundleName, const int userId, const int32_t appIndex) override {};
 
 private:
     void InitResultMap();
