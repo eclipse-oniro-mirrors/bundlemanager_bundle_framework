@@ -60,14 +60,14 @@ std::shared_ptr<Media::PixelMap> BundleGraphicsClientImpl::LoadImageFile(const u
     Media::SourceOptions opts;
     std::unique_ptr<Media::ImageSource> imageSource = Media::ImageSource::CreateImageSource(data, len, opts, errorCode);
     if ((errorCode != 0) || (imageSource == nullptr)) {
-        APP_LOGE("create image failed %{public}d", errorCode);
+        APP_LOGE("create image source failed err %{public}d", errorCode);
         return nullptr;
     }
 
     Media::DecodeOptions decodeOpts;
     auto pixelMapPtr = imageSource->CreatePixelMap(decodeOpts, errorCode);
     if (errorCode != 0) {
-        APP_LOGE("failed create pixelmap %{public}d", errorCode);
+        APP_LOGE("create pixelmap failed err %{public}d", errorCode);
         return nullptr;
     }
     APP_LOGI("end");

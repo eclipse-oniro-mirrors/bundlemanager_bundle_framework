@@ -71,7 +71,6 @@
                 "selinux_adapter",
                 "syscap_codec",
                 "storage_service",
-                "user_status_awareness",
                 "window_manager",
                 "distributed_bundle_framework",
                 "relational_store",

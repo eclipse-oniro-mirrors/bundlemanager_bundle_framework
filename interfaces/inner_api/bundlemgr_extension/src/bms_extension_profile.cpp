@@ -38,7 +38,7 @@ ErrCode BmsExtensionProfile::ParseBmsExtension(
     APP_LOGD("Parse BmsExtension from %{private}s", jsonPath.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(jsonPath, jsonBuf)) {
-        APP_LOGE("Parse failed %{public}s", jsonPath.c_str());
+        APP_LOGE("Parse bms-extension.json file failed, jsonPath: %{public}s", jsonPath.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
     return TransformTo(jsonBuf, bmsExtension);
@@ -57,14 +57,14 @@ bool BmsExtensionProfile::ReadFileIntoJson(const std::string &filePath, nlohmann
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("open failed %{public}s errno :%{public}d", errBuf, errno);
+        APP_LOGE("file open failed due to %{public}s, errno:%{public}d", errBuf, errno);
         return false;
     }
 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("file is empty %{public}d", errno);
+        APP_LOGE("file is empty err %{public}d", errno);
         in.close();
         return false;
     }

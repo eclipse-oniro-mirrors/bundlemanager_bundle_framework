@@ -16,11 +16,6 @@
 <configuration ver="2.0">
   <target name="BmsUninstallSystemTest">
     <preparer>
-      <option name="push" value="bundle_hsp/hsp_A.hap -> /data/test/testHapSo/hsp_A" src="res" />
-      <option name="push" value="bundle_hsp/hspASystemtestFeature1.hap -> /data/test/testHapSo/hspASystemtestFeature1" src="res" />
-      <option name="push" value="bundle_hsp/hspASystemtestFeature2.hap -> /data/test/testHapSo/hspASystemtestFeature2" src="res" />
-      <option name="push" value="bundle_hsp/hspASystemtestFeature3.hap -> /data/test/testHapSo/hspASystemtestFeature3" src="res" />
-      <option name="push" value="bundle_hsp/hspASystemtestFeature4.hap -> /data/test/testHapSo/hspASystemtestFeature4" src="res" />
       <option name="push" value="stSystemBundle/bmsSystemBundle1.hap -> /system/app/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle1.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle4.hap -> /data/test/bms_bundle/" src="res" />
@@ -35,7 +30,6 @@
   </target>
   <target name="BmsInstallSystemTest">
     <preparer>
-      <option name="push" value="bundle_hsp/hsp_A.hap -> /data/test/testHapSo/hsp_A" src="res" />
       <option name="push" value="stSystemBundle/bmsSystemBundle1.hap -> /system/app/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle1.hap -> /data/test/bms_bundle/" src="res" />
       <option name="push" value="stThirdBundle/bmsThirdBundle2.hap -> /data/test/bms_bundle/" src="res" />

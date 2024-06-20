@@ -190,7 +190,7 @@ BundleStatusCallbackProxy::~BundleStatusCallbackProxy()
 void BundleStatusCallbackProxy::OnBundleStateChanged(
     const uint8_t installType, const int32_t resultCode, const std::string &resultMsg, const std::string &bundleName)
 {
-    APP_LOGI("bundle %{public}s", bundleName.c_str());
+    APP_LOGI("bundle state changed %{public}s", bundleName.c_str());
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -228,7 +228,7 @@ void BundleStatusCallbackProxy::OnBundleStateChanged(
     int32_t ret = remote->SendRequest(
         static_cast<int32_t>(BundleStatusCallbackInterfaceCode::ON_BUNDLE_STATE_CHANGED), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGW("transact failed %{public}d", ret);
+        APP_LOGW("call OnBundleStateChanged fail for transact failed, error code: %{public}d", ret);
     }
 }
 }  // namespace AppExecFwk

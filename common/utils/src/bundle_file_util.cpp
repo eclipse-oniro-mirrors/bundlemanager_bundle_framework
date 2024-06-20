@@ -65,11 +65,11 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         return false;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("not access %{public}s %{public}d", realPath.c_str(), errno);
+        APP_LOGE("access failed path: %{public}s errno %{public}d", realPath.c_str(), errno);
         return false;
     }
     if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
-        APP_LOGE("Max size %{public}" PRId64, MAX_HAP_SIZE);
+        APP_LOGE("file size larger than max hap size: %{public}" PRId64, MAX_HAP_SIZE);
         return false;
     }
     return true;
@@ -98,7 +98,7 @@ bool BundleFileUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, 
             return true;
         }
         if (!GetHapFilesFromBundlePath(bundlePath, realPaths)) {
-            APP_LOGE("failed %{public}s", bundlePaths.front().c_str());
+            APP_LOGE("GetHapFilesFromBundlePath failed :%{public}s", bundlePaths.front().c_str());
             return false;
         }
         return true;
@@ -139,7 +139,7 @@ bool BundleFileUtil::CheckFileName(const std::string &fileName)
         return false;
     }
     if (fileName.size() > PATH_MAX_SIZE) {
-        APP_LOGE("length %{public}d", fileName.size());
+        APP_LOGE("path length %{public}zu too long", fileName.size());
         return false;
     }
     return true;
@@ -149,7 +149,7 @@ bool BundleFileUtil::CheckFileSize(const std::string &bundlePath, const int64_t 
 {
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
-        APP_LOGE("error %{public}d", errno);
+        APP_LOGE("call stat error:%{public}d", errno);
         return false;
     }
     if (fileInfo.st_size > fileSize) {
@@ -169,7 +169,7 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("%{public}s failure due to %{public}s errno %{public}d",
+        APP_LOGE("open %{public}s failure due to %{public}s errno %{public}d",
             currentBundlePath.c_str(), errMsg, errno);
         return false;
     }
@@ -185,7 +185,7 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
         const std::string hapFilePath = bundlePath + entry->d_name;
         std::string realPath = "";
         if (!CheckFilePath(hapFilePath, realPath)) {
-            APP_LOGE("find invalid path %{public}s", hapFilePath.c_str());
+            APP_LOGE("invalid hap path %{public}s", hapFilePath.c_str());
             closedir(dir);
             return false;
         }
@@ -193,7 +193,7 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
         APP_LOGD("find hap path %{public}s", realPath.c_str());
 
         if (hapFileList.size() > MAX_HAP_NUMBER) {
-            APP_LOGE("reach %{public}hhu, stop add more.", MAX_HAP_NUMBER);
+            APP_LOGE("max hap number %{public}hhu, stop add.", MAX_HAP_NUMBER);
             closedir(dir);
             return false;
         }
@@ -223,7 +223,7 @@ bool BundleFileUtil::IsExistFile(const std::string &filePath)
 
     struct stat result = {};
     if (stat(filePath.c_str(), &result) != 0) {
-        APP_LOGE("fail %{public}d", errno);
+        APP_LOGE("fail stat errno:%{public}d", errno);
         return false;
     }
 
@@ -238,7 +238,7 @@ bool BundleFileUtil::IsExistDir(const std::string &dirPath)
 
     struct stat result = {};
     if (stat(dirPath.c_str(), &result) != 0) {
-        APP_LOGE("fail %{public}d", errno);
+        APP_LOGE("fail stat errno %{public}d", errno);
         return false;
     }
 

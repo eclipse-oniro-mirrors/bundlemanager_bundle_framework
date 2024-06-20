@@ -111,12 +111,13 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     }
     ErrCode result = ERR_OK;
     for (auto userId : userIdSet) {
+        APP_LOGI("start ota install bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
         installParam.userId = userId;
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
-            APP_LOGE("install system bundle fail, error: %{public}d", errCode);
+            APP_LOGE("install system bundle %{public}s fail, error: %{public}d", bundleName.c_str(), errCode);
             result = errCode;
         }
         ResetInstallProperties();

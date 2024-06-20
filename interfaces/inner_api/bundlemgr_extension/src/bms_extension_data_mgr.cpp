@@ -42,7 +42,7 @@ ErrCode BmsExtensionDataMgr::Init()
         BmsExtensionProfile bmsExtensionProfile;
         auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension_);
         if (res != ERR_OK) {
-            APP_LOGW("failed errCode %{public}d", res);
+            APP_LOGW("ParseBmsExtension failed %{public}d", res);
             return ERR_APPEXECFWK_PARSE_UNEXPECTED;
         }
         APP_LOGD("parse bms-extension.json success, which is: %{public}s", bmsExtension_.ToString().c_str());
@@ -66,11 +66,11 @@ bool BmsExtensionDataMgr::OpenHandler()
     auto lib64Path = bmsExtension_.bmsExtensionBundleMgr.lib64Path.c_str();
     *handle = dlopen(lib64Path, RTLD_NOW | RTLD_GLOBAL);
     if (*handle == nullptr) {
-        APP_LOGW("failed %{public}s err:%{public}s", lib64Path, dlerror());
+        APP_LOGW("open %{public}s failed %{public}s", lib64Path, dlerror());
         *handle = dlopen(libPath, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {
-        APP_LOGE("failed %{public}s err %{public}s", libPath, dlerror());
+        APP_LOGE("open %{public}s failed %{public}s", libPath, dlerror());
         return false;
     }
     APP_LOGD("OpenHandler end");
@@ -85,7 +85,7 @@ bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sd
         if (bundleMgrExtPtr) {
             return bundleMgrExtPtr->CheckApiInfo(bundleInfo);
         }
-        APP_LOGE("%{public}s failed.", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        APP_LOGE("create class: %{public}s failed.", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
         return false;
     }
     APP_LOGW("access bms-extension failed.");

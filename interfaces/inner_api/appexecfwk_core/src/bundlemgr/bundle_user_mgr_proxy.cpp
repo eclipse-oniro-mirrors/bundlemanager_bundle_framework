@@ -70,7 +70,7 @@ ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std:
 
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host errCode : %{public}d", ret);
+        APP_LOGE("host reply err %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -97,7 +97,7 @@ ErrCode BundleUserMgrProxy::RemoveUser(int32_t userId)
     
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host errCode : %{public}d", ret);
+        APP_LOGE("host reply err %{public}d", ret);
         return ret;
     }
     return ERR_OK;
@@ -109,7 +109,7 @@ bool BundleUserMgrProxy::SendTransactCmd(BundleUserMgrInterfaceCode code, Messag
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail send transact cmd %{public}d", code);
+        APP_LOGE("fail send transact cmd %{public}d due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);

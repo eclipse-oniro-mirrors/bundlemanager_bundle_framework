@@ -404,7 +404,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         errCode = (this->*funcMap_[code])(data, reply);
     } else {
-        APP_LOGW("receives unknown %{public}u", code);
+        APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundleMgr host finish to process message, errCode: %{public}d", errCode);

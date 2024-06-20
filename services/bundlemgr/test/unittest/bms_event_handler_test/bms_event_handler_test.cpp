@@ -745,54 +745,6 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
 }
 
 /**
- * @tc.number: HotPatchAppProcessing_0100
- * @tc.name: HotPatchAppProcessing
- * @tc.desc: test HotPatchAppProcessing
- */
-HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto iter = handler->HotPatchAppProcessing("");
-    EXPECT_EQ(iter, false);
-}
-
-/**
- * @tc.number: HotPatchAppProcessing_0200
- * @tc.name: HotPatchAppProcessing
- * @tc.desc: test HotPatchAppProcessing
- */
-HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0200, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto iter = handler->HotPatchAppProcessing(BUNDLE_NAME);
-    EXPECT_EQ(iter, false);
-}
-
-/**
- * @tc.number: HotPatchAppProcessing_0300
- * @tc.name: HotPatchAppProcessing
- * @tc.desc: test HotPatchAppProcessing
- */
-HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0300, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    InnerBundleInfo info;
-    std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    InnerModuleInfo innerModuleInfo;
-    std::vector<Metadata> datas;
-    Metadata data;
-    data.name = HOT_PATCH_METADATA;
-    datas.emplace_back(data);
-    innerModuleInfo.metadata = datas;
-    info.AddInnerModuleInfo(innerModuleInfos);
-    info.isNewVersion_ = true;
-    dataMgr->bundleInfos_[TEST_BUNDLE_NAME] = info;
-    bool ret = handler->HotPatchAppProcessing(BUNDLE_NAME);
-    EXPECT_EQ(ret, false);
-}
-
-/**
  * @tc.number: HasModuleSavedInPreInstalledDbTest_0100
  * @tc.name: HasModuleSavedInPreInstalledDb
  * @tc.desc: test HasModuleSavedInPreInstalledDb

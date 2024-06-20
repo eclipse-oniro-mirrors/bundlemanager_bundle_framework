@@ -31,7 +31,8 @@ public:
 
     static bool InitResourceGlobalConfig(const std::string &hapPath,
         const std::vector<std::string> &overlayHaps,
-        std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
+        std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        bool needParseIcon = true, bool needParseLabel = true);
 };
 } // AppExecFwk
 } // OHOS

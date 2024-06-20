@@ -2011,6 +2011,7 @@ void InnerBundleInfo::SetkeyId(const int32_t userId, const std::string &keyId)
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("SetkeyId failed, cannot find userInfo for userId %{public}d", userId);
         return;
     }
     infoItem->second.keyId = keyId;
@@ -2036,7 +2037,7 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     auto& key = NameAndUserIdToKey(abilityInfo.bundleName, userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("innerBundleUserInfos find key:%{public}s, error", key.c_str());
+        APP_LOGD("innerBundleUserInfos find key:%{public}s, error", key.c_str());
         return false;
     }
 
@@ -2277,10 +2278,31 @@ void InnerBundleInfo::RemoveDuplicateName(std::vector<std::string> &name) const
     name.erase(iter, name.end());
 }
 
+void InnerBundleInfo::SetInnerModuleNeedDelete(const std::string &moduleName, const bool needDelete)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module module %{public}s", moduleName.c_str());
+        return;
+    }
+    innerModuleInfos_.at(moduleName).needDelete = needDelete;
+}
+
+bool InnerBundleInfo::GetInnerModuleNeedDelete(const std::string &moduleName)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module %{public}s", moduleName.c_str());
+        return true;
+    }
+    return innerModuleInfos_.at(moduleName).needDelete;
+}
+
 std::vector<DefinePermission> InnerBundleInfo::GetAllDefinePermissions() const
 {
     std::vector<DefinePermission> definePermissions;
     for (const auto &info : innerModuleInfos_) {
+        if (info.second.needDelete) {
+            continue;
+        }
         std::transform(info.second.definePermissions.begin(),
             info.second.definePermissions.end(),
             std::back_inserter(definePermissions),
@@ -2304,6 +2326,9 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
+        if (info.second.needDelete) {
+            continue;
+        }
         for (auto item : info.second.requestPermissions) {
             item.moduleName = info.second.moduleName;
             requestPermissions.push_back(item);
@@ -2360,7 +2385,7 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     return ERR_OK;
 }
 
-const std::string &InnerBundleInfo::GetCurModuleName() const
+const std::string InnerBundleInfo::GetCurModuleName() const
 {
     if (innerModuleInfos_.find(currentPackage_) != innerModuleInfos_.end()) {
         return innerModuleInfos_.at(currentPackage_).moduleName;

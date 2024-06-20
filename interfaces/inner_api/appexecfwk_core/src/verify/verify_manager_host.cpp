@@ -41,7 +41,7 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGI("message %{public}u", code);
+    APP_LOGI("VerifyManagerHost OnRemoteRequest, message code : %{public}u", code);
     std::u16string descriptor = VerifyManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
@@ -55,7 +55,7 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
         case static_cast<uint32_t>(VerifyManagerInterfaceCode::DELETE_ABC):
             return HandleDeleteAbc(data, reply);
         default:
-            APP_LOGW("receive unknown %{public}d", code);
+            APP_LOGW("VerifyManagerHost receive unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }

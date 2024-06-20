@@ -169,7 +169,7 @@ ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, Mes
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply %{public}d", ret);
+        APP_LOGE("host reply err: %{public}d", ret);
         return ret;
     }
     size_t dataSize = reply.ReadUint32();
@@ -206,7 +206,7 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
 
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("failed: %{public}d", res);
+        APP_LOGE("failed err %{public}d", res);
         return res;
     }
 
@@ -218,7 +218,7 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
 
     void *buffer = nullptr;
     if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("Fail, length %{public}zu", dataSize);
+        APP_LOGE("read raw data fail, length %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -250,12 +250,12 @@ bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail send transact cmd %{public}d due remote object", code);
+        APP_LOGE("fail send transact cmd %{public}d due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error transact %{public}d in %{public}d", result, code);
+        APP_LOGE("receive error %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

@@ -419,7 +419,7 @@ ErrCode BundleMgrProxy::BatchGetBundleInfo(const std::vector<std::string> &bundl
     for (size_t i = 0; i < bundleNames.size(); i++) {
         APP_LOGD("begin to get bundle info of %{public}s", bundleNames[i].c_str());
         if (bundleNames[i].empty()) {
-            APP_LOGE("%{public}zu empty", i);
+            APP_LOGE("fail to BatchGetBundleInfo due to bundleName %{public}zu empty", i);
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
@@ -497,7 +497,7 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("GetDependentBundleInfo failed %{public}d", res);
+        APP_LOGE("fail to GetDependentBundleInfo from server, error code: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -4240,7 +4240,7 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("GetUninstalledBundleInfo failed %{public}d", res);
+        APP_LOGE("GetUninstalledBundleInfo from server failed error %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -4324,7 +4324,7 @@ ErrCode BundleMgrProxy::GetAllBundleInfoByDeveloperId(const std::string &develop
     std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin developerId %{public}s userId :%{public}d",
+    APP_LOGI("begin GetAllBundleInfoByDeveloperId, developerId: %{public}s, userId :%{public}d",
         developerId.c_str(), userId);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -4347,8 +4347,7 @@ ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
     std::vector<std::string> &developerIdList, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGI("begin developerId: %{public}s, userId :%{public}d",
-        developerId.c_str(), userId);
+    APP_LOGI("begin to GetDeveloperIds of %{public}s", appDistributionType.c_str());
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetDeveloperIds due to write InterfaceToken fail");
@@ -4370,7 +4369,7 @@ ErrCode BundleMgrProxy::GetDeveloperIds(const std::string &appDistributionType,
     }
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("ErrCode: %{public}d", res);
+        APP_LOGE("host reply err %{public}d", res);
         return res;
     }
     if (!reply.ReadStringVector(&developerIdList)) {
@@ -4499,7 +4498,7 @@ ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
     size_t dataSize = reply.ReadUint32();
     void *buffer = nullptr;
     if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("failed: %{public}zu", dataSize);
+        APP_LOGE("GetData failed dataSize : %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -4553,7 +4552,7 @@ ErrCode BundleMgrProxy::GetVectorFromParcelIntelligentWithErrCode(
 
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("ErrCode %{public}d", res);
+        APP_LOGE("GetParcelableInfosWithErrCode: %{public}d", res);
         return res;
     }
 
@@ -4665,7 +4664,7 @@ ErrCode BundleMgrProxy::GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host ErrCode : %{public}d", ret);
+        APP_LOGE("host reply err : %{public}d", ret);
         return ret;
     }
     return InnerGetParcelInfo<T>(reply, parcelInfo);
@@ -4677,7 +4676,7 @@ ErrCode BundleMgrProxy::InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo)
     size_t dataSize = reply.ReadUint32();
     void *buffer = nullptr;
     if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("failed: %{public}zu", dataSize);
+        APP_LOGE("GetData failed, dataSize : %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -4706,7 +4705,7 @@ ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel 
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host ErrCode : %{public}d", ret);
+        APP_LOGE("host reply err %{public}d", ret);
         return ret;
     }
     return InnerGetBigString(reply, result);
@@ -4818,7 +4817,7 @@ ErrCode BundleMgrProxy::CopyAp(const std::string &bundleName, bool isAllBundle, 
     }
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("host ErrCode : %{public}d", res);
+        APP_LOGE("host reply err: %{public}d", res);
         return res;
     }
     if (!reply.ReadStringVector(&results)) {
@@ -4850,7 +4849,7 @@ ErrCode BundleMgrProxy::CanOpenLink(
     }
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("host ErrCode : %{public}d", res);
+        APP_LOGE("host reply err: %{public}d", res);
         return res;
     }
     canOpen = reply.ReadBool();

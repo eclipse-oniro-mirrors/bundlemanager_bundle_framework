@@ -33,6 +33,7 @@ std::multimap<std::string, std::string> MimeTypeMgr::mimeTypeMap_ = {
     {"3gpp", "audio/3gpp"},
     {"3gpp", "video/3gpp"},
     {"3gpp2", "video/3gpp2"},
+    {"7z", "application/x-7z-compressed"},
     {"VOB", "video/mpeg"},
     {"aac", "audio/aac"},
     {"aac", "audio/aac-adts"},
@@ -390,7 +391,7 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::stri
         mimeTypes.push_back(it->second);
     }
     if (mimeTypes.empty()) {
-        APP_LOGE("Suffix %{public}s has no corresponding type", suffix.c_str());
+        APP_LOGD("Suffix %{public}s has no corresponding type", suffix.c_str());
         return false;
     }
     return true;

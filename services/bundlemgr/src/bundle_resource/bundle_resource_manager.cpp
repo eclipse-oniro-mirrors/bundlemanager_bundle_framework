@@ -42,6 +42,7 @@ constexpr int32_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
 const std::string SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
 const std::string THEME_ICONS_A = "/a/app/icons/";
 const std::string THEME_ICONS_B = "/b/app/icons/";
+const std::string INNER_UNDER_LINE = "_";
 }
 
 BundleResourceManager::BundleResourceManager()
@@ -82,12 +83,31 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         APP_LOGE("bundleName: %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         return false;
     }
+    // get current rdb resource
+    std::vector<std::string> existResourceName;
+    std::vector<std::string> needDeleteResourceName;
+    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, 0, existResourceName) &&
+        !existResourceName.empty()) {
+        for (const auto &key : existResourceName) {
+            auto it = std::find_if(resourceInfos.begin(), resourceInfos.end(),
+                [&key](const ResourceInfo &info) {
+                return info.GetKey() == key;
+            });
+            if (it == resourceInfos.end()) {
+                bundleResourceRdb_->DeleteResourceInfo(key);
+                needDeleteResourceName.emplace_back(key);
+            }
+        }
+    }
     if (!AddResourceInfos(resourceInfos)) {
         APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
         for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
+            for (const auto &name : needDeleteResourceName) {
+                bundleResourceRdb_->DeleteResourceInfo(std::to_string(appIndex) + INNER_UNDER_LINE + name);
+            }
             if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
                 APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
             }
@@ -545,7 +565,7 @@ bool BundleResourceManager::AddCloneBundleResourceInfo(
     // 2. need to process base icon and badge icon
     // BundleResourceParser
     BundleResourceParser parser;
-    if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+    if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
         APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
             bundleName.c_str(), appIndex);
     }
@@ -621,7 +641,7 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(
         ((type & static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE)) ==
         static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE))) {
         BundleResourceParser parser;
-        if (parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
+        if (!parser.ParserCloneResourceInfo(appIndex, resourceInfos)) {
             APP_LOGE("bundleName:%{public}s appIndex:%{public}d parse clone resource failed",
                 bundleName.c_str(), appIndex);
         }

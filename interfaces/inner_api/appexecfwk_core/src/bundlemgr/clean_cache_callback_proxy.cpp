@@ -58,7 +58,7 @@ void CleanCacheCallbackProxy::OnCleanCacheFinished(bool succeeded)
     int32_t ret = remote->SendRequest(
         static_cast<int32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGW("transact failed error: %{public}d", ret);
+        APP_LOGW("call OnCleanCacheFinished fail, for transact failed, error code: %{public}d", ret);
     }
 }
 }  // namespace AppExecFwk

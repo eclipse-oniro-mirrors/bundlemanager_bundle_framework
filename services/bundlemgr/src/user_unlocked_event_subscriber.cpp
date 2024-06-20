@@ -97,7 +97,9 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         uint32_t fileMode = static_cast<uint32_t>(fileStat.mode);
         if ((fileStat.uid != bundleInfo.uid) || (fileStat.gid != ServiceConstants::DATABASE_DIR_GID) ||
             ((fileMode & MODE_BASE) != (S_IRWXU | S_IRWXG | S_ISGID))) {
-            APP_LOGW("path: %{public}s uid or gid or mode not same", baseBundleDataDir.c_str());
+            APP_LOGW("path: %{public}s uid or gid or mode not same: fileStat.uid:%{public}d,"
+                "bundleInfo.uid:%{public}d, fileStat.gid:%{public}d ", baseBundleDataDir.c_str(),
+                static_cast<int32_t>(fileStat.uid), bundleInfo.uid, static_cast<int32_t>(fileStat.mode));
             isExist = false;
         }
     }

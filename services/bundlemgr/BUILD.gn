@@ -243,6 +243,7 @@ ohos_shared_library("libbms") {
   external_deps = [
     "ability_base:want",
     "ability_runtime:ability_connect_callback_stub",
+    "access_token:el5_filekey_manager_sdk",
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
@@ -262,11 +263,6 @@ ohos_shared_library("libbms") {
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
-  }
-
-  if (bundle_framework_user_status_awareness_enable) {
-    external_deps += user_status_external_deps
-    defines += [ "BUNDLE_FRAMEWORK_USER_STATUS_AWARENESS_ENABLE" ]
   }
 
   if (storage_service_enable) {
