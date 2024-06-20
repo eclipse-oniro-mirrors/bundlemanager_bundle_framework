@@ -667,7 +667,7 @@ ExtensionProcessMode ConvertToExtensionProcessMode(const std::string &extensionP
 
 void ExtensionAbilityInfo::UpdateNeedCreateSandbox()
 {
-    needCreateSandbox = (NOT_NEED_CREATE_SANBOX_MODE.find(extensionTypeName) == NOT_NEED_CREATE_SANBOX_MODE.end());
+    needCreateSandbox = false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
