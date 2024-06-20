@@ -48,6 +48,9 @@ public:
     std::shared_ptr<NativeRdb::ResultSet> QueryByStep(
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
+    bool UpdateOrInsertData(
+        const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     std::mutex rdbMutex_;

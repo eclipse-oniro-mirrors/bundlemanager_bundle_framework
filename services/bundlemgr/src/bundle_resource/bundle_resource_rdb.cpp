@@ -507,6 +507,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     for (const auto &resourceInfo : resourceInfos) {
         NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, systemState);
         if (!resourceInfo.label_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
@@ -518,7 +519,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
-        if (!rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates)) {
+        if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
             APP_LOGE("bundleName: %{public}s UpdateData failed.", resourceInfo.GetKey().c_str());
             ret = false;
         }
