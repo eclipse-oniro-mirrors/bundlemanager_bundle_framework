@@ -1140,7 +1140,8 @@ protected:
                     "maxCount":5
                 },
                 "appIndex":0,
-                "maxChildProcess": 0
+                "maxChildProcess": 0,
+                "installSource": "unknown"
             },
             "baseBundleInfo": {
                 "abilityInfos": [
