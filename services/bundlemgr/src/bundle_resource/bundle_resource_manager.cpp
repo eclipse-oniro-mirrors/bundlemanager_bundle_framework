@@ -104,13 +104,21 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
+        bool needDeleteMainBundleResource = false;
         for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
+            if (appIndex == ServiceConstants::INVALID_GID) {
+                needDeleteMainBundleResource = true;
+                continue;
+            }
             for (const auto &name : needDeleteResourceName) {
                 bundleResourceRdb_->DeleteResourceInfo(std::to_string(appIndex) + INNER_UNDER_LINE + name);
             }
             if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
                 APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
             }
+        }
+        if (needDeleteMainBundleResource && !resourceInfos.empty()) {
+            DeleteResourceInfo(resourceInfos[0].bundleName_);
         }
     }
     APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
@@ -161,9 +169,17 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     // process clone bundle resource info
     for (const auto &item : resourceInfosMap) {
         if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
+            bool needDeleteMainBundleResource = false;
             APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
             for (const int32_t appIndex : item.second[0].appIndexes_) {
+                if (appIndex == ServiceConstants::INVALID_GID) {
+                    needDeleteMainBundleResource = true;
+                    continue;
+                }
                 UpdateCloneBundleResourceInfo(item.first, appIndex, type);
+            }
+            if (needDeleteMainBundleResource) {
+                DeleteResourceInfo(item.first);
             }
         }
     }
