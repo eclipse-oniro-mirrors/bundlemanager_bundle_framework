@@ -83,22 +83,8 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         APP_LOGE("bundleName: %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         return false;
     }
-    // get current rdb resource
-    std::vector<std::string> existResourceName;
-    std::vector<std::string> needDeleteResourceName;
-    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, 0, existResourceName) &&
-        !existResourceName.empty()) {
-        for (const auto &key : existResourceName) {
-            auto it = std::find_if(resourceInfos.begin(), resourceInfos.end(),
-                [&key](const ResourceInfo &info) {
-                return info.GetKey() == key;
-            });
-            if (it == resourceInfos.end()) {
-                bundleResourceRdb_->DeleteResourceInfo(key);
-                needDeleteResourceName.emplace_back(key);
-            }
-        }
-    }
+    DeleteNotExistResourceInfo(bundleName, 0, resourceInfos);
+
     if (!AddResourceInfos(resourceInfos)) {
         APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
         return false;
@@ -110,9 +96,7 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
                 needDeleteMainBundleResource = true;
                 continue;
             }
-            for (const auto &name : needDeleteResourceName) {
-                bundleResourceRdb_->DeleteResourceInfo(std::to_string(appIndex) + INNER_UNDER_LINE + name);
-            }
+            DeleteNotExistResourceInfo(bundleName, appIndex, resourceInfos);
             if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
                 APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
             }
@@ -123,6 +107,25 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
     }
     APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
     return true;
+}
+
+void BundleResourceManager::DeleteNotExistResourceInfo(
+    const std::string &bundleName, const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos)
+{
+    // get current rdb resource
+    std::vector<std::string> existResourceName;
+    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, appIndex, existResourceName) &&
+        !existResourceName.empty()) {
+        for (const auto &key : existResourceName) {
+            auto it = std::find_if(resourceInfos.begin(), resourceInfos.end(),
+                [&key](const ResourceInfo &info) {
+                return info.GetKey() == key;
+            });
+            if (it == resourceInfos.end()) {
+                bundleResourceRdb_->DeleteResourceInfo(key);
+            }
+        }
+    }
 }
 
 bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,

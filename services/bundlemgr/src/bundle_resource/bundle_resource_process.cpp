@@ -275,7 +275,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
         for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
             if (cloneInfo.second.enabled) {
-                appIndexes.emplace_back(cloneInfo.second.enabled);
+                appIndexes.emplace_back(cloneInfo.second.appIndex);
             }
         }
     }
@@ -297,8 +297,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             return false;
         }
 
-        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("%{public}s does not have default icon, build resourceInfo", innerBundleInfo.GetBundleName().c_str());
         ResourceInfo defaultResourceInfo;
         defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.labelNeedParse_ = false;
@@ -311,8 +310,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     }
 
     if (hasDynamicIcon) {
-        APP_LOGI("bundle %{public}s has dynamicIcon",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("bundle %{public}s has dynamicIcon", innerBundleInfo.GetBundleName().c_str());
         ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
     // for clone bundle
