@@ -4971,10 +4971,6 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     }
 
     // copy code signature file to security dir
-    if (!BundleUtil::CheckSystemSize(signatureFileDir, APP_INSTALL_PATH)) {
-        LOG_E(BMS_TAG_INSTALLER, "copy %{public}s failed due to insufficient disk memory", signatureFileDir.c_str());
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
     std::string destinationStr =
         BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
     if (destinationStr.empty()) {
