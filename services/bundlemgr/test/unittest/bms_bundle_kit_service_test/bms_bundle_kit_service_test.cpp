@@ -2754,6 +2754,105 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1100, Function | SmallTest |
 }
 
 /**
+ * @tc.number: QueryAbilityInfos_1200
+ * @tc.name: test can get the ability info by explicit query
+ * @tc.desc: 1.system run normally
+ *           2.install clone apps
+ *           3.disable main app
+ *           4.get ability info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> result;
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), TOTAL_APP_NUMS);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    result.clear();
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), 3);
+
+    result.clear();
+    flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), TOTAL_APP_NUMS);
+
+    int index = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(info.appIndex, index++);
+        }
+    }
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_1300
+ * @tc.name: test can get the ability info by implicit query
+ * @tc.desc: 1.system run normally
+ *           2.install clone apps
+ *           3.disable main app
+ *           4.get ability info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    std::vector<AbilityInfo> result;
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    result.clear();
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    int count = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            count++;
+        }
+    }
+    EXPECT_EQ(count, 3);
+
+    result.clear();
+    flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    count = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            count++;
+        }
+    }
+    EXPECT_EQ(count, TOTAL_APP_NUMS);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetLaunchWantForBundle_0100
  * @tc.name: test can get the launch want of a bundle
  * @tc.desc: 1.system run normally
