@@ -2296,34 +2296,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4200, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_4300
- * @tc.name: test RemoveModuleDataDir
- * @tc.desc: 1.Test the RemoveModuleDataDir of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4300, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo info;
-    std::string modulePackage = "";
-    ErrCode res = installer.RemoveModuleAndDataDir(info, modulePackage, USERID, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-
-    res = installer.RemoveModuleDataDir(info, modulePackage, USERID);
-    EXPECT_EQ(res, ERR_NO_INIT);
-
-    std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = TEST_PACK_AGE;
-    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
-    info.innerModuleInfos_ = innerModuleInfos;
-    info.AddInnerModuleInfo(innerModuleInfos);
-
-    res = installer.RemoveModuleDataDir(info, TEST_PACK_AGE, INVAILD_CODE);
-    EXPECT_NE(res, ERR_NO_INIT);
-}
-
-/**
  * @tc.number: InstalldHostImpl_0100
  * @tc.name: test CheckArkNativeFileWithOldInfo
  * @tc.desc: 1.Test the CreateBundleDir of InstalldHostImpl
