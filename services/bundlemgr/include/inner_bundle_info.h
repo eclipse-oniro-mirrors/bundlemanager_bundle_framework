@@ -1014,6 +1014,8 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void SetkeyId(const int32_t userId, const std::string &keyId);
+    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

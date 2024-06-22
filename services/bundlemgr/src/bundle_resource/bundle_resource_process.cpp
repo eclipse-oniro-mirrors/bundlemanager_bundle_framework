@@ -370,11 +370,13 @@ ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const A
 
 ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(const InnerBundleInfo &innerBundleInfo)
 {
+    ApplicationInfo appInfo = innerBundleInfo.GetBaseApplicationInfo();
+    innerBundleInfo.AdaptMainLauncherResourceInfo(appInfo);
     ResourceInfo resourceInfo;
     resourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
-    resourceInfo.labelId_ = innerBundleInfo.GetBaseApplicationInfo().labelResource.id;
-    resourceInfo.iconId_ = innerBundleInfo.GetBaseApplicationInfo().iconResource.id;
-    const auto &moduleName = innerBundleInfo.GetBaseApplicationInfo().labelResource.moduleName;
+    resourceInfo.labelId_ = appInfo.labelResource.id;
+    resourceInfo.iconId_ = appInfo.iconResource.id;
+    const auto &moduleName = appInfo.labelResource.moduleName;
     const auto &moduleInfos = innerBundleInfo.GetInnerModuleInfos();
     for (const auto &iter : moduleInfos) {
         if (iter.second.moduleName == moduleName) {
