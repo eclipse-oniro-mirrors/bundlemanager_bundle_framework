@@ -382,7 +382,7 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::stri
 {
     std::string suffix;
     if (!GetUriSuffix(uri, suffix)) {
-        APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
+        APP_LOGE("Get suffix failed %{public}s", uri.c_str());
         return false;
     }
 
@@ -412,7 +412,7 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
 {
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
-        APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
+        APP_LOGE("Get suffix failed %{public}s", uri.c_str());
         return false;
     }
     suffix = uri.substr(suffixIndex + 1);

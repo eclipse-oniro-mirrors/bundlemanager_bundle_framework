@@ -144,7 +144,7 @@ void from_json(const nlohmann::json& jsonObject, DistributedAbilityInfo& distrib
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module distributedAbilityInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read distributedAbilityInfo jsonObject error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk
