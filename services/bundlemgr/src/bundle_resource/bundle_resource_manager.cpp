@@ -83,10 +83,38 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         APP_LOGE("bundleName: %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         return false;
     }
+    DeleteNotExistResourceInfo(bundleName, 0, resourceInfos);
+
+    if (!AddResourceInfos(resourceInfos)) {
+        APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
+        return false;
+    }
+    if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
+        bool needDeleteMainBundleResource = false;
+        for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
+            if (appIndex == ServiceConstants::INVALID_GID) {
+                needDeleteMainBundleResource = true;
+                continue;
+            }
+            DeleteNotExistResourceInfo(bundleName, appIndex, resourceInfos);
+            if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
+                APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
+            }
+        }
+        if (needDeleteMainBundleResource && !resourceInfos.empty()) {
+            DeleteResourceInfo(resourceInfos[0].bundleName_);
+        }
+    }
+    APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
+    return true;
+}
+
+void BundleResourceManager::DeleteNotExistResourceInfo(
+    const std::string &bundleName, const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos)
+{
     // get current rdb resource
     std::vector<std::string> existResourceName;
-    std::vector<std::string> needDeleteResourceName;
-    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, 0, existResourceName) &&
+    if (bundleResourceRdb_->GetResourceNameByBundleName(bundleName, appIndex, existResourceName) &&
         !existResourceName.empty()) {
         for (const auto &key : existResourceName) {
             auto it = std::find_if(resourceInfos.begin(), resourceInfos.end(),
@@ -95,26 +123,9 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
             });
             if (it == resourceInfos.end()) {
                 bundleResourceRdb_->DeleteResourceInfo(key);
-                needDeleteResourceName.emplace_back(key);
             }
         }
     }
-    if (!AddResourceInfos(resourceInfos)) {
-        APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
-        return false;
-    }
-    if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
-        for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
-            for (const auto &name : needDeleteResourceName) {
-                bundleResourceRdb_->DeleteResourceInfo(std::to_string(appIndex) + INNER_UNDER_LINE + name);
-            }
-            if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
-                APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
-            }
-        }
-    }
-    APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
-    return true;
 }
 
 bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
@@ -161,9 +172,17 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     // process clone bundle resource info
     for (const auto &item : resourceInfosMap) {
         if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
+            bool needDeleteMainBundleResource = false;
             APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
             for (const int32_t appIndex : item.second[0].appIndexes_) {
+                if (appIndex == ServiceConstants::INVALID_GID) {
+                    needDeleteMainBundleResource = true;
+                    continue;
+                }
                 UpdateCloneBundleResourceInfo(item.first, appIndex, type);
+            }
+            if (needDeleteMainBundleResource) {
+                DeleteResourceInfo(item.first);
             }
         }
     }

@@ -102,11 +102,6 @@ bool BundleResourceProcess::GetAllResourceInfo(
                 item.second.GetBundleName().c_str(), userId);
             continue;
         }
-        if (!item.second.GetApplicationEnabled(item.second.GetResponseUserId(userId))) {
-            APP_LOGD("bundle %{public}s is disabled in userId: %{public}d",
-                item.second.GetBundleName().c_str(), userId);
-            continue;
-        }
         std::vector<ResourceInfo> resourceInfos;
         if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
             APP_LOGW("bundle %{public}s resourceInfo is empty", item.second.GetBundleName().c_str());
@@ -137,12 +132,6 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
 
     if (!IsBundleExist(item->second, userId)) {
         APP_LOGW("bundle %{public}s is not exist in userId: %{public}d",
-            item->second.GetBundleName().c_str(), userId);
-        return false;
-    }
-
-    if (!item->second.GetApplicationEnabled(item->second.GetResponseUserId(userId))) {
-        APP_LOGW("bundle %{public}s is disabled in userId:%{public}d",
             item->second.GetBundleName().c_str(), userId);
         return false;
     }
@@ -280,6 +269,25 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
+    // for clone bundle
+    std::vector<int32_t> appIndexes;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
+            if (cloneInfo.second.enabled) {
+                appIndexes.emplace_back(cloneInfo.second.appIndex);
+            }
+        }
+    }
+    if (!innerBundleInfo.GetApplicationEnabled(innerBundleInfo.GetResponseUserId(userId))) {
+        if (appIndexes.empty()) {
+            APP_LOGW("bundle %{public}s is disabled in userId:%{public}d, no clone info",
+                innerBundleInfo.GetBundleName().c_str(), userId);
+            return false;
+        }
+        appIndexes.emplace_back(ServiceConstants::INVALID_GID);
+    }
+
     ResourceInfo dynamicResourceInfo;
     bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicResourceInfo);
     if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
@@ -289,8 +297,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             return false;
         }
 
-        APP_LOGI("%{public}s does not have default icon, build new resourceInfo",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("%{public}s does not have default icon, build resourceInfo", innerBundleInfo.GetBundleName().c_str());
         ResourceInfo defaultResourceInfo;
         defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.labelNeedParse_ = false;
@@ -303,18 +310,10 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     }
 
     if (hasDynamicIcon) {
-        APP_LOGI("bundle %{public}s has dynamicIcon",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("bundle %{public}s has dynamicIcon", innerBundleInfo.GetBundleName().c_str());
         ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
     // for clone bundle
-    std::vector<int32_t> appIndexes;
-    InnerBundleUserInfo innerBundleUserInfo;
-    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
-            appIndexes.emplace_back(cloneInfo.second.appIndex);
-        }
-    }
     if (!appIndexes.empty()) {
         APP_LOGI("bundleName:%{public}s contains clone bundle", innerBundleInfo.GetBundleName().c_str());
         for (auto &info : resourceInfos) {
