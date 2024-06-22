@@ -1502,7 +1502,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
-        LOG_I(BMS_TAG_INSTALLD, "Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
+        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
