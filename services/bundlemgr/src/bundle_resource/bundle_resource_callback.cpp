@@ -36,7 +36,7 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId, const uint32
     if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if (currentUserId != userId) {
-            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
+            APP_LOGE("userId:%{public}d current:%{public}d not same", userId, currentUserId);
             return false;
         }
     }
@@ -106,7 +106,7 @@ bool BundleResourceCallback::OnBundleStatusChanged(
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
+            APP_LOGE("userId:%{public}d current:%{public}d not same", userId, currentUserId);
             return false;
         }
     }
@@ -117,21 +117,21 @@ bool BundleResourceCallback::OnBundleStatusChanged(
     }
     if (appIndex == 0) {
         if (enabled && !manager->AddResourceInfoByBundleName(bundleName, userId)) {
-            APP_LOGE("add failed bundleName %{public}s", bundleName.c_str());
+            APP_LOGE("add resource failed %{public}s", bundleName.c_str());
             return false;
         }
         if (!enabled && !manager->DeleteResourceInfo(bundleName)) {
-            APP_LOGE("delete failed bundleName %{public}s", bundleName.c_str());
+            APP_LOGE("delete resource failed %{public}s", bundleName.c_str());
             return false;
         }
         return true;
     }
     if (enabled && !manager->AddCloneBundleResourceInfo(bundleName, appIndex)) {
-        APP_LOGE("add failed bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
+        APP_LOGE("add bundleName : %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
         return false;
     }
     if (!enabled && !manager->DeleteCloneBundleResourceInfo(bundleName, appIndex)) {
-        APP_LOGE("delete failed bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
+        APP_LOGE("delete bundleName: %{public}s appIndex %{public}d resource failed", bundleName.c_str(), appIndex);
         return false;
     }
     APP_LOGI("end, bundleName: %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
@@ -150,7 +150,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGE("%{public}d, %{public}d userId not same", userId, currentUserId);
+            APP_LOGE("userId:%{public}d current:%{public}d not same", userId, currentUserId);
             return false;
         }
     }
@@ -163,7 +163,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
 
     if (enabled) {
         if (!manager->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId)) {
-            APP_LOGE("add failed bundleName %{public}s", bundleName.c_str());
+            APP_LOGE("add resource failed %{public}s", bundleName.c_str());
             return false;
         }
     } else {
@@ -172,7 +172,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
         info.moduleName_ = moduleName;
         info.abilityName_ = abilityName;
         if (!manager->DeleteResourceInfo(info.GetKey())) {
-            APP_LOGE("delete failed key %{public}s", info.GetKey().c_str());
+            APP_LOGE("delete key : %{public}s resource failed", info.GetKey().c_str());
             return false;
         }
     }
@@ -229,7 +229,7 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
         bundleName.c_str(), isEnabled, userId);
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if ((currentUserId > 0) && (userId != currentUserId)) {
-        APP_LOGW("%{public}d, %{public}d userId not same", currentUserId, userId);
+        APP_LOGW("userId:%{public}d current:%{public}d not same", currentUserId, userId);
         return false;
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
@@ -242,11 +242,11 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     APP_LOGI("bundleName:%{public}s, targetBundleName:%{public}s overlay changed", bundleName.c_str(),
         targetBundleName.c_str());
     if (!manager->DeleteResourceInfo(targetBundleName)) {
-        APP_LOGW("delete failed targetBundleName %{public}s", targetBundleName.c_str());
+        APP_LOGW("delete resource failed %{public}s", targetBundleName.c_str());
     }
 
     if (!manager->AddResourceInfoByBundleName(targetBundleName, userId)) {
-        APP_LOGE("add failed targetBundleName %{public}s", targetBundleName.c_str());
+        APP_LOGE("add resource failed %{public}s", targetBundleName.c_str());
         return false;
     }
     APP_LOGI("end, targetBundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",

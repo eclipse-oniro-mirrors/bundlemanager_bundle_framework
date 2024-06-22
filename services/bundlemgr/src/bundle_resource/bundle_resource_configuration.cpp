@@ -123,7 +123,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
         }
     } else {
         if (!resourceManager->AddResource(hapPath, overlayHaps)) {
-            APP_LOGW("AddResource failed, hapPath %{public}s", hapPath.c_str());
+            APP_LOGW("AddResource overlay failed, hapPath: %{public}s", hapPath.c_str());
         }
     }
     return true;

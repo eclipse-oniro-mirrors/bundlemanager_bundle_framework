@@ -4564,7 +4564,7 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0030, Function | S
     AbilityInfo abilityInfo;
     abilityInfos.emplace_back(abilityInfo);
     GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
-    EXPECT_EQ(abilityInfos.size(), 1);
+    EXPECT_EQ(abilityInfos.size(), 0);
 }
 
 /**

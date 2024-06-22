@@ -148,12 +148,12 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
             if (!BundleResourceConfiguration::InitResourceGlobalConfig(
                 resourceInfos[index].hapPath_, resourceInfos[index].overlayHapPaths_, resourceManager,
                 resourceInfos[index].iconNeedParse_, resourceInfos[index].labelNeedParse_)) {
-                APP_LOGW("Init config failed, key %{public}s", resourceInfos[index].GetKey().c_str());
+                APP_LOGW("InitResourceGlobalConfig failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             }
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
-            APP_LOGE("ParseResourceInfo failed, key %{public}s", resourceInfos[index].GetKey().c_str());
+            APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
             if (index > 0) {
                 ProcessResourceInfoWhenParseFailed(resourceInfos[0], resourceInfos[index]);
             }
@@ -161,7 +161,7 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
     }
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
-        APP_LOGE("bundleName %{public}s moduleName %{public}s parse failed",
+        APP_LOGE("bundleName:%{public}s moduleName:%{public}s prase resource failed",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
@@ -189,11 +189,11 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, Re
         return false;
     }
     if (!BundleResourceConfiguration::InitResourceGlobalConfig(resourceInfo.hapPath_, resourceManager)) {
-        APP_LOGE("Init config failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE("InitResourceGlobalConfig failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
     if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE("ParseResourceInfo failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
     return true;
@@ -217,7 +217,7 @@ bool BundleResourceParser::ParseLabelResourceByPath(
         return false;
     }
     if (!BundleResourceConfiguration::InitResourceGlobalConfig(hapPath, resourceManager)) {
-        APP_LOGE("Init config failed, key %{private}s", hapPath.c_str());
+        APP_LOGE("InitResourceGlobalConfig failed, key:%{private}s", hapPath.c_str());
         return false;
     }
     if (!ParseLabelResourceByResourceManager(resourceManager, labelId, label)) {
@@ -240,7 +240,7 @@ bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, c
         return false;
     }
     if (!BundleResourceConfiguration::InitResourceGlobalConfig(hapPath, resourceManager)) {
-        APP_LOGE("Init config failed, hapPath %{private}s", hapPath.c_str());
+        APP_LOGE("InitResourceGlobalConfig failed, hapPath:%{private}s", hapPath.c_str());
         return false;
     }
     resourceInfo.iconId_ = iconId;
@@ -313,7 +313,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
     std::unique_ptr<uint8_t[]> jsonBuf;
     Global::Resource::RState state = resourceManager->GetDrawableInfoById(resourceInfo.iconId_, type, len, jsonBuf, 0);
     if (state != Global::Resource::SUCCESS) {
-        APP_LOGE("bundleName %{public}s failed get id %{public}d", resourceInfo.bundleName_.c_str(),
+        APP_LOGE("%{public}s failed to get id:%{public}d", resourceInfo.bundleName_.c_str(),
             resourceInfo.iconId_);
         return false;
     }
@@ -327,11 +327,11 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         // encode base64
         return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
     }
-    APP_LOGI("bundleName %{public}s icon not png", resourceInfo.GetKey().c_str());
+    APP_LOGI("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
     // density 0
     BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
-        APP_LOGE("key {public}s parse failed iconId %{public}d", resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
+        APP_LOGE("key:%{public}s parse failed iconId:%{public}d", resourceInfo.GetKey().c_str(), resourceInfo.iconId_);
         return false;
     }
     if (!resourceInfo.foreground_.empty() && !resourceInfo.background_.empty()) {
@@ -425,7 +425,7 @@ bool BundleResourceParser::ParseForegroundAndBackgroundResource(
     uint32_t foregroundId = 0;
     uint32_t backgroundId = 0;
     if (!ParseIconIdFromJson(jsonBuff, foregroundId, backgroundId)) {
-        APP_LOGE("parse from json failed, iconId %{public}d, buffer %{public}s", resourceInfo.iconId_, jsonBuff.c_str());
+        APP_LOGE("parse from json failed, iconId:%{public}d,buffer:%{public}s", resourceInfo.iconId_, jsonBuff.c_str());
         return false;
     }
     // parse foreground
@@ -436,7 +436,7 @@ bool BundleResourceParser::ParseForegroundAndBackgroundResource(
     }
     // parse background
     if (!GetMediaDataById(resourceManager, backgroundId, density, resourceInfo.background_)) {
-        APP_LOGE("parse background failed iconId %{public}u", backgroundId);
+        APP_LOGE("parse background failed iconId:%{public}u", backgroundId);
         ans = false;
     }
     APP_LOGD("foreground size:%{public}zu background size:%{public}zu",

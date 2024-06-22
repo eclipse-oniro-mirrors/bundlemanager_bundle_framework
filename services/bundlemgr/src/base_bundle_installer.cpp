@@ -112,6 +112,8 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
+const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
+const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -281,10 +283,7 @@ ErrCode BaseBundleInstaller::Recover(
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
     int32_t uid = Constants::INVALID_UID;
     ErrCode result = ProcessRecover(bundleName, installParam, uid);
-    LOG_I(BMS_TAG_INSTALLER, "result: %{public}d, needSendEvent: %{public}d, dataMgr: %{public}d, bundle: %{public}d"
-        ", modulePackage: %{public}d", result, installParam.needSendEvent, (dataMgr_ == nullptr), bundleName_.empty(),
-        modulePackage_.empty());
-    if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty() && !modulePackage_.empty()) {
+    if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
             .resultCode = result,
@@ -860,6 +859,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    bool isOldSystemApp = bundleInfo.IsSystemApp();
 
     InnerBundleUserInfo innerBundleUserInfo;
     if (!bundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
@@ -899,6 +899,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             break;
         }
     }
+    if (result == ERR_OK) {
+        result = InnerProcessUpdateHapToken(isOldSystemApp);
+        CHECK_RESULT(result, "InnerProcessUpdateHapToken failed %{public}d");
+    }
 
     if (result == ERR_OK) {
         userGuard.Dismiss();
@@ -907,6 +911,43 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     uid = bundleInfo.GetUid(userId_);
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
+}
+
+ErrCode BaseBundleInstaller::InnerProcessUpdateHapToken(const bool isOldSystemApp)
+{
+    InnerBundleInfo newBundleInfo;
+    bool isBundleExist = false;
+    if (!GetInnerBundleInfo(newBundleInfo, isBundleExist) || !isBundleExist) {
+        APP_LOGE("bundleName:%{public}s not exist", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    std::vector<std::string> moduleVec = newBundleInfo.GetModuleNameVec();
+    if (!isAppExist_ && (moduleVec.size() == 1)) {
+        APP_LOGD("bundleName:%{public}s only has one module, no need update", bundleName_.c_str());
+        return ERR_OK;
+    }
+
+    if (!uninstallModuleVec_.empty()) {
+        for (const auto &package : moduleVec) {
+            if (std::find(uninstallModuleVec_.begin(), uninstallModuleVec_.end(), package)
+                == uninstallModuleVec_.end()) {
+                newBundleInfo.SetInnerModuleNeedDelete(package, true);
+            }
+        }
+    }
+    ErrCode result = UpdateHapToken(isOldSystemApp != newBundleInfo.IsSystemApp(), newBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("bundleName:%{public}s update hapToken failed, errCode:%{public}d", bundleName_.c_str(), result);
+        return result;
+    }
+    if (isAppExist_ && isModuleUpdate_) {
+        result = SetDirApl(newBundleInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("bundleName:%{public}s setDirApl failed:%{public}d", bundleName_.c_str(), result);
+            return result;
+        }
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo)
@@ -1730,6 +1771,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
+            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_);
             return ERR_OK;
         }
     }
@@ -2034,18 +2076,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
-    auto bundleUserInfos = oldInfo.GetInnerBundleUserInfos();
-    for (const auto &info : bundleUserInfos) {
-        if (info.second.accessTokenId == 0) {
-            continue;
-        }
-        Security::AccessToken::AccessTokenIDEx tokenIdEx;
-        tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
-        if (BundlePermissionMgr::UpdateHapToken(tokenIdEx, oldInfo) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
-            return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
-        }
-    }
     moduleGuard.Dismiss();
     return ERR_OK;
 }
@@ -2157,16 +2187,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     newInfo.RestoreModuleInfo(oldInfo);
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
-    bool needUpdateToken = newInfo.GetAppType() != oldInfo.GetAppType();
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    result = UpdateHapToken(needUpdateToken, oldInfo);
-    CHECK_RESULT(result, "UpdateHapToken failed %{public}d");
-
-    result = SetDirApl(oldInfo);
-    CHECK_RESULT(result, "SetDirApl failed %{public}d");
 
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
@@ -2571,6 +2595,8 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         return;
     }
 
+    LOG_I(BMS_TAG_INSTALLER, "SendToStorageQuota bundleName=%{public}s, uid=%{public}d, bundleDataDirPath=%{public}s,"
+        "limitSizeMb=%{public}d", bundleName.c_str(), uid, bundleDataDirPath.c_str(), limitSizeMb);
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
@@ -2778,9 +2804,20 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
             info.GetBundleName().c_str(), userId_);
         return;
     }
-    if (InstalldClient::GetInstance()->Mkdir(
-        dir, S_IRWXU, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid) != ERR_OK) {
+    int32_t mode = S_IRWXU;
+    int32_t gid = newInnerBundleUserInfo.uid;
+    if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
+        mode = S_IRWXU | S_IRWXG | S_ISGID;
+        gid = ServiceConstants::DATABASE_DIR_GID;
+    }
+    if (InstalldClient::GetInstance()->Mkdir(dir, mode, newInnerBundleUserInfo.uid, gid) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "create Screen Lock Protection dir %{public}s failed.", dir.c_str());
+    }
+    ErrCode result = InstalldClient::GetInstance()->SetDirApl(
+        dir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
+        info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
+    if (result != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
     }
 }
 
@@ -3417,6 +3454,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
     UpdateExtensionSandboxInfo(infos, hapVerifyRes);
+    SetInstallSourceToAppInfo(infos, installParam);
     return ret;
 }
 
@@ -3612,6 +3650,34 @@ void BaseBundleInstaller::RemoveOldExtensionDirs() const
     auto result = InstalldClient::GetInstance()->RemoveExtensionDir(userId_, removeExtensionDirs_);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "remove old extension sandbox dirfailed");
+    }
+}
+
+std::string BaseBundleInstaller::GetInstallSource(const InstallParam &installParam) const
+{
+    if (installParam.isPreInstallApp) {
+        return INSTALL_SOURCE_PREINSTALL;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_I(BMS_TAG_INSTALLER, "dataMgr is nullptr return unknown");
+        return INSTALL_SOURCE_UNKNOWN;
+    }
+    std::string callingBundleName;
+    ErrCode ret = dataMgr->GetNameForUid(sysEventInfo_.callingUid, callingBundleName);
+    if (ret != ERR_OK) {
+        LOG_I(BMS_TAG_INSTALLER, "get bundle name failed return unknown");
+        return INSTALL_SOURCE_UNKNOWN;
+    }
+    return callingBundleName;
+}
+
+void BaseBundleInstaller::SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const InstallParam &installParam) const
+{
+    std::string installSource = GetInstallSource(installParam);
+    for (auto &info : infos) {
+        info.second.SetInstallSource(installSource);
     }
 }
 
@@ -3941,10 +4007,6 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             }
         }
     }
-    // need to delete lower version feature hap definePermissions and requestPermissions
-    LOG_D(BMS_TAG_INSTALLER, "delete lower version feature hap definePermissions and requestPermissions");
-    ErrCode ret = UpdateHapToken(oldInfo.GetAppType() != info.GetAppType(), info);
-    CHECK_RESULT(ret, "UpdateHapToken failed %{public}d");
     needDeleteQuickFixInfo_ = true;
     LOG_D(BMS_TAG_INSTALLER, "finish to uninstall lower version feature hap");
     return ERR_OK;
@@ -4954,10 +5016,6 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     }
 
     // copy code signature file to security dir
-    if (!BundleUtil::CheckSystemSize(signatureFileDir, APP_INSTALL_PATH)) {
-        LOG_E(BMS_TAG_INSTALLER, "copy %{public}s failed due to insufficient disk memory", signatureFileDir.c_str());
-        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
     std::string destinationStr =
         BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
     if (destinationStr.empty()) {
@@ -5341,7 +5399,8 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
 
 ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start", bundleName_.c_str());
+    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdateToken:%{public}d",
+        bundleName_.c_str(), needUpdateToken);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {

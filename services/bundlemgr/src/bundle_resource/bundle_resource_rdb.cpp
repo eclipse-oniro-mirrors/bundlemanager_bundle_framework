@@ -135,7 +135,7 @@ bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
         // need delete both bundle resource and launcher ability resource
         absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + ServiceConstants::PATH_SEPARATOR);
         if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
-            APP_LOGW("delete key %{public}s failed", key.c_str());
+            APP_LOGW("delete key:%{public}s failed", key.c_str());
         }
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
@@ -150,7 +150,7 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
     APP_LOGI("start get all resource name:%{public}s", systemState.c_str());
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("QueryByStep failed, systemState %{public}s", systemState.c_str());
+        APP_LOGE("QueryByStep failed, systemState:%{public}s", systemState.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
@@ -197,6 +197,47 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
     return true;
 }
 
+bool BundleResourceRdb::GetResourceNameByBundleName(
+    const std::string &bundleName,
+    const int32_t appIndex,
+    std::vector<std::string> &keyName)
+{
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
+            bundleName.c_str(), systemState.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGD("bundleName:%{public}s not exist, ret: %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
+        return false;
+    }
+
+    do {
+        std::string key;
+        auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
+        keyName.emplace_back(key);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return true;
+}
+
 bool BundleResourceRdb::DeleteAllResourceInfo()
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
@@ -210,7 +251,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     BundleResourceInfo &bundleResourceInfo,
     int32_t appIndex)
 {
-    APP_LOGI("start, bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -232,7 +273,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("bundleName %{public}s failed, ret %{public}d, systemState:%{public}s",
+        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
@@ -245,7 +286,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     const int32_t appIndex)
 {
-    APP_LOGI("start, bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -466,6 +507,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     for (const auto &resourceInfo : resourceInfos) {
         NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, systemState);
         if (!resourceInfo.label_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
@@ -477,7 +519,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
-        if (!rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates)) {
+        if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
             APP_LOGE("bundleName: %{public}s UpdateData failed.", resourceInfo.GetKey().c_str());
             ret = false;
         }

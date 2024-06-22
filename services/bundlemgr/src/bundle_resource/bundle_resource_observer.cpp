@@ -60,7 +60,7 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
         std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, type);
         applicationThemeChangedThread.detach();
     }
-    APP_LOGI("end, type %{public}u", type);
+    APP_LOGI("end change type %{public}u", type);
 }
 
 void BundleResourceObserver::OnSystemColorModeChanged(const std::string &colorMode, const uint32_t type)

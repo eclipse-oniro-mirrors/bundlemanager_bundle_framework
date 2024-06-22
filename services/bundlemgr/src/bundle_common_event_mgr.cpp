@@ -112,7 +112,6 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
     int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
         AccountHelper::GetCurrentActiveUserId() : bundleUserId;
-    APP_LOGI("%{public}s publish event", installResult.bundleName.c_str());
     EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
 }
 

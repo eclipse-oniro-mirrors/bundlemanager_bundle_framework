@@ -701,6 +701,10 @@ private:
     void CreateExtensionDataDir(InnerBundleInfo &info) const;
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
+    ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
+    std::string GetInstallSource(const InstallParam &installParam) const;
+    void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        const InstallParam &installParam) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

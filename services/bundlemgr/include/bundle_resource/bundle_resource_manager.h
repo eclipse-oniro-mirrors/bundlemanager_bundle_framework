@@ -126,6 +126,9 @@ private:
 
     bool UpdateCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex, const uint32_t type);
 
+    void DeleteNotExistResourceInfo(const std::string &bundleName,
+        const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;
     std::atomic_uint currentTaskNum_ = 0;

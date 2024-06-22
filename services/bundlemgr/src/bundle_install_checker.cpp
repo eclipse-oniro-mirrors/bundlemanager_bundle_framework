@@ -406,9 +406,11 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         } else {
             newInfo.SetAppCrowdtestDeadline(Constants::INVALID_CROWDTEST_DEADLINE);
         }
-        if ((result = CheckSystemSize(bundlePaths[i], checkParam.appType)) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
-            return result;
+        if (!checkParam.isPreInstallApp) {
+            if ((result = CheckSystemSize(bundlePaths[i], checkParam.appType)) != ERR_OK) {
+                LOG_E(BMS_TAG_INSTALLER, "install failed due to insufficient disk memory");
+                return result;
+            }
         }
 
         infos.emplace(bundlePaths[i], newInfo);

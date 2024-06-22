@@ -35,7 +35,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
-        APP_LOGE("get fail, bundleName %{public}s %{public}d not in valid range",
+        APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -45,7 +45,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
-        APP_LOGE("get failed, bundleName %{public}s, flags %{public}u", bundleName.c_str(), flags);
+        APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;
@@ -64,7 +64,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if ((appIndex < 0) || (appIndex > ServiceConstants::CLONE_APP_INDEX_MAX)) {
-        APP_LOGE("get fail, bundleName %{public}s appIndex %{public}d not in valid range",
+        APP_LOGE("get bundle resource Fail, bundleName: %{public}s appIndex: %{public}d not in valid range",
             bundleName.c_str(), appIndex);
         return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
     }
@@ -74,7 +74,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
-        APP_LOGE("get failed, bundleName %{public}s, flags %{public}u", bundleName.c_str(), flags);
+        APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;
@@ -103,7 +103,7 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetAllBundleResourceInfo(flags, bundleResourceInfos)) {
-        APP_LOGE("get failed, flags %{public}u", flags);
+        APP_LOGE("get all resource failed, flags:%{public}u", flags);
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -135,7 +135,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos)) {
-        APP_LOGE("get failed, flags %{public}u", flags);
+        APP_LOGE("get all resource failed, flags:%{public}u", flags);
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -158,7 +158,7 @@ ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleNa
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo)) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    APP_LOGE("get failed, bundleName %{public}s appIndex %{public}d", bundleName.c_str(), appIndex);
+    APP_LOGE("get failed, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
     return ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX;
 }
 } // AppExecFwk

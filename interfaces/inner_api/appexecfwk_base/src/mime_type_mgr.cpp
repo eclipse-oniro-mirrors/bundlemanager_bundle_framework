@@ -33,6 +33,7 @@ std::multimap<std::string, std::string> MimeTypeMgr::mimeTypeMap_ = {
     {"3gpp", "audio/3gpp"},
     {"3gpp", "video/3gpp"},
     {"3gpp2", "video/3gpp2"},
+    {"7z", "application/x-7z-compressed"},
     {"VOB", "video/mpeg"},
     {"aac", "audio/aac"},
     {"aac", "audio/aac-adts"},

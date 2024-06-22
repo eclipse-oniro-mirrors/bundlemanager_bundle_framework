@@ -301,6 +301,8 @@ struct ApplicationInfo : public Parcelable {
     MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;
 
+    std::string installSource;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

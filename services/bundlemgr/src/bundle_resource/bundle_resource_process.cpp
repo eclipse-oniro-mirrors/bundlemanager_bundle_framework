@@ -58,13 +58,13 @@ bool BundleResourceProcess::GetResourceInfo(
     if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGW("%{public}d, %{public}d userId not same", userId, currentUserId);
+            APP_LOGW("userId:%{public}d current:%{public}d not same", userId, currentUserId);
             return false;
         }
     }
 
     if (!IsBundleExist(innerBundleInfo, userId)) {
-        APP_LOGW("bundle %{public}s not exist in userId %{public}d",
+        APP_LOGW("%{public}s not exist in userId %{public}d",
             innerBundleInfo.GetBundleName().c_str(), userId);
         return false;
     }
@@ -102,14 +102,9 @@ bool BundleResourceProcess::GetAllResourceInfo(
                 item.second.GetBundleName().c_str(), userId);
             continue;
         }
-        if (!item.second.GetApplicationEnabled(item.second.GetResponseUserId(userId))) {
-            APP_LOGD("bundle %{public}s is disabled in userId: %{public}d",
-                item.second.GetBundleName().c_str(), userId);
-            continue;
-        }
         std::vector<ResourceInfo> resourceInfos;
         if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
-            APP_LOGW("bundle %{public}s resourceInfo empty", item.second.GetBundleName().c_str());
+            APP_LOGW("%{public}s resourceInfo empty", item.second.GetBundleName().c_str());
         } else {
             resourceInfosMap[item.second.GetBundleName()] = resourceInfos;
         }
@@ -137,12 +132,6 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
 
     if (!IsBundleExist(item->second, userId)) {
         APP_LOGW("bundle %{public}s not exist in userId %{public}d",
-            item->second.GetBundleName().c_str(), userId);
-        return false;
-    }
-
-    if (!item->second.GetApplicationEnabled(item->second.GetResponseUserId(userId))) {
-        APP_LOGW("bundle %{public}s disable in userId %{public}d",
             item->second.GetBundleName().c_str(), userId);
         return false;
     }
@@ -232,7 +221,7 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
 
     for (const auto &bundleName : needAddResourceBundles) {
         if (!GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
-            APP_LOGW("bundleName {public}s get info failed.", bundleName.c_str());
+            APP_LOGW("bundleName %{public}s GetResourceInfoByBundleName failed.", bundleName.c_str());
         }
     }
     return true;
@@ -268,7 +257,7 @@ bool BundleResourceProcess::GetDynamicIcon(
     auto &extendResourceInfo = iter->second;
     BundleResourceParser parser;
     if (parser.ParseIconResourceByPath(extendResourceInfo.filePath, extendResourceInfo.iconId, resourceInfo)) {
-        APP_LOGE("bundleName {public}s parse dynamicIcon failed, iconId %{public}d",
+        APP_LOGE("bundleName:%{public}s parse dynamicIcon failed, iconId:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), extendResourceInfo.iconId);
         return false;
     }
@@ -280,6 +269,25 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
+    // for clone bundle
+    std::vector<int32_t> appIndexes;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
+            if (cloneInfo.second.enabled) {
+                appIndexes.emplace_back(cloneInfo.second.appIndex);
+            }
+        }
+    }
+    if (!innerBundleInfo.GetApplicationEnabled(innerBundleInfo.GetResponseUserId(userId))) {
+        if (appIndexes.empty()) {
+            APP_LOGW("bundle %{public}s is disabled in userId:%{public}d, no clone info",
+                innerBundleInfo.GetBundleName().c_str(), userId);
+            return false;
+        }
+        appIndexes.emplace_back(ServiceConstants::INVALID_GID);
+    }
+
     ResourceInfo dynamicResourceInfo;
     bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicResourceInfo);
     if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
@@ -289,8 +297,7 @@ bool BundleResourceProcess::InnerGetResourceInfo(
             return false;
         }
 
-        APP_LOGI("%{public}s build new resourceInfo",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("%{public}s no default icon, build new", innerBundleInfo.GetBundleName().c_str());
         ResourceInfo defaultResourceInfo;
         defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.labelNeedParse_ = false;
@@ -303,20 +310,12 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     }
 
     if (hasDynamicIcon) {
-        APP_LOGI("bundle %{public}s has dynamicIcon",
-            innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("bundle %{public}s has dynamicIcon", innerBundleInfo.GetBundleName().c_str());
         ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
     // for clone bundle
-    std::vector<int32_t> appIndexes;
-    InnerBundleUserInfo innerBundleUserInfo;
-    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
-            appIndexes.emplace_back(cloneInfo.second.appIndex);
-        }
-    }
     if (!appIndexes.empty()) {
-        APP_LOGI("bundleName %{public}s contains clone bundle", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGI("bundleName:%{public}s contains clone bundle", innerBundleInfo.GetBundleName().c_str());
         for (auto &info : resourceInfos) {
             info.appIndexes_ = appIndexes;
         }
@@ -334,7 +333,7 @@ bool BundleResourceProcess::OnGetResourceInfo(
     // get bundle
     ResourceInfo bundleResourceInfo;
     if (!GetBundleResourceInfo(innerBundleInfo, userId, bundleResourceInfo)) {
-        APP_LOGW("bundleName %{public}s get failed", bundleName.c_str());
+        APP_LOGW("%{public}s get resource failed", bundleName.c_str());
         return false;
     }
     resourceInfos.push_back(bundleResourceInfo);
@@ -346,7 +345,7 @@ bool BundleResourceProcess::OnGetResourceInfo(
             resourceInfos.push_back(info);
         }
     }
-    APP_LOGI("end, bundleName %{public}s, resourceInfo.size %{public}d", bundleName.c_str(),
+    APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", bundleName.c_str(),
         static_cast<int32_t>(resourceInfos.size()));
     return !resourceInfos.empty();
 }
@@ -395,7 +394,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
 {
     APP_LOGD("start get ability, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
     if (!CheckIsNeedProcessAbilityResource(innerBundleInfo)) {
-        APP_LOGW("bundleName %{public}s no need add", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGW("%{public}s no need add ability resource", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
 
@@ -412,7 +411,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
 
     if (abilityInfos.empty()) {
-        APP_LOGW("bundleName %{public}s no info", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGW("%{public}s no launcher ability Info", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     for (const auto &info : abilityInfos) {
@@ -541,7 +540,7 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
         return false;
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
-        APP_LOGW("bundleName %{public}s no ability", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGW("bundleName:%{public}s is shared bundle, no ability", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
