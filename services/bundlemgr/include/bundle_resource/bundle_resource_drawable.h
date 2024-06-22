@@ -35,6 +35,12 @@ public:
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
 
+    bool GetIconResourceByDrawableNoTheme(
+        const uint32_t iconId,
+        const int32_t density,
+        std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        ResourceInfo &resourceInfo);
+
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
     bool GetBadgedIconResource(
         const std::shared_ptr<Media::PixelMap> layeredPixelMap,
