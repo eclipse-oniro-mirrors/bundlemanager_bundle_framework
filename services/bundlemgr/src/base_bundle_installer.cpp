@@ -1632,10 +1632,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (onlyInstallInUser) {
         LOG_I(BMS_TAG_INSTALLER, "%{public}s is only install at the userId %{public}d", bundleName.c_str(), userId_);
         result = RemoveModuleAndDataDir(oldInfo, modulePackage, userId_, installParam.isKeepData);
-    } else {
-        if (!installParam.isKeepData) {
-            result = RemoveModuleDataDir(oldInfo, modulePackage, userId_);
-        }
     }
 
     if (result != ERR_OK) {
@@ -3339,20 +3335,6 @@ ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
         LOG_E(BMS_TAG_INSTALLER, "fail to remove module hap, error is %{public}d", result);
         return result;
     }
-
-    if (!isKeepData) {
-        // uninstall hap remove current userId data dir
-        if (userId != Constants::UNSPECIFIED_USERID) {
-            RemoveModuleDataDir(info, modulePackage, userId);
-            return ERR_OK;
-        }
-
-        // update hap remove all lower version data dir
-        for (auto infoItem : info.GetInnerBundleUserInfos()) {
-            int32_t installedUserId = infoItem.second.bundleUserInfo.userId;
-            RemoveModuleDataDir(info, modulePackage, installedUserId);
-        }
-    }
     LOG_D(BMS_TAG_INSTALLER, "RemoveModuleAndDataDir successfully");
     return ERR_OK;
 }
@@ -3361,25 +3343,6 @@ ErrCode BaseBundleInstaller::RemoveModuleDir(const std::string &modulePath) cons
 {
     LOG_D(BMS_TAG_INSTALLER, "module dir %{public}s to be removed", modulePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(modulePath);
-}
-
-ErrCode BaseBundleInstaller::RemoveModuleDataDir(
-    const InnerBundleInfo &info, const std::string &modulePackage, int32_t userId) const
-{
-    LOG_D(BMS_TAG_INSTALLER, "RemoveModuleDataDir bundleName: %{public}s  modulePackage: %{public}s",
-        info.GetBundleName().c_str(), modulePackage.c_str());
-    auto hapModuleInfo = info.FindHapModuleInfo(modulePackage);
-    if (!hapModuleInfo) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to findHapModule info modulePackage: %{public}s", modulePackage.c_str());
-        return ERR_NO_INIT;
-    }
-    std::string moduleDataDir = info.GetBundleName() + ServiceConstants::HAPS + (*hapModuleInfo).moduleName;
-    LOG_D(BMS_TAG_INSTALLER, "RemoveModuleDataDir moduleDataDir: %{public}s", moduleDataDir.c_str());
-    auto result = InstalldClient::GetInstance()->RemoveModuleDataDir(moduleDataDir, userId);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to remove HapModuleData dir, error is %{public}d", result);
-    }
-    return result;
 }
 
 ErrCode BaseBundleInstaller::ExtractModuleFiles(const InnerBundleInfo &info, const std::string &modulePath,

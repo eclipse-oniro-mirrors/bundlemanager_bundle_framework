@@ -512,8 +512,6 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
-    ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
-        int32_t userId) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
