@@ -310,7 +310,7 @@ ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
 
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
-        APP_LOGE("CheckAppLabelInfo failed %{public}d", ret);
+        APP_LOGE("CheckAppLabelInfo failed, ret %{public}d", ret);
         return ret;
     }
 
@@ -327,7 +327,7 @@ void AppServiceFwkInstaller::AddAppProvisionInfo(
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("BundleName %{public}s add failed.", bundleName.c_str());
+        APP_LOGW("BundleName %{public}s add appProvisionInfo failed.", bundleName.c_str());
     }
 
     if (!installParam.specifiedDistributionType.empty()) {
@@ -349,7 +349,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
     std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InstallParam &installParam)
 {
-    APP_LOGI("start bundleName %{public}s, size %{public}zu",
+    APP_LOGI("InnerProcessInstall start bundleName: %{public}s, size: %{public}zu",
         bundleName_.c_str(), newInfos.size());
     ErrCode result = ERR_OK;
     for (auto it = newInfos.begin(); it != newInfos.end(); ++it) {
@@ -452,14 +452,14 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     const std::string &versionDir,
     InnerBundleInfo &newInfo)
 {
-    APP_LOGI("param %{public}s %{public}s %{public}s %{public}s",
+    APP_LOGI("ProcessNativeLibrary param %{public}s  %{public}s %{public}s %{public}s",
         bundlePath.c_str(), moduleDir.c_str(), moduleName.c_str(), versionDir.c_str());
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath)) {
         return ERR_OK;
     }
-    APP_LOGI("sucess with cpuAbi %{public}s nativeLibraryPath %{public}s",
+    APP_LOGI("FetchNativeSoAttrs sucess with cpuAbi %{public}s nativeLibraryPath %{public}s",
         cpuAbi.c_str(), nativeLibraryPath.c_str());
     if (newInfo.IsCompressNativeLibs(moduleName)) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
@@ -614,7 +614,7 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
     auto result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
         hspPath) : ProcessNewModuleInstall(newInfo, oldInfo, hspPath);
     if (result != ERR_OK) {
-        APP_LOGE("install failed %{public}d", result);
+        APP_LOGE("install module failed %{public}d", result);
         return result;
     }
     return ERR_OK;
@@ -653,7 +653,7 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     oldInfo.SetInstallMark(bundleName_, moduleName, InstallExceptionStatus::UPDATING_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), Constants::DEFAULT_USERID);
     if (!dataMgr_->UpdateInnerBundleInfo(bundleName_, newInfo, oldInfo)) {
-        APP_LOGE("update info %{public}s failed", bundleName_.c_str());
+        APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     return ERR_OK;
@@ -712,7 +712,7 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
-    APP_LOGI("bundleName %{public}s size %{public}d", bundleName_.c_str(), moduleVec.size());
+    APP_LOGI("bundleName %{public}s moduleVec size %{public}zu", bundleName_.c_str(), moduleVec.size());
     InnerBundleInfo oldInfo = info;
     for (const auto &package : moduleVec) {
         if (find(moduleNameList.begin(), moduleNameList.end(), package) == moduleNameList.end()) {
@@ -748,7 +748,7 @@ ErrCode AppServiceFwkInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info)
 {
     auto result = InstalldClient::GetInstance()->RemoveDir(info.GetAppCodePath());
     if (result != ERR_OK) {
-        APP_LOGE("Fail remove dir %{public}s, %{public}d",
+        APP_LOGE("Fail remove dir %{public}s, err %{public}d",
             info.GetAppCodePath().c_str(), result);
     }
     return result;

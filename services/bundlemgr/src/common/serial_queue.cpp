@@ -66,7 +66,7 @@ void SerialQueue::CancelDelayTask(const std::string &taskName)
     if (item->second != nullptr) {
         int32_t ret = queue_->cancel(item->second);
         if (ret != 0) {
-            APP_LOGW("CancelDelayTask failed %{public}d", ret);
+            APP_LOGW("CancelDelayTask failed, err %{public}d", ret);
         }
     }
     taskMap_.erase(taskName);
