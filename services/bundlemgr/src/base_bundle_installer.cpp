@@ -1235,6 +1235,18 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
             LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
 
+        if (newInfos.begin()->second.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+            int32_t uid = newInfos.begin()->second.GetUid(userId_);
+            if (uid != Constants::INVALID_UID) {
+                LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
+                    newInfos.begin()->second.GetBundleName().c_str());
+                std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
+                    + ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+                    newInfos.begin()->second.GetBundleName();
+                PrepareBundleDirQuota(newInfos.begin()->second.GetBundleName(), uid, bundleDataDir, 0);
+            }
+        }
+
         // remove driver file
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
         for (const auto &info : newInfos) {
@@ -1812,6 +1824,18 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    }
+
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        int32_t uid = info.GetUid(userId_);
+        if (uid != Constants::INVALID_UID) {
+            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
+                info.GetBundleName().c_str());
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+                info.GetBundleName();
+            PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
+        }
     }
     return ERR_OK;
 }
@@ -2600,7 +2624,8 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 #endif // STORAGE_SERVICE_ENABLE
 }
 
-static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, const std::string &bundleDataDirPath)
+void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
+    const std::string &bundleDataDirPath, const int32_t limitSize) const
 {
     int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
 #ifdef STORAGE_SERVICE_ENABLE
@@ -2653,7 +2678,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
             ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
-        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
+        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
+            ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
@@ -4303,6 +4329,18 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
         AccessToken::AccessTokenKitRet::RET_SUCCESS) {
         LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    }
+
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        int32_t uid = innerBundleInfo.GetUid(userId_);
+        if (uid != Constants::INVALID_UID) {
+            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
+                innerBundleInfo.GetBundleName().c_str());
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+                innerBundleInfo.GetBundleName();
+            PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
+        }
     }
 
     return ERR_OK;
