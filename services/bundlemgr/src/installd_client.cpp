@@ -231,6 +231,7 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
 
 void InstalldClient::ResetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
