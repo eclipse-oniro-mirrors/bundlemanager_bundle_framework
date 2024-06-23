@@ -280,18 +280,18 @@ void BmsInstallExtensionSystemTest::CheckFileExist(
         std::string bundleDataDir = GetBundleDataDir(el) + BASE;
         std::string baseDir = bundleDataDir + extensionDir;
         int result1 = access(baseDir.c_str(), F_OK);
-        EXPECT_EQ(result1, 0) << "the dir not exist: " << baseDir;
+        EXPECT_NE(result1, 0) << "the dir not exist: " << baseDir;
 
         std::string databaseParentDir = GetBundleDataDir(el) + DATABASE;
         std::string databaseDir = databaseParentDir + extensionDir;
         int result2 = access(databaseDir.c_str(), F_OK);
-        EXPECT_EQ(result2, 0) << "the dir not exist: " << databaseDir;
+        EXPECT_NE(result2, 0) << "the dir not exist: " << databaseDir;
 
         if (el == BUNDLE_EL[1]) {
             std::string logParentDir = GetBundleDataDir(el) + LOG;
             std::string logDir = logParentDir + extensionDir;
             int result3 = access(logDir.c_str(), F_OK);
-            EXPECT_EQ(result3, 0) << "the dir not exist: " << logDir;
+            EXPECT_NE(result3, 0) << "the dir not exist: " << logDir;
         }
     }
 }

@@ -410,6 +410,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

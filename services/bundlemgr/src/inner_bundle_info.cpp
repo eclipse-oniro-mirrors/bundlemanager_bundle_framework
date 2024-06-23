@@ -3527,6 +3527,18 @@ std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
     return dirVec;
 }
 
+void InnerBundleInfo::UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList)
+{
+    for (auto &extensionItem : baseExtensionInfos_) {
+        extensionItem.second.needCreateSandbox = false;
+        std::string typeName = extensionItem.second.extensionTypeName;
+        auto it = std::find(typeList.begin(), typeList.end(), typeName);
+        if (it != typeList.end()) {
+            extensionItem.second.needCreateSandbox = true;
+        }
+    }
+}
+
 void InnerBundleInfo::UpdateExtensionDataGroupInfo(
     const std::string &key, const std::vector<std::string>& dataGroupIds)
 {

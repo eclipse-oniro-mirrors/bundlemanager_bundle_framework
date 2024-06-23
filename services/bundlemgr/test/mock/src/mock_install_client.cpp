@@ -299,5 +299,10 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

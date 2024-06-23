@@ -214,6 +214,8 @@ private:
 
     bool HandleCreateExtensionDataDir(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleGetExtensionSandboxTypeList(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

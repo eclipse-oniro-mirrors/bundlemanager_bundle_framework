@@ -3430,7 +3430,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+    std::vector<std::string> typeList;
+    InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
     for (auto &item : newInfos) {
+        item.second.UpdateExtensionSandboxInfo(typeList);
         auto innerBundleInfo = item.second;
         auto extensionInfoMap = innerBundleInfo.GetInnerExtensionInfos();
         for (auto iter = extensionInfoMap.begin(); iter != extensionInfoMap.end(); iter++) {

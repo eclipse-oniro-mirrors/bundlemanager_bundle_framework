@@ -229,6 +229,8 @@ public:
 
     ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam);
 
+    ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList);
+
 private:
     /**
      * @brief Get the installd proxy object.
