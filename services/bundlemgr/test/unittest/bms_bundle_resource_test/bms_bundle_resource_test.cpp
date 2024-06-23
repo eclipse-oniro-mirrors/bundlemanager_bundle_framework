@@ -1808,10 +1808,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0072, Function | SmallTest
 HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0073, Function | SmallTest | Level0)
 {
     BundleResourceCallback callback;
-    bool ans = callback.OnUserIdSwitched(200);
+    bool ans = callback.OnUserIdSwitched(100, 200);
     EXPECT_FALSE(ans);
 
-    ans = callback.OnUserIdSwitched(100);
+    ans = callback.OnUserIdSwitched(200, 100);
     EXPECT_TRUE(ans);
 }
 
@@ -2659,11 +2659,11 @@ HWTEST_F(BmsBundleResourceTest, AddResourceInfos_0001, Function | SmallTest | Le
     EXPECT_NE(manager, nullptr);
     if (manager != nullptr) {
         std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
-        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, 0, 0, USERID);
+        bool ret = manager->AddResourceInfosByMap(resourceInfosMap, 0, 0, USERID, USERID);
         EXPECT_FALSE(ret);
         resourceInfosMap[BUNDLE_NAME_NO_ICON] = resourceInfos;
         ret = manager->AddResourceInfosByMap(resourceInfosMap, manager->currentTaskNum_,
-            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID);
+            static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE), USERID, USERID);
         EXPECT_TRUE(ret);
     }
 

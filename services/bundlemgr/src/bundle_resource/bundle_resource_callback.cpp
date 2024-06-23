@@ -30,9 +30,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId, const uint32_t type)
+bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int32_t userId, const uint32_t type)
 {
-    APP_LOGI("start");
+    APP_LOGI("start, oldUserId:%{public}d to newUserId:%{public}d", oldUserId, userId);
     if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if (currentUserId != userId) {
@@ -45,11 +45,11 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId, const uint32
         APP_LOGE("switch userId : %{public}d failed, manager is nullptr", userId);
         return false;
     }
-    if (!manager->AddAllResourceInfo(userId, type)) {
+    if (!manager->AddAllResourceInfo(userId, type, oldUserId)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
     }
-    APP_LOGI("end");
+    APP_LOGI("end, oldUserId:%{public}d to newUserId:%{public}d", oldUserId, userId);
     return true;
 }
 
