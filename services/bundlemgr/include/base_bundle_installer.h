@@ -680,6 +680,8 @@ private:
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
+    void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
+        const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
