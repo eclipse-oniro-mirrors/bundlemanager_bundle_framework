@@ -67,6 +67,7 @@ constexpr const char* ROUTER_MAP = "routerMap";
 constexpr const char* PAGE_SOURCE_FILE = "pageSourceFile";
 constexpr const char* BUILD_FUNCTION = "buildFunction";
 constexpr const char* DATA = "data";
+constexpr const char* CUSTOM_DATA = "customData";
 constexpr const char* KEY = "key";
 constexpr const char* VALUE = "value";
 constexpr const char* CODE_PATH = "codePath";
@@ -1755,10 +1756,37 @@ void CommonFunc::ConvertRouterItem(napi_env env, const RouterItem &routerItem, n
         env, routerItem.buildFunction.c_str(), NAPI_AUTO_LENGTH, &nBuildFunction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUILD_FUNCTION, nBuildFunction));
 
-    napi_value nData;
+    napi_value nDataArray;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDataArray));
+    ConvertRouterDataInfos(env, routerItem.data, nDataArray);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nDataArray));
+
+    napi_value nCustomData;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, routerItem.data.c_str(), NAPI_AUTO_LENGTH, &nData));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DATA, nData));
+        env, routerItem.customData.c_str(), NAPI_AUTO_LENGTH, &nCustomData));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, CUSTOM_DATA, nCustomData));
+}
+
+void CommonFunc::ConvertRouterDataInfos(napi_env env,
+    const std::map<std::string, std::string> &data, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : data) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nKey;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nKey));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, KEY, nKey));
+
+        napi_value nValue;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.second.c_str(), NAPI_AUTO_LENGTH, &nValue));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, VALUE, nValue));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
+    }
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)

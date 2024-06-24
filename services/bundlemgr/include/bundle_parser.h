@@ -28,6 +28,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 class BundleParser {
+private:
+    bool CheckRouterData(nlohmann::json data) const;
 public:
     static bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
     /**
