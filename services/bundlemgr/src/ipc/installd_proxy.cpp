@@ -865,6 +865,24 @@ ErrCode InstalldProxy::IsExistExtensionDir(int32_t userId, const std::string &ex
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    if (!reply.ReadStringVector(&typeList)) {
+        APP_LOGE("fail to GetExtensionSandboxTypeList from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirParam)
 {
     MessageParcel data;

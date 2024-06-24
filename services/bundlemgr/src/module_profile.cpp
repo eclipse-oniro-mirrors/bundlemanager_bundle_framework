@@ -2266,7 +2266,6 @@ bool ToExtensionInfo(
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
     extensionInfo.extensionProcessMode = ConvertToExtensionProcessMode(extension.extensionProcessMode);
-    extensionInfo.UpdateNeedCreateSandbox();
     for (const std::string &dataGroup : extension.dataGroupIds) {
         extensionInfo.dataGroupIds.emplace_back(dataGroup);
     }

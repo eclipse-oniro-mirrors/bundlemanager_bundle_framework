@@ -471,5 +471,10 @@ bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
 }
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

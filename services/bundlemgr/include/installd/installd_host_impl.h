@@ -20,6 +20,7 @@
 #include "code_sign_helper.h"
 #include "ipc/installd_host.h"
 #include "installd/installd_operator.h"
+#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -227,6 +228,8 @@ public:
 
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam) override;
 
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
+
 private:
     ErrCode CreateExtensionDir(const CreateDirParam &createDirParam, const std::string& parentDir,
         int32_t mode, int32_t gid, bool isLog = false);
@@ -242,6 +245,10 @@ private:
         const int32_t userId, const int32_t appIndex);
     int64_t HandleAppDataSizeStats(const std::string &bundleName,
         const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath);
+    std::string GetExtensionConfigPath() const;
+    void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
+    bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
+    bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
