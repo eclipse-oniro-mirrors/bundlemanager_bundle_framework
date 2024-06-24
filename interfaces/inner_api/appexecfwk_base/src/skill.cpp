@@ -54,6 +54,7 @@ constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string LINK_FEATURE = "linkFeature";
+const std::string GENERAL_OBJECT = "general.object";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -433,16 +434,17 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
         return false;
     }
 
+    // only match */* or general.object
+    if (type == TYPE_ONLY_MATCH_WILDCARD) {
+        return skillUriType == TYPE_WILDCARD || skillUriType == GENERAL_OBJECT;
+    }
+
     bool containsUtd = false;
     bool matchUtdRet = MatchUtd(type, skillUriType, containsUtd);
     if (containsUtd) {
         return matchUtdRet;
     }
 
-    // only match */*
-    if (type == TYPE_ONLY_MATCH_WILDCARD) {
-        return skillUriType == TYPE_WILDCARD;
-    }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {
         // param is */* or config is */*
         return true;
