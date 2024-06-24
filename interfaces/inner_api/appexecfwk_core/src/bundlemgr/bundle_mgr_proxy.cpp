@@ -769,7 +769,9 @@ bool BundleMgrProxy::GetBundleNameForUid(const int uid, std::string &bundleName)
         return false;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        if (uid > Constants::BASE_APP_UID) {
+            APP_LOGE("reply result false");
+        }
         return false;
     }
     bundleName = reply.ReadString();
