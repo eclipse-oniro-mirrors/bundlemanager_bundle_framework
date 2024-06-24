@@ -950,7 +950,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfos(
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return;
     }
@@ -990,7 +990,7 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return false;
     }
@@ -1075,7 +1075,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfosV9(
         return;
     }
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return;
     }
@@ -5076,7 +5076,7 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY_EXTENSION, "param invalid");
         return false;
     }
@@ -5113,7 +5113,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY_EXTENSION, "param invalid");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
