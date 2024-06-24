@@ -630,7 +630,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.label, "$string:app_name");
         EXPECT_EQ(info.labelId, 16777216);
         EXPECT_EQ(info.iconPath, "$media:app_icon");
-        EXPECT_EQ(info.iconId, 16777228);
+        EXPECT_EQ(info.iconId, 16777229);
         EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
         EXPECT_EQ(info.versionName, "1.0");
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
