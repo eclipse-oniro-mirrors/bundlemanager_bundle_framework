@@ -174,6 +174,7 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
 
     for (const auto &innerBundleInfo : newInfos) {
         auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
         preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
