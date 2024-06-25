@@ -2157,6 +2157,17 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             LOG_E(BMS_TAG_INSTALLER, "fail to kill running application");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
+        InnerBundleUserInfo userInfo;
+        if (!oldInfo.GetInnerBundleUserInfo(userId_, userInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        for (auto &cloneInfo : userInfo.cloneInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
+        }
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_EXISTED_START);
@@ -3978,6 +3989,17 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
         if (!AbilityManagerHelper::UninstallApplicationProcesses(
             info.GetApplicationName(), info.GetUid(userId_), true)) {
             LOG_W(BMS_TAG_INSTALLER, "can not kill process");
+        }
+        InnerBundleUserInfo userInfo;
+        if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+            LOG_W(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        for (auto &cloneInfo : userInfo.cloneInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                info.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
         }
     }
 
