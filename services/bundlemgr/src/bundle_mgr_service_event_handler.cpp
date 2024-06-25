@@ -2920,6 +2920,7 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
         preInstallBundleInfo.AddBundlePath(item.first);
         if (!findEntry) {
             auto applicationInfo = item.second.GetBaseApplicationInfo();
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
