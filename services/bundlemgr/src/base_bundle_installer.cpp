@@ -4326,13 +4326,12 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    // delete accessTokenId
+    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
     }
-
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);
         if (uid != Constants::INVALID_UID) {
@@ -4343,6 +4342,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
                 innerBundleInfo.GetBundleName();
             PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
         }
+    }
+
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     ErrCode result = ERR_OK;
@@ -4363,13 +4369,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
         return result;
-    }
-
-    // delete accessTokenId
-    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
     }
 
     return ERR_OK;
