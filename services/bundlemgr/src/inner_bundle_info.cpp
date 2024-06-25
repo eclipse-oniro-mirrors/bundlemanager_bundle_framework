@@ -3764,31 +3764,18 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         APP_LOGI("com.ohos.contacts no need to process");
         return;
     }
-    OHOS::AAFwk::Want want;
-    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
-    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
-    for (const auto& abilityInfoPair : baseAbilityInfos_) {
-        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos_.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                if (abilityInfoPair.second.labelId != 0) {
-                    applicationInfo.labelId = abilityInfoPair.second.labelId;
-                    applicationInfo.labelResource.id = abilityInfoPair.second.labelId;
-                    applicationInfo.labelResource.moduleName = abilityInfoPair.second.moduleName;
-                    applicationInfo.labelResource.bundleName = abilityInfoPair.second.bundleName;
-                }
-                if (abilityInfoPair.second.iconId != 0) {
-                    applicationInfo.iconId = abilityInfoPair.second.iconId;
-                    applicationInfo.iconResource.id = abilityInfoPair.second.iconId;
-                    applicationInfo.iconResource.moduleName = abilityInfoPair.second.moduleName;
-                    applicationInfo.iconResource.bundleName = abilityInfoPair.second.bundleName;
-                }
-                return;
-            }
-        }
+    AbilityInfo mainAbilityInfo;
+    GetMainAbilityInfo(mainAbilityInfo);
+    if ((mainAbilityInfo.labelId != 0) && (mainAbilityInfo.iconId != 0)) {
+        applicationInfo.labelId = mainAbilityInfo.labelId ;
+        applicationInfo.labelResource.id = mainAbilityInfo.labelId;
+        applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
+        applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
+
+        applicationInfo.iconId = mainAbilityInfo.iconId ;
+        applicationInfo.labelResource.id = mainAbilityInfo.iconId;
+        applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
+        applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
     }
 }
 }  // namespace AppExecFwk

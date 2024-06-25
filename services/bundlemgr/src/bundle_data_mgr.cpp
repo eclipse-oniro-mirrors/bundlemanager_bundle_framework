@@ -1799,34 +1799,25 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         APP_LOGD("response user id is invalid");
         return;
     }
-    bool isExist = false;
-    bool isStage = info.GetIsNewVersion();
     // get clone bundle info
     InnerBundleUserInfo bundleUserInfo;
     (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfo);
-    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
-    for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                isExist = true;
-                AbilityInfo abilityinfo = abilityInfoPair.second;
-                info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
-                    responseUserId, abilityinfo.applicationInfo);
-                abilityinfo.installTime = installTime;
-                // fix labelId or iconId is equal 0
-                ModifyLauncherAbilityInfo(isStage, abilityinfo);
-                abilityInfos.emplace_back(abilityinfo);
-                GetMatchLauncherAbilityInfosForCloneInfos(info, abilityInfoPair.second, bundleUserInfo, abilityInfos);
-                break;
-            }
-        }
+    AbilityInfo mainAbilityInfo;
+    info.GetMainAbilityInfo(mainAbilityInfo);
+    if (!mainAbilityInfo.name.empty()) {
+        APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
+        info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+            responseUserId, mainAbilityInfo.applicationInfo);
+        mainAbilityInfo.installTime = installTime;
+        // fix labelId or iconId is equal 0
+        ModifyLauncherAbilityInfo(info.GetIsNewVersion(), mainAbilityInfo);
+        abilityInfos.emplace_back(mainAbilityInfo);
+        GetMatchLauncherAbilityInfosForCloneInfos(info, mainAbilityInfo, bundleUserInfo,
+            abilityInfos);
+        return;
     }
     // add app detail ability
-    if (!isExist && info.GetBaseApplicationInfo().needAppDetail) {
+    if (info.GetBaseApplicationInfo().needAppDetail) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "bundleName: %{public}s add detail ability info.", info.GetBundleName().c_str());
         std::string moduleName = "";
         auto ability = info.FindAbilityInfo(moduleName, ServiceConstants::APP_DETAIL_ABILITY, responseUserId);
@@ -1839,6 +1830,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         }
         ability->installTime = installTime;
         abilityInfos.emplace_back(*ability);
+        GetMatchLauncherAbilityInfosForCloneInfos(info, *ability, bundleUserInfo, abilityInfos);
     }
 }
 
@@ -1854,7 +1846,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             bundleUserInfo.bundleUserInfo.userId, cloneAbilityInfo.applicationInfo, item.second.appIndex);
         cloneAbilityInfo.installTime = item.second.installTime;
-        cloneAbilityInfo.uid =  item.second.uid;
+        cloneAbilityInfo.uid = item.second.uid;
         cloneAbilityInfo.appIndex = item.second.appIndex;
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(info.GetIsNewVersion(), cloneAbilityInfo);
