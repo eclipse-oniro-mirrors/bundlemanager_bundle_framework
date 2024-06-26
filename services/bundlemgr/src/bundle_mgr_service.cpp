@@ -461,7 +461,7 @@ void BundleMgrService::CheckAllUser()
 
         bool isExists = false;
         if (AccountHelper::IsOsAccountExists(userId, isExists) != ERR_OK) {
-            APP_LOGW("Failed to query whether the user(%{public}d) exists.", userId);
+            APP_LOGW("Failed query whether user(%{public}d) exists.", userId);
             continue;
         }
 

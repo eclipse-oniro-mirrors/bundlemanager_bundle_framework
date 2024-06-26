@@ -607,7 +607,7 @@ StatusReceiverProxy::~StatusReceiverProxy()
 
 void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
 {
-    APP_LOGI("status from service is %{public}d", progress);
+    APP_LOGI("service status %{public}d", progress);
 
     MessageParcel data;
     MessageParcel reply;
@@ -631,13 +631,13 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
     int32_t ret =
         remote->SendRequest(static_cast<int32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGE("fail to call OnStatusNotify, for transact is failed, error code is: %{public}d", ret);
+        APP_LOGE("fail call OnStatusNotify, for transact failed, error code %{public}d", ret);
     }
 }
 
 void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string &resultMsg)
 {
-    APP_LOGI("result from service is %{public}d, %{public}s", resultCode, resultMsg.c_str());
+    APP_LOGI("service result %{public}d, %{public}s", resultCode, resultMsg.c_str());
     // transform service error code to client error code.
     TransformResult(resultCode);
     if (!resultMsg.empty()) {
@@ -670,7 +670,7 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
     int32_t ret = remote->SendRequest(
         static_cast<int32_t>(StatusReceiverInterfaceCode::ON_FINISHED), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGE("fail to call OnFinished, for transact is failed, error code is: %{public}d", ret);
+        APP_LOGE("fail call OnFinished, for transact failed, error code %{public}d", ret);
     }
 }
 

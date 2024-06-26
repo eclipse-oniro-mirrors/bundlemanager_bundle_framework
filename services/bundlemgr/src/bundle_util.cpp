@@ -86,11 +86,11 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
+        APP_LOGE("not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
     if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
-        APP_LOGE("file size is larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
+        APP_LOGE("file size larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_SIZE;
     }
     return ERR_OK;
@@ -126,7 +126,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             }
             return ret;
         } else {
-            APP_LOGE("bundlePath is not existed with :%{public}s", bundlePaths.front().c_str());
+            APP_LOGE("bundlePath not existed with :%{public}s", bundlePaths.front().c_str());
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     } else {
@@ -217,7 +217,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s, errno:%{public}d",
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s failed due to %{public}s, errno:%{public}d",
             currentBundlePath.c_str(), errMsg, errno);
         return false;
     }
@@ -313,7 +313,7 @@ int32_t BundleUtil::GetUserIdByCallingUid()
 int32_t BundleUtil::GetUserIdByUid(int32_t uid)
 {
     if (uid <= Constants::INVALID_UID) {
-        APP_LOGE("uid is illegal: %{public}d", uid);
+        APP_LOGE("uid illegal: %{public}d", uid);
         return Constants::INVALID_USERID;
     }
 
@@ -478,7 +478,7 @@ bool BundleUtil::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("fail to stat errno:%{public}d", errno);
+        APP_LOGE("fail stat errno:%{public}d", errno);
         return false;
     }
 
@@ -493,7 +493,7 @@ bool BundleUtil::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("fail to stat errno:%{public}d", errno);
+        APP_LOGE("fail stat errno:%{public}d", errno);
         return false;
     }
 
@@ -663,7 +663,7 @@ bool BundleUtil::CreateDir(const std::string &dir)
     }
 
     if (chown(dir.c_str(), Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != 0) {
-        APP_LOGE("fail to change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
+        APP_LOGE("fail change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
         return false;
     }
 

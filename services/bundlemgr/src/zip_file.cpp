@@ -171,7 +171,7 @@ bool ZipFile::Open()
     }
 
     if (pathName_.length() > PATH_MAX) {
-        APP_LOGE("path length(%{public}u) longer than max path length(%{public}d)",
+        APP_LOGE("path length(%{public}u) longer than max length(%{public}d)",
             static_cast<unsigned int>(pathName_.length()),
             PATH_MAX);
         return false;
@@ -236,7 +236,7 @@ void ZipFile::Close()
     isOpen_ = false;
 
     if (fclose(file_) != 0) {
-        APP_LOGW("close failed, error: %{public}d", errno);
+        APP_LOGW("close failed err: %{public}d", errno);
     }
     file_ = nullptr;
 }
@@ -342,7 +342,7 @@ bool ZipFile::CheckCoherencyLocalHeader(const ZipEntry &zipEntry, uint16_t &extr
     LocalHeader localHeader = {0};
 
     if (zipEntry.localHeaderOffset >= fileLength_) {
-        APP_LOGE("check local file header offset is overflow %{public}d", zipEntry.localHeaderOffset);
+        APP_LOGE("check local file header offset overflow %{public}d", zipEntry.localHeaderOffset);
         return false;
     }
 
@@ -542,7 +542,7 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
     // free all dynamically allocated data structures except the next_in and next_out for this stream.
     zlibErr = inflateEnd(&zstream);
     if (zlibErr != Z_OK) {
-        APP_LOGE("unzip inflateEnd error, error: %{public}d", zlibErr);
+        APP_LOGE("unzip inflateEnd error %{public}d", zlibErr);
         ret = false;
     }
 

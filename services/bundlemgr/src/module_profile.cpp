@@ -2292,7 +2292,7 @@ bool GetPermissions(
             }
             if (!definePermission.availableType.empty() &&
                 definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
-                APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+                APP_LOGE("availableType(%{public}s) invalid", definePermission.availableType.c_str());
                 return false;
             }
             innerModuleInfo.definePermissions.emplace_back(definePermission);
@@ -2593,7 +2593,7 @@ OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) co
     auto isModulePriorityExisted = moduleJson.contains(Profile::MODULE_TARGET_PRIORITY);
     if (!isTargetBundleExisted && !isAppPriorityExisted && !isTargetModuleNameExisted &&
         !isModulePriorityExisted) {
-        APP_LOGW("current hap is not overlayed hap");
+        APP_LOGW("current hap not overlayed hap");
         return overlayMsg;
     }
     if (!isTargetModuleNameExisted) {
@@ -2637,14 +2637,14 @@ ErrCode ModuleProfile::TransformTo(
         if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::g_parseResult != ERR_OK)) {
             int32_t ret = Profile::g_parseResult;
             Profile::g_parseResult = ERR_OK;
-            APP_LOGE("ObtainOverlayType g_parseResult is %{public}d", ret);
+            APP_LOGE("ObtainOverlayType g_parseResult %{public}d", ret);
             return ret;
         }
         APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
         Profile::g_parseResult = ERR_OK;
         moduleJson = jsonObject.get<Profile::ModuleJson>();
         if (Profile::g_parseResult != ERR_OK) {
-            APP_LOGE("g_parseResult is %{public}d", Profile::g_parseResult);
+            APP_LOGE("g_parseResult %{public}d", Profile::g_parseResult);
             int32_t ret = Profile::g_parseResult;
             // need recover parse result to ERR_OK
             Profile::g_parseResult = ERR_OK;

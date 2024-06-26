@@ -246,7 +246,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-        APP_LOGE("get all bundle info failed when userId is %{public}d.", userId);
+        APP_LOGE("get all bundle info failed when userId %{public}d.", userId);
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
