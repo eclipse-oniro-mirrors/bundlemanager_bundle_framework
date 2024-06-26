@@ -59,18 +59,18 @@ bool BundleResourceImageInfo::ConvertToString(
     std::stringstream outputStream;
     auto errCode = packer.StartPacking(outputStream, option);
     if (errCode != 0) {
-        APP_LOGE("StartPacking failed, code: %{public}d", static_cast<int32_t>(errCode));
+        APP_LOGE("StartPacking failed %{public}d", static_cast<int32_t>(errCode));
         return false;
     }
     errCode = packer.AddImage(*pixelMap);
     if (errCode != 0) {
-        APP_LOGE("AddImage failed, code: %{public}d", static_cast<int32_t>(errCode));
+        APP_LOGE("AddImage failed %{public}d", static_cast<int32_t>(errCode));
         return false;
     }
     int64_t packedSize = 0;
     errCode = packer.FinalizePacking(packedSize);
     if (errCode != 0) {
-        APP_LOGE("FinalizePacking failed, code: %{public}d", static_cast<int32_t>(errCode));
+        APP_LOGE("FinalizePacking failed %{public}d", static_cast<int32_t>(errCode));
         return false;
     }
     std::string originalString = outputStream.str();
