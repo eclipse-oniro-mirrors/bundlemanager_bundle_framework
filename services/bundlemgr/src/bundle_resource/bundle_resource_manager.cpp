@@ -322,7 +322,7 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
         return;
     }
     // delete not exist resource when switch userId
-    InnerDeleteNoTExistResourceInfo(resourceInfosMap, existResourceNames);
+    DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
     // check which applications need to be parsed
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
         // not exist in resource rdb, need add
@@ -355,11 +355,11 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
     needDeleteAllResource = false;
 }
 
-void BundleResourceManager::InnerDeleteNoTExistResourceInfo(
+void BundleResourceManager::DeleteNotExistResourceInfo(
     const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
     const std::vector<std::string> &existResourceNames)
 {
-// delete not exist resource
+    // delete not exist resource
     for (const auto &name : existResourceNames) {
         if (resourceInfosMap.find(name) == resourceInfosMap.end()) {
             ResourceInfo resourceInfo;
@@ -387,16 +387,9 @@ void BundleResourceManager::InnerDeleteNoTExistResourceInfo(
 bool BundleResourceManager::InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId)
 {
     if (BundleUtil::IsExistFile(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
-        if (BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName)) {
-            return true;
-        }
-        return false;
+        return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName);
     }
-
-    if (BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName)) {
-        return true;
-    }
-    return false;
+    return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
 }
 
 bool BundleResourceManager::AddResourceInfosByMap(

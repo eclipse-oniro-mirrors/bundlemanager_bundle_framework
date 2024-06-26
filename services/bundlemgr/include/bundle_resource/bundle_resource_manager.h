@@ -123,7 +123,7 @@ private:
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource);
 
-    void InnerDeleteNoTExistResourceInfo(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+    void DeleteNotExistResourceInfo(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         const std::vector<std::string> &existResourceNames);
 
     bool InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId);
