@@ -130,6 +130,8 @@ void InstalldHost::Init()
         &InstalldHost::HandleCreateExtensionDataDir);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE),
         &InstalldHost::HandleGetDiskUsage);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST),
+        &InstalldHost::HandleGetExtensionSandboxTypeList);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -790,6 +792,24 @@ bool InstalldHost::HandleIsExistExtensionDir(MessageParcel &data, MessageParcel 
     bool isExist = false;
     ErrCode result = IsExistExtensionDir(userId, extensionBundleDir, isExist);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isExist)) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to write bool from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleGetExtensionSandboxTypeList(MessageParcel &data, MessageParcel &reply)
+{
+    std::vector<std::string> typeList;
+    ErrCode result = GetExtensionSandboxTypeList(typeList);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (result == ERR_OK) {
+        if (!reply.WriteStringVector(typeList)) {
+            APP_LOGE("write failed");
+            return false;
+        }
+    }
     return true;
 }
 

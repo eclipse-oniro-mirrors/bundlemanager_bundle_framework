@@ -74,6 +74,10 @@ int32_t RPCIDStreamDecodeToBuffer(
     }
 
     sysCapLength = ntohs(*(uint16_t *)(sysCapArrayPtr - sizeof(uint16_t)));
+    if (sysCapLength < 0) {
+        HILOG_ERROR(LOG_CORE, "format error:sysCapLength is invalid\n");
+        return ERROR;
+    }
     if (contextBufferTail < sysCapArrayPtr + sysCapLength) {
         HILOG_ERROR(LOG_CORE, "format error:sysCapArray tail over to buffer\n");
         return ERROR;

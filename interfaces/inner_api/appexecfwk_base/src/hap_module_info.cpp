@@ -141,7 +141,7 @@ void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read PreloadItem from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read PreloadItem database error : %{public}d", parseResult);
     }
 }
 
@@ -210,7 +210,7 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read Dependency error, error code : %{public}d", parseResult);
+        APP_LOGE("read Dependency error : %{public}d", parseResult);
     }
 }
 
@@ -295,7 +295,7 @@ void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read ProxyData from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read ProxyData error : %{public}d", parseResult);
     }
 }
 
@@ -401,7 +401,7 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module RouterItem from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read RouterItem jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -459,7 +459,7 @@ void from_json(const nlohmann::json &jsonObject, AppEnvironment &appEnvironment)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read AppEnvironment from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read AppEnvironment error : %{public}d", parseResult);
     }
 }
 
@@ -1303,7 +1303,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGW("HapModuleInfo from_json error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

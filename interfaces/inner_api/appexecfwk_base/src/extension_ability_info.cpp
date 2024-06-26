@@ -632,7 +632,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }
 }
 

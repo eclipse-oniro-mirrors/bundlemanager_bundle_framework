@@ -950,7 +950,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfos(
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return;
     }
@@ -990,7 +990,7 @@ bool BundleDataMgr::ImplicitQueryAbilityInfos(
     }
 
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return false;
     }
@@ -1075,7 +1075,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfosV9(
         return;
     }
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_E(BMS_TAG_QUERY_ABILITY, "param invalid");
         return;
     }
@@ -5076,7 +5076,7 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY_EXTENSION, "param invalid");
         return false;
     }
@@ -5113,7 +5113,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
     if (want.GetAction().empty() && want.GetEntities().empty()
-        && want.GetUriString().empty() && want.GetType().empty()) {
+        && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY_EXTENSION, "param invalid");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
@@ -5778,8 +5778,9 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    APP_LOGI("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
-        want.ToString().c_str(), flags, userId, withDefault);
+    APP_LOGI("action:%{public}s uri:%{private}s type:%{public}s",
+        want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
+    APP_LOGI("flags:%{public}d userId:%{public}d withDefault(bool):%{public}d", flags, userId, withDefault);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
@@ -6625,7 +6626,7 @@ ErrCode BundleDataMgr::DelExtNameOrMIMEToApp(const std::string &bundleName, cons
 bool BundleDataMgr::MatchPrivateType(const Want &want,
     const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes) const
 {
-    APP_LOGD("MatchPrivateType, uri is %{public}s", want.GetUriString().c_str());
+    APP_LOGD("MatchPrivateType, uri is %{private}s", want.GetUriString().c_str());
     std::string uri = want.GetUriString();
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
@@ -6854,7 +6855,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateUuid();
+    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }

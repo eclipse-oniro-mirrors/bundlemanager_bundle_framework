@@ -87,6 +87,7 @@ const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
     {"isolationFirst", IsolationMode::ISOLATION_FIRST},
 };
+constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -1353,6 +1354,8 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
         RemoveDuplicateName(appInfo.permissions);
     }
     appInfo.appIndex = appIndex;
+    // The label and icon are first used under main ability
+    AdaptMainLauncherResourceInfo(appInfo);
 }
 
 ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, ApplicationInfo &appInfo,
@@ -1407,6 +1410,8 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     if (!appInfo.permissions.empty()) {
         RemoveDuplicateName(appInfo.permissions);
     }
+    // The label and icon are first used under main ability
+    AdaptMainLauncherResourceInfo(appInfo);
     return ERR_OK;
 }
 
@@ -3527,6 +3532,18 @@ std::vector<std::string> InnerBundleInfo::GetAllExtensionDirs() const
     return dirVec;
 }
 
+void InnerBundleInfo::UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList)
+{
+    for (auto &extensionItem : baseExtensionInfos_) {
+        extensionItem.second.needCreateSandbox = false;
+        std::string typeName = extensionItem.second.extensionTypeName;
+        auto it = std::find(typeList.begin(), typeList.end(), typeName);
+        if (it != typeList.end()) {
+            extensionItem.second.needCreateSandbox = true;
+        }
+    }
+}
+
 void InnerBundleInfo::UpdateExtensionDataGroupInfo(
     const std::string &key, const std::vector<std::string>& dataGroupIds)
 {
@@ -3738,6 +3755,40 @@ void InnerBundleInfo::UpdateMultiAppMode(const InnerBundleInfo &newInfo)
     std::string moduleType = newInfo.GetModuleTypeByPackage(newInfo.GetCurrentModulePackage());
     if (moduleType == Profile::MODULE_TYPE_ENTRY || moduleType == Profile::MODULE_TYPE_FEATURE) {
         baseApplicationInfo_->multiAppMode = newInfo.GetBaseApplicationInfo().multiAppMode;
+    }
+}
+
+void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const
+{
+    if (GetBundleName() == COM_OHOS_CONTACTS) {
+        APP_LOGI("com.ohos.contacts no need to process");
+        return;
+    }
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    for (const auto& abilityInfoPair : baseAbilityInfos_) {
+        auto skillsPair = skillInfos_.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos_.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                if (abilityInfoPair.second.labelId != 0) {
+                    applicationInfo.labelId = abilityInfoPair.second.labelId;
+                    applicationInfo.labelResource.id = abilityInfoPair.second.labelId;
+                    applicationInfo.labelResource.moduleName = abilityInfoPair.second.moduleName;
+                    applicationInfo.labelResource.bundleName = abilityInfoPair.second.bundleName;
+                }
+                if (abilityInfoPair.second.iconId != 0) {
+                    applicationInfo.iconId = abilityInfoPair.second.iconId;
+                    applicationInfo.iconResource.id = abilityInfoPair.second.iconId;
+                    applicationInfo.iconResource.moduleName = abilityInfoPair.second.moduleName;
+                    applicationInfo.iconResource.bundleName = abilityInfoPair.second.bundleName;
+                }
+                return;
+            }
+        }
     }
 }
 }  // namespace AppExecFwk

@@ -420,6 +420,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
+    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);

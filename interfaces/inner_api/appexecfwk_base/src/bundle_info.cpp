@@ -553,7 +553,7 @@ void from_json(const nlohmann::json &jsonObject, RequestPermissionUsedScene &use
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read RequestPermissionUsedScene from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read RequestPermissionUsedScene error : %{public}d", parseResult);
     }
 }
 
@@ -602,7 +602,7 @@ void from_json(const nlohmann::json &jsonObject, RequestPermission &requestPermi
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read RequestPermission from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read RequestPermission error : %{public}d", parseResult);
     }
 }
 
@@ -635,7 +635,7 @@ void from_json(const nlohmann::json &jsonObject, SignatureInfo &signatureInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read SignatureInfo from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read SignatureInfo error : %{public}d", parseResult);
     }
 }
 
@@ -1070,7 +1070,7 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("BundleInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("BundleInfo from_json error %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

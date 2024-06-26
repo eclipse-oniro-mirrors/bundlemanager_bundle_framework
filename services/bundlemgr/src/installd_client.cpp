@@ -231,6 +231,7 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
 
 void InstalldClient::ResetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
@@ -565,6 +566,11 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     }
 
     return CallService(&IInstalld::CreateExtensionDataDir, createDirParam);
+}
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

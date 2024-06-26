@@ -120,7 +120,7 @@ void from_json(const nlohmann::json &jsonObject, DataGroupInfo &dataGroupInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read dataGroupInfo error, error code : %{public}d", parseResult);
+        APP_LOGE("read dataGroupInfo error : %{public}d", parseResult);
     }
 }
 

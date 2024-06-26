@@ -225,6 +225,8 @@ public:
 
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam) override;
 
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
