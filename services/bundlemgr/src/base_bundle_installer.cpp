@@ -1405,8 +1405,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
-    CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
+    if (res != ERR_OK) {
+        APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
+    }
 
     DeleteEncryptionKeyId(oldInfo);
 
@@ -2984,8 +2986,11 @@ void BaseBundleInstaller::DeleteGroupDirsForException() const
     }
 }
 
-ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData) const
 {
+    if (isKeepData) {
+        return ERR_OK;
+    }
     std::vector<DataGroupInfo> infos;
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");

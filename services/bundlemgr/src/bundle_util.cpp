@@ -63,6 +63,7 @@ constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
+const std::string EMPTY_STRING = "";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -834,6 +835,30 @@ std::string BundleUtil::GenerateUuid()
     }
 
     std::string uuid = timeStr + deviceStr;
+    RecursiveHash(uuid);
+
+    for (int32_t index : SEPARATOR_POSITIONS) {
+        uuid.insert(index, 1, UUID_SEPARATOR);
+    }
+    return uuid;
+}
+
+std::string BundleUtil::GenerateUuidByKey(const std::string &key)
+{
+    std::string keyHash = GetHexHash(key);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    std::string deviceStr;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+        deviceStr = GetHexHash(deviceUdid);
+    }
+
+    std::string uuid = keyHash + deviceStr;
     RecursiveHash(uuid);
 
     for (int32_t index : SEPARATOR_POSITIONS) {

@@ -6855,7 +6855,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateUuid();
+    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }
