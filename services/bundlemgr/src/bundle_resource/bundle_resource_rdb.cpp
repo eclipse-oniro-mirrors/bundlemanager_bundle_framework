@@ -95,12 +95,25 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(BundleResourceConstants::NAME, info.GetKey());
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
-        valuesBucket.PutString(BundleResourceConstants::LABEL, info.label_);
-        valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, BundleSystemState::GetInstance().ToString());
-        // used for layered icons
-        valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, info.foreground_);
-        valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, info.background_);
+
+        if (!info.label_.empty()) {
+            valuesBucket.PutString(BundleResourceConstants::LABEL, info.label_);
+        } else {
+            valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfos[0].label_);
+        }
+
+        if (!info.icon_.empty()) {
+            valuesBucket.PutString(BundleResourceConstants::ICON, info.icon_);
+            // used for layered icons
+            valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, info.foreground_);
+            valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, info.background_);
+        } else {
+            valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfos[0].icon_);
+            // used for layered icons
+            valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfos[0].foreground_);
+            valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfos[0].background_);
+        }
         APP_LOGD("key:%{public}s foreground: %{public}zu, background: %{public}zu", info.GetKey().c_str(),
             info.foreground_.size(), info.background_.size());
         valuesBuckets.emplace_back(valuesBucket);
@@ -501,6 +514,10 @@ bool BundleResourceRdb::ConvertToLauncherAbilityResourceInfo(
 
 bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<ResourceInfo> &resourceInfos)
 {
+    if (resourceInfos.empty()) {
+        APP_LOGE("resourceInfos is empty");
+        return false;
+    }
     std::string systemState = BundleSystemState::GetInstance().ToString();
     int64_t timeStamp = BundleUtil::GetCurrentTimeMs();
     bool ret = true;
@@ -509,13 +526,21 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, systemState);
+        // process label
         if (!resourceInfo.label_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
+        } else if (!resourceInfos[0].label_.empty()) {
+            valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfos[0].label_);
         }
+        // process icon
         if (!resourceInfo.icon_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfo.icon_);
             valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfo.foreground_);
             valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfo.background_);
+        } else if (!resourceInfos[0].icon_.empty()) {
+            valuesBucket.PutString(BundleResourceConstants::ICON, resourceInfos[0].icon_);
+            valuesBucket.PutBlob(BundleResourceConstants::FOREGROUND, resourceInfos[0].foreground_);
+            valuesBucket.PutBlob(BundleResourceConstants::BACKGROUND, resourceInfos[0].background_);
         }
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());

@@ -301,7 +301,6 @@ bool BundleResourceProcess::InnerGetResourceInfo(
         ResourceInfo defaultResourceInfo;
         defaultResourceInfo.bundleName_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.labelNeedParse_ = false;
-        defaultResourceInfo.label_ = innerBundleInfo.GetBundleName();
         defaultResourceInfo.iconNeedParse_ = false;
         defaultResourceInfo.icon_ = dynamicResourceInfo.icon_;
         defaultResourceInfo.foreground_ = dynamicResourceInfo.foreground_;
