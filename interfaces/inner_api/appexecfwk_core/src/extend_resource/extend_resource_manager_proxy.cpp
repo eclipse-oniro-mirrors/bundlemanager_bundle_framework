@@ -356,7 +356,7 @@ bool ExtendResourceManagerProxy::SendRequest(
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
+        APP_LOGE("receive error %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

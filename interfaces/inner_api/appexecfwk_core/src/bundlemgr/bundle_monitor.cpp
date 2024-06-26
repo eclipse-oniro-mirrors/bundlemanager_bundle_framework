@@ -69,7 +69,7 @@ void BundleMonitor::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
     } else if ((action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) && (callback_ != nullptr)) {
         callback_->OnBundleRemoved(bundleName, userId);
     } else {
-        APP_LOGI("OnReceiveEvent action = %{public}s not support", action.c_str());
+        APP_LOGI("%{public}s not support", action.c_str());
     }
 }
 }  // namespace AppExecFwk

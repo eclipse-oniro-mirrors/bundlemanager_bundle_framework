@@ -42,7 +42,7 @@ ErrCode BmsExtensionDataMgr::Init()
         BmsExtensionProfile bmsExtensionProfile;
         auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension_);
         if (res != ERR_OK) {
-            APP_LOGW("ParseBmsExtension failed, errCode is %{public}d", res);
+            APP_LOGW("ParseBmsExtension failed %{public}d", res);
             return ERR_APPEXECFWK_PARSE_UNEXPECTED;
         }
         APP_LOGD("parse bms-extension.json success, which is: %{public}s", bmsExtension_.ToString().c_str());
@@ -66,11 +66,11 @@ bool BmsExtensionDataMgr::OpenHandler()
     auto lib64Path = bmsExtension_.bmsExtensionBundleMgr.lib64Path.c_str();
     *handle = dlopen(lib64Path, RTLD_NOW | RTLD_GLOBAL);
     if (*handle == nullptr) {
-        APP_LOGW("failed to open %{public}s, err:%{public}s", lib64Path, dlerror());
+        APP_LOGW("open %{public}s failed %{public}s", lib64Path, dlerror());
         *handle = dlopen(libPath, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {
-        APP_LOGE("failed to open %{public}s, err:%{public}s", libPath, dlerror());
+        APP_LOGE("open %{public}s failed %{public}s", libPath, dlerror());
         return false;
     }
     APP_LOGD("OpenHandler end");
