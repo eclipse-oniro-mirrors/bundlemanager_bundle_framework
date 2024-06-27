@@ -1690,12 +1690,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0069, Function | SmallTest
         EXPECT_NE(resourceInfos[0].label_, "");
         EXPECT_NE(resourceInfos[0].icon_, "");
 
+        resourceInfos[0].label_ = "";
+        resourceInfos[0].icon_ = "";
         ans = parser.ParseResourceInfos(USERID, resourceInfos);
         EXPECT_TRUE(ans);
-        for (const auto &info : resourceInfos) {
-            EXPECT_NE(info.label_, "");
-            EXPECT_NE(info.icon_, "");
-        }
+        EXPECT_NE(resourceInfos[0].label_, "");
+        EXPECT_NE(resourceInfos[0].icon_, "");
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
@@ -3172,25 +3172,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0122, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0123
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test ParseThemeIcon
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0123, Function | SmallTest | Level0)
-{
-    ResourceInfo resourceInfo;
-    BundleResourceParser parser;
-    bool ans = parser.ParseThemeIcon(nullptr, 0, resourceInfo);
-    EXPECT_FALSE(ans);
-
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    ans = parser.ParseThemeIcon(nullptr, 0, resourceInfo);
-    EXPECT_FALSE(ans);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0124
  * Function: GetBundleResourceInfo
  * @tc.name: test disable and enable
@@ -3901,72 +3882,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0158, Function | SmallTest
     std::string jsonBuff;
     bool ans = parser.ParseForegroundAndBackgroundResource(resourceManager, jsonBuff, 0, resourceInfo);
     EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0159
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test ParseThemeIcon
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0159, Function | SmallTest | Level0)
-{
-    BundleResourceParser parser;
-    ResourceInfo resourceInfo;
-    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
-    bool ans = parser.ParseThemeIcon(resourceManager, 0, resourceInfo);
-    EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0160
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test ProcessResourceInfoWhenParseFailed
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest | Level0)
-{
-    BundleResourceParser parser;
-    ResourceInfo oldResourceInfo;
-    oldResourceInfo.label_ = "oldlabel";
-    oldResourceInfo.icon_ = "oldicon";
-    oldResourceInfo.foreground_.push_back(1);
-    oldResourceInfo.background_.push_back(1);
-    ResourceInfo newResourceInfo;
-    parser.ProcessResourceInfoWhenParseFailed(oldResourceInfo, newResourceInfo);
-    EXPECT_EQ(oldResourceInfo.label_, newResourceInfo.label_);
-    EXPECT_EQ(oldResourceInfo.icon_, newResourceInfo.icon_);
-    EXPECT_EQ(oldResourceInfo.foreground_, newResourceInfo.foreground_);
-    EXPECT_EQ(oldResourceInfo.background_, newResourceInfo.background_);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0161
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test ProcessResourceInfoWhenParseFailed
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0161, Function | SmallTest | Level0)
-{
-    BundleResourceParser parser;
-    ResourceInfo oldResourceInfo;
-    oldResourceInfo.label_ = "oldlabel";
-    oldResourceInfo.icon_ = "oldicon";
-    oldResourceInfo.foreground_.push_back(1);
-    oldResourceInfo.background_.push_back(1);
-    ResourceInfo newResourceInfo;
-    newResourceInfo.label_ = "newlabel";
-    newResourceInfo.icon_ = "newicon";
-    newResourceInfo.foreground_.push_back(2);
-    newResourceInfo.background_.push_back(2);
-    parser.ProcessResourceInfoWhenParseFailed(oldResourceInfo, newResourceInfo);
-    EXPECT_FALSE(newResourceInfo.label_.empty());
-    EXPECT_FALSE(newResourceInfo.icon_.empty());
-    EXPECT_FALSE(newResourceInfo.foreground_.empty());
-    EXPECT_FALSE(newResourceInfo.background_.empty());
 }
 #endif
 } // OHOS

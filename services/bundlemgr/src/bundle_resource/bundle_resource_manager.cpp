@@ -241,10 +241,8 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfos(currentUserId, resourceInfos)) {
-        APP_LOGW("Parse ResourceInfos failed, need to modify label and icon");
-        for (auto &resourceInfo : resourceInfos) {
-            ProcessResourceInfoWhenParseFailed(resourceInfo);
-        }
+        APP_LOGW("key:%{public}s Parse failed, need to modify label and icon", resourceInfos[0].GetKey().c_str());
+        ProcessResourceInfoWhenParseFailed(resourceInfos[0]);
     }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
