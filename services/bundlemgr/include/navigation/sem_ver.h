@@ -33,7 +33,7 @@ public:
     std::vector<std::string> buildMeta;
     std::string raw;
 
-    explicit SemVer(std::string version_string);
+    explicit SemVer(std::string versionString);
 };
 } // AppExecFwk
 } // OHOS
