@@ -157,14 +157,14 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
 
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        APP_LOGE("GoToFirstRow failed, ret %{public}d, systemState %{public}s", ret, systemState.c_str());
         return false;
     }
     do {
         std::string name;
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, name);
         if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString name failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+            APP_LOGE("GetString name failed, ret %{public}d, systemState %{public}s", ret, systemState.c_str());
             return false;
         }
         if (name.find("/") != std::string::npos) {
@@ -174,25 +174,66 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
         std::vector<uint8_t> foreground;
         ret = absSharedResultSet->GetBlob(BundleResourceConstants::INDEX_FOREGROUND, foreground);
         if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString foreground failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+            APP_LOGE("GetString foreground failed, ret %{public}d, systemState %{public}s", ret, systemState.c_str());
             return false;
         }
         if (foreground.empty()) {
-            APP_LOGW("keyName:%{public}s foreground is invalid, need add again", name.c_str());
+            APP_LOGW("keyName %{public}s foreground invalid", name.c_str());
             continue;
         }
         // label is invalid, need add again
         std::string label;
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_LABEL, label);
         if (ret != NativeRdb::E_OK) {
-            APP_LOGE("GetString label failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+            APP_LOGE("GetString label failed, ret %{public}d, systemState:%{public}s", ret, systemState.c_str());
             return false;
         }
         if ((label.find('$') == 0) || (label == name) || label.empty()) {
-            APP_LOGW("keyName:%{public}s label is invalid, need add again", name.c_str());
+            APP_LOGW("keyName %{public}s label invalid", name.c_str());
             continue;
         }
         keyNames.push_back(name);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
+    return true;
+}
+
+bool BundleResourceRdb::GetResourceNameByBundleName(
+    const std::string &bundleName,
+    const int32_t appIndex,
+    std::vector<std::string> &keyName)
+{
+    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return false;
+    }
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.appIndex_ = appIndex;
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, resourceInfo.GetKey() +
+        BundleResourceConstants::SEPARATOR);
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+
+    auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
+            bundleName.c_str(), systemState.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGD("bundleName:%{public}s not exist, ret: %{public}d, systemState:%{public}s",
+            bundleName.c_str(), ret, systemState.c_str());
+        return false;
+    }
+
+    do {
+        std::string key;
+        auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, key);
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
+        keyName.emplace_back(key);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return true;
 }
@@ -224,7 +265,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
 
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("bundleName:%{public}s appIndex: %{public}d failed due rdb QueryByStep failed, systemState:%{public}s",
+        APP_LOGE("rdb QueryByStep failed, bundleName %{public}s appIndex %{public}d, %{public}s",
             bundleName.c_str(), appIndex, systemState.c_str());
         return false;
     }
@@ -232,7 +273,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("bundleName:%{public}s GoToFirstRow failed, ret: %{public}d, systemState:%{public}s",
+        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
@@ -260,14 +301,14 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
 
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("bundleName:%{public}s failed due rdb QueryByStep failed, systemState:%{public}s",
+        APP_LOGE("QueryByStep failed bundleName %{public}s failed, systemState %{public}s",
             bundleName.c_str(), systemState.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("bundleName:%{public}s GoToFirstRow failed, ret: %{public}d, systemState:%{public}s",
+        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
@@ -299,13 +340,13 @@ bool BundleResourceRdb::GetAllBundleResourceInfo(const uint32_t flags,
 
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
+        APP_LOGE("absSharedResultSet nullptr, systemState %{public}s", systemState.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        APP_LOGE("GoToFirstRow failed, ret %{public}d, systemState %{public}s", ret, systemState.c_str());
         return false;
     }
 
@@ -337,14 +378,14 @@ bool BundleResourceRdb::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
 
     auto absSharedResultSet = rdbDataManager_->QueryByStep(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("absSharedResultSet is nullptr, systemState:%{public}s", systemState.c_str());
+        APP_LOGE("absSharedResultSet nullptr, systemState %{public}s", systemState.c_str());
         return false;
     }
 
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GoToFirstRow failed, ret: %{public}d, systemState:%{public}s", ret, systemState.c_str());
+        APP_LOGE("GoToFirstRow failed, ret %{public}d, systemState %{public}s", ret, systemState.c_str());
         return false;
     }
 
@@ -466,6 +507,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     for (const auto &resourceInfo : resourceInfos) {
         NativeRdb::ValuesBucket valuesBucket;
+        valuesBucket.PutString(BundleResourceConstants::NAME, resourceInfo.GetKey());
         valuesBucket.PutString(BundleResourceConstants::SYSTEM_STATE, systemState);
         if (!resourceInfo.label_.empty()) {
             valuesBucket.PutString(BundleResourceConstants::LABEL, resourceInfo.label_);
@@ -477,7 +519,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
-        if (!rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates)) {
+        if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
             APP_LOGE("bundleName: %{public}s UpdateData failed.", resourceInfo.GetKey().c_str());
             ret = false;
         }

@@ -110,7 +110,7 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return 0;
 }
 
-ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
 {
     if (bundleName.empty()) {
         return -1;
@@ -296,6 +296,11 @@ ErrCode InstalldClient::IsExistExtensionDir(int32_t userId, const std::string &e
 }
 
 ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return ERR_OK;
 }

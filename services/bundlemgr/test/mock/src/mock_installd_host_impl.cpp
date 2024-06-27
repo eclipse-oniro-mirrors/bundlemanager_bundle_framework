@@ -96,7 +96,8 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid,
+    const int appIndex)
 {
     return ERR_OK;
 }
@@ -291,6 +292,11 @@ ErrCode InstalldHostImpl::IsExistExtensionDir(int32_t userId, const std::string 
 }
 
 ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return ERR_OK;
 }

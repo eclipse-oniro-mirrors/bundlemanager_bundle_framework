@@ -123,7 +123,6 @@ ErrCode InstalldProxy::ProcessBundleUnInstallNative(const std::string &userId, c
     return TransactInstalldCmd(InstalldInterfaceCode::UNINSTALL_NATIVE, data, reply, option);
 }
 
-
 ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &pendSignData)
 {
     MessageParcel data;
@@ -136,15 +135,14 @@ ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs, std::vector<uint8_t> &
     MessageParcel reply;
     MessageOption option;
     ErrCode ret = TransactInstalldCmd(InstalldInterfaceCode::EXECUTE_AOT, data, reply, option);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd ExecuteAOT failed");
+    if (ret == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+        LOG_E(BMS_TAG_INSTALLD, "TransactInstalldCmd ExecuteAOT failed when AOTSign disable");
         if (!reply.ReadUInt8Vector(&pendSignData)) {
             LOG_E(BMS_TAG_INSTALLD, "ReadUInt8Vector ExecuteAOT failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-        return ret;
     }
-    return ERR_OK;
+    return ret;
 }
 
 ErrCode InstalldProxy::PendSignAOT(const std::string &anFileName, const std::vector<uint8_t> &signData)
@@ -277,12 +275,13 @@ ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldProxy::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, Int32, userid);
+    INSTALLD_PARCEL_WRITE(data, Int32, appIndex);
     MessageParcel reply;
     MessageOption option;
     return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME, data, reply, option);
@@ -861,6 +860,24 @@ ErrCode InstalldProxy::IsExistExtensionDir(int32_t userId, const std::string &ex
         return ret;
     }
     isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    if (!reply.ReadStringVector(&typeList)) {
+        APP_LOGE("fail to GetExtensionSandboxTypeList from reply");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 

@@ -35,6 +35,9 @@
 #include "code_sign_utils.h"
 #endif
 #include "common_profile.h"
+#ifdef CONFIG_POLOCY_ENABLE
+#include "config_policy_utils.h"
+#endif
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
@@ -68,6 +71,13 @@ const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_
 const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
 const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
 const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
+constexpr const char* EXTENSION_CONFIG_DEFAULT_PATH = "/system/etc/ams_extension_config.json";
+#ifdef CONFIG_POLOCY_ENABLE
+constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.json";
+#endif
+constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
+constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
+constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
 enum class DirType {
     DIR_EL1,
     DIR_EL2,
@@ -726,19 +736,23 @@ static void CleanCloudDir(const std::string &bundleName, const int userid)
     }
 }
 
-static void CleanBundleDataForEl2(const std::string &bundleName, const int userid)
+static void CleanBundleDataForEl2(const std::string &bundleName, const int userid, const int appIndex)
 {
+    std::string suffixName = bundleName;
+    if (appIndex > 0) {
+        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
     std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
         ServiceConstants::PATH_SEPARATOR + std::to_string(userid);
-    std::string databaseDir = dataDir + ServiceConstants::DATABASE + bundleName;
+    std::string databaseDir = dataDir + ServiceConstants::DATABASE + suffixName;
     if (!InstalldOperator::DeleteFiles(databaseDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
     }
-    std::string logDir = dataDir + ServiceConstants::LOG + bundleName;
+    std::string logDir = dataDir + ServiceConstants::LOG + suffixName;
     if (!InstalldOperator::DeleteFiles(logDir)) {
         LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
     }
-    std::string bundleDataDir = dataDir + ServiceConstants::BASE + bundleName;
+    std::string bundleDataDir = dataDir + ServiceConstants::BASE + suffixName;
     for (const auto &dir : BUNDLE_DATA_DIR) {
         std::string subDir = bundleDataDir + dir;
         if (!InstalldOperator::DeleteFiles(subDir)) {
@@ -873,27 +887,33 @@ ErrCode InstalldHostImpl::CleanBundleDataDir(const std::string &dataDir)
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
 {
-    LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s", bundleName.c_str());
+    LOG_D(BMS_TAG_INSTALLD,
+        "InstalldHostImpl::CleanBundleDataDirByName bundleName:%{public}s,userid:%{public}d,appIndex:%{public}d",
+        bundleName.c_str(), userid, appIndex);
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CleanBundleDataDirByName with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
+    std::string suffixName = bundleName;
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         if (el == ServiceConstants::BUNDLE_EL[1]) {
-            CleanBundleDataForEl2(bundleName, userid);
+            CleanBundleDataForEl2(bundleName, userid, appIndex);
             continue;
         }
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + bundleName;
+        if (appIndex > 0) {
+            suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+        }
+        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + suffixName;
         if (!InstalldOperator::DeleteFiles(bundleDataDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
         }
-        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + bundleName;
+        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + suffixName;
         if (!InstalldOperator::DeleteFiles(databaseDir)) {
             LOG_W(BMS_TAG_INSTALLD, "clean dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
         }
@@ -1492,7 +1512,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
-        LOG_I(BMS_TAG_INSTALLD, "Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
+        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         LOG_D(BMS_TAG_INSTALLD, "Verify code signature with: %{public}s", codeSignatureParam.signatureFileDir.c_str());
         ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
@@ -1755,6 +1775,101 @@ ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDir
         }
     }
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    nlohmann::json jsonBuf;
+    std::string extensionConfigPath = GetExtensionConfigPath();
+    if (!ReadFileIntoJson(extensionConfigPath, jsonBuf)) {
+        LOG_I(BMS_TAG_INSTALLD, "Parse file %{public}s failed.", extensionConfigPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+    }
+    LoadNeedCreateSandbox(jsonBuf, typeList);
+    return ERR_OK;
+}
+
+std::string InstalldHostImpl::GetExtensionConfigPath() const
+{
+#ifdef CONFIG_POLOCY_ENABLE
+    char buf[MAX_PATH_LEN] = { 0 };
+    char *configPath = GetOneCfgFile(EXTENSION_CONFIG_FILE_PATH, buf, MAX_PATH_LEN);
+    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+        return EXTENSION_CONFIG_DEFAULT_PATH;
+    }
+    return configPath;
+#else
+    return EXTENSION_CONFIG_DEFAULT_PATH;
+#endif
+}
+
+void InstalldHostImpl::LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList)
+{
+    if (!object.contains(EXTENSION_CONFIG_NAME) || !object.at(EXTENSION_CONFIG_NAME).is_array()) {
+        LOG_E(BMS_TAG_INSTALLD, "Extension config not existed.");
+        return;
+    }
+
+    for (auto &item : object.at(EXTENSION_CONFIG_NAME).items()) {
+        const nlohmann::json& jsonObject = item.value();
+        if (!jsonObject.contains(EXTENSION_TYPE_NAME) || !jsonObject.at(EXTENSION_TYPE_NAME).is_string()) {
+            continue;
+        }
+        std::string extensionType = jsonObject.at(EXTENSION_TYPE_NAME).get<std::string>();
+        if (LoadExtensionNeedCreateSandbox(jsonObject, extensionType)) {
+            typeList.emplace_back(extensionType);
+        }
+    }
+}
+
+bool InstalldHostImpl::LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName)
+{
+    if (!object.contains(EXTENSION_SERVICE_NEED_CREATE_SANDBOX) ||
+        !object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).is_boolean()) {
+        LOG_E(BMS_TAG_INSTALLD, "need create sandbox config not existed.");
+        return false;
+    }
+    return object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).get<bool>();
+}
+
+bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
+{
+    if (access(filePath.c_str(), F_OK) != 0) {
+        LOG_D(BMS_TAG_INSTALLD, "access file %{public}s failed, error: %{public}s", filePath.c_str(), strerror(errno));
+        return false;
+    }
+
+    std::fstream in;
+    char errBuf[256];
+    errBuf[0] = '\0';
+    in.open(filePath, std::ios_base::in);
+    if (!in.is_open()) {
+        strerror_r(errno, errBuf, sizeof(errBuf));
+        LOG_E(BMS_TAG_INSTALLD, "the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
+        return false;
+    }
+
+    in.seekg(0, std::ios::end);
+    int64_t size = in.tellg();
+    if (size <= 0) {
+        LOG_E(BMS_TAG_INSTALLD, "the file is an empty file, errno:%{public}d", errno);
+        in.close();
+        return false;
+    }
+
+    in.seekg(0, std::ios::beg);
+    jsonBuf = nlohmann::json::parse(in, nullptr, false);
+    in.close();
+    if (jsonBuf.is_discarded()) {
+        LOG_E(BMS_TAG_INSTALLD, "bad profile file");
+        return false;
+    }
+
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

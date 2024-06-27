@@ -390,7 +390,7 @@ void from_json(const nlohmann::json &jsonObject, FormCustomizeData &customizeDat
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module customizeDatas from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read customizeDatas jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -415,7 +415,7 @@ void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module formWindow from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read formWindow jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -728,7 +728,7 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module formInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read formInfo jsonObject error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

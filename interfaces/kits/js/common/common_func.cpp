@@ -1480,7 +1480,16 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.multiAppMode.maxCount, &nMaxCount));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nMultiAppMode, MAX_ADDITIONAL_NUMBER, nMaxCount));
 
+    if (nMultiAppModeType == nullptr || nMaxCount == nullptr || nMultiAppMode == nullptr) {
+        APP_LOGW("napi_value is nullptr");
+    }
+
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, MULTI_APP_MODE, nMultiAppMode));
+
+    napi_value nInstallSource;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.installSource.c_str(), NAPI_AUTO_LENGTH,
+        &nInstallSource));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "installSource", nInstallSource));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)

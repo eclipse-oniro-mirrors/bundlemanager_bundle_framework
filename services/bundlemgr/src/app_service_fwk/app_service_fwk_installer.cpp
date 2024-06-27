@@ -174,6 +174,7 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
 
     for (const auto &innerBundleInfo : newInfos) {
         auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+        innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
         preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
@@ -537,6 +538,13 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
         versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
     APP_LOGD("Move so files from path %{public}s to path %{public}s",
         tempSoPath.c_str(), realSoPath.c_str());
+    bool isDirExist = false;
+    result = InstalldClient::GetInstance()->IsExistDir(tempSoPath, isDirExist);
+    CHECK_RESULT(result, "Check temp so dir failed %{public}d");
+    if (!isDirExist) {
+        APP_LOGI("temp so dir not exist");
+        return ERR_OK;
+    }
     result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
     if (result != ERR_OK) {
         APP_LOGE("Move to real path failed %{public}d", result);

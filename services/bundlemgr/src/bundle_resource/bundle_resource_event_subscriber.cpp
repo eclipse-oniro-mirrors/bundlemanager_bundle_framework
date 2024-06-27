@@ -15,11 +15,16 @@
 
 #include "bundle_resource_event_subscriber.h"
 
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_resource_callback.h"
 #include "common_event_support.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string OLD_USER_ID = "oldId";
+}
 BundleResourceEventSubscriber::BundleResourceEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
@@ -35,7 +40,13 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
         // when reboot, user 0 switch to user 100, no need to flush resource rdb
         static bool isFirstSwitch = true;
         if (!isFirstSwitch) {
-            callback.OnUserIdSwitched(data.GetCode());
+            int32_t oldUserId = Constants::INVALID_USERID;
+            std::string oldId = data.GetWant().GetStringParam(OLD_USER_ID);
+            if (oldId.empty() || !OHOS::StrToInt(oldId, oldUserId)) {
+                APP_LOGE("oldId:%{public}s parse failed", oldId.c_str());
+                oldUserId = Constants::INVALID_USERID;
+            }
+            callback.OnUserIdSwitched(oldUserId, data.GetCode());
         }
         isFirstSwitch = false;
     }

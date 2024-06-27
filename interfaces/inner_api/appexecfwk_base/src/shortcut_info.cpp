@@ -194,7 +194,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module shortcutIntent from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read shortcutIntent jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -307,7 +307,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module shortcutInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read shortcutInfo jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -348,7 +348,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read shortcutWant from module.json error, error code : %{public}d", parseResult);
+        APP_LOGE("read shortcutWant module.json error : %{public}d", parseResult);
     }
 }
 
@@ -405,7 +405,7 @@ void from_json(const nlohmann::json &jsonObject, Shortcut &shortcut)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read Shortcut from module.json error, error code : %{public}d", parseResult);
+        APP_LOGE("read Shortcut module.json error : %{public}d", parseResult);
     }
 }
 
@@ -423,7 +423,7 @@ void from_json(const nlohmann::json &jsonObject, ShortcutJson &shortcutJson)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read ShortcutJson from module.json error, error code : %{public}d", parseResult);
+        APP_LOGE("read ShortcutJson module.json error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

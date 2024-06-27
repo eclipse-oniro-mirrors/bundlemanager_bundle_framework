@@ -54,6 +54,7 @@ constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string LINK_FEATURE = "linkFeature";
+const std::string GENERAL_OBJECT = "general.object";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -433,16 +434,17 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
         return false;
     }
 
+    // only match */* or general.object
+    if (type == TYPE_ONLY_MATCH_WILDCARD) {
+        return skillUriType == TYPE_WILDCARD || skillUriType == GENERAL_OBJECT;
+    }
+
     bool containsUtd = false;
     bool matchUtdRet = MatchUtd(type, skillUriType, containsUtd);
     if (containsUtd) {
         return matchUtdRet;
     }
 
-    // only match */*
-    if (type == TYPE_ONLY_MATCH_WILDCARD) {
-        return skillUriType == TYPE_WILDCARD;
-    }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {
         // param is */* or config is */*
         return true;
@@ -668,7 +670,7 @@ void Skill::Dump(std::string prefix, int fd)
     }
     int flags = fcntl(fd, F_GETFL);
     if (flags < 0) {
-        APP_LOGE("dump Skill fcntl error, errno : %{public}d", errno);
+        APP_LOGE("dump Skill fcntl error : %{public}d", errno);
         return;
     }
     uint uflags = static_cast<uint>(flags);
@@ -680,7 +682,7 @@ void Skill::Dump(std::string prefix, int fd)
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
-            APP_LOGE("dump Abilityinfo write error, errno : %{public}d", errno);
+            APP_LOGE("dump Abilityinfo write error : %{public}d", errno);
         }
     }
     return;

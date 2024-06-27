@@ -51,9 +51,9 @@ public:
      * @param uid uid of bundle.
      * @return Returns ERR_OK on success, others on failure.
      */
-    static int UninstallApp(const std::string &bundleName, int32_t uid);
+    static int UninstallApp(const std::string &bundleName, int32_t uid, int32_t appIndex);
 
-    static int UpgradeApp(const std::string &bundleName, int32_t uid);
+    static int UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex);
 
     static bool UnloadSystemAbility(const int32_t systemAbilityId);
 };

@@ -68,10 +68,6 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
         APP_LOGE("failed, manager is nullptr");
         return;
     }
-    // need delete current resource info
-    if (!manager->DeleteResourceInfo(bundleName)) {
-        APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
-    }
     int32_t currentUserId = userId;
     // 0 and 100 exist
     if ((userId != Constants::DEFAULT_USERID) && (userId != Constants::START_USERID)) {
@@ -96,7 +92,7 @@ bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int3
     if (userId != Constants::UNSPECIFIED_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d is not same", currentUserId, userId);
+            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
             return false;
         }
     }
@@ -202,7 +198,7 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
     if (userId != Constants::UNSPECIFIED_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d is not same", currentUserId, userId);
+            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
             return false;
         }
     }
@@ -231,7 +227,7 @@ bool BundleResourceHelper::DeleteCloneBundleResourceInfo(const std::string &bund
     if (userId != Constants::UNSPECIFIED_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d is not same", currentUserId, userId);
+            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
             return false;
         }
     }

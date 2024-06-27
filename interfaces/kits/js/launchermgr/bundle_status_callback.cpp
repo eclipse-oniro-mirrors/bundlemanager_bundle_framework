@@ -66,7 +66,7 @@ BundleStatusCallback::~BundleStatusCallback()
     }
 }
 
-void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const int userId, const int32_t appIndex)
+void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const int userId)
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -80,7 +80,6 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
         .callback_ = addedCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
-        .appIndex_ = appIndex,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleAdded asyncCallbackInfo is nullptr bundleName : %{public}s",
@@ -118,7 +117,6 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
             napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
-            napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->appIndex_, &result[2]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
@@ -134,7 +132,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
     }
 }
 
-void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const int userId, const int32_t appIndex)
+void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const int userId)
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -148,7 +146,6 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
         .callback_ = updatedCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
-        .appIndex_ = appIndex,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
@@ -185,7 +182,6 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
             napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
-            napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->appIndex_, &result[2]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);
@@ -205,7 +201,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
     }
 }
 
-void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const int userId, const int32_t appIndex)
+void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const int userId)
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
@@ -219,7 +215,6 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         .callback_ = removeCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
-        .appIndex_ = appIndex,
     };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
@@ -257,7 +252,6 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
             napi_create_string_utf8(
                 asyncCallbackInfo->env_, asyncCallbackInfo->bundleName_.c_str(), NAPI_AUTO_LENGTH, &result[0]);
             napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->userId_, &result[1]);
-            napi_create_uint32(asyncCallbackInfo->env_, asyncCallbackInfo->appIndex_, &result[2]);
             napi_call_function(
                 asyncCallbackInfo->env_, nullptr, callback, sizeof(result) / sizeof(result[0]), result, &placeHolder);
             napi_close_handle_scope(asyncCallbackInfo->env_, scope);

@@ -162,6 +162,30 @@ bool RdbDataManager::UpdateData(
     return ret == NativeRdb::E_OK;
 }
 
+bool RdbDataManager::UpdateOrInsertData(
+    const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    APP_LOGD("UpdateOrInsertData start");
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return false;
+    }
+    if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
+        APP_LOGE("RdbStore table is invalid");
+        return false;
+    }
+    int32_t rowId = -1;
+    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    if ((ret == NativeRdb::E_OK) && (rowId == 0)) {
+        APP_LOGI("data not exist, need insert data");
+        int64_t rowIdInsert = -1;
+        ret = rdbStore->InsertWithConflictResolution(
+            rowIdInsert, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    }
+    return ret == NativeRdb::E_OK;
+}
+
 bool RdbDataManager::DeleteData(const std::string &key)
 {
     APP_LOGD("DeleteData start");

@@ -147,7 +147,7 @@ public:
     {
         return 0;
     }
-    virtual int KillProcess(const std::string &bundleName) override
+    virtual int KillProcess(const std::string &bundleName, const bool clearPageStack = true) override
     {
         return 0;
     }
@@ -299,10 +299,6 @@ public:
     {}
 
     int GetWantSenderInfo(const sptr<IWantSender> &target, std::shared_ptr<WantSenderInfo> &info) override
-    {
-        return 0;
-    }
-    int ClearUpApplicationData(const std::string &bundleName) override
     {
         return 0;
     }

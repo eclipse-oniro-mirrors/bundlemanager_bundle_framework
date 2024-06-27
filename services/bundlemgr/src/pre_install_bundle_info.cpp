@@ -125,17 +125,17 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
 
 std::string PreInstallBundleInfo::ToString() const
 {
-    nlohmann::json j;
-    j[BUNDLE_NAME] = bundleName_;
-    j[VERSION_CODE] = versionCode_;
-    j[BUNDLE_PATHS] = bundlePaths_;
-    j[APP_TYPE] = appType_;
-    j[REMOVABLE] = removable_;
-    j[IS_UNINSTALLED] = isUninstalled_;
-    j[MODULE_NAME] = moduleName_;
-    j[LABEL_ID] = labelId_;
-    j[ICON_ID] = iconId_;
-    return j.dump();
+    nlohmann::json jsonObject;
+    jsonObject[BUNDLE_NAME] = bundleName_;
+    jsonObject[VERSION_CODE] = versionCode_;
+    jsonObject[BUNDLE_PATHS] = bundlePaths_;
+    jsonObject[APP_TYPE] = appType_;
+    jsonObject[REMOVABLE] = removable_;
+    jsonObject[IS_UNINSTALLED] = isUninstalled_;
+    jsonObject[MODULE_NAME] = moduleName_;
+    jsonObject[LABEL_ID] = labelId_;
+    jsonObject[ICON_ID] = iconId_;
+    return jsonObject.dump();
 }
 
 void PreInstallBundleInfo::CalculateHapTotalSize()

@@ -129,6 +129,7 @@ struct InnerModuleInfo {
     bool gwpAsanEnabled = false;
     std::string packageName;
     std::string appStartup;
+    bool needDelete = false;
 };
 
 enum InstallExceptionStatus : int32_t {

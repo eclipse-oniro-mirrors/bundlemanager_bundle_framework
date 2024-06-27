@@ -426,7 +426,7 @@ public:
     }
 
     void SetModuleHapPath(const std::string &hapPath);
-    const std::string &GetModuleHapPath(const std::string &modulePackage) const
+    const std::string GetModuleHapPath(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).hapPath;
@@ -435,7 +435,7 @@ public:
         return Constants::EMPTY_STRING;
     }
 
-    const std::string &GetModuleName(const std::string &modulePackage) const
+    const std::string GetModuleName(const std::string &modulePackage) const
     {
         if (innerModuleInfos_.find(modulePackage) != innerModuleInfos_.end()) {
             return innerModuleInfos_.at(modulePackage).moduleName;
@@ -444,7 +444,7 @@ public:
         return Constants::EMPTY_STRING;
     }
 
-    const std::string &GetCurModuleName() const;
+    const std::string GetCurModuleName() const;
 
     std::vector<DefinePermission> GetDefinePermissions() const
     {
@@ -910,9 +910,15 @@ public:
         return baseApplicationInfo_->multiAppMode.multiAppModeType;
     }
 
+    void SetInstallSource(const std::string &installSource)
+    {
+        baseApplicationInfo_->installSource = installSource;
+    }
+
+    void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);
     std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
     std::vector<std::string> GetAllExtensionDirs() const;
-    void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string>& dataGroupIds);
+    void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string> &dataGroupIds);
     void SetAppDistributionType(const std::string &appDistributionType);
     std::string GetAppDistributionType() const;
     void SetAppProvisionType(const std::string &appProvisionType);
@@ -949,6 +955,10 @@ public:
     void SetOverlayModuleState(const std::string &moduleName, int32_t state, int32_t userId);
     void SetOverlayModuleState(const std::string &moduleName, int32_t state);
     void ClearOverlayModuleStates(const std::string &moduleName);
+
+    void SetInnerModuleNeedDelete(const std::string &moduleName, const bool needDelete);
+
+    bool GetInnerModuleNeedDelete(const std::string &moduleName);
 
     bool GetBaseSharedBundleInfo(const std::string &moduleName, uint32_t versionCode,
         BaseSharedBundleInfo &baseSharedBundleInfo) const;
@@ -1005,6 +1015,8 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void SetkeyId(const int32_t userId, const std::string &keyId);
+    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

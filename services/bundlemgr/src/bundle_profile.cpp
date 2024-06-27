@@ -2302,7 +2302,7 @@ bool CheckDefinePermissions(const std::vector<DefinePermission> &definePermissio
     for (const auto &definePermission : definePermissions) {
         if (!definePermission.availableType.empty() &&
             definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
-            APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+            APP_LOGE("availableType(%{public}s) invalid", definePermission.availableType.c_str());
             return false;
         }
     }
@@ -2633,7 +2633,7 @@ ErrCode BundleProfile::TransformTo(
         ProfileReader::g_parseResult = ERR_OK;
         configJson = jsonObject.get<ProfileReader::ConfigJson>();
         if (ProfileReader::g_parseResult != ERR_OK) {
-            APP_LOGE("g_parseResult is %{public}d", ProfileReader::g_parseResult);
+            APP_LOGE("g_parseResult %{public}d", ProfileReader::g_parseResult);
             int32_t ret = ProfileReader::g_parseResult;
             // need recover parse result to ERR_OK
             ProfileReader::g_parseResult = ERR_OK;

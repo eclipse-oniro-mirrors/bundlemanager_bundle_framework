@@ -632,7 +632,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }
 }
 
@@ -667,7 +667,7 @@ ExtensionProcessMode ConvertToExtensionProcessMode(const std::string &extensionP
 
 void ExtensionAbilityInfo::UpdateNeedCreateSandbox()
 {
-    needCreateSandbox = (NOT_NEED_CREATE_SANBOX_MODE.find(extensionTypeName) == NOT_NEED_CREATE_SANBOX_MODE.end());
+    needCreateSandbox = false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
