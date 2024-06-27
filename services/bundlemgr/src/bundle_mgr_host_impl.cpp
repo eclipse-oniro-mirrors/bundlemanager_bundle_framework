@@ -2093,9 +2093,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .resultCode = ERR_OK,
         .type = NotifyType::APPLICATION_ENABLE,
         .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
+        .isApplicationEnabled = isEnable
     };
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     NotifyBundleStatus(installRes);
+    IPCSkeleton::SetCallingIdentity(identity);
     APP_LOGD("SetApplicationEnabled finish");
     return ERR_OK;
 }
