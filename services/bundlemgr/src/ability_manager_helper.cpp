@@ -52,7 +52,7 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(
 #endif
 }
 
-int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bundleUid)
+int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName, const int bundleUid)
 {
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     APP_LOGI("check app is running, app name is %{public}s", bundleName.c_str());
@@ -90,7 +90,7 @@ int AbilityManagerHelper::IsRunning(const std::string bundleName, const int bund
 #endif
 }
 
-int AbilityManagerHelper::IsRunning(const std::string bundleName)
+int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
 {
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     APP_LOGD("check app is running, app name is %{public}s", bundleName.c_str());

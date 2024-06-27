@@ -69,11 +69,11 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
             updateDataDirThread.detach();
         }
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
-    APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
-    Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
+        APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
+        Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
 #endif
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
+        DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
     }
 }
