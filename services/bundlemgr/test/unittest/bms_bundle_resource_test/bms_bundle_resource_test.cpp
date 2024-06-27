@@ -1690,12 +1690,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0069, Function | SmallTest
         EXPECT_NE(resourceInfos[0].label_, "");
         EXPECT_NE(resourceInfos[0].icon_, "");
 
+        resourceInfos[0].label_ = "";
+        resourceInfos[0].icon_ = "";
         ans = parser.ParseResourceInfos(USERID, resourceInfos);
         EXPECT_TRUE(ans);
-        for (const auto &info : resourceInfos) {
-            EXPECT_NE(info.label_, "");
-            EXPECT_NE(info.icon_, "");
-        }
+        EXPECT_NE(resourceInfos[0].label_, "");
+        EXPECT_NE(resourceInfos[0].icon_, "");
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
