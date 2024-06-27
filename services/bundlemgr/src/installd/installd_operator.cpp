@@ -75,6 +75,7 @@ constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
 constexpr const char* AP_PATH = "ap/";
 constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
+constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -843,7 +844,8 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
             break;
         }
         std::string dirName = ServiceConstants::PATH_SEPARATOR + std::string(ptr->d_name);
-        if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end()) {
+        if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end() ||
+            std::string(BUNDLE_BACKUP_KEEP_DIR) == dirName) {
             continue;
         }
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
