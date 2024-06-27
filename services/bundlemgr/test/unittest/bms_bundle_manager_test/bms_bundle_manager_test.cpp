@@ -2946,6 +2946,18 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2800, Function | MediumTest | L
     EXPECT_EQ(ret, false);
 }
 
+/**
+ * @tc.number: BundleMgrHostImpl_2900
+ * @tc.name: test BundleMgrHostImpl
+ * @tc.desc: 1.test CleanBundleCacheFilesAutomatic
+ */
+HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2900, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 0;
+    ErrCode ret = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
