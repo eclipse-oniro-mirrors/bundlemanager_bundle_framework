@@ -40,6 +40,8 @@ constexpr const char* SYSCAP_NAME = "rpcid.sc";
 static const std::string ROUTER_MAP = "routerMap";
 static const std::string DATA = "data";
 static const size_t DATA_MAX_LENGTH = 4096;
+const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
+const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -327,6 +329,28 @@ ErrCode BundleParser::ParseRouterArray(
             }
         }
         routerArray.emplace_back(routerItem);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList)
+{
+    nlohmann::json object;
+    if (!ReadFileIntoJson(configPath, object)) {
+        APP_LOGI("Parse file %{public}s failed.", configPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+    }
+    if (!object.contains(NO_DISABLING_CONFIG_KEY) || !object.at(NO_DISABLING_CONFIG_KEY).is_array()) {
+        APP_LOGE("no disabling config not existed");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    for (auto &item : object.at(NO_DISABLING_CONFIG_KEY).items()) {
+        const nlohmann::json& jsonObject = item.value();
+        if (jsonObject.contains(NO_DISABLING_KEY_BUNDLE_NAME) &&
+            jsonObject.at(NO_DISABLING_KEY_BUNDLE_NAME).is_string()) {
+            std::string bundleName = jsonObject.at(NO_DISABLING_KEY_BUNDLE_NAME).get<std::string>();
+            noDisablingList.emplace_back(bundleName);
+        }
     }
     return ERR_OK;
 }

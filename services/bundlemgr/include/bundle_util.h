@@ -187,6 +187,7 @@ public:
     static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
     static std::string ToString(const std::vector<std::string> &vector);
     static std::string GenerateUuidByKey(const std::string &key);
+    static std::string GetNoDisablingConfigPath();
 private:
     static std::mutex g_mutex;
 };
