@@ -213,6 +213,93 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0300, TestSiz
 }
 
 /**
+ * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0100
+ * @tc.name: ExtractHnpFiles
+ * @tc.desc: Test whether ExtractHnpFiles is called normally.(extractParam.srcPath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 start";
+    std::string hnpPackageInfo = EMPTY_STRING;
+    ExtractParam extractParam;
+    extractParam.srcPath = EMPTY_STRING;
+    extractParam.targetPath = TARGET_PATH;
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0200
+ * @tc.name: ExtractHnpFiles
+ * @tc.desc: Test whether ExtractHnpFiles is called normally.(extractParam.targetPath is empty)
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0200, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 start";
+    std::string hnpPackageInfo = "hnpPackageInfo";
+    ExtractParam extractParam;
+    extractParam.srcPath = SRC_PATH;
+    extractParam.targetPath = EMPTY_STRING;
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0200 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractHnpFiles_0300
+ * @tc.name: ExtractHnpFiles
+ * @tc.desc: Test whether ExtractHnpFiles is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractHnpFiles_0300, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 start";
+    std::string hnpPackageInfo = "hnpPackageInfo";
+    ExtractParam extractParam;
+    extractParam.srcPath = SRC_PATH;
+    extractParam.targetPath = TARGET_PATH;
+    ErrCode result = installClient_->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ExtractHnpFiles, hnpPackageInfo, extractParam));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractHnpFiles_0300 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ProcessBundleInstallNative_0100
+ * @tc.name: ProcessBundleInstallNative
+ * @tc.desc: Test whether ProcessBundleInstallNative is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleInstallNative_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 start";
+    std::string userId = std::to_string(USERID);
+    std::string hnpRootPath = SRC_PATH;
+    std::string hapPath = SRC_PATH;
+    std::string cpuAbi = CPU_ABI;
+    std::string packageName = "com.example.test";
+    
+    ErrCode result = installClient_->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleInstallNative,
+        userId, hnpRootPath, hapPath, cpuAbi, packageName));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleInstallNative_0100 end";
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ProcessBundleUnInstallNative_0100
+ * @tc.name: ProcessBundleInstallNative
+ * @tc.desc: Test whether ProcessBundleInstallNative is called normally.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ProcessBundleUnInstallNative_0100, TestSize.Level1)
+{
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleUnInstallNative_0100 start";
+    std::string userId = std::to_string(USERID);
+    std::string packageName = "com.example.test";
+    
+    ErrCode result = installClient_->ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ProcessBundleUnInstallNative, userId, packageName));
+    GTEST_LOG_(INFO) << "BmsInstalldClientTest_ProcessBundleUnInstallNative_0100 end";
+}
+
+/**
  * @tc.number: BmsInstalldClientTest_RenameModuleDir_0100
  * @tc.name: RenameModuleDir
  * @tc.desc: Test whether RenameModuleDir is called normally.(oldPath is empty)

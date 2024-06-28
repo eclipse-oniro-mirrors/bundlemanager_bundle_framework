@@ -103,6 +103,48 @@ HWTEST_F(BmsInstalldHostTest, HandleExtractFiles_0100, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: HandleExtractHnpFiles_0100
+ * @tc.name: test HandleExtractHnpFiles
+ * @tc.desc: 1.HandleExtractHnpFiles test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleExtractHnpFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleExtractHnpFiles(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleProcessBundleInstallNative_0100
+ * @tc.name: test HandleProcessBundleInstallNative
+ * @tc.desc: 1.HandleProcessBundleInstallNative test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleProcessBundleInstallNative_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleProcessBundleInstallNative(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HandleProcessBundleUnInstallNative_0100
+ * @tc.name: test HandleProcessBundleUnInstallNative
+ * @tc.desc: 1.HandleProcessBundleUnInstallNative test
+ */
+HWTEST_F(BmsInstalldHostTest, HandleProcessBundleUnInstallNative_0100, Function | SmallTest | Level1)
+{
+    InstalldHost installdHost;
+    MessageParcel data;
+    MessageParcel reply;
+    ErrCode res = installdHost.HandleProcessBundleUnInstallNative(data, reply);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: HandleExecuteAOT_0100
  * @tc.name: test HandleExecuteAOT
  * @tc.desc: 1.HandleExecuteAOT test

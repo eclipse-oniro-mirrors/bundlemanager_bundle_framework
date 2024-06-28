@@ -922,4 +922,70 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5200, Function | Sma
     auto ret = hostImpl->DeleteEncryptionKeyId("");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+
+/**
+ * @tc.number: InstalldHostImplTest_5300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ExtractHnpFiles of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5300, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::string hnpPackageInfo = "";
+    ExtractParam extractParam;
+    extractParam.srcPath = "";
+    extractParam.targetPath = "";
+    ErrCode ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = TEST_PATH;
+    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_NE(ret, ERR_OK);
+
+    extractParam.targetPath = "";
+    extractParam.srcPath = HAP_FILE_PATH;
+    ret = installdProxy->ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_5400
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ProcessBundleInstallNative of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5400, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+    
+    std::string userId = "";
+    std::string hnpRootPath = "";
+    std::string hapPath = "";
+    std::string cpuAbi = "";
+    std::string packageName = "";
+    ErrCode ret = installdProxy->ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_5500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling ProcessBundleUnInstallNative of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+    
+    std::string userId = "";
+    std::string packageName = "";
+    ErrCode ret = installdProxy->ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS
