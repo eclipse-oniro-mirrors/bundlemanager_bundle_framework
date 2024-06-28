@@ -298,7 +298,7 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
     bool isDirExist = false;
     errCode = InstalldClient::GetInstance()->IsExistDir(COPY_AP_DEST_PATH, isDirExist);
     if (errCode != ERR_OK) {
-        APP_LOGE("check if dir exist failed, error is %{public}d", errCode);
+        APP_LOGE("check if dir exist failed, err %{public}d", errCode);
     }
     if (isDirExist) {
         APP_LOGI("Copy ap path is exist");
@@ -308,7 +308,7 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
     errCode = InstalldClient::GetInstance()->Mkdir(
         COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, ServiceConstants::SHELL_UID);
     if (errCode != ERR_OK) {
-        APP_LOGE("fail to create dir, error is %{public}d", errCode);
+        APP_LOGE("fail create dir err %{public}d", errCode);
         return errCode;
     }
     APP_LOGI("MkApDestDir path success");
@@ -404,7 +404,7 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
         result.append(sourceAp);
         errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
         if (errCode != ERR_OK) {
-            APP_LOGE("Copy ap dir %{public}s failed! error is %{public}d", sourceAp.c_str(), errCode);
+            APP_LOGE("Copy ap dir %{public}s failed err %{public}d", sourceAp.c_str(), errCode);
             result.append(" copy ap failed!");
             continue;
         }
@@ -452,12 +452,12 @@ void AOTHandler::BeforeOTACompile()
 {
     OTACompileDeadline_ = false;
     int32_t limitSeconds = system::GetIntParameter<int32_t>(OTA_COMPILE_TIME, OTA_COMPILE_TIME_DEFAULT);
-    APP_LOGI("OTA compile time limit seconds : %{public}d", limitSeconds);
+    APP_LOGI("OTA compile time limit seconds %{public}d", limitSeconds);
     auto task = [this]() {
         APP_LOGI("compile timer end");
         OTACompileDeadline_ = true;
         ErrCode ret = InstalldClient::GetInstance()->StopAOT();
-        APP_LOGI("StopAOT ret : %{public}d", ret);
+        APP_LOGI("StopAOT ret %{public}d", ret);
     };
     int32_t delayTimeSeconds = limitSeconds - GAP_SECONDS;
     if (delayTimeSeconds < 0) {
@@ -492,7 +492,7 @@ void AOTHandler::OTACompileInternal() const
     std::string compileMode = system::GetParameter(OTA_COMPILE_MODE, COMPILE_NONE);
     APP_LOGI("%{public}s = %{public}s", OTA_COMPILE_MODE, compileMode.c_str());
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", OTA_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", OTA_COMPILE_MODE);
         return;
     }
 
@@ -520,7 +520,7 @@ void AOTHandler::OTACompileInternal() const
 bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
 {
     std::string updateType = system::GetParameter(UPDATE_TYPE, "");
-    APP_LOGI("updateType : %{public}s", updateType.c_str());
+    APP_LOGI("updateType %{public}s", updateType.c_str());
     int32_t size = 0;
     if (updateType == UPDATE_TYPE_MANUAL) {
         size = system::GetIntParameter<int32_t>(OTA_COMPILE_COUNT_MANUAL, OTA_COMPILE_COUNT_MANUAL_DEFAULT);
@@ -535,7 +535,7 @@ bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
 
 bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const
 {
-    APP_LOGI("GetUserBehaviourAppList begin, size : %{public}d", size);
+    APP_LOGI("GetUserBehaviourAppList begin, size %{public}d", size);
     void* handle = dlopen(USER_STATUS_SO_NAME, RTLD_NOW);
     if (handle == nullptr) {
         APP_LOGE("user status dlopen failed : %{public}s", dlerror());
@@ -557,7 +557,7 @@ bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, 
 EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
     std::shared_ptr<BundleDataMgr> dataMgr) const
 {
-    APP_LOGI("handle compile bundle : %{public}s", bundleName.c_str());
+    APP_LOGI("handle compile bundle %{public}s", bundleName.c_str());
     EventInfo eventInfo;
     eventInfo.timeStamp = BundleUtil::GetCurrentTime();
     eventInfo.bundleName = bundleName;
@@ -683,7 +683,7 @@ void AOTHandler::HandleIdle() const
     std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, ServiceConstants::COMPILE_PARTIAL);
     APP_LOGI("%{public}s = %{public}s", IDLE_COMPILE_MODE, compileMode.c_str());
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }
     if (!CheckDeviceState()) {
@@ -722,7 +722,7 @@ ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::stri
     APP_LOGI("HandleCompile begin");
     std::unique_lock<std::mutex> lock(compileMutex_, std::defer_lock);
     if (!lock.try_lock()) {
-        APP_LOGI("compile task is running, skip %{public}s", bundleName.c_str());
+        APP_LOGI("compile task running, skip %{public}s", bundleName.c_str());
         std::string compileResult = "info: compile task is running, skip.";
         compileResults.emplace_back(compileResult);
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -734,7 +734,7 @@ ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::stri
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", IDLE_COMPILE_MODE);
         std::string compileResult = "info: persist.bm.idle.arkopt = none, no need to AOT.";
         compileResults.emplace_back(compileResult);
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -769,7 +769,7 @@ ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleN
         APP_LOGD("HandleCompile bundleToCompile : %{public}s", bundleToCompile.c_str());
         InnerBundleInfo info;
         if (!dataMgr->QueryInnerBundleInfo(bundleToCompile, info)) {
-            APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile: %{public}s", bundleToCompile.c_str());
+            APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile %{public}s", bundleToCompile.c_str());
             std::string compileResult = bundleToCompile + ": QueryInnerBundleInfo failed.";
             compileResults.emplace_back(compileResult);
             ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;

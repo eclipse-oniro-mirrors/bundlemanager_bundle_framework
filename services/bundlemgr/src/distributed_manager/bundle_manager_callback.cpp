@@ -27,7 +27,7 @@ BundleManagerCallback::BundleManagerCallback(const std::weak_ptr<BundleDistribut
 
 int32_t BundleManagerCallback::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
 {
-    APP_LOGI("OnQueryRpcIdFinished :%{public}s", queryRpcIdResult.c_str());
+    APP_LOGI("OnQueryRpcIdFinished %{public}s", queryRpcIdResult.c_str());
     auto server = server_.lock();
     if (server == nullptr) {
         APP_LOGE("pointer is nullptr.");
