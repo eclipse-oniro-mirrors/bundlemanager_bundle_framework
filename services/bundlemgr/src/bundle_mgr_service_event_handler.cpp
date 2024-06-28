@@ -118,8 +118,6 @@ constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepa
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
-constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
-constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* INNER_UNDER_LINE = "_";
 constexpr char SEPARATOR = '/';
 
@@ -1122,8 +1120,6 @@ void BMSEventHandler::OnBundleRebootStart()
 void BMSEventHandler::ProcessRebootBundle()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler Process reboot bundle start");
-    ProcessRebootDeleteAotPath();
-    ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
     InnerProcessRebootUninstallWrongBundle();
@@ -1143,60 +1139,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessNewBackupDir();
     RefreshQuotaForAllUid();
     ProcessCheckRecoverableApplicationInfo();
-}
-
-void BMSEventHandler::ProcessRebootDeleteArkAp()
-{
-    LOG_I(BMS_TAG_DEFAULT, "DeleteArkAp start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    for (const auto &userId : userIds) {
-        std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-            LOG_W(BMS_TAG_DEFAULT, "UpdateAppDataDir GetAllBundleInfos failed");
-            continue;
-        }
-        for (const auto &bundleInfo : bundleInfos) {
-            DeleteArkAp(bundleInfo, userId);
-        }
-    }
-    LOG_I(BMS_TAG_DEFAULT, "DeleteArkAp end");
-}
-
-void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
-{
-    std::string arkProfilePath;
-    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleInfo.name).append(ServiceConstants::PATH_SEPARATOR);
-    for (const auto &moduleName : bundleInfo.moduleNames) {
-        std::string runtimeAp = arkProfilePath;
-        std::string mergedAp = arkProfilePath;
-        runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
-            .append(ServiceConstants::PGO_FILE_SUFFIX);
-        if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", runtimeAp.c_str());
-            continue;
-        }
-        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
-        if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", mergedAp.c_str());
-            continue;
-        }
-    }
-}
-
-void BMSEventHandler::ProcessRebootDeleteAotPath()
-{
-    std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
-    removeAotPath.append("*");
-    if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", removeAotPath.c_str());
-        return;
-    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
