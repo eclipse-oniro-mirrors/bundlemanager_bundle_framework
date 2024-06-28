@@ -333,6 +333,9 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
                 return;
             }
             auto userInfos = info.second.GetInnerBundleUserInfos();
+            if (userInfos.empty()) {
+                return;
+            }
             auto specifiedUserId = (userInfos.begin()->second).bundleUserInfo.userId;
             if (specifiedUserId == userId || userId == Constants::INVALID_USERID) {
                 if (this->UninstallSandboxApp(bundleName, appIndex, specifiedUserId) != ERR_OK) {
