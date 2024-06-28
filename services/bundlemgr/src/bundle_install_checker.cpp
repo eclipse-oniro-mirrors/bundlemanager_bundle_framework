@@ -344,8 +344,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         InnerBundleInfo newInfo;
         BundlePackInfo packInfo;
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = provisionInfo.bundleInfo.appFeature == ServiceConstants::HOS_SYSTEM_APP;
-        if (isSystemApp) {
+        if (provisionInfo.bundleInfo.appFeature == ServiceConstants::HOS_SYSTEM_APP) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         } else {
             newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
@@ -533,27 +532,23 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
         InnerModuleInfo moduleInfo = info.second.GetInnerModuleInfos().begin()->second;
         LOG_D(BMS_TAG_INSTALLER, "current module:%{public}s, dependencies = %{public}s", moduleInfo.moduleName.c_str(),
             GetJsonStrFromInfo(moduleInfo.dependencies).c_str());
-        bool isModuleExist = false;
         for (const auto &dependency : moduleInfo.dependencies) {
             if (!NeedCheckDependency(dependency, info.second)) {
                 LOG_D(BMS_TAG_INSTALLER, "deliveryWithInstall is false, do not check whether the dependency exists.");
                 continue;
             }
-
             std::string bundleName =
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
-            isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
-            if (!isModuleExist) {
-                LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package.",
-                    dependency.moduleName.c_str());
-                isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName,
-                    info.second.GetVersionCode());
-                if (!isModuleExist) {
-                    LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist.", dependency.moduleName.c_str());
-                    SetCheckResultMsg(
-                        moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist.");
-                    return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
-                }
+            if (FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos)) {
+                continue;
+            }
+            LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package.",
+                dependency.moduleName.c_str());
+            if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, info.second.GetVersionCode())) {
+                LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist.", dependency.moduleName.c_str());
+                SetCheckResultMsg(
+                    moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist.");
+                return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
             }
         }
     }
