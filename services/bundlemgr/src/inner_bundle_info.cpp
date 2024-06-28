@@ -2686,6 +2686,15 @@ bool InnerBundleInfo::HasEntry() const
         });
 }
 
+bool InnerBundleInfo::IsReleaseHsp() const
+{
+    bool allHsp = std::all_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
+            return item.second.distro.moduleType == Profile::MODULE_TYPE_SHARED;
+        });
+    return allHsp &&
+        BundleUtil::StartWith(baseApplicationInfo_->apiReleaseType, Constants::API_RELEASE_TYPE_RELEASE);
+}
+
 void InnerBundleInfo::SetAppDistributionType(const std::string &appDistributionType)
 {
     baseApplicationInfo_->appDistributionType = appDistributionType;
