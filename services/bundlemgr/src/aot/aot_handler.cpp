@@ -58,7 +58,7 @@ constexpr const char* OTA_COMPILE_SWITCH_DEFAULT = "off";
 const std::string OTA_COMPILE_SWITCH_ON = "on";
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
-constexpr int32_t OTA_COMPILE_TIME_DEFAULT = 5 * 60; // 5min
+constexpr int32_t OTA_COMPILE_TIME_DEFAULT = 4 * 60; // 4min
 constexpr int32_t GAP_SECONDS = 10;
 
 constexpr const char* OTA_COMPILE_COUNT_MANUAL = "persist.bms.optimizing_apps.counts.manual";
