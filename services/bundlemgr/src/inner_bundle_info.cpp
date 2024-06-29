@@ -848,7 +848,6 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     }
 
     baseBundleInfo_->vendor = bundleInfo.vendor;
-    baseBundleInfo_->releaseType = bundleInfo.releaseType;
     if (!baseBundleInfo_->isNativeApp) {
         baseBundleInfo_->isNativeApp = bundleInfo.isNativeApp;
     }
@@ -892,7 +891,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
         baseApplicationInfo_->isLauncherApp = applicationInfo.isLauncherApp;
     }
 
-    baseApplicationInfo_->apiReleaseType = applicationInfo.apiReleaseType;
     baseApplicationInfo_->deviceId = applicationInfo.deviceId;
     baseApplicationInfo_->distributedNotificationEnabled = applicationInfo.distributedNotificationEnabled;
     baseApplicationInfo_->entityType = applicationInfo.entityType;
@@ -3764,6 +3762,16 @@ void InnerBundleInfo::UpdateMultiAppMode(const InnerBundleInfo &newInfo)
     std::string moduleType = newInfo.GetModuleTypeByPackage(newInfo.GetCurrentModulePackage());
     if (moduleType == Profile::MODULE_TYPE_ENTRY || moduleType == Profile::MODULE_TYPE_FEATURE) {
         baseApplicationInfo_->multiAppMode = newInfo.GetBaseApplicationInfo().multiAppMode;
+    }
+}
+
+void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
+{
+    if (baseBundleInfo_->releaseType.empty() ||
+        baseApplicationInfo_->apiReleaseType.empty() ||
+        !newInfo.IsReleaseHsp()) {
+        baseBundleInfo_->releaseType = newInfo.GetBaseBundleInfo().releaseType;
+        baseApplicationInfo_->apiReleaseType = newInfo.GetBaseApplicationInfo().apiReleaseType;
     }
 }
 

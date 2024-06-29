@@ -1007,6 +1007,7 @@ public:
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
+    void UpdateReleaseType(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
