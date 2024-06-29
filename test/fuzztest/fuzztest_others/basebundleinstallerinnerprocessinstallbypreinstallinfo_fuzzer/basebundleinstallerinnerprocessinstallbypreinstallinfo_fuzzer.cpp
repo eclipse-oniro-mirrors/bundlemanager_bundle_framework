@@ -16,7 +16,7 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
-#include "basebundleinstallerremovemoduleanddatadir_fuzzer.h"
+#include "basebundleinstallerinnerprocessinstallbypreinstallinfo_fuzzer.h"
 #include "base_bundle_installer.h"
 #include "securec.h"
 
@@ -29,11 +29,10 @@ namespace OHOS
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        InnerBundleInfo info;
-        std::string modulePackage;
-        int32_t userId = 0;
-        bool isKeepData = true;
-        auto ret1 = basebundleinstall.RemoveModuleAndDataDir(info, modulePackage, userId, isKeepData);
+        std::string bundleName;
+        InstallParam installParam;
+        int32_t uid = 0;
+        auto ret1 = basebundleinstall.InnerProcessInstallByPreInstallInfo(bundleName, installParam, uid);
         return true;
     }
 }

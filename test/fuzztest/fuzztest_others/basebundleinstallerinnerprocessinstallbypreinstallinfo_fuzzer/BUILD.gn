@@ -17,8 +17,9 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = fuzz_test_path
 
-ohos_fuzztest("BaseBundleInstallerRemoveModuleDirFuzzTest") {
-  fuzz_config_file = "../../../fuzztest/fuzztest_others/basebundleinstallerremovemoduledir_fuzzer"
+ohos_fuzztest(
+    "BaseBundleInstallerInnerProcessInstallByPreInstallInfoFuzzTest") {
+  fuzz_config_file = "../../../fuzztest/fuzztest_others/basebundleinstallerinnerprocessinstallbypreinstallinfo_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -43,7 +44,8 @@ ohos_fuzztest("BaseBundleInstallerRemoveModuleDirFuzzTest") {
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
-  sources += [ "basebundleinstallerremovemoduledir_fuzzer.cpp" ]
+  sources +=
+      [ "basebundleinstallerinnerprocessinstallbypreinstallinfo_fuzzer.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = [

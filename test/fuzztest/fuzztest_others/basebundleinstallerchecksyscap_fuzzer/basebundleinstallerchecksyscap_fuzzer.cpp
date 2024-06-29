@@ -16,7 +16,7 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
-#include "basebundleinstallerextractmodulefiles_fuzzer.h"
+#include "basebundleinstallerchecksyscap_fuzzer.h"
 #include "base_bundle_installer.h"
 #include "securec.h"
 
@@ -29,11 +29,8 @@ namespace OHOS
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        InnerBundleInfo info;
-        std::string modulePath;
-        std::string targetSoPath;
-        std::string cpuAbi;
-        auto ret1 = basebundleinstall.ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+        std::vector<std::string> bundlePaths;
+        auto ret1 = basebundleinstall.CheckSysCap(bundlePaths);
         return true;
     }
 }

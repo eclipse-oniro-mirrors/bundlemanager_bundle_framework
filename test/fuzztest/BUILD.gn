@@ -102,6 +102,11 @@ group("fuzztest") {
     "fuzztest_others/appservicefwkinstallersendbundlesystemevent_fuzzer:AppServiceFwkInstallerSendBundleSystemEventFuzzTest",
     "fuzztest_others/appservicefwkinstalleruninstalllowerversion_fuzzer:AppServiceFwkInstallerUninstallLowerVersionFuzzTest",
     "fuzztest_others/appservicefwkinstallerupdateappservice_fuzzer:AppServiceFwkInstallerUpdateAppServiceFuzzTest",
+    "fuzztest_others/basebundleinstallercheckmultiplehapssigninfo_fuzzer:BaseBundleInstallerCheckMultipleHapsSignInfoFuzzTest",
+    "fuzztest_others/basebundleinstallerchecksyscap_fuzzer:BaseBundleInstallerCheckSysCapFuzzTest",
+    "fuzztest_others/basebundleinstallerinnerprocessinstallbypreinstallinfo_fuzzer:BaseBundleInstallerInnerProcessInstallByPreInstallInfoFuzzTest",
+    "fuzztest_others/basebundleinstallerprocessinstallbundlebybundlename_fuzzer:BaseBundleInstallerProcessInstallBundleByBundleNameFuzzTest",
+    "fuzztest_others/basebundleinstallerprocessrecover_fuzzer:BaseBundleInstallerProcessRecoverFuzzTest",
     "fuzztest_others/bmsextensionclient_fuzzer:BmsExtensionClientFuzzTest",
     "fuzztest_others/bundlecloneinstaller_fuzzer:BundlecloneinstallerFuzzTest",
     "fuzztest_others/commonevent_fuzzer:CommonEventFuzzTest",
@@ -139,13 +144,8 @@ group("fuzztest") {
     "fuzztest_others/verifymanagerhostimplverify_fuzzer/:VerifyManagerHostImplVerifyFuzzTest",
     "fuzztest_others/verifymanagerhostimplverifyabc_fuzzer:VerifyManagerHostImplVerifyAbcFuzzTest",
     "fuzztest_others/verifymanagerhostimplverifyabcdir_fuzzer:VerifyManagerHostImplVerifyAbcDirFuzzTest",
-    "fuzztest_others/basebundleinstallerremovemoduleanddatadir_fuzzer:BaseBundleInstallerRemoveModuleAndDataDirFuzzTest",
-    "fuzztest_others/basebundleinstallerremovemoduledir_fuzzer:BaseBundleInstallerRemoveModuleDirFuzzTest",
-    "fuzztest_others/basebundleinstallerextractmodulefiles_fuzzer:BaseBundleInstallerExtractModuleFilesFuzzTest",
-    "fuzztest_others/basebundleinstallerrenamemoduledir_fuzzer:BaseBundleInstallerRenameModuleDirFuzzTest",
-    "fuzztest_others/basebundleinstallerprocessmoduleupdate_fuzzer:BaseBundleInstallerProcessModuleUpdateFuzzTest",
     "fuzztest_others/zip_fuzzer:ZipFuzzTest",
-    ]
+  ]
 
   if (bundle_framework_default_app) {
     deps += [

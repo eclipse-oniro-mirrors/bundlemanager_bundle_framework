@@ -16,7 +16,7 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
-#include "basebundleinstallerprocessmoduleupdate_fuzzer.h"
+#include "basebundleinstallerprocessinstallbundlebybundlename_fuzzer.h"
 #include "base_bundle_installer.h"
 #include "securec.h"
 
@@ -29,10 +29,10 @@ namespace OHOS
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        InnerBundleInfo newInfo;
-        InnerBundleInfo oldInfo;
-        bool isReplace = true;
-        auto ret1 = basebundleinstall.ProcessModuleUpdate(newInfo, oldInfo, isReplace);
+        std::string bundleName;
+        InstallParam installParam;
+        int32_t uid = 0;
+        auto ret1 = basebundleinstall.ProcessInstallBundleByBundleName(bundleName, installParam, uid);
         return true;
     }
 }

@@ -16,7 +16,7 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
-#include "basebundleinstallerrenamemoduledir_fuzzer.h"
+#include "basebundleinstallercheckmultiplehapssigninfo_fuzzer.h"
 #include "base_bundle_installer.h"
 #include "securec.h"
 
@@ -29,8 +29,10 @@ namespace OHOS
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        InnerBundleInfo info;
-        auto ret1 = basebundleinstall.RenameModuleDir(info);
+        std::vector<std::string> bundlePaths;
+        InstallParam installParam;
+        std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+        auto ret1 = basebundleinstall.CheckMultipleHapsSignInfo(bundlePaths, installParam, hapVerifyRes);
         return true;
     }
 }

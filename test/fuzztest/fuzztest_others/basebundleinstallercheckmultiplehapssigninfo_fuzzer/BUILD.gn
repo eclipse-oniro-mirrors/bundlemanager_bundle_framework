@@ -17,8 +17,8 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = fuzz_test_path
 
-ohos_fuzztest("BaseBundleInstallerRenameModuleDirFuzzTest") {
-  fuzz_config_file = "../../../fuzztest/fuzztest_others/basebundleinstallerrenamemoduledir_fuzzer"
+ohos_fuzztest("BaseBundleInstallerCheckMultipleHapsSignInfoFuzzTest") {
+  fuzz_config_file = "../../../fuzztest/fuzztest_others/basebundleinstallercheckmultiplehapssigninfo_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -43,7 +43,7 @@ ohos_fuzztest("BaseBundleInstallerRenameModuleDirFuzzTest") {
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
-  sources += [ "basebundleinstallerrenamemoduledir_fuzzer.cpp" ]
+  sources += [ "basebundleinstallercheckmultiplehapssigninfo_fuzzer.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = [

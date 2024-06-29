@@ -16,7 +16,7 @@
 #define private public
 #include <cstddef>
 #include <cstdint>
-#include "basebundleinstallerremovemoduledir_fuzzer.h"
+#include "basebundleinstallerprocessrecover_fuzzer.h"
 #include "base_bundle_installer.h"
 #include "securec.h"
 
@@ -29,8 +29,10 @@ namespace OHOS
     bool DoSomethingInterestingWithMyAPI(const char *data, size_t size)
     {
         BaseBundleInstaller basebundleinstall;
-        std::string modulePath;
-        auto ret1 = basebundleinstall.RemoveModuleDir(modulePath);
+        std::string bundleName;
+        InstallParam installParam;
+        int32_t uid = 0;
+        auto ret1 = basebundleinstall.ProcessRecover(bundleName, installParam, uid);
         return true;
     }
 }
