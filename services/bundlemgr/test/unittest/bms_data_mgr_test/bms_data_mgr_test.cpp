@@ -1444,8 +1444,13 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0001, Function | SmallTest
     skills.emplace_back(skill);
     innerBundleInfo.InsertSkillInfo(BUNDLE_NAME, skills);
     AbilityInfo abilityInfo;
+    abilityInfo.name = BUNDLE_NAME;
     abilityInfo.type = AbilityType::PAGE;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.entryAbilityKey = BUNDLE_NAME;
+    moduleInfo.isEntry = true;
+    innerBundleInfo.innerModuleInfos_.try_emplace(BUNDLE_NAME, moduleInfo);
 
     auto dataMgr = GetDataMgr();
     EXPECT_NE(dataMgr, nullptr);

@@ -3773,9 +3773,9 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
 
         applicationInfo.iconId = mainAbilityInfo.iconId ;
-        applicationInfo.labelResource.id = mainAbilityInfo.iconId;
-        applicationInfo.labelResource.moduleName = mainAbilityInfo.moduleName;
-        applicationInfo.labelResource.bundleName = mainAbilityInfo.bundleName;
+        applicationInfo.iconResource.id = mainAbilityInfo.iconId;
+        applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
+        applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
     }
 }
 }  // namespace AppExecFwk

@@ -1804,7 +1804,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfo);
     AbilityInfo mainAbilityInfo;
     info.GetMainAbilityInfo(mainAbilityInfo);
-    if (!mainAbilityInfo.name.empty()) {
+    if (!mainAbilityInfo.name.empty() && (mainAbilityInfo.type == AbilityType::PAGE)) {
         APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             responseUserId, mainAbilityInfo.applicationInfo);
