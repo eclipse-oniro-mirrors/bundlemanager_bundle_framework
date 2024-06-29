@@ -226,6 +226,19 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0500
 }
 
 /**
+ * @tc.number: BmsBundleSyetemAppFalseTest_0600
+ * @tc.name: test CleanBundleCacheFilesAutomatic of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CleanBundleCacheFilesAutomatic false by cacheSize is 0
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_0600, Function | SmallTest | Level0)
+{
+    uint64_t cacheSize = 0;
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: BmsBundleSyetemAppFalseTest_0700
  * @tc.name: test GetBundleInfoV9 of BundleMgrHostImpl
  * @tc.desc: 1. system running normally

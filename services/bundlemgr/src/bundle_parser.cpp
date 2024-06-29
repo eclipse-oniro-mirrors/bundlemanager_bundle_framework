@@ -41,6 +41,8 @@ static const std::string ROUTER_MAP = "routerMap";
 static const std::string ROUTER_MAP_DATA = "data";
 static const std::string ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
 static const size_t DATA_MAX_LENGTH = 4096;
+const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
+const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -79,14 +81,14 @@ bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json 
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
+        APP_LOGE("file open failed due to %{public}s, errno:%{public}d", errBuf, errno);
         return false;
     }
 
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("the file is an empty file, errno:%{public}d", errno);
+        APP_LOGE("file empty, errno:%{public}d", errno);
         in.close();
         return false;
     }
@@ -301,7 +303,7 @@ ErrCode BundleParser::ParseRouterArray(
     APP_LOGD("Parse RouterItem from %{private}s", jsonString.c_str());
     nlohmann::json jsonBuf = nlohmann::json::parse(jsonString, nullptr, false);
     if (jsonBuf.is_discarded()) {
-        APP_LOGE("json file %{private}s is discarded", jsonString.c_str());
+        APP_LOGE("json file %{private}s discarded", jsonString.c_str());
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
     if (jsonBuf.find(ROUTER_MAP) == jsonBuf.end()) {
@@ -354,6 +356,28 @@ bool BundleParser::CheckRouterData(nlohmann::json data) const
         }
     }
     return true;
+}
+
+ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList)
+{
+    nlohmann::json object;
+    if (!ReadFileIntoJson(configPath, object)) {
+        APP_LOGI("Parse file %{public}s failed.", configPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+    }
+    if (!object.contains(NO_DISABLING_CONFIG_KEY) || !object.at(NO_DISABLING_CONFIG_KEY).is_array()) {
+        APP_LOGE("no disabling config not existed");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+    for (auto &item : object.at(NO_DISABLING_CONFIG_KEY).items()) {
+        const nlohmann::json& jsonObject = item.value();
+        if (jsonObject.contains(NO_DISABLING_KEY_BUNDLE_NAME) &&
+            jsonObject.at(NO_DISABLING_KEY_BUNDLE_NAME).is_string()) {
+            std::string bundleName = jsonObject.at(NO_DISABLING_KEY_BUNDLE_NAME).get<std::string>();
+            noDisablingList.emplace_back(bundleName);
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

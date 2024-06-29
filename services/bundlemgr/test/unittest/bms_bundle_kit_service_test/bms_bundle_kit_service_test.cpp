@@ -2115,7 +2115,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0800, Function | SmallTest
         }
     }
     QueryCloneApplicationInfosWithDisable();
-    
+
     ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -4287,6 +4287,21 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0100
+ * @tc.name: test CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system run normally
+ *           2. cacheSize is 0
+ *           3. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 0;
+    auto result = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: CleanCache_0500
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
@@ -4351,6 +4366,25 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0200
+ * @tc.name: test CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system run normally
+ *           2. cacheSize is 0
+ *           3. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    uint64_t cacheSize = 0;
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
@@ -8711,7 +8745,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0300, Function | SmallTe
         }
     }
     QueryCloneApplicationInfosV9WithDisable();
-    
+
     ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }

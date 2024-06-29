@@ -33,6 +33,9 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
+#ifdef CONFIG_POLOCY_ENABLE
+#include "config_policy_utils.h"
+#endif
 #include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -63,6 +66,12 @@ constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
+const std::string EMPTY_STRING = "";
+#ifdef CONFIG_POLOCY_ENABLE
+    const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
+#endif
+const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
+    "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -85,11 +94,11 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (access(realPath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
+        APP_LOGE("not access the bundle file path: %{public}s, errno:%{public}d", realPath.c_str(), errno);
         return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
     }
     if (!CheckFileSize(realPath, MAX_HAP_SIZE)) {
-        APP_LOGE("file size is larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
+        APP_LOGE("file size larger than max hap size Max size is: %{public}" PRId64, MAX_HAP_SIZE);
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_SIZE;
     }
     return ERR_OK;
@@ -125,7 +134,7 @@ ErrCode BundleUtil::CheckFilePath(const std::vector<std::string> &bundlePaths, s
             }
             return ret;
         } else {
-            APP_LOGE("bundlePath is not existed with :%{public}s", bundlePaths.front().c_str());
+            APP_LOGE("bundlePath not existed with :%{public}s", bundlePaths.front().c_str());
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     } else {
@@ -216,7 +225,7 @@ bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath,
     if (dir == nullptr) {
         char errMsg[256] = {0};
         strerror_r(errno, errMsg, sizeof(errMsg));
-        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s is failure due to %{public}s, errno:%{public}d",
+        APP_LOGE("GetHapFilesFromBundlePath open bundle dir:%{public}s failed due to %{public}s, errno:%{public}d",
             currentBundlePath.c_str(), errMsg, errno);
         return false;
     }
@@ -312,7 +321,7 @@ int32_t BundleUtil::GetUserIdByCallingUid()
 int32_t BundleUtil::GetUserIdByUid(int32_t uid)
 {
     if (uid <= Constants::INVALID_UID) {
-        APP_LOGE("uid is illegal: %{public}d", uid);
+        APP_LOGE("uid illegal: %{public}d", uid);
         return Constants::INVALID_USERID;
     }
 
@@ -477,7 +486,7 @@ bool BundleUtil::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("fail to stat errno:%{public}d", errno);
+        APP_LOGE("fail stat errno:%{public}d", errno);
         return false;
     }
 
@@ -492,7 +501,7 @@ bool BundleUtil::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("fail to stat errno:%{public}d", errno);
+        APP_LOGE("fail stat errno:%{public}d", errno);
         return false;
     }
 
@@ -662,7 +671,7 @@ bool BundleUtil::CreateDir(const std::string &dir)
     }
 
     if (chown(dir.c_str(), Constants::FOUNDATION_UID, ServiceConstants::BMS_GID) != 0) {
-        APP_LOGE("fail to change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
+        APP_LOGE("fail change %{public}s ownership, errno:%{public}d", dir.c_str(), errno);
         return false;
     }
 
@@ -842,6 +851,30 @@ std::string BundleUtil::GenerateUuid()
     return uuid;
 }
 
+std::string BundleUtil::GenerateUuidByKey(const std::string &key)
+{
+    std::string keyHash = GetHexHash(key);
+
+    char deviceId[UUID_LENGTH_MAX] = { 0 };
+    auto ret = GetDevUdid(deviceId, UUID_LENGTH_MAX);
+    std::string deviceUdid;
+    std::string deviceStr;
+    if (ret != 0) {
+        APP_LOGW("GetDevUdid failed");
+    } else {
+        deviceUdid = std::string{ deviceId };
+        deviceStr = GetHexHash(deviceUdid);
+    }
+
+    std::string uuid = keyHash + deviceStr;
+    RecursiveHash(uuid);
+
+    for (int32_t index : SEPARATOR_POSITIONS) {
+        uuid.insert(index, 1, UUID_SEPARATOR);
+    }
+    return uuid;
+}
+
 std::string BundleUtil::ExtractGroupIdByDevelopId(const std::string &developerId)
 {
     std::string::size_type dot_position = developerId.find('.');
@@ -864,6 +897,20 @@ std::string BundleUtil::ToString(const std::vector<std::string> &vector)
         ret.append(item).append(",");
     }
     return ret;
+}
+
+std::string BundleUtil::GetNoDisablingConfigPath()
+{
+#ifdef CONFIG_POLOCY_ENABLE
+    char buf[MAX_PATH_LEN] = { 0 };
+    char *configPath = GetOneCfgFile(NO_DISABLING_CONFIG_PATH, buf, MAX_PATH_LEN);
+    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+        return NO_DISABLING_CONFIG_PATH_DEFAULT;
+    }
+    return configPath;
+#else
+    return NO_DISABLING_CONFIG_PATH_DEFAULT;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

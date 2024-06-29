@@ -961,6 +961,19 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Functi
 }
 
 /**
+ * @tc.number: BmsBundlePermissionFalseTest_6300
+ * @tc.name: test CleanBundleCacheFilesAutomatic of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CleanBundleCacheFilesAutomatic false by cacheSize is 0
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6300, Function | SmallTest | Level0)
+{
+    uint64_t cacheSize = 0;
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: BmsBundlePermissionFalseTest_6400
  * @tc.name: test GetAppProvisionInfo of BundleMgrHostImpl
  * @tc.desc: 1. system running normally

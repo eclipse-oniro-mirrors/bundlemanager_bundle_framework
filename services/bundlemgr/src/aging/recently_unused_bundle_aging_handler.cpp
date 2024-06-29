@@ -147,7 +147,7 @@ bool RecentlyUnuseBundleAgingHandler::CleanCache(const AgingBundleInfo &agingBun
         APP_LOGD("cache path: %{public}s", cache.c_str());
         ErrCode ret = InstalldClient::GetInstance()->CleanBundleDataDir(cache);
         if (ret != ERR_OK) {
-            APP_LOGE("CleanBundleDataDir failed, path: %{private}s", cache.c_str());
+            APP_LOGE("CleanBundleDataDir failed, path %{private}s", cache.c_str());
             continue;
         }
 
@@ -170,7 +170,7 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
 
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     if (!dataMgr->GetInnerBundleUserInfos(agingBundle.GetBundleName(), innerBundleUserInfos)) {
-        APP_LOGE("GetInnerBundleUserInfos failed bundle: %{public}s",
+        APP_LOGE("GetInnerBundleUserInfos failed bundle %{public}s",
             agingBundle.GetBundleName().c_str());
         return false;
     }
@@ -190,7 +190,7 @@ bool RecentlyUnuseBundleAgingHandler::GetCachePath(
     for (const auto &st : rootDir) {
         std::vector<std::string> cache;
         if (InstalldClient::GetInstance()->GetBundleCachePath(st, cache) != ERR_OK) {
-            APP_LOGW("GetBundleCachePath failed, path: %{public}s", st.c_str());
+            APP_LOGW("GetBundleCachePath failed, path %{public}s", st.c_str());
             continue;
         }
 

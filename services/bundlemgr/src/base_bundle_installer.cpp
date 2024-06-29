@@ -760,6 +760,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #endif
         for (const auto &innerBundleInfo : newInfos) {
             auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
+            innerBundleInfo.second.AdaptMainLauncherResourceInfo(applicationInfo);
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
@@ -1228,13 +1229,6 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
     if (!isAppExist_) {
-        RemoveBundleAndDataDir(newInfos.begin()->second, false);
-        // delete accessTokenId
-        if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
-            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
-        }
-
         if (newInfos.begin()->second.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
             int32_t uid = newInfos.begin()->second.GetUid(userId_);
             if (uid != Constants::INVALID_UID) {
@@ -1245,6 +1239,12 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
                     newInfos.begin()->second.GetBundleName();
                 PrepareBundleDirQuota(newInfos.begin()->second.GetBundleName(), uid, bundleDataDir, 0);
             }
+        }
+        RemoveBundleAndDataDir(newInfos.begin()->second, false);
+        // delete accessTokenId
+        if (BundlePermissionMgr::DeleteAccessTokenId(newInfos.begin()->second.GetAccessTokenId(userId_)) !=
+            AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
         }
 
         // remove driver file
@@ -1405,8 +1405,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
-    CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
+    if (res != ERR_OK) {
+        APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
+    }
 
     DeleteEncryptionKeyId(oldInfo);
 
@@ -1813,7 +1815,17 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
         LOG_E(BMS_TAG_INSTALLER, "delete inner info failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        int32_t uid = info.GetUid(userId_);
+        if (uid != Constants::INVALID_UID) {
+            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
+                info.GetBundleName().c_str());
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+                info.GetBundleName();
+            PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
+        }
+    }
     ErrCode result = RemoveBundleAndDataDir(info, isKeepData);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "remove bundle dir failed");
@@ -1826,17 +1838,6 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
         LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
     }
 
-    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        int32_t uid = info.GetUid(userId_);
-        if (uid != Constants::INVALID_UID) {
-            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
-                info.GetBundleName().c_str());
-            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
-                info.GetBundleName();
-            PrepareBundleDirQuota(info.GetBundleName(), uid, bundleDataDir, 0);
-        }
-    }
     return ERR_OK;
 }
 
@@ -2158,6 +2159,17 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             oldInfo.GetApplicationName(), oldInfo.GetUid(userId_), true)) {
             LOG_E(BMS_TAG_INSTALLER, "fail to kill running application");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        InnerBundleUserInfo userInfo;
+        if (!oldInfo.GetInnerBundleUserInfo(userId_, userInfo)) {
+            LOG_E(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        for (auto &cloneInfo : userInfo.cloneInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                oldInfo.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                LOG_E(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
         }
     }
 
@@ -2627,7 +2639,12 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
     const std::string &bundleDataDirPath, const int32_t limitSize) const
 {
-    int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
+    if (limitSize == 0) {
+        LOG_I(BMS_TAG_INSTALLER, "cancel bundleName:%{public}s uid:%{public}d quota", bundleName.c_str(), uid);
+        SendToStorageQuota(bundleName, uid, bundleDataDirPath, 0);
+        return;
+    }
+    int32_t atomicserviceDatasizeThreshold = limitSize;
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
     char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
@@ -2969,8 +2986,11 @@ void BaseBundleInstaller::DeleteGroupDirsForException() const
     }
 }
 
-ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData) const
 {
+    if (isKeepData) {
+        return ERR_OK;
+    }
     std::vector<DataGroupInfo> infos;
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
@@ -3456,7 +3476,10 @@ void BaseBundleInstaller::UpdateExtensionSandboxInfo(std::unordered_map<std::str
     }
     Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.begin()->GetProvisionInfo();
     auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+    std::vector<std::string> typeList;
+    InstalldClient::GetInstance()->GetExtensionSandboxTypeList(typeList);
     for (auto &item : newInfos) {
+        item.second.UpdateExtensionSandboxInfo(typeList);
         auto innerBundleInfo = item.second;
         auto extensionInfoMap = innerBundleInfo.GetInnerExtensionInfos();
         for (auto iter = extensionInfoMap.begin(); iter != extensionInfoMap.end(); iter++) {
@@ -3973,6 +3996,17 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
             info.GetApplicationName(), info.GetUid(userId_), true)) {
             LOG_W(BMS_TAG_INSTALLER, "can not kill process");
         }
+        InnerBundleUserInfo userInfo;
+        if (!info.GetInnerBundleUserInfo(userId_, userInfo)) {
+            LOG_W(BMS_TAG_INSTALLER, "the origin application is not installed at current user");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        for (auto &cloneInfo : userInfo.cloneInfos) {
+            if (!AbilityManagerHelper::UninstallApplicationProcesses(
+                info.GetApplicationName(), cloneInfo.second.uid, true, std::stoi(cloneInfo.first))) {
+                LOG_W(BMS_TAG_INSTALLER, "fail to kill clone application");
+            }
+        }
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
@@ -4246,34 +4280,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
 
-    ErrCode ret = CheckDebugType(oldInfo, newInfo);
     LOG_D(BMS_TAG_INSTALLER, "CheckAppLabel end");
-    return ret;
-}
-
-ErrCode BaseBundleInstaller::CheckDebugType(
-    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
-{
-    if (!oldInfo.HasEntry() && !newInfo.HasEntry()) {
-        return ERR_OK;
-    }
-
-    if (oldInfo.HasEntry() && newInfo.HasEntry()) {
-        if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
-            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-        }
-
-        return ERR_OK;
-    }
-
-    if (oldInfo.HasEntry() && !oldInfo.GetBaseApplicationInfo().debug && newInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
-    if (newInfo.HasEntry() && !newInfo.GetBaseApplicationInfo().debug && oldInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
     return ERR_OK;
 }
 
@@ -4295,6 +4302,24 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     LOG_D(BMS_TAG_INSTALLER, "remove user(%{public}d) in bundle(%{public}s).", userId_, bundleName.c_str());
     if (!innerBundleInfo.HasInnerBundleUserInfo(userId_)) {
         return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    // delete accessTokenId
+    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
+    }
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
+        int32_t uid = innerBundleInfo.GetUid(userId_);
+        if (uid != Constants::INVALID_UID) {
+            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
+                innerBundleInfo.GetBundleName().c_str());
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
+                innerBundleInfo.GetBundleName();
+            PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
+        }
     }
 
     innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
@@ -4322,25 +4347,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
         return result;
-    }
-
-    // delete accessTokenId
-    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
-    }
-
-    if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        int32_t uid = innerBundleInfo.GetUid(userId_);
-        if (uid != Constants::INVALID_UID) {
-            LOG_I(BMS_TAG_INSTALLER, "uninstall atomic service need delete quota, bundleName:%{public}s",
-                innerBundleInfo.GetBundleName().c_str());
-            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-                ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE +
-                innerBundleInfo.GetBundleName();
-            PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
-        }
     }
 
     return ERR_OK;

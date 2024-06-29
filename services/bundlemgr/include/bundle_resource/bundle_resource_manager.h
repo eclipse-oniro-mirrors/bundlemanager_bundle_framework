@@ -21,6 +21,7 @@
 #include <string>
 #include <vector>
 
+#include "bundle_constants.h"
 #include "bundle_resource_change_type.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
@@ -47,7 +48,8 @@ public:
      * add all resource info in system, used when system configuration changed, like:
      * language, colorMode, theme, and so on
      */
-    bool AddAllResourceInfo(const int32_t userId, const uint32_t type);
+    bool AddAllResourceInfo(const int32_t userId, const uint32_t type,
+        const int32_t oldUserId = Constants::INVALID_USERID);
     /**
      * delete all resource info
      */
@@ -93,11 +95,11 @@ private:
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
     bool AddResourceInfosByMap(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const uint32_t tempTaskNumber, const uint32_t type, const int32_t userId);
+        const uint32_t tempTaskNumber, const uint32_t type, const int32_t userId, const int32_t oldUserId);
 
     void InnerProcessResourceInfoByResourceUpdateType(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap, const uint32_t type,
-        const int32_t userId, bool &needDeleteAllResource);
+        const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource);
 
     void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
 
@@ -119,7 +121,12 @@ private:
 
     void InnerProcessResourceInfoByUserIdChanged(
         std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
-        const int32_t userId, bool &needDeleteAllResource);
+        const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource);
+
+    void DeleteNotExistResourceInfo(const std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
+        const std::vector<std::string> &existResourceNames);
+
+    bool InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId);
 
     bool GetBundleResourceInfoForCloneBundle(const std::string &bundleName,
         const int32_t appIndex, std::vector<ResourceInfo> &resourceInfos);

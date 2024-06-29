@@ -228,7 +228,7 @@ void BundleStatusCallbackProxy::OnBundleStateChanged(
     int32_t ret = remote->SendRequest(
         static_cast<int32_t>(BundleStatusCallbackInterfaceCode::ON_BUNDLE_STATE_CHANGED), data, reply, option);
     if (ret != NO_ERROR) {
-        APP_LOGW("fail to call OnBundleStateChanged, for transact is failed, error code is: %{public}d", ret);
+        APP_LOGW("call OnBundleStateChanged fail for transact failed, error code: %{public}d", ret);
     }
 }
 }  // namespace AppExecFwk

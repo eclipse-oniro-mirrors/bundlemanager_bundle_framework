@@ -102,6 +102,8 @@ public:
      */
     ErrCode ParseRouterArray(
         const std::string &configFile, std::vector<RouterItem> &routerArray) const;
+
+    static ErrCode ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

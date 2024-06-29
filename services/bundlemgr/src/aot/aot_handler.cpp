@@ -21,6 +21,9 @@
 #include <vector>
 
 #include "account_helper.h"
+#ifdef CODE_SIGNATURE_ENABLE
+#include "aot/aot_sign_data_cache_mgr.h"
+#endif
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -32,11 +35,6 @@
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
 #include "display_power_mgr_client.h"
-#endif
-
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-#include "datetime_ex.h"
-#include "screenlock_manager.h"
 #endif
 
 namespace OHOS {
@@ -60,7 +58,7 @@ constexpr const char* OTA_COMPILE_SWITCH_DEFAULT = "off";
 const std::string OTA_COMPILE_SWITCH_ON = "on";
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
-constexpr int32_t OTA_COMPILE_TIME_DEFAULT = 5 * 60; // 5min
+constexpr int32_t OTA_COMPILE_TIME_DEFAULT = 4 * 60; // 4min
 constexpr int32_t GAP_SECONDS = 10;
 
 constexpr const char* OTA_COMPILE_COUNT_MANUAL = "persist.bms.optimizing_apps.counts.manual";
@@ -89,14 +87,6 @@ constexpr const char* COMPILE_NONE = "none";
 
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
-
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-constexpr int32_t SLEEP_TIME_FOR_COMMON_EVENT_MGR = 500 * 1000; // 500 ms
-constexpr int32_t SLEEP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT = 10 * 60; // 10 min
-constexpr int32_t COMMON_EVENT_MANAGER_ID = 3299;
-constexpr int32_t SLEEP_TIME_FOR_WAIT_SIGN_ENABLE = 1; // 1 s
-constexpr int32_t LOOP_TIMES_FOR_WAIT_SIGN_ENABLE = 5;
-#endif
 }
 
 AOTHandler::AOTHandler()
@@ -207,7 +197,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     return aotArgs;
 }
 
-ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode)
+ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const
 {
     if (!aotArgs) {
         APP_LOGD("aotArgs empty");
@@ -220,14 +210,8 @@ ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t version
         ret = InstalldClient::GetInstance()->ExecuteAOT(*aotArgs, pendSignData);
     }
     APP_LOGI("ExecuteAOT ret : %{public}d", ret);
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-    if (!hasUnlocked_ && !pendSignData.empty()) {
-        PendingData pendingData = {versionCode, pendSignData};
-        {
-            std::lock_guard<std::mutex> lock(unlockMutex_);
-            pendingSignData_[aotArgs->bundleName][aotArgs->moduleName] = pendingData;
-        }
-    }
+#ifdef CODE_SIGNATURE_ENABLE
+    AOTSignDataCacheMgr::GetInstance().AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
 #endif
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
@@ -239,13 +223,13 @@ ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t version
     return ret;
 }
 
-void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode)
+void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const
 {
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode, true);
     (void)AOTInternal(aotArgs, info.GetVersionCode());
 }
 
-void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
     auto task = [this, infos]() {
         APP_LOGD("HandleInstall begin");
@@ -314,7 +298,7 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
     bool isDirExist = false;
     errCode = InstalldClient::GetInstance()->IsExistDir(COPY_AP_DEST_PATH, isDirExist);
     if (errCode != ERR_OK) {
-        APP_LOGE("check if dir exist failed, error is %{public}d", errCode);
+        APP_LOGE("check if dir exist failed, err %{public}d", errCode);
     }
     if (isDirExist) {
         APP_LOGI("Copy ap path is exist");
@@ -324,7 +308,7 @@ ErrCode AOTHandler::MkApDestDirIfNotExist() const
     errCode = InstalldClient::GetInstance()->Mkdir(
         COPY_AP_DEST_PATH, mode, Constants::FOUNDATION_UID, ServiceConstants::SHELL_UID);
     if (errCode != ERR_OK) {
-        APP_LOGE("fail to create dir, error is %{public}d", errCode);
+        APP_LOGE("fail create dir err %{public}d", errCode);
         return errCode;
     }
     APP_LOGI("MkApDestDir path success");
@@ -420,7 +404,7 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
         result.append(sourceAp);
         errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
         if (errCode != ERR_OK) {
-            APP_LOGE("Copy ap dir %{public}s failed! error is %{public}d", sourceAp.c_str(), errCode);
+            APP_LOGE("Copy ap dir %{public}s failed err %{public}d", sourceAp.c_str(), errCode);
             result.append(" copy ap failed!");
             continue;
         }
@@ -468,12 +452,12 @@ void AOTHandler::BeforeOTACompile()
 {
     OTACompileDeadline_ = false;
     int32_t limitSeconds = system::GetIntParameter<int32_t>(OTA_COMPILE_TIME, OTA_COMPILE_TIME_DEFAULT);
-    APP_LOGI("OTA compile time limit seconds : %{public}d", limitSeconds);
+    APP_LOGI("OTA compile time limit seconds %{public}d", limitSeconds);
     auto task = [this]() {
         APP_LOGI("compile timer end");
         OTACompileDeadline_ = true;
         ErrCode ret = InstalldClient::GetInstance()->StopAOT();
-        APP_LOGI("StopAOT ret : %{public}d", ret);
+        APP_LOGI("StopAOT ret %{public}d", ret);
     };
     int32_t delayTimeSeconds = limitSeconds - GAP_SECONDS;
     if (delayTimeSeconds < 0) {
@@ -482,7 +466,7 @@ void AOTHandler::BeforeOTACompile()
     serialQueue_->ScheduleDelayTask(TASK_NAME, delayTimeSeconds * CONVERSION_FACTOR, task);
 }
 
-void AOTHandler::OTACompile()
+void AOTHandler::OTACompile() const
 {
     auto OTACompileTask = [this]() {
         OTACompileInternal();
@@ -490,7 +474,7 @@ void AOTHandler::OTACompile()
     std::thread(OTACompileTask).detach();
 }
 
-void AOTHandler::OTACompileInternal()
+void AOTHandler::OTACompileInternal() const
 {
     APP_LOGI("OTACompileInternal begin");
     system::SetParameter(OTA_COMPILE_STATUS, OTA_COMPILE_STATUS_BEGIN);
@@ -508,7 +492,7 @@ void AOTHandler::OTACompileInternal()
     std::string compileMode = system::GetParameter(OTA_COMPILE_MODE, COMPILE_NONE);
     APP_LOGI("%{public}s = %{public}s", OTA_COMPILE_MODE, compileMode.c_str());
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", OTA_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", OTA_COMPILE_MODE);
         return;
     }
 
@@ -536,7 +520,7 @@ void AOTHandler::OTACompileInternal()
 bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
 {
     std::string updateType = system::GetParameter(UPDATE_TYPE, "");
-    APP_LOGI("updateType : %{public}s", updateType.c_str());
+    APP_LOGI("updateType %{public}s", updateType.c_str());
     int32_t size = 0;
     if (updateType == UPDATE_TYPE_MANUAL) {
         size = system::GetIntParameter<int32_t>(OTA_COMPILE_COUNT_MANUAL, OTA_COMPILE_COUNT_MANUAL_DEFAULT);
@@ -551,7 +535,7 @@ bool AOTHandler::GetOTACompileList(std::vector<std::string> &bundleNames) const
 
 bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const
 {
-    APP_LOGI("GetUserBehaviourAppList begin, size : %{public}d", size);
+    APP_LOGI("GetUserBehaviourAppList begin, size %{public}d", size);
     void* handle = dlopen(USER_STATUS_SO_NAME, RTLD_NOW);
     if (handle == nullptr) {
         APP_LOGE("user status dlopen failed : %{public}s", dlerror());
@@ -571,9 +555,9 @@ bool AOTHandler::GetUserBehaviourAppList(std::vector<std::string> &bundleNames, 
 }
 
 EventInfo AOTHandler::HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
-    std::shared_ptr<BundleDataMgr> dataMgr)
+    std::shared_ptr<BundleDataMgr> dataMgr) const
 {
-    APP_LOGI("handle compile bundle : %{public}s", bundleName.c_str());
+    APP_LOGI("handle compile bundle %{public}s", bundleName.c_str());
     EventInfo eventInfo;
     eventInfo.timeStamp = BundleUtil::GetCurrentTime();
     eventInfo.bundleName = bundleName;
@@ -649,7 +633,7 @@ void AOTHandler::ReportSysEvent(const std::map<std::string, EventInfo> &sysEvent
 }
 
 void AOTHandler::HandleIdleWithSingleHap(
-    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode)
+    const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const
 {
     APP_LOGD("HandleIdleWithSingleHap, moduleName : %{public}s", moduleName.c_str());
     if (info.GetAOTCompileStatus(moduleName) == AOTCompileStatus::COMPILE_SUCCESS) {
@@ -661,7 +645,7 @@ void AOTHandler::HandleIdleWithSingleHap(
 }
 
 ErrCode AOTHandler::HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
-    const std::string &compileMode, bool isEnanleBaselinePgo)
+    const std::string &compileMode, bool isEnanleBaselinePgo) const
 {
     APP_LOGI("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnanleBaselinePgo);
@@ -684,7 +668,7 @@ bool AOTHandler::CheckDeviceState() const
 #endif
 }
 
-void AOTHandler::HandleIdle()
+void AOTHandler::HandleIdle() const
 {
     APP_LOGI("HandleIdle begin");
     std::unique_lock<std::mutex> lock(idleMutex_, std::defer_lock);
@@ -699,7 +683,7 @@ void AOTHandler::HandleIdle()
     std::string compileMode = system::GetParameter(IDLE_COMPILE_MODE, ServiceConstants::COMPILE_PARTIAL);
     APP_LOGI("%{public}s = %{public}s", IDLE_COMPILE_MODE, compileMode.c_str());
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", IDLE_COMPILE_MODE);
         return;
     }
     if (!CheckDeviceState()) {
@@ -733,12 +717,12 @@ void AOTHandler::HandleIdle()
 }
 
 ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
-    std::vector<std::string> &compileResults)
+    std::vector<std::string> &compileResults) const
 {
     APP_LOGI("HandleCompile begin");
     std::unique_lock<std::mutex> lock(compileMutex_, std::defer_lock);
     if (!lock.try_lock()) {
-        APP_LOGI("compile task is running, skip %{public}s", bundleName.c_str());
+        APP_LOGI("compile task running, skip %{public}s", bundleName.c_str());
         std::string compileResult = "info: compile task is running, skip.";
         compileResults.emplace_back(compileResult);
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -750,7 +734,7 @@ ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::stri
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     if (compileMode == COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", IDLE_COMPILE_MODE);
+        APP_LOGI("%{public}s none, no need to AOT", IDLE_COMPILE_MODE);
         std::string compileResult = "info: persist.bm.idle.arkopt = none, no need to AOT.";
         compileResults.emplace_back(compileResult);
         return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -777,7 +761,7 @@ ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::stri
 }
 
 ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
-    std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults)
+    std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults) const
 {
     ErrCode ret = ERR_OK;
     std::for_each(bundleNames.cbegin(), bundleNames.cend(),
@@ -785,7 +769,7 @@ ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleN
         APP_LOGD("HandleCompile bundleToCompile : %{public}s", bundleToCompile.c_str());
         InnerBundleInfo info;
         if (!dataMgr->QueryInnerBundleInfo(bundleToCompile, info)) {
-            APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile: %{public}s", bundleToCompile.c_str());
+            APP_LOGE("QueryInnerBundleInfo failed. bundleToCompile %{public}s", bundleToCompile.c_str());
             std::string compileResult = bundleToCompile + ": QueryInnerBundleInfo failed.";
             compileResults.emplace_back(compileResult);
             ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
@@ -813,7 +797,7 @@ ErrCode AOTHandler::HandleCompileBundles(const std::vector<std::string> &bundleN
 }
 
 ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleNames, const std::string &compileMode,
-    InnerBundleInfo &info, std::string &compileResult)
+    InnerBundleInfo &info, std::string &compileResult) const
 {
     ErrCode ret = ERR_OK;
     std::for_each(moduleNames.cbegin(), moduleNames.cend(),
@@ -826,8 +810,10 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
                 compileResult += "  " + moduleName + ":compile-fail";
                 break;
             case ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED:
-            case ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE:
                 compileResult += "  " + moduleName + ":signature-fail";
+                break;
+            case ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE:
+                compileResult += "  " + moduleName + ":signature-disable";
                 break;
             case ERR_APPEXECFWK_AOT_ARGS_EMPTY:
                 compileResult += "  " + moduleName + ":args-empty";
@@ -842,177 +828,5 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
     });
     return ret;
 }
-
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-void AOTHandler::RegisterScreenUnlockListener()
-{
-    auto PendingSignTask = [this]() {
-        if (!StartPendingSignEvent()) {
-            APP_LOGE("pending sign AOT event error");
-        }
-    };
-    std::thread(PendingSignTask).detach();
-}
-
-bool AOTHandler::StartPendingSignEvent()
-{
-    if (hasUnlocked_) {
-        return true;
-    }
-    {
-        std::unique_lock<std::mutex> lock(unlockMutex_);
-        bool lockStatus = false;
-        if (ScreenLock::ScreenLockManager::GetInstance()->IsLocked(lockStatus) == ScreenLock::E_SCREENLOCK_OK) {
-            APP_LOGI("screen lock status = %{public}d", lockStatus);
-            hasUnlocked_ = !lockStatus;
-        } else {
-            APP_LOGE("unable get lock screen status");
-        }
-        if (hasUnlocked_) {
-            return true;
-        }
-        if (!WaitForCommonEventManager()) {
-            return false;
-        }
-        if (!RegisterScreenUnlockEvent()) {
-            return false;
-        }
-        unlockConVar_.wait(lock, [this]() {
-            bool ret = this->hasUnlocked_;
-            return ret;
-        });
-        APP_LOGI("thread is wake up");
-        UnregisterScreenUnlockEvent();
-    }
-    return ExecutePendingSign();
-}
-
-bool AOTHandler::ExecutePendingSign()
-{
-    sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
-    int32_t loopTimes = 0;
-    while (FinishPendingSign() != ERR_OK) {
-        if (++loopTimes > LOOP_TIMES_FOR_WAIT_SIGN_ENABLE) {
-            APP_LOGE("wait for enforce sign enable time out");
-            return false;
-        }
-        sleep(SLEEP_TIME_FOR_WAIT_SIGN_ENABLE);
-    }
-    {
-        std::lock_guard<std::mutex> lock(unlockMutex_);
-        pendingSignData_.clear();
-    }
-    APP_LOGI("pending enforce sign success");
-    return true;
-}
-
-ErrCode AOTHandler::FinishPendingSign()
-{
-    std::lock_guard<std::mutex> lock(unlockMutex_);
-    ErrCode ret = ERR_OK;
-    for (auto itBundle = pendingSignData_.begin(); itBundle != pendingSignData_.end(); ++itBundle) {
-        auto &bundleName = itBundle->first;
-        auto &moduleSignData = itBundle->second;
-        for (auto itModule = moduleSignData.begin(); itModule != moduleSignData.end();) {
-            auto &moduleName = itModule->first;
-            auto &signData = itModule->second.signData;
-            std::string anFileName = ServiceConstants::ARK_CACHE_PATH + bundleName + ServiceConstants::PATH_SEPARATOR
-                + ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR + moduleName + ServiceConstants::AN_SUFFIX;
-
-            ErrCode retCS = InstalldClient::GetInstance()->PendSignAOT(anFileName, signData);
-            if (retCS == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
-                APP_LOGE("enforce sign service is disable");
-                ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-                ++itModule;
-                continue;
-            } else if (retCS != ERR_OK) {
-                itModule = moduleSignData.erase(itModule);
-                continue;
-            }
-            auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-            if (!dataMgr) {
-                APP_LOGE("dataMgr is null");
-                ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED;
-                ++itModule;
-                continue;
-            }
-            auto versionCode = itModule->second.versionCode;
-            dataMgr->SetAOTCompileStatus(bundleName, moduleName, AOTCompileStatus::COMPILE_SUCCESS, versionCode);
-            itModule = moduleSignData.erase(itModule);
-        }
-    }
-    return ret;
-}
-
-bool AOTHandler::WaitForCommonEventManager() const
-{
-    struct tm doingTime = {0};
-    struct tm startTime = {0};
-    int64_t seconds = 0;
-    bool ret = false;
-    if (!OHOS::GetSystemCurrentTime(&startTime)) {
-        return false;
-    }
-    while (seconds <= SLEEP_TIME_FOR_COMMON_EVENT_MGR_TIME_OUT) {
-        auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        if (samgr != nullptr && samgr->CheckSystemAbility(COMMON_EVENT_MANAGER_ID) != nullptr) {
-            APP_LOGI("common event manager is loaded");
-            ret = true;
-            break;
-        }
-        APP_LOGD("get common event manager failed");
-        usleep(SLEEP_TIME_FOR_COMMON_EVENT_MGR);
-        if (OHOS::GetSystemCurrentTime(&doingTime)) {
-            seconds = OHOS::GetSecondsBetween(startTime, doingTime);
-        }
-    }
-    return ret;
-}
-
-bool AOTHandler::RegisterScreenUnlockEvent()
-{
-    APP_LOGI("register screen unlock event start");
-    EventFwk::MatchingSkills matchingSkill;
-    // use COMMON_EVENT_USER_UNLOCKED if only for device with PIN
-    matchingSkill.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED);
-    EventFwk::CommonEventSubscribeInfo eventInfo(matchingSkill);
-    unlockEventSubscriber_ = std::make_shared<UnlockEventSubscriber>(eventInfo);
-    const auto result = EventFwk::CommonEventManager::SubscribeCommonEvent(unlockEventSubscriber_);
-    if (!result) {
-        APP_LOGE("register screen unlock event error");
-        return false;
-    }
-    APP_LOGI("register screen unlock event success");
-    return true;
-}
-
-void AOTHandler::UnregisterScreenUnlockEvent()
-{
-    APP_LOGI("unregister screen unlock event start");
-    const auto result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(unlockEventSubscriber_);
-    if (!result) {
-        APP_LOGE("unregister screen unlock event error");
-        return;
-    }
-    APP_LOGI("unregister screen unlock event success");
-}
-
-void AOTHandler::UnlockEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &event)
-{
-    const auto want = event.GetWant();
-    const auto action = want.GetAction();
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SCREEN_UNLOCKED) {
-        APP_LOGI("receive screen unlock event");
-        AOTHandler::GetInstance().FinishWaiting();
-    }
-}
-
-void AOTHandler::FinishWaiting()
-{
-    std::unique_lock<std::mutex> lock(unlockMutex_);
-    hasUnlocked_ = true;
-    unlockConVar_.notify_one();
-}
-#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

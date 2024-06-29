@@ -28,7 +28,7 @@ constexpr uint32_t CONVERSION_FACTOR = 1000; // ms to us
 
 SerialQueue::SerialQueue(const std::string &queueName)
 {
-    APP_LOGI("create SerialQueue, queueName : %{public}s", queueName.c_str());
+    APP_LOGI("create SerialQueue, queueName %{public}s", queueName.c_str());
     queue_ = std::make_shared<queue>(queueName.c_str());
 }
 
@@ -39,7 +39,7 @@ SerialQueue::~SerialQueue()
 
 void SerialQueue::ScheduleDelayTask(const std::string &taskName, uint64_t ms, std::function<void()> func)
 {
-    APP_LOGI("begin to ScheduleDelayTask, taskName : %{public}s", taskName.c_str());
+    APP_LOGI("begin, taskName %{public}s", taskName.c_str());
     if (ms > std::numeric_limits<uint64_t>::max() / CONVERSION_FACTOR) {
         APP_LOGE("invalid ms, ScheduleDelayTask failed");
         return;
@@ -56,7 +56,7 @@ void SerialQueue::ScheduleDelayTask(const std::string &taskName, uint64_t ms, st
 
 void SerialQueue::CancelDelayTask(const std::string &taskName)
 {
-    APP_LOGI("begin to CancelDelayTask, taskName : %{public}s", taskName.c_str());
+    APP_LOGI("begin, taskName %{public}s", taskName.c_str());
     std::unique_lock<std::shared_mutex> lock(mutex_);
     auto item = taskMap_.find(taskName);
     if (item == taskMap_.end()) {
@@ -66,7 +66,7 @@ void SerialQueue::CancelDelayTask(const std::string &taskName)
     if (item->second != nullptr) {
         int32_t ret = queue_->cancel(item->second);
         if (ret != 0) {
-            APP_LOGW("CancelDelayTask failed, error code : %{public}d", ret);
+            APP_LOGW("CancelDelayTask failed, err %{public}d", ret);
         }
     }
     taskMap_.erase(taskName);
