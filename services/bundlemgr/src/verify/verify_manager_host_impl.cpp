@@ -311,7 +311,7 @@ bool VerifyManagerHostImpl::CheckFileParam(const std::vector<std::string> &abcPa
 bool VerifyManagerHostImpl::VerifyAbc(
     const std::string &rootDir, const std::vector<std::string> &names)
 {
-    std::vector<std::string> paths;
+    std::vector<std::string> paths(names.size());
     for (const auto &name : names) {
         paths.emplace_back(rootDir + name);
     }
