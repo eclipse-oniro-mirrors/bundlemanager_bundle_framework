@@ -38,7 +38,8 @@ const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
 static const std::string ROUTER_MAP = "routerMap";
-static const std::string DATA = "data";
+static const std::string ROUTER_MAP_DATA = "data";
+static const std::string ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
 static const size_t DATA_MAX_LENGTH = 4096;
 const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
 const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
@@ -320,17 +321,41 @@ ErrCode BundleParser::ParseRouterArray(
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         }
         RouterItem routerItem;
+        if (object.count(ROUTER_MAP_DATA) > 0 && !CheckRouterData(object)) {
+            APP_LOGW("check data type failed");
+            continue;
+        }
         from_json(object, routerItem);
-        if (object.find(DATA) != object.end()) {
-            if (object[DATA].dump().size() <= DATA_MAX_LENGTH) {
-                routerItem.data = object[DATA].dump();
+        if (object.find(ROUTER_ITEM_KEY_CUSTOM_DATA) != object.end()) {
+            if (object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump().size() <= DATA_MAX_LENGTH) {
+                routerItem.customData = object[ROUTER_ITEM_KEY_CUSTOM_DATA].dump();
             } else {
-                APP_LOGE("data in routerMap profile is too long");
+                APP_LOGE("customData in routerMap profile is too long");
             }
         }
         routerArray.emplace_back(routerItem);
     }
     return ERR_OK;
+}
+
+bool BundleParser::CheckRouterData(nlohmann::json data) const
+{
+    if (data.find(ROUTER_MAP_DATA) == data.end()) {
+        APP_LOGW("data is not existed");
+        return false;
+    }
+    if (!data.at(ROUTER_MAP_DATA).is_object()) {
+        APP_LOGW("data is not a json object");
+        return false;
+    }
+    for (nlohmann::json::iterator kt = data.at(ROUTER_MAP_DATA).begin(); kt != data.at(ROUTER_MAP_DATA).end(); ++kt) {
+        // check every value is string
+        if (!kt.value().is_string()) {
+            APP_LOGW("Error: Value in data object for key %{public}s must be a string", kt.key().c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList)
