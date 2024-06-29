@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-int AccountHelper::IsOsAccountExists(const int id, bool &isOsAccountExists)
+int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExists)
 {
 #ifdef ACCOUNT_ENABLE
     return AccountSA::OsAccountManager::IsOsAccountCompleted(id, isOsAccountExists);

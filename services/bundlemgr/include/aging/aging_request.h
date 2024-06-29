@@ -46,17 +46,17 @@ public:
 
     void UpdateTotalDataBytesAfterUninstalled(const int64_t dataBytes)
     {
-        tatalDataBytes_ -= dataBytes;
+        totalDataBytes_ -= dataBytes;
     };
 
     int64_t GetTotalDataBytes() const
     {
-        return tatalDataBytes_;
+        return totalDataBytes_;
     };
 
     void SetTotalDataBytes(const int64_t allBundleDataBytes)
     {
-        tatalDataBytes_ = allBundleDataBytes;
+        totalDataBytes_ = allBundleDataBytes;
     };
 
     void SetAgingCleanType(const AgingCleanType agingCleanType)
@@ -85,7 +85,7 @@ private:
     void InitAgingOneDayTimeMs();
 
     std::vector<AgingBundleInfo> agingBundles_;
-    int64_t tatalDataBytes_ = 0;
+    int64_t totalDataBytes_ = 0;
     AgingCleanType agingCleanType_ = AgingCleanType::CLEAN_CACHE;
 
     static int64_t totalDataBytesThreshold_;
