@@ -37,7 +37,9 @@ namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
 const std::string DATA_APP_PATH = "/data/app";
+#ifdef GLOBAL_RESMGR_ENABLE
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
+#endif
 const std::string PATH_SEPARATOR = "/";
 } // namespace
 
