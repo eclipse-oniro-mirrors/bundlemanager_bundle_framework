@@ -2692,11 +2692,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
+    std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+    } else {
+        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
