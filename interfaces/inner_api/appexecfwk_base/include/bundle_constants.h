@@ -125,11 +125,6 @@ constexpr const char* APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
 constexpr const char* APP_PROVISION_TYPE_DEBUG = "debug";
 constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 
-// apiReleaseType
-const std::string API_RELEASE_TYPE_RELEASE = "Release";
-const std::string API_RELEASE_TYPE_BETA = "Beta";
-const std::string API_RELEASE_TYPE_CANARY = "Canary";
-
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 constexpr int64_t INHERIT_CROWDTEST_DEADLINE = -2;
