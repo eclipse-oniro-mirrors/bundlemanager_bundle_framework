@@ -197,7 +197,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     return aotArgs;
 }
 
-ErrCode AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const
+ErrCode AOTHandler::AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t versionCode) const
 {
     if (!aotArgs) {
         APP_LOGD("aotArgs empty");

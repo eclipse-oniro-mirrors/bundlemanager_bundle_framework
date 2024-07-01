@@ -40,7 +40,7 @@ int AccountHelper::IsOsAccountExists(const int id, bool &isOsAccountExists)
 int32_t AccountHelper::GetCurrentActiveUserId()
 {
 #ifdef ACCOUNT_ENABLE
-    std::int32_t localId;
+    int32_t localId;
     int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     if (ret != 0) {
         APP_LOGE("GetForegroundOsAccountLocalId failed ret:%{public}d", ret);

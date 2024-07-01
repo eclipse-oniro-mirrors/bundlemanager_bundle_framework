@@ -32,7 +32,7 @@ AgingHandlerChain::~AgingHandlerChain()
     handlers_.clear();
 }
 
-void AgingHandlerChain::AddHandler(const ::std::shared_ptr<AgingHandler> &handler)
+void AgingHandlerChain::AddHandler(const std::shared_ptr<AgingHandler> &handler)
 {
     if (handler == nullptr) {
         APP_LOGE("agingHandler: invalid handler.");

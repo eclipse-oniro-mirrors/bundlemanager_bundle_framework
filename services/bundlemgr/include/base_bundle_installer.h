@@ -663,7 +663,7 @@ private:
     ErrCode DeliveryProfileToCodeSign() const;
     ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
     ErrCode ExtractResFileDir(const std::string &modulePath) const;
-    ErrCode ExtractHnpFileDir(std::string cpuAbi, const std::string hnpPackageInfoString,
+    ErrCode ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
         const std::string &modulePath) const;
     void DeleteOldNativeLibraryPath() const;
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
@@ -705,7 +705,7 @@ private:
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-
+    bool InitDataMgr();
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;

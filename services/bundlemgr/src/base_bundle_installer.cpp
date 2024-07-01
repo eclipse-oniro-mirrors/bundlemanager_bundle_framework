@@ -89,7 +89,7 @@ constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
-const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
+constexpr const char* SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
 const int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
@@ -174,7 +174,7 @@ void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installPara
         LOG_W(BMS_TAG_INSTALLER, "sendStartInstallNotify bundleName is empty");
         return;
     }
-    for (auto item : infos) {
+    for (const auto &item : infos) {
         LOG_D(BMS_TAG_INSTALLER, "sendStartInstallNotify %{public}s  %{public}s %{public}s %{public}s",
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
@@ -390,16 +390,14 @@ ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
     LOG_I(BMS_TAG_INSTALLER, "begin to process cross-app %{public}s uninstall", uninstallParam.bundleName.c_str());
-    std::string bundleName = uninstallParam.bundleName;
+    const std::string &bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle name or module name empty");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
 
-    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr_) {
-        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
@@ -1010,12 +1008,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 {
     LOG_D(BMS_TAG_INSTALLER, "ProcessBundleInstall bundlePath install paths=%{public}s, hspPaths=%{public}s",
         GetJsonStrFromInfo(inBundlePaths).c_str(), GetJsonStrFromInfo(installParam.sharedBundleDirPaths).c_str());
-    if (dataMgr_ == nullptr) {
-        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        if (dataMgr_ == nullptr) {
-            LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
-            return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
-        }
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     SharedBundleInstaller sharedBundleInstaller(installParam, appType);
@@ -1334,9 +1328,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
     }
 
-    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -1507,10 +1499,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_E(BMS_TAG_INSTALLER, "uninstall bundle name or module name empty");
         return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
     }
-
-    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr_) {
-        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -1703,9 +1692,7 @@ ErrCode BaseBundleInstaller::ProcessRecover(
 ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     const std::string &bundleName, const InstallParam &installParam, int32_t &uid)
 {
-    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLER, "Get dataMgr shared_ptr nullptr.");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
@@ -1843,11 +1830,10 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, int32_t &userId)
 {
-    if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+    if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         std::string moduleHnpsPath = info.GetInnerModuleInfoHnpPath(info.GetCurModuleName());
-        std::string hapPath = modulePath_;
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleInstallNative(std::to_string(userId), moduleHnpsPath,
-            hapPath, info.GetCpuAbi(), info.GetBundleName());
+            modulePath_, info.GetCpuAbi(), info.GetBundleName());
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "installing the native package failed. error code: %{public}d", ret);
             return ret;
@@ -1862,7 +1848,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
 ErrCode BaseBundleInstaller::ProcessBundleUnInstallNative(InnerBundleInfo &info,
     int32_t &userId, std::string bundleName)
 {
-    if (auto hnpPackageInfos = info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
+    if (info.GetInnerModuleInfoHnpInfo(info.GetCurModuleName())) {
         ErrCode ret = InstalldClient::GetInstance()->ProcessBundleUnInstallNative(
             std::to_string(userId).c_str(), bundleName.c_str());
         if (ret != ERR_OK) {
@@ -2648,7 +2634,7 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
     char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
+    int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD, "",
         szAtomicDatasizeThresholdMb, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
         LOG_I(BMS_TAG_INSTALLER, "GetParameter failed");
@@ -3133,7 +3119,7 @@ ErrCode BaseBundleInstaller::ExtractResFileDir(const std::string &modulePath) co
     return ret;
 }
 
-ErrCode BaseBundleInstaller::ExtractHnpFileDir(std::string cpuAbi, const std::string hnpPackageInfoString,
+ErrCode BaseBundleInstaller::ExtractHnpFileDir(const std::string &cpuAbi, const std::string &hnpPackageInfoString,
     const std::string &modulePath) const
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractHnpFileDir begin");
@@ -3902,6 +3888,15 @@ ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &ins
 
 bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)
 {
+    if (!InitDataMgr()) {
+        return false;
+    }
+    isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
+    return true;
+}
+
+bool BaseBundleInstaller::InitDataMgr()
+{
     if (dataMgr_ == nullptr) {
         dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
         if (dataMgr_ == nullptr) {
@@ -3909,7 +3904,6 @@ bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppE
             return false;
         }
     }
-    isAppExist = dataMgr_->GetInnerBundleInfo(bundleName_, info);
     return true;
 }
 
@@ -4191,6 +4185,11 @@ ErrCode BaseBundleInstaller::CheckArkNativeFileWithOldInfo(
         return ERR_OK;
     }
 
+    if (newInfos.empty()) {
+        LOG_D(BMS_TAG_INSTALLER, "newInfos is empty");
+        return ERR_APPEXECFWK_INSTALL_AN_INCOMPATIBLE;
+    }
+
     std::string arkNativeFileAbi = newInfos.begin()->second.GetArkNativeFileAbi();
     if (arkNativeFileAbi.empty()) {
         LOG_D(BMS_TAG_INSTALLER, "NewInfos no arkNativeFile");
@@ -4214,8 +4213,7 @@ ErrCode BaseBundleInstaller::CheckNativeSoWithOldInfo(
     const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
     LOG_D(BMS_TAG_INSTALLER, "CheckNativeSoWithOldInfo begin");
-    bool oldInfoHasSo = !oldInfo.GetNativeLibraryPath().empty();
-    if (!oldInfoHasSo) {
+    if (oldInfo.GetNativeLibraryPath().empty()) {
         LOG_D(BMS_TAG_INSTALLER, "OldInfo does not has so");
         return ERR_OK;
     }
@@ -4520,7 +4518,7 @@ void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
 
     if (singletonState_ == SingletonState::NON_TO_SINGLETON) {
         LOG_I(BMS_TAG_INSTALLER, "Bundle changes from non singleton app to singleton app");
-        for (auto infoItem : info.GetInnerBundleUserInfos()) {
+        for (const auto &infoItem : info.GetInnerBundleUserInfos()) {
             int32_t installedUserId = infoItem.second.bundleUserInfo.userId;
             if (installedUserId == Constants::DEFAULT_USERID) {
                 continue;
