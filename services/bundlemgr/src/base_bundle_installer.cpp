@@ -1070,6 +1070,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
+    for (uint32_t i = 0; i < hapVerifyResults.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[i].GetProvisionInfo();
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+            DeliveryProfileToCodeSign();
+        }
+    }
     result = CheckInstallCondition(hapVerifyResults, newInfos);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
@@ -3461,6 +3467,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
+    isInternaltestingBundle_ = bundleInstallChecker_->CheckInternaltestingBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
@@ -3783,6 +3790,7 @@ ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installP
         installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
         // need vaild permission
@@ -4465,6 +4473,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEntryInstalled_ = false;
     entryModuleName_.clear();
     isEnterpriseBundle_ = false;
+    isInternaltestingBundle_ = false;
     appIdentifier_.clear();
     targetSoPathMap_.clear();
 }
@@ -4836,6 +4845,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = info.GetIsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
@@ -4869,6 +4879,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.modulePath = realHapPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = (iter->second).GetIsPreInstallApp();
@@ -5327,6 +5338,7 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
         return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());

@@ -26,6 +26,7 @@ struct CodeSignatureParam : public Parcelable {
     std::string targetSoPath;
     std::string signatureFileDir;
     bool isEnterpriseBundle = false;
+    bool isInternaltestingBundle = false;
     std::string appIdentifier;
     bool isPreInstalledBundle = false;
     bool isCompileSdkOpenHarmony = false;

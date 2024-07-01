@@ -42,6 +42,8 @@ struct InstallCheckParam {
     PermissionStatus installEtpNormalBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise mdm bundle permission
     PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install internaltesting bundle permission
+    PermissionStatus installInternaltestingBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // is shell token
     bool isCallByShell = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
@@ -139,11 +141,17 @@ public:
 
     bool VaildEnterpriseInstallPermission(const InstallParam &installParam,
         const Security::Verify::ProvisionInfo &provisionInfo);
+    
+    bool ValidInternaltestingInstallPermission(const InstallParam &installParam, 
+        const Security::Verify::ProvisionInfo &provisionInfo);
 
     bool VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     bool VaildEnterpriseInstallPermissionForShare(const InstallCheckParam &checkParam,
+        const Security::Verify::ProvisionInfo &provisionInfo);
+
+    bool VaildInternaltestngInstallPermissionForShare(const InstallCheckParam &checkParam,
         const Security::Verify::ProvisionInfo &provisionInfo);
 
     ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos);
@@ -167,6 +175,7 @@ public:
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     bool CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
+    bool CheckInternaltestingBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
     bool CheckSupportAppTypes(
         const std::unordered_map<std::string, InnerBundleInfo> &infos, const std::string &supportAppTypes) const;
 

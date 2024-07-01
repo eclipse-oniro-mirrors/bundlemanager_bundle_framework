@@ -263,10 +263,12 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
     PermissionStatus installBundleStatus = installParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
+    PermissionStatus installInternaltestingBundleStatus = installParam.installInternaltestingBundlePermissionStatus;
     bool isCallByShell = installParam.isCallByShell;
     if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
-        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installInternaltestingBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
@@ -286,6 +288,13 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
             provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
             bool result = VaildEnterpriseInstallPermission(installParam, provisionInfo);
             if (!result) {
+                return false;
+            }
+            continue;
+        }
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+            if (!isCallByShell && installInternaltestingBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                LOG_E(BMS_TAG_INSTALLER, "install internaltesting bundle permission denied");
                 return false;
             }
             continue;
@@ -443,6 +452,7 @@ ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &ch
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
         // need vaild permission
@@ -458,10 +468,12 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
     PermissionStatus installBundleStatus = checkParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = checkParam.installEnterpriseBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = checkParam.installEtpMdmBundlePermissionStatus;
+    PermissionStatus installInternaltestingBundleStatus = checkParam.installInternaltestingBundlePermissionStatus;
     bool isCallByShell = checkParam.isCallByShell;
     if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
-        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installInternaltestingBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
@@ -473,6 +485,17 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 LOG_E(BMS_TAG_INSTALLER, "install enterprise bundle permission denied");
+                return false;
+            }
+            continue;
+        }
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                LOG_E(BMS_TAG_INSTALLER, "internaltesting bundle can not be installed by shell");
+                return false;
+            }
+            if (!isCallByShell && installInternaltestingBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                LOG_E(BMS_TAG_INSTALLER, "install internaltesting bundle permission denied");
                 return false;
             }
             continue;
@@ -1578,6 +1601,15 @@ bool BundleInstallChecker::CheckEnterpriseBundle(Security::Verify::HapVerifyResu
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
+        return true;
+    }
+    return false;
+}
+
+bool BundleInstallChecker::CheckInternaltestingBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const
+{
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
         return true;
     }
     return false;

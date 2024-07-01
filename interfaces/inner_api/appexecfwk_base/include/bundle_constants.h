@@ -119,6 +119,7 @@ constexpr const char* APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENTERPRISE = "enterprise";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL = "enterprise_normal";
 constexpr const char* APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM = "enterprise_mdm";
+constexpr const char* APP_DISTRIBUTION_TYPE_INTERNALTESTING = "internaltesting";
 constexpr const char* APP_DISTRIBUTION_TYPE_OS_INTEGRATION = "os_integration";
 constexpr const char* APP_DISTRIBUTION_TYPE_CROWDTESTING = "crowdtesting";
 // app provision type

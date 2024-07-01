@@ -105,6 +105,7 @@ constexpr int32_t LOG_DIR_GID = 1007;
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
 constexpr const char* PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE";
+constexpr const char* PERMISSION_INSTALL_INTERNALTESTING_BUNDLE = "ohos.permission.INSTALL_INTERNALTESTING_BUNDLE";
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";
@@ -145,6 +146,7 @@ constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 constexpr const char* PGO_FILE_SUFFIX = ".ap";
 // system param
 constexpr const char* ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
+constexpr const char* ALLOW_INTERNALRTESTING_BUNDLE = "const.bms.allinternaltestingbundle";
 constexpr const char* IS_ENTERPRISE_DEVICE = "const.edm.is_enterprise_device";
 constexpr const char* DEVELOPERMODE_STATE = "const.security.developermode.state";
 //extResource

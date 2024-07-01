@@ -1508,6 +1508,10 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const CodeSignatureParam &co
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
                 codeSignatureParam.modulePath, entryMap, fileType);
+        } else if (codeSignatureParam.isInternaltestingBundle) {
+            LOG_D(BMS_TAG_INSTALLD, "Verify code signature for internaltesting bundle");
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(codeSignatureParam.appIdentifier,
+                codeSignatureParam.modulePath, entryMap, fileType);
         } else {
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
