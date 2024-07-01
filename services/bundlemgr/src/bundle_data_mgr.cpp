@@ -352,6 +352,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(newInfo.GetIsPreInstallApp(), newInfo.GetRemovable());
             oldInfo.UpdateMultiAppMode(newInfo);
+            oldInfo.UpdateReleaseType(newInfo);
         }
         if (oldInfo.GetOldAppIds().empty()) {
             oldInfo.AddOldAppId(oldInfo.GetAppId());
@@ -562,6 +563,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.UpdateMultiAppMode(newInfo);
+            oldInfo.UpdateReleaseType(newInfo);
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         if (oldInfo.GetOldAppIds().empty()) {

@@ -4254,7 +4254,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetCompatibleVersion() != newInfo.GetCompatibleVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
     }
-    if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
+    if (!CheckReleaseTypeIsCompatible(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
     }
     if (oldInfo.GetAppDistributionType() != newInfo.GetAppDistributionType()) {
@@ -4284,6 +4284,15 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 
     LOG_D(BMS_TAG_INSTALLER, "CheckAppLabel end");
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    if (oldInfo.IsReleaseHsp() || newInfo.IsReleaseHsp()) {
+        return true;
+    }
+    return oldInfo.GetReleaseType() == newInfo.GetReleaseType();
 }
 
 ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,
