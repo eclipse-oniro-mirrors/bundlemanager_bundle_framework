@@ -70,6 +70,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
