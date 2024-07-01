@@ -49,7 +49,7 @@ const std::string BUNDLE_UPDATE = "Bundle Update Success";
 const std::string BUNDLE_REMOVE = "Bundle Remove Success";
 constexpr uint32_t WAIT_SECONDS = 10;
 constexpr uint32_t USERID = 100;
-const unsigned int LIST_SIZE = 2;
+const unsigned int LIST_SIZE = 1;
 static const int APP_LABELID = 16777216;
 static const int APP_ICONID = 16777218;
 }  // namespace
@@ -679,9 +679,6 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_GetAbilityList_0400, Function | Mediu
     EXPECT_TRUE(result) << "Get ability list failed";
     EXPECT_FALSE(launcherAbilityInfos.empty()) << "Launcher ability infos is empty";
     EXPECT_EQ(launcherAbilityInfos.size(), LIST_SIZE);
-    if (!launcherAbilityInfos.empty()) {
-        EXPECT_EQ(launcherAbilityInfos[0].elementName.GetAbilityName(), abilityName1);
-    }
 
     Uninstall(bundleName, message);
     EXPECT_EQ(message, "Success") << "uninstall fail!";

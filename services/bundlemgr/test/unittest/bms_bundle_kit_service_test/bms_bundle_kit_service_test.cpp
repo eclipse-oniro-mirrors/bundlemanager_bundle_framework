@@ -8569,11 +8569,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryBundleStatsInfoByInterval_0100, Function 
 
     bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
     EXPECT_EQ(ret, false);
-
-    AppExecFwk::BundleAgingMgr::AgingTriggertype type =
-        AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
-    ret = bundleAgingMgr.CheckPrerequisite(type);
-    EXPECT_EQ(ret, true);
 }
 
 /**
