@@ -2516,6 +2516,7 @@ void InnerBundleInfo::ProcessBundleFlags(
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         bundleInfo.signatureInfo.appId = baseBundleInfo_->appId;
         bundleInfo.signatureInfo.fingerprint = baseApplicationInfo_->fingerprint;
+        bundleInfo.signatureInfo.certificate = baseBundleInfo_->signatureInfo.certificate;
     }
 }
 
@@ -4198,6 +4199,16 @@ std::string InnerBundleInfo::GetAppIdentifier() const
 void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
 {
     baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
+}
+
+void InnerBundleInfo::SetCertificate(const std::string &certificate)
+{
+    baseBundleInfo_->signatureInfo.certificate = certificate;
+}
+
+std::string InnerBundleInfo::GetCertificate() const
+{
+    return baseBundleInfo_->signatureInfo.certificate;
 }
 
 void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)

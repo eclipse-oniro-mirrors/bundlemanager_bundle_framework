@@ -2184,6 +2184,8 @@ public:
     ErrCode DelMimeType(const std::string &moduleName, const std::string &abilityName, const std::string extName);
     void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
     void SetAppIdentifier(const std::string &appIdentifier);
+    void SetCertificate(const std::string &certificate);
+    std::string GetCertificate() const;
     std::string GetAppIdentifier() const;
     void AddOldAppId(const std::string &appId);
     std::vector<std::string> GetOldAppIds() const;

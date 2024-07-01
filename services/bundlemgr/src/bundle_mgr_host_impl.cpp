@@ -4108,6 +4108,11 @@ void BundleMgrHostImpl::SetProvisionInfoToInnerBundleInfo(const std::string &hap
     info.SetProvisionId(provisionInfo.appId);
     info.SetCertificateFingerprint(provisionInfo.fingerprint);
     info.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
+    if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        info.SetCertificate(provisionInfo.bundleInfo.developmentCertificate);
+    } else {
+        info.SetCertificate(provisionInfo.bundleInfo.distributionCertificate);
+    }
     info.SetAppPrivilegeLevel(provisionInfo.bundleInfo.apl);
     bool isDebug = provisionInfo.type == Security::Verify::ProvisionType::DEBUG;
     info.SetAppProvisionType(isDebug ? Constants::APP_PROVISION_TYPE_DEBUG : Constants::APP_PROVISION_TYPE_RELEASE);

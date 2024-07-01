@@ -48,6 +48,8 @@ ErrCode SharedBundleInstaller::ParseFiles()
     checkParam.installEnterpriseBundlePermissionStatus = installParam_.installEnterpriseBundlePermissionStatus;
     checkParam.installEtpNormalBundlePermissionStatus = installParam_.installEtpNormalBundlePermissionStatus;
     checkParam.installEtpMdmBundlePermissionStatus = installParam_.installEtpMdmBundlePermissionStatus;
+    checkParam.installInternaltestingBundlePermissionStatus =
+        installParam_.installInternaltestingBundlePermissionStatus;
     checkParam.isCallByShell = installParam_.isCallByShell;
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
