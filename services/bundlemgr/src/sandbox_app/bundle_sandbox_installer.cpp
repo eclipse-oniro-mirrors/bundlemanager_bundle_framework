@@ -334,6 +334,7 @@ ErrCode BundleSandboxInstaller::UninstallAllSandboxApps(const std::string &bundl
             }
             auto userInfos = info.second.GetInnerBundleUserInfos();
             if (userInfos.empty()) {
+                APP_LOGE("userInfos is empty");
                 return;
             }
             auto specifiedUserId = (userInfos.begin()->second).bundleUserInfo.userId;
