@@ -118,7 +118,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
     { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
-    { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL }
+    { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
+    { "uiService", ExtensionAbilityType::UI_SERVICE }
 };
 
 // the new extension type does not need to be added here
