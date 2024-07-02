@@ -24,32 +24,32 @@ const size_t NUM_ONE = 1;
 const size_t NUM_TWO = 2;
 }
 
-SemVer::SemVer(std::string version_string) : raw(version_string)
+SemVer::SemVer(std::string versionString) : raw(versionString)
 {
-    if (version_string.empty()) {
+    if (versionString.empty()) {
         return;
     }
-    size_t pos1 = version_string.find(PRE_RELEASE_SEPARATOR);
-    size_t pos2 = version_string.find(BUILD_META_SEPARATOR);
+    size_t pos1 = versionString.find(PRE_RELEASE_SEPARATOR);
+    size_t pos2 = versionString.find(BUILD_META_SEPARATOR);
     std::string base;
     if (pos1 != std::string::npos) {
-        base = version_string.substr(0, pos1);
+        base = versionString.substr(0, pos1);
     } else if (pos2 != std::string::npos) {
-        base = version_string.substr(0, pos2);
+        base = versionString.substr(0, pos2);
     } else {
-        base = version_string;
+        base = versionString;
     }
     std::string preRel = "";
     std::string build = "";
     if (pos1 != std::string::npos) {
         if (pos2 != std::string::npos) {
-            preRel = version_string.substr(pos1 + 1, pos2 - pos1 - 1);
-            build = version_string.substr(pos2 + 1);
+            preRel = versionString.substr(pos1 + 1, pos2 - pos1 - 1);
+            build = versionString.substr(pos2 + 1);
         } else {
-            preRel = version_string.substr(pos1 + 1);
+            preRel = versionString.substr(pos1 + 1);
         }
     } else if (pos2 != std::string::npos) {
-        build = version_string.substr(pos2 + 1);
+        build = versionString.substr(pos2 + 1);
     }
     std::istringstream issBase(base);
     std::string segment;

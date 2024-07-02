@@ -550,7 +550,7 @@ private:
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    ErrCode CheckDebugType(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
+    bool CheckReleaseTypeIsCompatible(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode CheckMaxCountForClone(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);

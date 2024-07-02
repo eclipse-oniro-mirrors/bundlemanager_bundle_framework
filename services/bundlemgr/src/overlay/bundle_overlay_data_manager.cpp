@@ -73,7 +73,6 @@ bool OverlayDataMgr::IsExistedNonOverlayHap(const std::string &bundleName)
 
 ErrCode OverlayDataMgr::UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("start");
     auto &innerModuleInfos = newInfo.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
         APP_LOGW("innerModuleInfos is empty");

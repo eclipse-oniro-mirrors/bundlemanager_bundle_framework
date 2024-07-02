@@ -162,6 +162,10 @@ constexpr int32_t CLONE_APP_INDEX_MAX = 5;
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
 constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlename";
+// apiReleaseType
+const std::string API_RELEASE_TYPE_RELEASE = "Release";
+const std::string API_RELEASE_TYPE_BETA = "Beta";
+const std::string API_RELEASE_TYPE_CANARY = "Canary";
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -3883,5 +3883,130 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0158, Function | SmallTest
     bool ans = parser.ParseForegroundAndBackgroundResource(resourceManager, jsonBuff, 0, resourceInfo);
     EXPECT_FALSE(ans);
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0159
+ * Function: InnerProcessResourceInfoBySystemLanguageChanged
+ * @tc.name: test system language change
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessResourceInfoBySystemLanguageChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0159, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.iconNeedParse_ = true;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        bool needDelete = true;
+        manager->InnerProcessResourceInfoBySystemLanguageChanged(resourceInfosMap, needDelete);
+        EXPECT_FALSE(needDelete);
+        EXPECT_FALSE(resourceInfosMap[BUNDLE_NAME][0].iconNeedParse_);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0160
+ * Function: InnerProcessResourceInfoBySystemThemeChanged
+ * @tc.name: test system theme change
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessResourceInfoBySystemThemeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0160, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.bundleName_ = BUNDLE_NAME;
+        info.iconNeedParse_ = true;
+        resourceInfosMap[BUNDLE_NAME].emplace_back(info);
+        bool needDelete = true;
+        manager->InnerProcessResourceInfoBySystemThemeChanged(resourceInfosMap, USERID, needDelete);
+        EXPECT_FALSE(needDelete);
+        EXPECT_TRUE(resourceInfosMap.empty()); // theme not exist
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0161
+ * Function: InnerProcessWhetherThemeExist
+ * @tc.name: test user change
+ * @tc.desc: 1. system running normally
+ *           2. test InnerProcessWhetherThemeExist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0161, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        bool ret = manager->InnerProcessWhetherThemeExist(BUNDLE_NAME, 0);
+        EXPECT_FALSE(ret);
+        ret = manager->InnerProcessWhetherThemeExist(BUNDLE_NAME, 100);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0162
+ * Function: DeleteNotExistResourceInfo
+ * @tc.name: test user change
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteNotExistResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0162, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        ResourceInfo resourceInfo;
+        resourceInfo.bundleName_ = "notExist";
+        std::vector<ResourceInfo> resourceInfos;
+        resourceInfos.emplace_back(resourceInfo);
+        resourceInfo.appIndex_ = 1;
+        resourceInfos.emplace_back(resourceInfo);
+        resourceInfo.bundleName_ = "bundleName";
+        resourceInfo.appIndex_ = 0;
+        resourceInfos.emplace_back(resourceInfo);
+        resourceInfo.appIndex_ = 1;
+        resourceInfos.emplace_back(resourceInfo);
+        resourceInfo.appIndex_ = 2;
+        resourceInfos.emplace_back(resourceInfo);
+        bool ret = manager->SaveResourceInfos(resourceInfos);
+        EXPECT_TRUE(ret);
+        std::vector<std::string> existResourceNames;
+        existResourceNames.emplace_back("notExist");
+        existResourceNames.emplace_back("1_notExist");
+        existResourceNames.emplace_back("bundleName");
+        existResourceNames.emplace_back("1_bundleName");
+        existResourceNames.emplace_back("2_bundleName");
+        std::map<std::string, std::vector<ResourceInfo>> resourceInfosMap;
+        ResourceInfo info;
+        info.appIndexes_.emplace_back(1);
+        resourceInfosMap["bundleName"].emplace_back(info);
+        manager->DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
+        BundleResourceInfo bundleResourceInfo;
+        ret = manager->GetBundleResourceInfo("bundleName",
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo);
+        EXPECT_TRUE(ret);
+        ret = manager->GetBundleResourceInfo("bundleName",
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo, 1);
+        EXPECT_TRUE(ret);
+        ret = manager->GetBundleResourceInfo("bundleName",
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo, 2);
+        EXPECT_FALSE(ret);
+        ret = manager->GetBundleResourceInfo("notExist",
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), bundleResourceInfo);
+        EXPECT_FALSE(ret);
+        manager->DeleteResourceInfo("bundleName");
+        manager->DeleteResourceInfo("1_bundleName");
+        manager->DeleteResourceInfo("2_bundleName");
+        manager->DeleteResourceInfo("notExist");
+        manager->DeleteResourceInfo("1_notExist");
+    }
+}
 #endif
 } // OHOS

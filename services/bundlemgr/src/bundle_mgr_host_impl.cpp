@@ -2065,7 +2065,10 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    APP_LOGD("verify permission success, begin to SetApplicationEnabled");
+    if (!CheckCanSetEnable(bundleName)) {
+        APP_LOGE("bundle in white-list");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2099,7 +2102,6 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     NotifyBundleStatus(installRes);
     IPCSkeleton::SetCallingIdentity(identity);
-    APP_LOGD("SetApplicationEnabled finish");
     return ERR_OK;
 }
 
@@ -2191,7 +2193,6 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
-    APP_LOGD("start SetAbilityEnabled");
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2203,6 +2204,10 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, 0);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckCanSetEnable(abilityInfo.bundleName)) {
+        APP_LOGE("bundle in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -4230,6 +4235,22 @@ ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const Elem
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
+{
+    std::vector<std::string> noDisablingList;
+    std::string configPath = BundleUtil::GetNoDisablingConfigPath();
+    ErrCode ret = BundleParser::ParseNoDisablingList(configPath, noDisablingList);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "GetNoDisablingList failed");
+        return true;
+    }
+    auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);
+    if (it == noDisablingList.end()) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

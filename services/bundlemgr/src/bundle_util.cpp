@@ -33,6 +33,9 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_service_constants.h"
+#ifdef CONFIG_POLOCY_ENABLE
+#include "config_policy_utils.h"
+#endif
 #include "directory_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
@@ -64,6 +67,11 @@ constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
 const std::string EMPTY_STRING = "";
+#ifdef CONFIG_POLOCY_ENABLE
+    const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
+#endif
+const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
+    "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -889,6 +897,20 @@ std::string BundleUtil::ToString(const std::vector<std::string> &vector)
         ret.append(item).append(",");
     }
     return ret;
+}
+
+std::string BundleUtil::GetNoDisablingConfigPath()
+{
+#ifdef CONFIG_POLOCY_ENABLE
+    char buf[MAX_PATH_LEN] = { 0 };
+    char *configPath = GetOneCfgFile(NO_DISABLING_CONFIG_PATH, buf, MAX_PATH_LEN);
+    if (configPath == nullptr || configPath[0] == '\0' || strlen(configPath) > MAX_PATH_LEN) {
+        return NO_DISABLING_CONFIG_PATH_DEFAULT;
+    }
+    return configPath;
+#else
+    return NO_DISABLING_CONFIG_PATH_DEFAULT;
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

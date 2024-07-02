@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-int AccountHelper::IsOsAccountExists(const int id, bool &isOsAccountExists)
+int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExists)
 {
 #ifdef ACCOUNT_ENABLE
     return AccountSA::OsAccountManager::IsOsAccountCompleted(id, isOsAccountExists);
@@ -66,6 +66,23 @@ bool AccountHelper::IsOsAccountVerified(const int32_t userId)
 #else
     APP_LOGI("ACCOUNT_ENABLE is false");
     return false;
+#endif
+}
+
+int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
+{
+#ifdef ACCOUNT_ENABLE
+    int32_t localId;
+    ErrCode err = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(callingUid, localId);
+    if (err != ERR_OK || localId == Constants::DEFAULT_USERID) {
+        APP_LOGW("GetOsAccountLocalIdFromUid failed: uid %{public}d, req from active userid", callingUid);
+        return AccountHelper::GetCurrentActiveUserId();
+    }
+    return localId;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    // ACCOUNT_ENABLE is false, do nothing and return -1.
+    return -1;
 #endif
 }
 }  // namespace AppExecFwk

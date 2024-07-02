@@ -70,6 +70,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -2678,11 +2679,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
+    std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+    } else {
+        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
@@ -4250,7 +4253,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetCompatibleVersion() != newInfo.GetCompatibleVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
     }
-    if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
+    if (!CheckReleaseTypeIsCompatible(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
     }
     if (oldInfo.GetAppDistributionType() != newInfo.GetAppDistributionType()) {
@@ -4278,35 +4281,17 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
 
-    ErrCode ret = CheckDebugType(oldInfo, newInfo);
     LOG_D(BMS_TAG_INSTALLER, "CheckAppLabel end");
-    return ret;
+    return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CheckDebugType(
+bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
-    if (!oldInfo.HasEntry() && !newInfo.HasEntry()) {
-        return ERR_OK;
+    if (oldInfo.IsReleaseHsp() || newInfo.IsReleaseHsp()) {
+        return true;
     }
-
-    if (oldInfo.HasEntry() && newInfo.HasEntry()) {
-        if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
-            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-        }
-
-        return ERR_OK;
-    }
-
-    if (oldInfo.HasEntry() && !oldInfo.GetBaseApplicationInfo().debug && newInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
-    if (newInfo.HasEntry() && !newInfo.GetBaseApplicationInfo().debug && oldInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
-    return ERR_OK;
+    return oldInfo.GetReleaseType() == newInfo.GetReleaseType();
 }
 
 ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,

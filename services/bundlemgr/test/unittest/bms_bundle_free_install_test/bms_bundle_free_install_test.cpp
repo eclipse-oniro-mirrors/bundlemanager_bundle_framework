@@ -1726,7 +1726,7 @@ HWTEST_F(BmsBundleFreeInstallTest, Process_0100, Function | SmallTest | Level0)
     chain.AddHandler(nullptr);
     bool ret = chain.Process(request);
     EXPECT_EQ(ret, true);
-    request.tatalDataBytes_ = AppExecFwk::AgingRequest::totalDataBytesThreshold_ + 1;
+    request.totalDataBytes_ = AppExecFwk::AgingRequest::totalDataBytesThreshold_ + 1;
     std::shared_ptr<AgingHandler> handler;
     chain.AddHandler(handler);
     ret = chain.Process(request);
@@ -1743,7 +1743,7 @@ HWTEST_F(BmsBundleFreeInstallTest, Request_0100, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bool ret = bundleAgingMgr.InitAgingRequest();
     EXPECT_EQ(ret, false);
-    bundleAgingMgr.request_.tatalDataBytes_ =
+    bundleAgingMgr.request_.totalDataBytes_ =
         AppExecFwk::AgingRequest::totalDataBytesThreshold_ + 1;
     ret = bundleAgingMgr.InitAgingRequest();
     EXPECT_EQ(ret, false);

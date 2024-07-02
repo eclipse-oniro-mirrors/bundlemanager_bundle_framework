@@ -3258,6 +3258,21 @@ HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFiles_0001, Function | MediumTest
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0001
+ * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFilesAutomatic_0001, Function | MediumTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    uint64_t cacheSize = 0;
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: RegisterBundleStatusCallback_0001
  * @tc.name: test BundleMgrHostImpl::RegisterBundleStatusCallback
  * @tc.desc: 1. system run normally

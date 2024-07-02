@@ -1034,6 +1034,7 @@ private:
     void FilterAbilityInfos(std::vector<AbilityInfo> &abilityInfos);
     void SetProvisionInfoToInnerBundleInfo(const std::string &hapPath, InnerBundleInfo &info);
     bool CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex);
+    bool CheckCanSetEnable(const std::string &bundleName);
 
     std::atomic<bool> isBrokerServiceExisted_ = false;
 };
