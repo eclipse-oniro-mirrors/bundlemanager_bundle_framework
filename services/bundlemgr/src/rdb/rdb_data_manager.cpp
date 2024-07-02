@@ -59,6 +59,10 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
     rdbStoreConfig.SetAllowRebuild(true);
+    if (!isInitial_) {
+        rdbStoreConfig.SetIntegrityCheck(NativeRdb::IntegrityCheck::FULL);
+        isInitial_ = true;
+    }
     // for check db exist or not
     if (access(rdbStoreConfig.GetPath().c_str(), F_OK) != 0) {
         APP_LOGW("bms db :%{public}s is not exist, need to create. errno:%{public}d",
@@ -159,6 +163,30 @@ bool RdbDataManager::UpdateData(
     }
     int32_t rowId = -1;
     auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    return ret == NativeRdb::E_OK;
+}
+
+bool RdbDataManager::UpdateOrInsertData(
+    const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    APP_LOGD("UpdateOrInsertData start");
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return false;
+    }
+    if (absRdbPredicates.GetTableName() != bmsRdbConfig_.tableName) {
+        APP_LOGE("RdbStore table is invalid");
+        return false;
+    }
+    int32_t rowId = -1;
+    auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
+    if ((ret == NativeRdb::E_OK) && (rowId == 0)) {
+        APP_LOGI("data not exist, need insert data");
+        int64_t rowIdInsert = -1;
+        ret = rdbStore->InsertWithConflictResolution(
+            rowIdInsert, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);
+    }
     return ret == NativeRdb::E_OK;
 }
 

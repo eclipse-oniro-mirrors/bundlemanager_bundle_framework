@@ -63,8 +63,10 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
 CreateDirParam *CreateDirParam::Unmarshalling(Parcel &parcel)
 {
     CreateDirParam *info = new (std::nothrow) CreateDirParam();
-    if (info) {
-        info->ReadFromParcel(parcel);
+    if (info != nullptr && !info->ReadFromParcel(parcel)) {
+        APP_LOGE("read from parcel failed");
+        delete info;
+        info = nullptr;
     }
     return info;
 }

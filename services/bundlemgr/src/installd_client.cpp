@@ -172,14 +172,14 @@ ErrCode InstalldClient::CleanBundleDataDir(const std::string &bundleDir)
     return CallService(&IInstalld::CleanBundleDataDir, bundleDir);
 }
 
-ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+ErrCode InstalldClient::CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex)
 {
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userid < 0 || appIndex < 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid);
+    return CallService(&IInstalld::CleanBundleDataDirByName, bundleName, userid, appIndex);
 }
 
 ErrCode InstalldClient::GetBundleStats(const std::string &bundleName, const int32_t userId,
@@ -231,6 +231,7 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
 
 void InstalldClient::ResetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
@@ -541,7 +542,7 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
 {
     if (extensionBundleDirs.empty() || userId < 0) {
-        APP_LOGI("extensionBundleDirs is empty or userId is invalid");
+        APP_LOGI("extensionBundleDirs empty or userId invalid");
         return ERR_OK;
     }
     return CallService(&IInstalld::RemoveExtensionDir, userId, extensionBundleDirs);
@@ -565,6 +566,11 @@ ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirPa
     }
 
     return CallService(&IInstalld::CreateExtensionDataDir, createDirParam);
+}
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

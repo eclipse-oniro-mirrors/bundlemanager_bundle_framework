@@ -52,6 +52,7 @@
 #include "app_mgr_interface.h"
 #include "system_ability_helper.h"
 #include "running_process_info.h"
+#include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
@@ -1442,35 +1443,61 @@ void BundleMgrHostImpl::CleanBundleCacheTaskGetCleanSize(const std::string &bund
     NotifyBundleStatus(installRes);
 }
 
+bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    if (appIndex == 0) {
+        return true;
+    }
+    if (appIndex < 0) {
+        APP_LOGE("appIndex is invalid");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
+    bool isAppIndexValid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
+    if (isAppIndexValid) {
+        APP_LOGE("appIndex is not in the installed appIndexes range.");
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
-    int32_t userId)
+    int32_t userId, int32_t appIndex)
 {
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
-
-    APP_LOGD("start CleanBundleCacheFiles, bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    APP_LOGD("start CleanBundleCacheFiles, bundleName:%{public}s,userId:%{public}d,appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (userId < 0) {
         APP_LOGE("userId is invalid");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
+    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
+        return ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE;
+    }
     if (bundleName.empty() || !cleanCacheCallback) {
         APP_LOGE("the cleanCacheCallback is nullptr or bundleName empty");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -1482,7 +1509,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
@@ -1490,33 +1517,37 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ret;
     }
 
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, true, true);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId, appIndex);
     return ERR_OK;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     const sptr<ICleanCacheCallback> cleanCacheCallback,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
-    int32_t userId)
+    int32_t userId, int32_t appIndex)
 {
     std::vector<std::string> rootDir;
+    std::string suffixName = bundleName;
+    if (appIndex > 0) {
+        suffixName = BundleCloneCommonHelper::GetCloneDataDir(bundleName, appIndex);
+    }
     for (const auto &el : ServiceConstants::BUNDLE_EL) {
         std::string dataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + bundleName;
+            ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE + suffixName;
         rootDir.emplace_back(dataDir);
     }
 
-    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, this]() {
+    auto cleanCache = [bundleName, userId, rootDir, dataMgr, cleanCacheCallback, appIndex, this]() {
         std::vector<std::string> caches;
         for (const auto &st : rootDir) {
             std::vector<std::string> cache;
@@ -1544,7 +1575,28 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
             APP_LOGW("Get calling userInfo in bundle(%{public}s) failed", bundleName.c_str());
             return;
         }
-        NotifyBundleEvents installRes = {
+        NotifyBundleEvents installRes;
+        if (appIndex > 0) {
+            std::map<std::string, InnerBundleCloneInfo> cloneInfos = innerBundleUserInfo.cloneInfos;
+            auto cloneInfoIter = cloneInfos.find(std::to_string(appIndex));
+            if (cloneInfoIter == cloneInfos.end()) {
+                APP_LOGW("Get calling userCloneInfo in bundle(%{public}s) failed, appIndex:%{public}d",
+                    bundleName.c_str(), appIndex);
+                return;
+            }
+            int32_t uid = cloneInfoIter->second.uid;
+            installRes = {
+                .bundleName = bundleName,
+                .resultCode = ERR_OK,
+                .type = NotifyType::BUNDLE_CACHE_CLEARED,
+                .uid = uid,
+                .accessTokenId = innerBundleUserInfo.accessTokenId,
+                .appIndex = appIndex
+            };
+            NotifyBundleStatus(installRes);
+            return;
+        }
+        installRes = {
             .bundleName = bundleName,
             .resultCode = ERR_OK,
             .type = NotifyType::BUNDLE_CACHE_CLEARED,
@@ -1556,65 +1608,65 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
     ffrt::submit(cleanCache);
 }
 
-bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId)
+bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
 {
-    APP_LOGD("start CleanBundleDataFiles, bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    APP_LOGD("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
     if (bundleName.empty() || userId < 0) {
         APP_LOGE("the  bundleName empty or invalid userid");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
+        return false;
+    }
+    if (!CheckAppIndex(bundleName, userId, appIndex)) {
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_REMOVECACHEFILE)) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         ErrCode ret = bmsExtensionClient->ClearData(bundleName, userId);
         APP_LOGI("ret : %{public}d", ret);
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, ret != ERR_OK);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, ret != ERR_OK);
         return ret == ERR_OK;
     }
     ApplicationInfo applicationInfo;
     if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
         userId, applicationInfo) != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-
     if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("%{public}s, userId:%{public}d, GetBundleUserInfo failed", bundleName.c_str(), userId);
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-
     if (BundlePermissionMgr::ClearUserGrantedPermissionState(applicationInfo.accessTokenId)) {
         APP_LOGE("%{public}s, ClearUserGrantedPermissionState failed", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-
-    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId) != ERR_OK) {
+    if (InstalldClient::GetInstance()->CleanBundleDataDirByName(bundleName, userId, appIndex) != ERR_OK) {
         APP_LOGE("%{public}s, CleanBundleDataDirByName failed", bundleName.c_str());
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
+        EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, true);
         return false;
     }
-
-    EventReport::SendCleanCacheSysEvent(bundleName, userId, false, false);
+    EventReport::SendCleanCacheSysEventWithIndex(bundleName, userId, appIndex, false, false);
     return true;
 }
 
@@ -2013,7 +2065,10 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    APP_LOGD("verify permission success, begin to SetApplicationEnabled");
+    if (!CheckCanSetEnable(bundleName)) {
+        APP_LOGE("bundle in white-list");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2041,10 +2096,12 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         .resultCode = ERR_OK,
         .type = NotifyType::APPLICATION_ENABLE,
         .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
+        .accessTokenId = innerBundleUserInfo.accessTokenId,
+        .isApplicationEnabled = isEnable
     };
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     NotifyBundleStatus(installRes);
-    APP_LOGD("SetApplicationEnabled finish");
+    IPCSkeleton::SetCallingIdentity(identity);
     return ERR_OK;
 }
 
@@ -2136,7 +2193,6 @@ ErrCode BundleMgrHostImpl::IsCloneAbilityEnabled(const AbilityInfo &abilityInfo,
 
 ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool isEnabled, int32_t userId)
 {
-    APP_LOGD("start SetAbilityEnabled");
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
@@ -2148,6 +2204,10 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("verify permission failed");
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, 0);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!CheckCanSetEnable(abilityInfo.bundleName)) {
+        APP_LOGE("bundle in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -3001,6 +3061,9 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
     }
     if (bundleName.empty()) {
         APP_LOGE("bundleName empty");
+        return false;
+    }
+    if (!CheckAppIndex(bundleName, userId, appIndex)) {
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -4172,6 +4235,22 @@ ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const Elem
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
+{
+    std::vector<std::string> noDisablingList;
+    std::string configPath = BundleUtil::GetNoDisablingConfigPath();
+    ErrCode ret = BundleParser::ParseNoDisablingList(configPath, noDisablingList);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "GetNoDisablingList failed");
+        return true;
+    }
+    auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);
+    if (it == noDisablingList.end()) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

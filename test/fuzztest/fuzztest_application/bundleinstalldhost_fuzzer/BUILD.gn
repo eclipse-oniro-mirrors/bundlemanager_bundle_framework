@@ -107,7 +107,10 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
   defines = []
   include_dirs = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -134,10 +137,6 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:utd_client" ]
-  }
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 
   sources += [ "bundleinstalldhost_fuzzer.cpp" ]

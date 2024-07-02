@@ -3026,6 +3026,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0030, Function | Smal
 
     installer.verifyCodeParams_.emplace(TEST_MODULE_NAME, signatureFileDir);
     ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME, signatureFileDir);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
 }
 } // OHOS

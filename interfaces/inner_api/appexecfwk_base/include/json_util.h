@@ -56,7 +56,7 @@ void CheckArrayType(
         case ArrayType::STRING:
             for (const auto &array : arrays) {
                 if (!array.is_string()) {
-                    APP_LOGE("array %{public}s is not string type", key.c_str());
+                    APP_LOGE("%{public}s not string", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 }
             }
@@ -67,7 +67,7 @@ void CheckArrayType(
         case ArrayType::OBJECT:
             for (const auto &array : arrays) {
                 if (!array.is_object()) {
-                    APP_LOGE("array %{public}s is not object type", key.c_str());
+                    APP_LOGE("%{public}s not object", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -79,7 +79,7 @@ void CheckArrayType(
         case ArrayType::NUMBER:
             for (const auto &array : arrays) {
                 if (!array.is_number()) {
-                    APP_LOGE("array %{public}s is not number type", key.c_str());
+                    APP_LOGE("%{public}s not number", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                 }
             }
@@ -88,10 +88,10 @@ void CheckArrayType(
             }
             break;
         case ArrayType::NOT_ARRAY:
-            APP_LOGE("array %{public}s is not string type", key.c_str());
+            APP_LOGE("%{public}s not string", key.c_str());
             break;
         default:
-            APP_LOGE("array %{public}s type error", key.c_str());
+            APP_LOGE("%{public}s error", key.c_str());
             break;
     }
 }
@@ -108,7 +108,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
         switch (jsonType) {
             case JsonType::BOOLEAN:
                 if (!jsonObject.at(key).is_boolean()) {
-                    APP_LOGE("type is error %{public}s is not boolean", key.c_str());
+                    APP_LOGE("type error %{public}s not boolean", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -116,7 +116,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                 break;
             case JsonType::NUMBER:
                 if (!jsonObject.at(key).is_number()) {
-                    APP_LOGE("type is error %{public}s is not number", key.c_str());
+                    APP_LOGE("type error %{public}s not number", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -124,7 +124,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                 break;
             case JsonType::OBJECT:
                 if (!jsonObject.at(key).is_object()) {
-                    APP_LOGE("type is error %{public}s is not object", key.c_str());
+                    APP_LOGE("type error %{public}s not object", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -132,7 +132,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                 break;
             case JsonType::ARRAY:
                 if (!jsonObject.at(key).is_array()) {
-                    APP_LOGE("type is error %{public}s is not array", key.c_str());
+                    APP_LOGE("type error %{public}s not array", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -140,7 +140,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                 break;
             case JsonType::STRING:
                 if (!jsonObject.at(key).is_string()) {
-                    APP_LOGE("type is error %{public}s is not string", key.c_str());
+                    APP_LOGE("type error %{public}s not string", key.c_str());
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
                     break;
                 }
@@ -150,16 +150,16 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                 }
                 break;
             case JsonType::NULLABLE:
-                APP_LOGE("type is error %{public}s is nullable", key.c_str());
+                APP_LOGE("type error %{public}s nullable", key.c_str());
                 break;
             default:
-                APP_LOGE("type is error %{public}s is not jsonType", key.c_str());
+                APP_LOGE("type error %{public}s not jsonType", key.c_str());
                 parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         }
         return;
     }
     if (isNecessary) {
-        APP_LOGE("profile prop %{public}s is mission", key.c_str());
+        APP_LOGE("profile prop %{public}s mission", key.c_str());
         parseResult = ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP;
     }
 }
@@ -175,13 +175,13 @@ template<typename T>
 bool ParseInfoFromJsonStr(const char *data, T &t)
 {
     if (data == nullptr) {
-        APP_LOGE("%{public}s failed due to data is nullptr", __func__);
+        APP_LOGE("%{public}s failed nullptr", __func__);
         return false;
     }
 
     nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("%{public}s failed due to data is discarded", __func__);
+        APP_LOGE("%{public}s failed discarded", __func__);
         return false;
     }
 

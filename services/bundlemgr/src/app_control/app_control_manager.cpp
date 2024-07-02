@@ -28,7 +28,9 @@
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "bundle_parser.h"
 #include "bundle_service_constants.h"
+#include "bundle_util.h"
 #include "parameters.h"
 
 namespace OHOS {
@@ -51,6 +53,11 @@ AppControlManager::AppControlManager()
         LOG_I(BMS_TAG_APP_CONTROL, "App jump intercetor disabled");
     }
     commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
+    std::string configPath = BundleUtil::GetNoDisablingConfigPath();
+    ErrCode ret = BundleParser::ParseNoDisablingList(configPath, noControllingList_);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_APP_CONTROL, "GetNoDisablingList failed");
+    }
 }
 
 AppControlManager::~AppControlManager()
@@ -220,6 +227,10 @@ ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundle
 
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
+    if (!CheckCanDispose(appId, userId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "appid in white-list");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_APP_CONTROL, "SetDisposedStatus to rdb failed");
@@ -338,6 +349,10 @@ void AppControlManager::SetAppInstallControlStatus()
 ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const std::string &appId,
     const DisposedRule& rule, int32_t appIndex, int32_t userId)
 {
+    if (!CheckCanDispose(appId, userId)) {
+        LOG_E(BMS_TAG_APP_CONTROL, "appid in white-list");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
         LOG_E(BMS_TAG_APP_CONTROL, "SetDisposedStatus to rdb failed");
@@ -478,6 +493,27 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
     }
     abilityRunningControlRuleCache_[key] = disposedRules;
     return ret;
+}
+
+bool AppControlManager::CheckCanDispose(const std::string &appId, int32_t userId)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_APP_CONTROL, "DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (const auto &bundleName : noControllingList_) {
+        BundleInfo bundleInfo;
+        ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
+        if (ret != ERR_OK) {
+            continue;
+        }
+        if (appId == bundleInfo.appId) {
+            return false;
+        }
+    }
+    return true;
 }
 }
 }

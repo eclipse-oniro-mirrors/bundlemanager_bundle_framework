@@ -91,7 +91,7 @@ bool PreInstallExceptionMgr::LoadPreInstallExceptionInfosFromDb()
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("from_json error code : %{public}d", parseResult);
         exceptionPaths_.clear();
         exceptionBundleNames_.clear();
         return false;
@@ -152,7 +152,7 @@ void PreInstallExceptionMgr::SavePreInstallExceptionPath(
     }
 
     if (exceptionPaths_.find(bundleDir) != exceptionPaths_.end()) {
-        APP_LOGE("bundleDir %{public}s has saved", bundleDir.c_str());
+        APP_LOGE("bundleDir %{public}s saved", bundleDir.c_str());
         return;
     }
 
@@ -170,7 +170,7 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionPath(const std::string &bu
     }
 
     if (exceptionPaths_.find(bundleDir) == exceptionPaths_.end()) {
-        APP_LOGE("bundleDir %{public}s has deleted", bundleDir.c_str());
+        APP_LOGE("bundleDir %{public}s deleted", bundleDir.c_str());
         return;
     }
 
@@ -195,7 +195,7 @@ void PreInstallExceptionMgr::SavePreInstallExceptionBundleName(const std::string
     }
 
     if (exceptionBundleNames_.find(bundleName) != exceptionBundleNames_.end()) {
-        APP_LOGE("bundleName %{public}s has saved", bundleName.c_str());
+        APP_LOGE("bundleName %{public}s saved", bundleName.c_str());
         return;
     }
 
@@ -214,7 +214,7 @@ void PreInstallExceptionMgr::DeletePreInstallExceptionBundleName(const std::stri
     }
 
     if (exceptionBundleNames_.find(bundleName) == exceptionBundleNames_.end()) {
-        APP_LOGE("bundleName %{public}s has deleted", bundleName.c_str());
+        APP_LOGE("bundleName %{public}s deleted", bundleName.c_str());
         return;
     }
 

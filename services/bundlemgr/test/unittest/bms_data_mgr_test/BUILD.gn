@@ -145,9 +145,10 @@ ohos_unittest("BmsDataMgrTest") {
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources +=
+        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
 
@@ -283,9 +284,10 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources +=
+        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
 

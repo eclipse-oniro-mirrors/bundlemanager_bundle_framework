@@ -2115,7 +2115,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0800, Function | SmallTest
         }
     }
     QueryCloneApplicationInfosWithDisable();
-    
+
     ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -2750,6 +2750,105 @@ HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1100, Function | SmallTest |
     EXPECT_EQ(result.size(), MODULE_NAMES_SIZE_ONE);
     EXPECT_EQ(result[0].skills.size(), SKILL_SIZE_TWO);
     CheckSkillInfos(result[0].skills);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_1200
+ * @tc.name: test can get the ability info by explicit query
+ * @tc.desc: 1.system run normally
+ *           2.install clone apps
+ *           3.disable main app
+ *           4.get ability info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    Want want;
+    want.SetElementName(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<AbilityInfo> result;
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), TOTAL_APP_NUMS);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    result.clear();
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), 3);
+
+    result.clear();
+    flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    EXPECT_EQ(result.size(), TOTAL_APP_NUMS);
+
+    int index = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            EXPECT_EQ(info.appIndex, index++);
+        }
+    }
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: QueryAbilityInfos_1300
+ * @tc.name: test can get the ability info by implicit query
+ * @tc.desc: 1.system run normally
+ *           2.install clone apps
+ *           3.disable main app
+ *           4.get ability info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfos_1300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX1);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX2);
+    AddCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, TEST_APP_INDEX3);
+
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    std::vector<AbilityInfo> result;
+    int32_t flags = GET_ABILITY_INFO_DEFAULT;
+    bool testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+
+    EXPECT_TRUE(ChangeAppDisabledStatus(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST, 0, false));
+
+    result.clear();
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    int count = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            count++;
+        }
+    }
+    EXPECT_EQ(count, 3);
+
+    result.clear();
+    flags = static_cast<int32_t>(ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE);
+    testRet = GetBundleDataMgr()->QueryAbilityInfos(want, flags, DEFAULT_USER_ID_TEST, result);
+    EXPECT_TRUE(testRet);
+    count = 0;
+    for (AbilityInfo info : result) {
+        if (info.bundleName == BUNDLE_NAME_TEST) {
+            count++;
+        }
+    }
+    EXPECT_EQ(count, TOTAL_APP_NUMS);
+
+    ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -4188,6 +4287,21 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0100
+ * @tc.name: test CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system run normally
+ *           2. cacheSize is 0
+ *           3. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    uint64_t cacheSize = 0;
+    auto result = hostImpl->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
  * @tc.number: CleanCache_0500
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
@@ -4252,6 +4366,25 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFilesAutomatic_0200
+ * @tc.name: test CleanBundleCacheFilesAutomatic
+ * @tc.desc: 1. system run normally
+ *           2. cacheSize is 0
+ *           3. return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleCacheFilesAutomatic_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    uint64_t cacheSize = 0;
+    ErrCode result = bundleMgrProxy->CleanBundleCacheFilesAutomatic(cacheSize);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
 }
 
 /**
@@ -8436,11 +8569,6 @@ HWTEST_F(BmsBundleKitServiceTest, QueryBundleStatsInfoByInterval_0100, Function 
 
     bool ret = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
     EXPECT_EQ(ret, false);
-
-    AppExecFwk::BundleAgingMgr::AgingTriggertype type =
-        AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD;
-    ret = bundleAgingMgr.CheckPrerequisite(type);
-    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -8612,7 +8740,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfosV9_0300, Function | SmallTe
         }
     }
     QueryCloneApplicationInfosV9WithDisable();
-    
+
     ClearCloneInfo(BUNDLE_NAME_TEST, DEFAULT_USER_ID_TEST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }

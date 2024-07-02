@@ -135,10 +135,15 @@ group("fuzztest") {
     "fuzztest_others/verifymanagerhostimplgetfilename_fuzzer:VerifyManagerHostImplGetFileNameFuzzTest",
     "fuzztest_others/verifymanagerhostimplgetrealpath_fuzzer:VerifyManagerHostImplGetRealPathFuzzTest",
     "fuzztest_others/verifymanagerhostimplinnerverify_fuzzer:VerifyManagerHostImplInnerVerifyFuzzTest",
+    "fuzztest_others/verifymanagerhostimplmkdirIfnotexist_fuzzer:VerifyManagerHostImplMkdirIfNotExistFuzzTest",
     "fuzztest_others/verifymanagerhostimplmoveabc_fuzzer:VerifyManagerHostImplMoveAbcFuzzTest",
+    "fuzztest_others/verifymanagerhostimplremovetempfiles_fuzzer:VerifyManagerHostImplRemoveTempFilesFuzzTest",
+    "fuzztest_others/verifymanagerhostimplremovetempfilespaths_fuzzer:VerifyManagerHostImplRemoveTempFilesPathsFuzzTest",
     "fuzztest_others/verifymanagerhostimplrollback_fuzzer:VerifyManagerHostImplRollBackFuzzTest",
+    "fuzztest_others/verifymanagerhostimplrollbackdir_fuzzer:VerifyManagerHostImplRollBackDirFuzzTest",
     "fuzztest_others/verifymanagerhostimplverify_fuzzer:VerifyManagerHostImplVerifyFuzzTest",
     "fuzztest_others/verifymanagerhostimplverifyabc_fuzzer:VerifyManagerHostImplVerifyAbcFuzzTest",
+    "fuzztest_others/verifymanagerhostimplverifyabcdir_fuzzer:VerifyManagerHostImplVerifyAbcDirFuzzTest",
     "fuzztest_others/zip_fuzzer:ZipFuzzTest",
   ]
 

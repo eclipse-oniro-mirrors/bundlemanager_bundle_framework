@@ -120,7 +120,7 @@ bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(jsonString, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse DistributedBundleInfo: %{public}s.", jsonString.c_str());
+        APP_LOGE("failed parse DistributedBundleInfo: %{public}s.", jsonString.c_str());
         return false;
     }
 

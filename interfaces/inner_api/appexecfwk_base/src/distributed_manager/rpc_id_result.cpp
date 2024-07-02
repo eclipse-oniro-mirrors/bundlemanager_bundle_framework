@@ -110,7 +110,7 @@ void from_json(const nlohmann::json &jsonObject, SummaryAbilityInfo &summaryAbil
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module result from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read result jsonObject error : %{public}d", parseResult);
     }
 }
 
@@ -170,7 +170,7 @@ void from_json(const nlohmann::json &jsonObject, RpcIdResult &rpcIdResult)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module result from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read result jsonObject error : %{public}d", parseResult);
     }
 }
 

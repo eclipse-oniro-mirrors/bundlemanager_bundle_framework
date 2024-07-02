@@ -37,7 +37,9 @@ namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
 const std::string DATA_APP_PATH = "/data/app";
+#ifdef GLOBAL_RESMGR_ENABLE
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
+#endif
 const std::string PATH_SEPARATOR = "/";
 } // namespace
 
@@ -49,6 +51,7 @@ BundleMgrClientImpl::BundleMgrClientImpl()
 BundleMgrClientImpl::~BundleMgrClientImpl()
 {
     APP_LOGD("destroy bundleMgrClientImpl");
+    std::lock_guard<std::mutex> lock(mutex_);
     if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
         bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
     }
@@ -60,6 +63,7 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("failed to connect");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
@@ -74,6 +78,7 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
         return false;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
 }
 
@@ -86,6 +91,7 @@ ErrCode BundleMgrClientImpl::GetBundlePackInfo(
         APP_LOGE("failed to connect");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetBundlePackInfo(bundleName, flag, bundlePackInfo, userId);
 }
 
@@ -97,6 +103,7 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
         APP_LOGE("failed to connect");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->CreateBundleDataDir(userId);
 }
 
@@ -112,6 +119,7 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
     AbilityInfo info;
     info.bundleName = bundleName;
     info.package = hapName;
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetHapModuleInfo(info, hapModuleInfo);
 }
 
@@ -327,7 +335,7 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
 
     size_t pos = resName.rfind(PROFILE_FILE_PREFIX);
     if ((pos == std::string::npos) || (pos == resName.length() - strlen(PROFILE_FILE_PREFIX))) {
-        APP_LOGE("GetResFromResMgr res name %{public}s is invalid", resName.c_str());
+        APP_LOGE("GetResFromResMgr res name %{public}s invalid", resName.c_str());
         return false;
     }
     std::string profileName = resName.substr(pos + strlen(PROFILE_FILE_PREFIX));
@@ -377,7 +385,7 @@ bool BundleMgrClientImpl::IsFileExisted(const std::string &filePath) const
     }
 
     if (access(filePath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the file: %{private}s, errno:%{public}d", filePath.c_str(), errno);
+        APP_LOGE("not access file: %{private}s errno: %{public}d", filePath.c_str(), errno);
         return false;
     }
     return true;
@@ -395,13 +403,13 @@ bool BundleMgrClientImpl::TransformFileToJsonString(const std::string &resPath, 
     in.open(resPath, std::ios_base::in | std::ios_base::binary);
     if (!in.is_open()) {
         strerror_r(errno, errBuf, sizeof(errBuf));
-        APP_LOGE("the file cannot be open due to  %{public}s, errno:%{public}d", errBuf, errno);
+        APP_LOGE("file open fail due to %{public}s errno:%{public}d", errBuf, errno);
         return false;
     }
     in.seekg(0, std::ios::end);
     int64_t size = in.tellg();
     if (size <= 0) {
-        APP_LOGE("the file is an empty file, errno:%{public}d", errno);
+        APP_LOGE("file empty err %{public}d", errno);
         in.close();
         return false;
     }
@@ -431,6 +439,7 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleInstaller_->InstallSandboxApp(bundleName, dlpType, userId, appIndex);
 }
 
@@ -447,6 +456,7 @@ ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, 
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleInstaller_->UninstallSandboxApp(bundleName, appIndex, userId);
 }
 
@@ -464,6 +474,7 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
         APP_LOGE("failed to connect");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetSandboxBundleInfo(bundleName, appIndex, userId, info);
 }
 
@@ -481,6 +492,7 @@ ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t app
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetSandboxAbilityInfo(want, appIndex, flags, userId, abilityInfo);
 }
 
@@ -498,6 +510,7 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetSandboxExtAbilityInfos(want, appIndex, flags, userId, extensionInfos);
 }
 
@@ -515,6 +528,7 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
+    std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 

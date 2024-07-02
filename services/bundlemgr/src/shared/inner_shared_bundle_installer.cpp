@@ -386,6 +386,7 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         if (newBundleInfo_.GetBaseBundleInfo().versionCode < currentBundle.GetBaseBundleInfo().versionCode) {
             newBundleInfo_.UpdateBaseBundleInfo(currentBundle.GetBaseBundleInfo(), false);
             newBundleInfo_.UpdateBaseApplicationInfo(currentBundle.GetBaseApplicationInfo(), false);
+            newBundleInfo_.UpdateReleaseType(currentBundle);
         }
     }
 
@@ -420,6 +421,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
+    newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);

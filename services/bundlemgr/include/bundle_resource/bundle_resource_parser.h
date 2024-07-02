@@ -68,10 +68,7 @@ private:
     bool GetMediaDataById(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         const uint32_t iconId, const int32_t density, std::vector<uint8_t> &data);
 
-    bool ParseThemeIcon(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
-        const int32_t density, ResourceInfo &resourceInfo);
-
-    void ProcessResourceInfoWhenParseFailed(const ResourceInfo &oldResourceInfo, ResourceInfo &newResourceInfo);
+    bool IsNeedToParseResourceInfo(const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo);
 };
 } // AppExecFwk
 } // OHOS

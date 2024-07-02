@@ -90,7 +90,7 @@ void BundleUserInfo::Dump(const std::string &prefix, int fd)
     }
     int flags = fcntl(fd, F_GETFL);
     if (flags < 0) {
-        APP_LOGE("dump BundleUserInfo fcntl error %{public}s", strerror(errno));
+        APP_LOGE("BundleUserInfo fcntl error %{public}s", strerror(errno));
         return;
     }
     uint uflags = static_cast<uint>(flags);
@@ -102,7 +102,7 @@ void BundleUserInfo::Dump(const std::string &prefix, int fd)
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
-            APP_LOGE("dump BundleUserInfo write error %{public}s", strerror(errno));
+            APP_LOGE("BundleUserInfo write error %{public}s", strerror(errno));
         }
     }
 }
@@ -165,7 +165,7 @@ void from_json(const nlohmann::json& jsonObject, BundleUserInfo& bundleUserInfo)
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module bundleUserInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("module bundleUserInfo jsonObject error : %{public}d", parseResult);
     }
 }
 } // namespace AppExecFwk

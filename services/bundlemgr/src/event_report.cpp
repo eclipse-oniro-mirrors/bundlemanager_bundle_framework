@@ -125,6 +125,24 @@ void EventReport::SendCleanCacheSysEvent(
     EventReport::SendSystemEvent(bmsEventType, eventInfo);
 }
 
+void EventReport::SendCleanCacheSysEventWithIndex(
+    const std::string &bundleName, int32_t userId, int32_t appIndex, bool isCleanCache, bool exception)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.userId = userId;
+    eventInfo.appIndex = appIndex;
+    eventInfo.isCleanCache = isCleanCache;
+    BMSEventType bmsEventType;
+    if (exception) {
+        bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE_EXCEPTION;
+    } else {
+        bmsEventType = BMSEventType::BUNDLE_CLEAN_CACHE;
+    }
+
+    EventReport::SendSystemEvent(bmsEventType, eventInfo);
+}
+
 void EventReport::SendQueryAbilityInfoByContinueTypeSysEvent(const std::string &bundleName,
     const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType)
 {

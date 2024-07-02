@@ -87,7 +87,10 @@ ohos_fuzztest("AppServiceFwkInstallerInstallFuzzTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",

@@ -22,7 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class AccountHelper {
 public:
-    static int IsOsAccountExists(const int id, bool &isOsAccountExists);
+    static int32_t IsOsAccountExists(const int32_t id, bool &isOsAccountExists);
 
     static int32_t GetCurrentActiveUserId();
 

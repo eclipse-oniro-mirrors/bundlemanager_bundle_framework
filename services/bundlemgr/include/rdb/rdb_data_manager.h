@@ -48,10 +48,14 @@ public:
     std::shared_ptr<NativeRdb::ResultSet> QueryByStep(
         const NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
+    bool UpdateOrInsertData(
+        const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates);
+
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     std::mutex rdbMutex_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
+    bool isInitial_ = false;
 
     BmsRdbConfig bmsRdbConfig_;
 };

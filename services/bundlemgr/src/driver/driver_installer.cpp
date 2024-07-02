@@ -88,7 +88,7 @@ ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const M
     std::string destinedDir = meta.value;
     if (originalDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos ||
         destinedDir.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
-        APP_LOGW("metadata value %{public}s, resource %{public}s cannot support relevant path",
+        APP_LOGW("metadata value %{public}s, resource %{public}s cannot support path",
             destinedDir.c_str(), originalDir.c_str());
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }

@@ -172,7 +172,7 @@ void from_json(const nlohmann::json &jsonObject, CommonEventInfo &commonEvent)
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module commonEvent from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("module commonEvent jsonObject error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

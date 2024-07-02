@@ -273,9 +273,6 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-    AOTHandler::GetInstance().RegisterScreenUnlockListener();
-#endif
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
@@ -2920,6 +2917,7 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
         preInstallBundleInfo.AddBundlePath(item.first);
         if (!findEntry) {
             auto applicationInfo = item.second.GetBaseApplicationInfo();
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);

@@ -75,7 +75,7 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
         ErrCode result = InstalldClient::GetInstance()->Mkdir(
             ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH, mode, getuid(), getgid());
         if (result != ERR_OK) {
-            APP_LOGE("fail to create dir, error is %{public}d", result);
+            APP_LOGE("fail create dir err %{public}d", result);
             return false;
         }
     }
@@ -88,7 +88,7 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
 
     auto ret = fclose(file);
     if (ret != 0) {
-        APP_LOGE("ret: %{public}d,  errno:%{public}d", ret, errno);
+        APP_LOGE("ret: %{public}d, errno:%{public}d", ret, errno);
     }
 
     return false;
@@ -175,7 +175,7 @@ bool BundleStateStorage::SaveBundleStateStorage(
     bool isEmpty = (rootJson.size() == 0) ? true : false;
     std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
     if (!o.is_open()) {
-        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
+        APP_LOGE("open failed bundle state file, errno:%{public}d", errno);
         return false;
     }
     if (!isEmpty) {
@@ -236,7 +236,7 @@ bool BundleStateStorage::DeleteBundleState(
     bool isEmpty = (jParse.size() == 0) ? true : false;
     std::ofstream o(BUNDLE_USER_INFO_PATH, std::ios::out | std::ios::trunc);
     if (!o.is_open()) {
-        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
+        APP_LOGE("open failed bundle state file err:%{public}d", errno);
         return false;
     }
     if (!isEmpty) {
@@ -250,7 +250,7 @@ bool BundleStateStorage::GetBundleStateJson(nlohmann::json &jParse)
 {
     std::ifstream i(BUNDLE_USER_INFO_PATH);
     if (!i.is_open()) {
-        APP_LOGE("failed to open bundle state file, errno:%{public}d", errno);
+        APP_LOGE("open failed bundle state file, errno:%{public}d", errno);
         return false;
     }
     i.seekg(0, std::ios::end);

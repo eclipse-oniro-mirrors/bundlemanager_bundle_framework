@@ -630,7 +630,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.label, "$string:app_name");
         EXPECT_EQ(info.labelId, 16777216);
         EXPECT_EQ(info.iconPath, "$media:app_icon");
-        EXPECT_EQ(info.iconId, 16777228);
+        EXPECT_EQ(info.iconId, 16777229);
         EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
         EXPECT_EQ(info.versionName, "1.0");
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
@@ -2296,31 +2296,32 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4200, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_4300
- * @tc.name: test RemoveModuleDataDir
- * @tc.desc: 1.Test the RemoveModuleDataDir of BaseBundleInstaller
+ * @tc.number: baseBundleInstaller_6100
+ * @tc.name: test ProcessBundleInstallNative
+ * @tc.desc: 1.Test the ProcessBundleInstallNative
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6100, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
     InnerBundleInfo info;
-    std::string modulePackage = "";
-    ErrCode res = installer.RemoveModuleAndDataDir(info, modulePackage, USERID, false);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    int32_t userId = USERID;
+    ErrCode res = installer.ProcessBundleInstallNative(info, userId);
+    EXPECT_EQ(res, ERR_OK);
+}
 
-    res = installer.RemoveModuleDataDir(info, modulePackage, USERID);
-    EXPECT_EQ(res, ERR_NO_INIT);
-
-    std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = TEST_PACK_AGE;
-    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
-    info.innerModuleInfos_ = innerModuleInfos;
-    info.AddInnerModuleInfo(innerModuleInfos);
-
-    res = installer.RemoveModuleDataDir(info, TEST_PACK_AGE, INVAILD_CODE);
-    EXPECT_NE(res, ERR_NO_INIT);
+/**
+ * @tc.number: baseBundleInstaller_6200
+ * @tc.name: test ProcessBundleUnInstallNative
+ * @tc.desc: 1.Test the ProcessBundleUnInstallNative
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    int32_t userId = USERID;
+    std::string bundleName = "com.example.test";
+    ErrCode res = installer.ProcessBundleUnInstallNative(info, userId, bundleName);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -2612,6 +2613,51 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1700, Function | SmallTest | L
     std::vector<std::string> paths;
     ErrCode ret = impl.CopyFile("", "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_1800
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the ExtractHnpFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1800, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string hnpPackageInfo;
+    ExtractParam extractParam;
+    auto ret = impl.ExtractHnpFiles(hnpPackageInfo, extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_1900
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the ProcessBundleInstallNative of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1900, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string userId = std::to_string(USERID);
+    std::string hnpRootPath = "/data/app/el1/bundle/public/com.example.test/entry_tmp/hnp_tmp_extract_dir/";
+    std::string hapPath = "/system/app/module01/module01.hap";
+    std::string cpuAbi = "arm64";
+    std::string packageName = "com.example.test";
+    auto ret = impl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_INSTALL_FAILED);
+}
+
+/**
+ * @tc.number: InstalldHostImpl_2000
+ * @tc.name: test Install
+ * @tc.desc: 1.Test the ProcessBundleInstallNative of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_2000, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::string userId = std::to_string(USERID);
+    std::string packageName = "com.example.test";
+    auto ret = impl.ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**

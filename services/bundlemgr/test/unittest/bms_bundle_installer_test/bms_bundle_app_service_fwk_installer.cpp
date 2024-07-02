@@ -913,7 +913,7 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, MoveSoToRealPath_0010, Function | 
     InitAppServiceFwkInstaller(appServiceFwkInstaller);
 
     auto res = appServiceFwkInstaller.MoveSoToRealPath(MODULE_NAME_LIBRARY_ONE, "data/test", MODULE_NAME_LIBRARY_ONE);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+    EXPECT_EQ(res, ERR_OK);
 
     InstallParam installParam;
     std::unordered_map<std::string, InnerBundleInfo> infos;

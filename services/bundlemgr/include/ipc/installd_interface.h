@@ -179,9 +179,10 @@ public:
      * @brief Clean a bundle data directory.
      * @param bundleName Indicates the bundleName data directory path that to be cleaned.
      * @param userid Indicates userid to be set to the directory.
+     * @param appIndex Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory cleaned successfully; returns error code otherwise.
      */
-    virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid)
+    virtual ErrCode CleanBundleDataDirByName(const std::string &bundleName, const int userid, const int appIndex = 0)
     {
         return ERR_OK;
     }
@@ -406,6 +407,11 @@ public:
     }
 
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
     {
         return ERR_OK;
     }

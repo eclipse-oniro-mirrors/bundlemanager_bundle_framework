@@ -496,7 +496,7 @@ void AbilityInfo::Dump(std::string prefix, int fd)
     }
     int flags = fcntl(fd, F_GETFL);
     if (flags < 0) {
-        APP_LOGE("dump Abilityinfo fcntl error, errno : %{public}d", errno);
+        APP_LOGE("dump Abilityinfo fcntl error : %{public}d", errno);
         return;
     }
     uint uflags = static_cast<uint>(flags);
@@ -508,7 +508,7 @@ void AbilityInfo::Dump(std::string prefix, int fd)
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
-            APP_LOGE("dump Abilityinfo write error, errno : %{public}d", errno);
+            APP_LOGE("dump Abilityinfo write error : %{public}d", errno);
         }
     }
     return;
@@ -704,7 +704,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read Ability Metadata from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read database error : %{public}d", parseResult);
     }
 }
 
@@ -1314,7 +1314,7 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("AbilityInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("AbilityInfo from_json error : %{public}d", parseResult);
     }
 }
 

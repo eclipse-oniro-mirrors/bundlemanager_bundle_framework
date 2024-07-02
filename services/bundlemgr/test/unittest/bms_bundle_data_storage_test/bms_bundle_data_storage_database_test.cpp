@@ -1140,7 +1140,8 @@ protected:
                     "maxCount":5
                 },
                 "appIndex":0,
-                "maxChildProcess": 0
+                "maxChildProcess": 0,
+                "installSource": "unknown"
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -2367,6 +2368,30 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2800, Function | Smal
     std::vector<std::string> moduleToDelete;
     ret = info.GetRemovableModules(moduleToDelete);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2900
+ * @tc.name: Test GetInnerModuleInfoHnpInfo
+ * @tc.desc: 1.Test the GetInnerModuleInfoHnpInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    auto ret = info.GetInnerModuleInfoHnpInfo("");
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3000
+ * @tc.name: Test GetInnerModuleInfoHnpPath
+ * @tc.desc: 1.Test the GetInnerModuleInfoHnpPath of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string ret = info.GetInnerModuleInfoHnpPath("");
+    EXPECT_EQ(ret, "");
 }
 
 /**

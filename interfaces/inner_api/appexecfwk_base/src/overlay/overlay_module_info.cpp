@@ -131,7 +131,7 @@ void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModul
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("overlayModuleInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("overlayModuleInfo from_json error : %{public}d", parseResult);
     }
 }
 } // AppExecFwk

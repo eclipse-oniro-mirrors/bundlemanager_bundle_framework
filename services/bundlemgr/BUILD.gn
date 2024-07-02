@@ -435,9 +435,9 @@ ohos_shared_library("libbms") {
     defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources += [ "src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
   subsystem_name = "bundlemanager"
@@ -496,6 +496,11 @@ ohos_shared_library("installs") {
 
   if (code_encryption_enable) {
     defines += [ "CODE_ENCRYPTION_ENABLE" ]
+  }
+
+  if (configpolicy_enable) {
+    external_deps += [ "config_policy:configpolicy_util" ]
+    defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
 
   if (build_selinux) {
