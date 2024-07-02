@@ -764,59 +764,24 @@ static void CleanBundleDataForEl2(const std::string &bundleName, const int useri
     }
 }
 
-ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId,
+    bool isAtomicService)
 {
     LOG_D(BMS_TAG_INSTALLD, "InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userId < 0) {
         LOG_E(BMS_TAG_INSTALLD, "Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + ServiceConstants::BASE + bundleName;
-        if (!InstalldOperator::DeleteDir(bundleDataDir)) {
-            LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
-            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-        }
-        std::string databaseDir = GetBundleDataDir(el, userid) + ServiceConstants::DATABASE + bundleName;
-        if (!InstalldOperator::DeleteDir(databaseDir)) {
-            LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
-            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-        }
-        if (el == ServiceConstants::BUNDLE_EL[1]) {
-            std::string logDir = GetBundleDataDir(el, userid) + ServiceConstants::LOG + bundleName;
-            if (!InstalldOperator::DeleteDir(logDir)) {
-                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
-                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-            }
-        }
+    if (isAtomicService) {
+        LOG_I(BMS_TAG_INSTALLD, "bundleName:%{public}s is atomic service, need process", bundleName.c_str());
+        return InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
     }
-    if (RemoveShareDir(bundleName, userid) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to remove share dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    if (RemoveCloudDir(bundleName, userid) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to remove cloud dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    if (RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK ||
-        RemoveBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to remove backup ext home dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    if (RemoveNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL2) != ERR_OK ||
-        RemoveNewBackupExtHomeDir(bundleName, userid, DirType::DIR_EL1) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to remove new backup ext home dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    if (RemoveDistributedDir(bundleName, userid) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
-        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
-    }
-    return ERR_OK;
+    
+    return InnerRemoveBundleDataDir(bundleName, userId);
 }
 
 ErrCode InstalldHostImpl::RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
@@ -1870,6 +1835,71 @@ bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::j
     }
 
     return true;
+}
+
+ErrCode InstalldHostImpl::InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId)
+{
+    LOG_I(BMS_TAG_INSTALLD, "process atomic service bundleName:%{public}s", bundleName.c_str());
+    std::vector<std::string> pathName;
+    if (!InstalldOperator::GetAtomicServiceBundleDataDir(bundleName, userId, pathName)) {
+        LOG_W(BMS_TAG_INSTALLD, "atomic bundle %{public}s no other path", bundleName.c_str());
+    }
+    pathName.emplace_back(bundleName);
+    LOG_I(BMS_TAG_INSTALLD, "bundle %{public}s need delete path size:%{public}zu", bundleName.c_str(), pathName.size());
+    ErrCode result = ERR_OK;
+    for (const auto &name : pathName) {
+        ErrCode tmpResult = InnerRemoveBundleDataDir(name, userId);
+        if (tmpResult != ERR_OK) {
+            result = tmpResult;
+        }
+    }
+    return result;
+}
+
+ErrCode InstalldHostImpl::InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId)
+{
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE + bundleName;
+        if (!InstalldOperator::DeleteDir(bundleDataDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", bundleDataDir.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+        std::string databaseDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE + bundleName;
+        if (!InstalldOperator::DeleteDir(databaseDir)) {
+            LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", databaseDir.c_str(), errno);
+            return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+        if (el == ServiceConstants::BUNDLE_EL[1]) {
+            std::string logDir = GetBundleDataDir(el, userId) + ServiceConstants::LOG + bundleName;
+            if (!InstalldOperator::DeleteDir(logDir)) {
+                LOG_E(BMS_TAG_INSTALLD, "remove dir %{public}s failed errno:%{public}d", logDir.c_str(), errno);
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
+        }
+    }
+    if (RemoveShareDir(bundleName, userId) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove share dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveCloudDir(bundleName, userId) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove cloud dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveBackupExtHomeDir(bundleName, userId, DirType::DIR_EL2) != ERR_OK ||
+        RemoveBackupExtHomeDir(bundleName, userId, DirType::DIR_EL1) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove backup ext home dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveNewBackupExtHomeDir(bundleName, userId, DirType::DIR_EL2) != ERR_OK ||
+        RemoveNewBackupExtHomeDir(bundleName, userId, DirType::DIR_EL1) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove new backup ext home dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveDistributedDir(bundleName, userId) != ERR_OK) {
+        LOG_E(BMS_TAG_INSTALLD, "failed to remove distributed file dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

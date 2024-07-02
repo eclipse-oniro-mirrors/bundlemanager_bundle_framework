@@ -3322,7 +3322,8 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) co
 ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bool forException) const
 {
     ErrCode result =
-        InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_);
+        InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
+            info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE);
     CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
 
     if (forException) {

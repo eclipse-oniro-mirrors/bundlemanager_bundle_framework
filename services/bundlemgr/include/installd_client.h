@@ -70,7 +70,7 @@ public:
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    ErrCode RemoveBundleDataDir(const std::string &bundleName, const int userid);
+    ErrCode RemoveBundleDataDir(const std::string &bundleName, const int32_t userId, bool isAtomicService = false);
     /**
      * @brief Remove a module data directory.
      * @param ModuleDir Indicates the module data directory path that to be created.

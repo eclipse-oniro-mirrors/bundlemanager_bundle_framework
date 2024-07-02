@@ -329,8 +329,9 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
 bool InstalldHost::HandleRemoveBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
-    int userid = data.ReadInt32();
-    ErrCode result = RemoveBundleDataDir(bundleName, userid);
+    int32_t userId = data.ReadInt32();
+    bool isAtomicService = data.ReadBool();
+    ErrCode result = RemoveBundleDataDir(bundleName, userId, isAtomicService);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
