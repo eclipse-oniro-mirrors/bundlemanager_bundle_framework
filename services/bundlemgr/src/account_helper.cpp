@@ -68,5 +68,22 @@ bool AccountHelper::IsOsAccountVerified(const int32_t userId)
     return false;
 #endif
 }
+
+int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
+{
+#ifdef ACCOUNT_ENABLE
+    int32_t localId;
+    ErrCode err = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(callingUid, localId);
+    if (err != ERR_OK) {
+        APP_LOGW("GetOsAccountLocalIdFromUid failed: %{public}d", callingUid);
+        return Constants::INVALID_USERID;
+    }
+    return localId;
+#else
+    APP_LOGI("ACCOUNT_ENABLE is false");
+    // ACCOUNT_ENABLE is false, do nothing and return -1.
+    return -1;
+#endif
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

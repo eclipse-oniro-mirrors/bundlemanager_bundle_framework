@@ -6514,7 +6514,7 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
@@ -6540,7 +6540,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
@@ -7151,7 +7151,7 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const st
     }
 
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGE("BundleName: %{public}s does not exist in current userId", bundleName.c_str());
