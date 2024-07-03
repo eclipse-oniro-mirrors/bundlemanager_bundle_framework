@@ -50,6 +50,8 @@ public:
     ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
     ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
     ErrCode VerifyActivationLock(bool &res);
+    ErrCode GetBackupUninstallList(int32_t userId, td::vector<std::string> &uninstallBundles);
+    ErrCode ClearBackupUninstallFile(int32_t userId);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

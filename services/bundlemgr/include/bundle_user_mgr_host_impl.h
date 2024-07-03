@@ -58,6 +58,7 @@ private:
         const std::vector<std::string> &disallowList,
         int32_t userId,
         std::set<PreInstallBundleInfo> &preInstallBundleInfos);
+    void UninstallBackuUninstallList(int32_t userId);
 
     std::mutex bundleUserMgrMutex_;
 
