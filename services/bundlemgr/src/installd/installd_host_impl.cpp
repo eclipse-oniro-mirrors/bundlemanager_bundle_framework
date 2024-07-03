@@ -1838,6 +1838,18 @@ bool InstalldHostImpl::LoadExtensionNeedCreateSandbox(const nlohmann::json &obje
 
 bool InstalldHostImpl::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {
+    if (filePath.length() > PATH_MAX) {
+        LOG_E(BMS_TAG_INSTALLD, "path length(%{public}u) longer than max length(%{public}d)",
+            static_cast<unsigned int>(filePath.length()), PATH_MAX);
+        return false;
+    }
+    std::string realPath;
+    realPath.reserve(PATH_MAX);
+    realPath.resize(PATH_MAX - 1);
+    if (realpath(filePath.c_str(), &(realPath[0])) == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "transform real path error: %{public}d", errno);
+        return false;
+    }
     if (access(filePath.c_str(), F_OK) != 0) {
         LOG_D(BMS_TAG_INSTALLD, "access file %{public}s failed, error: %{public}s", filePath.c_str(), strerror(errno));
         return false;
