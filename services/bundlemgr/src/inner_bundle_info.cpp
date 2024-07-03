@@ -1299,12 +1299,12 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return;
     }
 
     if (baseApplicationInfo_ == nullptr) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "baseApplicationInfo_ is nullptr");
+        LOG_E(BMS_TAG_QUERY, "baseApplicationInfo_ is nullptr");
         return;
     }
     appInfo = *baseApplicationInfo_;
@@ -1361,7 +1361,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "can not find userId %{public}d when get applicationInfo", userId);
+        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when get applicationInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
@@ -1417,14 +1417,14 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
             userId, GetBundleName().c_str());
         return false;
     }
 
     bundleInfo = *baseBundleInfo_;
     if (!GetBundleInfoAdaptBundleClone(innerBundleUserInfo, appIndex, bundleInfo)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "userId %{public}d index %{public}d not exist", userId, appIndex);
+        LOG_E(BMS_TAG_QUERY, "userId %{public}d index %{public}d not exist", userId, appIndex);
         return false;
     }
     bundleInfo.overlayType = overlayType_;
@@ -1452,7 +1452,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     if ((static_cast<uint32_t>(flags) & GET_BUNDLE_WITH_REQUESTED_PERMISSION)
@@ -1465,7 +1465,7 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
         }
         if (!BundlePermissionMgr::GetRequestPermissionStates(bundleInfo,
             bundleInfo.applicationInfo.accessTokenId, bundleInfo.applicationInfo.deviceId)) {
-            LOG_E(BMS_TAG_QUERY_BUNDLE, "get request permission state failed");
+            LOG_E(BMS_TAG_QUERY, "get request permission state failed");
         }
         bundleInfo.reqPermissionDetails = GetAllRequestPermissions();
     }
@@ -1479,13 +1479,13 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find userId %{public}d when GetBundleInfo", userId);
+        LOG_E(BMS_TAG_QUERY, "can not find userId %{public}d when GetBundleInfo", userId);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     bundleInfo = *baseBundleInfo_;
     if (!GetBundleInfoAdaptBundleClone(innerBundleUserInfo, appIndex, bundleInfo)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "userId %{public}d index %{public}d not exist", userId, appIndex);
+        LOG_E(BMS_TAG_QUERY, "userId %{public}d index %{public}d not exist", userId, appIndex);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     bundleInfo.overlayType = overlayType_;
@@ -1500,7 +1500,7 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
             bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
             bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
         } else {
-            LOG_E(BMS_TAG_QUERY_BUNDLE, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
+            LOG_E(BMS_TAG_QUERY, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
         }
     }
     ProcessBundleFlags(flags, userId, bundleInfo, appIndex);
@@ -1573,7 +1573,7 @@ void InnerBundleInfo::GetBundleWithReqPermissionsV9(
         const std::map<std::string, InnerBundleCloneInfo> &mpCloneInfos = innerBundleUserInfo.cloneInfos;
         std::string appIndexKey = InnerBundleUserInfo::AppIndexToKey(appIndex);
         if (mpCloneInfos.find(appIndexKey) == mpCloneInfos.end()) {
-            LOG_E(BMS_TAG_QUERY_APPLICATION,
+            LOG_E(BMS_TAG_QUERY,
                 "can not find userId %{public}d, appIndex %{public}d when get applicationInfo", userId, appIndex);
             return;
         }

@@ -76,22 +76,22 @@ bool BundleMgrHostImpl::GetApplicationInfo(
 bool BundleMgrHostImpl::GetApplicationInfo(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
-    LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfo bundleName:%{public}s flags:%{public}d userId:%{public}d",
+    LOG_D(BMS_TAG_QUERY, "GetApplicationInfo bundleName:%{public}s flags:%{public}d userId:%{public}d",
         appName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(appName)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->GetApplicationInfo(appName, flags, userId, appInfo);
@@ -101,21 +101,21 @@ ErrCode BundleMgrHostImpl::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
+    LOG_D(BMS_TAG_QUERY, "GetApplicationInfoV9 bundleName:%{public}s flags:%{public}d userId:%{public}d",
         appName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(appName)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetApplicationInfoV9(appName, flags, userId, appInfo);
@@ -130,25 +130,25 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 bool BundleMgrHostImpl::GetApplicationInfos(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfos flags:%{public}d userId:%{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "GetApplicationInfos flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     if (!BundlePermissionMgr::IsNativeTokenType() &&
         (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_APPLICATION,
+        LOG_D(BMS_TAG_QUERY,
             "GetApplicationInfos return empty, not support target level greater than or equal to api9");
         return true;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->GetApplicationInfos(flags, userId, appInfos);
@@ -157,18 +157,18 @@ bool BundleMgrHostImpl::GetApplicationInfos(
 ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     int32_t flags, int32_t userId, std::vector<ApplicationInfo> &appInfos)
 {
-    LOG_D(BMS_TAG_QUERY_APPLICATION, "GetApplicationInfosV9 flags:%{public}d userId:%{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "GetApplicationInfosV9 flags:%{public}d userId:%{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_APPLICATION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -191,25 +191,25 @@ bool BundleMgrHostImpl::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_BUNDLE,
+    LOG_D(BMS_TAG_QUERY,
         "start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "verify permission success, begin to GetBundleInfo");
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     bool res = dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
@@ -243,22 +243,22 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
+    LOG_D(BMS_TAG_QUERY, "GetBundleInfoV9, bundleName:%{public}s, flags:%{public}d, userId:%{public}d",
         bundleName.c_str(), flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "verify permission success, begin to GetBundleInfoV9");
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfoV9");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
@@ -307,13 +307,13 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     std::string bundleName;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t appIndex = 0;
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "GetBundleNameForUid failed, uid is %{public}d", uid);
+        LOG_E(BMS_TAG_QUERY, "GetBundleNameForUid failed, uid is %{public}d", uid);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
@@ -412,27 +412,27 @@ bool BundleMgrHostImpl::GetBundleInfos(const BundleFlag flag, std::vector<Bundle
 
 bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "start GetBundleInfos, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "start GetBundleInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     // API9 need to be system app
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "verify permission success, begin to GetBundleInfos");
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfos");
     if (!BundlePermissionMgr::IsNativeTokenType() &&
         (BundlePermissionMgr::GetHapApiVersion() >= ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE,
+        LOG_D(BMS_TAG_QUERY,
             "GetBundleInfos return empty, not support target level greater than or equal to api9");
         return true;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     dataMgr->GetBundleInfos(flags, bundleInfos, userId);
@@ -445,19 +445,19 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "start GetBundleInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "start GetBundleInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "verify permission success, begin to GetBundleInfosV9");
+    LOG_D(BMS_TAG_QUERY, "verify permission success, begin to GetBundleInfosV9");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
@@ -468,7 +468,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     if (isBrokerServiceExisted_ && !getMenu) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         if (bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId, true) == ERR_OK) {
-            LOG_D(BMS_TAG_QUERY_BUNDLE, "query bundle infos from bms extension successfully");
+            LOG_D(BMS_TAG_QUERY, "query bundle infos from bms extension successfully");
             BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
             return ERR_OK;
         }
@@ -649,17 +649,17 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "check is system app failed.");
+        LOG_E(BMS_TAG_QUERY, "check is system app failed.");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed.");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed.");
         return false;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "connectAbilityMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "connectAbilityMgr is nullptr");
         return false;
     }
     return connectAbilityMgr->QueryAbilityInfo(want, flags, userId, abilityInfo, callBack);
@@ -739,22 +739,22 @@ bool BundleMgrHostImpl::ProcessPreload(const Want &want)
 
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfo, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfo, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     APP_LOGD("verify permission success, begin to QueryAbilityInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
@@ -777,21 +777,21 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfos, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
@@ -806,27 +806,27 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfosV9, flags : %{public}d, userId : %{public}d", flags, userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     if (isBrokerServiceExisted_ &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query ability infos from bms extension successfully");
+        LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
     }
     return res;
@@ -868,26 +868,26 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
     const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryLauncherAbilityInfos, userId : %{public}d", userId);
+    LOG_D(BMS_TAG_QUERY, "start QueryLauncherAbilityInfos, userId : %{public}d", userId);
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryLauncherAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     auto ret = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query launcher ability infos from bms extension successfully");
+        LOG_D(BMS_TAG_QUERY, "query launcher ability infos from bms extension successfully");
         return ERR_OK;
     }
     return ret;
@@ -895,26 +895,26 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
 
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAllAbilityInfos, userId : %{public}d", userId);
+    LOG_D(BMS_TAG_QUERY, "start QueryAllAbilityInfos, userId : %{public}d", userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     APP_LOGD("verify permission success, begin to QueryAllAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     bool res = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     if (bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos) == ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query launcher ability infos from bms extension successfully");
+        LOG_D(BMS_TAG_QUERY, "query launcher ability infos from bms extension successfully");
         return true;
     }
     return res;
@@ -922,21 +922,21 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
 
 bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfoByUri, uri : %{private}s", abilityUri.c_str());
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfoByUri, uri : %{private}s", abilityUri.c_str());
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify query permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify query permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->QueryAbilityInfoByUri(abilityUri, Constants::UNSPECIFIED_USERID, abilityInfo);
@@ -944,19 +944,19 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, Abi
 
 bool BundleMgrHostImpl::QueryAbilityInfosByUri(const std::string &abilityUri, std::vector<AbilityInfo> &abilityInfos)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfosByUri, uri : %{private}s", abilityUri.c_str());
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfosByUri, uri : %{private}s", abilityUri.c_str());
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->QueryAbilityInfosByUri(abilityUri, abilityInfos);
@@ -965,21 +965,21 @@ bool BundleMgrHostImpl::QueryAbilityInfosByUri(const std::string &abilityUri, st
 bool BundleMgrHostImpl::QueryAbilityInfoByUri(
     const std::string &abilityUri, int32_t userId, AbilityInfo &abilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start QueryAbilityInfoByUri, uri : %{private}s, userId : %{public}d",
+    LOG_D(BMS_TAG_QUERY, "start QueryAbilityInfoByUri, uri : %{private}s, userId : %{public}d",
         abilityUri.c_str(), userId);
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO,
         Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify query permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify query permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->QueryAbilityInfoByUri(abilityUri, userId, abilityInfo);
@@ -2476,29 +2476,29 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const int32_t &flag, const int32_t &userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos without type begin");
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos without type begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "want uri is %{private}s", want.GetUriString().c_str());
+    LOG_D(BMS_TAG_QUERY, "want uri is %{private}s", want.GetUriString().c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     (void)dataMgr->QueryExtensionAbilityInfos(want, flag, userId, extensionInfos);
     dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, extensionInfos);
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -2508,21 +2508,21 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 without type begin");
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 without type begin");
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "want uri is %{private}s", want.GetUriString().c_str());
+    LOG_D(BMS_TAG_QUERY, "want uri is %{private}s", want.GetUriString().c_str());
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
@@ -2530,10 +2530,10 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
 
     if (extensionInfos.empty()) {
         if (ret != ERR_OK) {
-            LOG_E(BMS_TAG_QUERY_EXTENSION, "query extension ability fail, %{public}d", ret);
+            LOG_E(BMS_TAG_QUERY, "query extension ability fail, %{public}d", ret);
             return ret;
         }
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -2542,22 +2542,22 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, int32_
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
     const int32_t &flag, const int32_t &userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos begin");
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     std::vector<ExtensionAbilityInfo> infos;
@@ -2565,14 +2565,14 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const Want &want, const Exten
     dataMgr->QueryAllCloneExtensionInfos(want, flag, userId, infos);
 
     for_each(infos.begin(), infos.end(), [&extensionType, &extensionInfos](const auto &info)->decltype(auto) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos extensionType:%{public}d info.type:%{public}d",
+        LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos extensionType:%{public}d info.type:%{public}d",
             static_cast<int32_t>(extensionType), static_cast<int32_t>(info.type));
         if (extensionType == info.type) {
             extensionInfos.emplace_back(info);
         }
     });
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -2582,27 +2582,27 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
     int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 begin");
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 begin");
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
     dataMgr->QueryAllCloneExtensionInfosV9(want, flags, userId, infos);
     for_each(infos.begin(), infos.end(), [&extensionType, &extensionInfos](const auto &info)->decltype(auto) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 extensionType:%{public}d info.type:%{public}d",
+        LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 extensionType:%{public}d info.type:%{public}d",
             static_cast<int32_t>(extensionType), static_cast<int32_t>(info.type));
         if (extensionType == info.type) {
             extensionInfos.emplace_back(info);
@@ -2610,10 +2610,10 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
     });
     if (extensionInfos.empty()) {
         if (ret != ERR_OK) {
-            LOG_E(BMS_TAG_QUERY_EXTENSION, "query extension ability fail, %{public}d", ret);
+            LOG_E(BMS_TAG_QUERY, "query extension ability fail, %{public}d", ret);
             return ret;
         }
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -2622,31 +2622,31 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosV9(const Want &want, const 
 bool BundleMgrHostImpl::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos with type begin");
+    LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfos with type begin");
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     bool ret = dataMgr->QueryExtensionAbilityInfos(extensionType, userId, extensionInfos);
     if (!ret) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfos is failed");
+        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfos is failed");
         return false;
     }
 
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "no valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "no valid extension info can be inquired");
         return false;
     }
     return true;
@@ -2720,21 +2720,21 @@ bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
+    LOG_D(BMS_TAG_QUERY, "uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify query permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify query permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return false;
     }
     return dataMgr->QueryExtensionAbilityInfoByUri(uri, userId, extensionAbilityInfo);
@@ -2847,7 +2847,7 @@ int BundleMgrHostImpl::GetUidByDebugBundleName(const std::string &bundleName, co
 bool BundleMgrHostImpl::GetAbilityInfo(
     const std::string &bundleName, const std::string &abilityName, AbilityInfo &abilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start GetAbilityInfo, bundleName:%{public}s abilityName:%{public}s",
+    LOG_D(BMS_TAG_QUERY, "start GetAbilityInfo, bundleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), abilityName.c_str());
     ElementName elementName("", bundleName, abilityName);
     Want want;
@@ -2859,11 +2859,11 @@ bool BundleMgrHostImpl::GetAbilityInfo(
     const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, AbilityInfo &abilityInfo)
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY,
+    LOG_D(BMS_TAG_QUERY,
         "start GetAbilityInfo bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (!VerifySystemApi(ServiceConstants::API_VERSION_NINE)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_D(BMS_TAG_QUERY, "non-system app calling system api");
         return true;
     }
     ElementName elementName("", bundleName, abilityName, moduleName);
@@ -3631,24 +3631,24 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "Non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO}) &&
         !BundlePermissionMgr::IsBundleSelfCalling(want.GetElement().GetBundleName())) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "Verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "Verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "QueryExtensionAbilityInfosV9 is failed");
+        LOG_E(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 is failed");
         return ret;
     }
     if (typeName.empty()) {
@@ -3663,7 +3663,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
         });
     }
     if (extensionInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "No valid extension info can be inquired");
+        LOG_E(BMS_TAG_QUERY, "No valid extension info can be inquired");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -4120,31 +4120,31 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
-    LOG_D(BMS_TAG_QUERY_ABILITY,
+    LOG_D(BMS_TAG_QUERY,
         "flags : %{public}d, userId : %{public}d, bundleName: %{public}s, abilityName: %{public}s",
         flags, userId, bundleName.c_str(), abilityName.c_str());
 
     if (bundleName.empty() || abilityName.empty()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "invalid params");
+        LOG_E(BMS_TAG_QUERY, "invalid params");
         return ERR_APPEXECFWK_CLONE_QUERY_PARAM_ERROR;
     }
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "non-system app calling system api");
+        LOG_E(BMS_TAG_QUERY, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})
         && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
+        LOG_E(BMS_TAG_QUERY, "QueryCloneAbilityInfo fail, err: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -4208,20 +4208,20 @@ ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const Elem
     int32_t appIndex, ExtensionAbilityInfo &extensionAbilityInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY_EXTENSION, "QueryCloneExtensionAbilityInfoWithAppIndex without type begin");
+    LOG_D(BMS_TAG_QUERY, "QueryCloneExtensionAbilityInfoWithAppIndex without type begin");
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED})) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "verify permission failed");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION, "DataMgr is nullptr");
+        LOG_E(BMS_TAG_QUERY, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     std::string bundleName = element.GetBundleName();
     std::string extensionName = element.GetAbilityName();
     if (bundleName.empty() || extensionName.empty()) {
-        LOG_E(BMS_TAG_QUERY_EXTENSION,
+        LOG_E(BMS_TAG_QUERY,
             "QueryCloneExtensionAbilityInfoWithAppIndex is failed, bundleName:%{public}s, extensionName:%{public}s",
             bundleName.c_str(), extensionName.c_str());
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4231,7 +4231,7 @@ ErrCode BundleMgrHostImpl::QueryCloneExtensionAbilityInfoWithAppIndex(const Elem
     want.SetElement(element);
     ErrCode ret = dataMgr->ExplicitQueryExtensionInfoV9(want, flags, userId, extensionAbilityInfo, appIndex);
     if (ret != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_EXTENSION, "explicit queryExtensionInfo error");
+        LOG_D(BMS_TAG_QUERY, "explicit queryExtensionInfo error");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;

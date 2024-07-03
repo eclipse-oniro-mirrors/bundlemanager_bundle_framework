@@ -41,18 +41,18 @@ sptr<IRemoteObject> BundleMgrProxyNative::GetBmsProxy()
 
 bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
-    LOG_I(BMS_TAG_QUERY_BUNDLE, "begin to get bundle info for self");
+    LOG_I(BMS_TAG_QUERY, "begin to get bundle info for self");
     MessageParcel data;
     if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf due to write flag fail");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf due to write flag fail");
         return false;
     }
     if (!GetParcelableInfo<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "fail to GetBundleInfoForSelf from server");
+        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf from server");
         return false;
     }
     return true;

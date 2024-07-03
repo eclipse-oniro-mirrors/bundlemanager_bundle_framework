@@ -48,7 +48,7 @@ bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleF
     int32_t userId)
 {
     if (impl_ == nullptr) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "Bundle mgr client impl is nullptr");
+        LOG_E(BMS_TAG_QUERY, "Bundle mgr client impl is nullptr");
         return false;
     }
     return impl_->GetBundleInfo(bundleName, flag, bundleInfo, userId);
