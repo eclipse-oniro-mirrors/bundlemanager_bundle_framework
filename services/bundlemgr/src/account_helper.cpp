@@ -40,7 +40,7 @@ int32_t AccountHelper::IsOsAccountExists(const int32_t id, bool &isOsAccountExis
 int32_t AccountHelper::GetCurrentActiveUserId()
 {
 #ifdef ACCOUNT_ENABLE
-    std::int32_t localId;
+    int32_t localId;
     int32_t ret = AccountSA::OsAccountManager::GetForegroundOsAccountLocalId(localId);
     if (ret != 0) {
         APP_LOGE("GetForegroundOsAccountLocalId failed ret:%{public}d", ret);
@@ -74,9 +74,9 @@ int32_t AccountHelper::GetOsAccountLocalIdFromUid(const int32_t callingUid)
 #ifdef ACCOUNT_ENABLE
     int32_t localId;
     ErrCode err = AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(callingUid, localId);
-    if (err != ERR_OK) {
-        APP_LOGW("GetOsAccountLocalIdFromUid failed: %{public}d", callingUid);
-        return Constants::INVALID_USERID;
+    if (err != ERR_OK || localId == Constants::DEFAULT_USERID) {
+        APP_LOGW("GetOsAccountLocalIdFromUid failed: uid %{public}d, req from active userid", callingUid);
+        return AccountHelper::GetCurrentActiveUserId();
     }
     return localId;
 #else

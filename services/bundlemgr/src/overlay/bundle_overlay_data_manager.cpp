@@ -139,8 +139,10 @@ ErrCode OverlayDataMgr::BuildOverlayConnection(const InnerBundleInfo &newInfo, I
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     // 1. build overlay connection for internal overlay
     const auto &moduleInfos = newInfo.GetInnerModuleInfos();
-    std::string moduleName = (moduleInfos.begin()->second).moduleName;
-    BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    if (!moduleInfos.empty()) {
+        std::string moduleName = (moduleInfos.begin()->second).moduleName;
+        BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    }
 #endif
     return ERR_OK;
 }

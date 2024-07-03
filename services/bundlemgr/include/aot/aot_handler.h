@@ -67,7 +67,7 @@ private:
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
-    ErrCode AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
+    ErrCode AOTInternal(const std::optional<AOTArgs> &aotArgs, uint32_t versionCode) const;
     void HandleOTACompile();
     void BeforeOTACompile();
     void OTACompile() const;
