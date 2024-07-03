@@ -485,7 +485,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveBundleDataDir_0300, 
     std::string bundleName = BUNDLE_NAME;
     int userid = USERID;
     ErrCode result = installClient_->RemoveBundleDataDir(bundleName, userid);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveBundleDataDir, bundleName, userid));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::RemoveBundleDataDir, bundleName, userid, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveBundleDataDir_0300 end";
 }
 

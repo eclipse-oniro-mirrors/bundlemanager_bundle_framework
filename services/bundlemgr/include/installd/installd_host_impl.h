@@ -91,7 +91,7 @@ public:
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
     virtual ErrCode RemoveBundleDataDir(
-        const std::string &bundleName, const int userid) override;
+        const std::string &bundleName, const int32_t userId, bool isAtomicService = false) override;
     /**
      * @brief Remove a module data directory.
      * @param ModuleDir Indicates the module data directory path that to be created.
@@ -249,6 +249,8 @@ private:
     void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
     bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
     bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
+    ErrCode InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId);
+    ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

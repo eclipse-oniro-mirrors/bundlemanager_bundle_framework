@@ -71,7 +71,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userId, bool isAtomicService)
 {
     return ERR_OK;
 }
