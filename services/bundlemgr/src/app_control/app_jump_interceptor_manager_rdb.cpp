@@ -90,7 +90,7 @@ ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<Ap
 {
     int64_t timeStamp = BundleUtil::GetCurrentTime();
     std::vector<NativeRdb::ValuesBucket> valuesBuckets;
-    for (auto &controlRule : controlRules) {
+    for (const auto &controlRule : controlRules) {
         NativeRdb::ValuesBucket valuesBucket;
         valuesBucket.PutString(CALLER_PKG, controlRule.callerPkg);
         valuesBucket.PutString(TARGET_PKG, controlRule.targetPkg);

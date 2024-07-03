@@ -30,6 +30,9 @@ ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
 {
     APP_LOGD("Start to check overlay installation");
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (newInfos.empty()) {
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
+    }
     bool isInternalOverlayExisted = false;
     bool isExternalOverlayExisted = false;
     for (auto &info : newInfos) {
