@@ -117,7 +117,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         otaInstall_ = true;
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
-            APP_LOGE("install system bundle %{public}s fail, error: %{public}d", bundleName.c_str(), errCode);
+            APP_LOGE("install system bundle %{public}s fail err %{public}d", bundleName.c_str(), errCode);
             result = errCode;
         }
         ResetInstallProperties();

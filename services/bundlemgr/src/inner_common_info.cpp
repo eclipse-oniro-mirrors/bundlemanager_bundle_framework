@@ -767,7 +767,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read InnerModuleInfo from database error code : %{public}d", parseResult);
     }
 }
 
@@ -809,7 +809,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("Distro from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("Distro from_json error code : %{public}d", parseResult);
     }
 }
 
@@ -842,7 +842,7 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("InstallMark from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("InstallMark from_json error code : %{public}d", parseResult);
     }
 }
 
@@ -931,7 +931,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("DefinePermission from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("DefinePermission from_json error code : %{public}d", parseResult);
     }
 }
 
@@ -964,7 +964,7 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("Dependency from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("Dependency from_json error code : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

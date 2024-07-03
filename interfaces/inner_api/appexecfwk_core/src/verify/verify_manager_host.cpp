@@ -55,7 +55,7 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
         case static_cast<uint32_t>(VerifyManagerInterfaceCode::DELETE_ABC):
             return HandleDeleteAbc(data, reply);
         default:
-            APP_LOGW("VerifyManagerHost receive unknown code, code = %{public}d", code);
+            APP_LOGW("VerifyManagerHost receive unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }

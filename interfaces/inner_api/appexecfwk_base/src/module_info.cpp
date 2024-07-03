@@ -101,7 +101,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleInfo &moduleInfo)
         parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read module moduleInfo from jsonObject error, error code : %{public}d", parseResult);
+        APP_LOGE("read moduleInfo jsonObject error : %{public}d", parseResult);
     }
 }
 }  // namespace AppExecFwk

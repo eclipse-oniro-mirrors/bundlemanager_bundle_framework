@@ -133,7 +133,8 @@ public:
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int userid)
+    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int32_t userId,
+        bool isAtomicService = false)
     {
         return ERR_OK;
     }
@@ -407,6 +408,11 @@ public:
     }
 
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
     {
         return ERR_OK;
     }

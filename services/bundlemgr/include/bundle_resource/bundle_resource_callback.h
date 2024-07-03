@@ -29,7 +29,7 @@ public:
     ~BundleResourceCallback() = default;
 
     // for userId switched
-    bool OnUserIdSwitched(const int32_t userId,
+    bool OnUserIdSwitched(const int32_t oldUserId, const int32_t newUserId,
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_USER_ID_CHANGE));
 
     // for colorMode changed

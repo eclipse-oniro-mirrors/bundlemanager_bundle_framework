@@ -544,6 +544,8 @@ public:
 
     bool HasEntry() const;
 
+    bool IsReleaseHsp() const;
+
     void InsertFormInfos(const std::string &keyName, const std::vector<FormInfo> &formInfos)
     {
         formInfos_.emplace(keyName, formInfos);
@@ -915,9 +917,10 @@ public:
         baseApplicationInfo_->installSource = installSource;
     }
 
+    void UpdateExtensionSandboxInfo(const std::vector<std::string> &typeList);
     std::vector<std::string> GetAllExtensionDirsInSpecifiedModule(const std::string &moduleName) const;
     std::vector<std::string> GetAllExtensionDirs() const;
-    void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string>& dataGroupIds);
+    void UpdateExtensionDataGroupInfo(const std::string &key, const std::vector<std::string> &dataGroupIds);
     void SetAppDistributionType(const std::string &appDistributionType);
     std::string GetAppDistributionType() const;
     void SetAppProvisionType(const std::string &appProvisionType);
@@ -1004,6 +1007,7 @@ public:
     bool GetUninstallState() const;
     void SetUninstallState(const bool &uninstallState);
     void UpdateMultiAppMode(const InnerBundleInfo &newInfo);
+    void UpdateReleaseType(const InnerBundleInfo &newInfo);
     ErrCode AddCloneBundle(const InnerBundleCloneInfo &attr);
     ErrCode RemoveCloneBundle(const int32_t userId, const int32_t appIndex);
     ErrCode GetAvailableCloneAppIndex(const int32_t userId, int32_t &appIndex);
@@ -1014,6 +1018,8 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void SetkeyId(const int32_t userId, const std::string &keyId);
+    void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+
 private:
     bool IsExistLauncherAbility() const;
     void GetBundleWithAbilities(

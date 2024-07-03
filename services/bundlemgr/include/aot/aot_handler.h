@@ -28,22 +28,16 @@
 #include "nocopyable.h"
 #include "serial_queue.h"
 
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-#include "common_event_manager.h"
-#include "common_event_support.h"
-#include "iservice_registry.h"
-#endif
-
 namespace OHOS {
 namespace AppExecFwk {
 class AOTHandler final {
 public:
     static AOTHandler& GetInstance();
-    void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     void HandleOTA();
-    void HandleIdle();
+    void HandleIdle() const;
     ErrCode HandleCompile(const std::string &bundleName, const std::string &compileMode, bool isAllBundle,
-        std::vector<std::string> &compileResults);
+        std::vector<std::string> &compileResults) const;
     void HandleResetAOT(const std::string &bundleName, bool isAllBundle) const;
     ErrCode HandleCopyAp(const std::string &bundleName, bool isAllBundle, std::vector<std::string> &results) const;
 private:
@@ -59,25 +53,25 @@ private:
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
         const std::string &compileMode, bool isEnanleBaselinePgo = false) const;
-    void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode);
+    void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
     ErrCode HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
-        const std::string &compileMode, bool isEnanleBaselinePgo = false);
+        const std::string &compileMode, bool isEnanleBaselinePgo = false) const;
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
-        std::shared_ptr<BundleDataMgr> dataMgr);
+        std::shared_ptr<BundleDataMgr> dataMgr) const;
     ErrCode HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
-        std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults);
+        std::shared_ptr<BundleDataMgr> &dataMgr, std::vector<std::string> &compileResults) const;
     ErrCode HandleCompileModules(const std::vector<std::string> &moduleNames, const std::string &compileMode,
-        InnerBundleInfo &info, std::string &compileResult);
+        InnerBundleInfo &info, std::string &compileResult) const;
     void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
-        const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode);
+        const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
-    ErrCode AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode);
+    ErrCode AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
     void HandleOTACompile();
     void BeforeOTACompile();
-    void OTACompile();
-    void OTACompileInternal();
+    void OTACompile() const;
+    void OTACompileInternal() const;
     bool GetOTACompileList(std::vector<std::string> &bundleNames) const;
     bool GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const;
     bool IsOTACompileSwitchOn() const;
@@ -88,35 +82,6 @@ private:
     mutable std::mutex compileMutex_;
     std::atomic<bool> OTACompileDeadline_ { false };
     std::shared_ptr<SerialQueue> serialQueue_;
-
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-public:
-    void RegisterScreenUnlockListener();
-private:
-    bool StartPendingSignEvent();
-    bool ExecutePendingSign();
-    ErrCode FinishPendingSign();
-    bool WaitForCommonEventManager() const;
-    bool RegisterScreenUnlockEvent();
-    void UnregisterScreenUnlockEvent();
-    void FinishWaiting();
-    class UnlockEventSubscriber : public OHOS::EventFwk::CommonEventSubscriber {
-    public:
-        UnlockEventSubscriber(const OHOS::EventFwk::CommonEventSubscribeInfo &info) : CommonEventSubscriber(info) {}
-        ~UnlockEventSubscriber() override = default;
-        void OnReceiveEvent(const OHOS::EventFwk::CommonEventData &event) override;
-    };
-private:
-    struct PendingData {
-        uint32_t versionCode {0};
-        std::vector<uint8_t> signData;
-    };
-    mutable std::mutex unlockMutex_;
-    std::condition_variable unlockConVar_;
-    std::atomic<bool> hasUnlocked_ { false };
-    std::shared_ptr<UnlockEventSubscriber> unlockEventSubscriber_;
-    std::unordered_map<std::string, std::unordered_map<std::string, PendingData>> pendingSignData_;
-#endif
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

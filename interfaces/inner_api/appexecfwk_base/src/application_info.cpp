@@ -351,7 +351,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationEnvironment &applica
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read ApplicationEnvironment from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read database error : %{public}d", parseResult);
     }
 }
 
@@ -762,7 +762,7 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
     }
     int flags = fcntl(fd, F_GETFL);
     if (flags < 0) {
-        APP_LOGE("dump ApplicationInfo fcntl error, errno : %{public}d", errno);
+        APP_LOGE("dump fcntl error : %{public}d", errno);
         return;
     }
     uint uflags = static_cast<uint>(flags);
@@ -774,7 +774,7 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
         result.append(jsonObject.dump(Constants::DUMP_INDENT));
         int ret = TEMP_FAILURE_RETRY(write(fd, result.c_str(), result.size()));
         if (ret < 0) {
-            APP_LOGE("dump ApplicationInfo write error, errno : %{public}d", errno);
+            APP_LOGE("dump write error : %{public}d", errno);
         }
     }
     return;
@@ -848,7 +848,7 @@ void from_json(const nlohmann::json &jsonObject, Resource &resource)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read Resource from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read Resource error : %{public}d", parseResult);
     }
 }
 
@@ -869,7 +869,7 @@ void from_json(const nlohmann::json &jsonObject, MultiAppModeData &multiAppMode)
     GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER,
         multiAppMode.maxCount, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("from_json error : %{public}d", parseResult);
     }
 }
 
@@ -902,7 +902,7 @@ void from_json(const nlohmann::json &jsonObject, HnpPackage &hnpPackage)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read Resource from database error, error code : %{public}d", parseResult);
+        APP_LOGE("read Resource error %{public}d", parseResult);
     }
 }
 
@@ -1194,7 +1194,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
         applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("from_json error : %{public}d", parseResult);
     }
 }
 

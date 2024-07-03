@@ -41,7 +41,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
-        APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
@@ -70,7 +70,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
-        APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
@@ -150,7 +150,7 @@ ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleNa
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
-        APP_LOGE("manager is nullptr, bundleName: %{public}s", bundleName.c_str());
+        APP_LOGE("manager nullptr, bundleName %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BundleResourceInfo bundleResourceInfo;

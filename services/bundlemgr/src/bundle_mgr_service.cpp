@@ -18,6 +18,9 @@
 #include <sys/stat.h>
 
 #include "account_helper.h"
+#ifdef CODE_SIGNATURE_ENABLE
+#include "aot/aot_sign_data_cache_mgr.h"
+#endif
 #include "app_log_wrapper.h"
 #include "bundle_common_event.h"
 #include "bundle_constants.h"
@@ -461,7 +464,7 @@ void BundleMgrService::CheckAllUser()
 
         bool isExists = false;
         if (AccountHelper::IsOsAccountExists(userId, isExists) != ERR_OK) {
-            APP_LOGW("Failed to query whether the user(%{public}d) exists.", userId);
+            APP_LOGW("Failed query whether user(%{public}d) exists.", userId);
             continue;
         }
 
@@ -508,6 +511,11 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
     }
+#ifdef CODE_SIGNATURE_ENABLE
+    if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+        AOTSignDataCacheMgr::GetInstance().RegisterScreenUnlockListener();
+    }
+#endif
     if (BUNDLE_BROKER_SERVICE_ABILITY_ID == systemAbilityId) {
         if (host_ != nullptr) {
             isBrokerServiceStarted_ = true;

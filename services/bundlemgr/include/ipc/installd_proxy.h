@@ -92,7 +92,8 @@ public:
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int userid) override;
+    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int32_t userId,
+        bool isAtomicService = false) override;
     /**
      * @brief Remove a module data directory through a proxy object.
      * @param ModuleDir Indicates the module data directory path that to be created.
@@ -224,6 +225,8 @@ public:
     virtual ErrCode IsExistExtensionDir(int32_t userId, const std::string &extensionBundleDir, bool &isExist) override;
 
     virtual ErrCode CreateExtensionDataDir(const CreateDirParam &createDirParam) override;
+
+    virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

@@ -58,7 +58,7 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         errCode = (this->*funcMap_[code])(data, reply);
     } else {
-        APP_LOGW("bundle resource host receives unknown code, code = %{public}u", code);
+        APP_LOGW("bundle resource host receives unknown %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundle resource host finish to process message, errCode: %{public}d", errCode);

@@ -75,6 +75,8 @@ constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
 constexpr const char* AP_PATH = "ap/";
 constexpr const char* AI_SUFFIX = ".ai";
 constexpr const char* DIFF_SUFFIX = ".diff";
+constexpr const char* BUNDLE_BACKUP_KEEP_DIR = "/.backup";
+constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 #if defined(CODE_SIGNATURE_ENABLE)
 using namespace OHOS::Security::CodeSign;
 #endif
@@ -138,7 +140,7 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to stat errno:%{public}d", errno);
+        LOG_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);
@@ -843,7 +845,8 @@ bool InstalldOperator::DeleteFilesExceptDirs(const std::string &dataPath, const 
             break;
         }
         std::string dirName = ServiceConstants::PATH_SEPARATOR + std::string(ptr->d_name);
-        if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end()) {
+        if (std::find(dirsToKeep.begin(), dirsToKeep.end(), dirName) != dirsToKeep.end() ||
+            std::string(BUNDLE_BACKUP_KEEP_DIR) == dirName) {
             continue;
         }
         if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
@@ -1263,7 +1266,7 @@ void InstalldOperator::CloseHandle(void **handle)
 #if defined(CODE_ENCRYPTION_ENABLE)
 bool InstalldOperator::OpenEncryptionHandle(void **handle)
 {
-    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "start");
     if (handle == nullptr) {
         LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr.");
         return false;
@@ -1279,19 +1282,19 @@ bool InstalldOperator::OpenEncryptionHandle(void **handle)
             dlerror());
         return false;
     }
-    LOG_I(BMS_TAG_INSTALLD, "OpenEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "end");
     return true;
 }
 
 void InstalldOperator::CloseEncryptionHandle(void **handle)
 {
-    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle start");
+    LOG_I(BMS_TAG_INSTALLD, "start");
     if ((handle != nullptr) && (*handle != nullptr)) {
         dlclose(*handle);
         *handle = nullptr;
         LOG_D(BMS_TAG_INSTALLD, "CloseEncryptionHandle, err:%{public}s", dlerror());
     }
-    LOG_I(BMS_TAG_INSTALLD, "CloseEncryptionHandle end");
+    LOG_I(BMS_TAG_INSTALLD, "end");
 }
 #endif
 
@@ -1546,7 +1549,7 @@ ErrCode InstalldOperator::PerformCodeSignatureCheck(const CodeSignatureParam &co
             LOG_D(BMS_TAG_INSTALLD, "Verify code signature for non-enterprise bundle");
             ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
-        LOG_I(BMS_TAG_INSTALLD, "Verify code signature for hap %{public}s", codeSignatureParam.modulePath.c_str());
+        LOG_I(BMS_TAG_INSTALLD, "Verify code signature %{public}s", codeSignatureParam.modulePath.c_str());
     } else {
         ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
     }
@@ -2254,6 +2257,33 @@ bool InstalldOperator::DeleteKeyId(const std::string &keyId)
         return false;
     }
     return true;
+}
+
+bool InstalldOperator::GetAtomicServiceBundleDataDir(const std::string &bundleName,
+    const int32_t userId, std::vector<std::string> &allPathNames)
+{
+    std::string baseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE;
+    DIR *dir = opendir(baseDir.c_str());
+    if (dir == nullptr) {
+        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{public}s, errno:%{public}d", baseDir.c_str(), errno);
+        return false;
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (ptr->d_type == DT_DIR) {
+            std::string pathName(ptr->d_name);
+            if (pathName.find(ATOMIC_SERVICE_PATH) != 0) {
+                continue;
+            }
+            auto pos = pathName.rfind(bundleName);
+            if ((pos != std::string::npos) && (pos == (pathName.size() - bundleName.size()))) {
+                allPathNames.emplace_back(pathName);
+            }
+        }
+    }
+    closedir(dir);
+    return !allPathNames.empty();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

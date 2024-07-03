@@ -32,7 +32,7 @@ int32_t BundleManagerCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGI("bundle mgr callback onReceived message, the message code is %{public}u", code);
+    APP_LOGI("bundle mgr callback onReceived message, message code %{public}u", code);
     std::u16string descriptor = BundleManagerCallbackStub::GetDescriptor();
     std::u16string token = data.ReadInterfaceToken();
     if (descriptor != token) {
@@ -43,7 +43,7 @@ int32_t BundleManagerCallbackStub::OnRemoteRequest(
         case static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK):
             return HandleQueryRpcIdCallBack(data, reply);
         default:
-            APP_LOGW("BundleManagerCallbackStub receives unknown code, code = %{public}d", code);
+            APP_LOGW("BundleManagerCallbackStub receives unknown code %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     return NO_ERROR;

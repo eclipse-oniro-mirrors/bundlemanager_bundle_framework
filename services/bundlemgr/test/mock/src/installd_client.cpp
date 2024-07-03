@@ -114,14 +114,14 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
 }
 
 ErrCode InstalldClient::RemoveBundleDataDir(
-    const std::string &bundleName, const int userid)
+    const std::string &bundleName, const int userId, bool isAtomicService)
 {
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userId < 0) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userid);
+    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userId, isAtomicService);
 }
 
 ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const int userid)
@@ -470,6 +470,11 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
+}
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
+{
+    return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

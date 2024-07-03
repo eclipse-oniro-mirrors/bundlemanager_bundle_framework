@@ -146,7 +146,7 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
         sharedModuleInfo.nativeLibraryFileNames, JsonType::ARRAY, false, parseResult,
         ArrayType::STRING);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read SharedModuleInfo error, error code : %{public}d", parseResult);
+        APP_LOGE("read SharedModuleInfo error : %{public}d", parseResult);
     }
 }
 } // AppExecFwk

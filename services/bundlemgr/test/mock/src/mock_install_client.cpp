@@ -79,7 +79,7 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
     return ERR_OK;
 }
 
-ErrCode InstalldClient::RemoveBundleDataDir(const std::string &bundleName, const int userid)
+ErrCode InstalldClient::RemoveBundleDataDir(const std::string &bundleName, const int32_t userId, bool isAtomicService)
 {
     if (bundleName.empty()) {
         return -1;
@@ -296,6 +296,11 @@ ErrCode InstalldClient::IsExistExtensionDir(int32_t userId, const std::string &e
 }
 
 ErrCode InstalldClient::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return ERR_OK;
 }

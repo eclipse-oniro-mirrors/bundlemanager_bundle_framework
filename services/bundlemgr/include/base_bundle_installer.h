@@ -512,8 +512,6 @@ private:
 
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
-    ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
-        int32_t userId) const;
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
@@ -552,7 +550,7 @@ private:
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    ErrCode CheckDebugType(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
+    bool CheckReleaseTypeIsCompatible(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode CheckMaxCountForClone(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
@@ -639,7 +637,7 @@ private:
     ErrCode CreateGroupDirs() const;
     void CreateDataGroupDir(InnerBundleInfo &info) const;
     ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
-    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
+    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData = false) const;
     void DeleteGroupDirsForException() const;
     ErrCode CreateDataGroupDirs(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
@@ -682,6 +680,8 @@ private:
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
 #endif
+    void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
+        const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
     ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;

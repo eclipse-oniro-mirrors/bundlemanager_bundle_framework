@@ -1028,7 +1028,7 @@ private:
     void CompatibleOldBundleStateInKvDb();
     void ResetBundleStateData();
     bool QueryAbilityInfoWithFlags(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
-        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info) const;
+        const InnerBundleInfo &innerBundleInfo, AbilityInfo &info, int32_t appIndex = 0) const;
     ErrCode QueryAbilityInfoWithFlagsV9(const std::optional<AbilityInfo> &option, int32_t flags, int32_t userId,
         const InnerBundleInfo &innerBundleInfo, AbilityInfo &info,
         int32_t appIndex = 0) const;
@@ -1097,6 +1097,12 @@ private:
     void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
     void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
         const ElementName &element, int32_t flags, int32_t userId) const;
+    void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
+        const ElementName &element, int32_t flags, int32_t userId) const;
+    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+        int32_t appIndex, AbilityInfo &abilityInfo) const;
+    ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
+        int32_t appIndex, AbilityInfo &abilityInfo) const;
     void ImplicitQueryCloneAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t flags, int32_t userId,

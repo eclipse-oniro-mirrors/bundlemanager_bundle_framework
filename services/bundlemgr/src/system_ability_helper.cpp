@@ -35,7 +35,7 @@ sptr<IRemoteObject> SystemAbilityHelper::GetSystemAbility(const int32_t systemAb
 {
     sptr<ISystemAbilityManager> systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
-        APP_LOGE("fail to get the system ability manager to get %{public}d proxy", systemAbilityId);
+        APP_LOGE("fail get system ability manager to get %{public}d proxy", systemAbilityId);
         return nullptr;
     }
     return systemAbilityMgr->GetSystemAbility(systemAbilityId);
@@ -47,7 +47,7 @@ bool SystemAbilityHelper::AddSystemAbility(const int32_t systemAbilityId, const 
     if (systemAbilityMgr && (systemAbilityMgr->AddSystemAbility(systemAbilityId, systemAbility) == 0)) {
         return true;
     }
-    APP_LOGE("fail to register %{public}d to system ability manager", systemAbilityId);
+    APP_LOGE("fail register %{public}d to system ability manager", systemAbilityId);
     return false;
 }
 
@@ -57,11 +57,11 @@ bool SystemAbilityHelper::RemoveSystemAbility(const int32_t systemAbilityId)
     if (systemAbilityMgr && (systemAbilityMgr->RemoveSystemAbility(systemAbilityId) == 0)) {
         return true;
     }
-    APP_LOGE("fail to remove %{public}d from system ability manager", systemAbilityId);
+    APP_LOGE("fail remove %{public}d from system ability manager", systemAbilityId);
     return false;
 }
 
-int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
     sptr<AAFwk::IAbilityManager> abilityMgrProxy =
@@ -71,7 +71,7 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
         return -1;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    auto ret = abilityMgrProxy->UninstallApp(bundleName, uid);
+    auto ret = abilityMgrProxy->UninstallApp(bundleName, uid, appIndex);
     IPCSkeleton::SetCallingIdentity(identity);
     return ret;
 #else
@@ -79,7 +79,7 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
 #endif
 }
 
-int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
+int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid, int32_t appIndex)
 {
 #ifdef ABILITY_RUNTIME_ENABLE
     sptr<AAFwk::IAbilityManager> abilityMgrProxy =
@@ -89,7 +89,7 @@ int SystemAbilityHelper::UpgradeApp(const std::string &bundleName, int32_t uid)
         return -1;
     }
     std::string identity = IPCSkeleton::ResetCallingIdentity();
-    auto ret = abilityMgrProxy->UpgradeApp(bundleName, uid, KILL_REASON);
+    auto ret = abilityMgrProxy->UpgradeApp(bundleName, uid, KILL_REASON, appIndex);
     IPCSkeleton::SetCallingIdentity(identity);
     return ret;
 #else
@@ -103,7 +103,7 @@ bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
     if (systemAbilityMgr != nullptr && (systemAbilityMgr->UnloadSystemAbility(systemAbilityId) == 0)) {
         return true;
     }
-    APP_LOGE("fail to unload %{public}d from system ability manager", systemAbilityId);
+    APP_LOGE("fail unload %{public}d from system ability manager", systemAbilityId);
     return false;
 }
 }  // namespace AppExecFwk

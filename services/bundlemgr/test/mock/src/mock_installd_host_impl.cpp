@@ -71,7 +71,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
+ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userId, bool isAtomicService)
 {
     return ERR_OK;
 }
@@ -292,6 +292,11 @@ ErrCode InstalldHostImpl::IsExistExtensionDir(int32_t userId, const std::string 
 }
 
 ErrCode InstalldHostImpl::CreateExtensionDataDir(const CreateDirParam &createDirParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return ERR_OK;
 }

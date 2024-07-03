@@ -117,7 +117,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
     { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
     { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
-    { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR }
+    { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
+    { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL }
 };
 
 // the new extension type does not need to be added here
@@ -632,7 +633,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
+        APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }
 }
 

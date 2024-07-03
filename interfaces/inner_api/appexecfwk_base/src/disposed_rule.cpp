@@ -140,7 +140,7 @@ void from_json(const nlohmann::json &jsonObject, ElementName &elementName)
         ArrayType::NOT_ARRAY);
     elementName.SetDeviceID(deviceId);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read elementName error, error code : %{public}d", parseResult);
+        APP_LOGE("read elementName error : %{public}d", parseResult);
     }
 }
 
@@ -221,7 +221,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        APP_LOGE("read disposedRule error, error code : %{public}d", parseResult);
+        APP_LOGE("read disposedRule error : %{public}d", parseResult);
     }
 }
 
@@ -237,7 +237,7 @@ bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
     APP_LOGD("FromString %{public}s", ruleString.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse ruleString: %{public}s.", ruleString.c_str());
+        APP_LOGE("failed parse ruleString: %{public}s.", ruleString.c_str());
         return false;
     }
     from_json(jsonObject, rule);

@@ -74,7 +74,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGE("UpdateResConfig failed with errcode %{public}d", static_cast<int32_t>(ret));
+        APP_LOGE("UpdateResConfig failed %{public}d", static_cast<int32_t>(ret));
         return false;
     }
     if (!hapPath.empty() && !resourceManager->AddResource(hapPath.c_str(),
@@ -111,7 +111,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
     if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGE("UpdateResConfig failed with errcode %{public}d", static_cast<int32_t>(ret));
+        APP_LOGE("UpdateResConfig failed %{public}d", static_cast<int32_t>(ret));
         return false;
     }
     // adapt overlay
