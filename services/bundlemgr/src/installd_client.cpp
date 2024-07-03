@@ -122,14 +122,14 @@ ErrCode InstalldClient::CreateBundleDataDirWithVector(const std::vector<CreateDi
 }
 
 ErrCode InstalldClient::RemoveBundleDataDir(
-    const std::string &bundleName, const int userid)
+    const std::string &bundleName, const int32_t userId, bool isAtomicService)
 {
-    if (bundleName.empty() || userid < 0) {
+    if (bundleName.empty() || userId < 0) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userid);
+    return CallService(&IInstalld::RemoveBundleDataDir, bundleName, userId, isAtomicService);
 }
 
 ErrCode InstalldClient::RemoveModuleDataDir(const std::string &ModuleName, const int userid)
@@ -542,7 +542,7 @@ ErrCode InstalldClient::DeleteEncryptionKeyId(const std::string &keyId)
 ErrCode InstalldClient::RemoveExtensionDir(int32_t userId, const std::vector<std::string> &extensionBundleDirs)
 {
     if (extensionBundleDirs.empty() || userId < 0) {
-        APP_LOGI("extensionBundleDirs is empty or userId is invalid");
+        APP_LOGI("extensionBundleDirs empty or userId invalid");
         return ERR_OK;
     }
     return CallService(&IInstalld::RemoveExtensionDir, userId, extensionBundleDirs);

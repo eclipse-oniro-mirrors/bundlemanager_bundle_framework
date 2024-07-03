@@ -1239,4 +1239,25 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7600, Function | Sma
     bool res = InstalldOperator::GenerateKeyIdAndSetPolicy(0, "", 100, keyId);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_7700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ExtractFiles of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7700, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    std::string hnpPackageInfo;
+    auto ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.srcPath = HAP_FILE_PATH;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = TEST_CPU_ABI;
+    extractParam.extractFileType = ExtractFileType::HNPS_FILE;
+    ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

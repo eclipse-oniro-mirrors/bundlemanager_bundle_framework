@@ -254,9 +254,11 @@ bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
     std::vector<uint8_t> pendSignData;
     ErrCode result = ExecuteAOT(*aotArgs, pendSignData);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
-    if (!reply.WriteUInt8Vector(pendSignData)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable ExecuteAOT failed");
-        return false;
+    if (result == ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE) {
+        if (!reply.WriteUInt8Vector(pendSignData)) {
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable ExecuteAOT failed");
+            return false;
+        }
     }
     return true;
 }
@@ -327,8 +329,9 @@ bool InstalldHost::HandleCreateBundleDataDirWithVector(MessageParcel &data, Mess
 bool InstalldHost::HandleRemoveBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleName = Str16ToStr8(data.ReadString16());
-    int userid = data.ReadInt32();
-    ErrCode result = RemoveBundleDataDir(bundleName, userid);
+    int32_t userId = data.ReadInt32();
+    bool isAtomicService = data.ReadBool();
+    ErrCode result = RemoveBundleDataDir(bundleName, userId, isAtomicService);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

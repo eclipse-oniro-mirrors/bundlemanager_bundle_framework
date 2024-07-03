@@ -222,7 +222,7 @@ ErrCode ExtendResourceManagerHostImpl::ParseExtendResourceFile(
         InnerBundleInfo innerBundleInfo;
         ErrCode result = bundleParser.Parse(filePaths[i], innerBundleInfo);
         if (result != ERR_OK) {
-            APP_LOGE("parse bundle info %{public}s failed, error: %{public}d",
+            APP_LOGE("parse bundle info %{public}s failed, err %{public}d",
                 filePaths[i].c_str(), result);
             return result;
         }
@@ -497,7 +497,7 @@ bool ExtendResourceManagerHostImpl::ParseBundleResource(
         return false;
     }
     if (info.icon_.empty()) {
-        APP_LOGE("icon is empty, bundleName:%{public}s", bundleName.c_str());
+        APP_LOGE("icon empty %{public}s", bundleName.c_str());
         return false;
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();

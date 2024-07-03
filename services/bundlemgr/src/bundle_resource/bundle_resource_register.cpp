@@ -59,7 +59,7 @@ void BundleResourceRegister::RegisterCommonEventSubscriber()
 
     auto subscriberPtr = std::make_shared<BundleResourceEventSubscriber>(subscribeInfo);
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
-        APP_LOGE("subscribe common event %{public}s failed",
+        APP_LOGE("subscribe event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED.c_str());
         return;
     }

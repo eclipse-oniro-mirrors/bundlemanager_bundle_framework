@@ -151,7 +151,7 @@ nlohmann::json AOTExecutor::GetSubjectInfo(const AOTArgs &aotArgs) const
 
 void AOTExecutor::MapArgs(const AOTArgs &aotArgs, std::unordered_map<std::string, std::string> &argsMap)
 {
-    APP_LOGI("ExecuteInCompilerServiceProcess, args : %{public}s", aotArgs.ToString().c_str());
+    APP_LOGI("ExecuteInCompilerServiceProcess, args %{public}s", aotArgs.ToString().c_str());
     nlohmann::json subject = GetSubjectInfo(aotArgs);
 
     nlohmann::json objectArray = nlohmann::json::array();

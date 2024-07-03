@@ -57,6 +57,7 @@ void AgingRequest::InitAgingDatasizeThreshold()
         APP_LOGD("AgingRequest init aging data size threshold success");
     }
 }
+
 void AgingRequest::InitAgingOneDayTimeMs()
 {
     char szOneDayTimeMs[AgingConstants::THRESHOLD_VAL_LEN] = {0};
@@ -82,16 +83,16 @@ void AgingRequest::InitAgingPolicySystemParameters()
 
 bool AgingRequest::IsReachStartAgingThreshold() const
 {
-    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
-        tatalDataBytes_, totalDataBytesThreshold_);
-    return tatalDataBytes_ > totalDataBytesThreshold_;
+    APP_LOGD("totalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
+        totalDataBytes_, totalDataBytesThreshold_);
+    return totalDataBytes_ > totalDataBytesThreshold_;
 }
 
 bool AgingRequest::IsReachEndAgingThreshold() const
 {
-    APP_LOGD("tatalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
-        tatalDataBytes_, totalDataBytesThreshold_);
-    return tatalDataBytes_ < (int64_t)(totalDataBytesThreshold_ * AgingConstants::AGING_SIZE_RATIO);
+    APP_LOGD("totalDataBytes: %{public}" PRId64 ", totalDataBytesThreshold: %{public}" PRId64,
+        totalDataBytes_, totalDataBytesThreshold_);
+    return totalDataBytes_ < (int64_t)(totalDataBytesThreshold_ * AgingConstants::AGING_SIZE_RATIO);
 }
 
 void AgingRequest::AddAgingBundle(AgingBundleInfo &bundleInfo)
@@ -103,7 +104,7 @@ void AgingRequest::ResetRequest()
 {
     agingBundles_.clear();
     agingCleanType_ = AgingCleanType::CLEAN_CACHE;
-    tatalDataBytes_ = 0;
+    totalDataBytes_ = 0;
 }
 
 void AgingRequest::Dump()

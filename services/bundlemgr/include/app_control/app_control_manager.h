@@ -92,6 +92,7 @@ private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
     void DeleteAppRunningRuleCache(std::string &key);
     void DeleteAbilityRunningRuleCache(std::string &key);
+    bool CheckCanDispose(const std::string &appId, int32_t userId);
 
     bool isAppInstallControlEnabled_ = false;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
@@ -101,6 +102,7 @@ private:
     std::mutex appRunningControlMutex_;
     std::unordered_map<std::string, std::vector<DisposedRule>> abilityRunningControlRuleCache_;
     std::mutex abilityRunningControlRuleMutex_;
+    std::vector<std::string> noControllingList_;
 };
 } // AppExecFwk
 } // OHOS

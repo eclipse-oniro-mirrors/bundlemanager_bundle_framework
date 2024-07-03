@@ -780,6 +780,60 @@ HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractFiles_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number: HandleExtractHnpFiles_0100
+ * @tc.name: HandleExtractHnpFiles
+ * @tc.desc: test HandleExtractHnpFiles of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleExtractHnpFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleExtractHnpFiles(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandleProcessBundleInstallNative_0100
+ * @tc.name: HandleProcessBundleInstallNative
+ * @tc.desc: test HandleProcessBundleInstallNative of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleProcessBundleInstallNative_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleProcessBundleInstallNative(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: HandleProcessBundleUnInstallNative_0100
+ * @tc.name: HandleProcessBundleUnInstallNative
+ * @tc.desc: test HandleProcessBundleUnInstallNative of InstalldHost
+ */
+HWTEST_F(BmsBundleInstallerIPCTest, HandleProcessBundleUnInstallNative_0100, Function | SmallTest | Level0)
+{
+    InstalldHost host;
+    MessageParcel datas;
+    std::u16string descriptor = InstalldHost::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(DATA, DATA_SIZE);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    bool res = host.HandleProcessBundleUnInstallNative(datas, reply);
+    EXPECT_EQ(res, true);
+}
+
+/**
  * @tc.number: HandleExecuteAOT_0100
  * @tc.name: HandleExecuteAOT
  * @tc.desc: test HandleExecuteAOT of InstalldHost

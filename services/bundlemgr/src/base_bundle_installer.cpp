@@ -70,6 +70,7 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -1405,8 +1406,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
-    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
-    CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_, installParam.isKeepData);
+    if (res != ERR_OK) {
+        APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
+    }
 
     DeleteEncryptionKeyId(oldInfo);
 
@@ -2690,11 +2693,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         LOG_E(BMS_TAG_INSTALLER, "fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
+    std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
+        ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
     if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
-        std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
-            ServiceConstants::PATH_SEPARATOR + std::to_string(userId_) + ServiceConstants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir,
             ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+    } else {
+        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir, 0);
     }
     if (info.GetIsNewVersion()) {
         int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
@@ -2984,8 +2989,11 @@ void BaseBundleInstaller::DeleteGroupDirsForException() const
     }
 }
 
-ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId, bool isKeepData) const
 {
+    if (isKeepData) {
+        return ERR_OK;
+    }
     std::vector<DataGroupInfo> infos;
     if (dataMgr_ == nullptr) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr_ is nullptr");
@@ -3314,7 +3322,8 @@ ErrCode BaseBundleInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info) co
 ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info, bool forException) const
 {
     ErrCode result =
-        InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_);
+        InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_,
+            info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE);
     CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
 
     if (forException) {
@@ -4247,7 +4256,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetCompatibleVersion() != newInfo.GetCompatibleVersion()) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
     }
-    if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
+    if (!CheckReleaseTypeIsCompatible(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
     }
     if (oldInfo.GetAppDistributionType() != newInfo.GetAppDistributionType()) {
@@ -4275,35 +4284,17 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
 
-    ErrCode ret = CheckDebugType(oldInfo, newInfo);
     LOG_D(BMS_TAG_INSTALLER, "CheckAppLabel end");
-    return ret;
+    return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::CheckDebugType(
+bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
-    if (!oldInfo.HasEntry() && !newInfo.HasEntry()) {
-        return ERR_OK;
+    if (oldInfo.IsReleaseHsp() || newInfo.IsReleaseHsp()) {
+        return true;
     }
-
-    if (oldInfo.HasEntry() && newInfo.HasEntry()) {
-        if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
-            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-        }
-
-        return ERR_OK;
-    }
-
-    if (oldInfo.HasEntry() && !oldInfo.GetBaseApplicationInfo().debug && newInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
-    if (newInfo.HasEntry() && !newInfo.GetBaseApplicationInfo().debug && oldInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
-
-    return ERR_OK;
+    return oldInfo.GetReleaseType() == newInfo.GetReleaseType();
 }
 
 ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,
@@ -4326,13 +4317,12 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
-    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
-    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
-        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
-            bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    // delete accessTokenId
+    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
     }
-
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         int32_t uid = innerBundleInfo.GetUid(userId_);
         if (uid != Constants::INVALID_UID) {
@@ -4343,6 +4333,13 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
                 innerBundleInfo.GetBundleName();
             PrepareBundleDirQuota(innerBundleInfo.GetBundleName(), uid, bundleDataDir, 0);
         }
+    }
+
+    innerBundleInfo.RemoveInnerBundleUserInfo(userId_);
+    if (!dataMgr_->RemoveInnerBundleUserInfo(bundleName, userId_)) {
+        LOG_E(BMS_TAG_INSTALLER, "update bundle user info to db failed %{public}s when remove user",
+            bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     ErrCode result = ERR_OK;
@@ -4363,13 +4360,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to remove asan log path, error is %{public}d", result);
         return result;
-    }
-
-    // delete accessTokenId
-    accessTokenId_ = innerBundleInfo.GetAccessTokenId(userId_);
-    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
-        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_INSTALLER, "delete accessToken failed");
     }
 
     return ERR_OK;

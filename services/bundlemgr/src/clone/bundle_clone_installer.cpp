@@ -115,7 +115,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("install clone app user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -133,7 +133,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     ErrCode result = ERR_OK;
     for (auto it = userInfo.cloneInfos.begin(); it != userInfo.cloneInfos.end(); it++) {
         if (UninstallCloneApp(bundleName, userId, std::stoi(it->first)) != ERR_OK) {
-            APP_LOGE("UninstallCloneApp failed, appIndex: %{public}s", it->first.c_str());
+            APP_LOGE("UninstallCloneApp failed, appIndex %{public}s", it->first.c_str());
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
     }
@@ -162,11 +162,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) is invalid.", userId);
+        APP_LOGE("userId(%{public}d) invalid.", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     if (!dataMgr->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("install clone app user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
 
@@ -179,7 +179,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     ErrCode ackRes = info.VerifyAndAckCloneAppIndex(userId, appIndex);
     if (ackRes != ERR_OK) {
-        APP_LOGE("installCloneApp fail for verifyAndAck res: %{public}d", ackRes);
+        APP_LOGE("installCloneApp fail for verifyAndAck res %{public}d", ackRes);
         return ackRes;
     }
 
@@ -256,7 +256,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("the user %{public}d does not exist when install clone application.", userId);
+        APP_LOGE("install clone app user %{public}d not exist.", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     InnerBundleInfo info;
@@ -289,7 +289,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     // process icon and label
     if (!BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId)) {
-        APP_LOGW("delete clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
+        APP_LOGW("delete clone resource failed %{public}s appIndex %{public}d",
             bundleName.c_str(), appIndex);
     }
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL

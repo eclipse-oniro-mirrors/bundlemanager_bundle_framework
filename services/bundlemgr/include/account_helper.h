@@ -22,11 +22,13 @@ namespace OHOS {
 namespace AppExecFwk {
 class AccountHelper {
 public:
-    static int IsOsAccountExists(const int id, bool &isOsAccountExists);
+    static int32_t IsOsAccountExists(const int32_t id, bool &isOsAccountExists);
 
     static int32_t GetCurrentActiveUserId();
 
     static bool IsOsAccountVerified(const int32_t userId);
+
+    static int32_t GetOsAccountLocalIdFromUid(const int32_t callingUid);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

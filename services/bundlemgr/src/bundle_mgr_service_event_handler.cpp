@@ -273,9 +273,6 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-#ifdef PEND_SIGN_SCREENLOCK_MGR_ENABLED
-    AOTHandler::GetInstance().RegisterScreenUnlockListener();
-#endif
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();

@@ -34,9 +34,6 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     const std::string &targetPath)
 {
     LOG_I(BMS_TAG_QUICK_FIX, "DeployQuickFix start");
-    if (statusCallback_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to nullptr statusCallback");
-    }
 
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(
         bundleFilePaths, isDebug, targetPath);
@@ -48,6 +45,8 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     std::shared_ptr<QuickFixResult> deployRes = std::make_shared<DeployQuickFixResult>(result);
     if (statusCallback_ != nullptr) {
         statusCallback_->OnPatchDeployed(deployRes);
+    } else {
+        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to nullptr statusCallback");
     }
 }
 

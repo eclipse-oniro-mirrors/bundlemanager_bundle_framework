@@ -237,6 +237,9 @@ public:
     static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
+    static bool GetAtomicServiceBundleDataDir(const std::string &bundleName,
+        const int32_t userId, std::vector<std::string> &allPathNames);
+
 #if defined(CODE_SIGNATURE_ENABLE)
     static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
         const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);

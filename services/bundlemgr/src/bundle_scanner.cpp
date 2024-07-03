@@ -75,7 +75,7 @@ bool BundleScanner::ScanImpl(const std::string &dirPath)
     for (;;) {
         dirent = readdir(dirp);
         if (dirent == nullptr) {
-            APP_LOGE("fail to readdir errno:%{public}d", errno);
+            APP_LOGE("fail readdir err:%{public}d", errno);
             break;
         }
 

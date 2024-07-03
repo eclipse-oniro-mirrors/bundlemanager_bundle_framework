@@ -352,6 +352,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(newInfo.GetIsPreInstallApp(), newInfo.GetRemovable());
             oldInfo.UpdateMultiAppMode(newInfo);
+            oldInfo.UpdateReleaseType(newInfo);
         }
         if (oldInfo.GetOldAppIds().empty()) {
             oldInfo.AddOldAppId(oldInfo.GetAppId());
@@ -562,6 +563,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.UpdateMultiAppMode(newInfo);
+            oldInfo.UpdateReleaseType(newInfo);
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         if (oldInfo.GetOldAppIds().empty()) {
@@ -1799,34 +1801,25 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         APP_LOGD("response user id is invalid");
         return;
     }
-    bool isExist = false;
-    bool isStage = info.GetIsNewVersion();
     // get clone bundle info
     InnerBundleUserInfo bundleUserInfo;
     (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfo);
-    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
-    for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
-        auto skillsPair = skillInfos.find(abilityInfoPair.first);
-        if (skillsPair == skillInfos.end()) {
-            continue;
-        }
-        for (const Skill& skill : skillsPair->second) {
-            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
-                isExist = true;
-                AbilityInfo abilityinfo = abilityInfoPair.second;
-                info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
-                    responseUserId, abilityinfo.applicationInfo);
-                abilityinfo.installTime = installTime;
-                // fix labelId or iconId is equal 0
-                ModifyLauncherAbilityInfo(isStage, abilityinfo);
-                abilityInfos.emplace_back(abilityinfo);
-                GetMatchLauncherAbilityInfosForCloneInfos(info, abilityInfoPair.second, bundleUserInfo, abilityInfos);
-                break;
-            }
-        }
+    AbilityInfo mainAbilityInfo;
+    info.GetMainAbilityInfo(mainAbilityInfo);
+    if (!mainAbilityInfo.name.empty() && (mainAbilityInfo.type == AbilityType::PAGE)) {
+        APP_LOGD("bundleName %{public}s exist mainAbility", info.GetBundleName().c_str());
+        info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+            responseUserId, mainAbilityInfo.applicationInfo);
+        mainAbilityInfo.installTime = installTime;
+        // fix labelId or iconId is equal 0
+        ModifyLauncherAbilityInfo(info.GetIsNewVersion(), mainAbilityInfo);
+        abilityInfos.emplace_back(mainAbilityInfo);
+        GetMatchLauncherAbilityInfosForCloneInfos(info, mainAbilityInfo, bundleUserInfo,
+            abilityInfos);
+        return;
     }
     // add app detail ability
-    if (!isExist && info.GetBaseApplicationInfo().needAppDetail) {
+    if (info.GetBaseApplicationInfo().needAppDetail) {
         LOG_D(BMS_TAG_QUERY_ABILITY, "bundleName: %{public}s add detail ability info.", info.GetBundleName().c_str());
         std::string moduleName = "";
         auto ability = info.FindAbilityInfo(moduleName, ServiceConstants::APP_DETAIL_ABILITY, responseUserId);
@@ -1839,6 +1832,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         }
         ability->installTime = installTime;
         abilityInfos.emplace_back(*ability);
+        GetMatchLauncherAbilityInfosForCloneInfos(info, *ability, bundleUserInfo, abilityInfos);
     }
 }
 
@@ -1854,7 +1848,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
         info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
             bundleUserInfo.bundleUserInfo.userId, cloneAbilityInfo.applicationInfo, item.second.appIndex);
         cloneAbilityInfo.installTime = item.second.installTime;
-        cloneAbilityInfo.uid =  item.second.uid;
+        cloneAbilityInfo.uid = item.second.uid;
         cloneAbilityInfo.appIndex = item.second.appIndex;
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(info.GetIsNewVersion(), cloneAbilityInfo);
@@ -6520,7 +6514,7 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
@@ -6546,7 +6540,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGW("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
@@ -6855,7 +6849,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    std::string str = BundleUtil::GenerateUuid();
+    std::string str = BundleUtil::GenerateUuidByKey(dataGroupInfo.dataGroupId);
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }
@@ -7157,7 +7151,7 @@ ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const st
     }
 
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
-        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t userId = AccountHelper::GetOsAccountLocalIdFromUid(IPCSkeleton::GetCallingUid());
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
             APP_LOGE("BundleName: %{public}s does not exist in current userId", bundleName.c_str());

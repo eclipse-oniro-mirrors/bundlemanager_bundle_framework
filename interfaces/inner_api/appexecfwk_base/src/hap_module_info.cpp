@@ -87,6 +87,7 @@ const std::string ROUTER_ITEM_KEY_NAME = "name";
 const std::string ROUTER_ITEM_KEY_PAGE_SOURCE_FILE = "pageSourceFile";
 const std::string ROUTER_ITEM_KEY_BUILD_FUNCTION = "buildFunction";
 const std::string ROUTER_ITEM_KEY_DATA = "data";
+const std::string ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
 const std::string ROUTER_ITEM_KEY_OHMURL = "ohmurl";
 const std::string ROUTER_ITEM_KEY_BUNDLE_NAME = "bundleName";
 const std::string ROUTER_ITEM_KEY_MODULE_NAME = "moduleName";
@@ -305,7 +306,15 @@ bool RouterItem::ReadFromParcel(Parcel &parcel)
     pageSourceFile = Str16ToStr8(parcel.ReadString16());
     buildFunction = Str16ToStr8(parcel.ReadString16());
 
-    data = Str16ToStr8(parcel.ReadString16());
+    int32_t dataSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, dataSize, &data);
+    for (int32_t i = 0; i < dataSize; ++i) {
+        std::string key = Str16ToStr8(parcel.ReadString16());
+        std::string value = Str16ToStr8(parcel.ReadString16());
+        data.emplace(key, value);
+    }
+    customData = Str16ToStr8(parcel.ReadString16());
     ohmurl = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
@@ -328,7 +337,12 @@ bool RouterItem::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pageSourceFile));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildFunction));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(data));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(data.size()));
+    for (const auto &dataItem : data) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(customData));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(ohmurl));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
@@ -342,6 +356,7 @@ void to_json(nlohmann::json &jsonObject, const RouterItem &routerItem)
         {ROUTER_ITEM_KEY_PAGE_SOURCE_FILE, routerItem.pageSourceFile},
         {ROUTER_ITEM_KEY_BUILD_FUNCTION, routerItem.buildFunction},
         {ROUTER_ITEM_KEY_DATA, routerItem.data},
+        {ROUTER_ITEM_KEY_CUSTOM_DATA, routerItem.customData},
         {ROUTER_ITEM_KEY_OHMURL, routerItem.ohmurl},
         {ROUTER_ITEM_KEY_BUNDLE_NAME, routerItem.bundleName},
         {ROUTER_ITEM_KEY_MODULE_NAME, routerItem.moduleName}
@@ -397,6 +412,14 @@ void from_json(const nlohmann::json &jsonObject, RouterItem &routerItem)
         ROUTER_ITEM_KEY_MODULE_NAME,
         routerItem.moduleName,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::string>>(jsonObject,
+        jsonObjectEnd,
+        ROUTER_ITEM_KEY_DATA,
+        routerItem.data,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

@@ -268,17 +268,15 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
         if (!onlyUri) {
             continue;
         }
-        std::vector<std::string> mimeTypes;
-        if (!MimeTypeMgr::GetMimeTypeByUri(paramUriString, mimeTypes)) {
+        std::string paramUtd;
+        if (!MimeTypeMgr::GetUtdByUri(paramUriString, paramUtd)) {
             continue;
         }
-        for (const auto &mimeType : mimeTypes) {
-            if ((MatchUri(paramUriString, skillUri) ||
-                (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-                MatchType(mimeType, skillUri.type)) {
-                matchUriIndex = uriIndex;
-                return true;
-            }
+        if ((MatchUri(paramUriString, skillUri) ||
+            (skillUri.scheme.empty() && paramUriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+            MatchType(paramUtd, skillUri.type)) {
+            matchUriIndex = uriIndex;
+            return true;
         }
     }
     return false;
@@ -534,18 +532,15 @@ bool Skill::IsUtd(const std::string &param) const
 
 bool Skill::MatchMimeType(const std::string & uriString) const
 {
-    std::vector<std::string> mimeTypes;
-    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
-    if (!ret) {
+    std::string paramUtd;
+    if (!MimeTypeMgr::GetUtdByUri(uriString, paramUtd)) {
         return false;
     }
     for (const SkillUri &skillUri : uris) {
-        for (const auto &mimeType : mimeTypes) {
-            if ((MatchUri(uriString, skillUri) ||
-                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-                MatchType(mimeType, skillUri.type)) {
-                return true;
-            }
+        if ((MatchUri(uriString, skillUri) ||
+            (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+            MatchType(paramUtd, skillUri.type)) {
+            return true;
         }
     }
     return false;
@@ -554,20 +549,17 @@ bool Skill::MatchMimeType(const std::string & uriString) const
 
 bool Skill::MatchMimeType(const std::string & uriString, size_t &matchUriIndex) const
 {
-    std::vector<std::string> mimeTypes;
-    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
-    if (!ret) {
+    std::string paramUtd;
+    if (!MimeTypeMgr::GetUtdByUri(uriString, paramUtd)) {
         return false;
     }
     for (size_t uriIndex = 0; uriIndex < uris.size(); ++uriIndex) {
         const SkillUri &skillUri = uris[uriIndex];
-        for (const auto &mimeType : mimeTypes) {
-            if ((MatchUri(uriString, skillUri) ||
-                (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
-                MatchType(mimeType, skillUri.type)) {
-                matchUriIndex = uriIndex;
-                return true;
-            }
+        if ((MatchUri(uriString, skillUri) ||
+            (skillUri.scheme.empty() && uriString.find(SCHEME_SEPARATOR) == std::string::npos)) &&
+            MatchType(paramUtd, skillUri.type)) {
+            matchUriIndex = uriIndex;
+            return true;
         }
     }
     return false;

@@ -96,7 +96,10 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -205,11 +208,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "APP_DOMAIN_VERIFY_ENABLED" ]
   }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
-  }
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {
@@ -283,7 +281,10 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -384,11 +385,6 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
-  }
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
@@ -479,7 +475,10 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -572,11 +571,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
-  }
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
@@ -640,7 +634,10 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -731,11 +728,6 @@ ohos_unittest("BmsBundleInstallIpcTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
-  }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 
@@ -875,9 +867,10 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources +=
+        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
 
@@ -1017,9 +1010,10 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources +=
+        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
 
@@ -1163,9 +1157,10 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
 
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
+  if (code_signature_enable) {
+    sources +=
+        [ "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 }
 
@@ -1259,7 +1254,10 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   }
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -1351,11 +1349,6 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
   }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
-  }
 }
 
 ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
@@ -1422,7 +1415,10 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
 
   defines = []
   if (code_signature_enable) {
-    sources += [ "${services_path}/bundlemgr/src/code_sign_helper.cpp" ]
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
     include_dirs += [ "${services_path}/bundlemgr/include" ]
     external_deps += [
       "bounds_checking_function:libsec_shared",
@@ -1522,11 +1518,6 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
       "device_info_manager:distributed_device_profile_sdk",
     ]
     defines += [ "BMS_DEVICE_INFO_MANAGER_ENABLE" ]
-  }
-
-  if (code_signature_enable && pend_sign_screenlock_mgr_enable) {
-    defines += [ "PEND_SIGN_SCREENLOCK_MGR_ENABLED" ]
-    external_deps += [ "screenlock_mgr:screenlock_client" ]
   }
 }
 

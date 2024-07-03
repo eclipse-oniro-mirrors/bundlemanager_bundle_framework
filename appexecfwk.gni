@@ -70,7 +70,6 @@ declare_args() {
   bms_device_info_manager_part_enabled = true
   app_domain_verify_enabled = true
   device_usage_statistics_enabled = true
-  pend_sign_screenlock_mgr_enable = false
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
@@ -181,11 +180,6 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.bundlemanager_app_domain_verify)) {
     app_domain_verify_enabled = false
-  }
-
-  if (defined(global_parts_info) &&
-      defined(global_parts_info.theme_screenlock_mgr)) {
-    pend_sign_screenlock_mgr_enable = true
   }
 }
 

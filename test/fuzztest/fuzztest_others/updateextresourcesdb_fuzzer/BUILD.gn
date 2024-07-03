@@ -1,0 +1,178 @@
+# Copyright (c) 2024 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/test.gni")
+import("../../../../appexecfwk.gni")
+import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
+
+module_output_path = "bundle_framework/bundle_framework"
+
+ohos_fuzztest("UpdateExtResourcesDbFuzzTest") {
+  use_exceptions = true
+  module_out_path = module_output_path
+  fuzz_config_file =
+      "../../../fuzztest/fuzztest_others/updateextresourcesdb_fuzzer"
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "//third_party/json/include",
+    "${services_path}/bundlemgr/include/extend_resource",
+  ]
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_installd_host_impl.cpp",
+  ]
+
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+  ]
+
+  sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+
+  sources += [ "updateextresourcesdb_fuzzer.cpp" ]
+
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+
+  deps = [
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_app_service/app_service_version1_library1:appService_v1_library1",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/defaultAppTest:defaultAppTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/resourceManagerTest:resourceManagerTest",
+    "${core_path}:appexecfwk_core",
+  ]
+  deps += bundle_install_deps
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:app_manager",
+    "access_token:el5_filekey_manager_sdk",
+    "access_token:libprivacy_sdk",
+    "access_token:libtokenid_sdk",
+    "appspawn:hnpapi",
+    "appverify:libhapverify",
+    "bounds_checking_function:libsec_shared",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
+    "init:libbegetutil",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+  ]
+  external_deps += bundle_install_external_deps
+  defines = []
+  if (code_signature_enable) {
+    sources += [
+      "${services_path}/bundlemgr/src/aot/aot_sign_data_cache_mgr.cpp",
+      "${services_path}/bundlemgr/src/code_sign_helper.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include" ]
+    external_deps += [
+      "bounds_checking_function:libsec_shared",
+      "code_signature:libcode_sign_utils",
+      "ets_runtime:libcompiler_service",
+    ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
+  if (configpolicy_enable) {
+    external_deps += [ "config_policy:configpolicy_util" ]
+    defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
+  if (build_selinux) {
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
+  }
+  if (account_enable) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+    defines += [ "ACCOUNT_ENABLE" ]
+  }
+  if (bundle_framework_free_install) {
+    sources += aging
+    sources += free_install
+    sources += distributed_manager
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+      "battery_manager:batterysrv_client",
+      "device_info_manager:distributed_device_profile_client",
+      "device_usage_statistics:usagestatsinner",
+      "display_manager:displaymgr",
+      "power_manager:powermgr_client",
+      "syscap_codec:syscap_interface_shared",
+    ]
+    defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (global_resmgr_enable) {
+    defines += [ "GLOBAL_RESMGR_ENABLE" ]
+    external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (hicollie_enable) {
+    external_deps += [ "hicollie:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (hisysevent_enable) {
+    sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
+    defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
+  configs += [ "../../../../services/bundlemgr:rdb_config" ]
+  external_deps += [ "relational_store:native_rdb" ]
+  sources += [
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_rdb_data_manager.cpp",
+  ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
+}

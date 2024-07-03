@@ -70,11 +70,11 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleCloneInfo& bundleClo
         bundleCloneInfo.enabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_DISABLE_ABILITIES,
         bundleCloneInfo.disabledAbilities, JsonType::ARRAY, false, parseResult, ArrayType::STRING);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID,
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID,
         bundleCloneInfo.accessTokenId, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX,
+    GetValueIfFindKey<uint64_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_ACCESS_TOKEN_ID_EX,
         bundleCloneInfo.accessTokenIdEx, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_INSTALL_TIME,
+    GetValueIfFindKey<int64_t>(jsonObject, jsonObjectEnd, BUNDLE_CLONE_INFO_INSTALL_TIME,
         bundleCloneInfo.installTime, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module bundleCloneInfo from jsonObject error, error code : %{public}d", parseResult);

@@ -47,7 +47,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     std::string action = data.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
-        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
+        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d unlocked", userId);
         std::lock_guard<std::mutex> lock(mutex_);
         if ((userId_ != userId)) {
             userId_ = userId;
@@ -60,20 +60,20 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     }
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
-        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is switched", userId);
+        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d switched", userId);
         std::lock_guard<std::mutex> lock(mutex_);
         if (AccountHelper::IsOsAccountVerified(userId) && (userId_ != userId)) {
-            APP_LOGI("UserUnlockedEventSubscriber userId:%{public}d has unlocked", userId);
+            APP_LOGI("UserUnlockedEventSubscriber userId:%{public}d unlocked", userId);
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
         }
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
-    APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
-    Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
+        APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
+        Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
 #endif
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
+        DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
     }
 }
@@ -104,7 +104,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         }
     }
     if (!isExist) {
-        APP_LOGI("path: %{public}s is not exist, need to create it", baseBundleDataDir.c_str());
+        APP_LOGI("path: %{public}s not exist, need create", baseBundleDataDir.c_str());
         CreateDirParam createDirParam;
         createDirParam.userId = userId;
         createDirParam.bundleName = bundleInfo.name;

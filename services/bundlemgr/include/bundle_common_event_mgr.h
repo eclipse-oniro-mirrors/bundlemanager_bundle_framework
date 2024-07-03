@@ -65,6 +65,7 @@ struct NotifyBundleEvents {
     int32_t appIndex = 0;
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
+    bool isApplicationEnabled = true;
 };
 
 class BundleCommonEventMgr {
