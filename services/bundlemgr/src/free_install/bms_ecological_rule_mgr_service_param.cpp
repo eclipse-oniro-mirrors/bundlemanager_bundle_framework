@@ -30,18 +30,18 @@ BmsExperienceRule *BmsExperienceRule::Unmarshalling(Parcel &in)
 {
     auto *rule = new (std::nothrow) BmsExperienceRule();
     if (rule == nullptr) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "rule is nullptr");
+        LOG_E(BMS_TAG_DEFAULT, "rule is nullptr");
         return nullptr;
     }
 
     if (!in.ReadBool(rule->isAllow)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read isAllow failed");
+        LOG_E(BMS_TAG_DEFAULT, "read isAllow failed");
         delete rule;
         return nullptr;
     }
 
     if (!in.ReadString(rule->sceneCode)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read sceneCode failed");
+        LOG_E(BMS_TAG_DEFAULT, "read sceneCode failed");
         delete rule;
         return nullptr;
     }
@@ -54,16 +54,16 @@ BmsExperienceRule *BmsExperienceRule::Unmarshalling(Parcel &in)
 bool BmsExperienceRule::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteBool(isAllow)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write isAllow failed");
+        LOG_E(BMS_TAG_DEFAULT, "write isAllow failed");
         return false;
     }
 
     if (!parcel.WriteString(sceneCode)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write sceneCode failed");
+        LOG_E(BMS_TAG_DEFAULT, "write sceneCode failed");
         return false;
     }
     if (!parcel.WriteParcelable(replaceWant)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write replaceWant failed");
+        LOG_E(BMS_TAG_DEFAULT, "write replaceWant failed");
         return false;
     }
 
@@ -72,7 +72,7 @@ bool BmsExperienceRule::Marshalling(Parcel &parcel) const
 
 bool BmsCallerInfo::ReadFromParcel(Parcel &parcel)
 {
-    LOG_I(BMS_TAG_FREE_INSTALL, "read from parcel");
+    LOG_I(BMS_TAG_DEFAULT, "read from parcel");
     return true;
 }
 
@@ -80,29 +80,29 @@ BmsCallerInfo *BmsCallerInfo::Unmarshalling(Parcel &in)
 {
     auto *info = new (std::nothrow) BmsCallerInfo();
     if (info == nullptr) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "new callerInfo failed, return nullptr");
+        LOG_E(BMS_TAG_DEFAULT, "new callerInfo failed, return nullptr");
         return nullptr;
     }
     info->packageName = in.ReadString();
-    LOG_I(BMS_TAG_FREE_INSTALL, "read packageName result: %{public}s", info->packageName.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "read packageName result: %{public}s", info->packageName.c_str());
 
     if (!in.ReadInt32(info->uid)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read uid failed");
+        LOG_E(BMS_TAG_DEFAULT, "read uid failed");
         delete info;
         return nullptr;
     }
     if (!in.ReadInt32(info->pid)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read pid failed");
+        LOG_E(BMS_TAG_DEFAULT, "read pid failed");
         delete info;
         return nullptr;
     }
     if (!in.ReadInt32(info->callerAppType)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read callerAppType failed");
+        LOG_E(BMS_TAG_DEFAULT, "read callerAppType failed");
         delete info;
         return nullptr;
     }
     if (!in.ReadInt32(info->targetAppType)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read targetAppType failed");
+        LOG_E(BMS_TAG_DEFAULT, "read targetAppType failed");
         delete info;
         return nullptr;
     }
@@ -132,23 +132,23 @@ BmsCallerInfo *BmsCallerInfo::Unmarshalling(Parcel &in)
 bool BmsCallerInfo::Marshalling(Parcel &parcel) const
 {
     if (!parcel.WriteString(packageName)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write packageName failed");
+        LOG_E(BMS_TAG_DEFAULT, "write packageName failed");
         return false;
     }
     if (!parcel.WriteInt32(uid)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write uid failed");
+        LOG_E(BMS_TAG_DEFAULT, "write uid failed");
         return false;
     }
     if (!parcel.WriteInt32(pid)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write pid failed");
+        LOG_E(BMS_TAG_DEFAULT, "write pid failed");
         return false;
     }
     if (!parcel.WriteInt32(callerAppType)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write callerAppType failed");
+        LOG_E(BMS_TAG_DEFAULT, "write callerAppType failed");
         return false;
     }
     if (!parcel.WriteInt32(targetAppType)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "write targetAppType failed");
+        LOG_E(BMS_TAG_DEFAULT, "write targetAppType failed");
         return false;
     }
     if (!parcel.WriteInt32(callerModelType)) {

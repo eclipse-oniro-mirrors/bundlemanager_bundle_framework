@@ -27,7 +27,7 @@ constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
 }
 QuickFixManagerRdb::QuickFixManagerRdb()
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "create QuickFixManagerRdb.");
+    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = QUICK_FIX_RDB_TABLE_NAME;
@@ -37,15 +37,15 @@ QuickFixManagerRdb::QuickFixManagerRdb()
 
 QuickFixManagerRdb::~QuickFixManagerRdb()
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "destroy QuickFixManagerRdb.");
+    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerRdb.");
 }
 
 bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "begin to QueryAllInnerAppQuickFix");
+    LOG_I(BMS_TAG_DEFAULT, "begin to QueryAllInnerAppQuickFix");
     bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
-        LOG_E(BMS_TAG_QUICK_FIX, "GetAllDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAllDataFromDb failed.");
         return false;
     }
     return true;
@@ -53,10 +53,10 @@ bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerApp
 
 bool QuickFixManagerRdb::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "begin to QueryAppQuickFix");
+    LOG_I(BMS_TAG_DEFAULT, "begin to QueryAppQuickFix");
     bool ret = GetDataFromDb(bundleName, innerAppQuickFix);
     if (!ret) {
-        LOG_E(BMS_TAG_QUICK_FIX, "GetDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed.");
         return false;
     }
     return true;
@@ -64,10 +64,10 @@ bool QuickFixManagerRdb::QueryInnerAppQuickFix(const std::string &bundleName, In
 
 bool QuickFixManagerRdb::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuickFix)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "begin to SaveInnerAppQuickFix");
+    LOG_I(BMS_TAG_DEFAULT, "begin to SaveInnerAppQuickFix");
     bool ret = SaveDataToDb(innerAppQuickFix);
     if (!ret) {
-        LOG_E(BMS_TAG_QUICK_FIX, "SaveDataToDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed.");
         return false;
     }
     return true;
@@ -75,10 +75,10 @@ bool QuickFixManagerRdb::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQu
 
 bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "begin to DeleteInnerAppQuickFix");
+    LOG_I(BMS_TAG_DEFAULT, "begin to DeleteInnerAppQuickFix");
     bool ret = DeleteDataFromDb(bundleName);
     if (!ret) {
-        LOG_E(BMS_TAG_QUICK_FIX, "DeleteDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDataFromDb failed.");
         return false;
     }
     return true;
@@ -87,21 +87,21 @@ bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
 bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
     std::map<std::string, std::string> values;
     bool result = rdbDataManager_->QueryAllData(values);
     if (!result) {
-        LOG_E(BMS_TAG_QUICK_FIX, "QueryAllData failed");
+        LOG_E(BMS_TAG_DEFAULT, "QueryAllData failed");
         return false;
     }
     for (auto iter = values.begin(); iter != values.end(); ++iter) {
         nlohmann::json jsonObject = nlohmann::json::parse(iter->second, nullptr, false);
         InnerAppQuickFix appQuickFix;
         if (jsonObject.is_discarded() || (appQuickFix.FromJson(jsonObject) != ERR_OK)) {
-            LOG_E(BMS_TAG_QUICK_FIX, "error key : %{public}s", iter->first.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", iter->first.c_str());
             rdbDataManager_->DeleteData(iter->first);
             continue;
         }
@@ -113,20 +113,20 @@ bool QuickFixManagerRdb::GetAllDataFromDb(std::map<std::string, InnerAppQuickFix
 bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
     std::string value;
     bool result = rdbDataManager_->QueryData(bundleName, value);
     if (!result) {
-        LOG_E(BMS_TAG_QUICK_FIX, "QueryData failed by bundleName %{public}s", bundleName.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "QueryData failed by bundleName %{public}s", bundleName.c_str());
         return false;
     }
 
     nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
     if (jsonObject.is_discarded() || (innerAppQuickFix.FromJson(jsonObject) != ERR_OK)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "error key : %{public}s", bundleName.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", bundleName.c_str());
         rdbDataManager_->DeleteData(bundleName);
         return false;
     }
@@ -136,7 +136,7 @@ bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQu
 bool QuickFixManagerRdb::SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
@@ -146,7 +146,7 @@ bool QuickFixManagerRdb::SaveDataToDb(const InnerAppQuickFix &innerAppQuickFix)
 bool QuickFixManagerRdb::DeleteDataFromDb(const std::string &bundleName)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 

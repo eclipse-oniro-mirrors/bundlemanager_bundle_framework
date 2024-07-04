@@ -27,32 +27,32 @@ namespace AppExecFwk {
 DefaultAppProxy::DefaultAppProxy(const sptr<IRemoteObject>& object)
     : IRemoteProxy<IDefaultApp>(object)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "create DefaultAppProxy.");
+    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppProxy.");
 }
 
 DefaultAppProxy::~DefaultAppProxy()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "destroy DefaultAppProxy.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppProxy.");
 }
 
 ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isDefaultApp)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to call IsDefaultApplication.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to call IsDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(type)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write type failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write type failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(DefaultAppInterfaceCode::IS_DEFAULT_APPLICATION, data, reply)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SendRequest failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = reply.ReadInt32();
@@ -64,25 +64,25 @@ ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isD
 
 ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to GetDefaultApplication.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to GetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (type.empty()) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "type is empty.");
+        LOG_E(BMS_TAG_DEFAULT, "type is empty.");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write userId failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(type)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write type failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write type failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfo<BundleInfo>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION, data, bundleInfo);
@@ -90,30 +90,30 @@ ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string
 
 ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to SetDefaultApplication.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to SetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write userId failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(type)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write type failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write type failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write want failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write want failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION, data, reply)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SendRequest failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -122,31 +122,31 @@ ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string
 
 ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::string& type)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to ResetDefaultApplication.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to ResetDefaultApplication.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
     if (type.empty()) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "type is empty.");
+        LOG_E(BMS_TAG_DEFAULT, "type is empty.");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_DEFAULT, "WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write userId failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(type)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "write type failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write type failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     MessageParcel reply;
     if (!SendRequest(DefaultAppInterfaceCode::RESET_DEFAULT_APPLICATION, data, reply)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SendRequest failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -158,22 +158,22 @@ ErrCode DefaultAppProxy::GetParcelableInfo(DefaultAppInterfaceCode code, Message
 {
     MessageParcel reply;
     if (!SendRequest(code, data, reply)) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SendRequest failed");
+        LOG_E(BMS_TAG_DEFAULT, "SendRequest failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "host reply errCode : %{public}d", ret);
+        LOG_E(BMS_TAG_DEFAULT, "host reply errCode : %{public}d", ret);
         return ret;
     }
 
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
     if (info == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "ReadParcelable failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable failed.");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     parcelableInfo = *info;
-    LOG_D(BMS_TAG_DEFAULT_APP, "GetParcelableInfo success.");
+    LOG_D(BMS_TAG_DEFAULT, "GetParcelableInfo success.");
     return ERR_OK;
 }
 
@@ -182,12 +182,12 @@ bool DefaultAppProxy::SendRequest(DefaultAppInterfaceCode code, MessageParcel& d
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "failed to send request %{public}d due to remote object null.", code);
+        LOG_E(BMS_TAG_DEFAULT, "failed to send request %{public}d due to remote object null.", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "receive error code %{public}d in transact %{public}d", result, code);
+        LOG_E(BMS_TAG_DEFAULT, "receive error code %{public}d in transact %{public}d", result, code);
         return false;
     }
     return true;

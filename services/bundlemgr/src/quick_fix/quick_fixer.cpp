@@ -27,13 +27,13 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : statusCallback_(statusCallback)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "enter QuickFixer");
+    LOG_I(BMS_TAG_DEFAULT, "enter QuickFixer");
 }
 
 void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug,
     const std::string &targetPath)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "DeployQuickFix start");
+    LOG_I(BMS_TAG_DEFAULT, "DeployQuickFix start");
 
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(
         bundleFilePaths, isDebug, targetPath);
@@ -46,15 +46,15 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
     if (statusCallback_ != nullptr) {
         statusCallback_->OnPatchDeployed(deployRes);
     } else {
-        LOG_E(BMS_TAG_QUICK_FIX, "DeployQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_DEFAULT, "DeployQuickFix failed due to nullptr statusCallback");
     }
 }
 
 void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "SwitchQuickFix start");
+    LOG_I(BMS_TAG_DEFAULT, "SwitchQuickFix start");
     if (statusCallback_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "SwitchQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_DEFAULT, "SwitchQuickFix failed due to nullptr statusCallback");
     }
 
     std::unique_ptr<IQuickFix> switcher = std::make_unique<QuickFixSwitcher>(bundleName, enable);
@@ -72,9 +72,9 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 
 void QuickFixer::DeleteQuickFix(const std::string &bundleName)
 {
-    LOG_I(BMS_TAG_QUICK_FIX, "DeleteQuickFix start");
+    LOG_I(BMS_TAG_DEFAULT, "DeleteQuickFix start");
     if (statusCallback_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "DeleteQuickFix failed due to nullptr statusCallback");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteQuickFix failed due to nullptr statusCallback");
     }
 
     std::unique_ptr<IQuickFix> deleter = std::make_unique<QuickFixDeleter>(bundleName);

@@ -36,7 +36,7 @@ ohos_shared_library("libappexecfwk_common") {
   ]
 
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   cflags = [ "-Os" ]

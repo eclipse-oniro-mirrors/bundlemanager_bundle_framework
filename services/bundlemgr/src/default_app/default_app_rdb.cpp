@@ -31,7 +31,7 @@ constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 }
 DefaultAppRdb::DefaultAppRdb()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "create DefaultAppRdb.");
+    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppRdb.");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = DEFAULT_APP_RDB_TABLE_NAME;
@@ -43,115 +43,115 @@ DefaultAppRdb::DefaultAppRdb()
 
 DefaultAppRdb::~DefaultAppRdb()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "destroy DefaultAppRdb.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppRdb.");
 }
 
 bool DefaultAppRdb::GetDefaultApplicationInfos(int32_t userId, std::map<std::string, Element>& infos)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to GetDefaultApplicationInfos, userId : %{public}d.", userId);
+    LOG_D(BMS_TAG_DEFAULT, "begin to GetDefaultApplicationInfos, userId : %{public}d.", userId);
     bool ret = GetDataFromDb(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "GetDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed.");
         return false;
     }
 
-    LOG_D(BMS_TAG_DEFAULT_APP, "GetDefaultApplicationInfos success.");
+    LOG_D(BMS_TAG_DEFAULT, "GetDefaultApplicationInfos success.");
     return true;
 }
 
 bool DefaultAppRdb::GetDefaultApplicationInfo(int32_t userId, const std::string& type, Element& element)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to GetDefaultApplicationInfo, userId : %{public}d, type : %{public}s.",
+    LOG_D(BMS_TAG_DEFAULT, "begin to GetDefaultApplicationInfo, userId : %{public}d, type : %{public}s.",
         userId, type.c_str());
     std::map<std::string, Element> infos;
     bool ret = GetDefaultApplicationInfos(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "GetDefaultApplicationInfos failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetDefaultApplicationInfos failed.");
         return false;
     }
 
     if (infos.find(type) == infos.end()) {
-        LOG_D(BMS_TAG_DEFAULT_APP, "type is not saved in db.");
+        LOG_D(BMS_TAG_DEFAULT, "type is not saved in db.");
         return false;
     }
 
     element = infos.find(type)->second;
-    LOG_D(BMS_TAG_DEFAULT_APP, "GetDefaultApplicationInfo success.");
+    LOG_D(BMS_TAG_DEFAULT, "GetDefaultApplicationInfo success.");
     return true;
 }
 
 bool DefaultAppRdb::SetDefaultApplicationInfos(int32_t userId, const std::map<std::string, Element>& infos)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to SetDefaultApplicationInfos, userId : %{public}d.", userId);
+    LOG_D(BMS_TAG_DEFAULT, "begin to SetDefaultApplicationInfos, userId : %{public}d.", userId);
     bool ret = SaveDataToDb(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SaveDataToDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed.");
         return false;
     }
 
-    LOG_D(BMS_TAG_DEFAULT_APP, "SetDefaultApplicationInfos success.");
+    LOG_D(BMS_TAG_DEFAULT, "SetDefaultApplicationInfos success.");
     return true;
 }
 
 bool DefaultAppRdb::SetDefaultApplicationInfo(int32_t userId, const std::string& type, const Element& element)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "SetDefaultApplicationInfo userId:%{public}d type:%{public}s.", userId, type.c_str());
+    LOG_D(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo userId:%{public}d type:%{public}s.", userId, type.c_str());
     std::map<std::string, Element> infos;
     GetDefaultApplicationInfos(userId, infos);
     if (infos.find(type) == infos.end()) {
-        LOG_D(BMS_TAG_DEFAULT_APP, "add default app info.");
+        LOG_D(BMS_TAG_DEFAULT, "add default app info.");
         infos.emplace(type, element);
     } else {
-        LOG_D(BMS_TAG_DEFAULT_APP, "modify default app info.");
+        LOG_D(BMS_TAG_DEFAULT, "modify default app info.");
         infos[type] = element;
     }
 
     bool ret = SaveDataToDb(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SaveDataToDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed.");
         return false;
     }
 
-    LOG_D(BMS_TAG_DEFAULT_APP, "SetDefaultApplicationInfo success.");
+    LOG_D(BMS_TAG_DEFAULT, "SetDefaultApplicationInfo success.");
     return true;
 }
 
 bool DefaultAppRdb::DeleteDefaultApplicationInfos(int32_t userId)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to DeleteDefaultApplicationInfos, userId : %{public}d.", userId);
+    LOG_D(BMS_TAG_DEFAULT, "begin to DeleteDefaultApplicationInfos, userId : %{public}d.", userId);
     bool ret = DeleteDataFromDb(userId);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "DeleteDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDataFromDb failed.");
         return false;
     }
 
-    LOG_D(BMS_TAG_DEFAULT_APP, "DeleteDefaultApplicationInfos success.");
+    LOG_D(BMS_TAG_DEFAULT, "DeleteDefaultApplicationInfos success.");
     return true;
 }
 
 bool DefaultAppRdb::DeleteDefaultApplicationInfo(int32_t userId, const std::string& type)
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to delete userId: %{public}d, type: %{public}s.", userId, type.c_str());
+    LOG_D(BMS_TAG_DEFAULT, "begin to delete userId: %{public}d, type: %{public}s.", userId, type.c_str());
     std::map<std::string, Element> infos;
     bool ret = GetDataFromDb(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "GetDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed.");
         return true;
     }
 
     if (infos.find(type) == infos.end()) {
-        LOG_D(BMS_TAG_DEFAULT_APP, "type doesn't exists in db.");
+        LOG_D(BMS_TAG_DEFAULT, "type doesn't exists in db.");
         return true;
     }
 
     infos.erase(type);
     ret = SaveDataToDb(userId, infos);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "SaveDataToDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed.");
         return false;
     }
 
-    LOG_D(BMS_TAG_DEFAULT_APP, "DeleteDefaultApplicationInfo success.");
+    LOG_D(BMS_TAG_DEFAULT, "DeleteDefaultApplicationInfo success.");
     return true;
 }
 
@@ -161,15 +161,15 @@ bool DefaultAppRdb::ParseConfig(const std::string& relativePath, DefaultAppData&
     std::vector<std::string> rootDirs;
     BMSEventHandler::GetPreInstallRootDirList(rootDirs);
     if (rootDirs.empty()) {
-        LOG_W(BMS_TAG_DEFAULT_APP, "rootDirs empty");
+        LOG_W(BMS_TAG_DEFAULT, "rootDirs empty");
         return false;
     }
     std::for_each(rootDirs.cbegin(), rootDirs.cend(), [&relativePath, &defaultAppData](const auto& rootDir) {
         std::string path = rootDir + relativePath;
-        LOG_D(BMS_TAG_DEFAULT_APP, "default app json path : %{public}s", path.c_str());
+        LOG_D(BMS_TAG_DEFAULT, "default app json path : %{public}s", path.c_str());
         nlohmann::json jsonObject;
         if (!BundleParser::ReadFileIntoJson(path, jsonObject)) {
-            LOG_W(BMS_TAG_DEFAULT_APP, "read default app json failed");
+            LOG_W(BMS_TAG_DEFAULT, "read default app json failed");
             return;
         }
         defaultAppData.ParseDefaultApplicationConfig(jsonObject);
@@ -179,10 +179,10 @@ bool DefaultAppRdb::ParseConfig(const std::string& relativePath, DefaultAppData&
 
 void DefaultAppRdb::LoadDefaultApplicationConfig()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin to LoadDefaultApplicationConfig.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to LoadDefaultApplicationConfig.");
     DefaultAppData defaultAppData;
     if (!ParseConfig(DEFAULT_APP_JSON_PATH, defaultAppData)) {
-        LOG_D(BMS_TAG_DEFAULT_APP, "default app config empty");
+        LOG_D(BMS_TAG_DEFAULT, "default app config empty");
         return;
     }
     // get pre default app config
@@ -191,7 +191,7 @@ void DefaultAppRdb::LoadDefaultApplicationConfig()
     // save to each user
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT_APP, "get BundleDataMgr failed.");
+        LOG_W(BMS_TAG_DEFAULT, "get BundleDataMgr failed.");
         return;
     }
 
@@ -215,26 +215,26 @@ void DefaultAppRdb::LoadDefaultApplicationConfig()
 
     // save default app config to db
     SetDefaultApplicationInfos(INITIAL_USER_ID, defaultAppData.infos);
-    LOG_D(BMS_TAG_DEFAULT_APP, "LoadDefaultApplicationConfig done.");
+    LOG_D(BMS_TAG_DEFAULT, "LoadDefaultApplicationConfig done.");
 }
 
 void DefaultAppRdb::LoadBackUpDefaultApplicationConfig()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "begin");
+    LOG_D(BMS_TAG_DEFAULT, "begin");
     DefaultAppData defaultAppData;
     if (!ParseConfig(BACK_UP_DEFAULT_APP_JSON_PATH, defaultAppData)) {
-        LOG_D(BMS_TAG_DEFAULT_APP, "backup default app config empty");
+        LOG_D(BMS_TAG_DEFAULT, "backup default app config empty");
         return;
     }
     // save default app config to db
     SetDefaultApplicationInfos(ServiceConstants::BACKUP_DEFAULT_APP_KEY, defaultAppData.infos);
-    LOG_D(BMS_TAG_DEFAULT_APP, "end");
+    LOG_D(BMS_TAG_DEFAULT, "end");
 }
 
 bool DefaultAppRdb::GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
@@ -242,14 +242,14 @@ bool DefaultAppRdb::GetDataFromDb(int32_t userId, std::map<std::string, Element>
     std::string value;
     bool result = rdbDataManager_->QueryData(key, value);
     if (!result) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "QueryData failed by key %{public}d", userId);
+        LOG_E(BMS_TAG_DEFAULT, "QueryData failed by key %{public}d", userId);
         return false;
     }
 
     DefaultAppData defaultAppData;
     nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
     if (jsonObject.is_discarded() || defaultAppData.FromJson(jsonObject) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "error key : %{public}s", key.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "error key : %{public}s", key.c_str());
         rdbDataManager_->DeleteData(key);
         return false;
     }
@@ -261,7 +261,7 @@ bool DefaultAppRdb::GetDataFromDb(int32_t userId, std::map<std::string, Element>
 bool DefaultAppRdb::SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
@@ -273,7 +273,7 @@ bool DefaultAppRdb::SaveDataToDb(int32_t userId, const std::map<std::string, Ele
 bool DefaultAppRdb::DeleteDataFromDb(int32_t userId)
 {
     if (rdbDataManager_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT_APP, "rdbDataManager is null");
+        LOG_E(BMS_TAG_DEFAULT, "rdbDataManager is null");
         return false;
     }
 
@@ -282,12 +282,12 @@ bool DefaultAppRdb::DeleteDataFromDb(int32_t userId)
 
 void DefaultAppRdb::RegisterDeathListener()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "RegisterDeathListener.");
+    LOG_D(BMS_TAG_DEFAULT, "RegisterDeathListener.");
 }
 
 void DefaultAppRdb::UnRegisterDeathListener()
 {
-    LOG_D(BMS_TAG_DEFAULT_APP, "UnRegisterDeathListener.");
+    LOG_D(BMS_TAG_DEFAULT, "UnRegisterDeathListener.");
 }
 }
 }

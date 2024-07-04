@@ -79,7 +79,7 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
         JsonType::ARRAY, false, parseResult,
         ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_QUICK_FIX, "read module appqfInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_DEFAULT, "read module appqfInfo from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -96,7 +96,7 @@ bool AppqfInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < hqfSize; i++) {
         std::unique_ptr<HqfInfo> hqfInfoPtr(parcel.ReadParcelable<HqfInfo>());
         if (!hqfInfoPtr) {
-            LOG_E(BMS_TAG_QUICK_FIX, "ReadParcelable<HqfInfo> failed");
+            LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<HqfInfo> failed");
             return false;
         }
         hqfInfos.emplace_back(*hqfInfoPtr);
@@ -122,7 +122,7 @@ AppqfInfo *AppqfInfo::Unmarshalling(Parcel &parcel)
 {
     AppqfInfo *info = new (std::nothrow) AppqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
+        LOG_E(BMS_TAG_DEFAULT, "read from parcel failed");
         delete info;
         info = nullptr;
     }

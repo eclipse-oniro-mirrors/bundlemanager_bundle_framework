@@ -21,7 +21,7 @@ config("bundle_ndk_config") {
 ohos_shared_library("bundle_ndk") {
   public_configs = [ ":bundle_ndk_config" ]
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
