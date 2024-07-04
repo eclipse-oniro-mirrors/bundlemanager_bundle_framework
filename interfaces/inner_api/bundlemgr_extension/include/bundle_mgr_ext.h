@@ -83,7 +83,7 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
-    virtual ErrCode GetBackupUninstallList(int32_t userId, td::vector<std::string> &uninstallBundles)
+    virtual ErrCode GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
