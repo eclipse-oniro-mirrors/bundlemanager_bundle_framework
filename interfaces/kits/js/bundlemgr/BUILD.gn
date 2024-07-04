@@ -20,7 +20,7 @@ ohos_shared_library("bundle") {
     "${inner_api_path}/bundlemgr_graphics/include",
   ]
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
 

@@ -45,7 +45,7 @@ config("bundlemgr_common_config") {
   include_dirs += bundle_mgr_impl_include_dirs
 
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
 }
@@ -205,7 +205,7 @@ ohos_shared_library("libbms") {
   sources += bundle_mgr_impl_sources
 
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
 
@@ -458,7 +458,7 @@ ohos_shared_library("installs") {
 
   sources += install_daemon_sources
 
-  defines = [ "APP_LOG_TAG = \"BundleMgrService\"" ]
+  defines = [ "APP_LOG_TAG = \"BMS\"" ]
 
   configs = [ ":bundlemgr_common_config" ]
 

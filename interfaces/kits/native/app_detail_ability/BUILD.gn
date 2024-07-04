@@ -16,7 +16,7 @@ import("../../../../appexecfwk.gni")
 ohos_shared_library("app_detail_ability") {
   include_dirs = [ "include" ]
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [ "src/app_detail_ability.cpp" ]

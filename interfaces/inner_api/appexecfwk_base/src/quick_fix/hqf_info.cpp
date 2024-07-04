@@ -97,7 +97,7 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_QUICK_FIX, "read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
+        LOG_E(BMS_TAG_DEFAULT, "read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
     }
 }
 
@@ -127,7 +127,7 @@ HqfInfo *HqfInfo::Unmarshalling(Parcel &parcel)
 {
     HqfInfo *info = new (std::nothrow) HqfInfo();
     if (info && !info->ReadFromParcel(parcel)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "read from parcel failed");
+        LOG_E(BMS_TAG_DEFAULT, "read from parcel failed");
         delete info;
         info = nullptr;
     }

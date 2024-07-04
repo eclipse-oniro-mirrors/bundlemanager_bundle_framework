@@ -20,7 +20,7 @@ ohos_shared_library("bundleresourcemanager") {
     "${kits_path}/js/common",
   ]
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [ "native_module.cpp" ]

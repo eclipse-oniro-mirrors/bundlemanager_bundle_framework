@@ -28,7 +28,7 @@ ohos_shared_library("bundlemgr_extension") {
   public_configs = [ ":bundlemgr_extension_config" ]
 
   defines = [
-    "APP_LOG_TAG = \"BundleMgrService\"",
+    "APP_LOG_TAG = \"BMS\"",
     "LOG_DOMAIN = 0xD001120",
   ]
   cflags = [ "-Os" ]
