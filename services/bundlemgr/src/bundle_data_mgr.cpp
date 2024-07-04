@@ -1488,9 +1488,14 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
         return;
     }
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    std::vector<std::string> mimeTypes;
+    bool uriRet = MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    if (!uriRet) {
+        LOG_D(BMS_TAG_QUERY_ABILITY, "get mimeType fail %{private}s", want.GetUriString().c_str());
+    }
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
-        bool isPrivateType = MatchPrivateType(
-            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+        bool isPrivateType = uriRet && MatchPrivateType(
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, mimeTypes);
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
@@ -1623,14 +1628,19 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
         return;
     }
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    std::vector<std::string> mimeTypes;
+    bool uriRet = MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    if (!uriRet) {
+        LOG_D(BMS_TAG_QUERY_ABILITY, "get mimeType fail %{private}s", want.GetUriString().c_str());
+    }
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         AbilityInfo abilityinfo = abilityInfoPair.second;
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
         }
-        bool isPrivateType = MatchPrivateType(
-            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+        bool isPrivateType = uriRet && MatchPrivateType(
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, mimeTypes);
         if (isPrivateType) {
             EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
                 std::nullopt, std::nullopt, appIndex);
@@ -6651,10 +6661,11 @@ ErrCode BundleDataMgr::DelExtNameOrMIMEToApp(const std::string &bundleName, cons
 }
 
 bool BundleDataMgr::MatchPrivateType(const Want &want,
-    const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes) const
+    const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes,
+    const std::vector<std::string> &paramMimeTypes) const
 {
-    APP_LOGD("MatchPrivateType, uri is %{private}s", want.GetUriString().c_str());
     std::string uri = want.GetUriString();
+    APP_LOGD("MatchPrivateType, uri is %{private}s", uri.c_str());
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
         return false;
@@ -6667,14 +6678,10 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
         APP_LOGI("uri is a supported private-type file");
         return true;
     }
-    std::vector<std::string> mimeTypes;
-    bool ret = MimeTypeMgr::GetMimeTypeByUri(uri, mimeTypes);
-    if (!ret) {
-        return false;
-    }
+
     auto iter = std::find_first_of(
-        mimeTypes.begin(), mimeTypes.end(), supportMimeTypes.begin(), supportMimeTypes.end());
-    if (iter != mimeTypes.end()) {
+        paramMimeTypes.begin(), paramMimeTypes.end(), supportMimeTypes.begin(), supportMimeTypes.end());
+    if (iter != paramMimeTypes.end()) {
         APP_LOGI("uri is a supported mime-type file");
         return true;
     }

@@ -1061,7 +1061,7 @@ private:
         const int32_t userId, const int32_t requestUserId) const;
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
-        const std::vector<std::string> &supportMimeTypes) const;
+        const std::vector<std::string> &supportMimeTypes, const std::vector<std::string> &paramMimeTypes) const;
     bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
