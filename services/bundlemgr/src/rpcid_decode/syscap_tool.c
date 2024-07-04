@@ -47,7 +47,15 @@ int32_t RPCIDStreamDecodeToBuffer(
     uint16_t sysCapLength;
     RPCIDHead *headPtr = NULL;
     char *sysCapArrayPtr = NULL;
+    if (syscapSetBuf == NULL) {
+        HILOG_ERROR(LOG_CORE, "syscapSetBuf is NULL\n");
+        return ERROR;
+    }
     *syscapSetBuf = NULL;
+    if (syscapSetLength == NULL) {
+        HILOG_ERROR(LOG_CORE, "syscapSetLength is NULL\n");
+        return ERROR;
+    }
     *syscapSetLength = 0;
     if (contextBuffer == NULL) {
         HILOG_ERROR(LOG_CORE, "input buffer is NULL\n");
