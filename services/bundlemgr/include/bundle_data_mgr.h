@@ -1124,6 +1124,10 @@ private:
         std::vector<ExtensionAbilityInfo> &infos) const;
     ErrCode ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &abilityInfos) const;
+    void GetMultiLauncherAbilityInfo(const Want& want,
+        const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
+        int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;
+
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;

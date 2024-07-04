@@ -158,6 +158,7 @@ constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 // clone application
 constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
+constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";

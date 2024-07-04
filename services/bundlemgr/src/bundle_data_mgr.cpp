@@ -1804,6 +1804,10 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     // get clone bundle info
     InnerBundleUserInfo bundleUserInfo;
     (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfo);
+    if (info.GetBundleName() == ServiceConstants::COM_OHOS_CONTACTS) {
+        GetMultiLauncherAbilityInfo(want, info, bundleUserInfo, installTime, abilityInfos);
+        return;
+    }
     AbilityInfo mainAbilityInfo;
     info.GetMainAbilityInfo(mainAbilityInfo);
     if (!mainAbilityInfo.name.empty() && (mainAbilityInfo.type == AbilityType::PAGE)) {
@@ -1834,6 +1838,35 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         abilityInfos.emplace_back(*ability);
         GetMatchLauncherAbilityInfosForCloneInfos(info, *ability, bundleUserInfo, abilityInfos);
     }
+}
+
+void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
+    const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
+    int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const
+{
+    int32_t count = 0;
+    std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
+    for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
+        auto skillsPair = skillInfos.find(abilityInfoPair.first);
+        if (skillsPair == skillInfos.end()) {
+            continue;
+        }
+        for (const Skill& skill : skillsPair->second) {
+            if (skill.MatchLauncher(want) && (abilityInfoPair.second.type == AbilityType::PAGE)) {
+                count++;
+                AbilityInfo abilityInfo = abilityInfoPair.second;
+                info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+                    bundleUserInfo.bundleUserInfo.userId, abilityInfo.applicationInfo);
+                abilityInfo.installTime = installTime;
+                // fix labelId or iconId is equal 0
+                ModifyLauncherAbilityInfo(info.GetIsNewVersion(), abilityInfo);
+                abilityInfos.emplace_back(abilityInfo);
+                GetMatchLauncherAbilityInfosForCloneInfos(info, abilityInfoPair.second, bundleUserInfo, abilityInfos);
+                break;
+            }
+        }
+    }
+    APP_LOGI("bundleName %{public}s has %{public}d launcher ability", info.GetBundleName().c_str(), count);
 }
 
 void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(

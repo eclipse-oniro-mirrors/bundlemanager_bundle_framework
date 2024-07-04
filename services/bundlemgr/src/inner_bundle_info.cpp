@@ -87,7 +87,6 @@ const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
     {"isolationFirst", IsolationMode::ISOLATION_FIRST},
 };
-constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -3777,7 +3776,7 @@ void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
 
 void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const
 {
-    if (GetBundleName() == COM_OHOS_CONTACTS) {
+    if (GetBundleName() == ServiceConstants::COM_OHOS_CONTACTS) {
         APP_LOGI("com.ohos.contacts no need to process");
         return;
     }
