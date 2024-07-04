@@ -283,5 +283,35 @@ ErrCode BmsExtensionDataMgr::VerifyActivationLock(bool &res)
     }
     return bundleMgrExtPtr->VerifyActivationLock(res);
 }
+
+ErrCode BmsExtensionDataMgr::GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->GetBackupUninstallList(userId, uninstallBundles);
+}
+
+ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
+}
 } // AppExecFwk
 } // OHOS

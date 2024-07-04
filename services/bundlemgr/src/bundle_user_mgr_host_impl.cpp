@@ -16,6 +16,7 @@
 #include "bundle_user_mgr_host_impl.h"
 
 #include "app_log_wrapper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
@@ -107,6 +108,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     }
     BeforeCreateNewUser(userId);
     OnCreateNewUser(userId, disallowList);
+    UninstallBackupUninstallList(userId);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
@@ -400,6 +402,33 @@ void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
     dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
     dataMgr->SetApplicationEnabled(ServiceConstants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
 #endif
+}
+
+void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::set<std::string> uninstallList;
+    bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallList);
+    if (uninstallList.empty()) {
+        APP_LOGI("userId : %{public}d, back uninstall list is empty", userId);
+        return;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    for (const auto &bundleName : uninstallList) {
+        BundleInfo bundleInfo;
+        if (dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (!bundleInfos.empty()) {
+        InnerUninstallBundle(userId, bundleInfos);
+    }
+    bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
