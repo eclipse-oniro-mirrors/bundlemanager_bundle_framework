@@ -28,10 +28,10 @@ BmsExtensionClient::BmsExtensionClient()
 ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos) const
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start to query launcher abilities from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to query launcher abilities from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_QUERY_ABILITY, "dataMgr is nullptr");
+        LOG_W(BMS_TAG_QUERY, "dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (userId != Constants::ALL_USERID) {
@@ -44,18 +44,18 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "bundle %{public}s has been existed and does not need to find in bms extension",
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
             bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (bmsExtensionImpl_ == nullptr) {
-        LOG_W(BMS_TAG_QUERY_ABILITY, "bmsExtensionImpl_ is nullptr");
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query ability infos failed due to error code %{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "query ability infos failed due to error code %{public}d", res);
         return res;
     }
     for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
@@ -69,10 +69,10 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
 ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start to query abilityInfos from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to query abilityInfos from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_QUERY_ABILITY, "dataMgr is nullptr");
+        LOG_W(BMS_TAG_QUERY, "dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (userId != Constants::ALL_USERID) {
@@ -85,22 +85,22 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo info;
     if (!bundleName.empty() && dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "bundle %{public}s has been existed and does not need to find in bms extension",
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
             bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (bmsExtensionImpl_ == nullptr) {
-        LOG_W(BMS_TAG_QUERY_ABILITY, "bmsExtensionImpl_ is nullptr");
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query ability infos failed due to error code %{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "query ability infos failed due to error code %{public}d", res);
         return res;
     }
     if (abilityInfos.empty()) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "no ability info can be found from bms extension");
+        LOG_D(BMS_TAG_QUERY, "no ability info can be found from bms extension");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -155,15 +155,15 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
 ErrCode BmsExtensionClient::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, bool isNewVersion) const
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start to query abilityInfo from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to query abilityInfo from bms extension");
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = QueryAbilityInfos(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "query ability info failed due to error code %{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "query ability info failed due to error code %{public}d", res);
         return res;
     }
     if (abilityInfos.empty()) {
-        LOG_D(BMS_TAG_QUERY_ABILITY, "no ability info can be found from bms extension");
+        LOG_D(BMS_TAG_QUERY, "no ability info can be found from bms extension");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 
@@ -174,11 +174,11 @@ ErrCode BmsExtensionClient::QueryAbilityInfo(const Want &want, int32_t flags, in
 ErrCode BmsExtensionClient::GetBundleInfos(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
 {
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "start to query bundle infos from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to query bundle infos from bms extension");
     if (userId != Constants::ALL_USERID) {
         auto dataMgr = GetDataMgr();
         if (dataMgr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_BUNDLE, "dataMgr is nullptr");
+            LOG_W(BMS_TAG_QUERY, "dataMgr is nullptr");
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         int32_t requestUserId = dataMgr->GetUserId(userId);
@@ -187,12 +187,12 @@ ErrCode BmsExtensionClient::GetBundleInfos(
         }
     }
     if (bmsExtensionImpl_ == nullptr) {
-        LOG_W(BMS_TAG_QUERY_BUNDLE, "bmsExtensionImpl_ is nullptr");
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "query bundle infos failed due to error code %{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "query bundle infos failed due to error code %{public}d", res);
         return res;
     }
 
@@ -202,10 +202,10 @@ ErrCode BmsExtensionClient::GetBundleInfos(
 ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t flags,
     BundleInfo &bundleInfo, int32_t userId, bool isNewVersion) const
 {
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "start to query bundle info from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to query bundle info from bms extension");
     auto dataMgr = GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_QUERY_BUNDLE, "dataMgr is nullptr");
+        LOG_W(BMS_TAG_QUERY, "dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (userId != Constants::ALL_USERID) {
@@ -216,18 +216,18 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     }
     InnerBundleInfo info;
     if (dataMgr->QueryInnerBundleInfo(bundleName, info)) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "bundle %{public}s has been existed and does not need to find in bms extension",
+        LOG_D(BMS_TAG_QUERY, "bundle %{public}s has been existed and does not need to find in bms extension",
             bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     if (bmsExtensionImpl_ == nullptr) {
-        LOG_W(BMS_TAG_QUERY_BUNDLE, "bmsExtensionImpl_ is nullptr");
+        LOG_W(BMS_TAG_QUERY, "bmsExtensionImpl_ is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY_BUNDLE, "query bundle info failed due to error code %{public}d", res);
+        LOG_D(BMS_TAG_QUERY, "query bundle info failed due to error code %{public}d", res);
         return res;
     }
 
@@ -271,11 +271,11 @@ ErrCode BmsExtensionClient::BatchGetBundleInfo(const std::vector<std::string> &b
 ErrCode BmsExtensionClient::ImplicitQueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
-    LOG_D(BMS_TAG_QUERY_ABILITY, "start to implicitly query ability info from bms extension");
+    LOG_D(BMS_TAG_QUERY, "start to implicitly query ability info from bms extension");
     if (userId != Constants::ALL_USERID) {
         auto dataMgr = GetDataMgr();
         if (dataMgr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_ABILITY, "dataMgr is nullptr");
+            LOG_W(BMS_TAG_QUERY, "dataMgr is nullptr");
             return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
         int32_t requestUserId = dataMgr->GetUserId(userId);
@@ -289,17 +289,17 @@ ErrCode BmsExtensionClient::ImplicitQueryAbilityInfos(
     std::string abilityName = element.GetAbilityName();
     // does not support explicit query
     if (!bundleName.empty() && !abilityName.empty()) {
-        LOG_W(BMS_TAG_QUERY_ABILITY, "implicit query failed bundleName:%{public}s, abilityName:%{public}s not empty",
+        LOG_W(BMS_TAG_QUERY, "implicit query failed bundleName:%{public}s, abilityName:%{public}s not empty",
             bundleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     ErrCode res = QueryAbilityInfos(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "query ability info failed error code %{public}d", res);
+        LOG_E(BMS_TAG_QUERY, "query ability info failed error code %{public}d", res);
         return res;
     }
     if (abilityInfos.empty()) {
-        LOG_E(BMS_TAG_QUERY_ABILITY, "no ability info can be found from bms extension");
+        LOG_E(BMS_TAG_QUERY, "no ability info can be found from bms extension");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 

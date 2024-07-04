@@ -70,11 +70,11 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
 bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {
-    LOG_D(BMS_TAG_QUERY_BUNDLE, "GetBundleInfo begin");
+    LOG_D(BMS_TAG_QUERY, "GetBundleInfo begin");
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY_BUNDLE, "failed to connect");
+        LOG_E(BMS_TAG_QUERY, "failed to connect");
         return false;
     }
 
