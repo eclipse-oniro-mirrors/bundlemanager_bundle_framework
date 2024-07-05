@@ -4243,7 +4243,7 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     std::string configPath = BundleUtil::GetNoDisablingConfigPath();
     ErrCode ret = BundleParser::ParseNoDisablingList(configPath, noDisablingList);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_APP_CONTROL, "GetNoDisablingList failed");
+        LOG_W(BMS_TAG_DEFAULT, "GetNoDisablingList failed");
         return true;
     }
     auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);

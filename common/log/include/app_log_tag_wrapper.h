@@ -28,20 +28,8 @@
 #define BMS_TAG_INSTALLER std::make_pair(0xD001101, "BMSInstaller")
 #endif
 
-#ifndef BMS_TAG_START
-#define BMS_TAG_START std::make_pair(0xD001110, "BMSStart")
-#endif
-
 #ifndef BMS_TAG_QUERY
 #define BMS_TAG_QUERY std::make_pair(0xD001121, "BMSQuery")
-#endif
-
-#ifndef BMS_TAG_APP_CONTROL
-#define BMS_TAG_APP_CONTROL std::make_pair(0xD001188, "BMSAppControl")
-#endif
-
-#ifndef BMS_TAG_DEFAULT
-#define BMS_TAG_DEFAULT std::make_pair(0xD001190, "BMSFreeInstall")
 #endif
 
 #ifndef BMS_TAG_INSTALLD
