@@ -809,6 +809,7 @@ public:
         const std::string &bundleName, const ApplicationInfo &appInfo);
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+    bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 

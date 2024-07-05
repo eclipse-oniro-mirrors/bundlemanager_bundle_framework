@@ -5912,6 +5912,20 @@ bool BundleDataMgr::FetchInnerBundleInfo(
     return true;
 }
 
+bool BundleDataMgr::GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds)
+{
+    InnerBundleInfo info;
+    if (!FetchInnerBundleInfo(bundleName, info)) {
+        APP_LOGW("GetInnerBundleInfoUsers failed");
+        return false;
+    }
+    std::map<std::string, InnerBundleUserInfo> userInfos = info.GetInnerBundleUserInfos();
+    for (const auto &userInfo : userInfos) {
+        userIds.insert(userInfo.second.bundleUserInfo.userId);
+    }
+    return true;
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 bool BundleDataMgr::QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
     AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const
