@@ -164,19 +164,19 @@ ErrCode BaseBundleInstaller::InstallBundle(
     return InstallBundle(bundlePaths, installParam, appType);
 }
 
-void BaseBundleInstaller::sendStartInstallNotify(const InstallParam &installParam,
+void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installParam,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!installParam.needSendEvent) {
-        LOG_W(BMS_TAG_INSTALLER, "sendStartInstallNotify needSendEvent is false");
+        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify needSendEvent is false");
         return;
     }
     if (bundleName_.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "sendStartInstallNotify bundleName is empty");
+        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
         return;
     }
     for (const auto &item : infos) {
-        LOG_D(BMS_TAG_INSTALLER, "sendStartInstallNotify %{public}s  %{public}s %{public}s %{public}s",
+        LOG_D(BMS_TAG_INSTALLER, "SendStartInstallNotify %{public}s  %{public}s %{public}s %{public}s",
             bundleName_.c_str(), item.second.GetCurModuleName().c_str(),
             item.second.GetAppId().c_str(), item.second.GetAppIdentifier().c_str());
         NotifyBundleEvents installRes = {
@@ -1007,7 +1007,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
     const InstallParam &installParam, const Constants::AppType appType, int32_t &uid)
 {
-    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleInstall bundlePath install paths=%{public}s, hspPaths=%{public}s",
+    LOG_D(BMS_TAG_INSTALLER, "ProcessBundleInstall bundlePath install paths=%{private}s, hspPaths=%{private}s",
         GetJsonStrFromInfo(inBundlePaths).c_str(), GetJsonStrFromInfo(installParam.sharedBundleDirPaths).c_str());
     if (!InitDataMgr()) {
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
@@ -1092,7 +1092,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
     // to send notify of start install application
-    sendStartInstallNotify(installParam, newInfos);
+    SendStartInstallNotify(installParam, newInfos);
 
     // check if bundle exists in extension
     result = CheckBundleInBmsExtension(bundleName_, userId_);

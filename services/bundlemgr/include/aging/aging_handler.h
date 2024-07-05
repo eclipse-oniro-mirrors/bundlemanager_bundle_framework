@@ -44,7 +44,7 @@ private:
     bool ProcessBundle(AgingRequest &request) const;
     bool UpdateUsedTotalDataBytes(AgingRequest &request) const;
     bool AgingClean(
-        const AgingBundleInfo &agingBundle, AgingRequest &request) const;
+        const AgingBundleInfo &agingBundle, const AgingRequest &request) const;
     bool CleanCache(const AgingBundleInfo &agingBundle) const;
     bool GetCachePath(
         const AgingBundleInfo &agingBundle, std::vector<std::string> &caches) const;
