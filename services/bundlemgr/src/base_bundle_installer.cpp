@@ -27,6 +27,7 @@
 #endif
 #include "aot/aot_handler.h"
 #include "app_control_constants.h"
+#include "app_mgr_client.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -115,6 +116,8 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
 const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
+const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
+const std::string ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -738,6 +741,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     LOG_I(BMS_TAG_INSTALLER, "flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
         installParam.installFlag, userId_, isAppExist_);
 
+    KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
     ErrCode result = ERR_OK;
     result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
     CHECK_RESULT(result, "Check appService failed %{public}d");
@@ -961,6 +965,21 @@ void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &o
             return;
         }
     }
+}
+
+void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta)
+{
+    std::string arkWebName = OHOS::system::GetParameter(ARK_WEB_BUNDLE_NAME_PARAM, ARK_WEB_BUNDLE_NAME);
+    if (bundleName != arkWebName || !isAppExist || isOta) {
+        return;
+    }
+    auto appMgrClient = DelayedSingleton<AppMgrClient>::GetInstance();
+    if (appMgrClient == nullptr) {
+        LOG_E(BMS_TAG_INSTALLER, "AppMgrClient is nullptr, kill ark web process failed");
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "start to kill ark web related process");
+    appMgrClient->KillProcessDependedOnWeb();
 }
 
 ErrCode BaseBundleInstaller::CheckAppService(

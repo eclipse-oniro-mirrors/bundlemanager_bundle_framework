@@ -593,6 +593,7 @@ private:
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
+    void KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta);
     ErrCode CheckAppService(
         const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist);
     ErrCode CheckSingleton(const InnerBundleInfo &newInfo, const int32_t userId);
