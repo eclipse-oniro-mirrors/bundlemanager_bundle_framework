@@ -4476,6 +4476,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEnterpriseBundle_ = false;
     appIdentifier_.clear();
     targetSoPathMap_.clear();
+    isAppService_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -5606,6 +5607,87 @@ bool BaseBundleInstaller::VerifyActivationLock() const
     LOG_D(BMS_TAG_INSTALLER, "activation lock pass");
     // otherwise, pass
     return true;
+}
+
+ErrCode BaseBundleInstaller::RollbackHmpUserInfo(const std::string &bundleName)
+{
+    LOG_I(BMS_TAG_INSTALLER, "RollbackHmpInstall %{public}s start", bundleName.c_str());
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "rollback hmp bundle name empty");
+        return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
+    }
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+    std::lock_guard lock {mtx};
+    InnerBundleInfo oldInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
+        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle info missing");
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    std::set<int32_t> userIds;
+    if (!dataMgr_->GetInnerBundleInfoUsers(bundleName, userIds)) {
+        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle users missing");
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    for (auto userId : userIds) {
+        if (oldInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE &&
+            oldInfo.GetUid(userId) != Constants::INVALID_UID) {
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1]
+                + ServiceConstants::PATH_SEPARATOR + std::to_string(userId) + ServiceConstants::BASE +
+                oldInfo.GetBundleName();
+            PrepareBundleDirQuota(oldInfo.GetBundleName(), oldInfo.GetUid(userId), bundleDataDir, 0);
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "rollback hmp bundle name empty");
+        return ERR_APPEXECFWK_UNINSTALL_INVALID_NAME;
+    }
+    if (!InitDataMgr()) {
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    auto &mtx = dataMgr_->GetBundleMutex(bundleName);
+    std::lock_guard lock {mtx};
+    InnerBundleInfo oldInfo;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo)) {
+        LOG_W(BMS_TAG_INSTALLER, "rollback hmp bundle info missing");
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_START)) {
+        APP_LOGE("rollback hmp start uninstall failed");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(oldInfo.GetBundleName(), InstallState::UNINSTALL_SUCCESS)) {
+        LOG_E(BMS_TAG_INSTALLER, "rollback hmp delete inner info failed");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    PreInstallBundleInfo preInfo;
+    preInfo.SetBundleName(bundleName);
+    if (!dataMgr_->DeletePreInstallBundleInfo(bundleName, preInfo)) {
+        LOG_E(BMS_TAG_INSTALLER, "rollback hmp delete pre install info failed");
+    }
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    if (quickFixDataMgr != nullptr) {
+        LOG_D(BMS_TAG_INSTALLER, "DeleteInnerAppQuickFix when bundleName :%{public}s uninstall",
+            oldInfo.GetBundleName().c_str());
+        quickFixDataMgr->DeleteInnerAppQuickFix(oldInfo.GetBundleName());
+    }
+#endif
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(oldInfo.GetBundleName())) {
+        LOG_W(BMS_TAG_INSTALLER, "bundleName: %{public}s delete appProvisionInfo failed.",
+            oldInfo.GetBundleName().c_str());
+    }
+    BundleResourceHelper::DeleteResourceInfo(oldInfo.GetBundleName());
+    RemoveProfileFromCodeSign(oldInfo.GetBundleName());
+    ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

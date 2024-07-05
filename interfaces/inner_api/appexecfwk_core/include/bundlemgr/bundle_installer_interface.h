@@ -142,6 +142,11 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
+    {
+        return ERR_OK;
+    }
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

@@ -26,6 +26,7 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
 #include "ffrt.h"
+#include "hmp_bundle_installer.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "ipc_types.h"
@@ -108,6 +109,9 @@ int BundleInstallerHost::OnRemoteRequest(
             break;
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP):
             HandleUninstallCloneApp(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_HMP_BUNDLE):
+            HandleInstallHmpBundle(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -837,6 +841,34 @@ void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessagePa
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall clone app message finished");
+}
+
+void BundleInstallerHost::HandleInstallHmpBundle(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle install hmp bundle message");
+    std::string filePath = Str16ToStr8(data.ReadString16());
+    bool isNeedRollback = data.ReadBool();
+
+    auto ret = InstallHmpBundle(filePath, isNeedRollback);
+    if (!reply.WriteInt32(ret)) {
+        LOG_E(BMS_TAG_INSTALLER, "write failed");
+    }
+    LOG_D(BMS_TAG_INSTALLER, "handle install hmp bundle message finished");
+}
+
+ErrCode BundleInstallerHost::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
+{
+    LOG_D(BMS_TAG_INSTALLER, "install hmp bundle filePath: %{public}s", filePath.c_str());
+    if (filePath.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install hmp bundle failed due to empty filePath");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallHmpBundle permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
+    return installer->InstallHmpBundle(filePath, isNeedRollback);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
