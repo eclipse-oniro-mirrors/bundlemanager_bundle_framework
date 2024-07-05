@@ -982,11 +982,13 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     bool CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags, const InnerBundleInfo &info,
-        int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+        int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+        const std::vector<std::string> &paramMimeTypes, int32_t appIndex = 0) const;
     void AddSkillUrisInfo(const std::vector<Skill> &skills, std::vector<SkillUriForAbilityAndExtension> &skillUris,
         std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags, const InnerBundleInfo &info,
-        int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+        int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+        const std::vector<std::string> &paramMimeTypes, int32_t appIndex = 0) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,

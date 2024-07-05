@@ -177,14 +177,14 @@ QuickFixType GetQuickFixType(const std::string &type)
     if (type == BUNDLE_PATCH_TYPE_HOT_RELOAD) {
         return QuickFixType::HOT_RELOAD;
     }
-    LOG_W(BMS_TAG_QUICK_FIX, "GetQuickFixType: unknow quick fix type");
+    LOG_W(BMS_TAG_DEFAULT, "GetQuickFixType: unknow quick fix type");
     return QuickFixType::UNKNOWN;
 }
 
 bool CheckNameIsValid(const std::string &name)
 {
     if (name.empty()) {
-        LOG_E(BMS_TAG_QUICK_FIX, "CheckNameIsValid: name is empty");
+        LOG_E(BMS_TAG_DEFAULT, "CheckNameIsValid: name is empty");
         return false;
     }
     if (name.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
@@ -196,11 +196,11 @@ bool CheckNameIsValid(const std::string &name)
 bool ToPatchInfo(const PatchJson &patchJson, AppQuickFix &appQuickFix)
 {
     if (!CheckNameIsValid(patchJson.app.bundleName)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "bundle name is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "bundle name is invalid");
         return false;
     }
     if (!CheckNameIsValid(patchJson.module.name)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "module name is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "module name is invalid");
         return false;
     }
     appQuickFix.bundleName = patchJson.app.bundleName;
@@ -229,10 +229,10 @@ bool PatchProfile::DefaultNativeSo(
                 appqfInfo.nativeLibraryPath = ServiceConstants::LIBS + iter->second;
                 return true;
             }
-            LOG_E(BMS_TAG_QUICK_FIX, "Can't find ARM64_V8A in ABI_MAP");
+            LOG_E(BMS_TAG_DEFAULT, "Can't find ARM64_V8A in ABI_MAP");
             return false;
         }
-        LOG_E(BMS_TAG_QUICK_FIX, " ARM64_V8A's directory doesn't exist");
+        LOG_E(BMS_TAG_DEFAULT, " ARM64_V8A's directory doesn't exist");
         return false;
     }
 
@@ -243,7 +243,7 @@ bool PatchProfile::DefaultNativeSo(
             appqfInfo.nativeLibraryPath = ServiceConstants::LIBS + iter->second;
             return true;
         }
-        LOG_E(BMS_TAG_QUICK_FIX, "Can't find ARM_EABI_V7A in ABI_MAP");
+        LOG_E(BMS_TAG_DEFAULT, "Can't find ARM_EABI_V7A in ABI_MAP");
         return false;
     }
 
@@ -254,10 +254,10 @@ bool PatchProfile::DefaultNativeSo(
             appqfInfo.nativeLibraryPath = ServiceConstants::LIBS + iter->second;
             return true;
         }
-        LOG_E(BMS_TAG_QUICK_FIX, "Can't find ARM_EABI in ABI_MAP");
+        LOG_E(BMS_TAG_DEFAULT, "Can't find ARM_EABI in ABI_MAP");
         return false;
     }
-    LOG_E(BMS_TAG_QUICK_FIX, "ARM_EABI_V7A and ARM_EABI directories do not exist");
+    LOG_E(BMS_TAG_DEFAULT, "ARM_EABI_V7A and ARM_EABI directories do not exist");
     return false;
 }
 
@@ -267,16 +267,16 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
     std::vector<std::string> abiList;
     SplitStr(abis, ServiceConstants::ABI_SEPARATOR, abiList, false, false);
     if (abiList.empty()) {
-        LOG_E(BMS_TAG_QUICK_FIX, "Abi is empty");
+        LOG_E(BMS_TAG_DEFAULT, "Abi is empty");
         return false;
     }
     bool isDefault = std::find(abiList.begin(), abiList.end(), ServiceConstants::ABI_DEFAULT) != abiList.end();
     bool isSystemLib64Exist = BundleUtil::IsExistDir(ServiceConstants::SYSTEM_LIB64);
-    LOG_D(BMS_TAG_QUICK_FIX, "abi list : %{public}s, isDefault : %{public}d, isSystemLib64Exist : %{public}d",
+    LOG_D(BMS_TAG_DEFAULT, "abi list : %{public}s, isDefault : %{public}d, isSystemLib64Exist : %{public}d",
         abis.c_str(), isDefault, isSystemLib64Exist);
     bool soExist = patchExtractor.IsDirExist(ServiceConstants::LIBS);
     if (!soExist) {
-        LOG_D(BMS_TAG_QUICK_FIX, "so not exist");
+        LOG_D(BMS_TAG_DEFAULT, "so not exist");
         if (isDefault) {
             appqfInfo.cpuAbi = isSystemLib64Exist ? ServiceConstants::ARM64_V8A : ServiceConstants::ARM_EABI_V7A;
             return true;
@@ -287,11 +287,11 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
                 return true;
             }
         }
-        LOG_E(BMS_TAG_QUICK_FIX, "None of the abiList are in the ABI_MAP");
+        LOG_E(BMS_TAG_DEFAULT, "None of the abiList are in the ABI_MAP");
         return false;
     }
 
-    LOG_D(BMS_TAG_QUICK_FIX, "so exist");
+    LOG_D(BMS_TAG_DEFAULT, "so exist");
     if (isDefault) {
         return DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
     }
@@ -306,7 +306,7 @@ bool PatchProfile::ParseNativeSo(const PatchExtractor &patchExtractor, AppqfInfo
                 appqfInfo.nativeLibraryPath = ServiceConstants::LIBS + iter->second;
                 return true;
             }
-            LOG_E(BMS_TAG_QUICK_FIX, "Can't find %{public}s in ABI_MAP", abi.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "Can't find %{public}s in ABI_MAP", abi.c_str());
             return false;
         }
     }
@@ -318,7 +318,7 @@ ErrCode PatchProfile::TransformTo(
 {
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
-        LOG_E(BMS_TAG_QUICK_FIX, "bad profile");
+        LOG_E(BMS_TAG_DEFAULT, "bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
     PatchProfileReader::PatchJson patchJson;
@@ -327,20 +327,20 @@ ErrCode PatchProfile::TransformTo(
         PatchProfileReader::g_parseResult = ERR_OK;
         patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
         if (PatchProfileReader::g_parseResult != ERR_OK) {
-            LOG_E(BMS_TAG_QUICK_FIX, "g_parseResult is %{public}d", PatchProfileReader::g_parseResult);
+            LOG_E(BMS_TAG_DEFAULT, "g_parseResult is %{public}d", PatchProfileReader::g_parseResult);
             int32_t ret = PatchProfileReader::g_parseResult;
             PatchProfileReader::g_parseResult = ERR_OK;
             return ret;
         }
     }
     if (!PatchProfileReader::ToPatchInfo(patchJson, appQuickFix)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "bundle or module name is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "bundle or module name is invalid");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
-        LOG_E(BMS_TAG_QUICK_FIX, "ParseNativeSo failed");
+        LOG_E(BMS_TAG_DEFAULT, "ParseNativeSo failed");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     return ERR_OK;

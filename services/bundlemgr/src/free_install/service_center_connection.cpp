@@ -23,22 +23,22 @@ namespace OHOS {
 namespace AppExecFwk {
 ServiceCenterConnection::~ServiceCenterConnection()
 {
-    LOG_I(BMS_TAG_FREE_INSTALL, "ServiceCenterConnection destory");
+    LOG_I(BMS_TAG_DEFAULT, "ServiceCenterConnection destory");
 }
 
 void ServiceCenterConnection::OnAbilityConnectDone(
     const AppExecFwk::ElementName &element, const sptr<IRemoteObject> &remoteObject, int32_t resultCode)
 {
-    LOG_I(BMS_TAG_FREE_INSTALL, "OnAbilityConnectDone start");
+    LOG_I(BMS_TAG_DEFAULT, "OnAbilityConnectDone start");
     if (resultCode != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "OnAbilityConnectDone resultCode = %{public}d", resultCode);
+        LOG_E(BMS_TAG_DEFAULT, "OnAbilityConnectDone resultCode = %{public}d", resultCode);
         connectState_ = ServiceCenterConnectState::DISCONNECTED;
         cv_.notify_all();
         return;
     }
 
     if (remoteObject == nullptr) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "OnAbilityConnectDone remoteObject is nullptr");
+        LOG_E(BMS_TAG_DEFAULT, "OnAbilityConnectDone remoteObject is nullptr");
         connectState_ = ServiceCenterConnectState::DISCONNECTED;
         cv_.notify_all();
         return;
@@ -48,21 +48,21 @@ void ServiceCenterConnection::OnAbilityConnectDone(
 
     deathRecipient_ = new (std::nothrow) ServiceCenterDeathRecipient(connectAbilityMgr_);
     if (deathRecipient_ == nullptr) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "Failed to create ServiceCenterDeathRecipient");
+        LOG_E(BMS_TAG_DEFAULT, "Failed to create ServiceCenterDeathRecipient");
         cv_.notify_all();
         return;
     }
 
     if (!serviceCenterRemoteObject_->AddDeathRecipient(deathRecipient_)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "Failed to add AbilityManagerDeathRecipient");
+        LOG_E(BMS_TAG_DEFAULT, "Failed to add AbilityManagerDeathRecipient");
     }
     cv_.notify_all();
-    LOG_I(BMS_TAG_FREE_INSTALL, "OnAbilityConnectDone end");
+    LOG_I(BMS_TAG_DEFAULT, "OnAbilityConnectDone end");
 }
 
 void ServiceCenterConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementName &element, int32_t resultCode)
 {
-    LOG_I(BMS_TAG_FREE_INSTALL, "OnAbilityDisconnectDone start");
+    LOG_I(BMS_TAG_DEFAULT, "OnAbilityDisconnectDone start");
     if (serviceCenterRemoteObject_ != nullptr && deathRecipient_ != nullptr) {
         serviceCenterRemoteObject_->RemoveDeathRecipient(deathRecipient_);
     }
@@ -71,7 +71,7 @@ void ServiceCenterConnection::OnAbilityDisconnectDone(const AppExecFwk::ElementN
     serviceCenterRemoteObject_ = nullptr;
 
     cv_.notify_all();
-    LOG_I(BMS_TAG_FREE_INSTALL, "OnAbilityDisconnectDone end");
+    LOG_I(BMS_TAG_DEFAULT, "OnAbilityDisconnectDone end");
 }
 
 sptr<IRemoteObject> ServiceCenterConnection::GetRemoteObject()

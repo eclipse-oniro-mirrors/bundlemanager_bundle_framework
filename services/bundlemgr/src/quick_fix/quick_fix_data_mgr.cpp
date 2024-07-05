@@ -25,10 +25,10 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixDataMgr::QuickFixDataMgr()
 {
-    LOG_D(BMS_TAG_QUICK_FIX, "create QuickFixDataMgr start.");
+    LOG_D(BMS_TAG_DEFAULT, "create QuickFixDataMgr start.");
     quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
     if (quickFixManagerDb_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "create QuickFixDataMgr failed.");
+        LOG_E(BMS_TAG_DEFAULT, "create QuickFixDataMgr failed.");
         return;
     }
 
@@ -37,7 +37,7 @@ QuickFixDataMgr::QuickFixDataMgr()
 
 QuickFixDataMgr::~QuickFixDataMgr()
 {
-    LOG_D(BMS_TAG_QUICK_FIX, "destroy QuickFixDataMgr.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy QuickFixDataMgr.");
 }
 
 void QuickFixDataMgr::InitStatesMap()
@@ -65,7 +65,7 @@ bool QuickFixDataMgr::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQui
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "error quickFixManagerDb_ is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "error quickFixManagerDb_ is nullptr.");
         return false;
     }
     return quickFixManagerDb_->QueryAllInnerAppQuickFix(innerAppQuickFixes);
@@ -75,7 +75,7 @@ bool QuickFixDataMgr::QueryInnerAppQuickFix(const std::string &bundleName, Inner
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "error quickFixManagerDb_ is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "error quickFixManagerDb_ is nullptr.");
         return false;
     }
     return quickFixManagerDb_->QueryInnerAppQuickFix(bundleName, innerAppQuickFix);
@@ -85,7 +85,7 @@ bool QuickFixDataMgr::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQuick
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "error quickFixManagerDb_ is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "error quickFixManagerDb_ is nullptr.");
         return false;
     }
     return quickFixManagerDb_->SaveInnerAppQuickFix(innerAppQuickFix);
@@ -95,7 +95,7 @@ bool QuickFixDataMgr::DeleteInnerAppQuickFix(const std::string &bundleName)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (quickFixManagerDb_ == nullptr) {
-        LOG_E(BMS_TAG_QUICK_FIX, "error quickFixManagerDb_ is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "error quickFixManagerDb_ is nullptr.");
         return false;
     }
     return quickFixManagerDb_->DeleteInnerAppQuickFix(bundleName);
@@ -109,7 +109,7 @@ bool QuickFixDataMgr::IsNextStatusExisted(const QuickFixStatus &curStatus, const
             return true;
         }
     }
-    LOG_E(BMS_TAG_QUICK_FIX, "IsNextStatusExisted failed due to invalid curStatus %{public}d", curStatus);
+    LOG_E(BMS_TAG_DEFAULT, "IsNextStatusExisted failed due to invalid curStatus %{public}d", curStatus);
     return false;
 }
 
@@ -125,13 +125,13 @@ bool QuickFixDataMgr::UpdateQuickFixStatus(const QuickFixStatus &nextStatus, Inn
     }
 
     if (fixMark.status == QuickFixStatus::DEFAULT_STATUS || nextStatus == QuickFixStatus::DEFAULT_STATUS) {
-        LOG_E(BMS_TAG_QUICK_FIX, "status is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "status is invalid");
         return false;
     }
 
     // check next status to be updated
     if (!IsNextStatusExisted(static_cast<QuickFixStatus>(fixMark.status), nextStatus)) {
-        LOG_E(BMS_TAG_QUICK_FIX, "next status %{public}d cannot be transferred by current status %{public}d",
+        LOG_E(BMS_TAG_DEFAULT, "next status %{public}d cannot be transferred by current status %{public}d",
             nextStatus, fixMark.status);
         return false;
     }

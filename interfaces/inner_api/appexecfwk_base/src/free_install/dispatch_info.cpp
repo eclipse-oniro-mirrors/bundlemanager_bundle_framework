@@ -48,7 +48,7 @@ void from_json(const nlohmann::json &jsonObject, DispatcherInfo &dispatcherInfo)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read module dispatcherInfo from jsonObject error: %{public}d", parseResult);
+        LOG_E(BMS_TAG_DEFAULT, "read module dispatcherInfo from jsonObject error: %{public}d", parseResult);
     }
 }
 
@@ -68,7 +68,7 @@ DispatcherInfo *DispatcherInfo::Unmarshalling(Parcel &parcel)
 {
     DispatcherInfo *dispatcherInfo = new (std::nothrow) DispatcherInfo();
     if (dispatcherInfo && !dispatcherInfo->ReadFromParcel(parcel)) {
-        LOG_E(BMS_TAG_FREE_INSTALL, "read from parcel failed");
+        LOG_E(BMS_TAG_DEFAULT, "read from parcel failed");
         delete dispatcherInfo;
         dispatcherInfo = nullptr;
     }

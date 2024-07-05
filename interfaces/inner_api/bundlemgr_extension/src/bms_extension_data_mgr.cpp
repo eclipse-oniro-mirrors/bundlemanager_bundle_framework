@@ -121,12 +121,12 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfos(const Want &want, int32_t userId,
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_ABILITY, "bundleMgrExtPtr is nullptr.");
+            LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
         return bundleMgrExtPtr->QueryAbilityInfos(want, userId, abilityInfos);
     }
-    LOG_W(BMS_TAG_QUERY_ABILITY, "access bms-extension failed.");
+    LOG_W(BMS_TAG_QUERY, "access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
@@ -137,12 +137,12 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfosWithFlag(const Want &want, int32_t
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_ABILITY, "bundleMgrExtPtr is nullptr.");
+            LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
         return bundleMgrExtPtr->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     }
-    LOG_W(BMS_TAG_QUERY_ABILITY, "access bms-extension failed.");
+    LOG_W(BMS_TAG_QUERY, "access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
@@ -153,12 +153,12 @@ ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInf
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_BUNDLE, "bundleMgrExtPtr is nullptr.");
+            LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
         return bundleMgrExtPtr->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     }
-    LOG_W(BMS_TAG_QUERY_BUNDLE, "access bms-extension failed.");
+    LOG_W(BMS_TAG_QUERY, "access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
@@ -169,12 +169,12 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
-            LOG_W(BMS_TAG_QUERY_BUNDLE, "bundleMgrExtPtr is nullptr.");
+            LOG_W(BMS_TAG_QUERY, "bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
         return bundleMgrExtPtr->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     }
-    LOG_W(BMS_TAG_QUERY_BUNDLE, "access bms-extension failed.");
+    LOG_W(BMS_TAG_QUERY, "access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
@@ -282,6 +282,36 @@ ErrCode BmsExtensionDataMgr::VerifyActivationLock(bool &res)
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
     return bundleMgrExtPtr->VerifyActivationLock(res);
+}
+
+ErrCode BmsExtensionDataMgr::GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->GetBackupUninstallList(userId, uninstallBundles);
+}
+
+ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
 } // AppExecFwk
 } // OHOS
