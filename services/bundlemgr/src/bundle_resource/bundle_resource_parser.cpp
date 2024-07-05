@@ -38,7 +38,6 @@ const char* TYPE_PNG = "png";
 const char* FOREGROUND = "foreground";
 const char* BACKGROUND = "background";
 const char CHAR_COLON = ':';
-const char* LAYERED_IMAGE = "layered-image";
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
 const int32_t BADGE_SIZE = 62;

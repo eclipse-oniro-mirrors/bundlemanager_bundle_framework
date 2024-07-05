@@ -3182,7 +3182,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0124, Function | SmallTest
 {
     nlohmann::json layeredImagedJson = R"(
         {
-            "layered-image" : {
+            "layered" : {
                 "background" : "$media:1",
                 "foreground" : "$media:2"
             }
@@ -3234,8 +3234,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0126, Function | SmallTest
     nlohmann::json layeredImagedJson = R"(
         {
             "error-key" : {
-                "background" : "$media:1",
-                "foreground" : "$media:2"
+                "background0" : "$media:1",
+                "foreground0" : "$media:2"
             }
         }
     )"_json;
