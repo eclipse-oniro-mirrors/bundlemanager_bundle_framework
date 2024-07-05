@@ -558,6 +558,39 @@ bool BundleUtil::IsUtd(const std::string &param)
 #endif
 }
 
+bool BundleUtil::IsSpecificUtd(const std::string &param)
+{
+    if (!IsUtd(param)) {
+        return false;
+    }
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    std::shared_ptr<UDMF::TypeDescriptor> typeDescriptor;
+    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(param, typeDescriptor);
+    if (ret != ERR_OK || typeDescriptor == nullptr) {
+        return false;
+    }
+    std::vector<std::string> mimeTypes = typeDescriptor->GetMimeTypes();
+    std::vector<std::string> filenameExtensions = typeDescriptor->GetFilenameExtensions();
+    return !mimeTypes.empty() || !filenameExtensions.empty();
+#else
+    return false;
+#endif
+}
+
+std::string BundleUtil::GetUtdByMimeType(const std::string &mimeType)
+{
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+    std::string utd;
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, utd);
+    if (ret != ERR_OK) {
+        return Constants::EMPTY_STRING;
+    }
+    return utd;
+#else
+    return Constants::EMPTY_STRING;
+#endif
+}
+
 std::string BundleUtil::GetBoolStrVal(bool val)
 {
     return val ? "true" : "false";
