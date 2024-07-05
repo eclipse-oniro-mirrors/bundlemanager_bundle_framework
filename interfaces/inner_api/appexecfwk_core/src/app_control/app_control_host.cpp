@@ -28,23 +28,23 @@ namespace OHOS {
 namespace AppExecFwk {
 AppControlHost::AppControlHost()
 {
-    LOG_D(BMS_TAG_APP_CONTROL, "create AppControlHost.");
+    LOG_D(BMS_TAG_DEFAULT, "create AppControlHost.");
 }
 
 AppControlHost::~AppControlHost()
 {
-    LOG_D(BMS_TAG_APP_CONTROL, "destroy AppControlHost.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy AppControlHost.");
 }
 
 int AppControlHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
     BundleMemoryGuard memoryGuard;
-    LOG_I(BMS_TAG_APP_CONTROL, "AppControlHost OnRemoteRequest, message code : %{public}u", code);
+    LOG_I(BMS_TAG_DEFAULT, "AppControlHost OnRemoteRequest, message code : %{public}u", code);
     std::u16string descriptor = AppControlHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        LOG_E(BMS_TAG_APP_CONTROL, "descriptor invalid.");
+        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid.");
         return OBJECT_NULL;
     }
 
@@ -98,7 +98,7 @@ int AppControlHost::OnRemoteRequest(
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_RULE_FOR_CLONE_APP):
             return HandleDeleteDisposedRuleForCloneApp(data, reply);
         default:
-            LOG_W(BMS_TAG_APP_CONTROL, "AppControlHost receive unknown code, code = %{public}d", code);
+            LOG_W(BMS_TAG_DEFAULT, "AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
 }
@@ -108,7 +108,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
     std::vector<std::string> appIds;
     int32_t appIdSize = data.ReadInt32();
     if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleAddAppInstallControlRule parameter is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "HandleAddAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < appIdSize; i++) {
@@ -118,7 +118,7 @@ ErrCode AppControlHost::HandleAddAppInstallControlRule(MessageParcel& data, Mess
     int32_t userId = data.ReadInt32();
     int32_t ret = AddAppInstallControlRule(appIds, controlRuleType, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleAddAppInstallControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleAddAppInstallControlRule failed");
     }
     return ret;
 }
@@ -129,7 +129,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
     std::vector<std::string> appIds;
     int32_t appIdSize = data.ReadInt32();
     if (appIdSize > AppControlConstants::LIST_MAX_SIZE) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleDeleteAppInstallControlRule parameter is invalid");
+        LOG_E(BMS_TAG_DEFAULT, "HandleDeleteAppInstallControlRule parameter is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < appIdSize; i++) {
@@ -138,7 +138,7 @@ ErrCode AppControlHost::HandleDeleteAppInstallControlRule(MessageParcel& data, M
     int32_t userId = data.ReadInt32();
     int32_t ret = DeleteAppInstallControlRule(controlRuleType, appIds, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleDeleteAppInstallControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleDeleteAppInstallControlRule failed");
     }
     return ret;
 }
@@ -149,7 +149,7 @@ ErrCode AppControlHost::HandleCleanAppInstallControlRule(MessageParcel& data, Me
     int32_t userId = data.ReadInt32();
     int32_t ret = DeleteAppInstallControlRule(controlRuleType, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleCleanAppInstallControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleCleanAppInstallControlRule failed");
     }
     return ret;
 }
@@ -161,11 +161,11 @@ ErrCode AppControlHost::HandleGetAppInstallControlRule(MessageParcel& data, Mess
     std::vector<std::string> appIds;
     int32_t ret = GetAppInstallControlRule(controlRuleType, userId, appIds);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleGetAppInstallControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleGetAppInstallControlRule failed");
         return ret;
     }
     if (!WriteStringVector(appIds, reply)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write appIds failed");
+        LOG_E(BMS_TAG_DEFAULT, "write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -176,7 +176,7 @@ ErrCode AppControlHost::HandleAddAppRunningControlRule(MessageParcel& data, Mess
     std::vector<AppRunningControlRule> controlRules;
     auto ret = ReadParcelableVector(data, controlRules);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "AddAppRunningControlRule read controlRuleParam failed");
+        LOG_E(BMS_TAG_DEFAULT, "AddAppRunningControlRule read controlRuleParam failed");
         return ret;
     }
     int32_t userId = data.ReadInt32();
@@ -188,7 +188,7 @@ ErrCode AppControlHost::HandleDeleteAppRunningControlRule(MessageParcel& data, M
     std::vector<AppRunningControlRule> controlRules;
     auto ret = ReadParcelableVector(data, controlRules);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "DeleteAppRunningControlRule read controlRuleParam failed");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule read controlRuleParam failed");
         return ret;
     }
     int32_t userId = data.ReadInt32();
@@ -200,7 +200,7 @@ ErrCode AppControlHost::HandleCleanAppRunningControlRule(MessageParcel& data, Me
     int32_t userId = data.ReadInt32();
     int32_t ret = DeleteAppRunningControlRule(userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleCleanAppInstallControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleCleanAppInstallControlRule failed");
     }
     return ret;
 }
@@ -211,11 +211,11 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
     std::vector<std::string> appIds;
     int32_t ret = GetAppRunningControlRule(userId, appIds);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleGetAppRunningControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleGetAppRunningControlRule failed");
         return ret;
     }
     if (!WriteStringVector(appIds, reply)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write appIds failed");
+        LOG_E(BMS_TAG_DEFAULT, "write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -228,14 +228,14 @@ ErrCode AppControlHost::HandleGetAppRunningControlRuleResult(MessageParcel& data
     AppRunningControlRuleResult ruleResult;
     int32_t ret = GetAppRunningControlRule(bundleName, userId, ruleResult);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleGetAppRunningControlRuleResult failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleGetAppRunningControlRuleResult failed");
     }
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write result failed");
+        LOG_E(BMS_TAG_DEFAULT, "write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if ((ret == ERR_OK) && !reply.WriteParcelable(&ruleResult)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write AppRunningControlRuleResult failed");
+        LOG_E(BMS_TAG_DEFAULT, "write AppRunningControlRuleResult failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -248,7 +248,7 @@ ErrCode AppControlHost::HandleConfirmAppJumpControlRule(MessageParcel& data, Mes
     int32_t userId = data.ReadInt32();
     int32_t ret = ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleConfirmAppJumpControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleConfirmAppJumpControlRule failed");
     }
     return ret;
 }
@@ -258,7 +258,7 @@ ErrCode AppControlHost::HandleAddAppJumpControlRule(MessageParcel& data, Message
     std::vector<AppJumpControlRule> controlRules;
     auto ret = ReadParcelableVector(data, controlRules);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleAddAppJumpControlRule read controlRuleParam failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleAddAppJumpControlRule read controlRuleParam failed");
         return ret;
     }
     int32_t userId = data.ReadInt32();
@@ -270,7 +270,7 @@ ErrCode AppControlHost::HandleDeleteAppJumpControlRule(MessageParcel& data, Mess
     std::vector<AppJumpControlRule> controlRules;
     auto ret = ReadParcelableVector(data, controlRules);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleDeleteAppJumpControlRule read controlRuleParam failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleDeleteAppJumpControlRule read controlRuleParam failed");
         return ret;
     }
     int32_t userId = data.ReadInt32();
@@ -283,7 +283,7 @@ ErrCode AppControlHost::HandleDeleteRuleByCallerBundleName(MessageParcel& data, 
     int32_t userId = data.ReadInt32();
     int32_t ret = DeleteRuleByCallerBundleName(callerBundleName, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleDeleteRuleByCallerBundleName failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleDeleteRuleByCallerBundleName failed");
     }
     return ret;
 }
@@ -294,7 +294,7 @@ ErrCode AppControlHost::HandleDeleteRuleByTargetBundleName(MessageParcel& data, 
     int32_t userId = data.ReadInt32();
     int32_t ret = DeleteRuleByTargetBundleName(targetBundleName, userId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleDeleteRuleByTargetBundleName failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleDeleteRuleByTargetBundleName failed");
     }
     return ret;
 }
@@ -307,14 +307,14 @@ ErrCode AppControlHost::HandleGetAppJumpControlRule(MessageParcel& data, Message
     AppJumpControlRule rule;
     int32_t ret = GetAppJumpControlRule(callerBundleName, targetBundleName, userId, rule);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_APP_CONTROL, "HandleGetAppJumpControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "HandleGetAppJumpControlRule failed");
     }
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write result failed");
+        LOG_E(BMS_TAG_DEFAULT, "write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if ((ret == ERR_OK) && !reply.WriteParcelable(&rule)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write AppJumpControlRule failed");
+        LOG_E(BMS_TAG_DEFAULT, "write AppJumpControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -326,12 +326,12 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     int32_t userId = data.ReadInt32();
     if (want == nullptr) {
-        LOG_E(BMS_TAG_APP_CONTROL, "ReadParcelable<Want> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedStatus(appId, *want, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -343,7 +343,7 @@ ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageP
     int32_t userId = data.ReadInt32();
     ErrCode ret = DeleteDisposedStatus(appId, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -356,12 +356,12 @@ ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParc
     Want want;
     ErrCode ret = GetDisposedStatus(appId, want, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&want)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write failed");
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -375,12 +375,12 @@ ErrCode AppControlHost::HandleGetDisposedRule(MessageParcel& data, MessageParcel
     DisposedRule rule;
     ErrCode ret = GetDisposedRule(appId, rule, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&rule)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write failed");
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -393,12 +393,12 @@ ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel
     std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
     int32_t userId = data.ReadInt32();
     if (disposedRule == nullptr) {
-        LOG_E(BMS_TAG_APP_CONTROL, "ReadParcelable<disposedRule> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedRule(appId, *disposedRule, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -411,12 +411,12 @@ ErrCode AppControlHost::HandleGetAbilityRunningControlRule(MessageParcel& data, 
     std::vector<DisposedRule> rules;
     ErrCode ret = GetAbilityRunningControlRule(bundleName, userId, rules);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!WriteParcelableVector(rules, reply)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write failed");
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -431,12 +431,12 @@ ErrCode AppControlHost::HandleGetDisposedRuleForCloneApp(MessageParcel& data, Me
     DisposedRule rule;
     ErrCode ret = GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&rule)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write failed");
+            LOG_E(BMS_TAG_DEFAULT, "write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -450,12 +450,12 @@ ErrCode AppControlHost::HandleSetDisposedRuleForCloneApp(MessageParcel& data, Me
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
     if (disposedRule == nullptr) {
-        LOG_E(BMS_TAG_APP_CONTROL, "ReadParcelable<disposedRule> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedRuleForCloneApp(appId, *disposedRule, appIndex, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -468,7 +468,7 @@ ErrCode AppControlHost::HandleDeleteDisposedRuleForCloneApp(MessageParcel& data,
     int32_t appIndex = data.ReadInt32();
     ErrCode ret = DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -477,13 +477,13 @@ ErrCode AppControlHost::HandleDeleteDisposedRuleForCloneApp(MessageParcel& data,
 bool AppControlHost::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &reply)
 {
     if (!reply.WriteInt32(stringVector.size())) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ParcelableVector failed");
         return false;
     }
 
     for (auto &string : stringVector) {
         if (!reply.WriteString(string)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write string failed");
+            LOG_E(BMS_TAG_DEFAULT, "write string failed");
             return false;
         }
     }
@@ -494,13 +494,13 @@ template<typename T>
 bool AppControlHost::WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
     if (!reply.WriteInt32(parcelableVector.size())) {
-        LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ParcelableVector failed");
         return false;
     }
 
     for (auto &parcelable : parcelableVector) {
         if (!reply.WriteParcelable(&parcelable)) {
-            LOG_E(BMS_TAG_APP_CONTROL, "write ParcelableVector failed");
+            LOG_E(BMS_TAG_DEFAULT, "write ParcelableVector failed");
             return false;
         }
     }
@@ -512,18 +512,18 @@ ErrCode AppControlHost::ReadParcelableVector(MessageParcel &data, std::vector<T>
 {
     int32_t infoSize = data.ReadInt32();
     if (infoSize > AppControlConstants::LIST_MAX_SIZE) {
-        LOG_E(BMS_TAG_APP_CONTROL, "elements num exceeds the limit %{public}d", AppControlConstants::LIST_MAX_SIZE);
+        LOG_E(BMS_TAG_DEFAULT, "elements num exceeds the limit %{public}d", AppControlConstants::LIST_MAX_SIZE);
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(data.ReadParcelable<T>());
         if (info == nullptr) {
-            LOG_E(BMS_TAG_APP_CONTROL, "read parcelable infos failed");
+            LOG_E(BMS_TAG_DEFAULT, "read parcelable infos failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         parcelableInfos.emplace_back(*info);
     }
-    LOG_D(BMS_TAG_APP_CONTROL, "read parcelable infos success");
+    LOG_D(BMS_TAG_DEFAULT, "read parcelable infos success");
     return ERR_OK;
 }
 } // AppExecFwk
