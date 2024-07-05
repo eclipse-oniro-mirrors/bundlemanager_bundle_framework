@@ -411,7 +411,7 @@ private:
      * @param installParam Indicates the install parameters.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
     */
-    void sendStartInstallNotify(const InstallParam &installParam,
+    void SendStartInstallNotify(const InstallParam &installParam,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);

@@ -123,7 +123,7 @@ bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &req
 }
 
 bool RecentlyUnuseBundleAgingHandler::AgingClean(
-    const AgingBundleInfo &agingBundleInfo, AgingRequest &request) const
+    const AgingBundleInfo &agingBundleInfo, const AgingRequest &request) const
 {
     if (request.GetAgingCleanType() == AgingCleanType::CLEAN_CACHE) {
         return CleanCache(agingBundleInfo);
