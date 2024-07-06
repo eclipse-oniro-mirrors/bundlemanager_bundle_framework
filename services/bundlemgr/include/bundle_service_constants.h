@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_SERVICE_CONSTANTS_H
 
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -158,7 +159,6 @@ constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 // clone application
 constexpr int32_t CLONE_APP_INDEX_MIN = 1;
 constexpr int32_t CLONE_APP_INDEX_MAX = 5;
-constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 // shader
 constexpr const char* SHADER_CACHE_PATH = "/data/local/shader_cache/local/";
 constexpr const char* CLOUD_SHADER_PATH = "/data/local/shader_cache/cloud/";
@@ -167,6 +167,10 @@ constexpr const char* CLOUD_SHADER_OWNER = "const.appgallery.shaderowner.bundlen
 const std::string API_RELEASE_TYPE_RELEASE = "Release";
 const std::string API_RELEASE_TYPE_BETA = "Beta";
 const std::string API_RELEASE_TYPE_CANARY = "Canary";
+// allow multi icon bundle
+const std::set<std::string> ALLOW_MULTI_ICON_BUNDLE = {
+    "com.ohos.contacts"
+};
 }  // namespace ServiceConstants
 }  // namespace AppExecFwk
 }  // namespace OHOS

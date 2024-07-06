@@ -3776,8 +3776,8 @@ void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
 
 void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const
 {
-    if (GetBundleName() == ServiceConstants::COM_OHOS_CONTACTS) {
-        APP_LOGI("com.ohos.contacts no need to process");
+    if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(GetBundleName()) !=
+        ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
         return;
     }
     AbilityInfo mainAbilityInfo;

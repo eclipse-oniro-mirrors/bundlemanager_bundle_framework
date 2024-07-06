@@ -1804,7 +1804,8 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     // get clone bundle info
     InnerBundleUserInfo bundleUserInfo;
     (void)info.GetInnerBundleUserInfo(responseUserId, bundleUserInfo);
-    if (info.GetBundleName() == ServiceConstants::COM_OHOS_CONTACTS) {
+    if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(info.GetBundleName()) !=
+        ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
         GetMultiLauncherAbilityInfo(want, info, bundleUserInfo, installTime, abilityInfos);
         return;
     }
