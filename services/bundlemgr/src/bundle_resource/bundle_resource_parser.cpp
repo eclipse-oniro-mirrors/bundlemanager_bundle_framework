@@ -38,7 +38,6 @@ const char* TYPE_PNG = "png";
 const char* FOREGROUND = "foreground";
 const char* BACKGROUND = "background";
 const char CHAR_COLON = ':';
-const char* LAYERED_IMAGE = "layered-image";
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
 const int32_t BADGE_SIZE = 62;
@@ -375,12 +374,12 @@ bool BundleResourceParser::ParseIconIdFromJson(
         APP_LOGE("failed to parse jsonBuff %{public}s.", jsonBuff.c_str());
         return false;
     }
-    const auto &jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = 0;
-    LayeredImage layerImage;
-    GetValueIfFindKey<LayeredImage>(jsonObject, jsonObjectEnd, LAYERED_IMAGE, layerImage,
-        JsonType::OBJECT, false, parseResult, ArrayType::NOT_ARRAY);
-
+    const auto &jsonObjectStart = jsonObject.begin();
+    if ((jsonObjectStart == jsonObject.end()) || !jsonObjectStart.value().is_object()) {
+        APP_LOGE("not object, failed to parse jsonBuff %{public}s", jsonBuff.c_str());
+        return false;
+    }
+    LayeredImage layerImage = jsonObjectStart.value().get<LayeredImage>();
     if (layerImage.foreground.empty() && layerImage.background.empty()) {
         APP_LOGE("foreground background empty, buffer %{public}s", jsonBuff.c_str());
         return false;
