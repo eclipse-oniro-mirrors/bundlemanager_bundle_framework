@@ -39,6 +39,7 @@ namespace AppExecFwk {
 namespace {
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
+const std::string PARAM_SUB_PACKAGE_NAME = "ohos.param.atomicservice.subpackageName";
 const std::string PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE = "send_to_erms_targetAppDistType";
 const std::string PARAM_FREEINSTALL_EMBEDDED = "send_to_erms_embedded";
 const std::string PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE = "send_to_erms_targetAppProvisionType";
@@ -272,7 +273,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->version = DEFAULT_VERSION;
 
     if (!GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo)) {
-        LOG_I(BMS_TAG_DEFAULT, "the module have no preload module.");
+        LOG_D(BMS_TAG_DEFAULT, "the module have no preload module.");
         return false;
     }
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
@@ -878,6 +879,23 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
 }
 
+bool BundleConnectAbilityMgr::CheckSubPackageName(const InnerBundleInfo &innerBundleInfo, const Want &want)
+{
+    std::string subPackageName = want.GetStringParam(PARAM_SUB_PACKAGE_NAME);
+    if (subPackageName.empty()) {
+        return true;
+    }
+    std::vector<std::string> moduleNameList;
+    innerBundleInfo.GetModuleNames(moduleNameList);
+    auto it = std::find(moduleNameList.begin(), moduleNameList.end(), subPackageName);
+    if (it == moduleNameList.end()) {
+        LOG_I(BMS_TAG_DEFAULT, "check subPackageName %{public}s failed",  subPackageName.c_str());
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "check subPackageName %{public}s success",  subPackageName.c_str());
+    return true;
+}
+
 void BundleConnectAbilityMgr::CallAbilityManager(
     int32_t resultCode, const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
 {
@@ -1002,6 +1020,9 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
         }
     }
     if (abilityInfoResult) {
+        if (!CheckSubPackageName(innerBundleInfo, want)) {
+            return false;
+        }
         return CheckIsModuleNeedUpdateWrap(innerBundleInfo, want, userId, callBack);
     }
     return false;
@@ -1265,6 +1286,12 @@ bool BundleConnectAbilityMgr::GetModuleName(const InnerBundleInfo &innerBundleIn
             moduleName = info.second.moduleName;
             return true;
         }
+    }
+    std::string wantModuleName = element.GetModuleName();
+    if (abilityName.empty() && wantModuleName.empty()) {
+        moduleName = innerBundleInfo.GetEntryModuleName();
+        LOG_I(BMS_TAG_DEFAULT, "get entry module name %{public}s", moduleName.c_str());
+        return !moduleName.empty();
     }
     LOG_E(BMS_TAG_DEFAULT, "GetModuleName failed, ability(%{public}s) is not existed in bundle(%{public}s)",
         abilityName.c_str(), innerBundleInfo.GetBundleName().c_str());
