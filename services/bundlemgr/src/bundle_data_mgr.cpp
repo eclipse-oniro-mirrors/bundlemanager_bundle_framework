@@ -5812,16 +5812,22 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
-        APP_LOGI("find target default application");
-        findDefaultApp = true;
-        return true;
+        FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+        if (!abilityInfos.empty() || !extensionInfos.empty()) {
+            APP_LOGI("find target default application");
+            findDefaultApp = true;
+            return true;
+        }
     }
     // step2 : find backup default infos
     if (withDefault &&
         DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos, true)) {
-        APP_LOGI("find target backup default application");
-        findDefaultApp = true;
-        return true;
+        FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+        if (!abilityInfos.empty() || !extensionInfos.empty()) {
+            APP_LOGI("find target backup default application");
+            findDefaultApp = true;
+            return true;
+        }
     }
 #endif
     // step3 : implicit query infos
