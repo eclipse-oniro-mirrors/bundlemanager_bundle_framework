@@ -710,6 +710,8 @@ private:
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
     bool InitDataMgr();
+    bool IsAppInBlocklist(const std::string &bundleName) const;
+
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;

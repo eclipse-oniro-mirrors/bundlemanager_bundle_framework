@@ -1056,10 +1056,15 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
     // washing machine judge
-    for (const auto &infoIter: newInfos) {
-        if (!infoIter.second.IsSystemApp() && !VerifyActivationLock()) {
-            result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
-            break;
+    if (!installParam.isPreInstallApp) {
+        for (const auto &infoIter: newInfos) {
+            if (!infoIter.second.IsSystemApp() && !VerifyActivationLock()) {
+                result = ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED;
+                break;
+            }
+        }
+        if (IsAppInBlocklist((newInfos.begin()->second).GetBundleName())) {
+            result = ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST;
         }
     }
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
@@ -5688,6 +5693,17 @@ ErrCode BaseBundleInstaller::RollbackHmpCommonInfo(const std::string &bundleName
     RemoveProfileFromCodeSign(oldInfo.GetBundleName());
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), oldInfo.GetBundleName());
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName) const
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName);
+    if (res) {
+        LOG_E(BMS_TAG_INSTALLER, "app %{public}s is in blocklist", bundleName.c_str());
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

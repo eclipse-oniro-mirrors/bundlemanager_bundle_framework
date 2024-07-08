@@ -91,6 +91,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual bool IsAppInBlocklist(const std::string &bundleName)
+    {
+        return false;
+    }
 };
 
 } // AppExecFwk
