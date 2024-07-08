@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,6 +26,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string ZIP_FORMAT = ".zip.";
+const std::string ZIP_SUFFIX = ".zip";
+const std::string FILE_7Z_FORMAT = ".7z.";
+const std::string FILE_7Z_SUFFIX = ".7z";
+}
+
 bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
@@ -60,6 +67,14 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::string &mimeType
 
 bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
 {
+    if (uri.find(ZIP_FORMAT) != std::string::npos) {
+        suffix = ZIP_SUFFIX;
+        return true;
+    }
+    if (uri.find(FILE_7Z_FORMAT) != std::string::npos) {
+        suffix = FILE_7Z_SUFFIX;
+        return true;
+    }
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
         APP_LOGD("Get suffix failed %{private}s", uri.c_str());
