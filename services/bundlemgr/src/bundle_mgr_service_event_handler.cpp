@@ -309,6 +309,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1087,6 +1088,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
     ProcessCheckCloudShaderDir();
+    ProcessNewBackupDir();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1381,6 +1383,35 @@ void BMSEventHandler::ProcessCheckCloudShaderDir()
     LOG_D(BMS_TAG_DEFAULT, "Need to check cloud shader cache dir.");
     InnerProcessCheckCloudShaderDir();
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
+}
+
+void BMSEventHandler::ProcessNewBackupDir()
+{
+    bool checkBackup = false;
+    CheckOtaFlag(OTAFlag::CHECK_BACK_UP_DIR, checkBackup);
+    if (checkBackup) {
+        LOG_D(BMS_TAG_DEFAULT, "Not need to check back up dir due to has checked.");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to check back up dir.");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "ProcessNewBackupDir GetAllBundleInfos failed");
+            continue;
+        }
+        UpdateAppDataMgr::ProcessNewBackupDir(bundleInfos, userId);
+    }
+    UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
 }
 
 void BMSEventHandler::InnerProcessCheckCloudShaderDir()
