@@ -977,6 +977,8 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     }
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName,
         flags, innerBundleInfo, userId);
+    EventReport::SendFreeInstallEvent(bundleName, abilityName, moduleName, innerBundleInfoResult,
+        BundleUtil::GetCurrentTime());
     if (!innerBundleInfoResult) {
         APP_LOGE("GetInnerBundleInfoWithBundleFlagsAndLock failed.");
         return false;
