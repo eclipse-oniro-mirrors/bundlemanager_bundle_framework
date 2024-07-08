@@ -1535,7 +1535,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
-        if (!hasBundleInstalled && mapIter->second.GetIsUninstalled()) {
+        if (!hasBundleInstalled && mapIter->second.IsUninstalled()) {
             LOG_W(BMS_TAG_DEFAULT, "app(%{public}s) has been uninstalled and do not OTA install.",
                 bundleName.c_str());
             if (!removable) {
@@ -2122,7 +2122,7 @@ void BMSEventHandler::HandlePreInstallException()
 
         const auto &preInstallBundleInfo = iter->second;
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
-            Constants::AppType::SYSTEM_APP, preInstallBundleInfo.GetRemovable())) {
+            Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
             LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
         }
 

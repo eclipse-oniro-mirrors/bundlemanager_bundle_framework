@@ -350,7 +350,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
-            oldInfo.UpdateRemovable(newInfo.GetIsPreInstallApp(), newInfo.GetRemovable());
+            oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.UpdateMultiAppMode(newInfo);
             oldInfo.UpdateReleaseType(newInfo);
         }
@@ -559,7 +559,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.UpdateBaseApplicationInfo(
                 newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(
-                newInfo.GetIsPreInstallApp(), newInfo.GetRemovable());
+                newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
             oldInfo.UpdateMultiAppMode(newInfo);
@@ -3228,7 +3228,7 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
-        if (!preInstallBundleInfo.GetRemovable()) {
+        if (!preInstallBundleInfo.IsRemovable()) {
             continue;
         }
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -3279,7 +3279,7 @@ bool BundleDataMgr::GetBundleStats(const std::string &bundleName,
         APP_LOGW("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
         return false;
     }
-    if (appIndex == 0 && infoItem->second.GetIsPreInstallApp() && !bundleStats.empty()) {
+    if (appIndex == 0 && infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
         for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
             bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
         }
@@ -3316,7 +3316,7 @@ bool BundleDataMgr::GetAllBundleStats(const int32_t userId, std::vector<int64_t>
         if (infoItem == bundleInfos_.end()) {
             return false;
         }
-        if (infoItem->second.GetIsPreInstallApp()) {
+        if (infoItem->second.IsPreInstallApp()) {
             for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
                 bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
             }
@@ -5868,7 +5868,7 @@ void BundleDataMgr::UpdateRemovable(
         return;
     }
 
-    if (infoItem->second.GetRemovable() != removable) {
+    if (infoItem->second.IsRemovable() != removable) {
         infoItem->second.UpdateRemovable(true, removable);
         SaveInnerBundleInfo(infoItem->second);
     }
@@ -6378,7 +6378,7 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
             bundleName.c_str());
         return false;
     }
-    return item->second.GetIsPreInstallApp();
+    return item->second.IsPreInstallApp();
 }
 
 ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
@@ -7050,7 +7050,7 @@ void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName
             continue;
         }
         // check target bundle is preInstall application
-        if (!oldInfo.GetIsPreInstallApp()) {
+        if (!oldInfo.IsPreInstallApp()) {
             APP_LOGW("target bundle is not preInstall application");
             return;
         }
@@ -7325,7 +7325,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.uid = info.GetUid(responseUserId);
         createDirParam.gid = info.GetGid(responseUserId);
         createDirParam.apl = info.GetAppPrivilegeLevel();
-        createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+        createDirParam.isPreInstallApp = info.IsPreInstallApp();
         createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         createDirParam.extensionDirs = info.GetAllExtensionDirs();
@@ -7554,7 +7554,7 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     InnerBundleInfo &innerBundleInfo = infoItem->second;
-    if (!innerBundleInfo.GetRemovable() && state) {
+    if (!innerBundleInfo.IsRemovable() && state) {
         APP_LOGW("the bundle : %{public}s is not removable", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED;
     }

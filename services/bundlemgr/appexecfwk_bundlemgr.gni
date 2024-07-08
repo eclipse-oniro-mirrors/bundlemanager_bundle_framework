@@ -55,7 +55,6 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/inner_bundle_clone_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
-  "${services_path}/bundlemgr/src/inner_common_info.cpp",
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd_client.cpp",
   "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
