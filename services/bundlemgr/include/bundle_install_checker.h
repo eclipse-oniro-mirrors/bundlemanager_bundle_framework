@@ -240,7 +240,8 @@ private:
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
     bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
     bool CheckProvisionInfoIsValid(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
-    std::string GetValidReleaseType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    std::tuple<bool, std::string, std::string> GetValidReleaseType(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     std::string checkResultMsg_ = "";
 };
