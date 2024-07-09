@@ -693,7 +693,7 @@ napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info)
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
-            GET_BUNDLE_ARCHIVE_INFO_SYNC, BUNDLE_PERMISSIONS);
+            GET_BUNDLE_ARCHIVE_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, error);
         return nullptr;
     }
@@ -703,7 +703,7 @@ napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info)
     if (ret != ERR_OK) {
         APP_LOGE("getBundleArchiveInfoSync failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_BUNDLE_ARCHIVE_INFO_SYNC, BUNDLE_PERMISSIONS);
+            env, ret, GET_BUNDLE_ARCHIVE_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
