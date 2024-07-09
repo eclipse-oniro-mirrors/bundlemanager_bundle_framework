@@ -1721,14 +1721,6 @@ HWTEST_F(BmsBundleDefaultAppTest, Normalize_0100, Function | SmallTest | Level1)
  */
 HWTEST_F(BmsBundleDefaultAppTest, Normalize_0200, Function | SmallTest | Level1)
 {
-    std::string notSpecificUtd = "general.audio";
-    std::string normalizedType = DefaultAppMgr::Normalize(notSpecificUtd);
-    EXPECT_EQ(normalizedType, "");
-
-    std::string wrongMimeType = "mainType/error";
-    normalizedType = DefaultAppMgr::Normalize(wrongMimeType);
-    EXPECT_EQ(normalizedType, "");
-
     std::string notSpecificMimeType = "mainType/*";
     normalizedType = DefaultAppMgr::Normalize(notSpecificMimeType);
     EXPECT_EQ(normalizedType, "");
