@@ -27,36 +27,12 @@ namespace AppExecFwk {
 OverlayManagerHost::OverlayManagerHost()
 {
     APP_LOGD("create OverlayManagerHost.");
-    init();
 }
 
 OverlayManagerHost::~OverlayManagerHost()
 {
     APP_LOGD("destroy OverlayManagerHost.");
 }
-
-void OverlayManagerHost::init()
-{
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_ALL_OVERLAY_MODULE_INFO),
-        &OverlayManagerHost::HandleGetAllOverlayModuleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_NAME),
-        &OverlayManagerHost::HandleGetOverlayModuleInfoByName);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO),
-        &OverlayManagerHost::HandleGetOverlayModuleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS),
-        &OverlayManagerHost::HandleGetTargetOverlayModuleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME),
-        &OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET),
-        &OverlayManagerHost::HandleGetOverlayBundleInfoForTarget);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET),
-        &OverlayManagerHost::HandleGetOverlayModuleInfoForTarget);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED),
-        &OverlayManagerHost::HandleSetOverlayEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED_FOR_SELF),
-        &OverlayManagerHost::HandleSetOverlayEnabledForSelf);
-}
-
 
 int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
@@ -71,11 +47,37 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     }
 
     ErrCode errCode = ERR_OK;
-    if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
-        errCode = (this->*funcMap_[code])(data, reply);
-    } else {
-        APP_LOGW("overlayMgr host receives unknown code %{public}u", code);
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_ALL_OVERLAY_MODULE_INFO):
+            errCode = this->HandleGetAllOverlayModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_NAME):
+            errCode = this->HandleGetOverlayModuleInfoByName(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO):
+            errCode = this->HandleGetOverlayModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS):
+            errCode = this->HandleGetTargetOverlayModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME):
+            errCode = this->HandleGetOverlayModuleInfoByBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET):
+            errCode = this->HandleGetOverlayBundleInfoForTarget(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET):
+            errCode = this->HandleGetOverlayModuleInfoForTarget(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED):
+            errCode = this->HandleSetOverlayEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED_FOR_SELF):
+            errCode = this->HandleSetOverlayEnabledForSelf(data, reply);
+            break;
+        default :
+            APP_LOGW("overlayMgr host receives unknown code %{public}u", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("overlayMgr host finish to process message");
     return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;

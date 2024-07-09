@@ -49,9 +49,6 @@ private:
     template<typename T>
     ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
 
-    using BundleResourceHostFunc = ErrCode (BundleResourceHost::*)(MessageParcel &, MessageParcel &);
-    std::unordered_map<uint32_t, BundleResourceHostFunc> funcMap_;
-
     DISALLOW_COPY_AND_MOVE(BundleResourceHost);
 };
 }

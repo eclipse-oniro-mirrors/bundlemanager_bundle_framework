@@ -32,13 +32,9 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    void Init();
     void HandleOnPatchDeployed(MessageParcel &data, MessageParcel &reply);
     void HandleOnPatchSwitched(MessageParcel &data, MessageParcel &reply);
     void HandleOnPatchDeleted(MessageParcel &data, MessageParcel &reply);
-
-    using QuickFixCallbackFunc = void (QuickFixStatusCallbackHost::*)(MessageParcel &, MessageParcel &);
-    std::unordered_map<uint32_t, QuickFixCallbackFunc> funcMap_;
 
     DISALLOW_COPY_AND_MOVE(QuickFixStatusCallbackHost);
 };
