@@ -4289,10 +4289,15 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
-    if (oldInfo.IsReleaseHsp() || newInfo.IsReleaseHsp()) {
-        return true;
+    if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
+        LOG_W(BMS_TAG_INSTALLER, "the releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
+            oldInfo.GetCurModuleName().c_str(), oldInfo.GetReleaseType().c_str(),
+            newInfo.GetCurModuleName().c_str(), newInfo.GetReleaseType().c_str());
+        if (!oldInfo.IsHsp() && !newInfo.IsHsp()) {
+            return false;
+        }
     }
-    return oldInfo.GetReleaseType() == newInfo.GetReleaseType();
+    return true;
 }
 
 ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,

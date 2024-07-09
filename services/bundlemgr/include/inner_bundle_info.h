@@ -544,7 +544,7 @@ public:
 
     bool HasEntry() const;
 
-    bool IsReleaseHsp() const;
+    bool IsHsp() const;
 
     void InsertFormInfos(const std::string &keyName, const std::vector<FormInfo> &formInfos)
     {
