@@ -983,11 +983,13 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     bool CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags, const InnerBundleInfo &info,
-        int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+        int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+        const std::vector<std::string> &paramMimeTypes, int32_t appIndex = 0) const;
     void AddSkillUrisInfo(const std::vector<Skill> &skills, std::vector<SkillUriForAbilityAndExtension> &skillUris,
         std::optional<size_t> matchSkillIndex, std::optional<size_t> matchUriIndex) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags, const InnerBundleInfo &info,
-        int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
+        int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+        const std::vector<std::string> &paramMimeTypes, int32_t appIndex = 0) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
         int32_t appIndex = 0) const;
     ErrCode ExplicitQueryAbilityInfoV9(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -1062,7 +1064,7 @@ private:
         const int32_t userId, const int32_t requestUserId) const;
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
-        const std::vector<std::string> &supportMimeTypes) const;
+        const std::vector<std::string> &supportMimeTypes, const std::vector<std::string> &paramMimeTypes) const;
     bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);

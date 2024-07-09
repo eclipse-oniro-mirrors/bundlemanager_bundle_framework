@@ -26,6 +26,7 @@
 #include "bundle_mgr_service.h"
 #include "json_constants.h"
 #include "json_serializer.h"
+#include "mime_type_mgr.h"
 #include "parcel.h"
 
 using namespace testing::ext;
@@ -1811,7 +1812,9 @@ HWTEST_F(BmsDataMgrTest, MatchPrivateType_0001, Function | SmallTest | Level0)
     std::vector<std::string> supportExtNames;
     supportExtNames.emplace_back("book");
     std::vector<std::string> supportMimeTypes;
-    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes, mimeTypes);
     EXPECT_TRUE(ret);
 }
 
@@ -1828,7 +1831,9 @@ HWTEST_F(BmsDataMgrTest, MatchPrivateType_0002, Function | SmallTest | Level0)
     want.SetUri("/test/test.book");
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
-    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes, mimeTypes);
     EXPECT_FALSE(ret);
 }
 
@@ -1845,7 +1850,9 @@ HWTEST_F(BmsDataMgrTest, MatchPrivateType_0003, Function | SmallTest | Level0)
     want.SetUri("/test/test");
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
-    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes, mimeTypes);
     EXPECT_FALSE(ret);
 }
 
@@ -1863,7 +1870,9 @@ HWTEST_F(BmsDataMgrTest, MatchPrivateType_0004, Function | SmallTest | Level0)
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
     supportMimeTypes.emplace_back("image/jpeg");
-    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes, mimeTypes);
     EXPECT_TRUE(ret);
 }
 } // OHOS
