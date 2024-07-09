@@ -264,6 +264,7 @@ private:
     bool GetModuleName(const InnerBundleInfo &innerBundleInfo, const Want &want, std::string &moduleName) const;
     bool CheckIsModuleNeedUpdateWrap(InnerBundleInfo &innerBundleInfo, const Want &want, int32_t userId,
         const sptr<IRemoteObject> &callBack);
+    bool CheckSubPackageName(const InnerBundleInfo &innerBundleInfo, const Want &want);
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
