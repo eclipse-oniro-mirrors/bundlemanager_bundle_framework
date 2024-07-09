@@ -1722,7 +1722,7 @@ HWTEST_F(BmsBundleDefaultAppTest, Normalize_0100, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleDefaultAppTest, Normalize_0200, Function | SmallTest | Level1)
 {
     std::string notSpecificMimeType = "mainType/*";
-    normalizedType = DefaultAppMgr::Normalize(notSpecificMimeType);
+    std::string normalizedType = DefaultAppMgr::Normalize(notSpecificMimeType);
     EXPECT_EQ(normalizedType, "");
 
     std::string wrongSuffix = "abc";
