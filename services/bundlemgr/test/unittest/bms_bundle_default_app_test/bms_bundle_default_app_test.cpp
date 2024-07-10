@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -91,6 +91,10 @@ const std::string INVALID_TYPE6 = "*/*";
 const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
 const std::string EMAIL_SCHEME = "mailto";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
+const std::string PDF_MIME_TYPE = "application/pdf";
+const std::string PDF_UTD = "com.adobe.pdf";
+const std::string PDF_SUFFIX = ".pdf";
+
 const nlohmann::json DEFAULT_CONFIG = R"(
 [{
     "bundleName": "bundleName",
@@ -332,11 +336,11 @@ HWTEST_F(BmsBundleDefaultAppTest, UTD_0300, Function | SmallTest | Level1)
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, UTD_GENERAL_AVI, ABILITY_VIDEO_MS_VIDEO);
-    EXPECT_NE(result, ERR_OK);
+    EXPECT_EQ(result, ERR_OK);
 
     BundleInfo bundleInfo;
     result = defaultAppProxy->GetDefaultApplication(USER_ID, UTD_GENERAL_AVI, bundleInfo);
-    EXPECT_NE(result, ERR_OK);
+    EXPECT_EQ(result, ERR_OK);
 }
 
 /**
@@ -1165,13 +1169,13 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4800, Function | SmallTest
 
 /**
  * @tc.number: BmsBundleDefaultApp_4900
- * @tc.name: test GetBundleInfoByFileType
- * @tc.desc: 1. test GetBundleInfoByFileType failed
+ * @tc.name: test GetBundleInfoByUtd
+ * @tc.desc: 1. test GetBundleInfoByUtd failed
  */
 HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_4900, Function | SmallTest | Level1)
 {
     BundleInfo bundleInfo;
-    ErrCode ret = DefaultAppMgr::GetInstance().GetBundleInfoByFileType(
+    ErrCode ret = DefaultAppMgr::GetInstance().GetBundleInfoByUtd(
         Constants::INVALID_USERID, DEFAULT_APP_VIDEO, bundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
 }
@@ -1329,10 +1333,8 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
     EXPECT_NE(dataMgr, nullptr);
 
     AAFwk::Want want;
-    AAFwk::Want want1;
-    want1.ClearWant(&want);
     want.SetAction(ACTION_VIEW_DATA);
-    want.SetType(DEFAULT_APP_VIDEO);
+    want.SetType(UTD_GENERAL_AVI);
 
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
@@ -1427,7 +1429,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6200, Function | SmallTest
     nlohmann::json rightTypeJson = DEFAULT_CONFIG;
     rightTypeJson[0]["extensionName"] = "";
     defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
-    EXPECT_NE(defaultAppData.infos.size(), 0);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
 }
 
 /**
@@ -1441,7 +1443,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6300, Function | SmallTest
     nlohmann::json rightTypeJson = DEFAULT_CONFIG;
     rightTypeJson[0]["abilityName"] = "";
     defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
-    EXPECT_NE(defaultAppData.infos.size(), 0);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
 }
 
 /**
@@ -1589,8 +1591,8 @@ HWTEST_F(BmsBundleDefaultAppTest, IsElementValid_0100, Function | MediumTest | L
 
 /**
  * @tc.number: MatchFileType_0100
- * @tc.name: test MatchFileType
- * @tc.desc: 1.MatchFileType is false
+ * @tc.name: test MatchUtd
+ * @tc.desc: 1.MatchUtd is false
  */
 HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0100, Function | SmallTest | Level1)
 {
@@ -1603,14 +1605,14 @@ HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0100, Function | SmallTest | Lev
     skill.uris.push_back(uris);
 
     skills.push_back(skill);
-    bool res = DefaultAppMgr::GetInstance().MatchFileType("application/msword", skills);
+    bool res = DefaultAppMgr::GetInstance().MatchUtd("application/msword", skills);
     EXPECT_EQ(res, false);
 }
 
 /**
  * @tc.number: MatchFileType_0100
- * @tc.name: test MatchFileType
- * @tc.desc: 1.MatchFileType is true
+ * @tc.name: test MatchUtd
+ * @tc.desc: 1.MatchUtd is true
  */
 HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0200, Function | SmallTest | Level1)
 {
@@ -1623,19 +1625,19 @@ HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0200, Function | SmallTest | Lev
     skill.uris.push_back(uris);
 
     skills.push_back(skill);
-    bool res = DefaultAppMgr::GetInstance().MatchFileType("application/msword", skills);
+    bool res = DefaultAppMgr::GetInstance().MatchUtd("application/msword", skills);
     EXPECT_EQ(res, true);
 }
 
 /**
  * @tc.number: MatchFileType_0300
- * @tc.name: test MatchFileType
- * @tc.desc: 1.MatchFileType is false
+ * @tc.name: test MatchUtd
+ * @tc.desc: 1.MatchUtd is false
  */
 HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0300, Function | SmallTest | Level1)
 {
     std::vector<Skill> skills;
-    bool res = DefaultAppMgr::GetInstance().MatchFileType("", skills);
+    bool res = DefaultAppMgr::GetInstance().MatchUtd("", skills);
     EXPECT_EQ(res, false);
 }
 
@@ -1673,5 +1675,103 @@ HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0100, Function | SmallTe
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     auto res = impl.SetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: Normalize_0100
+ * @tc.name: test Normalize success test case
+ * @tc.desc: 1.mimeType convert to utd, suffix convert to utd
+ *           2.utd and appType no need to convert
+ */
+HWTEST_F(BmsBundleDefaultAppTest, Normalize_0100, Function | SmallTest | Level1)
+{
+    std::string normalizedType = DefaultAppMgr::Normalize(PDF_MIME_TYPE);
+    EXPECT_EQ(normalizedType, PDF_UTD);
+
+    normalizedType = DefaultAppMgr::Normalize(PDF_SUFFIX);
+    EXPECT_EQ(normalizedType, PDF_UTD);
+
+    normalizedType = DefaultAppMgr::Normalize(PDF_UTD);
+    EXPECT_EQ(normalizedType, PDF_UTD);
+
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_VIDEO);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_VIDEO);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_IMAGE);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_IMAGE);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_BROWSER);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_BROWSER);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_EMAIL);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_EMAIL);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_AUDIO);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_AUDIO);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_PDF);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_PDF);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_WORD);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_WORD);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_EXCEL);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_EXCEL);
+    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_PPT);
+    EXPECT_EQ(normalizedType, DEFAULT_APP_PPT);
+}
+
+/**
+ * @tc.number: Normalize_0200
+ * @tc.name: test Normalize failed test case
+ * @tc.desc: 1.mimeType convert to utd, suffix convert to utd
+ */
+HWTEST_F(BmsBundleDefaultAppTest, Normalize_0200, Function | SmallTest | Level1)
+{
+    std::string notSpecificMimeType = "mainType/*";
+    std::string normalizedType = DefaultAppMgr::Normalize(notSpecificMimeType);
+    EXPECT_EQ(normalizedType, "");
+
+    std::string wrongSuffix = "abc";
+    normalizedType = DefaultAppMgr::Normalize(wrongSuffix);
+    EXPECT_EQ(normalizedType, "");
+}
+
+/**
+ * @tc.number: IsAppType_0100
+ * @tc.name: test IsAppType
+ * @tc.desc: 1.appType return true, others return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsAppType_0100, Function | SmallTest | Level1)
+{
+    bool ret = DefaultAppMgr::IsAppType(DEFAULT_APP_VIDEO);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_IMAGE);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_BROWSER);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_EMAIL);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_AUDIO);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_PDF);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_WORD);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_EXCEL);
+    EXPECT_TRUE(ret);
+    ret = DefaultAppMgr::IsAppType(DEFAULT_APP_PPT);
+    EXPECT_TRUE(ret);
+
+    ret = DefaultAppMgr::IsAppType("abc");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsSpecificMimeType_0100
+ * @tc.name: test IsSpecificMimeType
+ * @tc.desc: 1.is mimeType format and not contains *, return true. Otherwise return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsSpecificMimeType_0100, Function | SmallTest | Level1)
+{
+    bool ret = DefaultAppMgr::IsSpecificMimeType(PDF_MIME_TYPE);
+    EXPECT_TRUE(ret);
+
+    std::string notSpecificMimeType = "mainType/*";
+    ret = DefaultAppMgr::IsSpecificMimeType(notSpecificMimeType);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

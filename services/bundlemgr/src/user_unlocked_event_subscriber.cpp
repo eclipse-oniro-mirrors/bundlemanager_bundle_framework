@@ -34,6 +34,9 @@ namespace AppExecFwk {
 namespace {
 static constexpr int32_t MODE_BASE = 07777;
 static constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
+const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -204,6 +207,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 #endif
     ProcessUpdateAppLogDir(bundleInfos, userId);
     ProcessFileManagerDir(bundleInfos, userId);
+    ProcessNewBackupDir(bundleInfos, userId);
     ChmodBundleDataDir(bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
@@ -260,6 +264,52 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
         }
         if (!CreateBundleLogDir(bundleInfo, userId)) {
             APP_LOGD("log dir create failed or already exists");
+        }
+    }
+}
+
+void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    APP_LOGI("process new back up dir, start");
+    for (const auto &bundleInfo : bundleInfos) {
+        if (bundleInfo.appIndex > 0) {
+            APP_LOGI("bundleName:%{public}s appIndex %{public}d clone app no need to create",
+                bundleInfo.name.c_str(), bundleInfo.appIndex);
+            continue;
+        }
+        if (bundleInfo.singleton) {
+            CreateNewBackupDir(bundleInfo, Constants::DEFAULT_USERID);
+            continue;
+        }
+        if (userId != Constants::DEFAULT_USERID) {
+            CreateNewBackupDir(bundleInfo, userId);
+        }
+    }
+    APP_LOGI("process new back up dir, end");
+}
+
+void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)
+{
+    std::string backupDirEl1 = BUNDLE_BACKUP_HOME_PATH_EL1_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
+    backupDirEl1 = backupDirEl1.replace(backupDirEl1.find("%"), 1, std::to_string(userId));
+    std::vector<std::string> backupDirList;
+    backupDirList.emplace_back(backupDirEl1);
+    std::string backupDirEl2 = BUNDLE_BACKUP_HOME_PATH_EL2_NEW + bundleInfo.name + BUNDLE_BACKUP_INNER_DIR;
+    backupDirEl2 = backupDirEl2.replace(backupDirEl2.find("%"), 1, std::to_string(userId));
+    backupDirList.emplace_back(backupDirEl2);
+
+    for (const std::string &dir : backupDirList) {
+        bool isDirExisted = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExisted);
+        if (result != ERR_OK || isDirExisted) {
+            continue;
+        }
+        APP_LOGI("bundle %{public}s not exist backup dir", bundleInfo.name.c_str());
+        result = InstalldClient::GetInstance()->Mkdir(dir, S_IRWXU | S_IRWXG | S_ISGID,
+            bundleInfo.uid, ServiceConstants::BACKU_HOME_GID);
+        if (result != ERR_OK) {
+            APP_LOGW("bundle %{public}s create backup dir for user %{public}d failed",
+                bundleInfo.name.c_str(), userId);
         }
     }
 }

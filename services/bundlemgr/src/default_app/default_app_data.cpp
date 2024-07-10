@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_util.h"
 #include "common_profile.h"
 #include "default_app_mgr.h"
 #include "nlohmann/json.hpp"
@@ -95,7 +96,13 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
             LOG_W(BMS_TAG_DEFAULT, "bad element format.");
             continue;
         }
-        infos.try_emplace(element.type, element);
+        std::string normalizedType = DefaultAppMgr::Normalize(element.type);
+        if (normalizedType.empty()) {
+            LOG_W(BMS_TAG_DEFAULT, "normalizedType empty");
+            continue;
+        }
+        element.type = normalizedType;
+        infos.try_emplace(normalizedType, element);
     }
 }
 

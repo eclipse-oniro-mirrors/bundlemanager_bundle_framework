@@ -82,6 +82,7 @@ constexpr const char* SKILLS = "skills";
 constexpr const char* MAX_ADDITIONAL_NUMBER = "maxCount";
 constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
+constexpr const char* ORIENTATION_ID = "orientationId";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -1095,6 +1096,9 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSkills, index, nSkill));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, SKILLS, nSkills));
+    napi_value nOrientationId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.orientationId, &nOrientationId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ORIENTATION_ID, nOrientationId));
 }
 
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,

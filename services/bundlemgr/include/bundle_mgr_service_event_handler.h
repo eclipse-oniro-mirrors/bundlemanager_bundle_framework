@@ -45,6 +45,7 @@ enum OTAFlag {
     CHECK_SHADER_CAHCE_DIR = 0x00000200,
     CHECK_PREINSTALL_DATA = 0x00000400,
     CHECK_CLOUD_SHADER_DIR = 0x00000800,
+    CHECK_BACK_UP_DIR = 0x00001000,
 };
 
 enum class ScanResultCode {
@@ -492,6 +493,11 @@ private:
     void InnerProcessCheckShaderCacheDir();
     void ProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderDir();
+    void ProcessNewBackupDir();
+
+    void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
+        const std::string &bundleDataDirPath, const int32_t limitSize) const;
+    void RefreshQuotaForAllUid();
 
     bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &infos);

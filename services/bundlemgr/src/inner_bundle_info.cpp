@@ -3652,13 +3652,14 @@ bool InnerBundleInfo::HasEntry() const
         });
 }
 
-bool InnerBundleInfo::IsReleaseHsp() const
+bool InnerBundleInfo::IsHsp() const
 {
-    bool allHsp = std::all_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
+    if (!innerModuleInfos_.empty()) {
+        return std::all_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
             return item.second.distro.moduleType == Profile::MODULE_TYPE_SHARED;
         });
-    return allHsp &&
-        BundleUtil::StartWith(baseApplicationInfo_->apiReleaseType, ServiceConstants::API_RELEASE_TYPE_RELEASE);
+    }
+    return false;
 }
 
 void InnerBundleInfo::SetAppDistributionType(const std::string &appDistributionType)
@@ -4523,7 +4524,7 @@ void InnerBundleInfo::UpdateReleaseType(const InnerBundleInfo &newInfo)
 {
     if (baseBundleInfo_->releaseType.empty() ||
         baseApplicationInfo_->apiReleaseType.empty() ||
-        !newInfo.IsReleaseHsp()) {
+        !newInfo.IsHsp()) {
         baseBundleInfo_->releaseType = newInfo.GetBaseBundleInfo().releaseType;
         baseApplicationInfo_->apiReleaseType = newInfo.GetBaseApplicationInfo().apiReleaseType;
     }

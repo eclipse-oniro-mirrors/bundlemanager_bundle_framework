@@ -861,14 +861,20 @@ ErrCode BundleInstallChecker::CheckHapHashParams(
     return ERR_OK;
 }
 
-std::string BundleInstallChecker::GetValidReleaseType(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+std::tuple<bool, std::string, std::string> BundleInstallChecker::GetValidReleaseType(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    if (infos.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "infos is empty");
+        return std::make_tuple(false, "", "");
+    }
     for (const auto &info : infos) {
-        if (!info.second.IsReleaseHsp()) {
-            return info.second.GetReleaseType();
+        if (!info.second.IsHsp()) {
+            return std::make_tuple(false, info.second.GetCurModuleName(), info.second.GetReleaseType());
         }
     }
-    return Constants::EMPTY_STRING;
+    return std::make_tuple(true, (infos.begin()->second).GetCurModuleName(),
+        (infos.begin()->second).GetReleaseType());
 }
 
 ErrCode BundleInstallChecker::CheckAppLabelInfo(
@@ -880,7 +886,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     uint32_t versionCode = (infos.begin()->second).GetVersionCode();
     uint32_t minCompatibleVersionCode = (infos.begin()->second).GetMinCompatibleVersionCode();
     uint32_t target = (infos.begin()->second).GetTargetVersion();
-    std::string releaseType = GetValidReleaseType(infos);
+    auto [isHsp, moduleName, releaseType] = GetValidReleaseType(infos);
     uint32_t compatible = (infos.begin()->second).GetCompatibleVersion();
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
@@ -920,8 +926,11 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             LOG_E(BMS_TAG_INSTALLER, "compatible version not same");
             return ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME;
         }
-        if (!releaseType.empty() && !info.second.IsReleaseHsp()) {
-            if (releaseType != info.second.GetReleaseType()) {
+        if (releaseType != info.second.GetReleaseType()) {
+            LOG_W(BMS_TAG_INSTALLER, "releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
+                moduleName.c_str(), releaseType.c_str(),
+                info.second.GetCurModuleName().c_str(), info.second.GetReleaseType().c_str());
+            if (!isHsp && !info.second.IsHsp()) {
                 LOG_E(BMS_TAG_INSTALLER, "releaseType not same");
                 return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
             }

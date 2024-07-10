@@ -1241,7 +1241,9 @@ bool BundleDataMgr::ImplicitQueryCurAbilityInfos(const Want &want, int32_t flags
         }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
     FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     return true;
 }
@@ -1255,13 +1257,16 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t 
     if (cloneAppIndexes.empty()) {
         return false;
     }
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     for (int32_t appIndex: cloneAppIndexes) {
         InnerBundleInfo innerBundleInfo;
         if (!GetInnerBundleInfoWithFlags(bundleName, flags, innerBundleInfo, userId, appIndex)) {
             continue;
         }
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-        GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, appIndex);
+
+        GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, appIndex);
         FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     }
     LOG_D(BMS_TAG_QUERY, "end ImplicitQueryCurCloneAbilityInfos.");
@@ -1295,7 +1300,9 @@ ErrCode BundleDataMgr::ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t 
         }
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
+    GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
     FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     return ERR_OK;
 }
@@ -1310,6 +1317,8 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfosV9(const Want &want, int32_
     if (cloneAppIndexes.empty()) {
         return false;
     }
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     for (int32_t appIndex: cloneAppIndexes) {
         InnerBundleInfo innerBundleInfo;
         ErrCode ret = GetInnerBundleInfoWithFlagsV9(bundleName, flags, innerBundleInfo, userId, appIndex);
@@ -1319,7 +1328,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfosV9(const Want &want, int32_
             continue;
         }
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-        GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, appIndex);
+        GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, appIndex);
         FilterAbilityInfosByModuleName(want.GetElement().GetModuleName(), abilityInfos);
     }
     LOG_D(BMS_TAG_QUERY, "end ImplicitQueryCurCloneAbilityInfosV9.");
@@ -1335,7 +1344,8 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
         LOG_W(BMS_TAG_QUERY, "invalid userId");
         return;
     }
-
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     // query from bundleInfos_
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
@@ -1347,8 +1357,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                     innerBundleInfo.GetBundleName().c_str(), responseUserId);
                 continue;
             }
-
-            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
         }
     } else {
         // query from sandbox manager for sandbox bundle
@@ -1369,9 +1378,8 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfos(const Want &want, int32_t flags
                 LOG_D(BMS_TAG_QUERY, "obtain innerBundleInfo of sandbox app failed");
                 continue;
             }
-
             int32_t responseUserId = info.GetResponseUserId(userId);
-            GetMatchAbilityInfos(want, flags, info, responseUserId, abilityInfos);
+            GetMatchAbilityInfos(want, flags, info, responseUserId, abilityInfos, mimeTypes);
         }
     }
     APP_LOGD("finish to ImplicitQueryAllAbilityInfos.");
@@ -1386,7 +1394,8 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
         LOG_W(BMS_TAG_QUERY, "invalid userId");
         return;
     }
-
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(innerBundleInfo.GetBundleName(), userId);
@@ -1401,7 +1410,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
                     innerBundleInfo.GetBundleName().c_str(), responseUserId, appIndex);
                 continue;
             }
-            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, appIndex);
+            GetMatchAbilityInfos(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, appIndex);
         }
     }
     LOG_D(BMS_TAG_QUERY, "end ImplicitQueryAllCloneAbilityInfos.");
@@ -1412,6 +1421,8 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
 {
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllAbilityInfosV9.");
     // query from bundleInfos_
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     if (appIndex == 0) {
         for (const auto &item : bundleInfos_) {
             InnerBundleInfo innerBundleInfo;
@@ -1422,7 +1433,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             }
 
             int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-            GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos);
+            GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes);
         }
     } else {
         // query from sandbox manager for sandbox bundle
@@ -1445,7 +1456,7 @@ void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t fla
             }
 
             int32_t responseUserId = info.GetResponseUserId(userId);
-            GetMatchAbilityInfosV9(want, flags, info, responseUserId, abilityInfos);
+            GetMatchAbilityInfosV9(want, flags, info, responseUserId, abilityInfos, mimeTypes);
         }
     }
     LOG_D(BMS_TAG_QUERY, "finish to ImplicitQueryAllAbilityInfosV9.");
@@ -1455,6 +1466,8 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_
     std::vector<AbilityInfo> &abilityInfos) const
 {
     LOG_D(BMS_TAG_QUERY, "begin ImplicitQueryAllCloneAbilityInfosV9.");
+    std::vector<std::string> mimeTypes;
+    MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     for (const auto &item : bundleInfos_) {
         std::vector<int32_t> cloneAppIndexes = GetCloneAppIndexesNoLock(item.second.GetBundleName(), userId);
         if (cloneAppIndexes.empty()) {
@@ -1470,7 +1483,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_
             }
 
             int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-            GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, appIndex);
+            GetMatchAbilityInfosV9(want, flags, innerBundleInfo, responseUserId, abilityInfos, mimeTypes, appIndex);
         }
     }
     LOG_D(BMS_TAG_QUERY, "end ImplicitQueryAllCloneAbilityInfosV9.");
@@ -1482,7 +1495,8 @@ bool BundleDataMgr::CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abi
 }
 
 void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const InnerBundleInfo &info,
-    int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
+    int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+    const std::vector<std::string> &paramMimeTypes, int32_t appIndex) const
 {
     if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_SYSTEMAPP_ONLY) && !info.IsSystemApp()) {
         return;
@@ -1490,7 +1504,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
         bool isPrivateType = MatchPrivateType(
-            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
@@ -1503,16 +1517,14 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                 if (abilityinfo.name == ServiceConstants::APP_DETAIL_ABILITY) {
                     continue;
                 }
-                if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_DISABLE)) {
-                    if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId), appIndex)) {
-                        LOG_W(BMS_TAG_QUERY, "Ability %{public}s is disabled", abilityinfo.name.c_str());
-                        continue;
-                    }
+                if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_DISABLE) &&
+                    !info.IsAbilityEnabled(abilityinfo, GetUserId(userId), appIndex)) {
+                    LOG_W(BMS_TAG_QUERY, "Ability %{public}s is disabled", abilityinfo.name.c_str());
+                    continue;
                 }
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_APPLICATION)) {
-                    info.GetApplicationInfo(
-                        ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT, userId,
-                        abilityinfo.applicationInfo);
+                    info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
+                        userId, abilityinfo.applicationInfo);
                 }
                 if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_PERMISSION)) {
                     abilityinfo.permissions.clear();
@@ -1615,7 +1627,8 @@ void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, const std::v
 }
 
 void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, const InnerBundleInfo &info,
-    int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
+    int32_t userId, std::vector<AbilityInfo> &abilityInfos,
+    const std::vector<std::string> &paramMimeTypes, int32_t appIndex) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) ==
         static_cast<uint32_t>((GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) && !info.IsSystemApp()) {
@@ -1630,7 +1643,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
             continue;
         }
         bool isPrivateType = MatchPrivateType(
-            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes, paramMimeTypes);
         if (isPrivateType) {
             EmplaceAbilityInfo(info, skillsPair->second, abilityinfo, flags, userId, abilityInfos,
                 std::nullopt, std::nullopt, appIndex);
@@ -5812,16 +5825,22 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
-        APP_LOGI("find target default application");
-        findDefaultApp = true;
-        return true;
+        FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+        if (!abilityInfos.empty() || !extensionInfos.empty()) {
+            APP_LOGI("find target default application");
+            findDefaultApp = true;
+            return true;
+        }
     }
     // step2 : find backup default infos
     if (withDefault &&
         DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos, true)) {
-        APP_LOGI("find target backup default application");
-        findDefaultApp = true;
-        return true;
+        FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
+        if (!abilityInfos.empty() || !extensionInfos.empty()) {
+            APP_LOGI("find target backup default application");
+            findDefaultApp = true;
+            return true;
+        }
     }
 #endif
     // step3 : implicit query infos
@@ -6666,10 +6685,11 @@ ErrCode BundleDataMgr::DelExtNameOrMIMEToApp(const std::string &bundleName, cons
 }
 
 bool BundleDataMgr::MatchPrivateType(const Want &want,
-    const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes) const
+    const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes,
+    const std::vector<std::string> &paramMimeTypes) const
 {
-    APP_LOGD("MatchPrivateType, uri is %{private}s", want.GetUriString().c_str());
     std::string uri = want.GetUriString();
+    APP_LOGD("MatchPrivateType, uri is %{private}s", uri.c_str());
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
         return false;
@@ -6682,16 +6702,14 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
         APP_LOGI("uri is a supported private-type file");
         return true;
     }
-    std::vector<std::string> mimeTypes;
-    bool ret = MimeTypeMgr::GetMimeTypeByUri(uri, mimeTypes);
-    if (!ret) {
-        return false;
-    }
-    auto iter = std::find_first_of(
-        mimeTypes.begin(), mimeTypes.end(), supportMimeTypes.begin(), supportMimeTypes.end());
-    if (iter != mimeTypes.end()) {
-        APP_LOGI("uri is a supported mime-type file");
-        return true;
+
+    if (!paramMimeTypes.empty()) {
+        auto iter = std::find_first_of(
+            paramMimeTypes.begin(), paramMimeTypes.end(), supportMimeTypes.begin(), supportMimeTypes.end());
+        if (iter != paramMimeTypes.end()) {
+            APP_LOGI("uri is a supported mime-type file");
+            return true;
+        }
     }
     return false;
 }

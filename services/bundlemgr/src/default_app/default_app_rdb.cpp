@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "default_app_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -37,6 +38,7 @@ DefaultAppRdb::DefaultAppRdb()
     bmsRdbConfig.tableName = DEFAULT_APP_RDB_TABLE_NAME;
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
+    ConvertMimeTypeToUtd();
     LoadDefaultApplicationConfig();
     LoadBackUpDefaultApplicationConfig();
 }
@@ -153,6 +155,36 @@ bool DefaultAppRdb::DeleteDefaultApplicationInfo(int32_t userId, const std::stri
 
     LOG_D(BMS_TAG_DEFAULT, "DeleteDefaultApplicationInfo success.");
     return true;
+}
+
+void DefaultAppRdb::ConvertMimeTypeToUtd()
+{
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    std::set<int32_t> allUsers = dataMgr->GetAllUser();
+    allUsers.insert(INITIAL_USER_ID);
+    allUsers.insert(ServiceConstants::BACKUP_DEFAULT_APP_KEY);
+
+    for (int32_t userId : allUsers) {
+        std::map<std::string, Element> infos;
+        if (!GetDefaultApplicationInfos(userId, infos)) {
+            continue;
+        }
+        std::map<std::string, Element> newInfos;
+        for (auto& item : infos) {
+            std::string normalizedType = DefaultAppMgr::Normalize(item.first);
+            if (normalizedType.empty()) {
+                LOG_W(BMS_TAG_DEFAULT, "normalize %{public}s failed", item.first.c_str());
+                continue;
+            }
+            item.second.type = normalizedType;
+            newInfos.emplace(normalizedType, item.second);
+        }
+        (void)SetDefaultApplicationInfos(userId, newInfos);
+    }
 }
 
 bool DefaultAppRdb::ParseConfig(const std::string& relativePath, DefaultAppData& defaultAppData)

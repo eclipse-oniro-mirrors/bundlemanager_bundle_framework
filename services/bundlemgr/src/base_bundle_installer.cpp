@@ -96,7 +96,7 @@ const int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
-const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 100;
+const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
 const int32_t SINGLE_HSP_VERSION = 1;
 const int32_t USER_MODE = 0;
 const int32_t ROOT_MODE = 1;
@@ -4289,10 +4289,15 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
 bool BaseBundleInstaller::CheckReleaseTypeIsCompatible(
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
-    if (oldInfo.IsReleaseHsp() || newInfo.IsReleaseHsp()) {
-        return true;
+    if (oldInfo.GetReleaseType() != newInfo.GetReleaseType()) {
+        LOG_W(BMS_TAG_INSTALLER, "the releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
+            oldInfo.GetCurModuleName().c_str(), oldInfo.GetReleaseType().c_str(),
+            newInfo.GetCurModuleName().c_str(), newInfo.GetReleaseType().c_str());
+        if (!oldInfo.IsHsp() && !newInfo.IsHsp()) {
+            return false;
+        }
     }
-    return oldInfo.GetReleaseType() == newInfo.GetReleaseType();
+    return true;
 }
 
 ErrCode BaseBundleInstaller::CheckMaxCountForClone(const InnerBundleInfo &oldInfo,

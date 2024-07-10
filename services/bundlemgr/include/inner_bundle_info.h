@@ -1043,6 +1043,8 @@ public:
      * @param keyName Indicates object as key.
      * @param formInfos Indicates the formInfo object as value.
      */
+    bool IsHsp() const;
+
     void InsertFormInfos(const std::string &keyName, const std::vector<FormInfo> &formInfos)
     {
         formInfos_.emplace(keyName, formInfos);

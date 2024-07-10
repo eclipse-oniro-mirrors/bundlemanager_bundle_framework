@@ -63,6 +63,10 @@
 #include "want.h"
 #include "user_unlocked_event_subscriber.h"
 #include "json_util.h"
+#ifdef STORAGE_SERVICE_ENABLE
+#include "storage_manager_proxy.h"
+#include "iservice_registry.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -112,6 +116,16 @@ std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
 bool hasLoadPreInstallProFile_ = false;
 std::vector<std::string> bundleNameList_;
+
+#ifdef STORAGE_SERVICE_ENABLE
+#ifdef QUOTA_PARAM_SET_ENABLE
+const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
+    "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
+const int32_t THRESHOLD_VAL_LEN = 20;
+#endif // QUOTA_PARAM_SET_ENABLE
+const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
+#endif // STORAGE_SERVICE_ENABLE
+const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
 
 void MoveTempPath(const std::vector<std::string> &fromPaths,
     const std::string &bundleName, std::vector<std::string> &toPaths)
@@ -309,6 +323,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_PREINSTALL_DATA);
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1087,6 +1102,8 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckPreinstallData();
     ProcessCheckShaderCacheDir();
     ProcessCheckCloudShaderDir();
+    ProcessNewBackupDir();
+    RefreshQuotaForAllUid();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1383,6 +1400,35 @@ void BMSEventHandler::ProcessCheckCloudShaderDir()
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
 }
 
+void BMSEventHandler::ProcessNewBackupDir()
+{
+    bool checkBackup = false;
+    CheckOtaFlag(OTAFlag::CHECK_BACK_UP_DIR, checkBackup);
+    if (checkBackup) {
+        LOG_D(BMS_TAG_DEFAULT, "Not need to check back up dir due to has checked.");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "Need to check back up dir.");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        if (userId == Constants::DEFAULT_USERID) {
+            continue;
+        }
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "ProcessNewBackupDir GetAllBundleInfos failed");
+            continue;
+        }
+        UpdateAppDataMgr::ProcessNewBackupDir(bundleInfos, userId);
+    }
+    UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
+}
+
 void BMSEventHandler::InnerProcessCheckCloudShaderDir()
 {
     bool cloudExist = true;
@@ -1418,6 +1464,93 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
     result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
     LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
+}
+
+static void SendToStorageQuota(const std::string &bundleName, const int32_t uid,
+    const std::string &bundleDataDirPath, const int32_t limitSizeMb)
+{
+#ifdef STORAGE_SERVICE_ENABLE
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        LOG_W(BMS_TAG_DEFAULT, "SendToStorageQuota, systemAbilityManager error");
+        return;
+    }
+
+    auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+    if (!remote) {
+        LOG_W(BMS_TAG_DEFAULT, "SendToStorageQuota, CheckSystemAbility error");
+        return;
+    }
+
+    auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
+    if (!proxy) {
+        LOG_W(BMS_TAG_DEFAULT, "SendToStorageQuotactl, proxy get error");
+        return;
+    }
+
+    LOG_I(BMS_TAG_DEFAULT, "SendToStorageQuota bundleName=%{public}s, uid=%{public}d, bundleDataDirPath=%{public}s,"
+        "limitSizeMb=%{public}d", bundleName.c_str(), uid, bundleDataDirPath.c_str(), limitSizeMb);
+    int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
+    if (err != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
+    }
+#endif // STORAGE_SERVICE_ENABLE
+}
+
+void BMSEventHandler::PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
+    const std::string &bundleDataDirPath, const int32_t limitSize) const
+{
+    if (limitSize == 0) {
+        LOG_I(BMS_TAG_DEFAULT, "cancel bundleName:%{public}s uid:%{public}d quota", bundleName.c_str(), uid);
+        SendToStorageQuota(bundleName, uid, bundleDataDirPath, 0);
+        return;
+    }
+    int32_t atomicserviceDatasizeThreshold = limitSize;
+#ifdef STORAGE_SERVICE_ENABLE
+#ifdef QUOTA_PARAM_SET_ENABLE
+    char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
+        szAtomicDatasizeThresholdMb, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        LOG_I(BMS_TAG_DEFAULT, "GetParameter failed");
+    } else if (strcmp(szAtomicDatasizeThresholdMb, "") != 0) {
+        atomicserviceDatasizeThreshold = atoi(szAtomicDatasizeThresholdMb);
+        LOG_I(BMS_TAG_DEFAULT, "InstalldQuotaUtils init atomicserviceDataThreshold mb success");
+    }
+    if (atomicserviceDatasizeThreshold <= 0) {
+        LOG_W(BMS_TAG_DEFAULT, "no need to prepare quota");
+        return;
+    }
+#endif // QUOTA_PARAM_SET_ENABLE
+#endif // STORAGE_SERVICE_ENABLE
+    SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
+}
+
+void BMSEventHandler::RefreshQuotaForAllUid()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::map<std::string, InnerBundleInfo> infos = dataMgr->GetAllInnerBundleInfos();
+    for (auto &infoPair : infos) {
+        auto &info = infoPair.second;
+        std::map<std::string, InnerBundleUserInfo> userInfos = info.GetInnerBundleUserInfos();
+        for (auto &userInfoPair : userInfos) {
+            auto &userInfo = userInfoPair.second;
+            std::string bundleDataDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[0] +
+                ServiceConstants::PATH_SEPARATOR + std::to_string(userInfo.bundleUserInfo.userId) +
+                ServiceConstants::BASE + info.GetBundleName();
+            if (info.GetApplicationBundleType() != BundleType::ATOMIC_SERVICE) {
+                PrepareBundleDirQuota(info.GetBundleName(), info.GetUid(userInfo.bundleUserInfo.userId),
+                    bundleDataDir, 0);
+            } else {
+                PrepareBundleDirQuota(info.GetBundleName(), info.GetUid(userInfo.bundleUserInfo.userId),
+                    bundleDataDir, ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET);
+            }
+        }
+    }
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
