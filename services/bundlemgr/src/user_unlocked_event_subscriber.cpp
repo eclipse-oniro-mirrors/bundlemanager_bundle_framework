@@ -159,33 +159,6 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
     }
 }
 
-void UpdateAppDataMgr::ChmodBundleDataDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
-{
-    APP_LOGI("start chmod data dir");
-    std::vector<CreateDirParam> createDirParams;
-    for (const auto &bundleInfo : bundleInfos) {
-        CreateDirParam createDirParam;
-        createDirParam.bundleName = bundleInfo.name;
-        if (bundleInfo.singleton) {
-            createDirParam.userId = Constants::DEFAULT_USERID;
-        } else {
-            createDirParam.userId = userId;
-        }
-        createDirParam.uid = bundleInfo.uid;
-        createDirParam.gid = bundleInfo.gid;
-        createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
-        createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
-        createDirParam.debug = bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
-        createDirParam.createDirFlag = CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES;
-        ProcessExtensionDir(bundleInfo, createDirParam.extensionDirs);
-        createDirParams.emplace_back(createDirParam);
-    }
-    if (InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams) != ERR_OK) {
-        APP_LOGE("failed to chmod data dir");
-    }
-    APP_LOGI("end chmod data dir");
-}
-
 void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d start", userId);
@@ -208,7 +181,6 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ProcessUpdateAppLogDir(bundleInfos, userId);
     ProcessFileManagerDir(bundleInfos, userId);
     ProcessNewBackupDir(bundleInfos, userId);
-    ChmodBundleDataDir(bundleInfos, userId);
     APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d end", userId);
 }
 
