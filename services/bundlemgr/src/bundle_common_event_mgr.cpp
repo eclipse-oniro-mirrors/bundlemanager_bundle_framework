@@ -208,8 +208,6 @@ void BundleCommonEventMgr::NotifySetDiposedRule(
     EventFwk::CommonEventData commonData { want };
     commonData.SetData(data);
     EventFwk::CommonEventPublishInfo publishInfo;
-    std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
-    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
@@ -222,8 +220,6 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     want.SetParam(APP_INDEX, appIndex);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
-    std::vector<std::string> permissionVec { ServiceConstants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
-    publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
