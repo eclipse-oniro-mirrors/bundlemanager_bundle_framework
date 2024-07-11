@@ -41,6 +41,7 @@ const std::string TEST_DIFF_LIB_STRING = "libs/arm64/test.diff";
 const std::string TEST_CPU_ABI = "arm64";
 const std::string TEST_CPU_ARM = "arm";
 const std::string TEST_PATH = "/test/test/";
+const std::string TEST_PATH_ONE = "/data/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_SO_X = "libs/arm64/test.so.9";
 const std::string TEST_LIB_SO_XX = "libs/arm64/test.so.11";
@@ -756,7 +757,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4300, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4400, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::ChangeDirOwnerRecursively(TEST_PATH, 0, 0);
+    auto ret = InstalldOperator::ChangeDirOwnerRecursively(TEST_PATH_ONE, 0, 0);
     EXPECT_TRUE(ret);
     ret = InstalldOperator::ChangeDirOwnerRecursively("/system/etc/init/bootpic.zip", 0, 0);
     EXPECT_FALSE(ret);
