@@ -2328,7 +2328,7 @@ HWTEST_F(BmsBundleDataMgrTest, UpgradeAtomicService_0100, Function | MediumTest 
     DelayedSingleton<BundleMgrService>::GetInstance()->InitFreeInstall();
     auto ret = DelayedSingleton<BundleMgrService>::GetInstance()->connectAbilityMgr_;
     bundleMgrHostImpl_->UpgradeAtomicService(want, USERID);
-    ASSERT_NE(ret, nullptr);
+    ASSERT_FALSE(ret.empty());
 }
 
 /**

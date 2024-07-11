@@ -74,8 +74,8 @@ BundleMgrService::~BundleMgrService()
         dataMgr_.reset();
     }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    if (connectAbilityMgr_ != nullptr) {
-        connectAbilityMgr_.reset();
+    if (!connectAbilityMgr_.empty()) {
+        connectAbilityMgr_.clear();
     }
 #endif
     if (hidumpHelper_) {
@@ -237,10 +237,6 @@ void BundleMgrService::InitFreeInstall()
         agingMgr_ = std::make_shared<BundleAgingMgr>();
         agingMgr_->InitAgingtTimer();
     }
-    if (connectAbilityMgr_ == nullptr) {
-        APP_LOGI("Create BundleConnectAbility");
-        connectAbilityMgr_ = std::make_shared<BundleConnectAbilityMgr>();
-    }
     if (bundleDistributedManager_ == nullptr) {
         APP_LOGI("Create bundleDistributedManager");
         bundleDistributedManager_ = std::make_shared<BundleDistributedManager>();
@@ -352,9 +348,18 @@ const std::shared_ptr<BundleAgingMgr> BundleMgrService::GetAgingMgr() const
     return agingMgr_;
 }
 
-const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbility() const
+const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbility(int32_t userId)
 {
-    return connectAbilityMgr_;
+    int32_t currentUserId = userId;
+    if (currentUserId == Constants::UNSPECIFIED_USERID) {
+        currentUserId = AccountHelper::GetCurrentActiveUserId();
+    }
+    if (connectAbilityMgr_.find(userId) == connectAbilityMgr_.end() ||
+        connectAbilityMgr_[userId] == nullptr) {
+        auto ptr = std::make_shared<BundleConnectAbilityMgr>();
+        connectAbilityMgr_[userId] = ptr;
+    }
+    return connectAbilityMgr_[userId];
 }
 
 const std::shared_ptr<BundleDistributedManager> BundleMgrService::GetBundleDistributedManager() const
@@ -373,7 +378,7 @@ void BundleMgrService::SelfClean()
     }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     agingMgr_.reset();
-    connectAbilityMgr_.reset();
+    connectAbilityMgr_.clear();
     bundleDistributedManager_.reset();
 #endif
 }
@@ -471,6 +476,9 @@ void BundleMgrService::CheckAllUser()
         if (!isExists) {
             APP_LOGI("Query user(%{public}d) success but not complete and remove it", userId);
             userMgrHost_->RemoveUser(userId);
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+            connectAbilityMgr_.erase(userId);
+#endif
         }
     }
     APP_LOGI("Check all user end");
