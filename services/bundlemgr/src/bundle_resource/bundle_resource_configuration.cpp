@@ -26,23 +26,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string RESOURCE_LIGHT = "light";
-const std::string RESOURCE_DARK = "dark";
-static const std::unordered_map<std::string, Global::Resource::ColorMode> BUNDLE_COLOR_MODE = {
-    {RESOURCE_LIGHT, Global::Resource::ColorMode::LIGHT},
-    {RESOURCE_DARK, Global::Resource::ColorMode::DARK},
-};
-
-Global::Resource::ColorMode ConvertColorMode(const std::string &colorMode)
-{
-    if (BUNDLE_COLOR_MODE.find(colorMode) != BUNDLE_COLOR_MODE.end()) {
-        return BUNDLE_COLOR_MODE.at(colorMode);
-    }
-    return Global::Resource::ColorMode::COLOR_MODE_NOT_SET;
-}
-}
-
 bool BundleResourceConfiguration::InitResourceGlobalConfig(
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
 {
@@ -68,8 +51,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
     OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale(), configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
-    std::string colorMode = BundleSystemState::GetInstance().GetSystemColorMode();
-    resConfig->SetColorMode(ConvertColorMode(colorMode));
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);
@@ -105,8 +86,6 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(const std::string &ha
     OHOS::Global::I18n::LocaleInfo locale(Global::I18n::LocaleConfig::GetSystemLocale(), configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
-    std::string colorMode = BundleSystemState::GetInstance().GetSystemColorMode();
-    resConfig->SetColorMode(ConvertColorMode(colorMode));
     resConfig->SetScreenDensityDpi(Global::Resource::ScreenDensity::SCREEN_DENSITY_XXXLDPI);
 
     Global::Resource::RState ret = resourceManager->UpdateResConfig(*resConfig);

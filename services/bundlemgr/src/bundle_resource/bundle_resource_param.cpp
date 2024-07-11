@@ -23,7 +23,6 @@ namespace AppExecFwk {
 namespace {
 const int32_t MAX_LEN = 128;
 const std::string SYSTEM_LANGUAGE = "persist.global.locale";
-const std::string SYSTEM_COLOR_MODE = "persist.ace.darkmode";
 const std::string DEFAULT_LANGUAGE = "zh-Hans";
 const std::string DEFAULT_COLOR_MODE_LIGHT = "light";
 }
@@ -36,8 +35,8 @@ std::string BundleResourceParam::GetSystemLanguage()
 
 std::string BundleResourceParam::GetSystemColorMode()
 {
-    std::string mode = GetSystemParam(SYSTEM_COLOR_MODE);
-    return mode.empty() ? DEFAULT_COLOR_MODE_LIGHT : mode;
+    // no need to process colorMode
+    return DEFAULT_COLOR_MODE_LIGHT;
 }
 
 std::string BundleResourceParam::GetSystemParam(const std::string &key)

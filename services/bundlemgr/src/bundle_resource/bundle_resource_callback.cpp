@@ -60,7 +60,6 @@ bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
         APP_LOGD("colorMode: %{public}s no change", colorMode.c_str());
         return true;
     }
-    BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
     APP_LOGI("end, colorMode: %{public}s", colorMode.c_str());
     return true;
 }
