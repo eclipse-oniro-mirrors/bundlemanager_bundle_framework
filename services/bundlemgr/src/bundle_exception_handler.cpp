@@ -89,7 +89,7 @@ void BundleExceptionHandler::DeleteBundleInfoFromStorage(const InnerBundleInfo &
 
 bool BundleExceptionHandler::IsBundleHapPathExist(const InnerBundleInfo &info)
 {
-    if (info.GetIsPreInstallApp() || (info.GetApplicationBundleType() != BundleType::APP)) {
+    if (info.IsPreInstallApp() || (info.GetApplicationBundleType() != BundleType::APP)) {
         APP_LOGD("bundleName:%{public}s no need to check", info.GetBundleName().c_str());
         return true;
     }

@@ -86,14 +86,11 @@ const std::string MODULE_CPU_ABI = "cpuAbi";
 const std::string NEW_BUNDLE_NAME = "newBundleName";
 const std::string MODULE_SRC_PATH = "srcPath";
 const std::string MODULE_HASH_VALUE = "hashValue";
-const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
 const std::string PARAM_SEPARATOR = "?";
 const std::string IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string INSTALL_MARK = "installMark";
-const char WILDCARD = '*';
-const std::string TYPE_WILDCARD = "*/*";
 const std::string INNER_BUNDLE_USER_INFOS = "innerBundleUserInfos";
 const std::string MODULE_PROCESS = "process";
 const std::string MODULE_SRC_ENTRANCE = "srcEntrance";
@@ -1401,7 +1398,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         // if the old data does not have bundleUserInfos,
         // the default user information needs to be constructed.
         BuildDefaultUserInfo();
-    }    
+    }
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         BUNDLE_IS_NEW_VERSION,
@@ -3368,7 +3365,7 @@ const std::string InnerBundleInfo::GetCurModuleName() const
 
 bool InnerBundleInfo::IsBundleRemovable() const
 {
-    if (GetIsPreInstallApp()) {
+    if (IsPreInstallApp()) {
         APP_LOGE("PreInstallApp should not be cleaned");
         return false;
     }

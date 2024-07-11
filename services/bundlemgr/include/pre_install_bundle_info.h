@@ -80,18 +80,6 @@ public:
         return bundlePaths_;
     }
     /**
-     * @brief Calculate Hap Total Size.
-     */
-    void CalculateHapTotalSize();
-    /**
-     * @brief Get HapTotalSize.
-     * @return Returns the HapTotalSize.
-     */
-    int64_t GetHapTotalSize() const
-    {
-        return hapTotalSize_;
-    }
-    /**
      * @brief Add bundle path.
      * @param bundlePath bundle path.
      */
@@ -130,6 +118,18 @@ public:
     {
         return std::find(bundlePaths_.begin(), bundlePaths_.end(), bundlePath)
             != bundlePaths_.end();
+    }
+    /**
+     * @brief Calculate Hap Total Size.
+     */
+    void CalculateHapTotalSize();
+    /**
+     * @brief Get HapTotalSize.
+     * @return Returns the HapTotalSize.
+     */
+    int64_t GetHapTotalSize() const
+    {
+        return hapTotalSize_;
     }
     /**
      * @brief Get AppType.
@@ -187,7 +187,6 @@ public:
     {
         return bundleName_ == info.GetBundleName();
     }
-
     bool operator < (const PreInstallBundleInfo &preInstallBundleInfo) const
     {
         if (bundlePaths_.size() == preInstallBundleInfo.GetBundlePaths().size()) {
@@ -195,6 +194,54 @@ public:
         }
 
         return bundlePaths_.size() > preInstallBundleInfo.GetBundlePaths().size();
+    }
+    /**
+     * @brief Get module name.
+     * @return Return module name.
+     */
+    std::string GetModuleName() const
+    {
+        return moduleName_;
+    }
+    /**
+     * @brief Set module name.
+     * @param moduleName module name.
+     */
+    void SetModuleName(const std::string &moduleName)
+    {
+        moduleName_ = moduleName;
+    }
+    /**
+     * @brief Get label id.
+     * @return Return label id.
+     */
+    int32_t GetLabelId() const
+    {
+        return labelId_;
+    }
+    /**
+     * @brief Set label id.
+     * @param labelId label id.
+     */
+    void SetLabelId(const int32_t labelId)
+    {
+        labelId_ = labelId;
+    }
+    /**
+     * @brief Get icon id.
+     * @return Return icon id.
+     */
+    int32_t GetIconId() const
+    {
+        return iconId_;
+    }
+    /**
+     * @brief Set icon id.
+     * @param iconId icon id.
+     */
+    void SetIconId(const int32_t iconId)
+    {
+        iconId_ = iconId;
     }
 
 private:

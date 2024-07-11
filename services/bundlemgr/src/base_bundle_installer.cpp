@@ -5412,7 +5412,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     }
 
     for (const auto &info : newInfos) {
-        if (info.second.GetOnlyCreateBundleUser()) {
+        if (info.second.IsOnlyCreateBundleUser()) {
             LOG_D(BMS_TAG_INSTALLER, "Some hap no update module.");
             return false;
         }

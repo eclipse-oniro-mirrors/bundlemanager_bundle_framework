@@ -501,7 +501,7 @@ public:
     ErrCode SetApplicationEnabled(bool enabled, int32_t userId = Constants::UNSPECIFIED_USERID);
     ErrCode SetCloneApplicationEnabled(bool enabled, int32_t appIndex, int32_t userId);
     ErrCode SetCloneAbilityEnabled(const std::string &moduleName, const std::string &abilityName,
-        bool isEnabled, int32_t userId, int32_t appIndex);    
+        bool isEnabled, int32_t userId, int32_t appIndex);
     /**
      * @brief Get application code path.
      * @return Return the string object.
@@ -1037,7 +1037,6 @@ public:
 
     bool HasEntry() const;
 
-    bool IsReleaseHsp() const;
     /**
      * @brief Insert formInfo.
      * @param keyName Indicates object as key.
@@ -2171,7 +2170,7 @@ private:
         int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GetBundleWithExtension(
         int32_t flags, BundleInfo &bundleInfo, int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) const;
-    void BuildDefaultUserInfo();    
+    void BuildDefaultUserInfo();
     void RemoveDuplicateName(std::vector<std::string> &name) const;
     void GetBundleWithReqPermissionsV9(
         int32_t flags, int32_t userId, BundleInfo &bundleInfo, int32_t appIndex = 0) const;
@@ -2189,7 +2188,7 @@ private:
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
     int uid_ = Constants::INVALID_UID;
-    int gid_ = ServiceConstants::INVALID_GID;    
+    int gid_ = ServiceConstants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
