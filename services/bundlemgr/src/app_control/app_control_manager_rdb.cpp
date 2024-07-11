@@ -451,7 +451,7 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
 {
     ErrCode code = DeleteDisposedRule(callingName, appId, appIndex, userId);
     if (code != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus failed.");
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_RDB), "DeleteDisposedStatus failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     int64_t timeStamp = BundleUtil::GetCurrentTime();
@@ -466,8 +466,8 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
     valuesBucket.PutString(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
-            callingName.c_str(), appId.c_str());
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_RDB), "callingName:%{public}s user:%{public}d index:%{public}d",
+            callingName.c_str(), userId, appIndex);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
