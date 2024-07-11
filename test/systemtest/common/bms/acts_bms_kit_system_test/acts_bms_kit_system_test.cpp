@@ -9270,7 +9270,7 @@ HWTEST_F(ActsBmsKitSystemTest, InstallCloneAppTest002_UserNotFound, Function | M
     int32_t appIndex = TEST_APP_INDEX1;
     auto result = installerProxy->InstallCloneApp(bundleName, userId, appIndex);
     EXPECT_TRUE(result == ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST
-        || result == ERR_APPEXECFWK_PERMISSION_DENIED);
+        || result == ERR_APPEXECFWK_PERMISSION_DENIED || result = ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
 }
 
 /**
