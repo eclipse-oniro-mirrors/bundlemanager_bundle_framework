@@ -36,12 +36,14 @@
 #include "installd_client.h"
 #include "mock_status_receiver.h"
 #include "remote_ability_info.h"
+#include "mock_app_provision_info.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
+using namespace OHOS::NativeRdb;
 
 namespace OHOS {
 namespace {
@@ -471,6 +473,28 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0010, Functio
 }
 
 /**
+ * @tc.number: BmsGetAppProvisionInfoTest_0011
+ * Function: GetAppProvisionInfo
+ * @tc.name: test GetAppProvisionInfo
+ * @tc.desc: 1. system running normally
+ *           2. AddAppProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0011, Function | SmallTest | Level0)
+{
+    auto appProvisionInfoManager = std::make_shared<AppProvisionInfoManager>();
+    ASSERT_NE(appProvisionInfoManager, nullptr);
+    AppProvisionInfo newProvisionInfo;
+    BmsRdbConfig bmsRdbConfig;
+    appProvisionInfoManager->AppProvisionInfoManagerDb_ = std::make_shared<AppProvisionInfoManagerRdb>();
+    appProvisionInfoManager->AppProvisionInfoManagerDb_->rdbDataManager_ =
+        std::make_shared<RdbDataManager>(bmsRdbConfig);
+    appProvisionInfoManager->AppProvisionInfoManagerDb_->rdbDataManager_->bmsRdbConfig_.tableName = "test";
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+        newProvisionInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: AddAppProvisionInfo_0001
  * @tc.name: test the start function of AddAppProvisionInfo
  * @tc.desc: 1. BaseBundleInstaller
@@ -598,6 +622,22 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SetSpecifiedDistributionType_0002, Funct
 }
 
 /**
+ * @tc.number: SetSpecifiedDistributionType_0003
+ * @tc.name: test the start function of SetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetSpecifiedDistributionType_0003, Function | SmallTest | Level0)
+{
+    std::string specifiedDistributionType = "distributionType";
+    auto appProvisionInfoManagerRdb = std::make_shared<AppProvisionInfoManagerRdb>();
+    ASSERT_NE(appProvisionInfoManagerRdb, nullptr);
+    BmsRdbConfig bmsRdbConfig;
+    appProvisionInfoManagerRdb->rdbDataManager_->bmsRdbConfig_.tableName = "test";
+    appProvisionInfoManagerRdb->rdbDataManager_->rdbStore_ = std::make_shared<MockAppProvisionInfo>();
+    bool ret = appProvisionInfoManagerRdb->SetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: GetSpecifiedDistributionType_0001
  * @tc.name: test the start function of GetSpecifiedDistributionType
 */
@@ -619,6 +659,26 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, GetSpecifiedDistributionType_0002, Funct
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
         specifiedDistributionType);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0003
+ * @tc.name: test the start function of GetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetSpecifiedDistributionType_0003, Function | SmallTest | Level0)
+{
+    auto appProvisionInfoManagerRdb = std::make_shared<AppExecFwk::AppProvisionInfoManagerRdb>();
+    ASSERT_NE(appProvisionInfoManagerRdb, nullptr);
+    std::string specifiedDistributionType = "test";
+    BmsRdbConfig bmsRdbConfig;
+    appProvisionInfoManagerRdb->rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    bool ret = appProvisionInfoManagerRdb->GetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+    EXPECT_FALSE(ret);
+
+    appProvisionInfoManagerRdb->rdbDataManager_->bmsRdbConfig_.tableName = "test";
+    appProvisionInfoManagerRdb->rdbDataManager_->rdbStore_ = std::make_shared<MockAppProvisionInfo>();
+    bool result = appProvisionInfoManagerRdb->GetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+    EXPECT_FALSE(result);
 }
 
 /**
@@ -657,6 +717,21 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SetAdditionalInfo_0002, Function | Small
 }
 
 /**
+ * @tc.number: SetAdditionalInfo_0003
+ * @tc.name: test the start function of SetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetAdditionalInfo_0003, Function | SmallTest | Level0)
+{
+    std::string additionalInfo = "additional";
+    auto appProvisionInfoManagerRdb = std::make_shared<AppExecFwk::AppProvisionInfoManagerRdb>();
+    ASSERT_NE(appProvisionInfoManagerRdb, nullptr);
+    appProvisionInfoManagerRdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_provision_info";
+    appProvisionInfoManagerRdb->rdbDataManager_->rdbStore_ = std::make_shared<MockAppProvisionInfo>();
+    bool ret = appProvisionInfoManagerRdb->SetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: GetAdditionalInfo_0001
  * @tc.name: test the start function of GetAdditionalInfo
 */
@@ -678,6 +753,26 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0002, Function | Small
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
         additionalInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0003
+ * @tc.name: test the start function of GetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0003, Function | SmallTest | Level0)
+{
+    auto appProvisionInfoManagerRdb = std::make_shared<AppExecFwk::AppProvisionInfoManagerRdb>();
+    ASSERT_NE(appProvisionInfoManagerRdb, nullptr);
+    std::string additionalInfo = "test";
+    BmsRdbConfig bmsRdbConfig;
+    appProvisionInfoManagerRdb->rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
+    bool ret = appProvisionInfoManagerRdb->GetAdditionalInfo(additionalInfo, additionalInfo);
+    EXPECT_FALSE(ret);
+
+    appProvisionInfoManagerRdb->rdbDataManager_->bmsRdbConfig_.tableName = "app_provision_info";
+    appProvisionInfoManagerRdb->rdbDataManager_->rdbStore_ = std::make_shared<MockAppProvisionInfo>();
+    bool result = appProvisionInfoManagerRdb->GetAdditionalInfo(additionalInfo, additionalInfo);
+    EXPECT_FALSE(result);
 }
 
 /**
