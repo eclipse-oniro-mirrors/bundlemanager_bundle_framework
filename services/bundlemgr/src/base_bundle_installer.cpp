@@ -4055,14 +4055,16 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
 int32_t BaseBundleInstaller::GetConfirmUserId(
     const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
-    if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
-        return userId;
-    }
-
     bool isSingleton = newInfos.begin()->second.IsSingleton();
     LOG_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install.",
         static_cast<int32_t>(isSingleton));
-    return isSingleton ? Constants::DEFAULT_USERID : AccountHelper::GetCurrentActiveUserId();
+    if (isSingleton) {
+        return Constants::DEFAULT_USERID;
+    }
+    if (userId != Constants::UNSPECIFIED_USERID || newInfos.size() <= 0) {
+        return userId;
+    }
+    return AccountHelper::GetCurrentActiveUserId();
 }
 
 ErrCode BaseBundleInstaller::CheckUserId(const int32_t &userId) const
