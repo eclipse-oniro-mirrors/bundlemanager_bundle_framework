@@ -74,8 +74,11 @@ BundleMgrService::~BundleMgrService()
         dataMgr_.reset();
     }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-    if (!connectAbilityMgr_.empty()) {
-        connectAbilityMgr_.clear();
+    {
+        std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
+        if (!connectAbilityMgr_.empty()) {
+            connectAbilityMgr_.clear();
+        }
     }
 #endif
     if (hidumpHelper_) {
@@ -354,6 +357,7 @@ const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbili
     if (currentUserId == Constants::UNSPECIFIED_USERID) {
         currentUserId = AccountHelper::GetCurrentActiveUserId();
     }
+    std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
     if (connectAbilityMgr_.find(userId) == connectAbilityMgr_.end() ||
         connectAbilityMgr_[userId] == nullptr) {
         auto ptr = std::make_shared<BundleConnectAbilityMgr>();
@@ -378,7 +382,10 @@ void BundleMgrService::SelfClean()
     }
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     agingMgr_.reset();
-    connectAbilityMgr_.clear();
+    {
+        std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
+        connectAbilityMgr_.clear();
+    }
     bundleDistributedManager_.reset();
 #endif
 }
@@ -477,7 +484,10 @@ void BundleMgrService::CheckAllUser()
             APP_LOGI("Query user(%{public}d) success but not complete and remove it", userId);
             userMgrHost_->RemoveUser(userId);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-            connectAbilityMgr_.erase(userId);
+            {
+                std::lock_guard<std::mutex> connectLock(bundleConnectMutex_);
+                connectAbilityMgr_.erase(userId);
+            }
 #endif
         }
     }

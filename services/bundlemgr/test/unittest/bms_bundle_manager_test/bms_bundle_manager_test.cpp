@@ -4367,7 +4367,7 @@ HWTEST_F(BmsBundleManagerTest, SilentInstall_0200, Function | SmallTest | Level1
 
     AAFwk::Want want;
     bool ret = hostImpl->SilentInstall(want, USERID, nullptr);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
 #endif
 

@@ -189,6 +189,7 @@ private:
     std::shared_ptr<HidumpHelper> hidumpHelper_;
     std::shared_ptr<ChargeIdleListener> chargeIdleListener_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    mutable std::mutex bundleConnectMutex_;
     std::shared_ptr<BundleAgingMgr> agingMgr_;
     // key is userId
     std::map<int32_t, std::shared_ptr<BundleConnectAbilityMgr>> connectAbilityMgr_;
