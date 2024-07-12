@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024;
+constexpr size_t MAX_PARCEL_CAPACITY = 200 * 1024 * 1024;
 bool GetData(void *&buffer, size_t size, const void *data)
 {
     if (data == nullptr) {
