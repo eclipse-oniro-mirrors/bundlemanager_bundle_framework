@@ -2674,7 +2674,8 @@ const OHOS::sptr<IDistributedBms> BundleMgrHostImpl::GetDistributedBundleMgrServ
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrHostImpl::GetConnectAbilityMgrFromService()
 {
-    return DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility(currentUserId);
 }
 #endif
 

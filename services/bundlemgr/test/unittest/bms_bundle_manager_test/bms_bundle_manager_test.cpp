@@ -276,13 +276,13 @@ void BmsBundleManagerTest::ResetDataMgr()
 
 void BmsBundleManagerTest::ClearConnectAbilityMgr()
 {
-    bundleMgrService_->connectAbilityMgr_ = nullptr;
+    bundleMgrService_->connectAbilityMgr_.clear();
 }
 
 void BmsBundleManagerTest::ResetConnectAbilityMgr()
 {
-    bundleMgrService_->connectAbilityMgr_ = std::make_shared<BundleConnectAbilityMgr>();
-    EXPECT_NE(bundleMgrService_->connectAbilityMgr_, nullptr);
+    auto ptr = bundleMgrService_->GetConnectAbility();
+    EXPECT_FALSE(bundleMgrService_->connectAbilityMgr_.empty());
 }
 
 void BmsBundleManagerTest::StopInstalldService() const
@@ -4367,7 +4367,7 @@ HWTEST_F(BmsBundleManagerTest, SilentInstall_0200, Function | SmallTest | Level1
 
     AAFwk::Want want;
     bool ret = hostImpl->SilentInstall(want, USERID, nullptr);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
 }
 #endif
 

@@ -84,7 +84,7 @@ public:
      * @brief Get a util object for FA  Distribution center
      * @return Returns the pointer of BundleConnectAbility object.
      */
-    const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbility() const;
+    const std::shared_ptr<BundleConnectAbilityMgr> GetConnectAbility(int32_t userId = Constants::UNSPECIFIED_USERID);
 
     const std::shared_ptr<BundleDistributedManager> GetBundleDistributedManager() const;
 #endif
@@ -189,8 +189,10 @@ private:
     std::shared_ptr<HidumpHelper> hidumpHelper_;
     std::shared_ptr<ChargeIdleListener> chargeIdleListener_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    mutable std::mutex bundleConnectMutex_;
     std::shared_ptr<BundleAgingMgr> agingMgr_;
-    std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;
+    // key is userId
+    std::map<int32_t, std::shared_ptr<BundleConnectAbilityMgr>> connectAbilityMgr_;
     std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
 #endif
     sptr<BundleMgrHostImpl> host_;
