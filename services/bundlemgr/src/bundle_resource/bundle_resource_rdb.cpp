@@ -39,7 +39,7 @@ BundleResourceRdb::BundleResourceRdb()
         "CREATE TABLE IF NOT EXISTS "
         + std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME)
         + "(NAME TEXT NOT NULL, UPDATE_TIME INTEGER, LABEL TEXT, ICON TEXT, "
-        + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME, SYSTEM_STATE));");
+        + "SYSTEM_STATE TEXT NOT NULL, PRIMARY KEY (NAME));");
     bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " +
         std::string(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME) +
         " ADD FOREGROUND BLOB;"));
@@ -573,6 +573,16 @@ bool BundleResourceRdb::GetCurrentSystemState(std::string &systemState)
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
     APP_LOGI("current resource rdb systemState:%{public}s", systemState.c_str());
     return true;
+}
+
+bool BundleResourceRdb::DeleteNotExistResourceInfo()
+{
+    // need delete not current systemState resource
+    std::string systemState = BundleSystemState::GetInstance().ToString();
+    APP_LOGI("current systemState:%{public}s", systemState.c_str());
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    absRdbPredicates.NotEqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
+    return rdbDataManager_->DeleteData(absRdbPredicates);
 }
 
 void BundleResourceRdb::ParseKey(const std::string &key,

@@ -60,6 +60,8 @@ public:
 
     static bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex,
         const int32_t userId = Constants::UNSPECIFIED_USERID);
+
+    static void DeleteNotExistResourceInfo();
 };
 } // AppExecFwk
 } // OHOS

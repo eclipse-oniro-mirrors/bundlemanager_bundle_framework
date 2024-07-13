@@ -738,5 +738,11 @@ bool BundleResourceManager::UpdateCloneBundleResourceInfo(
     APP_LOGD("end, add clone bundle resource succeed");
     return true;
 }
+
+bool BundleResourceManager::DeleteNotExistResourceInfo()
+{
+    APP_LOGD("start delete not exist resource");
+    return bundleResourceRdb_->DeleteNotExistResourceInfo();
+}
 } // AppExecFwk
 } // OHOS
