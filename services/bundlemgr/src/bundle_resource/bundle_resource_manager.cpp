@@ -50,10 +50,6 @@ const std::string THEME_ICONS_B_FLAG = "/b/app/flag";
 BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
-    std::string systemState;
-    if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
-        APP_LOGI("current resource rdb system state:%{public}s when rdb create", systemState.c_str());
-    }
 }
 
 BundleResourceManager::~BundleResourceManager()
@@ -299,10 +295,16 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     }
     // process labelNeedParse_
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
-        for (auto &resourceInfo : iter->second) {
+        size_t size = iter->second.size();
+        for (size_t index = 0; index < size; ++index) {
             // theme changed no need parse label
-            resourceInfo.labelNeedParse_ = false;
-            resourceInfo.label_ = Constants::EMPTY_STRING;
+            iter->second[index].labelNeedParse_ = false;
+            iter->second[index].label_ = Constants::EMPTY_STRING;
+            if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(iter->first) ==
+                ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+                // only need parse once
+                iter->second[index].iconNeedParse_ = false;
+            }
         }
     }
     needDeleteAllResource = false;
