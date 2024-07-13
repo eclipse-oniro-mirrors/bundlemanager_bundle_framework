@@ -92,9 +92,9 @@ public:
     bool DeleteNotExistResourceInfo();
 
 private:
-    bool AddResourceInfo(ResourceInfo &resourceInfo);
+    bool AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo);
 
-    bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
+    bool AddResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos);
 
     bool AddResourceInfosByMap(std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap,
         const uint32_t tempTaskNumber, const uint32_t type, const int32_t userId, const int32_t oldUserId);
