@@ -253,7 +253,7 @@ void BundleResourceHelper::DeleteNotExistResourceInfo()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGI("start delete not exist resource");
-        auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
         return;
