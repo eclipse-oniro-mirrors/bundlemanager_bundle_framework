@@ -338,7 +338,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
 
-    if (newInfo.GetIsPreInstallApp()) {
+    if (newInfo.IsPreInstallApp()) {
         // preInstallApp does not need to copy hsp
         newInfo.SetModuleHapPath(bundlePath);
     } else {
@@ -418,7 +418,7 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
 #ifdef USE_PRE_BUNDLE_PROFILE
     preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
-    preInstallBundleInfo.SetRemovable(newBundleInfo_.GetRemovable());
+    preInstallBundleInfo.SetRemovable(newBundleInfo_.IsRemovable());
 #endif
     auto applicationInfo = newBundleInfo_.GetBaseApplicationInfo();
     newBundleInfo_.AdaptMainLauncherResourceInfo(applicationInfo);
@@ -669,11 +669,11 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         CHECK_RESULT(result, "extract module files failed %{public}d");
         // verify hap or hsp code signature for compressed so files
         result = VerifyCodeSignatureForNativeFiles(
-            bundlePath, cpuAbi, tempSoPath, signatureFileDir_, newInfo.GetIsPreInstallApp());
+            bundlePath, cpuAbi, tempSoPath, signatureFileDir_, newInfo.IsPreInstallApp());
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         cpuAbi_ = cpuAbi;
         tempSoPath_ = tempSoPath;
-        isPreInstalledBundle_ = newInfo.GetIsPreInstallApp();
+        isPreInstalledBundle_ = newInfo.IsPreInstallApp();
     } else {
         std::vector<std::string> fileNames;
         auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);

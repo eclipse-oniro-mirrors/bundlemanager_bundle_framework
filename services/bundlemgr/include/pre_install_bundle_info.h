@@ -40,16 +40,44 @@ public:
      */
     std::string ToString() const;
     /**
-     * @brief Calculate Hap Total Size.
+     * @brief Get bundle name.
+     * @return Return bundle name
      */
-    void CalculateHapTotalSize();
-    /**
-     * @brief Get HapTotalSize.
-     * @return Returns the HapTotalSize.
-     */
-    int64_t GetHapTotalSize() const
+    std::string GetBundleName() const
     {
-        return hapTotalSize_;
+        return bundleName_;
+    }
+    /**
+     * @brief Set bundle name.
+     * @param bundleName bundle name.
+     */
+    void SetBundleName(const std::string &bundleName)
+    {
+        bundleName_ = bundleName;
+    }
+    /**
+     * @brief Get versionCode.
+     * @return Return versionCode.
+     */
+    uint32_t GetVersionCode() const
+    {
+        return versionCode_;
+    }
+    /**
+     * @brief Set versionCode.
+     * @param versionCode versionCode.
+     */
+    void SetVersionCode(const uint32_t &versionCode)
+    {
+        versionCode_ = versionCode;
+    }
+    /**
+     * @brief Get bundle path.
+     * @return Return bundle path
+     */
+    std::vector<std::string> GetBundlePaths() const
+    {
+        return bundlePaths_;
     }
     /**
      * @brief Add bundle path.
@@ -92,6 +120,66 @@ public:
             != bundlePaths_.end();
     }
     /**
+     * @brief Calculate Hap Total Size.
+     */
+    void CalculateHapTotalSize();
+    /**
+     * @brief Get HapTotalSize.
+     * @return Returns the HapTotalSize.
+     */
+    int64_t GetHapTotalSize() const
+    {
+        return hapTotalSize_;
+    }
+    /**
+     * @brief Get AppType.
+     * @return Returns the AppType.
+     */
+    Constants::AppType GetAppType() const
+    {
+        return appType_;
+    }
+    /**
+     * @brief Set AppType.
+     * @param appType Indicates the AppType to be set.
+     */
+    void SetAppType(Constants::AppType appType)
+    {
+        appType_ = appType;
+    }
+    /**
+     * @brief Is removable or not.
+     * @return Returns the removable.
+     */
+    bool IsRemovable() const
+    {
+        return removable_;
+    }
+    /**
+     * @brief Set removable.
+     * @param appType Indicates the removable to be set.
+     */
+    void SetRemovable(bool removable)
+    {
+        removable_ = removable;
+    }
+    /**
+     * @brief Is uninstalled or not.
+     * @return Returns the isUninstalled.
+     */
+    bool IsUninstalled() const
+    {
+        return isUninstalled_;
+    }
+    /**
+     * @brief Set isUninstalled.
+     * @param appType Indicates the removable to be set.
+     */
+    void SetIsUninstalled(bool isUninstalled)
+    {
+        isUninstalled_ = isUninstalled;
+    }
+    /**
      * @brief operator.
      * @param PreInstallBundleInfo Indicates the PreInstallBundleInfo.
      */
@@ -99,7 +187,6 @@ public:
     {
         return bundleName_ == info.GetBundleName();
     }
-
     bool operator < (const PreInstallBundleInfo &preInstallBundleInfo) const
     {
         if (bundlePaths_.size() == preInstallBundleInfo.GetBundlePaths().size()) {
@@ -108,16 +195,55 @@ public:
 
         return bundlePaths_.size() > preInstallBundleInfo.GetBundlePaths().size();
     }
+    /**
+     * @brief Get module name.
+     * @return Return module name.
+     */
+    std::string GetModuleName() const
+    {
+        return moduleName_;
+    }
+    /**
+     * @brief Set module name.
+     * @param moduleName module name.
+     */
+    void SetModuleName(const std::string &moduleName)
+    {
+        moduleName_ = moduleName;
+    }
+    /**
+     * @brief Get label id.
+     * @return Return label id.
+     */
+    int32_t GetLabelId() const
+    {
+        return labelId_;
+    }
+    /**
+     * @brief Set label id.
+     * @param labelId label id.
+     */
+    void SetLabelId(const int32_t labelId)
+    {
+        labelId_ = labelId;
+    }
+    /**
+     * @brief Get icon id.
+     * @return Return icon id.
+     */
+    int32_t GetIconId() const
+    {
+        return iconId_;
+    }
+    /**
+     * @brief Set icon id.
+     * @param iconId icon id.
+     */
+    void SetIconId(const int32_t iconId)
+    {
+        iconId_ = iconId;
+    }
 
-    BMS_DEFINE_PROPERTY(AppType, appType_, Constants::AppType);
-    BMS_DEFINE_PROPERTY(Removable, removable_, bool);
-    BMS_DEFINE_PROPERTY(IsUninstalled, isUninstalled_, bool);
-    BMS_DEFINE_PROPERTY(BundleName, bundleName_, std::string);
-    BMS_DEFINE_PROPERTY(VersionCode, versionCode_, uint32_t);
-    BMS_DEFINE_PROPERTY_GET(BundlePaths, bundlePaths_, std::vector<std::string>);
-    BMS_DEFINE_PROPERTY(ModuleName, moduleName_, std::string);
-    BMS_DEFINE_PROPERTY(LabelId, labelId_, int32_t);
-    BMS_DEFINE_PROPERTY(IconId, iconId_, int32_t);
 private:
     std::string bundleName_;
     std::string moduleName_;

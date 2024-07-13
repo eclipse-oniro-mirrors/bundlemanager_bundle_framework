@@ -261,7 +261,7 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
-    createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     createDirParam.isDlpSandbox = (appIndex > DLP_SANDBOX_APP_INDEX);
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);

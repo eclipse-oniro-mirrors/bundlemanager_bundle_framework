@@ -314,7 +314,7 @@ ErrCode BundleCloneInstaller::CreateCloneDataDir(InnerBundleInfo &info,
     createDirParam.uid = uid;
     createDirParam.gid = uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
-    createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {

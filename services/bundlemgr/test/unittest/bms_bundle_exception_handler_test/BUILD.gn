@@ -27,7 +27,6 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
-    "${services_path}/bundlemgr/src/inner_common_info.cpp",
     "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_app_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp",
   ]

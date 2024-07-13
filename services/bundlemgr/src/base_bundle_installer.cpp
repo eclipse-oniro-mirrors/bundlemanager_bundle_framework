@@ -375,7 +375,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
 ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
 {
-    if (!info.GetRemovable()) {
+    if (!info.IsRemovable()) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -759,7 +759,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 #ifdef USE_PRE_BUNDLE_PROFILE
         preInstallBundleInfo.SetRemovable(installParam.removable);
 #else
-        preInstallBundleInfo.SetRemovable(newInfos.begin()->second.GetRemovable());
+        preInstallBundleInfo.SetRemovable(newInfos.begin()->second.IsRemovable());
 #endif
         for (const auto &innerBundleInfo : newInfos) {
             auto applicationInfo = innerBundleInfo.second.GetBaseApplicationInfo();
@@ -1369,7 +1369,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_W(BMS_TAG_INSTALLER, "uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-    if (installParam.isUninstallAndRecover && !oldInfo.GetIsPreInstallApp()) {
+    if (installParam.isUninstallAndRecover && !oldInfo.IsPreInstallApp()) {
         LOG_E(BMS_TAG_INSTALLER, "UninstallAndRecover bundle is not pre-install app.");
         return ERR_APPEXECFWK_UNINSTALL_AND_RECOVER_NOT_PREINSTALLED_BUNDLE;
     }
@@ -1391,7 +1391,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted &&
-        !oldInfo.GetRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
+        !oldInfo.IsRemovable() && installParam.noSkipsKill && !installParam.isUninstallAndRecover) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -1500,7 +1500,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
-    if (oldInfo.GetIsPreInstallApp()) {
+    if (oldInfo.IsPreInstallApp()) {
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
@@ -1557,7 +1557,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     uid = curInnerBundleUserInfo.uid;
     if (!installParam.forceExecuted
-        && !oldInfo.GetRemovable() && installParam.noSkipsKill) {
+        && !oldInfo.IsRemovable() && installParam.noSkipsKill) {
         LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
@@ -1642,7 +1642,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 return result;
             }
 
-            if (oldInfo.GetIsPreInstallApp()) {
+            if (oldInfo.IsPreInstallApp()) {
                 LOG_I(BMS_TAG_INSTALLER, "%{public}s detected, Marking as uninstalled", bundleName.c_str());
                 MarkPreInstallState(bundleName, true);
             }
@@ -1811,7 +1811,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         pathVec = preInstallBundleInfo.GetBundlePaths();
     }
     innerInstallParam.isPreInstallApp = true;
-    innerInstallParam.removable = preInstallBundleInfo.GetRemovable();
+    innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     innerInstallParam.copyHapToInstallPath = false;
     return ProcessBundleInstall(pathVec, innerInstallParam, preInstallBundleInfo.GetAppType(), uid);
 }
@@ -1963,10 +1963,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     }
 
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
-        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
+        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
             && AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::SINGLETON_TO_NON;
-        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.GetIsPreInstallApp()
+        } else if ((!oldInfo.IsSingleton() && newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
             && AllowSingletonChange(newInfo.GetBundleName())) {
             singletonState_ = SingletonState::NON_TO_SINGLETON;
         } else {
@@ -2561,7 +2561,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
+            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
             info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl baseDir dir, error is %{public}d", result);
@@ -2569,7 +2569,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         }
         std::string databaseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
+            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
             info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
         if (result != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "fail to SetDirApl databaseDir dir, error is %{public}d", result);
@@ -2690,7 +2690,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.uid = newInnerBundleUserInfo.uid;
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
-    createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
@@ -2861,7 +2861,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
         LOG_W(BMS_TAG_INSTALLER, "create Screen Lock Protection dir %{public}s failed.", dir.c_str());
     }
     ErrCode result = InstalldClient::GetInstance()->SetDirApl(
-        dir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.GetIsPreInstallApp(),
+        dir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
         info.GetBaseApplicationInfo().appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG);
     if (result != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "fail to SetDirApl dir %{public}s, error is %{public}d", dir.c_str(), result);
@@ -3094,7 +3094,7 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
-    if (info.GetIsPreInstallApp()) {
+    if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
         info.SetModuleHapPath(GetHapPath(info));
@@ -3111,7 +3111,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
 {
     LOG_D(BMS_TAG_INSTALLER, "ExtractResourceFiles begin");
     int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
-    if (info.GetIsPreInstallApp() || apiTargetVersion > ServiceConstants::API_VERSION_NINE) {
+    if (info.IsPreInstallApp() || apiTargetVersion > ServiceConstants::API_VERSION_NINE) {
         LOG_D(BMS_TAG_INSTALLER, "no need to extract resource files");
         return;
     }
@@ -3541,7 +3541,7 @@ void BaseBundleInstaller::CreateExtensionDataDir(InnerBundleInfo &info) const
     createDirParam.uid = newInnerBundleUserInfo.uid;
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
-    createDirParam.isPreInstallApp = info.GetIsPreInstallApp();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
     createDirParam.debug = info.GetBaseApplicationInfo().debug;
     createDirParam.extensionDirs.assign(createExtensionDirs_.begin(), createExtensionDirs_.end());
 
@@ -4873,7 +4873,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
-    codeSignatureParam.isPreInstalledBundle = info.GetIsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
@@ -4907,7 +4907,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
-    codeSignatureParam.isPreInstalledBundle = (iter->second).GetIsPreInstallApp();
+    codeSignatureParam.isPreInstalledBundle = (iter->second).IsPreInstallApp();
     return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(codeSignatureParam);
 }
 
@@ -5020,7 +5020,7 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
     LOG_D(BMS_TAG_INSTALLER, "begin to rename all temp dir");
     ErrCode ret = ERR_OK;
     for (const auto &info : newInfos) {
-        if (info.second.GetOnlyCreateBundleUser()) {
+        if (info.second.IsOnlyCreateBundleUser()) {
             continue;
         }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
@@ -5433,7 +5433,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     }
 
     for (const auto &info : newInfos) {
-        if (info.second.GetOnlyCreateBundleUser()) {
+        if (info.second.IsOnlyCreateBundleUser()) {
             LOG_D(BMS_TAG_INSTALLER, "Some hap no update module.");
             return false;
         }
