@@ -57,6 +57,10 @@ public:
     ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId);
     ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
     ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
+    ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId);
+    ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId);
+    ErrCode DeleteResourceInfo(const std::string &key);
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;

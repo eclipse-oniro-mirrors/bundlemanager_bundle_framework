@@ -43,6 +43,12 @@ private:
 
     ErrCode HandleGetAllLauncherAbilityResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleAddResourceInfoByBundleName(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleAddResourceInfoByAbility(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply);
+
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
 

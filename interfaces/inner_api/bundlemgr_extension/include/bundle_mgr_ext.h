@@ -91,6 +91,19 @@ public:
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
+    virtual ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode DeleteResourceInfo(const std::string &key)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

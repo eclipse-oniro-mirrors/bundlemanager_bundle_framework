@@ -313,5 +313,60 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     }
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
+
+ErrCode BmsExtensionDataMgr::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->AddResourceInfoByBundleName(bundleName, userId);
+    APP_LOGD("call bundle mgr ext return %{public}d by bundleName:%{public}s userId:%{private}d",
+        ret, bundleName.c_str(), userId);
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const int32_t userId)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    APP_LOGD("call bundle mgr ext return %{public}d by bundleName:%{public}s moduleName:%{public}s \
+        abilityName:%{public}s userId:%{private}d",
+        ret, bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
+    return ret;
+}
+
+ErrCode BmsExtensionDataMgr::DeleteResourceInfo(const std::string &key)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->DeleteResourceInfo(key);
+    APP_LOGD("call bundle mgr ext return %{public}d by key:%{private}s", ret, key.c_str());
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

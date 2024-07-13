@@ -50,6 +50,22 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode DeleteResourceInfo(const std::string &key)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 } // AppExecFwk
 } // OHOS

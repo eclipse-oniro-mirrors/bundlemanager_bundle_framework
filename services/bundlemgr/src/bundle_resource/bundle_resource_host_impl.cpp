@@ -16,9 +16,11 @@
 #include "bundle_resource_host_impl.h"
 
 #include "app_log_wrapper.h"
+#include "bms_extension_client.h"
 #include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_manager.h"
+#include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -141,6 +143,118 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;
+}
+
+ErrCode BundleResourceHostImpl::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    APP_LOGD("start, bundleName:%{public}s userId:%{private}d", bundleName.c_str(), userId);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("user id invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGE("broker is not started");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->AddResourceInfoByBundleName(bundleName, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("bms extension client api add resource info by bundle name error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BundleResourceHostImpl::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const int32_t userId)
+{
+    APP_LOGD("start, bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s userId:%{private}d",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("moduleName is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (abilityName.empty()) {
+        APP_LOGE("abilityName is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("user id invalid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGE("broker is not started");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("bms extension client api add resource info by ability name error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode BundleResourceHostImpl::DeleteResourceInfo(const std::string &key)
+{
+    APP_LOGD("start, key:%{private}s", key.c_str());
+    if (key.empty()) {
+        APP_LOGE("key is empty.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_GET_BUNDLE_RESOURCES)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGE("broker is not started");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->DeleteResourceInfo(key);
+    if (ret != ERR_OK) {
+        APP_LOGE("bms extension client api delete by key error:%{public}d", ret);
+    }
+    return ret;
 }
 
 ErrCode BundleResourceHostImpl::CheckBundleNameValid(const std::string &bundleName, int32_t appIndex)
