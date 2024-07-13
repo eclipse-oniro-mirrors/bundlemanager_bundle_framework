@@ -2020,16 +2020,10 @@ bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBund
             return false;
         }
     }
-
-    if (oldInfo.GetAppIdentifier().empty() || newInfo.GetAppIdentifier().empty()) {
-        if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
-            LOG_E(BMS_TAG_INSTALLER, "the signature of the new bundle is not the same as old one");
-            return false;
-        }
-        return true;
-    }
-    if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
-        LOG_E(BMS_TAG_INSTALLER, "the appIdentifier of the new bundle is not the same as old one");
+    // for versionCode update
+    if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
+        (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
+        LOG_E(BMS_TAG_INSTALLER, "the appIdentifier or appId of the new bundle is not the same as old one");
         return false;
     }
     return true;
