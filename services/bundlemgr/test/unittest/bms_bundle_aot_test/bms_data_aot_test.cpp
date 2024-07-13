@@ -981,7 +981,7 @@ HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0100, Function | SmallTest | Level0)
     AOTArgs aotArg;
     aotArg.bundleName = "bundleName";
     aotArg.moduleName = "moduleName";
-    aotArgs = aotArg; 
+    aotArgs = aotArg;
     int32_t versionCode = 1;
     std::vector<uint8_t> pendSignData(HAP_PATH.begin(), HAP_PATH.end());
     ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;

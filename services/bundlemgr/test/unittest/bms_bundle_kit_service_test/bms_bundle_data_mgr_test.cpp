@@ -4917,7 +4917,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetTargetAbilityInfo_0100, Function | MediumTest 
     std::string keyName = bundleName + "." + moduleName + "." + abilityName;
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
     bundleConnectAbility->GetTargetAbilityInfo(want, USERID, innerBundleInfo, targetAbilityInfo);
-    EXPECT_EQ(targetAbilityInfo->targetInfo.callingAppType, CALLING_TYPE_HARMONY_VALUE); 
+    EXPECT_EQ(targetAbilityInfo->targetInfo.callingAppType, CALLING_TYPE_HARMONY_VALUE);
 }
 
 /**
