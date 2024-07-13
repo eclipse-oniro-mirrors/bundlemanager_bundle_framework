@@ -60,6 +60,8 @@ public:
 
     bool GetCurrentSystemState(std::string &systemState);
 
+    bool DeleteNotExistResourceInfo();
+
 private:
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::ResultSet> &absSharedResultSet,

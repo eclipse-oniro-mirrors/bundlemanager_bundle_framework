@@ -89,6 +89,8 @@ public:
 
     bool DeleteCloneBundleResourceInfo(const std::string &bundleName, const int32_t appIndex);
 
+    bool DeleteNotExistResourceInfo();
+
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
 
