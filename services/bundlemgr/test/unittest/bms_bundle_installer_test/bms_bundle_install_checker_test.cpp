@@ -50,6 +50,8 @@ const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
 const std::string ENTRY = "entry";
 const std::string PROXY_DATAS = "2";
+const std::string NONISOLATION_ONLY_VALUE = "nonisolationOnly";
+const std::string ISOLATION_ONLY_VALUE = "isolationOnly";
 const int32_t PRIORITY_ONE = 1;
 const int32_t PRIORITY_TWO = 2;
 const int32_t TEST_UID = 20013999;
@@ -2503,5 +2505,140 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetEntryModuleNameTest, Function | SmallTe
     innerBundleInfonfo.InsertInnerModuleInfo(HAP_ONE, innerModuleInfo);
     res = innerBundleInfonfo.GetEntryModuleName();
     EXPECT_EQ(res.empty(), false);
+}
+
+/**
+ * @tc.number: VaildInstallPermission_0100
+ * @tc.name: test VaildInstallPermission
+ * @tc.desc: 1.test install permission
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, VaildInstallPermission_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isSelfUpdate = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+
+    Security::Verify::HapVerifyResult result;
+    hapVerifyRes.emplace_back(result);
+    ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: FindModuleInInstalledPackage_0100
+ * @tc.name: test FindModuleInInstalledPackage
+ * @tc.desc: 1.test find module in install package
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, FindModuleInInstalledPackage_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string moduleName = ENTRY;
+    std::string bundleName = BUNDLE_NAME;
+    uint32_t versionCode = 0;
+    bool ret = installChecker.FindModuleInInstalledPackage(moduleName, bundleName, versionCode);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CheckHapHashParams_0200
+ * @tc.name: test the function of CheckHapHashParams
+ * @tc.desc: 1.test check hap hash params by CheckHapHashParams
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckHapHashParams_0200, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(HAP, innerBundleInfo);
+    std::map<std::string, std::string> hashParams;
+    hashParams.insert(pair<string, string>(ENTRY, BUNDLE_NAME));
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckHapHashParams(infos, hashParams);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_MODULE_NAME_EMPTY);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    ProxyData data;
+    data.uri = MODULE_PATH;
+    innerModuleInfo.moduleName = MODULE_PACKAGE;
+    innerModuleInfo.proxyDatas.emplace_back(data);
+    innerModuleInfos.try_emplace(HAP, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    infos.clear();
+    infos.emplace(HAP, innerBundleInfo);
+    ret = installChecker.CheckHapHashParams(infos, hashParams);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_CHECK_HAP_HASH_PARAM);
+}
+
+/**
+ * @tc.number: CheckEnterpriseBundle_0100
+ * @tc.name: test CheckEnterpriseBundle
+ * @tc.desc: 1.test check enterprise bundle
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, CheckEnterpriseBundle_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    result.SetProvisionInfo(provisionInfo);
+    bool ret = installChecker.CheckEnterpriseBundle(result);
+    EXPECT_EQ(ret, true);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    result.SetProvisionInfo(provisionInfo);
+    ret = installChecker.CheckEnterpriseBundle(result);
+    EXPECT_EQ(ret, true);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    result.SetProvisionInfo(provisionInfo);
+    ret = installChecker.CheckEnterpriseBundle(result);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ParseBundleInfo_0100
+ * @tc.name: test ParseBundleInfo
+ * @tc.desc: 1.test parse bundle info
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, ParseBundleInfo_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string bundlePath = "";
+    InnerBundleInfo info;
+    BundlePackInfo packInfo;
+    bool ret = installChecker.ParseBundleInfo(bundlePath, info, packInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: FindModuleInInstallingPackage_0100
+ * @tc.name: test FindModuleInInstallingPackage
+ * @tc.desc: 1.test find module in installing package
+ */
+HWTEST_F(BmsBundleInstallCheckerTest, FindModuleInInstallingPackage_0100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::string moduleName = MODULE_PACKAGE;
+    std::string bundleName = BUNDLE_NAME;
+    bool ret = installChecker.FindModuleInInstallingPackage(moduleName, bundleName, infos);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    ProxyData data;
+    data.uri = MODULE_PATH;
+    innerModuleInfo.moduleName = MODULE_PACKAGE;
+    innerModuleInfo.proxyDatas.emplace_back(data);
+    innerModuleInfos.try_emplace(HAP, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    infos.emplace(HAP, innerBundleInfo);
+    ret = installChecker.FindModuleInInstallingPackage(moduleName, bundleName, infos);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS
