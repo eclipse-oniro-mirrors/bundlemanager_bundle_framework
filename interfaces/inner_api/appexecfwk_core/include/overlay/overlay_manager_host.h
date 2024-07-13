@@ -48,13 +48,8 @@ private:
 
     ErrCode HandleSetOverlayEnabledForSelf(MessageParcel &data, MessageParcel &reply);
 
-    void init();
-
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
-
-    using OverlayMgrHostFunc = ErrCode (OverlayManagerHost::*)(MessageParcel &, MessageParcel &);
-    std::unordered_map<uint32_t, OverlayMgrHostFunc> funcMap_;
 
     DISALLOW_COPY_AND_MOVE(OverlayManagerHost);
 };

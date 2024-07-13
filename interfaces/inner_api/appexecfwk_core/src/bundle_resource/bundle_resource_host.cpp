@@ -32,14 +32,6 @@ constexpr size_t MAX_PARCEL_CAPACITY = 200 * 1024 * 1024; // 200M
 BundleResourceHost::BundleResourceHost()
 {
     APP_LOGD("start");
-    funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO),
-        &BundleResourceHost::HandleGetBundleResourceInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_LAUNCHER_ABILITY_RESOURCE_INFO),
-        &BundleResourceHost::HandleGetLauncherAbilityResourceInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_BUNDLE_RESOURCE_INFO),
-        &BundleResourceHost::HandleGetAllBundleResourceInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO),
-        &BundleResourceHost::HandleGetAllLauncherAbilityResourceInfo);
 }
 
 int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
@@ -55,11 +47,22 @@ int32_t BundleResourceHost::OnRemoteRequest(uint32_t code, MessageParcel &data,
     }
 
     ErrCode errCode = ERR_OK;
-    if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
-        errCode = (this->*funcMap_[code])(data, reply);
-    } else {
-        APP_LOGW("bundle resource host receives unknown %{public}u", code);
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO):
+            errCode = this->HandleGetBundleResourceInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_LAUNCHER_ABILITY_RESOURCE_INFO):
+            errCode = this->HandleGetLauncherAbilityResourceInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_BUNDLE_RESOURCE_INFO):
+            errCode = this->HandleGetAllBundleResourceInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleResourceInterfaceCode::GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO):
+            errCode = this->HandleGetAllLauncherAbilityResourceInfo(data, reply);
+            break;
+        default :
+            APP_LOGW("bundle resource host receives unknown %{public}u", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundle resource host finish to process message, errCode: %{public}d", errCode);
     return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;

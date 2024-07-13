@@ -28,22 +28,11 @@ namespace AppExecFwk {
 QuickFixStatusCallbackHost::QuickFixStatusCallbackHost()
 {
     LOG_I(BMS_TAG_DEFAULT, "create QuickFixStatusCallbackHost.");
-    Init();
 }
 
 QuickFixStatusCallbackHost::~QuickFixStatusCallbackHost()
 {
     LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixStatusCallbackHost.");
-}
-
-void QuickFixStatusCallbackHost::Init()
-{
-    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED),
-        &QuickFixStatusCallbackHost::HandleOnPatchDeployed);
-    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED),
-        &QuickFixStatusCallbackHost::HandleOnPatchSwitched);
-    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED),
-        &QuickFixStatusCallbackHost::HandleOnPatchDeleted);
 }
 
 int QuickFixStatusCallbackHost::OnRemoteRequest(
@@ -57,11 +46,19 @@ int QuickFixStatusCallbackHost::OnRemoteRequest(
         LOG_E(BMS_TAG_DEFAULT, "fail to write reply message in clean cache host due to the reply is nullptr");
         return OBJECT_NULL;
     }
-    if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
-        (this->*funcMap_[code])(data, reply);
-    } else {
-        LOG_W(BMS_TAG_DEFAULT, "quickfix callback host receives unknown code, code = %{public}u", code);
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED):
+            this->HandleOnPatchDeployed(data, reply);
+            break;
+        case static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED):
+            this->HandleOnPatchSwitched(data, reply);
+            break;
+        case static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED):
+            this->HandleOnPatchDeleted(data, reply);
+            break;
+        default :
+            LOG_W(BMS_TAG_DEFAULT, "quickfix callback host receives unknown code, code = %{public}u", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     LOG_D(BMS_TAG_DEFAULT, "quickfix callback host finish to process message");
     return NO_ERROR;
