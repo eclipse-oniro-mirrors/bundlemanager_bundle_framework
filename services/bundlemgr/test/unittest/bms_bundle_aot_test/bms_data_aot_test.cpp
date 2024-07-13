@@ -21,6 +21,7 @@
 #include "ability_manager_helper.h"
 #include "aot/aot_executor.h"
 #include "aot/aot_handler.h"
+#include "aot/aot_sign_data_cache_mgr.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "base_bundle_installer.h"
@@ -61,6 +62,7 @@ constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
 constexpr const char* OTA_COMPILE_MODE = "persist.bm.ota.arkopt";
 constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
+constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_FULL = "full";
 }  // namespace
@@ -894,4 +896,190 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2300, Function | SmallTest | Level0)
     AOTHandler::GetInstance().ReportSysEvent(sysEventMap);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
 }
+
+/**
+ * @tc.number: AOTHandler_2400
+ * @tc.name: test AOTHandler
+ * @tc.desc: test BuildAOTArgs function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2400, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    std::vector<std::string> results;
+    installdService_->Start();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(USERID_ONE);
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    info.bundleUserInfo.userId = 1;
+    innerBundleUserInfos["_1"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        "", innerBundleInfo);
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: AOTHandler_2500
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleInstall function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    newInfo.SetIsNewVersion(true);
+    infos.emplace("", newInfo);
+    system::SetParameter(INSTALL_COMPILE_MODE, "on");
+    AOTHandler::GetInstance().HandleInstall(infos);
+    EXPECT_EQ(infos.empty(), false);
+}
+
+/**
+ * @tc.number: AOTHandler_2600
+ * @tc.name: test AOTHandler
+ * @tc.desc: test CopyApWithBundle function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    std::vector<std::string> results;
+    installdService_->Start();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->AddUserId(USERID_ONE);
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    BundleInfo bundleInfo;
+    bundleInfo.moduleNames.push_back(bundleName);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(
+        bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().CopyApWithBundle(bundleName, bundleInfo, 100, results);
+    EXPECT_EQ(results.empty(), false);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0100
+ * @tc.name: test AOTSignDataCacheMgr
+ * @tc.desc: test AddPendSignData function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0100, Function | SmallTest | Level0)
+{
+    std::optional<AOTArgs> aotArgs;
+    AOTArgs aotArg;
+    aotArg.bundleName = "bundleName";
+    aotArg.moduleName = "moduleName";
+    aotArgs = aotArg; 
+    int32_t versionCode = 1;
+    std::vector<uint8_t> pendSignData(HAP_PATH.begin(), HAP_PATH.end());
+    ErrCode ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    AOTSignDataCacheMgr::GetInstance().AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(AOTSignDataCacheMgr::GetInstance().pendingSignData_.empty(), false);
+    AOTSignDataCacheMgr::GetInstance().pendingSignData_.clear();
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0200
+ * @tc.name: test AOTSignDataCacheMgr
+ * @tc.desc: test AddPendSignData function running with exception parameter
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0200, Function | SmallTest | Level0)
+{
+    std::optional<AOTArgs> aotArgs;
+    std::optional<AOTArgs> aotArgs2;
+    std::optional<AOTArgs> aotArgs3;
+    AOTArgs aotArg;
+    aotArg.bundleName = "bundleName";
+    aotArg.moduleName = "moduleName";
+    aotArgs = aotArg;
+    AOTArgs aotArg2;
+    aotArg2.bundleName = "bundleName";
+    aotArgs2 = aotArg2;
+    AOTArgs aotArg3;
+    aotArg3.moduleName = "moduleName";
+    aotArgs3 = aotArg3;
+    int32_t versionCode = 1;
+    std::vector<uint8_t> pendSignData;
+    std::vector<uint8_t> pendSignData2(HAP_PATH.begin(), HAP_PATH.end());
+    ErrCode ret = ERR_OK;
+    AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.isLocked_ = false;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    signDataCacheMgr.isLocked_ = true;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    signDataCacheMgr.isLocked_ = false;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    ret = ERR_OK;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    ret = ERR_OK;
+    signDataCacheMgr.isLocked_ = true;
+    signDataCacheMgr.AddPendSignData(*aotArgs, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    ret = ERR_APPEXECFWK_INSTALLD_SIGN_AOT_DISABLE;
+    signDataCacheMgr.AddPendSignData(*aotArgs2, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+    signDataCacheMgr.AddPendSignData(*aotArgs3, versionCode, pendSignData2, ret);
+    EXPECT_EQ(signDataCacheMgr.pendingSignData_.empty(), true);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0300
+ * @tc.name: test RegisterScreenUnlockListener and UnregisterScreenUnlockEvent
+ * @tc.desc: test RegisterScreenUnlockListener function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0300, Function | SmallTest | Level0)
+{
+    AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.RegisterScreenUnlockListener();
+    signDataCacheMgr.UnregisterScreenUnlockEvent();
+    EXPECT_NE(signDataCacheMgr.unlockEventSubscriber_, nullptr);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0400
+ * @tc.name: test HandleUnlockEvent
+ * @tc.desc: test HandleUnlockEvent function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0400, Function | SmallTest | Level0)
+{
+    AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    signDataCacheMgr.HandleUnlockEvent();
+    EXPECT_EQ(signDataCacheMgr.isLocked_, false);
+}
+
+/**
+ * @tc.number: AOTSignDataCacheMgr_0500
+ * @tc.name: test ExecutePendSign
+ * @tc.desc: test ExecutePendSign function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTSignDataCacheMgr_0500, Function | SmallTest | Level0)
+{
+    AOTSignDataCacheMgr& signDataCacheMgr = AOTSignDataCacheMgr::GetInstance();
+    ErrCode ret = ERR_OK;
+    ret = signDataCacheMgr.ExecutePendSign();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
 } // OHOS

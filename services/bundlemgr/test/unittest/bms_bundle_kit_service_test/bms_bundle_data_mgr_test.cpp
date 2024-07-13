@@ -202,6 +202,62 @@ const nlohmann::json INSTALL_LIST3 = R"(
         }]
 }
 )"_json;
+const nlohmann::json INSTALL_LIST4 = R"(
+{
+    "install_list": [
+        {
+            "1":"app_dir",
+            "1":true
+        }
+    ]
+}
+)"_json;
+const nlohmann::json INSTALL_LIST5 = R"(
+{
+    "install_list": [
+        {
+            "app_dir":1,
+            "removable":1
+        }
+    ]
+}
+)"_json;
+const nlohmann::json INSTALL_LIST6 = R"(
+{
+    "install_list": [
+        {
+            "bundleName":true,
+            "removable":"none"
+        }
+    ]
+}
+)"_json;
+const nlohmann::json EXTENSION_TYPE_LIST = R"(
+{
+    "extensionType": [
+        {
+            "name":"test"
+        }
+    ]
+}
+)"_json;
+const nlohmann::json EXTENSION_TYPE_LIST1 = R"(
+{
+    "extensionType1": [
+        {
+            "name":"test"
+        }
+    ]
+}
+)"_json;
+const nlohmann::json EXTENSION_TYPE_LIST2 = R"(
+{
+    "extensionType":
+        {
+            "name":"test"
+        }
+}
+)"_json;
 const int FORMINFO_DESCRIPTIONID = 123;
 const int ABILITYINFOS_SIZE_1 = 1;
 const int ABILITYINFOS_SIZE_2 = 2;
@@ -212,6 +268,10 @@ const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
 const int32_t GET_ABILITY_INFO_WITH_APP_LINKING = 0x00000040;
 constexpr int32_t MAX_APP_UID = 65535;
+constexpr uint32_t TYPE_HARMONEY_INVALID_VALUE = 0;
+constexpr uint32_t TYPE_HARMONEY_SERVICE_VALUE = 2;
+constexpr uint32_t CALLING_TYPE_HARMONY_VALUE = 2;
+constexpr uint32_t BIT_ZERO_COMPATIBLE_VALUE = 0;
 const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
 const std::string ENTRY = "entry";
 const std::string FEATURE = "feature";
@@ -2940,6 +3000,112 @@ HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0800, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: PreBundleProfile_0900
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0900, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST4, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1000
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1000, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST4, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1100
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1100, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST5, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1200
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1200, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST6, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1300
+ * @tc.name: test TransformJsonToExtensionTypeList
+ * @tc.desc: 1. call TransformJsonToExtensionTypeList, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1300, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<std::string> extensionTypeList;
+    ErrCode res = preBundleProfile.TransformJsonToExtensionTypeList(EXTENSION_TYPE_LIST, extensionTypeList);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1400
+ * @tc.name: test TransformJsonToExtensionTypeList
+ * @tc.desc: 1. call TransformJsonToExtensionTypeList, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1400, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<std::string> extensionTypeList;
+    ErrCode res = preBundleProfile.TransformJsonToExtensionTypeList(EXTENSION_TYPE_LIST1, extensionTypeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1500
+ * @tc.name: test TransformJsonToExtensionTypeList
+ * @tc.desc: 1. call TransformJsonToExtensionTypeList, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1500, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<std::string> extensionTypeList;
+    nlohmann::json errorTypeJson = EXTENSION_TYPE_LIST;
+    errorTypeJson["extensionType"][100] = { 0 };
+    ErrCode res = preBundleProfile.TransformJsonToExtensionTypeList(errorTypeJson, extensionTypeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_1600
+ * @tc.name: test TransformJsonToExtensionTypeList
+ * @tc.desc: 1. call TransformJsonToExtensionTypeList, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_1600, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<std::string> extensionTypeList;
+    ErrCode res = preBundleProfile.TransformJsonToExtensionTypeList(EXTENSION_TYPE_LIST2, extensionTypeList);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
  * @tc.number: SetExtNameOrMIMEToApp_0001
  * @tc.name: SetExtNameOrMIMEToApp
  * @tc.desc: 1. SetMimeTypeToApp
@@ -4597,5 +4763,310 @@ HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByAppLinking_0040, Function | S
     abilityInfos.emplace_back(abilityInfo);
     GetBundleDataMgr()->FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
     EXPECT_EQ(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetModuleName_0100
+ * @tc.name: test GetModuleName
+ * @tc.desc: 1.test get moduleName from innerBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetModuleName_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    InnerBundleInfo innerBundleInfo;
+    std::string moduleName = "";
+    bool res = bundleConnectAbility->GetModuleName(innerBundleInfo, want, moduleName);
+    EXPECT_EQ(res, false);
+
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string abilityName = ABILITY_NAME_TEST;
+    want.SetElementName(bundleName, abilityName);
+    std::string targetModuleName = MODULE_NAME1;
+    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, targetModuleName, abilityName);
+    std::string keyName = bundleName + "." + targetModuleName + "." + abilityName;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    res = bundleConnectAbility->GetModuleName(innerBundleInfo, want, moduleName);
+    EXPECT_EQ(moduleName, targetModuleName);
+    EXPECT_EQ(res, true);
+
+    moduleName = BUNDLE_NAME_TEST;
+    res = bundleConnectAbility->GetModuleName(innerBundleInfo, want, moduleName);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number:CheckIsOnDemandLoad_0100
+ * @tc.name: test CheckIsOnDemandLoad
+ * @tc.desc: 1.test check targetAbilityInfo is loaded as needed
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckIsOnDemandLoad_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    TargetAbilityInfo targetAbilityInfo;
+    bool res = bundleConnectAbility->CheckIsOnDemandLoad(targetAbilityInfo);
+    EXPECT_EQ(res, false);
+
+    targetAbilityInfo.targetInfo.callingBundleNames.emplace_back(BUNDLE_NAME_TEST);
+    res = bundleConnectAbility->CheckIsOnDemandLoad(targetAbilityInfo);
+    EXPECT_EQ(res, false);
+
+    targetAbilityInfo.targetInfo.bundleName = BUNDLE_NAME_TEST;
+    res = bundleConnectAbility->CheckIsOnDemandLoad(targetAbilityInfo);
+    EXPECT_EQ(res, false);
+}
+
+
+/**
+ * @tc.number:GetEcologicalCallerInfo_0100
+ * @tc.name: test GetEcologicalCallerInfo
+ * @tc.desc: 1.test obtain ecological caller information
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetEcologicalCallerInfo_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    ErmsCallerInfo callerInfo;
+    InnerBundleInfo innerBundleInfo;
+    bundleConnectAbility->GetEcologicalCallerInfo(want, callerInfo, USERID);
+    EXPECT_EQ(callerInfo.targetAppType, TYPE_HARMONEY_SERVICE_VALUE);
+    EXPECT_EQ(callerInfo.callerAppType, TYPE_HARMONEY_INVALID_VALUE);
+}
+
+/**
+ * @tc.number:CheckEcologicalRule_0100
+ * @tc.name: test CheckEcologicalRule
+ * @tc.desc: 1.test check ecological rules
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckEcologicalRule_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    ErmsCallerInfo callerInfo;
+    bundleConnectAbility->GetEcologicalCallerInfo(want, callerInfo, USERID);
+    BmsExperienceRule rule;
+    bool ret = bundleConnectAbility->CheckEcologicalRule(want, callerInfo, rule);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SilentInstall_0100
+ * @tc.name: test SilentInstall
+ * @tc.desc: 1.test silent Install
+ */
+HWTEST_F(BmsBundleDataMgrTest, SilentInstall_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    IBundleEventCallbackTest iBundleEventCallback;
+    sptr<IRemoteObject> callBack = iBundleEventCallback.AsObject();
+    bool ret = bundleConnectAbility->SilentInstall(want, USERID, callBack);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ConnectQueryAbilityInfo_0100
+ * @tc.name: test QueryAbilityInfo
+ * @tc.desc: 1.test QueryAbilityInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, ConnectQueryAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    int32_t flags = GET_ABILITY_INFO_WITH_APP_LINKING;
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string abilityName = ABILITY_NAME_TEST;
+    std::string moduleName = MODULE_NAME1;
+    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    IBundleEventCallbackTest iBundleEventCallback;
+    sptr<IRemoteObject> callBack = iBundleEventCallback.AsObject();
+    bool abilityInfoResult = bundleConnectAbility->QueryAbilityInfo(want, flags, USERID, abilityInfo, callBack);
+    EXPECT_EQ(abilityInfoResult, false);
+}
+
+/**
+ * @tc.number: GetTargetAbilityInfo_0100
+ * @tc.name: test GetTargetAbilityInfo
+ * @tc.desc: 1.test obtain target capability information
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetTargetAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    InnerBundleInfo innerBundleInfo;
+    sptr<TargetAbilityInfo> targetAbilityInfo = nullptr;
+    bundleConnectAbility->GetTargetAbilityInfo(want, USERID, innerBundleInfo, targetAbilityInfo);
+
+    targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
+    ASSERT_NE(targetAbilityInfo, nullptr);
+    bundleConnectAbility->GetTargetAbilityInfo(want, USERID, innerBundleInfo, targetAbilityInfo);
+    EXPECT_EQ(targetAbilityInfo->targetInfo.callingAppType, CALLING_TYPE_HARMONY_VALUE);
+
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string abilityName = ABILITY_NAME_TEST;
+    want.SetElementName(bundleName, abilityName);
+    std::string moduleName = MODULE_NAME1;
+    AbilityInfo abilityInfo = MockAbilityInfo(bundleName, moduleName, abilityName);
+    std::string keyName = bundleName + "." + moduleName + "." + abilityName;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfo);
+    bundleConnectAbility->GetTargetAbilityInfo(want, USERID, innerBundleInfo, targetAbilityInfo);
+    EXPECT_EQ(targetAbilityInfo->targetInfo.callingAppType, CALLING_TYPE_HARMONY_VALUE); 
+}
+
+/**
+ * @tc.number: GetPreloadFlag_0100
+ * @tc.name: test GetPreloadFlag
+ * @tc.desc: 1.test get preload flag
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPreloadFlag_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    bool res = bundleConnectAbility->ProcessPreload(want);
+    EXPECT_EQ(res, false);
+
+    TargetAbilityInfo targetAbilityInfo;
+    bool ret = bundleConnectAbility->ProcessPreloadCheck(targetAbilityInfo);
+    EXPECT_EQ(ret, true);
+    int32_t preloadFlag = bundleConnectAbility->GetPreloadFlag();
+    EXPECT_NE(preloadFlag, BIT_ZERO_COMPATIBLE_VALUE);
+}
+
+/**
+ * @tc.number: GetPreloadList_0100
+ * @tc.name: test GetPreloadList
+ * @tc.desc: 1.test get preload list
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetPreloadList_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string moduleName = MODULE_NAME1;
+    sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
+    ASSERT_NE(targetAbilityInfo, nullptr);
+    bool preloadList = bundleConnectAbility->GetPreloadList(bundleName, moduleName, USERID, targetAbilityInfo);
+    EXPECT_EQ(preloadList, false);
+}
+
+/**
+ * @tc.number: UpgradeCheck_0100
+ * @tc.name: test UpgradeCheck
+ * @tc.desc: 1.test upgrade check
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpgradeCheck_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    bundleConnectAbility->UpgradeAtomicService(want, USERID);
+    TargetAbilityInfo targetAbilityInfo;
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    ASSERT_NE(freeInstallParams, nullptr);
+    freeInstallParams->want = want;
+    freeInstallParams->userId = USERID;
+    bool ret = bundleConnectAbility->UpgradeCheck(targetAbilityInfo, want, *freeInstallParams, USERID);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: UpgradeInstall_0100
+ * @tc.name: test UpgradeInstall
+ * @tc.desc: 1.test upgrade install, return true
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpgradeInstall_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    Want want;
+    bundleConnectAbility->UpgradeAtomicService(want, USERID);
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    ASSERT_NE(freeInstallParams, nullptr);
+    TargetAbilityInfo targetAbilityInfo;
+    freeInstallParams->want = want;
+    freeInstallParams->userId = USERID;
+    bool ret = bundleConnectAbility->UpgradeInstall(targetAbilityInfo, want, *freeInstallParams, USERID);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SendRequestToServiceCenter_0100
+ * @tc.name: test SendRequestToServiceCenter
+ * @tc.desc: 1.test send request to the service center
+ */
+HWTEST_F(BmsBundleDataMgrTest, SendRequestToServiceCenter_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    int32_t flag = 0;
+    Want want;
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    ASSERT_NE(freeInstallParams, nullptr);
+    freeInstallParams->want = want;
+    freeInstallParams->userId = USERID;
+    TargetAbilityInfo abilityInfo;
+    bundleConnectAbility->LoadDownloadService();
+    bool ret = bundleConnectAbility->SendRequestToServiceCenter(flag, abilityInfo, want, USERID, *freeInstallParams);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DeathRecipientSendCallback_0100
+ * @tc.name: test DeathRecipientSendCallback
+ * @tc.desc: 1.test DeathRecipientSendCallback
+ */
+HWTEST_F(BmsBundleDataMgrTest, DeathRecipientSendCallback_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    ASSERT_NE(freeInstallParams, nullptr);
+    Want want;
+    freeInstallParams->want = want;
+    freeInstallParams->userId = USERID;
+    int transactId = 0;
+    std::string transactIdStr = std::to_string(transactId);
+    bundleConnectAbility->SendCallBack(transactIdStr, *freeInstallParams);
+    bundleConnectAbility->DeathRecipientSendCallback();
+    bundleConnectAbility->DisconnectDelay();
+    EXPECT_EQ(bundleConnectAbility->connectState_, ServiceCenterConnectState::DISCONNECTED);
+}
+
+/**
+ * @tc.number: CheckIsModuleNeedUpdate_0100
+ * @tc.name: test CheckIsModuleNeedUpdate
+ * @tc.desc: 1.test check the module needs to be updated
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckIsModuleNeedUpdate_0100, Function | MediumTest | Level1)
+{
+    auto bundleConnectAbility = std::make_shared<BundleConnectAbilityMgr>();
+    ASSERT_NE(bundleConnectAbility, nullptr);
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    bool ret = bundleConnectAbility->IsObtainAbilityInfo(want, flags, USERID, abilityInfo, nullptr, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    IBundleEventCallbackTest iBundleEventCallback;
+    sptr<IRemoteObject> callBack = iBundleEventCallback.AsObject();
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string abilityName = ABILITY_NAME_TEST;
+    want.SetElementName(bundleName, abilityName);
+    std::string moduleName = MODULE_NAME1;
+    AbilityInfo abilityInfoExt = MockAbilityInfo(bundleName, moduleName, abilityName);
+    std::string keyName = bundleName + "." + moduleName + "." + abilityName;
+    innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfoExt);
+    bool isModuleNeedUpdate = bundleConnectAbility->CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
+    EXPECT_EQ(isModuleNeedUpdate, false);
 }
 }
