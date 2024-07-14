@@ -56,23 +56,6 @@ BundleResourceManager::~BundleResourceManager()
 {
 }
 
-bool BundleResourceManager::AddResourceInfo(const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId, std::string hapPath)
-{
-    std::vector<ResourceInfo> resourceInfos;
-    if (!BundleResourceProcess::GetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
-        APP_LOGE("bundleName %{public}s GetResourceInfo failed", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    if (!hapPath.empty()) {
-        for (auto &info : resourceInfos) {
-            info.hapPath_ = hapPath;
-        }
-    }
-    return AddResourceInfos(userId, resourceInfos);
-}
-
 bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
