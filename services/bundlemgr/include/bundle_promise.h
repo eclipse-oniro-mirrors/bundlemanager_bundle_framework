@@ -35,11 +35,11 @@ public:
     {
         std::lock_guard<std::mutex> lock(notifyTaskMutex_);
         if (hasNotified_) {
-            APP_LOGE("promise has executed and abort when NotifyAllTasksExecuteFinished.");
+            APP_LOGE("promise has executed and abort when NotifyAllTasksExecuteFinished");
             return;
         }
 
-        APP_LOGD("Notify all tasks has executed finished.");
+        APP_LOGD("Notify all tasks has executed finished");
         hasNotified_ = true;
         promise_.set_value();
     }
@@ -51,11 +51,11 @@ public:
     {
         std::lock_guard<std::mutex> lock(waitTaskMutex_);
         if (hasWaited_) {
-            APP_LOGE("promise has executed and abort when WaitForAllTasksExecute.");
+            APP_LOGE("promise has executed and abort when WaitForAllTasksExecute");
             return;
         }
 
-        APP_LOGD("Wait for all tasks execute.");
+        APP_LOGD("Wait for all tasks execute");
         hasWaited_ = true;
         future_.get();
     }

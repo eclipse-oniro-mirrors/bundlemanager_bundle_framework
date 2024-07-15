@@ -273,7 +273,7 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "name", nName));
-    APP_LOGI("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
+    APP_LOGI("ConvertApplicationInfo name=%{public}s", appInfo.name.c_str());
 
     napi_value nCodePath;
     NAPI_CALL_RETURN_VOID(
@@ -972,7 +972,7 @@ static void ConvertFormInfo(napi_env env, napi_value objformInfo, const FormInfo
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, formInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objformInfo, "name", nName));
-    APP_LOGI("ConvertFormInfo name=%{public}s.", formInfo.name.c_str());
+    APP_LOGI("ConvertFormInfo name=%{public}s", formInfo.name.c_str());
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
@@ -1059,13 +1059,13 @@ static void ConvertFormInfo(napi_env env, napi_value objformInfo, const FormInfo
     napi_value nSrc;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, formInfo.src.c_str(), NAPI_AUTO_LENGTH, &nSrc));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objformInfo, "src", nSrc));
-    APP_LOGI("ConvertFormInfo src=%{public}s.", formInfo.src.c_str());
+    APP_LOGI("ConvertFormInfo src=%{public}s", formInfo.src.c_str());
 
     napi_value nWindow;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindow));
     ConvertFormWindow(env, nWindow, formInfo.window);
-    APP_LOGI("ConvertFormInfo window.designWidth=%{public}d.", formInfo.window.designWidth);
-    APP_LOGI("ConvertFormInfo window.autoDesignWidth=%{public}d.", formInfo.window.autoDesignWidth);
+    APP_LOGI("ConvertFormInfo window.designWidth=%{public}d", formInfo.window.designWidth);
+    APP_LOGI("ConvertFormInfo window.autoDesignWidth=%{public}d", formInfo.window.autoDesignWidth);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objformInfo, "window", nWindow));
 }
 
@@ -1094,11 +1094,11 @@ static napi_value ParseInt(napi_env env, int &param, napi_value args)
 {
     napi_valuetype valuetype = napi_undefined;
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
-    APP_LOGD("valuetype=%{public}d.", valuetype);
+    APP_LOGD("valuetype=%{public}d", valuetype);
     NAPI_ASSERT(env, valuetype == napi_number, "Wrong argument type. int32 expected.");
     int32_t value = 0;
     napi_get_value_int32(env, args, &value);
-    APP_LOGD("param=%{public}d.", value);
+    APP_LOGD("param=%{public}d", value);
     param = value;
     // create result code
     napi_value result = nullptr;
@@ -1582,7 +1582,7 @@ static napi_value ParseString(napi_env env, std::string &param, napi_value args)
     NAPI_CALL(env, napi_typeof(env, args, &valuetype));
     NAPI_ASSERT(env, valuetype == napi_string, "Wrong argument type. String expected.");
     param = GetStringFromNAPI(env, args);
-    APP_LOGD("param=%{public}s.", param.c_str());
+    APP_LOGD("param=%{public}s", param.c_str());
     // create result code
     napi_value result;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
@@ -1869,7 +1869,7 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
         APP_LOGE("param string moduleName is empty.");
         return false;
     }
-    APP_LOGD("ParseHashParam moduleName=%{public}s.", key.c_str());
+    APP_LOGD("ParseHashParam moduleName=%{public}s", key.c_str());
 
     property = nullptr;
     hasKey = false;
@@ -1888,7 +1888,7 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
         APP_LOGE("param string hashValue is empty.");
         return false;
     }
-    APP_LOGD("ParseHashParam hashValue=%{public}s.", value.c_str());
+    APP_LOGD("ParseHashParam hashValue=%{public}s", value.c_str());
     return true;
 }
 
@@ -2083,7 +2083,7 @@ napi_value GetAllFormsInfo(napi_env env, napi_callback_info info)
     napi_value thisArg;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGI("ARGCSIZE is =%{public}zu.", argc);
+    APP_LOGI("ARGCSIZE is =%{public}zu", argc);
 
     AsyncFormInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncFormInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -2188,7 +2188,7 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info)
     napi_value thisArg;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGI("ARGCSIZE is =%{public}zu.", argc);
+    APP_LOGI("ARGCSIZE is =%{public}zu", argc);
     std::string bundleName;
     std::string moduleName;
     ParseString(env, bundleName, argv[PARAM0]);
@@ -2302,7 +2302,7 @@ napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info)
     napi_value thisArg;
     void *data = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    APP_LOGI("ARGCSIZE is =%{public}zu.", argc);
+    APP_LOGI("ARGCSIZE is =%{public}zu", argc);
     std::string bundleName;
     ParseString(env, bundleName, argv[PARAM0]);
 
@@ -2435,14 +2435,14 @@ napi_value WrapUndefinedToJS(napi_env env)
 
 AsyncGetBundleGidsCallbackInfo *CreateAsyncGetBundleGidsCallbackInfo(napi_env env)
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGI("%{public}s called", __func__);
     AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncGetBundleGidsCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return nullptr;
     }
 
-    APP_LOGI("%{public}s end.", __func__);
+    APP_LOGI("%{public}s end", __func__);
     return asyncCallbackInfo;
 }
 
@@ -2506,9 +2506,9 @@ void GetBundleGidsPromiseComplete(napi_env env, napi_status status, void *data)
 napi_value GetBundleGidsAsync(
     napi_env env, napi_value *args, const size_t argCallback, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, asyncCallback.", __func__);
+    APP_LOGI("%{public}s, asyncCallback", __func__);
     if (args == nullptr || asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, param == nullptr.", __func__);
+        APP_LOGE("%{public}s, param == nullptr", __func__);
         return nullptr;
     }
 
@@ -2528,15 +2528,15 @@ napi_value GetBundleGidsAsync(
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
-    APP_LOGI("%{public}s, asyncCallback end.", __func__);
+    APP_LOGI("%{public}s, asyncCallback end", __func__);
     return result;
 }
 
 napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, promise.", __func__);
+    APP_LOGI("%{public}s, promise", __func__);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, param == nullptr.", __func__);
+        APP_LOGE("%{public}s, param == nullptr", __func__);
         return nullptr;
     }
     napi_value resourceName = nullptr;
@@ -2550,15 +2550,15 @@ napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *as
                 GetBundleGidsExecute, GetBundleGidsPromiseComplete,
                 reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    APP_LOGI("%{public}s, promise end.", __func__);
+    APP_LOGI("%{public}s, promise end", __func__);
     return promise;
 }
 
 napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, asyncCallback.", __func__);
+    APP_LOGI("%{public}s, asyncCallback", __func__);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return nullptr;
     }
 
@@ -2570,7 +2570,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync > argCountWithAsync) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
+        APP_LOGE("%{public}s, Wrong argument count", __func__);
         return nullptr;
     }
 
@@ -2587,7 +2587,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
     } else {
         ret = GetBundleGidsPromise(env, asyncCallbackInfo);
     }
-    APP_LOGI("%{public}s, asyncCallback end.", __func__);
+    APP_LOGI("%{public}s, asyncCallback end", __func__);
     return ret;
 }
 
@@ -2606,7 +2606,7 @@ napi_value GetBundleGids(napi_env env, napi_callback_info info)
     } else {
         callbackPtr.release();
     }
-    APP_LOGI("%{public}s end.", __func__);
+    APP_LOGI("%{public}s end", __func__);
     return ret;
 }
 
@@ -4431,7 +4431,7 @@ static std::string InnerGetAbilityLabel(napi_env env, std::string &bundleName, s
     std::string label;
     ErrCode ret = iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, label);
     if (ret != ERR_OK) {
-        APP_LOGE("can not GetAbilityLabel, bundleName is %{public}s.", bundleName.c_str());
+        APP_LOGE("can not GetAbilityLabel, bundleName is %{public}s", bundleName.c_str());
         return Constants::EMPTY_STRING;
     }
     return label;
@@ -4822,7 +4822,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 
 static void ConvertInstallResult(InstallResult &installResult)
 {
-    APP_LOGD("ConvertInstallResult = %{public}s.", installResult.resultMsg.c_str());
+    APP_LOGD("ConvertInstallResult = %{public}s", installResult.resultMsg.c_str());
     switch (installResult.resultCode) {
         case static_cast<int32_t>(IStatusReceiver::SUCCESS):
             installResult.resultCode = static_cast<int32_t>(InstallErrorCode::SUCCESS);
@@ -5337,9 +5337,9 @@ static void InnerRecover(napi_env env, const std::string &bundleName, InstallPar
     }
     iBundleInstaller->Recover(bundleName, installParam, callback);
     installResult.resultMsg = callback->GetResultMsg();
-    APP_LOGD("InnerRecover resultMsg %{public}s.", installResult.resultMsg.c_str());
+    APP_LOGD("InnerRecover resultMsg %{public}s", installResult.resultMsg.c_str());
     installResult.resultCode = callback->GetResultCode();
-    APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
+    APP_LOGD("InnerRecover resultCode %{public}d", installResult.resultCode);
 }
 
 napi_value Recover(napi_env env, napi_callback_info info)
@@ -5358,7 +5358,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Recover installParam error, bundleName is %{public}s.", bundleName.c_str());
+        APP_LOGE("Recover installParam error, bundleName is %{public}s", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 
@@ -5531,7 +5531,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     ParseString(env, bundleName, argv[PARAM0]);
     InstallParam installParam;
     if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
-        APP_LOGE("Uninstall installParam error, bundleName is %{public}s.", bundleName.c_str());
+        APP_LOGE("Uninstall installParam error, bundleName is %{public}s", bundleName.c_str());
         asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
     }
 

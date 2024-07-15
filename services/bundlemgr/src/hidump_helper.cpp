@@ -193,7 +193,7 @@ ErrCode HidumpHelper::GetAllAbilityInfo(std::string &result)
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
         bundleInfos, Constants::ANY_USERID)) {
-        APP_LOGE("get bundleInfos failed.");
+        APP_LOGE("get bundleInfos failed");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
@@ -224,7 +224,7 @@ ErrCode HidumpHelper::GetAllAbilityNameList(std::string &result)
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
         bundleInfos, Constants::ANY_USERID)) {
-        APP_LOGE("get bundleInfos failed.");
+        APP_LOGE("get bundleInfos failed");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
@@ -252,7 +252,7 @@ ErrCode HidumpHelper::GetAbilityInfoByName(const std::string &name, std::string 
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
         bundleInfos, Constants::ANY_USERID)) {
-        APP_LOGE("get bundleInfos failed.");
+        APP_LOGE("get bundleInfos failed");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
@@ -266,7 +266,7 @@ ErrCode HidumpHelper::GetAbilityInfoByName(const std::string &name, std::string 
     }
 
     if (jsonObject.is_discarded() || jsonObject.empty()) {
-        APP_LOGE("get ability by abilityName failed.");
+        APP_LOGE("get ability by abilityName failed");
         return ERR_APPEXECFWK_HIDUMP_ERROR;
     }
 
@@ -288,7 +288,7 @@ ErrCode HidumpHelper::GetAllBundleInfo(std::string &result)
         BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO |
         BundleFlag::GET_BUNDLE_WITH_HASH_VALUE),
         bundleInfos, Constants::ANY_USERID)) {
-        APP_LOGE("get bundleInfos failed.");
+        APP_LOGE("get bundleInfos failed");
         return false;
     }
 

@@ -41,7 +41,7 @@ namespace {
 
 std::string DefaultAppData::ToString() const
 {
-    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToString begin.");
+    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToString begin");
     nlohmann::json j;
     j[INFOS] = infos;
     return j.dump();
@@ -49,13 +49,13 @@ std::string DefaultAppData::ToString() const
 
 void DefaultAppData::ToJson(nlohmann::json& jsonObject) const
 {
-    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToJson begin.");
+    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData ToJson begin");
     jsonObject[INFOS] = infos;
 }
 
 int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 {
-    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData FromJson begin.");
+    LOG_D(BMS_TAG_DEFAULT, "DefaultAppData FromJson begin");
     const auto& jsonObjectEnd = jsonObject.end();
     std::lock_guard<std::mutex> lock(g_mutex);
     g_defaultAppJson = ERR_OK;
@@ -77,15 +77,15 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 
 void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
 {
-    LOG_D(BMS_TAG_DEFAULT, "begin to ParseDefaultApplicationConfig.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to ParseDefaultApplicationConfig");
     if (jsonObject.is_discarded() || !jsonObject.is_array() || jsonObject.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "json format error.");
+        LOG_W(BMS_TAG_DEFAULT, "json format error");
         return;
     }
     std::lock_guard<std::mutex> lock(g_mutex);
     for (const auto& object : jsonObject) {
         if (!object.is_object()) {
-            LOG_W(BMS_TAG_DEFAULT, "not json object.");
+            LOG_W(BMS_TAG_DEFAULT, "not json object");
             continue;
         }
         Element element;
@@ -93,7 +93,7 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         from_json(object, element);
         g_defaultAppJson = ERR_OK;
         if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
-            LOG_W(BMS_TAG_DEFAULT, "bad element format.");
+            LOG_W(BMS_TAG_DEFAULT, "bad element format");
             continue;
         }
         std::string normalizedType = DefaultAppMgr::Normalize(element.type);
@@ -108,7 +108,7 @@ void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
 
 void to_json(nlohmann::json& jsonObject, const Element& element)
 {
-    LOG_D(BMS_TAG_DEFAULT, "Element to_json begin.");
+    LOG_D(BMS_TAG_DEFAULT, "Element to_json begin");
     jsonObject = nlohmann::json {
         {BUNDLE_NAME, element.bundleName},
         {MODULE_NAME, element.moduleName},

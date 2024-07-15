@@ -26,7 +26,7 @@ constexpr const char* SAND_BOX_RDB_TABLE_NAME = "sandbox";
 }
 SandboxManagerRdb::SandboxManagerRdb()
 {
-    APP_LOGI("create SandboxManagerRdb.");
+    APP_LOGI("create SandboxManagerRdb");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = SAND_BOX_RDB_TABLE_NAME;
@@ -36,7 +36,7 @@ SandboxManagerRdb::SandboxManagerRdb()
 
 SandboxManagerRdb::~SandboxManagerRdb()
 {
-    APP_LOGI("destroy SandboxManagerRdb.");
+    APP_LOGI("destroy SandboxManagerRdb");
 }
 
 bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(
@@ -45,7 +45,7 @@ bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(
     APP_LOGI("begin to QueryAllSandboxInnerBundleInfo");
     bool ret = GetAllDataFromDb(innerBundleInfos);
     if (!ret) {
-        APP_LOGE("GetAllDataFromDb failed.");
+        APP_LOGE("GetAllDataFromDb failed");
         return false;
     }
     return true;
@@ -56,7 +56,7 @@ bool SandboxManagerRdb::QuerySandboxInnerBundleInfo(const std::string &bundleNam
     APP_LOGI("begin to QuerySandboxInnerBundleInfo");
     bool ret = GetDataFromDb(bundleName, innerBundleInfos);
     if (!ret) {
-        APP_LOGE("GetDataFromDb failed.");
+        APP_LOGE("GetDataFromDb failed");
         return false;
     }
     return true;
@@ -68,7 +68,7 @@ bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName
     APP_LOGI("begin to SaveSandboxInnerBundleInfo");
     bool ret = SaveDataToDb(bundleName, innerBundleInfos);
     if (!ret) {
-        APP_LOGE("SaveDataToDb failed.");
+        APP_LOGE("SaveDataToDb failed");
         return false;
     }
     return true;
@@ -79,7 +79,7 @@ bool SandboxManagerRdb::DeleteSandboxInnerBundleInfo(const std::string &bundleNa
     APP_LOGI("begin to DeleteSandboxInnerBundleInfo");
     bool ret = DeleteDataFromDb(bundleName);
     if (!ret) {
-        APP_LOGE("DeleteDataFromDb failed.");
+        APP_LOGE("DeleteDataFromDb failed");
         return false;
     }
     return true;

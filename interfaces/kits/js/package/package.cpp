@@ -165,7 +165,7 @@ static bool InnerHasInstalled(std::string bundleName)
     BundleInfo bundleInfo;
     bool ret = iBundleMgr->GetBundleInfo(bundleName, 0, bundleInfo);
     if (!ret) {
-        APP_LOGE("bundleInfo is not find, bundleName=%{public}s.", bundleName.c_str());
+        APP_LOGE("bundleInfo is not find, bundleName=%{public}s", bundleName.c_str());
     }
     return ret;
 }
@@ -231,7 +231,7 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
 
 napi_value HasInstalled(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("%{public}s, asyncCallback.", __func__);
+    APP_LOGD("%{public}s, asyncCallback", __func__);
     size_t requireArgc = ARGS_SIZE_ONE;
     size_t argc = ARGS_SIZE_TWO;
     napi_value argv[ARGS_SIZE_TWO] = { 0 };

@@ -1845,7 +1845,7 @@ public:
     bool SetInnerModuleAtomicPreload(const std::string &moduleName, const std::vector<std::string> &preloads)
     {
         if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-            APP_LOGE("innerBundleInfo does not contain the module.");
+            APP_LOGE("innerBundleInfo does not contain the module");
             return false;
         }
         innerModuleInfos_.at(moduleName).preloads = preloads;
@@ -1895,7 +1895,7 @@ public:
     bool GetModuleBuildHash(const std::string &moduleName, std::string &buildHash) const
     {
         if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-            APP_LOGE("innerBundleInfo does not contain the module.");
+            APP_LOGE("innerBundleInfo does not contain the module");
             return false;
         }
         buildHash = innerModuleInfos_.at(moduleName).buildHash;

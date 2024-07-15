@@ -70,7 +70,7 @@ void IsHapModuleRemovableExec(napi_env env, void *data)
 {
     HapModuleRemovableCallbackInfo *asyncCallbackInfo = reinterpret_cast<HapModuleRemovableCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerIsHapModuleRemovable(asyncCallbackInfo->bundleName,
@@ -162,7 +162,7 @@ void SetHapModuleUpgradeFlagExec(napi_env env, void *data)
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<SetHapModuleUpgradeFlagCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerSetHapModuleUpgradeFlag(asyncCallbackInfo->bundleName,
@@ -565,7 +565,7 @@ void GetBundlePackInfoExec(napi_env env, void *data)
     GetBundlePackInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<GetBundlePackInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerGetBundlePackInfo(asyncCallbackInfo->bundleName,
@@ -679,7 +679,7 @@ void GetDispatchInfoExec(napi_env env, void *data)
     GetDispatchInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<GetDispatchInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerGetDispatchInfo(asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);

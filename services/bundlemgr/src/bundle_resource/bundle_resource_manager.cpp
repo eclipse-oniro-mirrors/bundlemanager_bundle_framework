@@ -223,7 +223,7 @@ bool BundleResourceManager::AddResourceInfo(const int32_t userId, ResourceInfo &
 bool BundleResourceManager::AddResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
-        APP_LOGE("resourceInfos is empty.");
+        APP_LOGE("resourceInfos is empty");
         return false;
     }
     // need to parse label and icon
@@ -392,7 +392,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
     const int32_t oldUserId)
 {
     if (resourceInfosMap.empty()) {
-        APP_LOGE("resourceInfosMap is empty.");
+        APP_LOGE("resourceInfosMap is empty");
         return false;
     }
     bool needDeleteAllResource = false;
@@ -545,7 +545,7 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
 bool BundleResourceManager::SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
-        APP_LOGE("resourceInfos is empty.");
+        APP_LOGE("resourceInfos is empty");
         return false;
     }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);

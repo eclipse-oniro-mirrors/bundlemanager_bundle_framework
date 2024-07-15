@@ -52,24 +52,24 @@ ErrCode DefaultAppHostImpl::SetDefaultApplication(int32_t userId, const std::str
     // case1 : ElementName is empty.
     bool isEmpty = bundleName.empty() && moduleName.empty() && abilityName.empty();
     if (isEmpty) {
-        LOG_D(BMS_TAG_DEFAULT, "ElementName is empty.");
+        LOG_D(BMS_TAG_DEFAULT, "ElementName is empty");
         Element element;
         return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);
     }
     // case2 : ElementName is valid ability or valid extension.
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!dataMgr->HasUserId(userId)) {
-        LOG_E(BMS_TAG_DEFAULT, "userId not exist.");
+        LOG_E(BMS_TAG_DEFAULT, "userId not exist");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     Element element;
     bool ret = dataMgr->GetElement(userId, elementName, element);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "GetElement failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetElement failed");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
     return DefaultAppMgr::GetInstance().SetDefaultApplication(userId, type, element);

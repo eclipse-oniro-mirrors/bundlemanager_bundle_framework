@@ -235,7 +235,7 @@ bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
     if (jsonObject.is_discarded()) {
-        LOG_E(TAG_DISPOSED_RULE_BASE, "failed parse ruleString: %{public}s.", ruleString.c_str());
+        LOG_E(TAG_DISPOSED_RULE_BASE, "failed parse ruleString: %{public}s", ruleString.c_str());
         return false;
     }
     from_json(jsonObject, rule);

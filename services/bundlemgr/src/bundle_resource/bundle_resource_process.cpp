@@ -218,7 +218,7 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
 
     for (const auto &bundleName : needAddResourceBundles) {
         if (!GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
-            APP_LOGW("bundleName %{public}s GetResourceInfoByBundleName failed.", bundleName.c_str());
+            APP_LOGW("bundleName %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         }
     }
     return true;
@@ -247,7 +247,7 @@ bool BundleResourceProcess::GetDynamicIcon(
         innerBundleInfo.GetExtendResourceInfos();
     auto iter = extResourceInfos.find(curDynamicIconModule);
     if (iter == extResourceInfos.end()) {
-        APP_LOGE("Module not exist %{public}s.",
+        APP_LOGE("Module not exist %{public}s",
             curDynamicIconModule.c_str());
         return false;
     }

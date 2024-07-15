@@ -1535,7 +1535,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 
 void InnerBundleInfo::BuildDefaultUserInfo()
 {
-    APP_LOGD("BuildDefaultUserInfo: bundleName: %{public}s.",
+    APP_LOGD("BuildDefaultUserInfo: bundleName: %{public}s",
         baseApplicationInfo_->bundleName.c_str());
     InnerBundleUserInfo defaultInnerBundleUserInfo;
     defaultInnerBundleUserInfo.bundleUserInfo.userId = GetUserId();
@@ -1603,7 +1603,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }
     std::string key;
-    key.append(".").append(modulePackage).append(".");
+    key.append(".").append(modulePackage).append("");
     for (const auto &extension : baseExtensionInfos_) {
         if (extension.first.find(key) != std::string::npos) {
             hapInfo.extensionInfos.emplace_back(extension.second);
@@ -2193,7 +2193,7 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
     }
     innerModuleInfos_.erase(it);
     std::string key;
-    key.append(".").append(modulePackage).append(".");
+    key.append(".").append(modulePackage).append("");
     for (auto iter = shortcutInfos_.begin(); iter != shortcutInfos_.end();) {
         if (iter->first.find(key) != std::string::npos) {
             shortcutInfos_.erase(iter++);
@@ -2608,7 +2608,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY)) {
         return;
     }
-    APP_LOGD("Get bundleInfo with abilities.");
+    APP_LOGD("Get bundleInfo with abilities");
     for (auto &ability : baseAbilityInfos_) {
         if ((ability.second.moduleName != hapModuleInfo.moduleName) ||
             (ability.second.name == ServiceConstants::APP_DETAIL_ABILITY)) {
@@ -2647,7 +2647,7 @@ void InnerBundleInfo::GetBundleWithExtensionAbilitiesV9(
         != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY)) {
         return;
     }
-    APP_LOGD("Get bundleInfo with extensionAbilities.");
+    APP_LOGD("Get bundleInfo with extensionAbilities");
     for (const auto &extensionInfo : baseExtensionInfos_) {
         if (extensionInfo.second.moduleName != hapModuleInfo.moduleName || !extensionInfo.second.enabled) {
             continue;
@@ -2769,7 +2769,7 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
                 return;
             }
             if (rawJson.size() == 0) {
-                APP_LOGD("rawJson size 0. skip.");
+                APP_LOGD("rawJson size 0. skip");
                 return;
             }
             nlohmann::json jsonObject = nlohmann::json::parse(rawJson[0], nullptr, false);
@@ -3555,7 +3555,7 @@ int32_t InnerBundleInfo::GetModuleUpgradeFlag(std::string moduleName) const
 int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
 {
     if (innerBundleUserInfos_.empty()) {
-        APP_LOGD("user map is empty.");
+        APP_LOGD("user map is empty");
         return Constants::INVALID_USERID;
     }
 
@@ -3568,7 +3568,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
     }
 
     if (requestUserId < Constants::START_USERID) {
-        APP_LOGD("requestUserId(%{public}d) less than start userId.", requestUserId);
+        APP_LOGD("requestUserId(%{public}d) less than start userId", requestUserId);
         return Constants::INVALID_USERID;
     }
 
@@ -3580,7 +3580,7 @@ int32_t InnerBundleInfo::GetResponseUserId(int32_t requestUserId) const
         }
     }
 
-    APP_LOGD("requestUserId(%{public}d) and responseUserId(%{public}d).", requestUserId, responseUserId);
+    APP_LOGD("requestUserId(%{public}d) and responseUserId(%{public}d)", requestUserId, responseUserId);
     return responseUserId;
 }
 
@@ -3773,7 +3773,7 @@ bool InnerBundleInfo::IsLibIsolated(const std::string &moduleName) const
 {
     auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
     if (!moduleInfo) {
-        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        APP_LOGE("Get moduleInfo(%{public}s) failed", moduleName.c_str());
         return false;
     }
 
@@ -3905,7 +3905,7 @@ bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
 {
     auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
     if (!moduleInfo) {
-        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        APP_LOGE("Get moduleInfo(%{public}s) failed", moduleName.c_str());
         return true; // compressNativeLibs default true
     }
 
@@ -3916,7 +3916,7 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
     const std::vector<std::string> &fileNames)
 {
     if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-        APP_LOGE("innerBundleInfo not contain the module: %{public}s.", moduleName.c_str());
+        APP_LOGE("innerBundleInfo not contain the module: %{public}s", moduleName.c_str());
         return;
     }
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
@@ -4030,7 +4030,7 @@ ErrCode InnerBundleInfo::DelMimeType(
 ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
 {
     if (baseApplicationInfo_->bundleType != BundleType::APP_SERVICE_FWK) {
-        APP_LOGD("bundle is not app service hsp.");
+        APP_LOGD("bundle is not app service hsp");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     bundleInfo = *baseBundleInfo_;
