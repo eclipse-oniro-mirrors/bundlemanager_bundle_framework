@@ -17,6 +17,7 @@
 #include <string>
 
 #include "app_log_wrapper.h"
+#include "app_log_tag_wrapper.h"
 #include "app_control_interface.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_interface.h"
@@ -685,7 +686,7 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
     napi_get_undefined(env, &nRet);
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
-        APP_LOGE("AppControlProxy is null.");
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "AppControlProxy is null");
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             SET_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
@@ -699,7 +700,7 @@ static napi_value InnerSetDisposedRule(napi_env env, std::string &appId, Dispose
     }
     ret = CommonFunc::ConvertErrCode(ret);
     if (ret != NO_ERROR) {
-        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "err: %{public}d", ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
@@ -714,13 +715,13 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     napi_value nRet;
     napi_get_undefined(env, &nRet);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("Napi func init failed");
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "func init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nRet;
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "appId %{public}s invalid", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
@@ -732,7 +733,7 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     DisposedRule rule;
     if (!ParseDiposedRule(env, args[ARGS_POS_ONE], rule)) {
-        APP_LOGE("rule invalid!");
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "rule invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return nRet;
     }
@@ -742,11 +743,11 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_TWO], appIndex)) {
-            APP_LOGW("parse appIndex falied");
+            LOG_W(TAG_SET_DISPOSED_RULE(BMS_NAPI), "parse appIndex falied");
         }
         return InnerSetDisposedRule(env, appId, rule, appIndex);
     }
-    APP_LOGE("parameter is invalid");
+    LOG_E(TAG_SET_DISPOSED_RULE(BMS_NAPI), "parameter is invalid");
     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
     return nRet;
 }
