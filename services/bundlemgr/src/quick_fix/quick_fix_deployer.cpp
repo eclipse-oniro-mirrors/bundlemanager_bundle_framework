@@ -333,7 +333,7 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
         if (!targetPath_.empty()) {
             nativeLibraryPath = PATCH_DIR + targetPath_ + ServiceConstants::PATH_SEPARATOR + libraryPath;
         } else {
-            nativeLibraryPath = 
+            nativeLibraryPath =
                 ServiceConstants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode) +
                 ServiceConstants::PATH_SEPARATOR + libraryPath;
         }
