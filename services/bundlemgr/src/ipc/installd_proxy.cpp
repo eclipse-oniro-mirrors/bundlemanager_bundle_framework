@@ -328,11 +328,10 @@ ErrCode InstalldProxy::GetAllBundleStats(const std::vector<std::string> &bundleN
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply, option);
     if (ret == ERR_OK) {
-        if (reply.ReadInt64Vector(&bundleStats)) {
-            return ERR_OK;
-        } else {
+        if (!reply.ReadInt64Vector(&bundleStats)) {
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+        return ERR_OK;
     }
     return ret;
 }
