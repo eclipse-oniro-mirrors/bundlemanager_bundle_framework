@@ -823,7 +823,6 @@ private:
      * @return Returns ashmem num.
      */
     int32_t AllocatAshmemNum();
-    void init();
 
     template<typename T>
     bool WriteParcelableIntoAshmem(
@@ -840,9 +839,6 @@ private:
     ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 
     ErrCode WriteBigString(const std::string &str, MessageParcel &reply) const;
-
-    using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
-    std::unordered_map<uint32_t, BundleMgrHostFunc> funcMap_;
 
     std::mutex bundleAshmemMutex_;
     int32_t ashmemNum_ = 0;
