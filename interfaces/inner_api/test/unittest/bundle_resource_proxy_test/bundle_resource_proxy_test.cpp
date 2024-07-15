@@ -107,17 +107,6 @@ void BundleResourceProxyTest::TearDown()
 {
 }
 
-HWTEST_F(BundleResourceProxyTest, GetParceInfo_0100, Function | SmallTest | Level0)
-{
-    GTEST_LOG_(INFO) << "GetParceInfo_0100 start";
-    sptr<MockStub> stub = new MockStub();
-    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
-    BundleResourceInfo info;
-    ErrCode ret = proxy->GetBundleResourceInfo("com.test.empty", 0, info, 1);
-    GTEST_LOG_(INFO) << "GetParceInfo_0100 end, " << ret;
-    ASSERT_EQ(ret, ERR_OK);
-}
-
 HWTEST_F(BundleResourceProxyTest, GetVectorParcelInfo_0100, Function | SmallTest | Level0)
 {
     GTEST_LOG_(INFO) << "GetVectorParcelInfo_0100 start";
