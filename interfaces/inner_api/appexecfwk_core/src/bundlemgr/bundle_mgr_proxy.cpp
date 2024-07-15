@@ -622,7 +622,7 @@ bool BundleMgrProxy::GetBundleInfos(
 ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_D(BMS_TAG_QUERY, "begin to get bundle infos");
+    LOG_I(BMS_TAG_QUERY, "begin to get bundle infos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosV9 due to write InterfaceToken fail");
@@ -636,6 +636,7 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    LOG_I(BMS_TAG_QUERY, "get bundle infos end");
     return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
