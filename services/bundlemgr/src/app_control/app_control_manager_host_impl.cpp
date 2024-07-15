@@ -28,6 +28,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+    const std::string PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 }
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
@@ -340,8 +341,9 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
         LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
-        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({PERMISSION_DISPOSED_STATUS,
+        PERMISSION_GET_DISPOSED_STATUS})) {
+        LOG_W(BMS_TAG_DEFAULT, "verify get disposed status permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
