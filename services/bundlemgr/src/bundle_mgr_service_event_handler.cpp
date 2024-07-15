@@ -29,6 +29,7 @@
 #include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
+#include "bms_key_event_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
@@ -357,6 +358,8 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         CheckALLResourceInfo();
     }
+    // need process main bundle status
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
 
     if (IsModuleUpdate()) {
         HandleModuleUpdate();
@@ -1674,6 +1677,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             LOG_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(scanPathIter, ERR_APPEXECFWK_PARSE_UNEXPECTED);
             SavePreInstallException(scanPathIter);
             continue;
         }
