@@ -1603,7 +1603,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(
         hapInfo.moduleType = ModuleType::UNKNOWN;
     }
     std::string key;
-    key.append(".").append(modulePackage).append("");
+    key.append(".").append(modulePackage).append(".");
     for (const auto &extension : baseExtensionInfos_) {
         if (extension.first.find(key) != std::string::npos) {
             hapInfo.extensionInfos.emplace_back(extension.second);
@@ -2193,7 +2193,7 @@ void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
     }
     innerModuleInfos_.erase(it);
     std::string key;
-    key.append(".").append(modulePackage).append("");
+    key.append(".").append(modulePackage).append(".");
     for (auto iter = shortcutInfos_.begin(); iter != shortcutInfos_.end();) {
         if (iter->first.find(key) != std::string::npos) {
             shortcutInfos_.erase(iter++);

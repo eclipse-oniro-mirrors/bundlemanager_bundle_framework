@@ -222,7 +222,7 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<GetBundleArchiveInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -519,7 +519,7 @@ napi_value GetBundleNameByUid(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<GetBundleNameByUidCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -558,7 +558,7 @@ napi_value GetAppCloneIdentity(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<GetAppCloneIdentityCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -580,12 +580,12 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ApplicationInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ApplicationInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -631,7 +631,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetApplicationInfo done.");
+    APP_LOGD("call NAPI_GetApplicationInfo done");
     return promise;
 }
 
@@ -641,12 +641,12 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ApplicationInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -686,7 +686,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfosCallbackInfo>(
         env, asyncCallbackInfo, GET_APPLICATION_INFOS, GetApplicationInfosExec, GetApplicationInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetApplicationInfos done.");
+    APP_LOGD("call NAPI_GetApplicationInfos done");
     return promise;
 }
 
@@ -720,7 +720,7 @@ static ErrCode InnerSetApplicationEnabled(const std::string &bundleName, bool &i
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = ERR_OK;
@@ -736,7 +736,7 @@ static ErrCode InnerIsApplicationEnabled(const std::string &bundleName, bool &is
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = ERR_OK;
@@ -752,7 +752,7 @@ static ErrCode InnerSetAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEn
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = ERR_OK;
@@ -768,7 +768,7 @@ static ErrCode InnerIsAbilityEnabled(const AbilityInfo &abilityInfo, bool &isEna
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode ret = ERR_OK;
@@ -785,7 +785,7 @@ static ErrCode InnerGetAbilityLabel(const std::string &bundleName, const std::st
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
     ErrCode ret = bundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel);
@@ -819,11 +819,11 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return ERROR_SYSTEM_ABILITY_NOT_FOUND;
     }
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("GetAbilityIcon check param failed.");
+        APP_LOGE("GetAbilityIcon check param failed");
         return ERROR_PARAM_CHECK_ERROR;
     }
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
@@ -919,7 +919,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
             QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
             asyncCallbackInfo->isSavedInCache = true;
-            APP_LOGD("has cache, no need to query from host.");
+            APP_LOGD("has cache, no need to query from host");
             return;
         }
     }
@@ -968,7 +968,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     APP_LOGI("begin");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1040,7 +1040,7 @@ void BatchQueryAbilityInfosExec(napi_env env, void *data)
             BATCH_QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
             asyncCallbackInfo->isSavedInCache = true;
-            APP_LOGE("has cache, no need to query from host.");
+            APP_LOGE("has cache, no need to query from host");
             return;
         }
     }
@@ -1107,7 +1107,7 @@ napi_value BatchQueryAbilityInfos(napi_env env, napi_callback_info info)
     asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<BatchAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1297,7 +1297,7 @@ void QueryExtensionInfosExec(napi_env env, void *data)
             Query(key, QUERY_EXTENSION_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
             asyncCallbackInfo->isSavedInCache = true;
-            APP_LOGD("extension has cache, no need to query from host.");
+            APP_LOGD("extension has cache, no need to query from host");
             return;
         }
     }
@@ -1487,7 +1487,7 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AbilityLabelCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityLabelCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AbilityLabelCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1523,10 +1523,10 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityLabelCallbackInfo>(
         env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
     callbackPtr.release();
-    APP_LOGD("call GetAbilityLabel done.");
+    APP_LOGD("call GetAbilityLabel done");
     return promise;
 #else
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
     napi_throw(env, error);
     return nullptr;
@@ -1573,7 +1573,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AbilityIconCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1610,10 +1610,10 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
         env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
     callbackPtr.release();
-    APP_LOGD("call GetAbilityIcon done.");
+    APP_LOGD("call GetAbilityIcon done");
     return promise;
 #else
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityIcon");
     napi_throw(env, error);
     return nullptr;
@@ -1725,7 +1725,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1755,7 +1755,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
         env, asyncCallbackInfo, "SetApplicationEnabled", SetApplicationEnabledExec, SetApplicationEnabledComplete);
     callbackPtr.release();
-    APP_LOGD("call SetApplicationEnabled done.");
+    APP_LOGD("call SetApplicationEnabled done");
     return promise;
 }
 
@@ -1836,7 +1836,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1866,7 +1866,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
         env, asyncCallbackInfo, "SetAbilityEnabled", SetAbilityEnabledExec, SetAbilityEnabledComplete);
     callbackPtr.release();
-    APP_LOGD("call SetAbilityEnabled done.");
+    APP_LOGD("call SetAbilityEnabled done");
     return promise;
 }
 
@@ -1926,7 +1926,7 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1951,7 +1951,7 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(
         env, asyncCallbackInfo, "IsSetApplicationEnabled", IsApplicationEnabledExec, IsApplicationEnabledComplete);
     callbackPtr.release();
-    APP_LOGD("call IsSetApplicationEnabled done.");
+    APP_LOGD("call IsSetApplicationEnabled done");
     return promise;
 }
 
@@ -2014,7 +2014,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -2040,7 +2040,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
         env, asyncCallbackInfo, "IsAbilityEnabled", IsAbilityEnabledExec, IsAbilityEnabledComplete);
     callbackPtr.release();
-    APP_LOGD("call SetAbilityEnabled done.");
+    APP_LOGD("call SetAbilityEnabled done");
     return promise;
 }
 
@@ -2106,7 +2106,7 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     CleanBundleCacheCallbackInfo *asyncCallbackInfo = new (std::nothrow) CleanBundleCacheCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("CleanBundleCacheFiles asyncCallbackInfo is null.");
+        APP_LOGE("CleanBundleCacheFiles asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<CleanBundleCacheCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -2131,7 +2131,7 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
             }
         }
     } else {
-        APP_LOGE("param error.");
+        APP_LOGE("param error");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2195,7 +2195,7 @@ napi_value VerifyAbc(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     VerifyCallbackInfo *asyncCallbackInfo = new (std::nothrow) VerifyCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null.");
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null");
         return nullptr;
     }
 
@@ -2309,12 +2309,12 @@ napi_value GetExtResource(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     DynamicIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) DynamicIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2328,7 +2328,7 @@ napi_value GetExtResource(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "GetExtResource", GetExtResourceExec, GetExtResourceComplete);
     callbackPtr.release();
-    APP_LOGD("call GetExtResource done.");
+    APP_LOGD("call GetExtResource done");
     return promise;
 }
 
@@ -2387,12 +2387,12 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     DynamicIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) DynamicIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2418,7 +2418,7 @@ napi_value EnableDynamicIcon(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "EnableDynamicIcon", EnableDynamicIconExec, EnableDynamicIconComplete);
     callbackPtr.release();
-    APP_LOGD("call EnableDynamicIcon done.");
+    APP_LOGD("call EnableDynamicIcon done");
     return promise;
 }
 
@@ -2475,12 +2475,12 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     DynamicIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) DynamicIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2494,7 +2494,7 @@ napi_value DisableDynamicIcon(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "DisableDynamicIcon", DisableDynamicIconExec, DisableDynamicIconComplete);
     callbackPtr.release();
-    APP_LOGD("call DisableDynamicIcon done.");
+    APP_LOGD("call DisableDynamicIcon done");
     return promise;
 }
 
@@ -2554,12 +2554,12 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     DynamicIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) DynamicIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<DynamicIconCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2573,7 +2573,7 @@ napi_value GetDynamicIcon(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DynamicIconCallbackInfo>(
         env, asyncCallbackInfo, "GetDynamicIcon", GetDynamicIconExec, GetDynamicIconComplete);
     callbackPtr.release();
-    APP_LOGD("call GetDynamicIcon done.");
+    APP_LOGD("call GetDynamicIcon done");
     return promise;
 }
 
@@ -2631,7 +2631,7 @@ napi_value DeleteAbc(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     VerifyCallbackInfo *asyncCallbackInfo = new (std::nothrow) VerifyCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null.");
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null");
         return nullptr;
     }
 
@@ -2713,7 +2713,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     LaunchWantCallbackInfo *asyncCallbackInfo = new (std::nothrow) LaunchWantCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("GetLaunchWantForBundle asyncCallbackInfo is null.");
+        APP_LOGE("GetLaunchWantForBundle asyncCallbackInfo is null");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -2928,7 +2928,7 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfil
     NapiArg args(env, info);
     GetProfileCallbackInfo *asyncCallbackInfo = new (std::nothrow) GetProfileCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("GetProfile asyncCallbackInfo is null.");
+        APP_LOGE("GetProfile asyncCallbackInfo is null");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -3365,7 +3365,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AsyncPermissionDefineCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncPermissionDefineCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AsyncPermissionDefineCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -3826,12 +3826,12 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -3878,7 +3878,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetBundleInfo done.");
+    APP_LOGD("call NAPI_GetBundleInfo done");
     return promise;
 }
 
@@ -3899,12 +3899,12 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     BundleInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<BundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -3944,7 +3944,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfosCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFOS, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetBundleInfos done.");
+    APP_LOGD("call NAPI_GetBundleInfos done");
     return promise;
 }
 
@@ -3954,12 +3954,12 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     BundleInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) BundleInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -3985,7 +3985,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call GetBundleInfoForSelf done.");
+    APP_LOGD("call GetBundleInfoForSelf done");
     return promise;
 }
 
@@ -4037,17 +4037,17 @@ napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     SharedBundleCallbackInfo *asyncCallbackInfo = new (std::nothrow) SharedBundleCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     if (args.GetMaxArgc() < ARGS_SIZE_ZERO) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4068,7 +4068,7 @@ napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
         GET_ALL_SHARED_BUNDLE_INFO, GetAllSharedBundleInfoExec, GetAllSharedBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetAllSharedBundleInfo done.");
+    APP_LOGD("call NAPI_GetAllSharedBundleInfo done");
     return promise;
 }
 
@@ -4122,17 +4122,17 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     SharedBundleCallbackInfo *asyncCallbackInfo = new (std::nothrow) SharedBundleCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
     if (args.GetMaxArgc() < ARGS_SIZE_TWO) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4167,7 +4167,7 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
         GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetSharedBundleInfo done.");
+    APP_LOGD("call NAPI_GetSharedBundleInfo done");
     return promise;
 }
 
@@ -4413,12 +4413,12 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     AppProvisionInfoCallbackInfo *asyncCallbackInfo = new (std::nothrow) AppProvisionInfoCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<AppProvisionInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4439,7 +4439,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("parse userId failed, set this parameter to the caller userId.");
+                APP_LOGW("parse userId failed, set this parameter to the caller userId");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -4456,7 +4456,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AppProvisionInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_APP_PROVISION_INFO, GetAppProvisionInfoExec, GetAppProvisionInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call GetAppProvisionInfo done.");
+    APP_LOGD("call GetAppProvisionInfo done");
     return promise;
 }
 
@@ -4465,7 +4465,7 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     APP_LOGD("GetSpecifiedDistributionType napi called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4501,7 +4501,7 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
 
     napi_value nSpecifiedDistributionType;
     napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
-    APP_LOGD("call GetSpecifiedDistributionType done.");
+    APP_LOGD("call GetSpecifiedDistributionType done");
     return nSpecifiedDistributionType;
 }
 
@@ -4510,7 +4510,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     APP_LOGD("GetAdditionalInfo napi called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4546,7 +4546,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
 
     napi_value nAdditionalInfo;
     napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
-    APP_LOGD("call GetAdditionalInfo done.");
+    APP_LOGD("call GetAdditionalInfo done");
     return nAdditionalInfo;
 }
 
@@ -4607,7 +4607,7 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
 {
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return false;
     }
@@ -4682,7 +4682,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     }
     napi_value nProfile;
     napi_create_string_utf8(env, profile.c_str(), NAPI_AUTO_LENGTH, &nProfile);
-    APP_LOGD("call GetJsonProfile done.");
+    APP_LOGD("call GetJsonProfile done");
     return nProfile;
 }
 
@@ -4734,12 +4734,12 @@ napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     RecoverableApplicationCallbackInfo *asyncCallbackInfo = new (std::nothrow) RecoverableApplicationCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<RecoverableApplicationCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -4761,7 +4761,7 @@ napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, GET_RECOVERABLE_APPLICATION_INFO,
         GetRecoverableApplicationInfoExec, GetRecoverableApplicationInfoExecComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetRecoverableApplicationInfo done.");
+    APP_LOGD("call NAPI_GetRecoverableApplicationInfo done");
     return promise;
 }
 
@@ -4852,7 +4852,7 @@ napi_value CanOpenLink(napi_env env, napi_callback_info info)
         return nRet;
     }
     NAPI_CALL(env, napi_get_boolean(env, canOpen, &nRet));
-    APP_LOGD("call CanOpenLink done.");
+    APP_LOGD("call CanOpenLink done");
     return nRet;
 }
 
@@ -4884,7 +4884,7 @@ static void ProcessPreinstalledApplicationInfos(
     napi_env env, napi_value result, const std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
 {
     if (preinstalledApplicationInfos.size() == 0) {
-        APP_LOGD("PreinstalledApplicationInfos is null.");
+        APP_LOGD("PreinstalledApplicationInfos is null");
         return;
     }
     size_t index = 0;
@@ -4902,7 +4902,7 @@ void GetAllPreinstalledApplicationInfosComplete(napi_env env, napi_status status
     PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("AsyncCallbackInfo is null.");
+        APP_LOGE("AsyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -4936,7 +4936,7 @@ void GetAllPreinstalledApplicationInfosExec(napi_env env, void *data)
     PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<PreinstalledApplicationInfosCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("AsyncCallbackInfo is null.");
+        APP_LOGE("AsyncCallbackInfo is null");
         return;
     }
     asyncCallbackInfo->err = InnerGetAllPreinstalledApplicationInfos(asyncCallbackInfo->preinstalledApplicationInfos);
@@ -4949,12 +4949,12 @@ napi_value GetAllPreinstalledApplicationInfos(napi_env env, napi_callback_info i
     PreinstalledApplicationInfosCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) PreinstalledApplicationInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("AsyncCallbackInfo is null.");
+        APP_LOGE("AsyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<PreinstalledApplicationInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ZERO)) {
-        APP_LOGE("Param count invalid.");
+        APP_LOGE("Param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -5109,7 +5109,7 @@ napi_value SwitchUninstallState(napi_env env, napi_callback_info info)
     }
     napi_value nRet = nullptr;
     NAPI_CALL(env, napi_get_undefined(env, &nRet));
-    APP_LOGD("call SwitchUninstallState done.");
+    APP_LOGD("call SwitchUninstallState done");
     return nRet;
 }
 
@@ -5202,7 +5202,7 @@ napi_value GetAppCloneBundleInfo(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), GET_APP_CLONE_BUNDLE_INFO,
         GetAppCloneBundleInfoExec, GetAppCloneBundleInfoComplete);
     asyncCallbackInfo.release();
-    APP_LOGD("call GetAppCloneBundleInfo done.");
+    APP_LOGD("call GetAppCloneBundleInfo done");
     return promise;
 }
 
@@ -5330,7 +5330,7 @@ napi_value GetAllAppCloneBundleInfo(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), GET_ALL_APP_CLONE_BUNDLE_INFO,
         GetAllAppCloneBundleInfoExec, GetAllAppCloneBundleInfoComplete);
     asyncCallbackInfo.release();
-    APP_LOGD("call GetAllAppCloneBundleInfo done.");
+    APP_LOGD("call GetAllAppCloneBundleInfo done");
     return promise;
 }
 

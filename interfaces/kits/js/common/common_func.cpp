@@ -184,7 +184,7 @@ sptr<IRemoteObject::DeathRecipient> CommonFunc::deathRecipient_(new (std::nothro
 
 void CommonFunc::BundleMgrCommonDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
 {
-    APP_LOGD("BundleManagerService dead.");
+    APP_LOGD("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     bundleMgr_ = nullptr;
 };
@@ -201,12 +201,12 @@ bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
     napi_valuetype valuetype = napi_undefined;
     napi_typeof(env, args, &valuetype);
     if (valuetype != napi_number) {
-        APP_LOGD("Wrong argument type. int32 expected.");
+        APP_LOGD("Wrong argument type. int32 expected");
         return false;
     }
     int32_t value = 0;
     if (napi_get_value_int32(env, args, &value) != napi_ok) {
-        APP_LOGD("napi_get_value_int32 failed.");
+        APP_LOGD("napi_get_value_int32 failed");
         return false;
     }
     param = value;
@@ -391,17 +391,17 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
     if (bundleMgr_ == nullptr) {
         auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null.");
+            APP_LOGE("systemAbilityManager is null");
             return nullptr;
         }
         auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
         if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null.");
+            APP_LOGE("bundleMgrSa is null");
             return nullptr;
         }
         bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            APP_LOGE("iface_cast failed.");
+            APP_LOGE("iface_cast failed");
             return nullptr;
         }
         bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
@@ -535,11 +535,11 @@ void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Wan
 
 bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
 {
-    APP_LOGD("begin to parse ElementName.");
+    APP_LOGD("begin to parse ElementName");
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
-        APP_LOGW("args not object type.");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -566,11 +566,11 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
 
 bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &elementName)
 {
-    APP_LOGD("begin to parse ElementName.");
+    APP_LOGD("begin to parse ElementName");
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
-        APP_LOGW("args not object type.");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -2180,11 +2180,11 @@ std::string CommonFunc::ObtainCallingBundleName()
     std::string callingBundleName;
     auto bundleMgr = GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return callingBundleName;
     }
     if (!bundleMgr->ObtainCallingBundleName(callingBundleName)) {
-        APP_LOGE("obtain calling bundleName failed.");
+        APP_LOGE("obtain calling bundleName failed");
     }
     return callingBundleName;
 }

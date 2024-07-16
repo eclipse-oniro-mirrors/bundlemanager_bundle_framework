@@ -212,7 +212,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("NAPI GetBundleInstallerSync called.");
+    APP_LOGI("NAPI GetBundleInstallerSync called");
     napi_value m_classBundleInstaller = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
@@ -231,9 +231,9 @@ napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
     g_isSystemApp = true;
     napi_value nBundleInstaller = nullptr;
     NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
-    APP_LOGD("call GetBundleInstallerSync done.");
+    APP_LOGD("call GetBundleInstallerSync done");
     return nBundleInstaller;
-    APP_LOGI("call GetBundleInstallerSync done.");
+    APP_LOGI("call GetBundleInstallerSync done");
 }
 
 static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
@@ -432,7 +432,7 @@ static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std:
     APP_LOGD("start to parse moduleName");
     bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
     if (!ret || key.empty()) {
-        APP_LOGE("param string moduleName is empty.");
+        APP_LOGE("param string moduleName is empty");
         return false;
     }
     APP_LOGD("ParseHashParam moduleName=%{public}s", key.c_str());
@@ -440,7 +440,7 @@ static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std:
     APP_LOGD("start to parse hashValue");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, HASH_VALUE, true, value);
     if (!ret || value.empty()) {
-        APP_LOGE("param string hashValue is empty.");
+        APP_LOGE("param string hashValue is empty");
         return false;
     }
     APP_LOGD("ParseHashParam hashValue=%{public}s", value.c_str());
@@ -453,11 +453,11 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, HASH_PARAMS, valueVec);
     if (!res) {
-        APP_LOGW("hashParams type error,using default value.");
+        APP_LOGW("hashParams type error,using default value");
         return true;
     }
     if (valueVec.empty()) {
-        APP_LOGW("hashParams is empty,using default value.");
+        APP_LOGW("hashParams is empty,using default value");
         return true;
     }
     for (const auto &property : valueVec) {
@@ -481,7 +481,7 @@ static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key
     APP_LOGD("start to parse moduleName");
     bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
     if (!ret || key.empty()) {
-        APP_LOGE("param string moduleName is empty.");
+        APP_LOGE("param string moduleName is empty");
         return false;
     }
     APP_LOGD("ParseVerifyCodeParam moduleName is %{public}s", key.c_str());
@@ -489,7 +489,7 @@ static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key
     APP_LOGD("start to parse signatureFilePath");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, SIGNATURE_FILE_PATH, true, value);
     if (!ret || value.empty()) {
-        APP_LOGE("param string signatureFilePath is empty.");
+        APP_LOGE("param string signatureFilePath is empty");
         return false;
     }
     APP_LOGD("ParseVerifyCodeParam signatureFilePath is %{public}s", value.c_str());
@@ -502,11 +502,11 @@ static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::s
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, VERIFY_CODE_PARAM, valueVec);
     if (!res) {
-        APP_LOGW("verifyCodeParams type error, using default value.");
+        APP_LOGW("verifyCodeParams type error, using default value");
         return true;
     }
     if (valueVec.empty()) {
-        APP_LOGW("verifyCodeParams is empty, using default value.");
+        APP_LOGW("verifyCodeParams is empty, using default value");
         return true;
     }
     for (const auto &property : valueVec) {
@@ -530,7 +530,7 @@ static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::
     APP_LOGD("start to parse moduleName");
     bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
     if (!ret || key.empty()) {
-        APP_LOGE("param string moduleName is empty.");
+        APP_LOGE("param string moduleName is empty");
         return false;
     }
     APP_LOGD("ParsePgoParam moduleName is %{public}s", key.c_str());
@@ -538,7 +538,7 @@ static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::
     APP_LOGD("start to parse pgoFilePath");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, PGO_FILE_PATH, true, value);
     if (!ret || value.empty()) {
-        APP_LOGE("param string pgoFilePath is empty.");
+        APP_LOGE("param string pgoFilePath is empty");
         return false;
     }
     APP_LOGD("ParsePgoParam pgoFilePath is %{public}s", value.c_str());
@@ -551,11 +551,11 @@ static bool ParsePgoParams(napi_env env, napi_value args, std::map<std::string, 
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, PGO_PARAM, valueVec);
     if (!res) {
-        APP_LOGW("pgoParams type error, using default value.");
+        APP_LOGW("pgoParams type error, using default value");
         return true;
     }
     if (valueVec.empty()) {
-        APP_LOGW("pgoParams is empty, using default value.");
+        APP_LOGW("pgoParams is empty, using default value");
         return true;
     }
     for (const auto &property : valueVec) {
@@ -852,25 +852,25 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
         return false;
     }
     if (!ParseUserId(env, args, installParam.userId)) {
-        APP_LOGW("Parse userId failed,using default value.");
+        APP_LOGW("Parse userId failed,using default value");
     }
     if (!ParseInstallFlag(env, args, installParam.installFlag)) {
-        APP_LOGW("Parse installFlag failed,using default value.");
+        APP_LOGW("Parse installFlag failed,using default value");
     }
     if (!ParseIsKeepData(env, args, installParam.isKeepData)) {
-        APP_LOGW("Parse isKeepData failed,using default value.");
+        APP_LOGW("Parse isKeepData failed,using default value");
     }
     if (!ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
-        APP_LOGW("Parse crowdtestDeadline failed,using default value.");
+        APP_LOGW("Parse crowdtestDeadline failed,using default value");
     }
     if (!ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
-        APP_LOGW("Parse sharedBundleDirPaths failed,using default value.");
+        APP_LOGW("Parse sharedBundleDirPaths failed,using default value");
     }
     if (!ParseSpecifiedDistributionType(env, args, installParam.specifiedDistributionType)) {
-        APP_LOGW("Parse specifiedDistributionType failed,using default value.");
+        APP_LOGW("Parse specifiedDistributionType failed,using default value");
     }
     if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
-        APP_LOGW("Parse additionalInfo failed,using default value.");
+        APP_LOGW("Parse additionalInfo failed,using default value");
     }
     return true;
 }
@@ -1388,12 +1388,12 @@ napi_value AddExtResource(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1419,7 +1419,7 @@ napi_value AddExtResource(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
         env, asyncCallbackInfo, "AddExtResource", AddExtResourceExec, AddExtResourceComplete);
     callbackPtr.release();
-    APP_LOGD("call AddExtResource done.");
+    APP_LOGD("call AddExtResource done");
     return promise;
 }
 
@@ -1478,12 +1478,12 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info)
     NapiArg args(env, info);
     ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
     std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1509,7 +1509,7 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
         env, asyncCallbackInfo, "RemoveExtResource", RemoveExtResourceExec, RemoveExtResourceComplete);
     callbackPtr.release();
-    APP_LOGD("call RemoveExtResource done.");
+    APP_LOGD("call RemoveExtResource done");
     return promise;
 }
 
@@ -1570,7 +1570,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
                 APP_LOGW("Parse installParam failed");
             }
         } else {
-            APP_LOGE("The number of parameters is incorrect.");
+            APP_LOGE("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -1664,7 +1664,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGW("param count invalid.");
+        APP_LOGW("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1683,7 +1683,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
                 ParseAppCloneParam(env, args[i], asyncCallbackInfo->userId, asyncCallbackInfo->appIndex);
             }
         } else {
-            APP_LOGW("The number of parameters is incorrect.");
+            APP_LOGW("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -1694,7 +1694,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppCloneCallbackInfo>(
         env, asyncCallbackInfo.get(), CREATE_APP_CLONE, CreateAppCloneExec, CreateAppCloneComplete);
     asyncCallbackInfo.release();
-    APP_LOGI("call napi CreateAppClone done.");
+    APP_LOGI("call napi CreateAppClone done");
     return promise;
 }
 
@@ -1763,7 +1763,7 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGW("param count invalid.");
+        APP_LOGW("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -1788,7 +1788,7 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
                 APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else {
-            APP_LOGE("The number of parameters is incorrect.");
+            APP_LOGE("The number of parameters is incorrect");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -1799,7 +1799,7 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<CreateAppCloneCallbackInfo>(
         env, asyncCallbackInfo.get(), DESTROY_APP_CLONE, DestroyAppCloneExec, DestroyAppCloneComplete);
     asyncCallbackInfo.release();
-    APP_LOGI("call napi destroyAppTwin done.");
+    APP_LOGI("call napi destroyAppTwin done");
     return promise;
 }
 } // AppExecFwk

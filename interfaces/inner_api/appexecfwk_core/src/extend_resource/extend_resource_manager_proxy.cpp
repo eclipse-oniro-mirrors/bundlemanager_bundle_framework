@@ -35,12 +35,12 @@ const int32_t DEFAULT_BUFFER_SIZE = 65536;
 ExtendResourceManagerProxy::ExtendResourceManagerProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IExtendResourceManager>(object)
 {
-    APP_LOGI("create ExtendResourceManagerProxy.");
+    APP_LOGI("create ExtendResourceManagerProxy");
 }
 
 ExtendResourceManagerProxy::~ExtendResourceManagerProxy()
 {
-    APP_LOGI("destroy ExtendResourceManagerProxy.");
+    APP_LOGI("destroy ExtendResourceManagerProxy");
 }
 
 ErrCode ExtendResourceManagerProxy::AddExtResource(
@@ -49,16 +49,16 @@ ErrCode ExtendResourceManagerProxy::AddExtResource(
     APP_LOGD("begin to AddExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to AddExtResource due to bundleName is empty.");
+        APP_LOGE("fail to AddExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (filePaths.empty()) {
-        APP_LOGE("fail to AddExtResource due to filePaths is empty.");
+        APP_LOGE("fail to AddExtResource due to filePaths is empty");
         return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to AddExtResource due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to AddExtResource due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -85,16 +85,16 @@ ErrCode ExtendResourceManagerProxy::RemoveExtResource(
     APP_LOGD("begin to RemoveExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to RemoveExtResource due to bundleName is empty.");
+        APP_LOGE("fail to RemoveExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (moduleNames.empty()) {
-        APP_LOGE("fail to RemoveExtResource due to moduleNames is empty.");
+        APP_LOGE("fail to RemoveExtResource due to moduleNames is empty");
         return ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to RemoveExtResource due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to RemoveExtResource due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -121,12 +121,12 @@ ErrCode ExtendResourceManagerProxy::GetExtResource(
     APP_LOGD("begin to GetExtResource");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetExtResource due to bundleName is empty.");
+        APP_LOGE("fail to GetExtResource due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetExtResource due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to GetExtResource due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -158,16 +158,16 @@ ErrCode ExtendResourceManagerProxy::EnableDynamicIcon(
     APP_LOGD("begin to EnableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty.");
+        APP_LOGE("fail to EnableDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (moduleName.empty()) {
-        APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty.");
+        APP_LOGE("fail to EnableDynamicIcon due to moduleName is empty");
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to EnableDynamicIcon due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to EnableDynamicIcon due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -193,12 +193,12 @@ ErrCode ExtendResourceManagerProxy::DisableDynamicIcon(const std::string &bundle
     APP_LOGD("begin to DisableDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to DisableDynamicIcon due to bundleName is empty.");
+        APP_LOGE("fail to DisableDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to DisableDynamicIcon due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to DisableDynamicIcon due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -221,12 +221,12 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
     APP_LOGD("begin to GetDynamicIcon");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetDynamicIcon due to bundleName is empty.");
+        APP_LOGE("fail to GetDynamicIcon due to bundleName is empty");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetDynamicIcon due to WriteInterfaceToken failed.");
+        APP_LOGE("fail to GetDynamicIcon due to WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -236,7 +236,7 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
 
     MessageParcel reply;
     if (!SendRequest(ExtendResourceManagerInterfaceCode::GET_DYNAMIC_ICON, data, reply)) {
-        APP_LOGE("fail to GetDynamicIcon from server.");
+        APP_LOGE("fail to GetDynamicIcon from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -253,51 +253,51 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
 ErrCode ExtendResourceManagerProxy::CreateFd(
     const std::string &fileName, int32_t &fd, std::string &path)
 {
-    APP_LOGD("begin to create fd.");
+    APP_LOGD("begin to create fd");
     if (fileName.empty()) {
-        APP_LOGE("fileName is empty.");
+        APP_LOGE("fileName is empty");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interface token failed.");
+        APP_LOGE("write interface token failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(fileName)) {
-        APP_LOGE("write fileName failed.");
+        APP_LOGE("write fileName failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     if (!SendRequest(ExtendResourceManagerInterfaceCode::CREATE_FD, data, reply)) {
-        APP_LOGE("send request failed.");
+        APP_LOGE("send request failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("reply return false.");
+        APP_LOGE("reply return false");
         return ret;
     }
     fd = reply.ReadFileDescriptor();
     if (fd < 0) {
-        APP_LOGE("invalid fd.");
+        APP_LOGE("invalid fd");
         return ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED;
     }
     path = reply.ReadString();
     if (path.empty()) {
-        APP_LOGE("invalid path.");
+        APP_LOGE("invalid path");
         close(fd);
         return ERR_EXT_RESOURCE_MANAGER_INVALID_TARGET_DIR;
     }
-    APP_LOGD("create fd success.");
+    APP_LOGD("create fd success");
     return ERR_OK;
 }
 
 ErrCode ExtendResourceManagerProxy::CopyFiles(
     const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
 {
-    APP_LOGD("begin to copy files.");
+    APP_LOGD("begin to copy files");
     if (sourceFiles.empty()) {
-        APP_LOGE("sourceFiles empty.");
+        APP_LOGE("sourceFiles empty");
         return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
     }
     std::vector<std::string> filePaths;
@@ -308,7 +308,7 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
     for (const std::string &sourcePath : filePaths) {
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
-            APP_LOGE("invalid sourcePath.");
+            APP_LOGE("invalid sourcePath");
             return ERR_EXT_RESOURCE_MANAGER_COPY_FILE_FAILED;
         }
         std::string fileName = sourcePath.substr(pos + 1);
@@ -322,7 +322,7 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
         std::string destPath;
         auto ret = CreateFd(fileName, destFd, destPath);
         if ((ret != ERR_OK) || (destFd < 0) || (destPath.empty())) {
-            APP_LOGE("create fd failed.");
+            APP_LOGE("create fd failed");
             close(sourceFd);
             return ret;
         }
@@ -341,7 +341,7 @@ ErrCode ExtendResourceManagerProxy::CopyFiles(
         fsync(destFd);
         close(destFd);
     }
-    APP_LOGD("copy files success.");
+    APP_LOGD("copy files success");
     return ERR_OK;
 }
 

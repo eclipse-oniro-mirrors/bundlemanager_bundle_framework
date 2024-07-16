@@ -2953,23 +2953,23 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        LOG_E(BMS_TAG_QUERY, "WriteInterfaceToken failed.");
+        LOG_E(BMS_TAG_QUERY, "WriteInterfaceToken failed");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        LOG_E(BMS_TAG_QUERY, "WriteParcelable want failed.");
+        LOG_E(BMS_TAG_QUERY, "WriteParcelable want failed");
         return false;
     }
     if (!data.WriteInt32(flags)) {
-        LOG_E(BMS_TAG_QUERY, "WriteInt32 flags failed.");
+        LOG_E(BMS_TAG_QUERY, "WriteInt32 flags failed");
         return false;
     }
     if (!data.WriteInt32(userId)) {
-        LOG_E(BMS_TAG_QUERY, "WriteInt32 userId failed.");
+        LOG_E(BMS_TAG_QUERY, "WriteInt32 userId failed");
         return false;
     }
     if (!data.WriteBool(withDefault)) {
-        LOG_E(BMS_TAG_QUERY, "WriteBool withDefault failed.");
+        LOG_E(BMS_TAG_QUERY, "WriteBool withDefault failed");
         return false;
     }
 
@@ -2978,14 +2978,14 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         return false;
     }
     if (!reply.ReadBool()) {
-        LOG_E(BMS_TAG_QUERY, "reply result false.");
+        LOG_E(BMS_TAG_QUERY, "reply result false");
         return false;
     }
     int32_t abilityInfoSize = reply.ReadInt32();
     for (int32_t i = 0; i < abilityInfoSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
         if (abilityInfoPtr == nullptr) {
-            LOG_E(BMS_TAG_QUERY, "Read Parcelable abilityInfos failed.");
+            LOG_E(BMS_TAG_QUERY, "Read Parcelable abilityInfos failed");
             return false;
         }
         abilityInfos.emplace_back(*abilityInfoPtr);
@@ -2994,7 +2994,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     for (int32_t i = 0; i < extensionInfoSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
         if (extensionInfoPtr == nullptr) {
-            LOG_E(BMS_TAG_QUERY, "Read Parcelable extensionInfos failed.");
+            LOG_E(BMS_TAG_QUERY, "Read Parcelable extensionInfos failed");
             return false;
         }
         extensionInfos.emplace_back(*extensionInfoPtr);
@@ -3213,7 +3213,7 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
 std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
-    APP_LOGD("begin to GetStringById.");
+    APP_LOGD("begin to GetStringById");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetStringById due to params empty");
@@ -3257,7 +3257,7 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
 std::string BundleMgrProxy::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
-    APP_LOGD("begin to GetIconById.");
+    APP_LOGD("begin to GetIconById");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("fail to GetIconById due to params empty");
@@ -3306,7 +3306,7 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get default app proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get default app proxy due to write InterfaceToken failed");
         return nullptr;
     }
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEFAULT_APP_PROXY, data, reply)) {
@@ -3315,12 +3315,12 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("reply failed.");
+        APP_LOGE("reply failed");
         return nullptr;
     }
     sptr<IDefaultApp> defaultAppProxy = iface_cast<IDefaultApp>(object);
     if (defaultAppProxy == nullptr) {
-        APP_LOGE("defaultAppProxy is nullptr.");
+        APP_LOGE("defaultAppProxy is nullptr");
     }
 
     return defaultAppProxy;
@@ -3334,7 +3334,7 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get app control proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get app control proxy due to write InterfaceToken failed");
         return nullptr;
     }
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APP_CONTROL_PROXY, data, reply)) {
@@ -3343,12 +3343,12 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("reply failed.");
+        APP_LOGE("reply failed");
         return nullptr;
     }
     sptr<IAppControlMgr> appControlProxy = iface_cast<IAppControlMgr>(object);
     if (appControlProxy == nullptr) {
-        APP_LOGE("appControlProxy is nullptr.");
+        APP_LOGE("appControlProxy is nullptr");
     }
 
     return appControlProxy;
@@ -3366,11 +3366,11 @@ ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        APP_LOGE("WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("WriteParcelable want failed.");
+        APP_LOGE("WriteParcelable want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
@@ -3401,11 +3401,11 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        APP_LOGE("WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("WriteParcelable want failed.");
+        APP_LOGE("WriteParcelable want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
@@ -3436,11 +3436,11 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("WriteInterfaceToken failed.");
+        APP_LOGE("WriteInterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteParcelable(&abilityInfo)) {
-        APP_LOGE("WriteParcelable want failed.");
+        APP_LOGE("WriteParcelable want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
@@ -3537,7 +3537,7 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed");
         return nullptr;
     }
     MessageParcel reply;
@@ -3547,12 +3547,12 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("reply failed.");
+        APP_LOGE("reply failed");
         return nullptr;
     }
     sptr<IQuickFixManager> quickFixManagerProxy = iface_cast<IQuickFixManager>(object);
     if (quickFixManagerProxy == nullptr) {
-        APP_LOGE("quickFixManagerProxy is nullptr.");
+        APP_LOGE("quickFixManagerProxy is nullptr");
     }
 
     return quickFixManagerProxy;
@@ -3563,7 +3563,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
     }
     if (!data.WriteBool(isDebug)) {
@@ -3602,7 +3602,7 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
 
 bool BundleMgrProxy::ProcessPreload(const Want &want)
 {
-    APP_LOGD("BundleMgrProxy::ProcessPreload is called.");
+    APP_LOGD("BundleMgrProxy::ProcessPreload is called");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to ProcessPreload due to write InterfaceToken fail");
@@ -3633,7 +3633,7 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed");
         return nullptr;
     }
     MessageParcel reply;
@@ -3643,12 +3643,12 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("reply failed.");
+        APP_LOGE("reply failed");
         return nullptr;
     }
     sptr<IOverlayManager> overlayManagerProxy = iface_cast<IOverlayManager>(object);
     if (overlayManagerProxy == nullptr) {
-        APP_LOGE("overlayManagerProxy is nullptr.");
+        APP_LOGE("overlayManagerProxy is nullptr");
     }
 
     return overlayManagerProxy;
@@ -3843,7 +3843,7 @@ ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleNa
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetSpecifiedDistributionType due to write InterfaceToken failed.");
+        APP_LOGE("fail to GetSpecifiedDistributionType due to write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -3870,7 +3870,7 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -3893,16 +3893,16 @@ ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, con
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("bundleName, moduleName or abilityName is empty.");
+        APP_LOGE("bundleName, moduleName or abilityName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     if (extName.empty() && mimeType.empty()) {
-        APP_LOGE("extName and mimeType are empty.");
+        APP_LOGE("extName and mimeType are empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write InterfaceToken failed.");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -3939,16 +3939,16 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
-        APP_LOGE("bundleName, moduleName or abilityName is empty.");
+        APP_LOGE("bundleName, moduleName or abilityName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     if (extName.empty() && mimeType.empty()) {
-        APP_LOGE("extName and mimeType are empty.");
+        APP_LOGE("extName and mimeType are empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write InterfaceToken failed.");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write InterfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
@@ -3985,12 +3985,12 @@ bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty.");
+        APP_LOGE("bundleName is empty");
         return false;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryDataGroupInfos due to write InterfaceToken failed.");
+        APP_LOGE("fail to QueryDataGroupInfos due to write InterfaceToken failed");
         return false;
     }
     if (!data.WriteString(bundleName)) {
@@ -4013,12 +4013,12 @@ bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &di
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (dataGroupId.empty()) {
-        APP_LOGE("dataGroupId is empty.");
+        APP_LOGE("dataGroupId is empty");
         return false;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetGroupDir due to write InterfaceToken failed.");
+        APP_LOGE("fail to GetGroupDir due to write InterfaceToken failed");
         return false;
     }
     if (!data.WriteString(dataGroupId)) {
@@ -4045,7 +4045,7 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAppGalleryBundleName due to write InterfaceToken failed.");
+        APP_LOGE("fail to QueryAppGalleryBundleName due to write InterfaceToken failed");
         return false;
     }
 
@@ -4161,7 +4161,7 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetJsonProfile");
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty.");
+        APP_LOGE("bundleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
@@ -4196,7 +4196,7 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     MessageParcel data;
     MessageParcel reply;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write InterfaceToken failed.");
+        APP_LOGE("write InterfaceToken failed");
         return nullptr;
     }
     if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY, data, reply)) {
@@ -4205,12 +4205,12 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
 
     sptr<IRemoteObject> object = reply.ReadRemoteObject();
     if (object == nullptr) {
-        APP_LOGE("reply failed.");
+        APP_LOGE("reply failed");
         return nullptr;
     }
     sptr<IBundleResource> bundleResourceProxy = iface_cast<IBundleResource>(object);
     if (bundleResourceProxy == nullptr) {
-        APP_LOGE("bundleResourceProxy is nullptr.");
+        APP_LOGE("bundleResourceProxy is nullptr");
     }
 
     return bundleResourceProxy;
@@ -4650,15 +4650,15 @@ bool BundleMgrProxy::SendTransactCmdWithLog(BundleMgrInterfaceCode code, Message
 
 bool ParseStr(const char *buf, const int itemLen, int index, std::string &result)
 {
-    APP_LOGD("ParseStr itemLen:%{public}d index:%{public}d.", itemLen, index);
+    APP_LOGD("ParseStr itemLen:%{public}d index:%{public}d", itemLen, index);
     if (buf == nullptr || itemLen <= 0 || index < 0) {
-        APP_LOGE("param invalid.");
+        APP_LOGE("param invalid");
         return false;
     }
 
     char item[itemLen + 1];
     if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
-        APP_LOGE("ParseStr failed due to strncpy_s error.");
+        APP_LOGE("ParseStr failed due to strncpy_s error");
         return false;
     }
 
@@ -4873,10 +4873,10 @@ ErrCode BundleMgrProxy::GetAllPreinstalledApplicationInfos(
     std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("Called.");
+    APP_LOGD("Called");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("Fail to reset due to WriteInterfaceToken fail.");
+        APP_LOGE("Fail to reset due to WriteInterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<PreinstalledApplicationInfo>(

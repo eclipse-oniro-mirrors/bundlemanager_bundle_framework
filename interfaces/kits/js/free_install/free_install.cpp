@@ -102,7 +102,7 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI_IsHapModuleRemovable start");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
