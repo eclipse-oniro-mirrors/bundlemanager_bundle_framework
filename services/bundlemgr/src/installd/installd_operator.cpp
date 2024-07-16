@@ -255,7 +255,7 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
 
     if ((extractParam.extractFileType == ExtractFileType::AP) &&
         !extractor.IsDirExist(AP_PATH)) {
-        LOG_D(BMS_TAG_INSTALLD, "hap has no ap files and does not need to be extracted.");
+        LOG_D(BMS_TAG_INSTALLD, "hap has no ap files and does not need to be extracted");
         return true;
     }
 
@@ -379,7 +379,7 @@ bool InstalldOperator::IsNativeFile(
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
         && extractParam.extractFileType != ExtractFileType::SO
         && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
-        LOG_D(BMS_TAG_INSTALLD, "file type error.");
+        LOG_D(BMS_TAG_INSTALLD, "file type error");
         return false;
     }
 
@@ -414,7 +414,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         return false;
     }
     if (!EndsWith(entryName, DIFF_SUFFIX)) {
-        LOG_D(BMS_TAG_INSTALLD, "file name not diff format.");
+        LOG_D(BMS_TAG_INSTALLD, "file name not diff format");
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "find native diff, entryName : %{public}s", entryName.c_str());
@@ -458,15 +458,15 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
     struct HapInfo hapInfo;
     int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName");
     }
     res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath");
     }
     res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi");
     }
     int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
     LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
@@ -1236,7 +1236,7 @@ bool InstalldOperator::OpenHandle(void **handle)
 {
     LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle start");
     if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle error handle is nullptr");
         return false;
     }
     *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
@@ -1268,7 +1268,7 @@ bool InstalldOperator::OpenEncryptionHandle(void **handle)
 {
     LOG_I(BMS_TAG_INSTALLD, "start");
     if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr");
         return false;
     }
     *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);

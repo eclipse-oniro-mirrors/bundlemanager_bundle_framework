@@ -100,7 +100,7 @@ void *OpenZipBuffer(void *opaque, const char *, int mode)
 {
     uint32_t modeInner = static_cast<uint32_t>(mode);
     if ((modeInner & ZLIB_FILEFUNC_MODE_READWRITEFILTER) != ZLIB_FILEFUNC_MODE_READ) {
-        APP_LOGI("%{public}s called, mode is not ZLIB_FILEFUNC_MODE_READ.", __func__);
+        APP_LOGI("%{public}s called, mode is not ZLIB_FILEFUNC_MODE_READ", __func__);
         return NULL;
     }
     ZipBuffer *buffer = static_cast<ZipBuffer *>(opaque);
@@ -117,11 +117,11 @@ uLong ReadZipBuffer(void *opaque, void *, void *buf, uLong size)
 {
     ZipBuffer *buffer = static_cast<ZipBuffer *>(opaque);
     if (buffer == nullptr) {
-        APP_LOGI("%{public}s called, buffer = nullptr.", __func__);
+        APP_LOGI("%{public}s called, buffer = nullptr", __func__);
         return 0;
     }
     if (buffer->offset > buffer->length) {
-        APP_LOGI("%{public}s called, buffer->offset > buffer->length.", __func__);
+        APP_LOGI("%{public}s called, buffer->offset > buffer->length", __func__);
         return 0;
     }
 
@@ -173,7 +173,7 @@ long SeekZipBuffer(void *opaque, void *, uLong offset, int origin)
         buffer->offset = std::min(buffer->length, static_cast<size_t>(offset));
         return 0;
     }
-    APP_LOGD("%{public}s called. origin is not supported.", __func__);
+    APP_LOGD("%{public}s called. origin is not supported", __func__);
     return -1;
 }
 

@@ -28,7 +28,7 @@ void ServiceCenterDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &wptrDe
 
     auto mgr = connectAbilityMgr_.lock();
     if (mgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "mgr pointer is nullptr.");
+        LOG_E(BMS_TAG_DEFAULT, "mgr pointer is nullptr");
         return;
     }
     mgr->DeathRecipientSendCallback();

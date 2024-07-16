@@ -415,7 +415,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
 
 static void ConvertInstallResult(InstallResult &installResult)
 {
-    APP_LOGD("ConvertInstallResult msg %{public}s, errCode is %{public}d.", installResult.resultMsg.c_str(),
+    APP_LOGD("ConvertInstallResult msg %{public}s, errCode is %{public}d", installResult.resultMsg.c_str(),
         installResult.resultCode);
     std::unordered_map<int32_t, int32_t> errCodeMap;
     CreateErrCodeMap(errCodeMap);
@@ -435,7 +435,7 @@ static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std:
         APP_LOGE("param string moduleName is empty.");
         return false;
     }
-    APP_LOGD("ParseHashParam moduleName=%{public}s.", key.c_str());
+    APP_LOGD("ParseHashParam moduleName=%{public}s", key.c_str());
 
     APP_LOGD("start to parse hashValue");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, HASH_VALUE, true, value);
@@ -443,7 +443,7 @@ static bool ParseHashParam(napi_env env, napi_value args, std::string &key, std:
         APP_LOGE("param string hashValue is empty.");
         return false;
     }
-    APP_LOGD("ParseHashParam hashValue=%{public}s.", value.c_str());
+    APP_LOGD("ParseHashParam hashValue=%{public}s", value.c_str());
     return true;
 }
 
@@ -484,7 +484,7 @@ static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key
         APP_LOGE("param string moduleName is empty.");
         return false;
     }
-    APP_LOGD("ParseVerifyCodeParam moduleName is %{public}s.", key.c_str());
+    APP_LOGD("ParseVerifyCodeParam moduleName is %{public}s", key.c_str());
 
     APP_LOGD("start to parse signatureFilePath");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, SIGNATURE_FILE_PATH, true, value);
@@ -492,7 +492,7 @@ static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key
         APP_LOGE("param string signatureFilePath is empty.");
         return false;
     }
-    APP_LOGD("ParseVerifyCodeParam signatureFilePath is %{public}s.", value.c_str());
+    APP_LOGD("ParseVerifyCodeParam signatureFilePath is %{public}s", value.c_str());
     return true;
 }
 
@@ -533,7 +533,7 @@ static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::
         APP_LOGE("param string moduleName is empty.");
         return false;
     }
-    APP_LOGD("ParsePgoParam moduleName is %{public}s.", key.c_str());
+    APP_LOGD("ParsePgoParam moduleName is %{public}s", key.c_str());
 
     APP_LOGD("start to parse pgoFilePath");
     ret = CommonFunc::ParseStringPropertyFromObject(env, args, PGO_FILE_PATH, true, value);
@@ -541,7 +541,7 @@ static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::
         APP_LOGE("param string pgoFilePath is empty.");
         return false;
     }
-    APP_LOGD("ParsePgoParam pgoFilePath is %{public}s.", value.c_str());
+    APP_LOGD("ParsePgoParam pgoFilePath is %{public}s", value.c_str());
     return true;
 }
 
@@ -1104,9 +1104,9 @@ void UninstallOrRecoverExecuter(napi_env env, void *data)
         return;
     }
     installResult.resultMsg = callback->GetResultMsg();
-    APP_LOGD("InnerRecover resultMsg %{public}s.", installResult.resultMsg.c_str());
+    APP_LOGD("InnerRecover resultMsg %{public}s", installResult.resultMsg.c_str());
     installResult.resultCode = callback->GetResultCode();
-    APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
+    APP_LOGD("InnerRecover resultCode %{public}d", installResult.resultCode);
 }
 
 void UninstallByUninstallParamExecuter(napi_env env, void* data)
@@ -1642,15 +1642,15 @@ void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
 void ParseAppCloneParam(napi_env env, napi_value args, int32_t &userId, int32_t &appIndex)
 {
     if (!ParseUserId(env, args, userId)) {
-        APP_LOGI("parse userId failed. assign a default value = %{public}d.", userId);
+        APP_LOGI("parse userId failed. assign a default value = %{public}d", userId);
     }
     if (ParseAppIndex(env, args, appIndex)) {
         if (appIndex == 0) {
-            APP_LOGI("parse appIndex success, but appIndex is 0, assign a value: %{public}d.", ILLEGAL_APP_INDEX);
+            APP_LOGI("parse appIndex success, but appIndex is 0, assign a value: %{public}d", ILLEGAL_APP_INDEX);
             appIndex = ILLEGAL_APP_INDEX;
         }
     } else {
-        APP_LOGI("parse appIndex failed. assign a default value = %{public}d.", appIndex);
+        APP_LOGI("parse appIndex failed. assign a default value = %{public}d", appIndex);
     }
 }
 

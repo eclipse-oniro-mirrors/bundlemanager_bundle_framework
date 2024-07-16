@@ -52,7 +52,7 @@ namespace {
 }
 AppControlManagerRdb::AppControlManagerRdb()
 {
-    LOG_D(BMS_TAG_DEFAULT, "create AppControlManagerRdb.");
+    LOG_D(BMS_TAG_DEFAULT, "create AppControlManagerRdb");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = APP_CONTROL_RDB_TABLE_NAME;
@@ -70,7 +70,7 @@ AppControlManagerRdb::AppControlManagerRdb()
 
 AppControlManagerRdb::~AppControlManagerRdb()
 {
-    LOG_D(BMS_TAG_DEFAULT, "destroy AppControlManagerRdb.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy AppControlManagerRdb");
 }
 
 ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callingName,
@@ -81,7 +81,7 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     for (auto appId : appIds) {
         ErrCode result = DeleteOldControlRule(callingName, controlRuleType, appId, userId);
         if (result != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule failed.");
+            LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule failed");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;
@@ -95,11 +95,11 @@ ErrCode AppControlManagerRdb::AddAppInstallControlRule(const std::string &callin
     int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert failed.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -133,7 +133,7 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteData callingName:%{public}s controlRuleType:%{public}s failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteData callingName:%{public}s controlRuleType:%{public}s failed",
             callingName.c_str(), controlRuleType.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -149,7 +149,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
@@ -189,7 +189,7 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
     for (auto &controlRule : controlRules) {
         ErrCode result = DeleteOldControlRule(callingName, RUNNING_CONTROL, controlRule.appId, userId);
         if (result != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule failed.");
+            LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule failed");
             return result;
         }
         NativeRdb::ValuesBucket valuesBucket;
@@ -205,11 +205,11 @@ ErrCode AppControlManagerRdb::AddAppRunningControlRule(const std::string &callin
     int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppRunningControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppRunningControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -241,7 +241,7 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule callingName:%{public}s userId:%{public}d failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteAppRunningControlRule callingName:%{public}s userId:%{public}d failed",
             callingName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -350,7 +350,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     LOG_D(BMS_TAG_DEFAULT, "rdb begin to SetDisposedStatus");
     ErrCode code = DeleteDisposedStatus(callingName, appId, userId);
     if (code != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus failed.");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     int64_t timeStamp = BundleUtil::GetCurrentTime();
@@ -364,7 +364,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     valuesBucket.PutString(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -382,7 +382,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingNam
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -400,7 +400,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
@@ -439,7 +439,7 @@ ErrCode AppControlManagerRdb::DeleteOldControlRule(const std::string &callingNam
     absRdbPredicates.EqualTo(APP_ID, appId);
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule %{public}s, %{public}s, %{public}s, %{public}d failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteOldControlRule %{public}s, %{public}s, %{public}s, %{public}d failed",
             callingName.c_str(), appId.c_str(), controlRuleType.c_str(), userId);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -484,7 +484,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -504,7 +504,7 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &a
     }
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle appId:%{public}s failed.", appId.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle appId:%{public}s failed", appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -522,7 +522,7 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
@@ -563,7 +563,7 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
     absRdbPredicates.OrderByAsc(PRIORITY); // ascending
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });

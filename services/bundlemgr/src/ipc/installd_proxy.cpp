@@ -71,7 +71,7 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -86,7 +86,7 @@ ErrCode InstalldProxy::ExtractHnpFiles(const std::string &hnpPackageInfo, const 
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hnpPackageInfo));
     if (!data.WriteParcelable(&extractParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable extractParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -187,7 +187,7 @@ ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&createDirParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -201,13 +201,13 @@ ErrCode InstalldProxy::CreateBundleDataDirWithVector(const std::vector<CreateDir
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (createDirParams.empty()) {
-        LOG_E(BMS_TAG_INSTALLD, "createDirParams size is empty.");
+        LOG_E(BMS_TAG_INSTALLD, "createDirParams size is empty");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
     INSTALLD_PARCEL_WRITE(data, Uint32, createDirParams.size());
     for (const auto &createDirParam : createDirParams) {
         if (!data.WriteParcelable(&createDirParam)) {
-            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
+            LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -620,7 +620,7 @@ ErrCode InstalldProxy::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&codeSignatureParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -639,7 +639,7 @@ ErrCode InstalldProxy::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&checkEncryptionParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable checkEncryptionParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable checkEncryptionParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -717,7 +717,7 @@ ErrCode InstalldProxy::VerifyCodeSignatureForHap(const CodeSignatureParam &codeS
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&codeSignatureParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable codeSignatureParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -887,7 +887,7 @@ ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirPar
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     if (!data.WriteParcelable(&createDirParam)) {
-        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed.");
+        LOG_E(BMS_TAG_INSTALLD, "WriteParcelable createDirParam failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

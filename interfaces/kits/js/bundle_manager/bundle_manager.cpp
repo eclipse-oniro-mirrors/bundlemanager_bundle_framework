@@ -1452,7 +1452,7 @@ void GetAbilityLabelExec(napi_env env, void *data)
 {
     AbilityLabelCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityLabelCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerGetAbilityLabel(asyncCallbackInfo->bundleName,
@@ -1538,7 +1538,7 @@ void GetAbilityIconExec(napi_env env, void *data)
 {
     AbilityIconCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityIconCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerGetAbilityIcon(asyncCallbackInfo->bundleName,
@@ -1624,7 +1624,7 @@ void SetApplicationEnabledExec(napi_env env, void *data)
 {
     ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
@@ -1763,7 +1763,7 @@ void SetAbilityEnabledExec(napi_env env, void *data)
 {
     AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerSetAbilityEnabled(asyncCallbackInfo->abilityInfo,
@@ -1874,7 +1874,7 @@ void IsApplicationEnabledExec(napi_env env, void *data)
 {
     ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerIsApplicationEnabled(asyncCallbackInfo->bundleName,
@@ -1959,7 +1959,7 @@ void IsAbilityEnabledExec(napi_env env, void *data)
 {
     AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     asyncCallbackInfo->err = InnerIsAbilityEnabled(asyncCallbackInfo->abilityInfo,
@@ -3327,7 +3327,7 @@ void GetPermissionDefExec(napi_env env, void *data)
 {
     AsyncPermissionDefineCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncPermissionDefineCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {

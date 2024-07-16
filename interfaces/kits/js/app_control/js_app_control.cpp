@@ -102,7 +102,7 @@ void SetDisposedStatusExec(napi_env env, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {

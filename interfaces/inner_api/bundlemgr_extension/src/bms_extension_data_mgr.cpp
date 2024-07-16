@@ -85,7 +85,7 @@ bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sd
         if (bundleMgrExtPtr) {
             return bundleMgrExtPtr->CheckApiInfo(bundleInfo);
         }
-        APP_LOGE("create class: %{public}s failed.", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        APP_LOGE("create class: %{public}s failed", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
         return false;
     }
     APP_LOGW("access bms-extension failed.");

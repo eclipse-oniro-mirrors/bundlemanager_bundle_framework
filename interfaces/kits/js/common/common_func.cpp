@@ -1331,7 +1331,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
-    APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
+    APP_LOGD("ConvertApplicationInfo name=%{public}s", appInfo.name.c_str());
 
     napi_value nBundleType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
@@ -1600,7 +1600,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
-    APP_LOGD("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
+    APP_LOGD("ConvertHapModuleInfo name=%{public}s", hapModuleInfo.name.c_str());
 
     napi_value nIcon;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIcon));
@@ -2109,32 +2109,32 @@ void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo 
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, BUNDLE_NAME, nBundleName));
-    APP_LOGD("ConvertOverlayModuleInfo bundleName=%{public}s.", info.bundleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo bundleName=%{public}s", info.bundleName.c_str());
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, MODULE_NAME, nModuleName));
-    APP_LOGD("ConvertOverlayModuleInfo moduleName=%{public}s.", info.moduleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo moduleName=%{public}s", info.moduleName.c_str());
 
     napi_value nTargetModuleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.targetModuleName.c_str(), NAPI_AUTO_LENGTH, &nTargetModuleName));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, TARGET_MODULE_NAME, nTargetModuleName));
-    APP_LOGD("ConvertOverlayModuleInfo targetModuleName=%{public}s.", info.targetModuleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo targetModuleName=%{public}s", info.targetModuleName.c_str());
 
     napi_value nPriority;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, PRIORITY, nPriority));
-    APP_LOGD("ConvertOverlayModuleInfo priority=%{public}d.", info.priority);
+    APP_LOGD("ConvertOverlayModuleInfo priority=%{public}d", info.priority);
 
     napi_value nState;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.state, &nState));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, STATE, nState));
-    APP_LOGD("ConvertOverlayModuleInfo state=%{public}d.", info.state);
+    APP_LOGD("ConvertOverlayModuleInfo state=%{public}d", info.state);
 }
 
 void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos,

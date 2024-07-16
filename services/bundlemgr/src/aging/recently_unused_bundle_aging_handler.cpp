@@ -60,7 +60,7 @@ public:
         std::lock_guard<std::mutex> lock(stateMutex_);
         isRunning_ = false;
         if (agingPromise_) {
-            APP_LOGD("Notify task end.");
+            APP_LOGD("Notify task end");
             agingPromise_->NotifyAllTasksExecuteFinished();
         }
     }
@@ -83,7 +83,7 @@ bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
         static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
     for (const auto &agingBundle : request.GetAgingBundles()) {
         bool isBundleRunning = AbilityManagerHelper::IsRunning(agingBundle.GetBundleName());
-        APP_LOGD("found matching bundle: %{public}s, isRunning: %{public}d.",
+        APP_LOGD("found matching bundle: %{public}s, isRunning: %{public}d",
             agingBundle.GetBundleName().c_str(), isBundleRunning);
         if (isBundleRunning != AbilityManagerHelper::NOT_RUNNING) {
             continue;
@@ -96,7 +96,7 @@ bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
 
         UpdateUsedTotalDataBytes(request);
         if (!NeedContinue(request)) {
-            APP_LOGD("there is no need to continue now.");
+            APP_LOGD("there is no need to continue now");
             return false;
         }
     }
@@ -204,19 +204,19 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
 {
     auto bms = DelayedSingleton<BundleMgrService>::GetInstance();
     if (bms == nullptr) {
-        APP_LOGE("bms is nullptr.");
+        APP_LOGE("bms is nullptr");
         return false;
     }
 
     auto bundleInstaller = bms->GetBundleInstaller();
     if (bundleInstaller == nullptr) {
-        APP_LOGE("bundleInstaller is null.");
+        APP_LOGE("bundleInstaller is null");
         return false;
     }
 
     sptr<AgingUninstallReceiveImpl> unInstallReceiverImpl(new (std::nothrow) AgingUninstallReceiveImpl());
     if (unInstallReceiverImpl == nullptr) {
-        APP_LOGE("unInstallReceiverImpl is null.");
+        APP_LOGE("unInstallReceiverImpl is null");
         return false;
     }
 
@@ -230,7 +230,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     installParam.noSkipsKill = false;
     bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
     if (unInstallReceiverImpl->IsRunning()) {
-        APP_LOGD("Wait for UnInstallBundle end %{public}s.", bundleName.c_str());
+        APP_LOGD("Wait for UnInstallBundle end %{public}s", bundleName.c_str());
         agingPromise->WaitForAllTasksExecute();
     }
 

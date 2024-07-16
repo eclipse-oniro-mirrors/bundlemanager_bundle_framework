@@ -203,7 +203,7 @@ void InnerSharedBundleInstaller::RollBack()
             APP_LOGE("rollback new bundle failed : %{public}s", bundleName_.c_str());
         }
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName_)) {
-            APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed.", bundleName_.c_str());
+            APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed", bundleName_.c_str());
         }
         return;
     }
@@ -482,7 +482,7 @@ void InnerSharedBundleInstaller::AddAppProvisionInfo(const std::string &bundleNa
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed", bundleName.c_str());
     }
 }
 
@@ -492,13 +492,13 @@ void InnerSharedBundleInstaller::SaveInstallParamInfo(
     if (!installParam.specifiedDistributionType.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
             bundleName, installParam.specifiedDistributionType)) {
-            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed", bundleName.c_str());
         }
     }
     if (!installParam.additionalInfo.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
             bundleName, installParam.additionalInfo)) {
-            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed", bundleName.c_str());
         }
     }
 }

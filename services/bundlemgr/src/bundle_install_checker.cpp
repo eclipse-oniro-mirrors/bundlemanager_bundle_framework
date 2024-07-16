@@ -150,7 +150,7 @@ bool IsSystemExtensionAbilityType(ExtensionAbilityType type)
 
 ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
-    LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start.");
+    LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start");
     if (bundlePaths.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
@@ -534,7 +534,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             GetJsonStrFromInfo(moduleInfo.dependencies).c_str());
         for (const auto &dependency : moduleInfo.dependencies) {
             if (!NeedCheckDependency(dependency, info.second)) {
-                LOG_D(BMS_TAG_INSTALLER, "deliveryWithInstall is false, do not check whether the dependency exists.");
+                LOG_D(BMS_TAG_INSTALLER, "deliveryWithInstall is false, do not check whether the dependency exists");
                 continue;
             }
             std::string bundleName =
@@ -542,12 +542,12 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             if (FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos)) {
                 continue;
             }
-            LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package.",
+            LOG_W(BMS_TAG_INSTALLER, "The depend module:%{public}s is not exist in installing package",
                 dependency.moduleName.c_str());
             if (!FindModuleInInstalledPackage(dependency.moduleName, bundleName, info.second.GetVersionCode())) {
-                LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist.", dependency.moduleName.c_str());
+                LOG_E(BMS_TAG_INSTALLER, "The depend :%{public}s is not exist", dependency.moduleName.c_str());
                 SetCheckResultMsg(
-                    moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist.");
+                    moduleInfo.moduleName + "'s dependent module: " + dependency.moduleName + " does not exist");
                 return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
             }
         }
@@ -558,16 +558,16 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
 
 bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, const InnerBundleInfo &info)
 {
-    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the moduleName is %{public}s, the bundleName is %{public}s.",
+    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the moduleName is %{public}s, the bundleName is %{public}s",
         dependency.moduleName.c_str(), dependency.bundleName.c_str());
 
     if (!dependency.bundleName.empty() && dependency.bundleName != info.GetBundleName()) {
-        LOG_D(BMS_TAG_INSTALLER, "Cross-app dependencies, check dependency with shared bundle installer.");
+        LOG_D(BMS_TAG_INSTALLER, "Cross-app dependencies, check dependency with shared bundle installer");
         return false;
     }
     std::vector<PackageModule> modules = info.GetBundlePackInfo().summary.modules;
     if (modules.empty()) {
-        LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency modules is empty, need check dependency.");
+        LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency modules is empty, need check dependency");
         return true;
     }
     for (const auto &module : modules) {
@@ -576,7 +576,7 @@ bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, con
         }
     }
 
-    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the module not found, need check dependency.");
+    LOG_D(BMS_TAG_INSTALLER, "NeedCheckDependency the module not found, need check dependency");
     return true;
 }
 
@@ -585,7 +585,7 @@ bool BundleInstallChecker::FindModuleInInstallingPackage(
     const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    LOG_D(BMS_TAG_INSTALLER, "moduleName is %{public}s, the bundleName is %{public}s.",
+    LOG_D(BMS_TAG_INSTALLER, "moduleName is %{public}s, the bundleName is %{public}s",
         moduleName.c_str(), bundleName.c_str());
     for (const auto &info : infos) {
         if (info.second.GetBundleName() == bundleName) {
@@ -961,7 +961,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
         if (isHmService != info.second.GetEntryInstallationFree()) {
-            LOG_E(BMS_TAG_INSTALLER, "application and hm service are not allowed installed simultaneously.");
+            LOG_E(BMS_TAG_INSTALLER, "application and hm service are not allowed installed simultaneously");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
@@ -1158,7 +1158,7 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
         return ERR_OK;
     }
     if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "atomic service's mainElement can't be empty.");
+        LOG_E(BMS_TAG_INSTALLER, "atomic service's mainElement can't be empty");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;
@@ -1245,7 +1245,7 @@ bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
     std::vector<std::string> oldAppIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->GetOldAppIds(bundleName, oldAppIds)) {
-        LOG_D(BMS_TAG_INSTALLER, "Get OldAppIds failed.");
+        LOG_D(BMS_TAG_INSTALLER, "Get OldAppIds failed");
         return false;
     }
     for (const auto &signature : appSignatures) {
@@ -1507,12 +1507,12 @@ bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::st
     if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) ||
         (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL.c_str()) == 0)) {
         if (isolationMode == NONISOLATION_ONLY) {
-            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
+            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");
             return false;
         }
     } else {
         if (isolationMode == ISOLATION_ONLY) {
-            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
+            LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");
             return false;
         }
     }
@@ -1532,7 +1532,7 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
                 LOG_W(BMS_TAG_INSTALLER, "GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
-                LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed.");
+                LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");
                 return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }
