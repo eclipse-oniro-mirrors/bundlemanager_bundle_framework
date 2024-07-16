@@ -793,7 +793,7 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         }
     }
     if (preloadModules.empty()) {
-        APP_LOGD("the module have no preloads.");
+        APP_LOGD("the module have no preloads");
         return false;
     }
     for (const ModuleInfo &moduleInfo : moduleInfos) {
@@ -803,10 +803,10 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         }
     }
     if (preloadModules.empty()) {
-        APP_LOGD("all preload modules exist locally.");
+        APP_LOGD("all preload modules exist locally");
         return false;
     }
-    APP_LOGD("need to process preload.");
+    APP_LOGD("need to process preload");
     return true;
 }
 

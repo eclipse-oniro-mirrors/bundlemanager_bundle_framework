@@ -26,7 +26,7 @@ namespace AppExecFwk {
 
 napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "isHapModuleRemovable");
     napi_throw(env, error);
     return nullptr;
@@ -34,7 +34,7 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
 
 napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "setHapModuleUpgradeFlag");
     napi_throw(env, error);
     return nullptr;
@@ -42,7 +42,7 @@ napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
 
 napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getBundlePackInfo");
     napi_throw(env, error);
     return nullptr;
@@ -50,7 +50,7 @@ napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
 
 napi_value GetDispatchInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.FreeInstall not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getDispatchInfo");
     napi_throw(env, error);
     return nullptr;

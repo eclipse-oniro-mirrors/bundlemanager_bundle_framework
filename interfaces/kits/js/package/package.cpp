@@ -181,7 +181,7 @@ static void ConvertCheckPackageHasInstalledResponse(napi_env env, napi_value has
 
 static void HasInstalledExecute(napi_env env, void *data)
 {
-    APP_LOGD("NAPI_HasInstalled, worker pool thread execute.");
+    APP_LOGD("NAPI_HasInstalled, worker pool thread execute");
     CheckPackageHasInstalledOptions *asyncCallbackInfo = static_cast<CheckPackageHasInstalledOptions *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("NAPI_HasInstalled, asyncCallbackInfo == nullptr");
@@ -190,12 +190,12 @@ static void HasInstalledExecute(napi_env env, void *data)
     if (!asyncCallbackInfo->errCode && asyncCallbackInfo->isString && asyncCallbackInfo->successRef) {
         asyncCallbackInfo->response.result = InnerHasInstalled(asyncCallbackInfo->bundleName);
     }
-    APP_LOGD("NAPI_HasInstalled, worker pool thread execute end.");
+    APP_LOGD("NAPI_HasInstalled, worker pool thread execute end");
 }
 
 static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGD("NAPI_HasInstalled, main event thread complete.");
+    APP_LOGD("NAPI_HasInstalled, main event thread complete");
     CheckPackageHasInstalledOptions *asyncCallbackInfo = static_cast<CheckPackageHasInstalledOptions *>(data);
     std::unique_ptr<CheckPackageHasInstalledOptions> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
@@ -226,7 +226,7 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
         NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->completeRef, &callback));
         napi_call_function(env, nullptr, callback, 0, nullptr, &placeHolder);
     }
-    APP_LOGD("NAPI_HasInstalled, main event thread complete end.");
+    APP_LOGD("NAPI_HasInstalled, main event thread complete end");
 }
 
 napi_value HasInstalled(napi_env env, napi_callback_info info)

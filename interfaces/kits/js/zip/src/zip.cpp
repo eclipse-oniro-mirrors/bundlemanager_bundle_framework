@@ -373,11 +373,11 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
 {
     FilePath destPath = destFile;
     if (!FilePath::DirectoryExists(destPath.DirName())) {
-        APP_LOGE("The destPath not exist.");
+        APP_LOGE("The destPath not exist");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
     if (!FilePath::PathIsWriteable(destPath.DirName())) {
-        APP_LOGE("The destPath not writeable.");
+        APP_LOGE("The destPath not writeable");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -407,11 +407,11 @@ ErrCode ZipsWithFilterCallback(const std::vector<FilePath> &srcFiles, const File
 {
     FilePath destPath = destFile;
     if (!FilePath::DirectoryExists(destPath.DirName())) {
-        APP_LOGE("The destPath not exist.");
+        APP_LOGE("The destPath not exist");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
     if (!FilePath::PathIsWriteable(destPath.DirName())) {
-        APP_LOGE("The destPath not writeable.");
+        APP_LOGE("The destPath not writeable");
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 
@@ -478,20 +478,20 @@ bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS 
 bool ZipFileIsValid(const std::string &srcFile)
 {
     if (srcFile.size() == 0) {
-        APP_LOGE("srcFile len is 0.");
+        APP_LOGE("srcFile len is 0");
         return false;
     }
     if (!FilePathCheckValid(srcFile)) {
-        APP_LOGE("FilePathCheckValid return false.");
+        APP_LOGE("FilePathCheckValid return false");
         return false;
     }
     FilePath srcFileDir(srcFile);
     if (!FilePath::PathIsValid(srcFileDir)) {
-        APP_LOGE("PathIsValid return false.");
+        APP_LOGE("PathIsValid return false");
         return false;
     }
     if (!FilePath::PathIsReadable(srcFileDir)) {
-        APP_LOGE("PathIsReadable return false.");
+        APP_LOGE("PathIsReadable return false");
         return false;
     }
     return true;
@@ -501,24 +501,24 @@ ErrCode GetOriginalSize(PlatformFile zipFd, int64_t &originalSize)
 {
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(zipFd)) {
-        APP_LOGE("Failed to open, not ZIP format or damaged.");
+        APP_LOGE("Failed to open, not ZIP format or damaged");
         return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     int64_t totalSize = 0;
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
-            APP_LOGE("Failed to open the current file in zip.");
+            APP_LOGE("Failed to open the current file in zip");
             return ERR_ZLIB_SERVICE_DISABLED;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
-            APP_LOGE("Found an unsafe file in zip.");
+            APP_LOGE("Found an unsafe file in zip");
             return ERR_ZLIB_SERVICE_DISABLED;
         }
         totalSize += reader.CurrentEntryInfo()->GetOriginalSize();
         if (!reader.AdvanceToNextEntry()) {
-            APP_LOGE("Failed to advance to the next file.");
+            APP_LOGE("Failed to advance to the next file");
             return ERR_ZLIB_SERVICE_DISABLED;
         }
     }

@@ -40,11 +40,11 @@ PreinstalledApplicationInfo *PreinstalledApplicationInfo::Unmarshalling(Parcel &
 {
     PreinstalledApplicationInfo *info = new (std::nothrow) PreinstalledApplicationInfo();
     if (info == nullptr) {
-        APP_LOGE("Info is null.");
+        APP_LOGE("Info is null");
         return nullptr;
     }
     if (info && !info->ReadFromParcel(parcel)) {
-        APP_LOGW("Read from parcel failed.");
+        APP_LOGW("Read from parcel failed");
         delete info;
         info = nullptr;
     }

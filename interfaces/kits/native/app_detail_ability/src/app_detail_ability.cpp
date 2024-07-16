@@ -48,7 +48,7 @@ void AppDetailAbility::OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessio
             want.GetBundle().c_str(), errCode);
         return;
     }
-    APP_LOGD("AppDetailAbility::OnStart end.");
+    APP_LOGD("AppDetailAbility::OnStart end");
 }
 
 REGISTER_AA(AppDetailAbility)

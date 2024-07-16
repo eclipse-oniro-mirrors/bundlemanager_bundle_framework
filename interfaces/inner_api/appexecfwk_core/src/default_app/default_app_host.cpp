@@ -27,12 +27,12 @@ namespace OHOS {
 namespace AppExecFwk {
 DefaultAppHost::DefaultAppHost()
 {
-    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppHost.");
+    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppHost");
 }
 
 DefaultAppHost::~DefaultAppHost()
 {
-    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppHost.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppHost");
 }
 
 int DefaultAppHost::OnRemoteRequest(
@@ -43,7 +43,7 @@ int DefaultAppHost::OnRemoteRequest(
     std::u16string descriptor = DefaultAppHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid.");
+        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid");
         return OBJECT_NULL;
     }
 
@@ -64,18 +64,18 @@ int DefaultAppHost::OnRemoteRequest(
 
 ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleIsDefaultApplication.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleIsDefaultApplication");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string type = data.ReadString();
     bool isDefaultApp = false;
     ErrCode ret = IsDefaultApplication(type, isDefaultApp);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteBool(isDefaultApp)) {
-            LOG_E(BMS_TAG_DEFAULT, "write isDefaultApp failed.");
+            LOG_E(BMS_TAG_DEFAULT, "write isDefaultApp failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -84,19 +84,19 @@ ErrCode DefaultAppHost::HandleIsDefaultApplication(Parcel& data, Parcel& reply)
 
 ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleGetDefaultApplication.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleGetDefaultApplication");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     BundleInfo bundleInfo;
     ErrCode ret = GetDefaultApplication(userId, type, bundleInfo);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteParcelable(&bundleInfo)) {
-            LOG_E(BMS_TAG_DEFAULT, "write bundleInfo failed.");
+            LOG_E(BMS_TAG_DEFAULT, "write bundleInfo failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
@@ -105,18 +105,18 @@ ErrCode DefaultAppHost::HandleGetDefaultApplication(Parcel& data, Parcel& reply)
 
 ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleSetDefaultApplication.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleSetDefaultApplication");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDefaultApplication(userId, type, *want);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -124,13 +124,13 @@ ErrCode DefaultAppHost::HandleSetDefaultApplication(Parcel& data, Parcel& reply)
 
 ErrCode DefaultAppHost::HandleResetDefaultApplication(Parcel& data, Parcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleResetDefaultApplication.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleResetDefaultApplication");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t userId = data.ReadInt32();
     std::string type = data.ReadString();
     ErrCode ret = ResetDefaultApplication(userId, type);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
