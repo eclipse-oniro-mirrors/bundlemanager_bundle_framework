@@ -102,7 +102,7 @@ void SetDisposedStatusExec(napi_env env, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
+        APP_LOGE("asyncCallbackInfo == nullptr");
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
@@ -115,7 +115,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
@@ -150,14 +150,14 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid!");
+                APP_LOGE("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
             asyncCallbackInfo->err = asyncCallbackInfo->appId.size() == 0 ? ERROR_INVALID_APPID : NO_ERROR;
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseWantWithoutVerification(env, args[i], asyncCallbackInfo->want)) {
-                APP_LOGE("disposed want invalid!");
+                APP_LOGE("disposed want invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
                 return nullptr;
             }
@@ -168,7 +168,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
                 APP_LOGD("SetDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("SetDisposedStatus arg err!");
+            APP_LOGE("SetDisposedStatus arg err");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
@@ -193,7 +193,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        APP_LOGE("appId %{public}s invalid", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
@@ -205,7 +205,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
     }
     OHOS::AAFwk::Want want;
     if (!CommonFunc::ParseWantWithoutVerification(env, args[ARGS_POS_ONE], want)) {
-        APP_LOGE("want invalid!");
+        APP_LOGE("want invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
         return nRet;
     }
@@ -233,7 +233,7 @@ void DeleteDisposedStatusExec(napi_env env, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
@@ -245,7 +245,7 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
@@ -280,7 +280,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId invalid!");
+                APP_LOGE("appId invalid");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -294,7 +294,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
                 APP_LOGD("DeleteDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("DeleteDisposedStatus arg err!");
+            APP_LOGE("DeleteDisposedStatus arg err");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
@@ -354,7 +354,7 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        APP_LOGE("appId %{public}s invalid", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
@@ -377,7 +377,7 @@ void GetDisposedStatusExec(napi_env env, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
@@ -390,7 +390,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 {
     DisposedStatus *asyncCallbackInfo = reinterpret_cast<DisposedStatus *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DisposedStatus> callbackPtr {asyncCallbackInfo};
@@ -427,7 +427,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->appId)) {
-                APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->appId.c_str());
+                APP_LOGE("appId %{public}s invalid", asyncCallbackInfo->appId.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
                 return nullptr;
             }
@@ -441,7 +441,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
                 APP_LOGD("GetDisposedStatus extra arg ignored");
             }
         } else {
-            APP_LOGE("GetDisposedStatus arg err!");
+            APP_LOGE("GetDisposedStatus arg err");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
@@ -464,7 +464,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        APP_LOGE("appId %{public}s invalid", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }
@@ -661,7 +661,7 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
-        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        APP_LOGE("appId %{public}s invalid", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }

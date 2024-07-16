@@ -1842,7 +1842,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
                 return true;
             }
             if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
-                APP_LOGE("preloads config in module.json is oversize!");
+                APP_LOGE("preloads config in module.json is oversize");
                 return false;
             }
             for (const auto &preload : preloadObj) {

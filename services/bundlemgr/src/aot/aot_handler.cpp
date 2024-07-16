@@ -390,7 +390,7 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
         std::string sourceAp = GetSouceAp(mergedAp, rtAp);
         std::string result;
         if (sourceAp.empty()) {
-            result.append(bundleName).append(" ").append(moduleName).append(" get source ap failed!");
+            result.append(bundleName).append(" ").append(moduleName).append(" get source ap failed");
             results.emplace_back(result);
             continue;
         }
@@ -405,10 +405,10 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
         errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
         if (errCode != ERR_OK) {
             APP_LOGE("Copy ap dir %{public}s failed err %{public}d", sourceAp.c_str(), errCode);
-            result.append(" copy ap failed!");
+            result.append(" copy ap failed");
             continue;
         }
-        result.append(" copy ap success!");
+        result.append(" copy ap success");
         results.emplace_back(result);
     }
 }

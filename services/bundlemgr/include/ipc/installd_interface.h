@@ -422,7 +422,7 @@ public:
     do {                                                                            \
         bool ret = parcel.WriteInterfaceToken((token));                             \
         if (!ret) {                                                                 \
-            APP_LOGE("fail to write interface token into the parcel!");             \
+            APP_LOGE("write interface token failed");             \
             return ERR_APPEXECFWK_PARCEL_ERROR;                                     \
         }                                                                           \
     } while (0)
@@ -431,7 +431,7 @@ public:
     do {                                                                            \
         bool ret = parcel.Write##type((value));                                     \
         if (!ret) {                                                                 \
-            APP_LOGE("fail to write parameter into the parcel!");                   \
+            APP_LOGE("write parameter failed");                   \
             return ERR_APPEXECFWK_PARCEL_ERROR;                                     \
         }                                                                           \
     } while (0)

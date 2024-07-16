@@ -254,7 +254,7 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         std::shared_lock<std::shared_mutex> lock(mutex_);
         auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
         if (queryAbilityParams == queryAbilityParamsMap_.end()) {
-            APP_LOGE("no node in %{public}s", __func__);
+            APP_LOGE("no node");
             return;
         }
         want = queryAbilityParams->second.want;

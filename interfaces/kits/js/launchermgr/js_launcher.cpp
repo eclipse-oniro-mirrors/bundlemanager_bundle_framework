@@ -87,7 +87,7 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("param type mismatch!");
+        APP_LOGE("param type mismatch");
         return false;
     }
 
@@ -95,10 +95,10 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref addCallback = nullptr;
     napi_value addValue = nullptr;
     napi_status status = napi_get_named_property(env, args, "add", &addValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
     napi_typeof(env, addValue, &valueType);
     if (valueType != napi_function) {
-        APP_LOGE("add param type mismatch!");
+        APP_LOGE("add param type mismatch");
         return false;
     }
     napi_create_reference(env, addValue, NAPI_RETURN_ONE, &addCallback);
@@ -107,10 +107,10 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref updateCallback = nullptr;
     napi_value updateValue = nullptr;
     status = napi_get_named_property(env, args, "update", &updateValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
     napi_typeof(env, updateValue, &valueType);
     if (valueType != napi_function) {
-        APP_LOGE("update param type mismatch!");
+        APP_LOGE("update param type mismatch");
         return false;
     }
     napi_create_reference(env, updateValue, NAPI_RETURN_ONE, &updateCallback);
@@ -119,10 +119,10 @@ static bool ParseBundleStatusCallback(napi_env env,
     napi_ref removeCallback = nullptr;
     napi_value removeValue = nullptr;
     status = napi_get_named_property(env, args, "remove", &removeValue);
-    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect!", false);
+    NAPI_ASSERT_BASE(env, status == napi_ok, "property name incorrect", false);
     napi_typeof(env, removeValue, &valueType);
     if (valueType != napi_function) {
-        APP_LOGE("remove param type mismatch!");
+        APP_LOGE("remove param type mismatch");
         return false;
     }
     napi_create_reference(env, removeValue, NAPI_RETURN_ONE, &removeCallback);
@@ -737,7 +737,7 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
     JsGetAllLauncherAbilityCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<JsGetAllLauncherAbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<JsGetAllLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};

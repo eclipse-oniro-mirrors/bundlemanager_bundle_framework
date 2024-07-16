@@ -152,7 +152,7 @@ ErrCode BundleInstallChecker::CheckSysCap(const std::vector<std::string> &bundle
 {
     LOG_D(BMS_TAG_INSTALLER, "check hap syscaps start");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths!");
+        LOG_E(BMS_TAG_INSTALLER, "check hap syscaps failed due to empty bundlePaths");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
@@ -186,7 +186,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 {
     LOG_D(BMS_TAG_INSTALLER, "Check multiple haps signInfo");
     if (bundlePaths.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "check hap sign info failed due to empty bundlePaths!");
+        LOG_E(BMS_TAG_INSTALLER, "check hap sign info failed due to empty bundlePaths");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
     for (const std::string &bundlePath : bundlePaths) {
@@ -202,7 +202,7 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     }
 
     if (hapVerifyRes.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps!");
+        LOG_E(BMS_TAG_INSTALLER, "no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
@@ -365,7 +365,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 #endif
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
-                LOG_E(BMS_TAG_INSTALLER, "more than one entry hap in the direction!");
+                LOG_E(BMS_TAG_INSTALLER, "more than one entry hap in the direction");
                 return ERR_APPEXECFWK_INSTALL_INVALID_NUMBER_OF_ENTRY_HAP;
             }
             isContainEntry_ = true;

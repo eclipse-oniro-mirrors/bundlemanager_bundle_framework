@@ -449,7 +449,7 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed!", uninstallDir.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
@@ -484,11 +484,11 @@ ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int3
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     if ((errCode = InstalldClient::GetInstance()->RemoveDir(uninstallDir)) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed!", uninstallDir.c_str());
+        LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", uninstallDir.c_str());
         return errCode;
     }
     if (!dataMgr_->RemoveHspModuleByVersionCode(versionCode, info)) {
-        LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed!");
+        LOG_E(BMS_TAG_INSTALLER, "remove hsp module by versionCode failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::INSTALL_SUCCESS)) {
@@ -1681,8 +1681,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
 void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, bool isUninstalled)
 {
-    LOG_I(BMS_TAG_INSTALLER, "Entering %{public}s for bundle: %{public}s, isUninstalled: %{public}d",
-        __func__, bundleName.c_str(), isUninstalled);
+    LOG_I(BMS_TAG_INSTALLER, "bundle: %{public}s isUninstalled: %{public}d", bundleName.c_str(), isUninstalled);
     if (!dataMgr_) {
         LOG_E(BMS_TAG_INSTALLER, "dataMgr is nullptr");
         return;
@@ -1864,7 +1863,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallNative(InnerBundleInfo &info, i
             return ret;
         }
         if ((InstalldClient::GetInstance()->RemoveDir(moduleHnpsPath)) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed!", moduleHnpsPath.c_str());
+            LOG_E(BMS_TAG_INSTALLER, "delete dir %{public}s failed", moduleHnpsPath.c_str());
         }
     }
     return ERR_OK;
@@ -2093,7 +2092,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::INSTALL_FINISH);
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
     if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed!");
+        LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
     }
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
@@ -2727,7 +2726,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     // create asan log directory when asanEnabled is true
     // In update condition, delete asan log directory when asanEnabled is false if directory is exist
     if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed!");
+        LOG_E(BMS_TAG_INSTALLER, "process asan log directory failed");
         return result;
     }
 
@@ -4729,7 +4728,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
     bool dirExist = false;
     ErrCode errCode = InstalldClient::GetInstance()->IsExistDir(asanLogDir, dirExist);
     if (errCode != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "check asan log directory failed!");
+        LOG_E(BMS_TAG_INSTALLER, "check asan log directory failed");
         return errCode;
     }
     bool asanEnabled = info.GetAsanEnabled();
@@ -4749,7 +4748,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
         if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
             newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid)) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "create asan log directory failed!");
+            LOG_E(BMS_TAG_INSTALLER, "create asan log directory failed");
             return errCode;
         }
     }
@@ -4759,7 +4758,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
     // clean asan directory
     if (dirExist && !asanEnabled) {
         if ((errCode = CleanAsanDirectory(info)) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "clean asan log directory failed!");
+            LOG_E(BMS_TAG_INSTALLER, "clean asan log directory failed");
             return errCode;
         }
     }
@@ -4773,7 +4772,7 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
         + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName;
     ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
     if (errCode != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "clean asan log path failed!");
+        LOG_E(BMS_TAG_INSTALLER, "clean asan log path failed");
         return errCode;
     }
     info.SetAsanLogPath("");

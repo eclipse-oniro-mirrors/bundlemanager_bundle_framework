@@ -533,7 +533,7 @@ bool ZipFile::UnzipWithInflated(const ZipEntry &zipEntry, const uint16_t extraSi
             errorTimes++;
         }
         if (errorTimes >= INFLATE_ERROR_TIMES) {
-            APP_LOGE("unzip inflated data is abnormal!");
+            APP_LOGE("unzip inflated data is abnormal");
             ret = false;
             break;
         }

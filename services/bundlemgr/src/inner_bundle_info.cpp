@@ -2012,7 +2012,7 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     }
     InnerModuleInfo innerModuleInfo = sharedModuleInfoVector.front();
     if (innerModuleInfo.bundleType != BundleType::SHARED) {
-        APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, bundleType is invalid!");
+        APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, bundleType is invalid");
         return false;
     }
     baseSharedBundleInfo.bundleName = baseBundleInfo_->name;
@@ -2040,7 +2040,7 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
     }
     for (const auto &item : sharedModuleInfoVector) {
         if (item.bundleType != BundleType::SHARED) {
-            APP_LOGE("GetBaseSharedBundleInfo failed, bundleType is invalid!");
+            APP_LOGE("GetBaseSharedBundleInfo failed, bundleType is invalid");
             return false;
         }
         if (item.versionCode == versionCode) {

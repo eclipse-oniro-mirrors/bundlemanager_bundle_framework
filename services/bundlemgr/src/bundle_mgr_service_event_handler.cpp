@@ -1139,12 +1139,12 @@ void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &u
         runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
             .append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", runtimeAp.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", runtimeAp.c_str());
             continue;
         }
         mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", mergedAp.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", mergedAp.c_str());
             continue;
         }
     }
@@ -1155,7 +1155,7 @@ void BMSEventHandler::ProcessRebootDeleteAotPath()
     std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
     removeAotPath.append("*");
     if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", removeAotPath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", removeAotPath.c_str());
         return;
     }
 }
@@ -2014,7 +2014,7 @@ bool BMSEventHandler::GetSystemParameter(const std::string &key, std::string &va
     char firmware[VERSION_LEN] = {0};
     int32_t ret = GetParameter(key.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
     if (ret <= 0) {
-        LOG_E(BMS_TAG_DEFAULT, "GetParameter failed!");
+        LOG_E(BMS_TAG_DEFAULT, "GetParameter failed");
         return false;
     }
 
