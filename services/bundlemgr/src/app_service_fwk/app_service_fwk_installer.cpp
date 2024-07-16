@@ -127,7 +127,12 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     CHECK_RESULT(result, "CheckAndParseFiles failed %{public}d");
 
     InnerBundleInfo oldInfo;
-    if (!CheckNeedInstall(newInfos, oldInfo)) {
+    bool isDowngrade = false;
+    if (!CheckNeedInstall(newInfos, oldInfo, isDowngrade)) {
+        if (isDowngrade) {
+            APP_LOGE("version down grade install");
+            return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+        }
         APP_LOGI("need not to install");
         return ERR_OK;
     }
@@ -785,7 +790,7 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
 }
 
 bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    InnerBundleInfo &oldInfo)
+    InnerBundleInfo &oldInfo, bool &isDowngrade)
 {
     if (infos.empty()) {
         APP_LOGW("innerbundleinfos is empty");
@@ -804,6 +809,7 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         return false;
     }
     if (oldInfo.GetVersionCode() > versionCode_) {
+        isDowngrade = true;
         APP_LOGW("version code is lower than current app service");
         return false;
     }
