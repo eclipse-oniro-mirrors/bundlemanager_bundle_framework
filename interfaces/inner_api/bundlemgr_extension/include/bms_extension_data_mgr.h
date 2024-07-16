@@ -52,6 +52,7 @@ public:
     ErrCode VerifyActivationLock(bool &res);
     ErrCode GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles);
     ErrCode ClearBackupUninstallFile(int32_t userId);
+    bool IsAppInBlocklist(const std::string &bundleName);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

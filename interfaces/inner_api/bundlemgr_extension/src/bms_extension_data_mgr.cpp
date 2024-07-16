@@ -313,5 +313,20 @@ ErrCode BmsExtensionDataMgr::ClearBackupUninstallFile(int32_t userId)
     }
     return bundleMgrExtPtr->ClearBackupUninstallFile(userId);
 }
+
+bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return false;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return false;
+    }
+    return bundleMgrExtPtr->IsAppInBlocklist(bundleName);
+}
 } // AppExecFwk
 } // OHOS
