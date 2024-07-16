@@ -4829,6 +4829,19 @@ HWTEST_F(BmsBundleDataMgrTest, BatchGetBundleInfo_0200, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetDataMgr_0100
+ * @tc.name: GetDataMgr
+ * @tc.desc: test GetDataMgr of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetDataMgr_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+   
+    const std::shared_ptr<BundleDataMgr> ptr = bmsExtensionClient->GetDataMgr();
+    EXPECT_EQ(ptr, nullptr);
+}
+
+/**
  * @tc.number: ImplicitQueryAbilityInfos_0100
  * @tc.name: ImplicitQueryAbilityInfos
  * @tc.desc: test ImplicitQueryAbilityInfos of BmsExtensionClient
@@ -4943,6 +4956,42 @@ HWTEST_F(BmsBundleDataMgrTest, ClearData_0300, Function | MediumTest | Level1)
     int32_t userId = 100;
     ErrCode res = bmsExtensionClient->ClearData(bundleName, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BatchQueryAbilityInfos_0100
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    std::vector<Want> wants;
+    int32_t flags = 1;
+    int32_t userId = -3;
+    std::vector<AbilityInfo> abilityInfos;
+    bool isNewVersion = true;
+    ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BatchQueryAbilityInfos_0200
+ * @tc.name: BatchQueryAbilityInfos
+ * @tc.desc: test BatchQueryAbilityInfos of BmsExtensionClient
+ */
+HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0200, Function | MediumTest | Level1)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    std::vector<Want> wants;
+    int32_t flags = 1;
+    int32_t userId = 100;
+    std::vector<AbilityInfo> abilityInfos;
+    bool isNewVersion = true;
+    ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

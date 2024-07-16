@@ -947,4 +947,30 @@ HWTEST_F(BmsInstallDaemonTest, GetNativeLibraryFileNames_0001, Function | SmallT
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_TRUE(fileNames.empty());
 }
+
+/**
+ * @tc.number: OnStart_0001
+ * @tc.name: test the OnStart
+ * @tc.desc: 1. OnStart success
+*/
+HWTEST_F(BmsInstallDaemonTest, OnStart_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    service->OnStart();
+    bool isRead = service->IsServiceReady();
+    EXPECT_TRUE(isRead);
+}
+
+/**
+ * @tc.number: OnStop_0001
+ * @tc.name: test the OnStop
+ * @tc.desc: 1. OnStop success
+*/
+HWTEST_F(BmsInstallDaemonTest, OnStop_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<InstalldService> service = std::make_shared<InstalldService>();
+    service->OnStop();
+    bool isRead = service->IsServiceReady();
+    EXPECT_FALSE(isRead);
+}
 } // OHOS
