@@ -81,6 +81,7 @@ const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
 const std::string MODULE_UPDATE_PATH = "module_update";
 const std::string MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
 const std::string MODULE_UPDATE_VALUE_UPDATE = "update";
+const std::string MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
 const std::string MODULE_UPDATE_VALUE_REVERT = "revert";
 const std::string MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
 const std::string MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
@@ -2000,7 +2001,7 @@ bool BMSEventHandler::IsModuleUpdate()
     LOG_I(BMS_TAG_DEFAULT, "parameter %{public}s is %{public}s", MODULE_UPDATE_PARAM.c_str(), paramValue.c_str());
     if (paramValue == MODULE_UPDATE_VALUE_UPDATE) {
         moduleUpdateStatus_ = ModuleUpdateStatus::UPDATE;
-    } else if (paramValue == MODULE_UPDATE_VALUE_REVERT) {
+    } else if (paramValue == MODULE_UPDATE_VALUE_REVERT_BMS) {
         moduleUpdateStatus_ = ModuleUpdateStatus::REVERT;
     } else {
         moduleUpdateStatus_ = ModuleUpdateStatus::DEFAULT;

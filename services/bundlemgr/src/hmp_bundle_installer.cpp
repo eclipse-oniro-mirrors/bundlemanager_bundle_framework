@@ -145,6 +145,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
         APP_LOGE("install hmp system hsp %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
         return ret;
     }
+    bool installSuccess = false;
     for (auto userId : requiredUserIds) {
         if (userId == Constants::DEFAULT_USERID) {
             continue;
@@ -158,8 +159,9 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
             APP_LOGE("install hmp normal app %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
             return ret;
         }
+        installSuccess = true;
     }
-    return ERR_OK;
+    return installSuccess ? ERR_OK : ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
 }
 
 std::set<int32_t> HmpBundleInstaller::GetRequiredUserIds(std::string bundleName) const
