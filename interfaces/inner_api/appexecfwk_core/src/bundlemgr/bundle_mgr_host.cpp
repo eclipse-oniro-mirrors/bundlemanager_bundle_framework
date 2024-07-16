@@ -36,11 +36,11 @@ namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
-const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)

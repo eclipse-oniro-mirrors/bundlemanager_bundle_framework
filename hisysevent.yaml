@@ -212,19 +212,15 @@ BUNDLE_QUICK_FIX:
   FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hqf file}
   HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hqf file}
 
-QUERY_OF_CONTINUE_TYPE:
-  __BASE: {type: BEHAVIOR, level: MINOR, desc: query abilityInfo by continuetype and bundleName}
-  PNAMEID: {type: STRING, desc: package name}
-  PVERSIONID: {type: STRING, desc: application version}
-  BUNDLE_NAME: {type: STRING, desc: bundleName}
-  ABILITY_NAME: {type: STRING, desc: abilityName}
-  CONTINUE_TYPE: {type: STRING, desc: continueType}
-  ERROR_CODE: {type: INT32, desc: apply quick fix frequency}
-  USERID: {type: INT32, desc: userId of the bundle}
+CPU_SCENE_ENTRY:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: CPU Scenario Code, preserve: true}
+  PACKAGE_NAME: {type: STRING, desc: package name}
+  SCENE_ID: {type: STRING, desc: customized application scenario id}
+  HAPPEN_TIME: {type: UINT16, desc: timestamp}
 
 AOT_COMPILE_SUMMARY:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: AOT compile summary result in OTA scene}
-  TOTAL_BUNDLE_NAMES: {type: STRING, arrsize: 99, desc: bundle names from msdp}
+  TOTAL_BUNDLE_NAMES: {type: STRING, arrsize: 99, desc: bundle names from MSDP}
   TOTAL_SIZE: {type: UINT32, desc: compile total bundle size}
   SUCCESS_SIZE: {type: UINT32, desc: compile success bundle size}
   COST_TIME_SECONDS: {type: INT64, desc: total compile cost time}
@@ -238,3 +234,13 @@ AOT_COMPILE_RECORD:
   COST_TIME_SECONDS: {type: INT64, desc: compile cost time}
   COMPILE_MODE: {type: STRING, desc: compile mode}
   TIME_STAMP: {type: INT64, desc: time stamp}
+
+QUERY_OF_CONTINUE_TYPE:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: query abilityInfo by continuetype and bundleName}
+  PNAMEID: {type: STRING, desc: package name}
+  PVERSIONID: {type: STRING, desc: application version}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  ABILITY_NAME: {type: STRING, desc: abilityName}
+  CONTINUE_TYPE: {type: STRING, desc: continueType}
+  ERROR_CODE: {type: INT32, desc: apply quick fix frequency}
+  USERID: {type: INT32, desc: userId of the bundle}

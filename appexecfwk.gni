@@ -74,6 +74,7 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.resourceschedule_device_usage_statistics)) {
     device_usage_statistics_enabled = false
+    bundle_framework_free_install = false
   }
 
   if (defined(global_parts_info) &&
