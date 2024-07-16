@@ -3961,6 +3961,20 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest 
 }
 
 /**
+ * @tc.number: BundleUserMgrHostImpl_0500
+ * @tc.name: test HandleSceneBoard
+ * @tc.desc: test HandleSceneBoard function running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    bundleUserMgrHostImpl_->HandleSceneBoard(USERID);
+    ASSERT_NE(GetBundleDataMgr(), nullptr);
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
+}
+
+/**
  * @tc.number: BundleExceptionHandler_0100
  * Function: BundleExceptionHandler
  * @tc.name: test HandleInvalidBundle
