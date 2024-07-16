@@ -1088,6 +1088,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootDeleteAotPath();
     ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
+    BundleResourceHelper::DeleteNotExistResourceInfo();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
