@@ -159,6 +159,102 @@ ErrCode BundleResourceProxy::GetAllLauncherAbilityResourceInfo(const uint32_t fl
         BundleResourceInterfaceCode::GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, data, launcherAbilityResourceInfos);
 }
 
+ErrCode BundleResourceProxy::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start, bundleName:%{public}s userId:%{private}d", bundleName.c_str(), userId);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!SendRequest(BundleResourceInterfaceCode::ADD_RESOURCE_INFO_BY_BUNDLE_NAME, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply err:%{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceProxy::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start, bundleName:%{public}s moduleName:%{public}s abilityName:%{public}s userId:%{private}d",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), userId);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to write bundleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to write moduleName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        APP_LOGE("fail to write abilityName");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to write userId");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!SendRequest(BundleResourceInterfaceCode::ADD_RESOURCE_INFO_BY_ABILITY, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply err:%{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleResourceProxy::DeleteResourceInfo(const std::string &key)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("start, key:%{private}s", key.c_str());
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to write InterfaceToken");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(key)) {
+        APP_LOGE("fail to write key");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!SendRequest(BundleResourceInterfaceCode::DELETE_RESOURCE_INFO, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply err:%{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo)
 {

@@ -52,6 +52,10 @@ public:
     ErrCode VerifyActivationLock(bool &res);
     ErrCode GetBackupUninstallList(int32_t userId, std::set<std::string> &uninstallBundles);
     ErrCode ClearBackupUninstallFile(int32_t userId);
+    ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId);
+    ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId);
+    ErrCode DeleteResourceInfo(const std::string &key);
     bool IsAppInBlocklist(const std::string &bundleName);
 private:
     bool OpenHandler();
