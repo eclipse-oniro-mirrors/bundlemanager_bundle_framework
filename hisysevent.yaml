@@ -238,3 +238,11 @@ AOT_COMPILE_RECORD:
   COST_TIME_SECONDS: {type: INT64, desc: compile cost time}
   COMPILE_MODE: {type: STRING, desc: compile mode}
   TIME_STAMP: {type: INT64, desc: time stamp}
+
+FREE_INSTALL_EVENT:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: free install event}
+  BUNDLE_NAME: {type: STRING, desc: bundle name}
+  MODULE_NAME: {type: STRING, desc: module name}
+  ABILITY_NAME: {type: STRING, desc: ability name}
+  IS_FREE_INSTALL: {type: BOOL, desc: is free install}
+  TIME_STAMP: {type: INT64, desc: time stamp}

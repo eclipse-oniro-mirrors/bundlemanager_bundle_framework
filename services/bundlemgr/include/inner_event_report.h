@@ -57,6 +57,7 @@ private:
     static void InnerSendAOTSummaryEvent(const EventInfo& eventInfo);
     static void InnerSendAOTRecordEvent(const EventInfo& eventInfo);
     static void InnerSendCpuSceneEvent(const EventInfo& eventInfo);
+    static void InnerSendFreeInstallEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,
