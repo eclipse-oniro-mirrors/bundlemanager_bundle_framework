@@ -87,6 +87,7 @@ constexpr const char* COMPILE_NONE = "none";
 
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
+constexpr const char* BM_AOT_TEST = "bm.aot.test";
 }
 
 AOTHandler::AOTHandler()
@@ -273,6 +274,10 @@ void AOTHandler::ClearArkCacheDir() const
 
 void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle) const
 {
+    if (isAllBundle && system::GetParameter(BM_AOT_TEST, "").empty()) {
+        APP_LOGD("isAllBundle true, param bm.aot.test empty, so ignore");
+        return;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr) {
         APP_LOGE("dataMgr is null");
@@ -720,6 +725,10 @@ ErrCode AOTHandler::HandleCompile(const std::string &bundleName, const std::stri
     std::vector<std::string> &compileResults) const
 {
     APP_LOGI("HandleCompile begin");
+    if (isAllBundle && system::GetParameter("BM_AOT_TEST", "").empty()) {
+        APP_LOGD("isAllBundle true, param bm.aot.test empty, so ignore");
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
     std::unique_lock<std::mutex> lock(compileMutex_, std::defer_lock);
     if (!lock.try_lock()) {
         APP_LOGI("compile task running, skip %{public}s", bundleName.c_str());
