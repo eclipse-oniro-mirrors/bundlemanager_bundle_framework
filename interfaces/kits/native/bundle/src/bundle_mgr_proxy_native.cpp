@@ -33,7 +33,7 @@ sptr<IRemoteObject> BundleMgrProxyNative::GetBmsProxy()
 {
     auto samgrProxy = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (samgrProxy == nullptr) {
-        APP_LOGE("fail to get samgr.");
+        APP_LOGE("fail to get samgr");
         return nullptr;
     }
     return samgrProxy->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);

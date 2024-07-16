@@ -76,7 +76,7 @@ bool BundleSystemState::FromString(const std::string &systemState)
 {
     nlohmann::json jsonObject = nlohmann::json::parse(systemState, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed parse SystemState: %{public}s.", systemState.c_str());
+        APP_LOGE("failed parse SystemState: %{public}s", systemState.c_str());
         return false;
     }
     const auto &jsonObjectEnd = jsonObject.end();

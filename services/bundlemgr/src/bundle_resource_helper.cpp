@@ -68,17 +68,16 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
         APP_LOGE("failed, manager is nullptr");
         return;
     }
-    int32_t currentUserId = userId;
-    // 0 and 100 exist
-    if ((userId != Constants::DEFAULT_USERID) && (userId != Constants::START_USERID)) {
-        currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if (currentUserId <= 0) {
-            // invalid userId
-            currentUserId = userId;
+    if (userId != Constants::DEFAULT_USERID) {
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if ((currentUserId > 0) && (currentUserId != userId)) {
+            APP_LOGW("bundleName:%{public}s, currentUserId: %{public}d, userId: %{public}d not same",
+                bundleName.c_str(), currentUserId, userId);
+            return;
         }
     }
     // add new resource info
-    if (!manager->AddResourceInfoByBundleName(bundleName, currentUserId)) {
+    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
         APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
     }
     APP_LOGI("bundleName:%{public}s userId:%{public}d add resource end", bundleName.c_str(), userId);
@@ -89,7 +88,7 @@ bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int3
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     APP_LOGD("start");
-    if (userId != Constants::UNSPECIFIED_USERID) {
+    if ((userId != Constants::UNSPECIFIED_USERID) && (userId != Constants::DEFAULT_USERID)) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
         if ((currentUserId > 0) && (userId != currentUserId)) {
             APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);

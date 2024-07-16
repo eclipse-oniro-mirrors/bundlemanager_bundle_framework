@@ -59,7 +59,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &ap
 ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
     std::unordered_map<std::string, AppQuickFix> &appQuickFixes) const
 {
-    LOG_D(BMS_TAG_DEFAULT, "Parse quick fix files start.");
+    LOG_D(BMS_TAG_DEFAULT, "Parse quick fix files start");
     if (filePaths.empty()) {
         return ERR_APPEXECFWK_PARSE_NO_PROFILE;
     }
@@ -72,7 +72,7 @@ ErrCode PatchParser::ParsePatchInfo(const std::vector<std::string> &filePaths,
         }
         appQuickFixes.emplace(filePaths[index], appQuickFix);
     }
-    LOG_D(BMS_TAG_DEFAULT, "Parse quick fix files end.");
+    LOG_D(BMS_TAG_DEFAULT, "Parse quick fix files end");
     return ERR_OK;
 }
 

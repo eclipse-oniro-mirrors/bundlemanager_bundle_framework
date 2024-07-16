@@ -29,12 +29,12 @@ namespace OHOS {
 namespace AppExecFwk {
 VerifyManagerHost::VerifyManagerHost()
 {
-    APP_LOGI("create VerifyManagerHost.");
+    APP_LOGI("create VerifyManagerHost");
 }
 
 VerifyManagerHost::~VerifyManagerHost()
 {
-    APP_LOGI("destroy VerifyManagerHost.");
+    APP_LOGI("destroy VerifyManagerHost");
 }
 
 int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -45,7 +45,7 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     std::u16string descriptor = VerifyManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        APP_LOGE("descriptor invalid.");
+        APP_LOGE("descriptor invalid");
         return OBJECT_NULL;
     }
 
@@ -62,17 +62,17 @@ int VerifyManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
 
 ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& reply)
 {
-    APP_LOGI("begin to HandleVerify.");
+    APP_LOGI("begin to HandleVerify");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<std::string> abcPaths;
     if (!data.ReadStringVector(&abcPaths)) {
-        APP_LOGE("read abcPaths failed.");
+        APP_LOGE("read abcPaths failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     auto ret = Verify(abcPaths);
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write ret failed.");
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -80,12 +80,12 @@ ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& repl
 
 ErrCode VerifyManagerHost::HandleDeleteAbc(MessageParcel& data, MessageParcel& reply)
 {
-    APP_LOGD("begin to HandleDeleteAbc.");
+    APP_LOGD("begin to HandleDeleteAbc");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string path = data.ReadString();
     auto ret = DeleteAbc(path);
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write ret failed.");
+        APP_LOGE("write ret failed");
         return ERR_BUNDLE_MANAGER_DELETE_ABC_PARAM_ERROR;
     }
     return ERR_OK;

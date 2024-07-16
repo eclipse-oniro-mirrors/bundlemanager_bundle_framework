@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getBundleResourceInfo");
     napi_throw(env, error);
@@ -34,7 +34,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getLauncherAbilityResourceInfo");
     napi_throw(env, error);
@@ -43,7 +43,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
 
 napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getAllBundleResourceInfo");
     napi_throw(env, error);
@@ -52,7 +52,7 @@ napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info)
 
 napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getAllLauncherAbilityResourceInfo");
     napi_throw(env, error);

@@ -27,11 +27,11 @@ BundleSandboxDataMgr::BundleSandboxDataMgr()
     APP_LOGI("BundleSandboxDataMgr instance is created");
     sandboxManagerDb_ = std::make_shared<SandboxManagerRdb>();
     if (sandboxManagerDb_ == nullptr) {
-        APP_LOGE("create sandboxManagerDb_ failed.");
+        APP_LOGE("create sandboxManagerDb_ failed");
         return;
     }
     if (!RestoreSandboxPersistentInnerBundleInfo()) {
-        APP_LOGW("RestoreSandboxPersistentInnerBundleInfo failed.");
+        APP_LOGW("RestoreSandboxPersistentInnerBundleInfo failed");
     }
 }
 
@@ -84,7 +84,7 @@ ErrCode BundleSandboxDataMgr::GetSandboxAppInfo(
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) is invalid.", userId);
+        APP_LOGE("userId(%{public}d) is invalid", userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
 
@@ -243,7 +243,7 @@ ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerB
 {
     APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
     if (uid < Constants::BASE_APP_UID) {
-        APP_LOGD("the uid(%{public}d) is not an application.", uid);
+        APP_LOGD("the uid(%{public}d) is not an application", uid);
         return ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP;
     }
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
@@ -272,7 +272,7 @@ bool BundleSandboxDataMgr::SaveSandboxPersistentInfo(const std::string &bundleNa
     APP_LOGD("SaveSandboxPersistentInfo for bundleName %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(sandboxDbMutex_);
     if (sandboxManagerDb_ == nullptr) {
-        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        APP_LOGE("error sandboxManagerDb_ is nullptr");
         return false;
     }
     return sandboxManagerDb_->SaveSandboxInnerBundleInfo(bundleName, innerBundleInfo);
@@ -283,7 +283,7 @@ bool BundleSandboxDataMgr::RemoveSandboxPersistentInfo(const std::string &bundle
     APP_LOGD("RemoveSandboxPersistentInfo for bundleName %{public}s", bundleName.c_str());
     std::unique_lock<std::shared_mutex> lock(sandboxDbMutex_);
     if (sandboxManagerDb_ == nullptr) {
-        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        APP_LOGE("error sandboxManagerDb_ is nullptr");
         return false;
     }
     return sandboxManagerDb_->DeleteSandboxInnerBundleInfo(bundleName);
@@ -294,7 +294,7 @@ bool BundleSandboxDataMgr::RestoreSandboxPersistentInnerBundleInfo()
     APP_LOGD("start to RestoreSandboxPersistentInnerBundleInfo");
     std::unique_lock<std::shared_mutex> lockDbMutex(sandboxDbMutex_);
     if (sandboxManagerDb_ == nullptr) {
-        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        APP_LOGE("error sandboxManagerDb_ is nullptr");
         return false;
     }
     std::unique_lock<std::shared_mutex> lockAppMutex(sandboxAppMutex_);

@@ -93,7 +93,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {
-        APP_LOGE("%{public}s, module exported object is invalid.", __func__);
+        APP_LOGE("%{public}s, module exported object is invalid", __func__);
         return;
     }
 
@@ -101,7 +101,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
     if (loop == nullptr) {
-        APP_LOGE("%{public}s, loop is nullptr.", __func__);
+        APP_LOGE("%{public}s, loop is nullptr", __func__);
         return;
     }
     uv_work_t* work = new (std::nothrow) uv_work_t;

@@ -64,7 +64,7 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty.");
+        APP_LOGE("bundleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
@@ -96,7 +96,7 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
-        APP_LOGE("bundleName is empty.");
+        APP_LOGE("bundleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;

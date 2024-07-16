@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 static napi_value OverlayExport(napi_env env, napi_value exports)
 {
-    APP_LOGI("export overlay begin.");
+    APP_LOGI("export overlay begin");
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("setOverlayEnabled", SetOverlayEnabled),
         DECLARE_NAPI_FUNCTION("setOverlayEnabledByBundleName", SetOverlayEnabledByBundleName),
@@ -36,7 +36,7 @@ static napi_value OverlayExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    APP_LOGD("init js overlay success.");
+    APP_LOGD("init js overlay success");
     return exports;
 }
 

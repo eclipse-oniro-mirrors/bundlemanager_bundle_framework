@@ -123,20 +123,18 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    auto item = bundleInfos.find(bundleName);
-    if (item == bundleInfos.end()) {
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
         return false;
     }
 
-    if (!IsBundleExist(item->second, userId)) {
-        APP_LOGW("bundle %{public}s not exist in userId %{public}d",
-            item->second.GetBundleName().c_str(), userId);
+    if (!IsBundleExist(innerBundleInfo, userId)) {
+        APP_LOGW("bundle %{public}s not exist in userId %{public}d", innerBundleInfo.GetBundleName().c_str(), userId);
         return false;
     }
 
-    return InnerGetResourceInfo(item->second, userId, resourceInfo);
+    return InnerGetResourceInfo(innerBundleInfo, userId, resourceInfo);
 }
 
 bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
@@ -153,23 +151,22 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    auto item = bundleInfos.find(bundleName);
-    if (item == bundleInfos.end()) {
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
         return false;
     }
-    if (!IsBundleExist(item->second, userId)) {
-        APP_LOGW("bundle %{public}s not exist in userId %{public}d",
-            item->second.GetBundleName().c_str(), userId);
+
+    if (!IsBundleExist(innerBundleInfo, userId)) {
+        APP_LOGW("bundle %{public}s not exist in userId %{public}d", innerBundleInfo.GetBundleName().c_str(), userId);
         return false;
     }
-    if (item->second.IsDisabled()) {
-        APP_LOGD("bundle %{public}s is disabled", item->second.GetBundleName().c_str());
+    if (innerBundleInfo.IsDisabled()) {
+        APP_LOGD("bundle %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     std::vector<ResourceInfo> resourceInfos;
-    if (GetAbilityResourceInfos(item->second, userId, resourceInfos)) {
+    if (GetAbilityResourceInfos(innerBundleInfo, userId, resourceInfos)) {
         for (const auto &info : resourceInfos) {
             if ((info.moduleName_ == moduleName) && (info.abilityName_ == abilityName)) {
                 resourceInfo = info;
@@ -221,7 +218,7 @@ bool BundleResourceProcess::GetResourceInfoByColorModeChanged(
 
     for (const auto &bundleName : needAddResourceBundles) {
         if (!GetResourceInfoByBundleName(bundleName, userId, resourceInfos)) {
-            APP_LOGW("bundleName %{public}s GetResourceInfoByBundleName failed.", bundleName.c_str());
+            APP_LOGW("bundleName %{public}s GetResourceInfoByBundleName failed", bundleName.c_str());
         }
     }
     return true;
@@ -250,7 +247,7 @@ bool BundleResourceProcess::GetDynamicIcon(
         innerBundleInfo.GetExtendResourceInfos();
     auto iter = extResourceInfos.find(curDynamicIconModule);
     if (iter == extResourceInfos.end()) {
-        APP_LOGE("Module not exist %{public}s.",
+        APP_LOGE("Module not exist %{public}s",
             curDynamicIconModule.c_str());
         return false;
     }

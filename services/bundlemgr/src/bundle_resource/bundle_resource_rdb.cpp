@@ -545,7 +545,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         valuesBucket.PutLong(BundleResourceConstants::UPDATE_TIME, timeStamp);
         absRdbPredicates.EqualTo(BundleResourceConstants::NAME, resourceInfo.GetKey());
         if (!rdbDataManager_->UpdateOrInsertData(valuesBucket, absRdbPredicates)) {
-            APP_LOGE("bundleName: %{public}s UpdateData failed.", resourceInfo.GetKey().c_str());
+            APP_LOGE("bundleName: %{public}s UpdateData failed", resourceInfo.GetKey().c_str());
             ret = false;
         }
         absRdbPredicates.Clear();

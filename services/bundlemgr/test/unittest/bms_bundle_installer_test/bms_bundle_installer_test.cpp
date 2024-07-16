@@ -5785,4 +5785,126 @@ HWTEST_F(BmsBundleInstallerTest, IsExistApFile_0100, Function | SmallTest | Leve
     auto ret = hostImpl.IsExistApFile(TEST_STRING, isExist);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+
+/**
+ * @tc.number: ExtractHnpFileDir_0100
+ * @tc.name: test ExtractHnpFileDir
+ * @tc.desc: 1.Test the ExtractHnpFileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractHnpFileDir_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string cpuAbi = "abi";
+    std::string hnpPackageInfoString = "packagerinfo";
+    std::string modulePath = "module.path";
+    ErrCode res = installer.ExtractHnpFileDir(cpuAbi, hnpPackageInfoString, modulePath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: GetValidDataGroupIds_0100
+ * @tc.name: test GetValidDataGroupIds
+ * @tc.desc: 1.Test the GetValidDataGroupIds
+*/
+HWTEST_F(BmsBundleInstallerTest, GetValidDataGroupIds_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> extensionDataGroupIds;
+    extensionDataGroupIds.push_back("1");
+    std::vector<std::string> bundleDataGroupId;
+    bundleDataGroupId.push_back("1");
+    bundleDataGroupId.push_back("2");
+    std::vector<std::string> validGroupIds;
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupId, validGroupIds);
+    EXPECT_NE(validGroupIds.size(), 0);
+}
+
+/**
+ * @tc.number: InstallCloneApp_0100
+ * @tc.name: test InstallCloneApp
+ * @tc.desc: 1.Test the InstallCloneApp
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName ;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    int32_t res = bundleInstallerHost.InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstallCloneApp_0200
+ * @tc.name: test InstallCloneApp
+ * @tc.desc: 1.Test the InstallCloneApp
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.acts.example";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    int32_t res = bundleInstallerHost.InstallCloneApp(bundleName, userId, appIndex);
+    EXPECT_EQ(res, ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: UninstallCloneApp_0100
+ * @tc.name: test UninstallCloneApp
+ * @tc.desc: 1.Test the UninstallCloneApp
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallCloneApp_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName ;
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    EXPECT_EQ(bundleInstallerHost.UninstallCloneApp(bundleName, userId, appIndex),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: UninstallCloneApp_0200
+ * @tc.name: test UninstallCloneApp
+ * @tc.desc: 1.Test the UninstallCloneApp
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallCloneApp_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string bundleName = "com.acts.example";
+    int32_t userId = 100;
+    int32_t appIndex = 1;
+    EXPECT_EQ(bundleInstallerHost.UninstallCloneApp(bundleName, userId, appIndex),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: InstallHmpBundle_0100
+ * @tc.name: test InstallHmpBundle
+ * @tc.desc: 1.Test the InstallHmpBundle
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallHmpBundle_0100, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string filePath;
+    bool isNeedRollback = true;
+    ErrCode res = bundleInstallerHost.InstallHmpBundle(filePath, isNeedRollback);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstallHmpBundle_0200
+ * @tc.name: test InstallHmpBundle
+ * @tc.desc: 1.Test the InstallHmpBundle
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallHmpBundle_0200, Function | SmallTest | Level0)
+{
+    BundleInstallerHost bundleInstallerHost;
+    std::string filePath = "file.path";
+    bool isNeedRollback = true;
+    ErrCode res = bundleInstallerHost.InstallHmpBundle(filePath, isNeedRollback);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

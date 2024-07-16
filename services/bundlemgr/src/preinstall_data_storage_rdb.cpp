@@ -165,7 +165,7 @@ bool PreInstallDataStorageRdb::LoadPreInstallBundleInfo(const std::string &bundl
     std::string value;
     bool ret = rdbDataManager_->QueryData(bundleName, value);
     if (!ret) {
-        APP_LOGE("LoadPreInstallBundleInfo QueryData failed.");
+        APP_LOGE("LoadPreInstallBundleInfo QueryData failed");
         return ret;
     }
     nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);

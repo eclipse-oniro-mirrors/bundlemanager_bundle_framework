@@ -73,7 +73,7 @@ static bool ParseType(napi_env env, napi_value value, std::string& result)
     }
     size_t size = 0;
     if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("napi_get_value_string_utf8 error.");
+        APP_LOGE("napi_get_value_string_utf8 error");
         return false;
     }
     result.reserve(size + 1);
@@ -92,22 +92,22 @@ static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
 {
     auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
-        APP_LOGE("systemAbilityManager is null.");
+        APP_LOGE("systemAbilityManager is null");
         return nullptr;
     }
     auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (bundleMgrSa == nullptr) {
-        APP_LOGE("bundleMgrSa is null.");
+        APP_LOGE("bundleMgrSa is null");
         return nullptr;
     }
     auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
     if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
+        APP_LOGE("iface_cast failed");
         return nullptr;
     }
     auto defaultAppProxy = bundleMgr->GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
-        APP_LOGE("GetDefaultAppProxy failed.");
+        APP_LOGE("GetDefaultAppProxy failed");
         return nullptr;
     }
     return defaultAppProxy;
@@ -372,7 +372,7 @@ napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
     NAPI_CALL(env, napi_get_boolean(env, isDefaultApp, &nRet));
-    APP_LOGD("call ResetDefaultApplicationSync done.");
+    APP_LOGD("call ResetDefaultApplicationSync done");
     return nRet;
 }
 
@@ -535,7 +535,7 @@ napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info)
     napi_value nBundleInfo = nullptr;
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     ConvertBundleInfo(env, nBundleInfo, bundleInfo);
-    APP_LOGD("call GetDefaultApplicationSync done.");
+    APP_LOGD("call GetDefaultApplicationSync done");
     return nBundleInfo;
 }
 
@@ -708,7 +708,7 @@ napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    APP_LOGD("call SetDefaultApplicationSync done.");
+    APP_LOGD("call SetDefaultApplicationSync done");
     return nRet;
 }
 
@@ -867,7 +867,7 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    APP_LOGD("call ResetDefaultApplicationSync done.");
+    APP_LOGD("call ResetDefaultApplicationSync done");
     return nRet;
 }
 }

@@ -115,7 +115,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("install clone app user %{public}d not exist.", userId);
+        APP_LOGE("install clone app user %{public}d not exist", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     ScopeGuard bundleEnabledGuard([&] { dataMgr_->EnableBundle(bundleName); });
@@ -162,11 +162,11 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) invalid.", userId);
+        APP_LOGE("userId(%{public}d) invalid", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
     if (!dataMgr->HasUserId(userId)) {
-        APP_LOGE("install clone app user %{public}d not exist.", userId);
+        APP_LOGE("install clone app user %{public}d not exist", userId);
         return ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST;
     }
 
@@ -256,7 +256,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
     }
     if (!dataMgr_->HasUserId(userId)) {
-        APP_LOGE("install clone app user %{public}d not exist.", userId);
+        APP_LOGE("install clone app user %{public}d not exist", userId);
         return ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST;
     }
     InnerBundleInfo info;

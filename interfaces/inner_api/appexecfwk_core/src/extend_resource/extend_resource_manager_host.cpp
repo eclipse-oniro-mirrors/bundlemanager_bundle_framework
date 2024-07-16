@@ -29,12 +29,12 @@ namespace OHOS {
 namespace AppExecFwk {
 ExtendResourceManagerHost::ExtendResourceManagerHost()
 {
-    APP_LOGI("create ExtendResourceManagerHost.");
+    APP_LOGI("create ExtendResourceManagerHost");
 }
 
 ExtendResourceManagerHost::~ExtendResourceManagerHost()
 {
-    APP_LOGI("destroy ExtendResourceManagerHost.");
+    APP_LOGI("destroy ExtendResourceManagerHost");
 }
 
 int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -45,7 +45,7 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
     std::u16string descriptor = ExtendResourceManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        APP_LOGE("descriptor invalid.");
+        APP_LOGE("descriptor invalid");
         return OBJECT_NULL;
     }
 
@@ -168,25 +168,25 @@ ErrCode ExtendResourceManagerHost::HandleGetDynamicIcon(MessageParcel& data, Mes
 
 ErrCode ExtendResourceManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
 {
-    APP_LOGD("begin to HandleCreateFd.");
+    APP_LOGD("begin to HandleCreateFd");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string fileName = data.ReadString();
     int32_t fd = -1;
     std::string path;
     auto ret = CreateFd(fileName, fd, path);
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write ret failed.");
+        APP_LOGE("write ret failed");
         close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteFileDescriptor(fd)) {
-            APP_LOGE("write fd failed.");
+            APP_LOGE("write fd failed");
             close(fd);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteString(path)) {
-            APP_LOGE("write path failed.");
+            APP_LOGE("write path failed");
             close(fd);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }

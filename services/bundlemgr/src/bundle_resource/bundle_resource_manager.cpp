@@ -70,7 +70,7 @@ bool BundleResourceManager::AddResourceInfo(const InnerBundleInfo &innerBundleIn
             info.hapPath_ = hapPath;
         }
     }
-    return AddResourceInfos(resourceInfos);
+    return AddResourceInfos(userId, resourceInfos);
 }
 
 bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
@@ -83,7 +83,7 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
     }
     DeleteNotExistResourceInfo(bundleName, 0, resourceInfos);
 
-    if (!AddResourceInfos(resourceInfos)) {
+    if (!AddResourceInfos(userId, resourceInfos)) {
         APP_LOGE("error, bundleName:%{public}s", bundleName.c_str());
         return false;
     }
@@ -137,7 +137,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
-    if (!AddResourceInfo(resourceInfo)) {
+    if (!AddResourceInfo(userId, resourceInfo)) {
         APP_LOGE("error, bundleName %{public}s, moduleName %{public}s, abilityName %{public}s failed",
             bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
@@ -198,15 +198,11 @@ bool BundleResourceManager::DeleteAllResourceInfo()
     return bundleResourceRdb_->DeleteAllResourceInfo();
 }
 
-bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
+bool BundleResourceManager::AddResourceInfo(const int32_t userId, ResourceInfo &resourceInfo)
 {
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if ((currentUserId <= 0)) {
-        currentUserId = Constants::START_USERID;
-    }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfo(currentUserId, resourceInfo)) {
+    if (!parser.ParseResourceInfo(userId, resourceInfo)) {
         APP_LOGW("key %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
         BundleResourceInfo bundleResourceInfo;
         if (GetBundleResourceInfo(resourceInfo.bundleName_,
@@ -224,19 +220,15 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
     return bundleResourceRdb_->AddResourceInfo(resourceInfo);
 }
 
-bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resourceInfos)
+bool BundleResourceManager::AddResourceInfos(const int32_t userId, std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
-        APP_LOGE("resourceInfos is empty.");
+        APP_LOGE("resourceInfos is empty");
         return false;
-    }
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if ((currentUserId <= 0)) {
-        currentUserId = Constants::START_USERID;
     }
     // need to parse label and icon
     BundleResourceParser parser;
-    if (!parser.ParseResourceInfos(currentUserId, resourceInfos)) {
+    if (!parser.ParseResourceInfos(userId, resourceInfos)) {
         APP_LOGW("key:%{public}s Parse failed, need to modify label and icon", resourceInfos[0].GetKey().c_str());
         ProcessResourceInfoWhenParseFailed(resourceInfos[0]);
     }
@@ -400,7 +392,7 @@ bool BundleResourceManager::AddResourceInfosByMap(
     const int32_t oldUserId)
 {
     if (resourceInfosMap.empty()) {
-        APP_LOGE("resourceInfosMap is empty.");
+        APP_LOGE("resourceInfosMap is empty");
         return false;
     }
     bool needDeleteAllResource = false;
@@ -553,7 +545,7 @@ void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &res
 bool BundleResourceManager::SaveResourceInfos(std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
-        APP_LOGE("resourceInfos is empty.");
+        APP_LOGE("resourceInfos is empty");
         return false;
     }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
