@@ -36,7 +36,6 @@ const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 
 InstalldHost::InstalldHost()
 {
-    Init();
     InitEventHandler();
     LOG_I(BMS_TAG_INSTALLD, "installd host instance is created");
 }
@@ -44,94 +43,6 @@ InstalldHost::InstalldHost()
 InstalldHost::~InstalldHost()
 {
     LOG_I(BMS_TAG_INSTALLD, "installd host instance is destroyed");
-}
-
-void InstalldHost::Init()
-{
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR),
-        &InstalldHost::HandleCreateBundleDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES),
-        &InstalldHost::HandleExtractModuleFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::RENAME_MODULE_DIR),
-        &InstalldHost::HandleRenameModuleDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR),
-        &InstalldHost::HandleCreateBundleDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR),
-        &InstalldHost::HandleRemoveBundleDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR),
-        &InstalldHost::HandleRemoveModuleDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR),
-        &InstalldHost::HandleCleanBundleDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME),
-        &InstalldHost::HandleCleanBundleDataDirByName);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL), &InstalldHost::HandleSetDirApl);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR), &InstalldHost::HandleRemoveDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS),
-        &InstalldHost::HandleGetBundleStats);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS),
-        &InstalldHost::HandleGetAllBundleStats);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH),
-        &InstalldHost::HandleGetBundleCachePath);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR), &InstalldHost::HandleScanDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE), &InstalldHost::HandleMoveFile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE), &InstalldHost::HandleCopyFile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MKDIR), &InstalldHost::HandleMkdir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_FILE_STAT), &InstalldHost::HandleGetFileStat);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DIFF_FILES),
-        &InstalldHost::HandleExtractDiffFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::APPLY_DIFF_PATCH),
-        &InstalldHost::HandleApplyDiffPatch);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_DIR), &InstalldHost::HandleIsExistDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_DIR_EMPTY), &InstalldHost::HandleIsDirEmpty);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR),
-        &InstalldHost::HandObtainQuickFixFileDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES), &InstalldHost::HandCopyFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES), &InstalldHost::HandleExtractFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES),
-        &InstalldHost::HandleExtractHnpFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE),
-        &InstalldHost::HandleProcessBundleInstallNative);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::UNINSTALL_NATIVE),
-        &InstalldHost::HandleProcessBundleUnInstallNative);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
-        &InstalldHost::HandGetNativeLibraryFileNames);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::PEND_SIGN_AOT), &InstalldHost::HandlePendSignAOT);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_AP_FILE),
-        &InstalldHost::HandleIsExistApFile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
-        &InstalldHost::HandVerifyCodeSignature);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CHECK_ENCRYPTION),
-        &InstalldHost::HandleCheckEncryption);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE),
-        &InstalldHost::HandExtractDriverSoFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE),
-        &InstalldHost::HandExtractEncryptedSoFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP),
-        &InstalldHost::HandVerifyCodeSignatureForHap);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE),
-        &InstalldHost::HandDeliverySignProfile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE),
-        &InstalldHost::HandRemoveSignProfile);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR),
-        &InstalldHost::HandleCreateBundleDataDirWithVector);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::STOP_AOT), &InstalldHost::HandleStopAOT);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_ENCRYPTION_DIR),
-        &InstalldHost::HandleSetEncryptionDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID),
-        &InstalldHost::HandleDeleteEncryptionKeyId);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_EXTENSION_DIR),
-        &InstalldHost::HandleRemoveExtensionDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_EXTENSION_DIR),
-        &InstalldHost::HandleIsExistExtensionDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR),
-        &InstalldHost::HandleCreateExtensionDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE),
-        &InstalldHost::HandleGetDiskUsage);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST),
-        &InstalldHost::HandleGetExtensionSandboxTypeList);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -147,12 +58,160 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         return OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool result = true;
-    LOG_D(BMS_TAG_INSTALLD, "funcMap_ size is %{public}d", static_cast<int32_t>(funcMap_.size()));
-    if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
-        result = (this->*funcMap_[code])(data, reply);
-    } else {
-        LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR):
+            result = this->HandleCreateBundleDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES):
+            result = this->HandleExtractModuleFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::RENAME_MODULE_DIR):
+            result = this->HandleRenameModuleDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR):
+            result = this->HandleCreateBundleDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR):
+            result = this->HandleRemoveBundleDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR):
+            result = this->HandleRemoveModuleDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR):
+            result = this->HandleCleanBundleDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR_BY_NAME):
+            result = this->HandleCleanBundleDataDirByName(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL):
+            result = this->HandleSetDirApl(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR):
+            result = this->HandleRemoveDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS):
+            result = this->HandleGetBundleStats(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS):
+            result = this->HandleGetAllBundleStats(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH):
+            result = this->HandleGetBundleCachePath(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR):
+            result = this->HandleScanDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE):
+            result = this->HandleMoveFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE):
+            result = this->HandleCopyFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MKDIR):
+            result = this->HandleMkdir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_FILE_STAT):
+            result = this->HandleGetFileStat(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DIFF_FILES):
+            result = this->HandleExtractDiffFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::APPLY_DIFF_PATCH):
+            result = this->HandleApplyDiffPatch(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_DIR):
+            result = this->HandleIsExistDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::IS_DIR_EMPTY):
+            result = this->HandleIsDirEmpty(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR):
+            result = this->HandObtainQuickFixFileDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES):
+            result = this->HandCopyFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES):
+            result = this->HandleExtractFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_HNP_FILES):
+            result = this->HandleExtractHnpFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::INSTALL_NATIVE):
+            result = this->HandleProcessBundleInstallNative(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::UNINSTALL_NATIVE):
+            result = this->HandleProcessBundleUnInstallNative(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES):
+            result = this->HandGetNativeLibraryFileNames(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT):
+            result = this->HandleExecuteAOT(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::PEND_SIGN_AOT):
+            result = this->HandlePendSignAOT(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE):
+            result = this->HandleIsExistFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_AP_FILE):
+            result = this->HandleIsExistApFile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE):
+            result = this->HandVerifyCodeSignature(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CHECK_ENCRYPTION):
+            result = this->HandleCheckEncryption(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES):
+            result = this->HandMoveFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE):
+            result = this->HandExtractDriverSoFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE):
+            result = this->HandExtractEncryptedSoFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP):
+            result = this->HandVerifyCodeSignatureForHap(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE):
+            result = this->HandDeliverySignProfile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE):
+            result = this->HandRemoveSignProfile(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR_WITH_VECTOR):
+            result = this->HandleCreateBundleDataDirWithVector(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::STOP_AOT):
+            result = this->HandleStopAOT(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::SET_ENCRYPTION_DIR):
+            result = this->HandleSetEncryptionDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::DELETE_ENCRYPTION_KEY_ID):
+            result = this->HandleDeleteEncryptionKeyId(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_EXTENSION_DIR):
+            result = this->HandleRemoveExtensionDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_EXTENSION_DIR):
+            result = this->HandleIsExistExtensionDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::CREATE_EXTENSION_DATA_DIR):
+            result = this->HandleCreateExtensionDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_DISK_USAGE):
+            result = this->HandleGetDiskUsage(data, reply);
+            break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST):
+            result = this->HandleGetExtensionSandboxTypeList(data, reply);
+            break;
+        default :
+            LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     LOG_D(BMS_TAG_INSTALLD, "installd host finish to process message from client");
     AddCloseInstalldTask();

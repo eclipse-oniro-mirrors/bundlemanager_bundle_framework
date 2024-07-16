@@ -68,325 +68,6 @@ inline void ClearAshmem(sptr<Ashmem> &optMem)
 BundleMgrHost::BundleMgrHost()
 {
     APP_LOGD("create bundle manager host ");
-    init();
-}
-
-void BundleMgrHost::init()
-{
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO),
-        &BundleMgrHost::HandleGetApplicationInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetApplicationInfoWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS),
-        &BundleMgrHost::HandleGetApplicationInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9),
-        &BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetApplicationInfosWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9),
-        &BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9),
-        &BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_INFO),
-        &BundleMgrHost::HandleBatchGetBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO),
-        &BundleMgrHost::HandleGetBundlePackInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetBundlePackInfoWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS),
-        &BundleMgrHost::HandleGetBundleInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetBundleInfosWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9),
-        &BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID),
-        &BundleMgrHost::HandleGetBundleNameForUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLES_FOR_UID),
-        &BundleMgrHost::HandleGetBundlesForUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_FOR_UID),
-        &BundleMgrHost::HandleGetNameForUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID),
-        &BundleMgrHost::HandleGetNameAndIndexForUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS),
-        &BundleMgrHost::HandleGetBundleGids);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS_BY_UID),
-        &BundleMgrHost::HandleGetBundleGidsByUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_BY_METADATA),
-        &BundleMgrHost::HandleGetBundleInfosByMetaData);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO),
-        &BundleMgrHost::HandleQueryAbilityInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_MUTI_PARAM),
-        &BundleMgrHost::HandleQueryAbilityInfoMutiparam);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS),
-        &BundleMgrHost::HandleQueryAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_MUTI_PARAM),
-        &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9),
-        &BundleMgrHost::HandleQueryAbilityInfosV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS),
-        &BundleMgrHost::HandleBatchQueryAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO),
-        &BundleMgrHost::HandleQueryLauncherAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS),
-        &BundleMgrHost::HandleQueryAllAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI),
-        &BundleMgrHost::HandleQueryAbilityInfoByUri);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_BY_URI),
-        &BundleMgrHost::HandleQueryAbilityInfosByUri);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI_FOR_USERID),
-        &BundleMgrHost::HandleQueryAbilityInfoByUriForUserId);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_KEEPALIVE_BUNDLE_INFOS),
-        &BundleMgrHost::HandleQueryKeepAliveBundleInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL),
-        &BundleMgrHost::HandleGetAbilityLabel);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL_WITH_MODULE_NAME),
-        &BundleMgrHost::HandleGetAbilityLabelWithModuleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID),
-        &BundleMgrHost::HandleCheckIsSystemAppByUid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO),
-        &BundleMgrHost::HandleGetBundleArchiveInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS),
-        &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9),
-        &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO),
-        &BundleMgrHost::HandleGetHapModuleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT_FOR_BUNDLE),
-        &BundleMgrHost::HandleGetLaunchWantForBundle);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PERMISSION_DEF),
-        &BundleMgrHost::HandleGetPermissionDef);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE),
-        &BundleMgrHost::HandleCleanBundleCacheFilesAutomatic);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES),
-        &BundleMgrHost::HandleCleanBundleCacheFiles);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR),
-        &BundleMgrHost::HandleCreateBundleDataDir);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES),
-        &BundleMgrHost::HandleCleanBundleDataFiles);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_STATUS_CALLBACK),
-        &BundleMgrHost::HandleRegisterBundleStatusCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_EVENT_CALLBACK),
-        &BundleMgrHost::HandleRegisterBundleEventCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_EVENT_CALLBACK),
-        &BundleMgrHost::HandleUnregisterBundleEventCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAR_BUNDLE_STATUS_CALLBACK),
-        &BundleMgrHost::HandleClearBundleStatusCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_STATUS_CALLBACK),
-        &BundleMgrHost::HandleUnregisterBundleStatusCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_APPLICATION_ENABLED),
-        &BundleMgrHost::HandleIsApplicationEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APPLICATION_ENABLED),
-        &BundleMgrHost::HandleSetApplicationEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_ABILITY_ENABLED),
-        &BundleMgrHost::HandleIsAbilityEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ABILITY_ENABLED),
-        &BundleMgrHost::HandleSetAbilityEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO),
-        &BundleMgrHost::HandleGetAbilityInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO_WITH_MODULE_NAME),
-        &BundleMgrHost::HandleGetAbilityInfoWithModuleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::DUMP_INFOS),
-        &BundleMgrHost::HandleDumpInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALLER),
-        &BundleMgrHost::HandleGetBundleInstaller);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_FORMS_INFO),
-        &BundleMgrHost::HandleGetAllFormsInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_APP),
-        &BundleMgrHost::HandleGetFormsInfoByApp);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_MODULE),
-        &BundleMgrHost::HandleGetFormsInfoByModule);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO),
-        &BundleMgrHost::HandleGetShortcutInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9),
-        &BundleMgrHost::HandleGetShortcutInfoV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_COMMON_EVENT_INFO),
-        &BundleMgrHost::HandleGetAllCommonEventInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_USER_MGR),
-        &BundleMgrHost::HandleGetBundleUserMgr);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DISTRIBUTE_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetDistributedBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_PRIVILEGE_LEVEL),
-        &BundleMgrHost::HandleGetAppPrivilegeLevel);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE),
-        &BundleMgrHost::HandleQueryExtAbilityInfosWithoutType);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9),
-        &BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO),
-        &BundleMgrHost::HandleQueryExtAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_V9),
-        &BundleMgrHost::HandleQueryExtAbilityInfosV9);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_BY_TYPE),
-        &BundleMgrHost::HandleQueryExtAbilityInfosByType);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_CALLING_PERMISSION),
-        &BundleMgrHost::HandleVerifyCallingPermission);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI),
-        &BundleMgrHost::HandleQueryExtensionAbilityInfoByUri);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME),
-        &BundleMgrHost::HandleGetAppIdByBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_TYPE),
-        &BundleMgrHost::HandleGetAppType);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_BUNDLE_NAME),
-        &BundleMgrHost::HandleGetUidByBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_REMOVABLE),
-        &BundleMgrHost::HandleIsModuleRemovable);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_REMOVABLE),
-        &BundleMgrHost::HandleSetModuleRemovable);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_WITH_CALLBACK),
-        &BundleMgrHost::HandleQueryAbilityInfoWithCallback);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UPGRADE_ATOMIC_SERVICE),
-        &BundleMgrHost::HandleUpgradeAtomicService);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_NEED_UPDATE),
-        &BundleMgrHost::HandleGetModuleUpgradeFlag);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_NEED_UPDATE),
-        &BundleMgrHost::HandleSetModuleUpgradeFlag);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID),
-        &BundleMgrHost::HandleGetHapModuleInfoWithUserId);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY),
-        &BundleMgrHost::HandleImplicitQueryInfoByPriority);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFOS),
-        &BundleMgrHost::HandleImplicitQueryInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DEPENDENT_MODULE_NAMES),
-        &BundleMgrHost::HandleGetAllDependentModuleNames);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetSandboxBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CALLING_BUNDLE_NAME),
-        &BundleMgrHost::HandleObtainCallingBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
-        &BundleMgrHost::HandleGetBundleStats);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS),
-        &BundleMgrHost::HandleGetAllBundleStats);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL),
-        &BundleMgrHost::HandleCheckAbilityEnableInstall);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID),
-        &BundleMgrHost::HandleGetStringById);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ICON_BY_ID),
-        &BundleMgrHost::HandleGetIconById);
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEFAULT_APP_PROXY),
-        &BundleMgrHost::HandleGetDefaultAppProxy);
-#endif
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_ABILITY_INFO),
-        &BundleMgrHost::HandleGetSandboxAbilityInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS),
-        &BundleMgrHost::HandleGetSandboxExtAbilityInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO),
-        &BundleMgrHost::HandleGetSandboxHapModuleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_MEDIA_DATA),
-        &BundleMgrHost::HandleGetMediaData);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_QUICK_FIX_MANAGER_PROXY),
-        &BundleMgrHost::HandleGetQuickFixManagerProxy);
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_CONTROL_PROXY),
-        &BundleMgrHost::HandleGetAppControlProxy);
-#endif
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_DEBUG_MODE),
-        &BundleMgrHost::HandleSetDebugMode);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF),
-        &BundleMgrHost::HandleGetBundleInfoForSelf);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_SYSTEM_API),
-        &BundleMgrHost::HandleVerifySystemApi);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY),
-        &BundleMgrHost::HandleGetOverlayManagerProxy);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SILENT_INSTALL),
-        &BundleMgrHost::HandleSilentInstall);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::PROCESS_PRELOAD),
-        &BundleMgrHost::HandleProcessPreload);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO),
-        &BundleMgrHost::HandleGetAppProvisionInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROVISION_METADATA),
-        &BundleMgrHost::HandleGetProvisionMetadata);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS),
-        &BundleMgrHost::HandleGetBaseSharedBundleInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetAllSharedBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetSharedBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO_BY_SELF),
-        &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_DEPENDENCIES),
-        &BundleMgrHost::HandleGetSharedDependencies);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetDependentBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_DEBUG_BUNDLE_NAME),
-        &BundleMgrHost::HandleGetUidByDebugBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROXY_DATA_INFOS),
-        &BundleMgrHost::HandleGetProxyDataInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PROXY_DATA_INFOS),
-        &BundleMgrHost::HandleGetAllProxyDataInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SPECIFIED_DISTRIBUTED_TYPE),
-        &BundleMgrHost::HandleGetSpecifiedDistributionType);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO),
-        &BundleMgrHost::HandleGetAdditionalInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_EXT_NAME_OR_MIME_TO_APP),
-        &BundleMgrHost::HandleSetExtNameOrMIMEToApp);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::DEL_EXT_NAME_OR_MIME_TO_APP),
-        &BundleMgrHost::HandleDelExtNameOrMIMEToApp);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS),
-        &BundleMgrHost::HandleQueryDataGroupInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID),
-        &BundleMgrHost::HandleGetPreferenceDirByGroupId);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME),
-        &BundleMgrHost::HandleQueryAppGalleryBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
-        &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME),
-        &BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
-        &BundleMgrHost::HandleResetAOTCompileStatus);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE),
-        &BundleMgrHost::HandleGetJsonProfile);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY),
-        &BundleMgrHost::HandleGetBundleResourceProxy);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_VERIFY_MANAGER),
-        &BundleMgrHost::HandleGetVerifyManager);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_RECOVERABLE_APPLICATION_INFO),
-        &BundleMgrHost::HandleGetRecoverableApplicationInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetUninstalledBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO),
-        &BundleMgrHost::HandleSetAdditionalInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_PROCESSAOT),
-        &BundleMgrHost::HandleCompileProcessAOT);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_RESET),
-        &BundleMgrHost::HandleCompileReset);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CAN_OPEN_LINK),
-        &BundleMgrHost::HandleCanOpenLink);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID),
-        &BundleMgrHost::HandleGetOdid);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO),
-        &BundleMgrHost::HandleGetAllPreinstalledApplicationInfos);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER),
-        &BundleMgrHost::HandleGetExtendResourceManager);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID),
-        &BundleMgrHost::HandleGetAllBundleInfoByDeveloperId);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEVELOPER_IDS),
-        &BundleMgrHost::HandleGetDeveloperIds);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE),
-        &BundleMgrHost::HandleSwitchUninstallState);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE),
-        &BundleMgrHost::HandleQueryAbilityInfoByContinueType);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO),
-        &BundleMgrHost::HandleQueryCloneAbilityInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO),
-        &BundleMgrHost::HandleGetCloneBundleInfo);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::COPY_AP),
-        &BundleMgrHost::HandleCopyAp);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES),
-        &BundleMgrHost::HandleGetCloneAppIndexes);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX),
-        &BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED),
-        &BundleMgrHost::HandleSetCloneApplicationEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED),
-        &BundleMgrHost::HandleIsCloneApplicationEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED),
-        &BundleMgrHost::HandleSetCloneAbilityEnabled);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED),
-        &BundleMgrHost::HandleIsCloneAbilityEnabled);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -401,11 +82,479 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
     }
 
     ErrCode errCode = ERR_OK;
-    if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
-        errCode = (this->*funcMap_[code])(data, reply);
-    } else {
-        APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
-        return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+    switch (code) {
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO):
+            errCode = this->HandleGetApplicationInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS):
+            errCode = this->HandleGetApplicationInfoWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS):
+            errCode = this->HandleGetApplicationInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9):
+            errCode = this->HandleGetApplicationInfoWithIntFlagsV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS):
+            errCode = this->HandleGetApplicationInfosWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9):
+            errCode = this->HandleGetApplicationInfosWithIntFlagsV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO):
+            errCode = this->HandleGetBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS):
+            errCode = this->HandleGetBundleInfoWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9):
+            errCode = this->HandleGetBundleInfoWithIntFlagsV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_GET_BUNDLE_INFO):
+            errCode = this->HandleBatchGetBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO):
+            errCode = this->HandleGetBundlePackInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS):
+            errCode = this->HandleGetBundlePackInfoWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS):
+            errCode = this->HandleGetBundleInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS):
+            errCode = this->HandleGetBundleInfosWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9):
+            errCode = this->HandleGetBundleInfosWithIntFlagsV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID):
+            errCode = this->HandleGetBundleNameForUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLES_FOR_UID):
+            errCode = this->HandleGetBundlesForUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_FOR_UID):
+            errCode = this->HandleGetNameForUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_AND_APPINDEX_FOR_UID):
+            errCode = this->HandleGetNameAndIndexForUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS):
+            errCode = this->HandleGetBundleGids(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS_BY_UID):
+            errCode = this->HandleGetBundleGidsByUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_BY_METADATA):
+            errCode = this->HandleGetBundleInfosByMetaData(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO):
+            errCode = this->HandleQueryAbilityInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_MUTI_PARAM):
+            errCode = this->HandleQueryAbilityInfoMutiparam(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS):
+            errCode = this->HandleQueryAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_MUTI_PARAM):
+            errCode = this->HandleQueryAbilityInfosMutiparam(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9):
+            errCode = this->HandleQueryAbilityInfosV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::BATCH_QUERY_ABILITY_INFOS):
+            errCode = this->HandleBatchQueryAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO):
+            errCode = this->HandleQueryLauncherAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS):
+            errCode = this->HandleQueryAllAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI):
+            errCode = this->HandleQueryAbilityInfoByUri(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_BY_URI):
+            errCode = this->HandleQueryAbilityInfosByUri(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI_FOR_USERID):
+            errCode = this->HandleQueryAbilityInfoByUriForUserId(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_KEEPALIVE_BUNDLE_INFOS):
+            errCode = this->HandleQueryKeepAliveBundleInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL):
+            errCode = this->HandleGetAbilityLabel(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL_WITH_MODULE_NAME):
+            errCode = this->HandleGetAbilityLabelWithModuleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID):
+            errCode = this->HandleCheckIsSystemAppByUid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO):
+            errCode = this->HandleGetBundleArchiveInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS):
+            errCode = this->HandleGetBundleArchiveInfoWithIntFlags(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9):
+            errCode = this->HandleGetBundleArchiveInfoWithIntFlagsV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO):
+            errCode = this->HandleGetHapModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT_FOR_BUNDLE):
+            errCode = this->HandleGetLaunchWantForBundle(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PERMISSION_DEF):
+            errCode = this->HandleGetPermissionDef(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::AUTO_CLEAN_CACHE_BY_SIZE):
+            errCode = this->HandleCleanBundleCacheFilesAutomatic(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES):
+            errCode = this->HandleCleanBundleCacheFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CREATE_BUNDLE_DATA_DIR):
+            errCode = this->HandleCreateBundleDataDir(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES):
+            errCode = this->HandleCleanBundleDataFiles(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_STATUS_CALLBACK):
+            errCode = this->HandleRegisterBundleStatusCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_EVENT_CALLBACK):
+            errCode = this->HandleRegisterBundleEventCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_EVENT_CALLBACK):
+            errCode = this->HandleUnregisterBundleEventCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAR_BUNDLE_STATUS_CALLBACK):
+            errCode = this->HandleClearBundleStatusCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_STATUS_CALLBACK):
+            errCode = this->HandleUnregisterBundleStatusCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_APPLICATION_ENABLED):
+            errCode = this->HandleIsApplicationEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APPLICATION_ENABLED):
+            errCode = this->HandleSetApplicationEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_ABILITY_ENABLED):
+            errCode = this->HandleIsAbilityEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ABILITY_ENABLED):
+            errCode = this->HandleSetAbilityEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO):
+            errCode = this->HandleGetAbilityInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO_WITH_MODULE_NAME):
+            errCode = this->HandleGetAbilityInfoWithModuleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::DUMP_INFOS):
+            errCode = this->HandleDumpInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALLER):
+            errCode = this->HandleGetBundleInstaller(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_FORMS_INFO):
+            errCode = this->HandleGetAllFormsInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_APP):
+            errCode = this->HandleGetFormsInfoByApp(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_MODULE):
+            errCode = this->HandleGetFormsInfoByModule(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO):
+            errCode = this->HandleGetShortcutInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9):
+            errCode = this->HandleGetShortcutInfoV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_COMMON_EVENT_INFO):
+            errCode = this->HandleGetAllCommonEventInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_USER_MGR):
+            errCode = this->HandleGetBundleUserMgr(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DISTRIBUTE_BUNDLE_INFO):
+            errCode = this->HandleGetDistributedBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_PRIVILEGE_LEVEL):
+            errCode = this->HandleGetAppPrivilegeLevel(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE):
+            errCode = this->HandleQueryExtAbilityInfosWithoutType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9):
+            errCode = this->HandleQueryExtAbilityInfosWithoutTypeV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO):
+            errCode = this->HandleQueryExtAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_V9):
+            errCode = this->HandleQueryExtAbilityInfosV9(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_BY_TYPE):
+            errCode = this->HandleQueryExtAbilityInfosByType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_CALLING_PERMISSION):
+            errCode = this->HandleVerifyCallingPermission(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI):
+            errCode = this->HandleQueryExtensionAbilityInfoByUri(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME):
+            errCode = this->HandleGetAppIdByBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_TYPE):
+            errCode = this->HandleGetAppType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_BUNDLE_NAME):
+            errCode = this->HandleGetUidByBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_REMOVABLE):
+            errCode = this->HandleIsModuleRemovable(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_REMOVABLE):
+            errCode = this->HandleSetModuleRemovable(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_WITH_CALLBACK):
+            errCode = this->HandleQueryAbilityInfoWithCallback(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::UPGRADE_ATOMIC_SERVICE):
+            errCode = this->HandleUpgradeAtomicService(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_NEED_UPDATE):
+            errCode = this->HandleGetModuleUpgradeFlag(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_NEED_UPDATE):
+            errCode = this->HandleSetModuleUpgradeFlag(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID):
+            errCode = this->HandleGetHapModuleInfoWithUserId(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY):
+            errCode = this->HandleImplicitQueryInfoByPriority(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFOS):
+            errCode = this->HandleImplicitQueryInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DEPENDENT_MODULE_NAMES):
+            errCode = this->HandleGetAllDependentModuleNames(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO):
+            errCode = this->HandleGetSandboxBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CALLING_BUNDLE_NAME):
+            errCode = this->HandleObtainCallingBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS):
+            errCode = this->HandleGetBundleStats(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_STATS):
+            errCode = this->HandleGetAllBundleStats(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL):
+            errCode = this->HandleCheckAbilityEnableInstall(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID):
+            errCode = this->HandleGetStringById(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ICON_BY_ID):
+            errCode = this->HandleGetIconById(data, reply);
+            break;
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEFAULT_APP_PROXY):
+            errCode = this->HandleGetDefaultAppProxy(data, reply);
+            break;
+#endif
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_ABILITY_INFO):
+            errCode = this->HandleGetSandboxAbilityInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS):
+            errCode = this->HandleGetSandboxExtAbilityInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO):
+            errCode = this->HandleGetSandboxHapModuleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_MEDIA_DATA):
+            errCode = this->HandleGetMediaData(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_QUICK_FIX_MANAGER_PROXY):
+            errCode = this->HandleGetQuickFixManagerProxy(data, reply);
+            break;
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_CONTROL_PROXY):
+            errCode = this->HandleGetAppControlProxy(data, reply);
+            break;
+#endif
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_DEBUG_MODE):
+            errCode = this->HandleSetDebugMode(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF):
+            errCode = this->HandleGetBundleInfoForSelf(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_SYSTEM_API):
+            errCode = this->HandleVerifySystemApi(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY):
+            errCode = this->HandleGetOverlayManagerProxy(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SILENT_INSTALL):
+            errCode = this->HandleSilentInstall(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::PROCESS_PRELOAD):
+            errCode = this->HandleProcessPreload(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO):
+            errCode = this->HandleGetAppProvisionInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROVISION_METADATA):
+            errCode = this->HandleGetProvisionMetadata(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS):
+            errCode = this->HandleGetBaseSharedBundleInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO):
+            errCode = this->HandleGetAllSharedBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO):
+            errCode = this->HandleGetSharedBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO_BY_SELF):
+            errCode = this->HandleGetSharedBundleInfoBySelf(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_DEPENDENCIES):
+            errCode = this->HandleGetSharedDependencies(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO):
+            errCode = this->HandleGetDependentBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_DEBUG_BUNDLE_NAME):
+            errCode = this->HandleGetUidByDebugBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROXY_DATA_INFOS):
+            errCode = this->HandleGetProxyDataInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PROXY_DATA_INFOS):
+            errCode = this->HandleGetAllProxyDataInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SPECIFIED_DISTRIBUTED_TYPE):
+            errCode = this->HandleGetSpecifiedDistributionType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO):
+            errCode = this->HandleGetAdditionalInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_EXT_NAME_OR_MIME_TO_APP):
+            errCode = this->HandleSetExtNameOrMIMEToApp(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::DEL_EXT_NAME_OR_MIME_TO_APP):
+            errCode = this->HandleDelExtNameOrMIMEToApp(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS):
+            errCode = this->HandleQueryDataGroupInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID):
+            errCode = this->HandleGetPreferenceDirByGroupId(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME):
+            errCode = this->HandleQueryAppGalleryBundleName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME):
+            errCode = this->HandleQueryExtensionAbilityInfosWithTypeName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME):
+            errCode = this->HandleQueryExtensionAbilityInfosOnlyWithTypeName(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS):
+            errCode = this->HandleResetAOTCompileStatus(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE):
+            errCode = this->HandleGetJsonProfile(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY):
+            errCode = this->HandleGetBundleResourceProxy(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_VERIFY_MANAGER):
+            errCode = this->HandleGetVerifyManager(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_RECOVERABLE_APPLICATION_INFO):
+            errCode = this->HandleGetRecoverableApplicationInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO):
+            errCode = this->HandleGetUninstalledBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO):
+            errCode = this->HandleSetAdditionalInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_PROCESSAOT):
+            errCode = this->HandleCompileProcessAOT(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::COMPILE_RESET):
+            errCode = this->HandleCompileReset(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::CAN_OPEN_LINK):
+            errCode = this->HandleCanOpenLink(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID):
+            errCode = this->HandleGetOdid(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREINSTALLED_APPLICATION_INFO):
+            errCode = this->HandleGetAllPreinstalledApplicationInfos(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_EXTEND_RESOURCE_MANAGER):
+            errCode = this->HandleGetExtendResourceManager(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_BUNDLE_INFO_BY_DEVELOPER_ID):
+            errCode = this->HandleGetAllBundleInfoByDeveloperId(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEVELOPER_IDS):
+            errCode = this->HandleGetDeveloperIds(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SWITCH_UNINSTALL_STATE):
+            errCode = this->HandleSwitchUninstallState(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_CONTINUE_TYPE):
+            errCode = this->HandleQueryAbilityInfoByContinueType(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_ABILITY_INFO):
+            errCode = this->HandleQueryCloneAbilityInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_BUNDLE_INFO):
+            errCode = this->HandleGetCloneBundleInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::COPY_AP):
+            errCode = this->HandleCopyAp(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_CLONE_APP_INDEXES):
+            errCode = this->HandleGetCloneAppIndexes(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX):
+            errCode = this->HandleQueryCloneExtensionAbilityInfoWithAppIndex(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_APPLICATION_ENABLED):
+            errCode = this->HandleSetCloneApplicationEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_APPLICATION_ENABLED):
+            errCode = this->HandleIsCloneApplicationEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::SET_CLONE_ABILITY_ENABLED):
+            errCode = this->HandleSetCloneAbilityEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED):
+            errCode = this->HandleIsCloneAbilityEnabled(data, reply);
+            break;
+        default :
+            APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
+            return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("bundleMgr host finish to process message, errCode: %{public}d", errCode);
     return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;

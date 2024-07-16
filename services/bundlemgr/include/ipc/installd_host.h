@@ -139,11 +139,7 @@ private:
     bool HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);
 
     bool HandleGetAllBundleStats(MessageParcel &data, MessageParcel &reply);
-
-    /**
-     * @brief Init private hash map funcMap_.
-     */
-    void Init();
+    
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -222,8 +218,6 @@ private:
 
     void InitEventHandler();
 
-    using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
-    std::unordered_map<uint32_t, InstalldFunc> funcMap_;
     std::mutex unloadTaskMutex_;
     std::shared_ptr<EventHandler> handler_ = nullptr;
     std::shared_ptr<EventRunner> runner_ = nullptr;
