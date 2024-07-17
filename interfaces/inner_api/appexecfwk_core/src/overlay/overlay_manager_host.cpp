@@ -26,12 +26,12 @@ namespace OHOS {
 namespace AppExecFwk {
 OverlayManagerHost::OverlayManagerHost()
 {
-    APP_LOGD("create OverlayManagerHost.");
+    APP_LOGD("create OverlayManagerHost");
 }
 
 OverlayManagerHost::~OverlayManagerHost()
 {
-    APP_LOGD("destroy OverlayManagerHost.");
+    APP_LOGD("destroy OverlayManagerHost");
 }
 
 int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,

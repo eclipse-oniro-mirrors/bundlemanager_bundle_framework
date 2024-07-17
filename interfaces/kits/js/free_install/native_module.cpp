@@ -43,7 +43,7 @@ static napi_value FreeInstallExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    APP_LOGI("init js free install success.");
+    APP_LOGI("init js free install success");
     return exports;
 }
 

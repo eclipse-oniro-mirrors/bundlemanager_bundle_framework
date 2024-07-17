@@ -32,7 +32,7 @@ bool BundleMonitor::Subscribe(const sptr<IBundleStatusCallback> &callback)
     }
 
     if (EventFwk::CommonEventManager::SubscribeCommonEvent(shared_from_this()) != true) {
-        APP_LOGE("SubscribeCommonEvent occur exception.");
+        APP_LOGE("SubscribeCommonEvent occur exception");
         return false;
     }
     return true;
@@ -42,7 +42,7 @@ bool BundleMonitor::UnSubscribe()
 {
     APP_LOGI("unsubscribe called");
     if (EventFwk::CommonEventManager::UnSubscribeCommonEvent(shared_from_this()) != true) {
-        APP_LOGE("UnsubscribeCommonEvent occur exception.");
+        APP_LOGE("UnsubscribeCommonEvent occur exception");
         return false;
     }
     {

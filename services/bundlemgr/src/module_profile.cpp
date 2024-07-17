@@ -40,7 +40,7 @@ bool IsSupportCompressNativeLibs()
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -1850,7 +1850,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
                     std::string preloadName = preload.at(Profile::PRELOADS_MODULE_NAME);
                     preloads.emplace_back(preloadName);
                 } else {
-                    APP_LOGE("preloads must have moduleName.");
+                    APP_LOGE("preloads must have moduleName");
                     return false;
                 }
             }
@@ -1885,7 +1885,7 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
 
     innerBundleInfo.SetApplicationBundleType(bundleType);
     if (!ParserAtomicModuleConfig(jsonObject, innerBundleInfo)) {
-        APP_LOGE("parse module atomicService failed.");
+        APP_LOGE("parse module atomicService failed");
         return false;
     }
     return true;
@@ -2666,15 +2666,15 @@ ErrCode ModuleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserAtomicConfig(jsonObject, innerBundleInfo)) {
-        APP_LOGE("Parser atomicService config failed.");
+        APP_LOGE("Parser atomicService config failed");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed.");
+        APP_LOGE("Parser native so failed");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     if (!ParserArkNativeFilePath(moduleJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser ark native file failed.");
+        APP_LOGE("Parser ark native file failed");
         return ERR_APPEXECFWK_PARSE_AN_FAILED;
     }
     return ERR_OK;

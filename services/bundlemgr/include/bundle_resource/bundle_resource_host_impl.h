@@ -37,6 +37,13 @@ public:
     virtual ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
 
+    virtual ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId) override;
+
+    virtual ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId) override;
+
+    virtual ErrCode DeleteResourceInfo(const std::string &key) override;
+
 private:
     ErrCode CheckBundleNameValid(const std::string &bundleName, int32_t appIndex);
 };

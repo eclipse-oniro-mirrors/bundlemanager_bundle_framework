@@ -247,17 +247,17 @@ bool InstalldClient::LoadInstalldService()
     }
     auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
-        APP_LOGE("Failed to get SystemAbilityManager.");
+        APP_LOGE("Failed to get SystemAbilityManager");
         return false;
     }
     sptr<InstalldLoadCallback> loadCallback = new (std::nothrow) InstalldLoadCallback();
     if (loadCallback == nullptr) {
-        APP_LOGE("Create load callback failed.");
+        APP_LOGE("Create load callback failed");
         return false;
     }
     auto ret = systemAbilityMgr->LoadSystemAbility(INSTALLD_SERVICE_ID, loadCallback);
     if (ret != 0) {
-        APP_LOGE("Load system ability %{public}d failed with %{public}d.", INSTALLD_SERVICE_ID, ret);
+        APP_LOGE("Load system ability %{public}d failed with %{public}d", INSTALLD_SERVICE_ID, ret);
         return false;
     }
 
@@ -268,7 +268,7 @@ bool InstalldClient::LoadInstalldService()
                 return loadSaFinished_;
             });
         if (!waitStatus) {
-            APP_LOGE("Wait for load sa timeout.");
+            APP_LOGE("Wait for load sa timeout");
             return false;
         }
     }

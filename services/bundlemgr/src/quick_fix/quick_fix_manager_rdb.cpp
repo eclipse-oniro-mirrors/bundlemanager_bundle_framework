@@ -27,7 +27,7 @@ constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
 }
 QuickFixManagerRdb::QuickFixManagerRdb()
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerRdb.");
+    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerRdb");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = QUICK_FIX_RDB_TABLE_NAME;
@@ -37,7 +37,7 @@ QuickFixManagerRdb::QuickFixManagerRdb()
 
 QuickFixManagerRdb::~QuickFixManagerRdb()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerRdb.");
+    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerRdb");
 }
 
 bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerAppQuickFix> &innerAppQuickFixes)
@@ -45,7 +45,7 @@ bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerApp
     LOG_I(BMS_TAG_DEFAULT, "begin to QueryAllInnerAppQuickFix");
     bool ret = GetAllDataFromDb(innerAppQuickFixes);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "GetAllDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetAllDataFromDb failed");
         return false;
     }
     return true;
@@ -56,7 +56,7 @@ bool QuickFixManagerRdb::QueryInnerAppQuickFix(const std::string &bundleName, In
     LOG_I(BMS_TAG_DEFAULT, "begin to QueryAppQuickFix");
     bool ret = GetDataFromDb(bundleName, innerAppQuickFix);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed");
         return false;
     }
     return true;
@@ -67,7 +67,7 @@ bool QuickFixManagerRdb::SaveInnerAppQuickFix(const InnerAppQuickFix &innerAppQu
     LOG_I(BMS_TAG_DEFAULT, "begin to SaveInnerAppQuickFix");
     bool ret = SaveDataToDb(innerAppQuickFix);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "SaveDataToDb failed");
         return false;
     }
     return true;
@@ -78,7 +78,7 @@ bool QuickFixManagerRdb::DeleteInnerAppQuickFix(const std::string &bundleName)
     LOG_I(BMS_TAG_DEFAULT, "begin to DeleteInnerAppQuickFix");
     bool ret = DeleteDataFromDb(bundleName);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDataFromDb failed.");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDataFromDb failed");
         return false;
     }
     return true;

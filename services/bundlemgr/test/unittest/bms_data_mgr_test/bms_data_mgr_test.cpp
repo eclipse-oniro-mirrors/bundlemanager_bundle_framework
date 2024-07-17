@@ -58,6 +58,7 @@ const int32_t USERID = 100;
 const std::string ACTION = "action.system.home";
 const std::string ENTITY = "entity.system.home";
 const std::string ISOLATION_ONLY = "isolationOnly";
+constexpr const char* SHARE_ACTION_VALUE = "ohos.want.action.sendData";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -1874,5 +1875,320 @@ HWTEST_F(BmsDataMgrTest, MatchPrivateType_0004, Function | SmallTest | Level0)
     MimeTypeMgr::GetMimeTypeByUri(want.GetUriString(), mimeTypes);
     bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes, mimeTypes);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: MatchShare_0100
+ * @tc.name: test MatchShare
+ * @tc.desc: 1.test match share based on want and skill
+ */
+HWTEST_F(BmsDataMgrTest, MatchShare_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    AAFwk::Want want;
+    want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
+    want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
+    want.SetElementName("", BUNDLE_NAME, "", MODULE_NAME);
+    std::vector<Skill> skills;
+    bool result = dataMgr->MatchShare(want, skills);
+    EXPECT_EQ(result, false);
+    want.SetAction(SHARE_ACTION_VALUE);
+    result = dataMgr->MatchShare(want, skills);
+    EXPECT_EQ(result, false);
+    struct Skill skill;
+    skills.emplace_back(skill);
+    result = dataMgr->MatchShare(want, skills);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: MatchUtd_0100
+ * @tc.name: test MatchUtd
+ * @tc.desc: 1.test match utd
+ */
+HWTEST_F(BmsDataMgrTest, MatchUtd_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    struct Skill skill;
+    std::string utd = "";
+    int32_t count = 0;
+    bool result = dataMgr->MatchUtd(skill, utd, count);
+    EXPECT_EQ(result, false);
+
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    result = dataMgr->MatchUtd(skill, utd, count);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: MatchUtd_0200
+ * @tc.name: test MatchUtd
+ * @tc.desc: 1.test match utd without count
+ */
+HWTEST_F(BmsDataMgrTest, MatchUtd_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string skillUtd = "";
+    std::string wantUtd = "";
+    bool result = dataMgr->MatchUtd(skillUtd, wantUtd);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: MatchTypeWithUtd_0100
+ * @tc.name: test MatchTypeWithUtd
+ * @tc.desc: 1.test match type with utd
+ */
+HWTEST_F(BmsDataMgrTest, MatchTypeWithUtd_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    struct Skill skill;
+    std::string mimeType = "";
+    std::string wantUtd = "";
+    bool ret = dataMgr->MatchTypeWithUtd(wantUtd, mimeType);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: FindSkillsContainShareAction_0200
+ * @tc.name: test FindSkillsContainShareAction
+ * @tc.desc: 1.test find skills that include sharing action
+ */
+HWTEST_F(BmsDataMgrTest, FindSkillsContainShareAction_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::vector<Skill> skills;
+    auto result = dataMgr->FindSkillsContainShareAction(skills);
+    EXPECT_EQ(result.empty(), true);
+
+    struct Skill skill;
+    skill.actions.emplace_back(SHARE_ACTION_VALUE);
+    skills.emplace_back(skill);
+    result = dataMgr->FindSkillsContainShareAction(skills);
+    EXPECT_EQ(result.empty(), false);
+}
+
+/**
+ * @tc.number: LoadDataFromPersistentStorage_0100
+ * @tc.name: test CompatibleOldBundleStateInKvDb
+ * @tc.desc: 1.compatible old bundle status in Kvdb
+ */
+HWTEST_F(BmsDataMgrTest, LoadDataFromPersistentStorage_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto ret = dataMgr->LoadDataFromPersistentStorage();
+    dataMgr->CompatibleOldBundleStateInKvDb();
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace("", innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    dataMgr->CompatibleOldBundleStateInKvDb();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetMatchLauncherAbilityInfosForCloneInfos_0100
+ * @tc.name: test GetMatchLauncherAbilityInfosForCloneInfos
+ * @tc.desc: 1.obtain matching launcher ability information for clone information
+ */
+HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfosForCloneInfos_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.iconId = 0;
+    ApplicationInfo applicationInfo;
+    applicationInfo.iconId = 200;
+    abilityInfo.applicationInfo = applicationInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    innerBundleUserInfo.bundleUserInfo.enabled = true;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->GetMatchLauncherAbilityInfosForCloneInfos(innerBundleInfo, abilityInfo, innerBundleUserInfo, abilityInfos);
+    EXPECT_EQ(abilityInfos.empty(), true);
+    InnerBundleCloneInfo cloneInfo;
+    innerBundleUserInfo.cloneInfos.emplace("", cloneInfo);
+    dataMgr->GetMatchLauncherAbilityInfosForCloneInfos(innerBundleInfo, abilityInfo, innerBundleUserInfo, abilityInfos);
+    EXPECT_EQ(abilityInfos.empty(), false);
+}
+
+/**
+ * @tc.number: ModifyBundleInfoByCloneInfo_0100
+ * @tc.name: test ModifyBundleInfoByCloneInfo
+ * @tc.desc: 1.modify bundle information based on clone information
+ */
+HWTEST_F(BmsDataMgrTest, ModifyBundleInfoByCloneInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleCloneInfo cloneInfo;
+    BundleInfo bundleInfo;
+    dataMgr->ModifyBundleInfoByCloneInfo(cloneInfo, bundleInfo);
+    bundleInfo.applicationInfo.bundleName = BUNDLE_NAME;
+    dataMgr->ModifyBundleInfoByCloneInfo(cloneInfo, bundleInfo);
+    EXPECT_EQ(bundleInfo.uid, cloneInfo.uid);
+}
+
+/**
+ * @tc.number: ModifyApplicationInfoByCloneInfo_0100
+ * @tc.name: test ModifyApplicationInfoByCloneInfo
+ * @tc.desc: 1.modify application information based on clone information
+ */
+HWTEST_F(BmsDataMgrTest, ModifyApplicationInfoByCloneInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleCloneInfo cloneInfo;
+    ApplicationInfo applicationInfo;
+    dataMgr->ModifyApplicationInfoByCloneInfo(cloneInfo, applicationInfo);
+    EXPECT_EQ(applicationInfo.enabled, cloneInfo.enabled);
+}
+
+/**
+ * @tc.number: UpateExtResources_0100
+ * @tc.name: test UpateExtResources
+ * @tc.desc: 1.test update external resources
+ */
+HWTEST_F(BmsDataMgrTest, UpateExtResources_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::vector<ExtendResourceInfo> extendResourceInfos;
+    bool ret = dataMgr->UpateExtResources(bundleName, extendResourceInfos);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->UpateExtResources(BUNDLE_NAME, extendResourceInfos);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RemoveExtResources_0100
+ * @tc.name: test RemoveExtResources
+ * @tc.desc: 1.test remove external resources
+ */
+HWTEST_F(BmsDataMgrTest, RemoveExtResources_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::vector<std::string> moduleNames;
+    bool ret = dataMgr->RemoveExtResources(bundleName, moduleNames);
+    EXPECT_EQ(ret, false);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->RemoveExtResources(BUNDLE_NAME, moduleNames);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: IsBundleExist_0100
+ * @tc.name: test IsBundleExist
+ * @tc.desc: 1.judge bundle exist
+ */
+HWTEST_F(BmsDataMgrTest, IsBundleExist_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    bool ret = dataMgr->IsBundleExist(bundleName);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->IsBundleExist(BUNDLE_NAME);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test GetAllBundleStats
+ * @tc.desc: 1.test get all bundle stats
+ */
+HWTEST_F(BmsDataMgrTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    int32_t userId = 0;
+    std::vector<int64_t> bundleStats;
+    bool ret = dataMgr->GetAllBundleStats(userId, bundleStats);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IsApplicationEnabled_0100
+ * @tc.name: test IsApplicationEnabled
+ * @tc.desc: 1.test enable application
+ */
+HWTEST_F(BmsDataMgrTest, IsApplicationEnabled_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    const std::string bundleName = BUNDLE_NAME;
+    int32_t appIndex = 1;
+    bool isEnabled = false;
+    bool ret = dataMgr->IsApplicationEnabled(bundleName, appIndex, isEnabled);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ImplicitQueryAllExtensionInfos_0100
+ * @tc.name: test ImplicitQueryAllExtensionInfos
+ * @tc.desc: 1.test implicit query of all extended information
+ */
+HWTEST_F(BmsDataMgrTest, ImplicitQueryAllExtensionInfos_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    ErrCode ret = dataMgr->ImplicitQueryAllExtensionInfos(flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+    appIndex = -1;
+    ret = dataMgr->ImplicitQueryAllExtensionInfos(flags, userId, infos, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: UpateCurDynamicIconModule_0100
+ * @tc.name: test UpateCurDynamicIconModule
+ * @tc.desc: 1.test update dynamic icon module
+ */
+HWTEST_F(BmsDataMgrTest, UpateCurDynamicIconModule_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::string moduleName = MODULE_NAME;
+    bool ret = dataMgr->UpateCurDynamicIconModule(bundleName, moduleName);
+    EXPECT_EQ(ret, false);
+    ret = dataMgr->UpateCurDynamicIconModule(BUNDLE_NAME, moduleName);
+    EXPECT_EQ(ret, false);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->UpateCurDynamicIconModule(BUNDLE_NAME, moduleName);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS

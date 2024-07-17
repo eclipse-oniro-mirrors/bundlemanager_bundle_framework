@@ -185,7 +185,7 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         }
     }
     if (!dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
-        APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed.");
+        APP_LOGE("SavePreInstallBundleInfo for bundleName_ failed");
     }
 }
 
@@ -328,20 +328,20 @@ void AppServiceFwkInstaller::AddAppProvisionInfo(
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("BundleName %{public}s add appProvisionInfo failed.", bundleName.c_str());
+        APP_LOGW("BundleName %{public}s add appProvisionInfo failed", bundleName.c_str());
     }
 
     if (!installParam.specifiedDistributionType.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
             bundleName, installParam.specifiedDistributionType)) {
-            APP_LOGW("BundleName %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+            APP_LOGW("BundleName %{public}s SetSpecifiedDistributionType failed", bundleName.c_str());
         }
     }
 
     if (!installParam.additionalInfo.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
             bundleName, installParam.additionalInfo)) {
-            APP_LOGW("BundleName %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+            APP_LOGW("BundleName %{public}s SetAdditionalInfo failed", bundleName.c_str());
         }
     }
 }
@@ -804,7 +804,7 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         return false;
     }
     if (oldInfo.GetVersionCode() > versionCode_) {
-        APP_LOGW("version code is lower than current app service.");
+        APP_LOGW("version code is lower than current app service");
         return false;
     }
 
@@ -820,7 +820,7 @@ bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, con
 {
     auto oldVersionCode = oldInfo.GetVersionCode();
     if (oldVersionCode > versionCode_) {
-        APP_LOGW("version code is lower than current app service.");
+        APP_LOGW("version code is lower than current app service");
         return false;
     } else if (oldVersionCode < versionCode_) {
         APP_LOGW("upgrade, old version is %{public}d, new version is %{public}d", oldVersionCode, versionCode_);

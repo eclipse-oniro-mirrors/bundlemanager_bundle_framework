@@ -2505,7 +2505,7 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     if (want == nullptr) {
-        APP_LOGE("ReadParcelable want failed.");
+        APP_LOGE("ReadParcelable want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     int32_t flags = data.ReadInt32();
@@ -2516,16 +2516,16 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     bool findDefaultApp = false;
     bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (!reply.WriteBool(ret)) {
-        APP_LOGE("WriteBool ret failed.");
+        APP_LOGE("WriteBool ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
         if (!WriteParcelableVector(abilityInfos, reply)) {
-            APP_LOGE("WriteParcelableVector abilityInfos failed.");
+            APP_LOGE("WriteParcelableVector abilityInfos failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!WriteParcelableVector(extensionInfos, reply)) {
-            APP_LOGE("WriteParcelableVector extensionInfo failed.");
+            APP_LOGE("WriteParcelableVector extensionInfo failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteBool(findDefaultApp)) {
@@ -2660,12 +2660,12 @@ ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IDefaultApp> defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
-        APP_LOGE("defaultAppProxy is nullptr.");
+        APP_LOGE("defaultAppProxy is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(defaultAppProxy->AsObject())) {
-        APP_LOGE("WriteRemoteObject failed.");
+        APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2678,12 +2678,12 @@ ErrCode BundleMgrHost::HandleGetAppControlProxy(MessageParcel &data, MessageParc
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IAppControlMgr> appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
-        APP_LOGE("appControlProxy is nullptr.");
+        APP_LOGE("appControlProxy is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(appControlProxy->AsObject())) {
-        APP_LOGE("WriteRemoteObject failed.");
+        APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -2768,12 +2768,12 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IQuickFixManager> quickFixManagerProxy = GetQuickFixManagerProxy();
     if (quickFixManagerProxy == nullptr) {
-        APP_LOGE("quickFixManagerProxy is nullptr.");
+        APP_LOGE("quickFixManagerProxy is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(quickFixManagerProxy->AsObject())) {
-        APP_LOGE("WriteRemoteObject failed.");
+        APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -3009,12 +3009,12 @@ ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, Message
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IOverlayManager> overlayManagerProxy = GetOverlayManagerProxy();
     if (overlayManagerProxy == nullptr) {
-        APP_LOGE("overlayManagerProxy is nullptr.");
+        APP_LOGE("overlayManagerProxy is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(overlayManagerProxy->AsObject())) {
-        APP_LOGE("WriteRemoteObject failed.");
+        APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -3419,12 +3419,12 @@ ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, Message
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     sptr<IBundleResource> bundleResourceProxy = GetBundleResourceProxy();
     if (bundleResourceProxy == nullptr) {
-        APP_LOGE("bundleResourceProxy is nullptr.");
+        APP_LOGE("bundleResourceProxy is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     if (!reply.WriteRemoteObject(bundleResourceProxy->AsObject())) {
-        APP_LOGE("WriteRemoteObject failed.");
+        APP_LOGE("WriteRemoteObject failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -3668,27 +3668,27 @@ ErrCode BundleMgrHost::HandleGetOdid(MessageParcel &data, MessageParcel &reply)
 ErrCode BundleMgrHost::HandleGetAllPreinstalledApplicationInfos(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("Called.");
+    APP_LOGD("Called");
     std::vector<PreinstalledApplicationInfo> preinstalledApplicationInfos;
     ErrCode ret = GetAllPreinstalledApplicationInfos(preinstalledApplicationInfos);
     int32_t vectorSize = static_cast<int32_t>(preinstalledApplicationInfos.size());
     if (vectorSize > MAX_STATUS_VECTOR_NUM) {
-        APP_LOGE("PreinstallApplicationInfos vector is over size.");
+        APP_LOGE("PreinstallApplicationInfos vector is over size");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
     constexpr int32_t VECTOR_SIZE_UNDER_DEFAULT_DATA = 500;
     if (vectorSize > VECTOR_SIZE_UNDER_DEFAULT_DATA &&
         !reply.SetDataCapacity(PREINSTALL_PARCEL_CAPACITY)) {
-        APP_LOGE("SetDataCapacity failed.");
+        APP_LOGE("SetDataCapacity failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!reply.WriteInt32(ret)) {
-        APP_LOGE("Write reply failed.");
+        APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !WriteParcelableVector(preinstalledApplicationInfos, reply)) {
-        APP_LOGE("Write preinstalled app infos failed.");
+        APP_LOGE("Write preinstalled app infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

@@ -371,7 +371,7 @@ bool BundleResourceParser::ParseIconIdFromJson(
 {
     nlohmann::json jsonObject = nlohmann::json::parse(jsonBuff, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse jsonBuff %{public}s.", jsonBuff.c_str());
+        APP_LOGE("failed to parse jsonBuff %{public}s", jsonBuff.c_str());
         return false;
     }
     const auto &jsonObjectStart = jsonObject.begin();

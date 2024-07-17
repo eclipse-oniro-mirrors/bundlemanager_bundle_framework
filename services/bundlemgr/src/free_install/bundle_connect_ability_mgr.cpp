@@ -177,7 +177,7 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_DEFAULT, "Failed to sendRequest, result = %{public}d", result);
     }
-    LOG_D(BMS_TAG_DEFAULT, "sendRequest to service center success.");
+    LOG_D(BMS_TAG_DEFAULT, "sendRequest to service center success");
 }
 
 int32_t BundleConnectAbilityMgr::GetPreloadFlag()
@@ -205,20 +205,20 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
     int32_t flag = ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE;
     auto ret = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName, flag, innerBundleInfo, userId);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "GetInnerBundleInfoWithBundleFlagsAndLock failed.");
+        LOG_E(BMS_TAG_DEFAULT, "GetInnerBundleInfoWithBundleFlagsAndLock failed");
         return false;
     }
     if (innerBundleInfo.GetBaseApplicationInfo().bundleType != BundleType::ATOMIC_SERVICE) {
         return false;
     }
     if (moduleName.empty()) {
-        LOG_E(BMS_TAG_DEFAULT, "moduleName is empty.");
+        LOG_E(BMS_TAG_DEFAULT, "moduleName is empty");
         return false;
     }
     std::set<std::string> preloadModuleNames;
     auto moduleInfoMap = innerBundleInfo.GetInnerModuleInfos();
     if (moduleInfoMap.find(moduleName) == moduleInfoMap.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "get moduleInfo from innerBundleInfo failed.");
+        LOG_E(BMS_TAG_DEFAULT, "get moduleInfo from innerBundleInfo failed");
         return false;
     }
     auto preloadItems = moduleInfoMap[moduleName].preloads;
@@ -235,7 +235,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
         }
     }
     if (preloadModuleNames.empty()) {
-        LOG_D(BMS_TAG_DEFAULT, "All preload modules exist locally.");
+        LOG_D(BMS_TAG_DEFAULT, "All preload modules exist locally");
         return false;
     }
     targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().appId);
@@ -247,7 +247,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
 
 bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 {
-    LOG_D(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::ProcessPreload is called.");
+    LOG_D(BMS_TAG_DEFAULT, "BundleConnectAbilityMgr::ProcessPreload is called");
     std::string bundleName = want.GetElement().GetBundleName();
     std::string moduleName = want.GetElement().GetModuleName();
     std::string abilityName = want.GetElement().GetAbilityName();
@@ -273,7 +273,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->version = DEFAULT_VERSION;
 
     if (!GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo)) {
-        LOG_D(BMS_TAG_DEFAULT, "the module have no preload module.");
+        LOG_D(BMS_TAG_DEFAULT, "the module have no preload module");
         return false;
     }
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
@@ -288,7 +288,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     targetAbilityInfo->targetInfo.callingBundleNames.emplace_back(bundleName);
     if (!ProcessPreloadCheck(*targetAbilityInfo)) {
-        LOG_E(BMS_TAG_DEFAULT, "ProcessPreloadCheck failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ProcessPreloadCheck failed");
         return false;
     }
     return true;
@@ -305,15 +305,15 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
         BmsExperienceRule rule;
         bool ret = CheckEcologicalRule(want, callerInfo, rule);
         if (!ret) {
-            LOG_E(BMS_TAG_DEFAULT, "check ecological rule failed, skip.");
+            LOG_E(BMS_TAG_DEFAULT, "check ecological rule failed, skip");
         } else if (rule.isAllow) {
-            LOG_I(BMS_TAG_DEFAULT, "ecological rule is allow, keep going.");
+            LOG_I(BMS_TAG_DEFAULT, "ecological rule is allow, keep going");
         } else if (rule.replaceWant != nullptr) {
-            LOG_I(BMS_TAG_DEFAULT, "ecological rule is replace want.");
+            LOG_I(BMS_TAG_DEFAULT, "ecological rule is replace want");
             targetAbilityInfo.targetExtSetting.extValues.emplace(PARAM_REPLACE_WANT,
                 rule.replaceWant->ToUri());
         } else {
-            LOG_W(BMS_TAG_DEFAULT, "ecological rule is not allowed, return.");
+            LOG_W(BMS_TAG_DEFAULT, "ecological rule is not allowed, return");
             CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
             return false;
         }
@@ -416,7 +416,7 @@ void BundleConnectAbilityMgr::LoadDownloadService() const
     }
     auto ret = systemAbilityMgr->LoadSystemAbility(DOWNLOAD_SERVICE_SA_ID, loadCallback);
     if (ret != 0) {
-        LOG_E(BMS_TAG_DEFAULT, "Load system ability %{public}d failed with %{public}d.",
+        LOG_E(BMS_TAG_DEFAULT, "Load system ability %{public}d failed with %{public}d",
             DOWNLOAD_SERVICE_SA_ID, ret);
         return;
     }
@@ -995,8 +995,10 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     }
     bool innerBundleInfoResult = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(bundleName,
         flags, innerBundleInfo, userId);
+    EventReport::SendFreeInstallEvent(bundleName, abilityName, moduleName, innerBundleInfoResult,
+        BundleUtil::GetCurrentTime());
     if (!innerBundleInfoResult) {
-        APP_LOGE("GetInnerBundleInfoWithBundleFlagsAndLock failed.");
+        APP_LOGE("GetInnerBundleInfoWithBundleFlagsAndLock failed");
         return false;
     }
     if (abilityName.empty()) {
@@ -1181,12 +1183,12 @@ bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerIn
     sptr<BmsEcologicalRuleMgrServiceClient> instance_ =
         BmsEcologicalRuleMgrServiceClient::GetInstance();
     if (instance_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "Failed to get instance from erms.");
+        LOG_E(BMS_TAG_DEFAULT, "Failed to get instance from erms");
         return false;
     }
     int ret = instance_->QueryFreeInstallExperience(want, callerInfo, rule);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "Failed to query free install experience from erms.");
+        LOG_E(BMS_TAG_DEFAULT, "Failed to query free install experience from erms");
         return false;
     }
     return true;
@@ -1211,14 +1213,14 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     std::string callerBundleName;
     ErrCode err = bundleDataMgr_->GetNameForUid(callerInfo.uid, callerBundleName);
     if (err != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "Get callerBundleName failed.");
+        LOG_E(BMS_TAG_DEFAULT, "Get callerBundleName failed");
         return;
     }
     AppExecFwk::ApplicationInfo callerAppInfo;
     bool getCallerResult = bundleDataMgr_->GetApplicationInfo(callerBundleName,
         AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, callerAppInfo);
     if (!getCallerResult) {
-        LOG_E(BMS_TAG_DEFAULT, "Get callerAppInfo failed.");
+        LOG_E(BMS_TAG_DEFAULT, "Get callerAppInfo failed");
         return;
     }
     callerInfo.callerAppProvisionType = callerAppInfo.appProvisionType;
@@ -1226,7 +1228,7 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     bool getInnerBundleInfoRes = bundleDataMgr_->GetInnerBundleInfoWithBundleFlagsAndLock(callerBundleName,
         AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, info, userId);
     if (!getInnerBundleInfoRes) {
-        APP_LOGW("Get callerInnerBundleInfo failed.");
+        APP_LOGW("Get callerInnerBundleInfo failed");
         return;
     }
     callerInfo.callerModelType = BmsCallerInfo::MODEL_FA;
@@ -1247,11 +1249,11 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
 bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const
 {
     if (targetAbilityInfo.targetInfo.callingBundleNames.empty()) {
-        LOG_D(BMS_TAG_DEFAULT, "callingBundleNames in targetAbilityInfo is empty.");
+        LOG_D(BMS_TAG_DEFAULT, "callingBundleNames in targetAbilityInfo is empty");
         return false;
     }
     if (targetAbilityInfo.targetInfo.callingBundleNames[0] != targetAbilityInfo.targetInfo.bundleName) {
-        LOG_D(BMS_TAG_DEFAULT, "callingBundleName is different with target bundleName.");
+        LOG_D(BMS_TAG_DEFAULT, "callingBundleName is different with target bundleName");
         return false;
     }
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();

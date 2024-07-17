@@ -76,13 +76,13 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
 
     // 2. obtain userId
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) is invalid.", userId);
+        APP_LOGE("userId(%{public}d) is invalid", userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     userId_ = userId;
 
     if (!dataMgr_->HasUserId(userId_)) {
-        APP_LOGE("the user %{public}d does not exist when when install sandbox application.", userId_);
+        APP_LOGE("the user %{public}d does not exist when when install sandbox application", userId_);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST;
     }
 
@@ -171,12 +171,12 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     if (userId < Constants::DEFAULT_USERID) {
-        APP_LOGE("userId(%{public}d) is invalid.", userId);
+        APP_LOGE("userId(%{public}d) is invalid", userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     userId_ = userId;
     if (!dataMgr_->HasUserId(userId_)) {
-        APP_LOGE("The user %{public}d does not exist when uninstall sandbox application.", userId_);
+        APP_LOGE("The user %{public}d does not exist when uninstall sandbox application", userId_);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_USER_NOT_EXIST;
     }
 

@@ -167,6 +167,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
+    { ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE, ERROR_APP_NOT_SUPPORTED_MULTI_TYPE },
@@ -184,7 +185,7 @@ sptr<IRemoteObject::DeathRecipient> CommonFunc::deathRecipient_(new (std::nothro
 
 void CommonFunc::BundleMgrCommonDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
 {
-    APP_LOGD("BundleManagerService dead.");
+    APP_LOGD("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     bundleMgr_ = nullptr;
 };
@@ -201,12 +202,12 @@ bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
     napi_valuetype valuetype = napi_undefined;
     napi_typeof(env, args, &valuetype);
     if (valuetype != napi_number) {
-        APP_LOGD("Wrong argument type. int32 expected.");
+        APP_LOGD("Wrong argument type. int32 expected");
         return false;
     }
     int32_t value = 0;
     if (napi_get_value_int32(env, args, &value) != napi_ok) {
-        APP_LOGD("napi_get_value_int32 failed.");
+        APP_LOGD("napi_get_value_int32 failed");
         return false;
     }
     param = value;
@@ -391,17 +392,17 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
     if (bundleMgr_ == nullptr) {
         auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (systemAbilityManager == nullptr) {
-            APP_LOGE("systemAbilityManager is null.");
+            APP_LOGE("systemAbilityManager is null");
             return nullptr;
         }
         auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
         if (bundleMgrSa == nullptr) {
-            APP_LOGE("bundleMgrSa is null.");
+            APP_LOGE("bundleMgrSa is null");
             return nullptr;
         }
         bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            APP_LOGE("iface_cast failed.");
+            APP_LOGE("iface_cast failed");
             return nullptr;
         }
         bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
@@ -535,11 +536,11 @@ void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Wan
 
 bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
 {
-    APP_LOGD("begin to parse ElementName.");
+    APP_LOGD("begin to parse ElementName");
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
-        APP_LOGW("args not object type.");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -566,11 +567,11 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
 
 bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &elementName)
 {
-    APP_LOGD("begin to parse ElementName.");
+    APP_LOGD("begin to parse ElementName");
     napi_valuetype valueType = napi_undefined;
     napi_typeof(env, args, &valueType);
     if (valueType != napi_object) {
-        APP_LOGW("args not object type.");
+        APP_LOGW("args not object type");
         return false;
     }
     napi_value prop = nullptr;
@@ -1331,7 +1332,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
-    APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
+    APP_LOGD("ConvertApplicationInfo name=%{public}s", appInfo.name.c_str());
 
     napi_value nBundleType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
@@ -1600,7 +1601,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, NAME, nName));
-    APP_LOGD("ConvertHapModuleInfo name=%{public}s.", hapModuleInfo.name.c_str());
+    APP_LOGD("ConvertHapModuleInfo name=%{public}s", hapModuleInfo.name.c_str());
 
     napi_value nIcon;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.iconPath.c_str(), NAPI_AUTO_LENGTH, &nIcon));
@@ -2109,32 +2110,32 @@ void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo 
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, BUNDLE_NAME, nBundleName));
-    APP_LOGD("ConvertOverlayModuleInfo bundleName=%{public}s.", info.bundleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo bundleName=%{public}s", info.bundleName.c_str());
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, MODULE_NAME, nModuleName));
-    APP_LOGD("ConvertOverlayModuleInfo moduleName=%{public}s.", info.moduleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo moduleName=%{public}s", info.moduleName.c_str());
 
     napi_value nTargetModuleName;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_string_utf8(env, info.targetModuleName.c_str(), NAPI_AUTO_LENGTH, &nTargetModuleName));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, TARGET_MODULE_NAME, nTargetModuleName));
-    APP_LOGD("ConvertOverlayModuleInfo targetModuleName=%{public}s.", info.targetModuleName.c_str());
+    APP_LOGD("ConvertOverlayModuleInfo targetModuleName=%{public}s", info.targetModuleName.c_str());
 
     napi_value nPriority;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, PRIORITY, nPriority));
-    APP_LOGD("ConvertOverlayModuleInfo priority=%{public}d.", info.priority);
+    APP_LOGD("ConvertOverlayModuleInfo priority=%{public}d", info.priority);
 
     napi_value nState;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.state, &nState));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objOverlayModuleInfo, STATE, nState));
-    APP_LOGD("ConvertOverlayModuleInfo state=%{public}d.", info.state);
+    APP_LOGD("ConvertOverlayModuleInfo state=%{public}d", info.state);
 }
 
 void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos,
@@ -2180,11 +2181,11 @@ std::string CommonFunc::ObtainCallingBundleName()
     std::string callingBundleName;
     auto bundleMgr = GetBundleMgr();
     if (bundleMgr == nullptr) {
-        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
         return callingBundleName;
     }
     if (!bundleMgr->ObtainCallingBundleName(callingBundleName)) {
-        APP_LOGE("obtain calling bundleName failed.");
+        APP_LOGE("obtain calling bundleName failed");
     }
     return callingBundleName;
 }

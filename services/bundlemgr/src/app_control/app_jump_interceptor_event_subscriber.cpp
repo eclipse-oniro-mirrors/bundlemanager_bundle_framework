@@ -50,7 +50,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
             __func__, action.c_str(), bundleName.c_str());
         return;
     }
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s, action:%{public}s.", __func__, action.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s, action:%{public}s", __func__, action.c_str());
     std::weak_ptr<AppJumpInterceptorEventSubscriber> weakThis = shared_from_this();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
         LOG_I(BMS_TAG_DEFAULT, "bundle remove, bundleName: %{public}s", bundleName.c_str());
@@ -70,7 +70,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
         };
         ffrt::submit(task);
     } else {
-        LOG_W(BMS_TAG_DEFAULT, "%{public}s warnning, invalid action.", __func__);
+        LOG_W(BMS_TAG_DEFAULT, "%{public}s warnning, invalid action", __func__);
     }
 }
 } // AppExecFwk

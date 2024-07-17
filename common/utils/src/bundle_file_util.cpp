@@ -193,7 +193,7 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
         APP_LOGD("find hap path %{public}s", realPath.c_str());
 
         if (hapFileList.size() > MAX_HAP_NUMBER) {
-            APP_LOGE("max hap number %{public}hhu, stop add.", MAX_HAP_NUMBER);
+            APP_LOGE("max hap number %{public}hhu, stop add", MAX_HAP_NUMBER);
             closedir(dir);
             return false;
         }

@@ -305,7 +305,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
 bool FormInfo::IsValid() const
 {
     if (!window.autoDesignWidth && window.designWidth <= 0) {
-        APP_LOGW("Invalid FormInfo, window.designWidth <= 0.");
+        APP_LOGW("Invalid FormInfo, window.designWidth <= 0");
         return false;
     }
     return true;

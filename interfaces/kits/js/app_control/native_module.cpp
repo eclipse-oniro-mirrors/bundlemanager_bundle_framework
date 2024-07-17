@@ -52,7 +52,7 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    APP_LOGD("init js app control success.");
+    APP_LOGD("init js app control success");
     return exports;
 }
 

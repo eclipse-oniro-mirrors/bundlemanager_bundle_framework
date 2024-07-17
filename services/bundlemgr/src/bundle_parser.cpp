@@ -46,9 +46,9 @@ const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
-    APP_LOGD("Parse rpcid output start, itemLen:%{public}d  totalLen:%{public}d.", itemLen, totalLen);
+    APP_LOGD("Parse rpcid output start, itemLen:%{public}d  totalLen:%{public}d", itemLen, totalLen);
     if (buf == nullptr || itemLen <= 0 || totalLen <= 0) {
-        APP_LOGE("param invalid.");
+        APP_LOGE("param invalid");
         return false;
     }
 
@@ -56,7 +56,7 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
     while (index + itemLen <= totalLen) {
         char item[itemLen];
         if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
-            APP_LOGE("Parse rpcid failed due to strncpy_s error.");
+            APP_LOGE("Parse rpcid failed due to strncpy_s error");
             return false;
         }
 
@@ -188,7 +188,7 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
     }
 
     if (!bundleExtractor.HasEntry(SYSCAP_NAME)) {
-        APP_LOGD("Rpcid.sc is not exist, and do not need verification sysCaps.");
+        APP_LOGD("Rpcid.sc is not exist, and do not need verification sysCaps");
         return ERR_OK;
     }
 
@@ -362,7 +362,7 @@ ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::v
 {
     nlohmann::json object;
     if (!ReadFileIntoJson(configPath, object)) {
-        APP_LOGI("Parse file %{public}s failed.", configPath.c_str());
+        APP_LOGI("Parse file %{public}s failed", configPath.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
     }
     if (!object.contains(NO_DISABLING_CONFIG_KEY) || !object.at(NO_DISABLING_CONFIG_KEY).is_array()) {
