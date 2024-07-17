@@ -270,10 +270,6 @@ public:
     static bool CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
         const std::string &destinedDir);
 
-    static void ChangeDirProperties(const std::string &path, int32_t uid, int32_t gid);
-
-    static bool ChangeDirPropertiesRecursively(const std::string &path, int32_t uid, int32_t gid);
-
 #if defined(CODE_ENCRYPTION_ENABLE)
     static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
         const std::string &tmpSoPath, int32_t uid);

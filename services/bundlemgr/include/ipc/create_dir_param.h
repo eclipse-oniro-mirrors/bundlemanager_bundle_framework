@@ -27,9 +27,7 @@ enum class CreateDirFlag {
     // Inaccessible directories will fail to be created and errors will be ignored.
     CREATE_DIR_ALL = 0,
     // Only create directories that are inaccessible without unlocking.
-    CREATE_DIR_UNLOCKED = 1,
-    // Fix the properties of folders and files
-    FIX_DIR_AND_FILES_PROPERTIES = 2
+    CREATE_DIR_UNLOCKED = 1
 };
 
 struct CreateDirParam : public Parcelable {
