@@ -114,7 +114,10 @@ ohos_shared_library("appexecfwk_base") {
     external_deps += [ "udmf:utd_client" ]
   }
 
-  public_external_deps = [ "json:nlohmann_json_static" ]
+  public_external_deps = [
+    "ability_base:base",
+    "json:nlohmann_json_static",
+  ]
 
   subsystem_name = "bundlemanager"
   innerapi_tags = [
