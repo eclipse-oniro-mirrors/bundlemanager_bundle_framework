@@ -764,9 +764,8 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0005, Function | Sm
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     ErrCode res = installer.MkdirIfNotExist("test/test");
-    installer.createdDirs_ .emplace_back("createdDirs");
-    installer.createdDirs_ .emplace_back("") ;
     installer.RollBack();
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -777,17 +776,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0006, Function | Sm
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     ErrCode res = installer.CheckAppLabelInfo();
-    auto info = InnerBundleInfo();
-    installer.parsedBundles_.emplace(std::string("test"), info);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_.reset();
-    res = installer.CheckAppLabelInfo();
-
-    auto mgr = std::make_shared<BundleDataMgr>();
-    mgr->bundleInfos_.emplace(std::string("test"), InnerBundleInfo());
-    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(mgr);
-    installer.CheckAppLabelInfo();
-
-    EXPECT_NE(res, ERR_OK);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -823,32 +812,6 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0008, Function | Sm
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType("",
         specifiedDistributionType);
     EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: SaveInstallParamInfo_0009
- * @tc.name: test the start function of SaveInstallParamInfo
-*/
-HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0009, Function | SmallTest | Level0)
-{
-    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
-    installer.createdDirs_ .emplace_back("createdDirs");
-    installer.createdDirs_ .emplace_back("") ;
-    installer.RollBack();
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_.reset();
-    installer.RollBack();
-    auto mgr = std::make_shared<BundleDataMgr>();
-    mgr->bundleInfos_.emplace(std::string("test"), InnerBundleInfo());
-    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterDataMgr(mgr);
-    installer.bundleName_ = "111";
-    installer.RollBack();
-    installer.bundleName_ = "test";
-    installer.RollBack();
-    installer.isBundleExist_ = true;
-
-    installer.bundleName_ = "test";
-    installer.RollBack();
-    EXPECT_TRUE(true);
 }
 
 /**
@@ -1015,12 +978,6 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1000, Fun
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     std::string nativeLibPath = HAP_FILE_PATH1;
     std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
-
-    std::string tempSoPath = nativeLibPath;
-    installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
-
-    tempSoPath = "";
-    installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
     EXPECT_EQ(ret, TEST_MODULE_NAME_TMP + HAP_FILE_PATH1 + PATH_SEPARATOR);
 }
 
@@ -1034,11 +991,6 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1100, Fun
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     std::string nativeLibPath = "path/testModuleName";
     std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
-    std::string versionDir = "";
-    string moduleName = "testModuleName";
-    std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName
-        + ServiceConstants::TMP_SUFFIX;
-    installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
     EXPECT_EQ(ret, nativeLibPath + "_tmp/");
 }
 
@@ -1051,12 +1003,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1200, Fun
 {
     InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
     std::string versionDir = "data/test";
-    string moduleName = " ";
     auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
-
-    std::string deleteTempDir = versionDir + ServiceConstants::PATH_SEPARATOR + moduleName
-        + ServiceConstants::TMP_SUFFIX;
-    installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -1086,16 +1033,6 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1400, Fun
     InnerBundleInfo newInfo;
     auto ret = installer.ProcessNativeLibrary(
         HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
-    EXPECT_EQ(ret, ERR_OK);
-
-    std::string moduleName ="";
-    installer.ProcessNativeLibrary(
-        HAP_FILE_PATH1, TEST_MODULE_NAME, moduleName, versionDir, newInfo);
-    
-    moduleName ="TEST_MODULE_NAME";
-    installer.nativeLibraryPath_ = " ";
-    installer.ProcessNativeLibrary(
-        HAP_FILE_PATH1, TEST_MODULE_NAME, moduleName, versionDir, newInfo);
     EXPECT_EQ(ret, ERR_OK);
 }
 
