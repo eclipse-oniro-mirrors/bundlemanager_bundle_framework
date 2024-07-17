@@ -341,7 +341,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
             }
         } else if (i == ARGS_POS_THREE) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -381,7 +381,7 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -945,7 +945,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId");
         }
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();

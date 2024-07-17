@@ -123,7 +123,7 @@ struct checked_cast_impl<T, X, false> {
         T t = dynamic_cast<T>(x);
         // check cross cast
         if (&t != &static_cast<T>(x)) {
-            APP_LOGE("!!!bad cast!!!");
+            APP_LOGE("bad cast");
         }
         return t;
 #else

@@ -41,16 +41,15 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     int32_t userId = want.GetIntParam(WANT_PARAM_USER_ID, -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
     if (action.empty() || userId < 0 || db == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed, empty action: %{public}s, userId:%{public}d",
-            __func__, action.c_str(), userId);
+        LOG_E(BMS_TAG_DEFAULT, "empty action: %{public}s, userId:%{public}d", action.c_str(), userId);
         return;
     }
     if (bundleName.empty() && action != EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed, invalid param, action: %{public}s, bundleName: %{public}s",
-            __func__, action.c_str(), bundleName.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "invalid param action: %{public}s, bundleName: %{public}s",
+            action.c_str(), bundleName.c_str());
         return;
     }
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s, action:%{public}s", __func__, action.c_str());
+    LOG_I(BMS_TAG_DEFAULT, "action:%{public}s", action.c_str());
     std::weak_ptr<AppJumpInterceptorEventSubscriber> weakThis = shared_from_this();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
         LOG_I(BMS_TAG_DEFAULT, "bundle remove, bundleName: %{public}s", bundleName.c_str());
@@ -70,7 +69,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
         };
         ffrt::submit(task);
     } else {
-        LOG_W(BMS_TAG_DEFAULT, "%{public}s warnning, invalid action", __func__);
+        LOG_W(BMS_TAG_DEFAULT, "invalid action");
     }
 }
 } // AppExecFwk

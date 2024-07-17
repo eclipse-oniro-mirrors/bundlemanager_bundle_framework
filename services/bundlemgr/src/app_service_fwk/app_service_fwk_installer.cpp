@@ -887,7 +887,7 @@ ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
         return ERR_OK;
     }
     if (hapVerifyResults.empty()) {
-        APP_LOGE("no sign info in the all haps!");
+        APP_LOGE("no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 

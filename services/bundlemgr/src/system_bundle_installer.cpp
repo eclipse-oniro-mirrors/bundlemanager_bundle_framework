@@ -156,7 +156,7 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr!");
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
     }
 

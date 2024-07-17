@@ -113,7 +113,7 @@ static void ParseCheckPackageHasInstalledOptions(napi_env env, napi_value param,
     OHOS::AppExecFwk::CheckPackageHasInstalledOptions *hasInstalledOptions)
 {
     if (hasInstalledOptions == nullptr) {
-        APP_LOGW("%{public}s hasInstalledOptions is nullptr", __func__);
+        APP_LOGW("hasInstalledOptions is nullptr");
         return;
     }
     napi_valuetype valueType;
@@ -231,7 +231,7 @@ static void HasInstalledAsyncComplete(napi_env env, napi_status status, void *da
 
 napi_value HasInstalled(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("%{public}s, asyncCallback", __func__);
+    APP_LOGD("asyncCallback");
     size_t requireArgc = ARGS_SIZE_ONE;
     size_t argc = ARGS_SIZE_TWO;
     napi_value argv[ARGS_SIZE_TWO] = { 0 };
@@ -240,7 +240,7 @@ napi_value HasInstalled(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     if (argc != requireArgc) {
-        APP_LOGW("%{public}s, requires 1 parameter", __func__);
+        APP_LOGW("requires 1 parameter");
         return nullptr;
     }
 
