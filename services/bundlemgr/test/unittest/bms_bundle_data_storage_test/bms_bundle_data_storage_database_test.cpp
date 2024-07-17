@@ -403,7 +403,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "multiAppMode": {
             "multiAppModeType":2,
             "maxCount":5
-        }
+        },
+        "configuration":""
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -521,7 +522,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "multiAppMode": {
                 "multiAppModeType":2,
                 "maxCount":5
-            }
+            },
+            "configuration":""
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1150,7 +1152,8 @@ protected:
                 },
                 "appIndex":0,
                 "maxChildProcess": 0,
-                "installSource": "unknown"
+                "installSource": "unknown",
+                "configuration":""
             },
             "baseBundleInfo": {
                 "abilityInfos": [
