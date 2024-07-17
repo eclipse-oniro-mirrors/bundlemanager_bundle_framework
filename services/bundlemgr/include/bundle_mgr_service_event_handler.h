@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_SERVICE_EVENT_HANDLER_H
 
 #include <list>
+#include <map>
 #include <unordered_set>
 
 #include "bundle_constants.h"
@@ -52,6 +53,19 @@ enum class ScanResultCode {
     SCAN_HAS_DATA_PARSE_SUCCESS,
     SCAN_HAS_DATA_PARSE_FAILED,
     SCAN_NO_DATA,
+};
+
+enum class ModuleUpdateStatus {
+    DEFAULT = 1,
+    UPDATE = 2,
+    REVERT = 3
+};
+
+struct HmpBundlePathInfo {
+    std::string bundleName;
+    std::string hmpName;
+    std::string bundleDir;
+    std::string hspDir;
 };
 
 class BMSEventHandler {
@@ -518,6 +532,7 @@ private:
 
     void InnerProcessBootSystemHspInstall();
     void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
+    bool ProcessSystemHspInstall(const std::string &systemHspDir);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
@@ -535,6 +550,35 @@ private:
     bool MatchOldSignatures(const PreBundleConfigInfo &configInfo, const std::vector<std::string> &appSignatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
+    bool IsModuleUpdate();
+    void HandleModuleUpdate();
+    bool GetModuleUpdatePathList(
+        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
+    bool HandleInstallHmp(
+        const std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+        const std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
+    bool HandleInstallModuleUpdateSystemHsp(const std::vector<std::string> &appDirList);
+    bool HandleInstallModuleUpdateNormalApp(const std::vector<std::string> &appDirList);
+    bool CheckIsModuleUpdate(const std::string &str);
+    void FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateMap, bool isAppService);
+    std::string GetBundleNameByPreInstallPath(const std::string& path);
+    bool GetRevertHmpList(std::vector<std::string> &hmpList,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
+    void GetHmpList(std::vector<std::string> &hmpList,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
+    void HandleInstallHmpResult();
+    void ModuleUpdateRollBack();
+    void ProcessModuleUpdateSystemParameters();
+    void ProcessRevertAppPath(
+        std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+        std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);
+    void HandleHmpUninstall();
+    void SaveHmpBundlePathInfo(const std::string &hmpName,
+        const std::string &bundleName, const std::string bundlePath, bool isAppService);
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
@@ -560,6 +604,16 @@ private:
     bool needNotifyBundleScanStatus_ = false;
 
     bool hasLoadAllPreInstallBundleInfosFromDb_ = false;
+    // Used to mark module update status depend on system parameter
+    ModuleUpdateStatus moduleUpdateStatus_ = ModuleUpdateStatus::DEFAULT;
+    // Used to mark every hmp install result
+    std::map<std::string, bool> moduleUpdateInstallResults_;
+    // Used to indicates not appService bundleName in hmp
+    std::map<std::string, std::set<std::string>> moduleUpdateNormalApp_;
+    // Used to indicates appService bundleName in hmp
+    std::map<std::string, std::set<std::string>> moduleUpdateAppService_;
+    // key is bundleName, value is HmpBundlePathInfo
+    std::map<std::string, HmpBundlePathInfo> hmpBundlePathInfos_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

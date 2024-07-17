@@ -997,6 +997,10 @@ ErrCode BaseBundleInstaller::CheckAppService(
             LOG_W(BMS_TAG_INSTALLER, "Bundle(%{public}s) type is not same", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
+        if (isAppService_ && (oldInfo.GetVersionCode() < newInfo.GetVersionCode())) {
+            APP_LOGW("upgrade must first upgrade the hsp, cannot upgrade hap first");
+            return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
+        }
     }
     return ERR_OK;
 }
@@ -2970,15 +2974,7 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
             LOG_E(BMS_TAG_INSTALLER, "dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
-            + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + item.second[0].uuid;
-        bool dirExist = false;
-        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
-        CHECK_RESULT(result, "check IsExistDir failed %{public}d");
-        if (!dirExist) {
-            LOG_D(BMS_TAG_INSTALLER, "dir: %{public}s need to be created", dir.c_str());
-            createGroupDirs_.emplace_back(item.second[0]);
-        }
+        createGroupDirs_.emplace_back(item.second[0]);
     }
     return ERR_OK;
 }
@@ -3568,13 +3564,8 @@ void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
         std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        bool dirExist = false;
-        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
-        if (result == ERR_OK && dirExist) {
-            continue;
-        }
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
-        result = InstalldClient::GetInstance()->Mkdir(dir,
+        auto result = InstalldClient::GetInstance()->Mkdir(dir,
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "create data group dir %{public}s userId %{public}d failed",
@@ -4733,7 +4724,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
     }
     bool asanEnabled = info.GetAsanEnabled();
     // create asan log directory if asanEnabled is true
-    if (!dirExist && asanEnabled) {
+    if (asanEnabled) {
         InnerBundleUserInfo newInnerBundleUserInfo;
         if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
             LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
@@ -5562,16 +5553,6 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    bool isExist = true;
-    ErrCode result = InstalldClient::GetInstance()->IsExistDir(shaderCachePath, isExist);
-    if (result != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "IsExistDir failed, error is %{public}d", result);
-        return result;
-    }
-    if (isExist) {
-        LOG_D(BMS_TAG_INSTALLER, "shaderCachePath is exist");
-        return ERR_OK;
-    }
     LOG_I(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
 }
