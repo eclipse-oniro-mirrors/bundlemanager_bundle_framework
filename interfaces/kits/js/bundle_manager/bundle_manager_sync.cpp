@@ -33,9 +33,9 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
+constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";

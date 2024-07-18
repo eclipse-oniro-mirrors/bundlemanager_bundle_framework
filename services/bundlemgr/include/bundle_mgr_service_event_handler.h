@@ -102,6 +102,8 @@ public:
 
     static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
 
+    static void SavePreInstallException(const std::string &bundleDir);
+    
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
         Constants::AppType appType,
@@ -509,7 +511,6 @@ private:
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
-    static void SavePreInstallException(const std::string &bundleDir);
     void HandlePreInstallException();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);

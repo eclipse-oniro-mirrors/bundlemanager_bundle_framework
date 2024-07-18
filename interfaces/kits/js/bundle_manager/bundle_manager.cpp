@@ -3286,7 +3286,7 @@ void CreateAppDistributionTypeObject(napi_env env, napi_value value)
     napi_value nAppGallery;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_ONE, &nAppGallery));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_GALLERY", nAppGallery));
-
+    
     napi_value nEnterprise;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, ENUM_TWO, &nEnterprise));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE", nEnterprise));

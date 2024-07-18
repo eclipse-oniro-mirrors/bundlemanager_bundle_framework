@@ -674,8 +674,12 @@ private:
     void RemoveTempPathOnlyUsedForSo(const InnerBundleInfo &innerBundleInfo) const;
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
+    void ForceWriteToDisk() const;    
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void ForceWriteToDisk() const;
+    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
@@ -689,10 +693,6 @@ private:
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
-    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    ErrCode DeleteShaderCache(const std::string &bundleName) const;
-    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    bool VerifyActivationLock() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -707,10 +707,10 @@ private:
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
+    bool InitDataMgr();
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool InitDataMgr();
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;
