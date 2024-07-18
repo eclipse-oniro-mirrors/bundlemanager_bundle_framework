@@ -305,6 +305,9 @@ enum class BundleResourceInterfaceCode : uint32_t {
     GET_LAUNCHER_ABILITY_RESOURCE_INFO = 1,
     GET_ALL_BUNDLE_RESOURCE_INFO = 2,
     GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = 3,
+    ADD_RESOURCE_INFO_BY_BUNDLE_NAME = 4,
+    ADD_RESOURCE_INFO_BY_ABILITY = 5,
+    DELETE_RESOURCE_INFO = 6,
 };
 
 /* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */

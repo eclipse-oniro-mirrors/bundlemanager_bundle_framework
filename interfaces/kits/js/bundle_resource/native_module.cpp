@@ -38,7 +38,7 @@ static napi_value BundleResourceExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
-    APP_LOGI("init bundle resource success.");
+    APP_LOGI("init bundle resource success");
     return exports;
 }
 

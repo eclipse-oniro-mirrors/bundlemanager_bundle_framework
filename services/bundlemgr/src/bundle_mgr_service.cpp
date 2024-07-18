@@ -253,7 +253,7 @@ bool BundleMgrService::InitDefaultApp()
     if (defaultAppHostImpl_ == nullptr) {
         defaultAppHostImpl_ = new (std::nothrow) DefaultAppHostImpl();
         if (defaultAppHostImpl_ == nullptr) {
-            APP_LOGE("create DefaultAppHostImpl failed.");
+            APP_LOGE("create DefaultAppHostImpl failed");
             return false;
         }
     }
@@ -267,7 +267,7 @@ bool BundleMgrService::InitAppControl()
     if (appControlManagerHostImpl_ == nullptr) {
         appControlManagerHostImpl_ = new (std::nothrow) AppControlManagerHostImpl();
         if (appControlManagerHostImpl_ == nullptr) {
-            APP_LOGE("create appControlManagerHostImpl failed.");
+            APP_LOGE("create appControlManagerHostImpl failed");
             return false;
         }
     }
@@ -281,7 +281,7 @@ bool BundleMgrService::InitQuickFixManager()
     if (quickFixManagerHostImpl_ == nullptr) {
         quickFixManagerHostImpl_ = new (std::nothrow) QuickFixManagerHostImpl();
         if (quickFixManagerHostImpl_ == nullptr) {
-            APP_LOGE("create QuickFixManagerHostImpl failed.");
+            APP_LOGE("create QuickFixManagerHostImpl failed");
             return false;
         }
     }
@@ -295,7 +295,7 @@ bool BundleMgrService::InitOverlayManager()
     if (overlayManagerHostImpl_ == nullptr) {
         overlayManagerHostImpl_ = new (std::nothrow) OverlayManagerHostImpl();
         if (overlayManagerHostImpl_ == nullptr) {
-            APP_LOGE("create OverlayManagerHostImpl failed.");
+            APP_LOGE("create OverlayManagerHostImpl failed");
             return false;
         }
     }
@@ -319,7 +319,7 @@ bool BundleMgrService::InitBundleResourceMgr()
     if (bundleResourceHostImpl_ == nullptr) {
         bundleResourceHostImpl_ = new (std::nothrow) BundleResourceHostImpl();
         if (bundleResourceHostImpl_ == nullptr) {
-            APP_LOGE("create bundleResourceHostImpl failed.");
+            APP_LOGE("create bundleResourceHostImpl failed");
             return false;
         }
     }
@@ -467,7 +467,7 @@ void BundleMgrService::CheckAllUser()
         return;
     }
 
-    APP_LOGI("Check all user start.");
+    APP_LOGI("Check all user start");
     std::set<int32_t> userIds = dataMgr_->GetAllUser();
     for (auto userId : userIds) {
         if (userId == Constants::DEFAULT_USERID) {
@@ -476,7 +476,7 @@ void BundleMgrService::CheckAllUser()
 
         bool isExists = false;
         if (AccountHelper::IsOsAccountExists(userId, isExists) != ERR_OK) {
-            APP_LOGW("Failed query whether user(%{public}d) exists.", userId);
+            APP_LOGW("Failed query whether user(%{public}d) exists", userId);
             continue;
         }
 
@@ -517,15 +517,15 @@ void BundleMgrService::NotifyBundleScanStatus()
     EventFwk::CommonEventData commonEventData { want };
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonEventData)) {
         notifyBundleScanStatus = true;
-        APP_LOGE("PublishCommonEvent for bundle scan finished failed.");
+        APP_LOGE("PublishCommonEvent for bundle scan finished failed");
     } else {
-        APP_LOGI("PublishCommonEvent for bundle scan finished succeed.");
+        APP_LOGI("PublishCommonEvent for bundle scan finished succeed");
     }
 }
 
 void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d added", systemAbilityId);
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
     }

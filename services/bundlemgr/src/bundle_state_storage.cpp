@@ -156,7 +156,7 @@ bool BundleStateStorage::SaveBundleStateStorage(
 {
     APP_LOGD("Save bundle state to json db");
     if (bundleName.empty() || userId < 0) {
-        APP_LOGE("Save bundle state failed due to param invalid.");
+        APP_LOGE("Save bundle state failed due to param invalid");
         return false;
     }
 
@@ -189,7 +189,7 @@ bool BundleStateStorage::GetBundleStateStorage(
     const std::string bundleName, int32_t userId, BundleUserInfo &bundleUserInfo)
 {
     if (bundleName.empty() || userId < 0) {
-        APP_LOGE("Get bundle state data failed due to param invalid.");
+        APP_LOGE("Get bundle state data failed due to param invalid");
         return false;
     }
 
@@ -216,7 +216,7 @@ bool BundleStateStorage::DeleteBundleState(
 {
     APP_LOGD("Delete bundle state data");
     if (bundleName.empty() || userId < 0) {
-        APP_LOGE("Delete bundle state data failed due to param invalid.");
+        APP_LOGE("Delete bundle state data failed due to param invalid");
         return false;
     }
     std::lock_guard<std::mutex> lock(bundleStateMutex_);

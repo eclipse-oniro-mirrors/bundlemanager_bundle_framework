@@ -42,8 +42,28 @@ public:
     void RollbackHmpBundle(const std::set<std::string> &systemHspList,
         const std::set<std::string> &hapList);
 
+    void UpdateBundleInfo(const std::string &bundleName, const std::string &bundleDir, const std::string &hspDir);
+
 private:
     std::set<std::string> GetHmpBundleList(const std::string &path) const;
+
+    void UpdateInnerBundleInfo(const std::string &bundleName,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    void ParseInfos(const std::string &bundleDir, const std::string &hspDir,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    bool ParseHapFiles(const std::string &hapFilePath, std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    bool UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage);
+
+    void CheckUninstallSystemHsp(const std::string &bundleName);
+
+    void UpdatePreInfoInDb(
+        const std::string &bundleName, const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    void UpdateBundleInfoForHmp(const std::string &filePath, std::set<std::string> hapList,
+        std::set<std::string> systemHspList);
 
     DISALLOW_COPY_AND_MOVE(HmpBundleInstaller);
 };

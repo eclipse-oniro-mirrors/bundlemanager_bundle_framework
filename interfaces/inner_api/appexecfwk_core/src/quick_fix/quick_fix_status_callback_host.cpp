@@ -27,12 +27,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixStatusCallbackHost::QuickFixStatusCallbackHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixStatusCallbackHost.");
+    LOG_I(BMS_TAG_DEFAULT, "create QuickFixStatusCallbackHost");
 }
 
 QuickFixStatusCallbackHost::~QuickFixStatusCallbackHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixStatusCallbackHost.");
+    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixStatusCallbackHost");
 }
 
 int QuickFixStatusCallbackHost::OnRemoteRequest(

@@ -36,7 +36,7 @@ ErrCode QuickFixChecker::CheckMultipleHqfsSignInfo(
 
 ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::string, AppQuickFix> &infos)
 {
-    LOG_D(BMS_TAG_DEFAULT, "Check quick fix files start.");
+    LOG_D(BMS_TAG_DEFAULT, "Check quick fix files start");
     if (infos.size() <= QUICK_FIX_MAP_SIZE) {
         return ERR_OK;
     }
@@ -70,7 +70,7 @@ ErrCode QuickFixChecker::CheckAppQuickFixInfos(const std::unordered_map<std::str
         }
         moduleNames.insert(moduleName);
     }
-    LOG_D(BMS_TAG_DEFAULT, "Check quick fix files end.");
+    LOG_D(BMS_TAG_DEFAULT, "Check quick fix files end");
     return ERR_OK;
 }
 

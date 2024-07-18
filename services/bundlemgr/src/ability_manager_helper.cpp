@@ -57,7 +57,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName, const int
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     APP_LOGI("check app is running, app name is %{public}s", bundleName.c_str());
     if (bundleUid < 0) {
-        APP_LOGE("bundleUid is error.");
+        APP_LOGE("bundleUid is error");
         return FAILED;
     }
     sptr<IAppMgr> appMgrProxy = iface_cast<IAppMgr>(SystemAbilityHelper::GetSystemAbility(APP_MGR_SERVICE_ID));
@@ -68,7 +68,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName, const int
     std::vector<RunningProcessInfo> runningList;
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
-        APP_LOGE("GetAllRunningProcesses failed.");
+        APP_LOGE("GetAllRunningProcesses failed");
         return FAILED;
     }
     for (const RunningProcessInfo &info : runningList) {
@@ -82,7 +82,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName, const int
             }
         }
     }
-    APP_LOGI("nothing app running.");
+    APP_LOGI("nothing app running");
     return NOT_RUNNING;
 #else
     APP_LOGI("BUNDLE_FRAMEWORK_FREE_INSTALL is false");
@@ -104,7 +104,7 @@ int32_t AbilityManagerHelper::IsRunning(const std::string &bundleName)
     std::vector<RunningProcessInfo> runningList;
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
-        APP_LOGE("GetAllRunningProcesses failed.");
+        APP_LOGE("GetAllRunningProcesses failed");
         return FAILED;
     }
 

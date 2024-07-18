@@ -969,6 +969,157 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_2600, Function | SmallTest | Level0)
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
 }
 
+/**
+ * @tc.number: AOTHandler_2700
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileWithBundle function running with OTACompileDeadline true
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2700, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    AOTHandler::GetInstance().OTACompileDeadline_ = true;
+    EventInfo eventInfo = AOTHandler::GetInstance().HandleCompileWithBundle(bundleName, compileMode, dataMgr);
+    EXPECT_EQ(eventInfo.costTimeSeconds, 0);
+    EXPECT_EQ(eventInfo.failureReason, "timeout");
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+}
+
+/**
+ * @tc.number: AOTHandler_2800
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileWithBundle function running with IsNewVersion false
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2800, Function | SmallTest | Level0)
+{
+    std::string bundleName = "bundleName";
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    AOTHandler::GetInstance().OTACompileDeadline_ = false;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    innerBundleInfo.SetIsNewVersion(false);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+    EventInfo eventInfo = AOTHandler::GetInstance().HandleCompileWithBundle(bundleName, compileMode, dataMgr);
+    EXPECT_EQ(eventInfo.costTimeSeconds, 0);
+    EXPECT_EQ(eventInfo.failureReason, "not stage model");
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_2900
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileBundles function running with compile fail
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_2900, Function | SmallTest | Level0)
+{
+    std::vector<std::string> results;
+    std::string bundleName = "bundleName";
+    std::vector<std::string> bundleNames = { bundleName };
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = AOT_MODULE_NAME;
+    innerBundleInfo.innerModuleInfos_.try_emplace(AOT_MODULE_NAME, moduleInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    innerBundleInfo.SetIsNewVersion(true);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileBundles(
+        bundleNames, ServiceConstants::COMPILE_PARTIAL, dataMgr, results);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTHandler_3000
+ * @tc.name: test AOTHandler
+ * @tc.desc: test HandleCompileBundles function running with IsNewVersion false
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level0)
+{
+    std::vector<std::string> results;
+    std::string bundleName = "bundleName";
+    std::vector<std::string> bundleNames = { bundleName };
+    string compileMode = ServiceConstants::COMPILE_PARTIAL;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.emplace(bundleName, innerBundleInfo);
+
+    ErrCode ret = AOTHandler::GetInstance().HandleCompileBundles(
+        bundleNames, ServiceConstants::COMPILE_PARTIAL, dataMgr, results);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(bundleName);
+}
+
+/**
+ * @tc.number: AOTExecutor_1200
+ * @tc.name: test GetSubjectInfo
+ * @tc.desc: test GetSubjectInfo function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1200, Function | SmallTest | Level0)
+{
+    std::optional<AOTArgs> aotArgs;
+    AOTArgs aotArg;
+    aotArg.bundleName = "bundleName";
+    aotArg.moduleName = "moduleName";
+    auto json = AOTExecutor::GetInstance().GetSubjectInfo(aotArg);
+    EXPECT_EQ(json.empty(), false);
+}
+
+/**
+ * @tc.number: AOTExecutor_1300
+ * @tc.name: test MapArgs
+ * @tc.desc: test MapArgs function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1300, Function | SmallTest | Level0)
+{
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    aotArgs.compileMode = "compileMode";
+    aotArgs.hapPath = "hapPath";
+    aotArgs.coreLibPath = "coreLibPath";
+    aotArgs.outputPath = "outputPath";
+    aotArgs.arkProfilePath = "arkProfilePath";
+    aotArgs.offset = OFFSET;
+    aotArgs.length = LENGTH;
+    aotArgs.hspVector.emplace_back(CreateHspInfo());
+    aotArgs.hspVector.emplace_back(CreateHspInfo());
+    std::unordered_map<std::string, std::string> argsMap;
+    AOTExecutor::GetInstance().MapArgs(aotArgs, argsMap);
+    EXPECT_EQ(argsMap.empty(), false);
+}
+
+/**
+ * @tc.number: AOTExecutor_1400
+ * @tc.name: test PendSignAOT
+ * @tc.desc: test PendSignAOT function running with exception parameter
+ */
+HWTEST_F(BmsAOTMgrTest, AOTExecutor_1400, Function | SmallTest | Level0)
+{
+    std::string anFileName = "anFileName";
+    std::vector<uint8_t> signData(HAP_PATH.begin(), HAP_PATH.end());
+    ErrCode ret = AOTExecutor::GetInstance().PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SIGN_AOT_FAILED);
+}
 
 /**
  * @tc.number: AOTSignDataCacheMgr_0100

@@ -255,7 +255,7 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
 
     if ((extractParam.extractFileType == ExtractFileType::AP) &&
         !extractor.IsDirExist(AP_PATH)) {
-        LOG_D(BMS_TAG_INSTALLD, "hap has no ap files and does not need to be extracted.");
+        LOG_D(BMS_TAG_INSTALLD, "hap has no ap files and does not need to be extracted");
         return true;
     }
 
@@ -379,7 +379,7 @@ bool InstalldOperator::IsNativeFile(
     if (!checkSuffix && extractParam.extractFileType != ExtractFileType::RES_FILE
         && extractParam.extractFileType != ExtractFileType::SO
         && extractParam.extractFileType != ExtractFileType::HNPS_FILE) {
-        LOG_D(BMS_TAG_INSTALLD, "file type error.");
+        LOG_D(BMS_TAG_INSTALLD, "file type error");
         return false;
     }
 
@@ -414,7 +414,7 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         return false;
     }
     if (!EndsWith(entryName, DIFF_SUFFIX)) {
-        LOG_D(BMS_TAG_INSTALLD, "file name not diff format.");
+        LOG_D(BMS_TAG_INSTALLD, "file name not diff format");
         return false;
     }
     LOG_D(BMS_TAG_INSTALLD, "find native diff, entryName : %{public}s", entryName.c_str());
@@ -458,15 +458,15 @@ bool InstalldOperator::ProcessBundleInstallNative(const std::string &userId, con
     struct HapInfo hapInfo;
     int res = strcpy_s(hapInfo.packageName, packageName.length() + 1, packageName.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s packageName");
     }
     res = strcpy_s(hapInfo.hapPath, hapPath.length() + 1, hapPath.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s hapPath");
     }
     res = strcpy_s(hapInfo.abi, cpuAbi.length() + 1, cpuAbi.c_str());
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi.");
+        LOG_E(BMS_TAG_INSTALLD, "failed to strcpy_s cpuAbi");
     }
     int ret = NativeInstallHnp(userId.c_str(), hnpRootPath.c_str(), &hapInfo, 1);
     LOG_D(BMS_TAG_INSTALLD, "NativeInstallHnp ret: %{public}d", ret);
@@ -677,76 +677,6 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
         }
     }
 
-    return ret;
-}
-
-void InstalldOperator::ChangeDirProperties(const std::string &path, int32_t uid, int32_t gid)
-{
-    struct stat s;
-    if ((stat(path.c_str(), &s) == 0) && (((s.st_mode & S_ISGID) != S_ISGID) ||
-        (static_cast<int32_t>(s.st_uid) != uid) || (static_cast<int32_t>(s.st_gid) != gid))) {
-        LOG_I(BMS_TAG_INSTALLD, "dir :%{private}s need change mode, uid:%{public}d, gid:%{public}d",
-            path.c_str(), uid, gid);
-        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{private}s ownership, errno:%{public}d", path.c_str(), errno);
-        }
-        if (chmod(path.c_str(), s.st_mode | S_ISGID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "chmod path:%{private}s failed, errno:%{public}d",
-                path.c_str(), errno);
-        }
-        if (chown(path.c_str(), uid, gid) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{private}s ownership, uid=%{public}d, errno:%{public}d",
-                path.c_str(), uid, errno);
-        }
-    }
-}
-
-bool InstalldOperator::ChangeDirPropertiesRecursively(const std::string &path, int32_t uid, int32_t gid)
-{
-    std::string subPath;
-    bool ret = true;
-    DIR *dir = opendir(path.c_str());
-    if (dir == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{private}s, errno:%{public}d", path.c_str(), errno);
-        return false;
-    }
-    struct dirent *ptr = nullptr;
-    while ((ptr = readdir(dir)) != nullptr) {
-        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
-            continue;
-        }
-        subPath = OHOS::IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
-        struct stat s;
-        if ((stat(subPath.c_str(), &s) == 0)) {
-            if ((ptr->d_type == DT_DIR) && (((s.st_mode & S_ISGID) != S_ISGID) ||
-                (static_cast<int32_t>(s.st_uid) != uid) || (static_cast<int32_t>(s.st_gid) != gid))) {
-                LOG_I(BMS_TAG_INSTALLD, "dir :%{private}s need change mode, uid:%{public}d, gid:%{public}d,",
-                    subPath.c_str(), uid, gid);
-                if ((chown(subPath.c_str(), INSTALLS_UID, INSTALLS_UID) == 0) &&
-                    (chmod(subPath.c_str(), s.st_mode | S_ISGID) == 0) &&
-                    (chown(subPath.c_str(), uid, gid) == 0)) {
-                    LOG_I(BMS_TAG_INSTALLD, "change %{private}s ownership success", subPath.c_str(), errno);
-                } else {
-                    LOG_E(BMS_TAG_INSTALLD, "chmod and chown path:%{public}s failed, errno:%{public}d",
-                        subPath.c_str(), errno);
-                }
-            }
-            if ((ptr->d_type != DT_DIR) && ((static_cast<int32_t>(s.st_uid) != uid) ||
-                (static_cast<int32_t>(s.st_gid) != gid))) {
-                LOG_I(BMS_TAG_INSTALLD, "file: %{private}s need change uid %{public}d gid:%{public}d",
-                    subPath.c_str(), uid, gid);
-                if (chown(subPath.c_str(), uid, gid) != 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, uid=%{public}d, errno:%{public}d",
-                        subPath.c_str(), uid, errno);
-                }
-            }
-        }
-
-        if (ptr->d_type == DT_DIR) {
-            ret = ChangeDirPropertiesRecursively(subPath, uid, gid);
-        }
-    }
-    closedir(dir);
     return ret;
 }
 
@@ -1236,7 +1166,7 @@ bool InstalldOperator::OpenHandle(void **handle)
 {
     LOG_I(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle start");
     if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "InstalldOperator::OpenHandle error handle is nullptr");
         return false;
     }
     *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
@@ -1268,7 +1198,7 @@ bool InstalldOperator::OpenEncryptionHandle(void **handle)
 {
     LOG_I(BMS_TAG_INSTALLD, "start");
     if (handle == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr.");
+        LOG_E(BMS_TAG_INSTALLD, "OpenEncryptionHandle error handle is nullptr");
         return false;
     }
     *handle = dlopen(LIB64_CODE_CRYPTO_SO_PATH, RTLD_NOW | RTLD_GLOBAL);

@@ -188,7 +188,7 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
 
     nlohmann::json jsonObject = nlohmann::json::parse(theme, nullptr, false);
     if (jsonObject.is_discarded()) {
-        APP_LOGE("failed parse theme %{public}s.", theme.c_str());
+        APP_LOGE("failed parse theme %{public}s", theme.c_str());
         return false;
     }
     const auto &jsonObjectEnd = jsonObject.end();

@@ -164,6 +164,18 @@ void EventReport::SendCpuSceneEvent(const std::string &processName, const int32_
     EventReport::SendSystemEvent(BMSEventType::CPU_SCENE_ENTRY, eventInfo);
 }
 
+void EventReport::SendFreeInstallEvent(const std::string &bundleName, const std::string &abilityName,
+    const std::string &moduleName, bool isFreeInstall, int64_t timeStamp)
+{
+    EventInfo eventInfo;
+    eventInfo.bundleName = bundleName;
+    eventInfo.abilityName = abilityName;
+    eventInfo.moduleName = moduleName;
+    eventInfo.isFreeInstall = isFreeInstall;
+    eventInfo.timeStamp = timeStamp;
+    EventReport::SendSystemEvent(BMSEventType::FREE_INSTALL_EVENT, eventInfo);
+}
+
 void EventReport::SendSystemEvent(BMSEventType bmsEventType, const EventInfo& eventInfo)
 {
 #ifdef HISYSEVENT_ENABLE

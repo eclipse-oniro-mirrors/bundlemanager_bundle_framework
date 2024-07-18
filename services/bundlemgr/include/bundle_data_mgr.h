@@ -810,6 +810,7 @@ public:
     bool FetchInnerBundleInfo(
         const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     bool GetInnerBundleInfoUsers(const std::string &bundleName, std::set<int32_t> &userIds);
+    bool IsSystemHsp(const std::string &bundleName);
 
     bool UpdateQuickFixInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
 
@@ -1088,7 +1089,7 @@ private:
     bool ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos) const;
     ErrCode ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &abilityInfos) const;    
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
     ErrCode CheckInnerBundleInfoWithFlagsV9(

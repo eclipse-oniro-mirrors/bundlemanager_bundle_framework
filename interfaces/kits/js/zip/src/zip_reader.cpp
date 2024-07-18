@@ -268,7 +268,7 @@ FilePathWriterDelegate::~FilePathWriterDelegate()
 bool FilePathWriterDelegate::PrepareOutput()
 {
     if (!FilePathCheckValid(outputFilePath_.Value())) {
-        APP_LOGE("%{public}s called, outputFilePath_ invalid !!!.", __func__);
+        APP_LOGE("outputFilePath_ invalid");
         return false;
     }
     // We can't rely on parent directory entries being specified in the

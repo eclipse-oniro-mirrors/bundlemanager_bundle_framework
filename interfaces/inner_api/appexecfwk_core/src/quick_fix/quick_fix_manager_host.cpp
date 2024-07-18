@@ -30,12 +30,12 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixManagerHost::QuickFixManagerHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerHost.");
+    LOG_I(BMS_TAG_DEFAULT, "create QuickFixManagerHost");
 }
 
 QuickFixManagerHost::~QuickFixManagerHost()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerHost.");
+    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixManagerHost");
 }
 
 int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
@@ -46,7 +46,7 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     std::u16string descriptor = QuickFixManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid.");
+        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid");
         return OBJECT_NULL;
     }
 
@@ -67,25 +67,25 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
 
 ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessageParcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeployQuickFix.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeployQuickFix");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<std::string> bundleFilePaths;
     if (!data.ReadStringVector(&bundleFilePaths)) {
-        LOG_E(BMS_TAG_DEFAULT, "read bundleFilePaths failed.");
+        LOG_E(BMS_TAG_DEFAULT, "read bundleFilePaths failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     bool isDebug = data.ReadBool();
     std::string targetPath = data.ReadString();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed.");
+        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
     auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug, targetPath);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -93,20 +93,20 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
 
 ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessageParcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleSwitchQuickFix.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleSwitchQuickFix");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     bool enable = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed.");
+        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
     auto ret = SwitchQuickFix(bundleName, enable, statusCallback);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -114,19 +114,19 @@ ErrCode QuickFixManagerHost::HandleSwitchQuickFix(MessageParcel& data, MessagePa
 
 ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessageParcel& reply)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeleteQuickFix.");
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleDeleteQuickFix");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     sptr<IRemoteObject> object = data.ReadRemoteObject();
     if (object == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed.");
+        LOG_E(BMS_TAG_DEFAULT, "read statusCallback failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
     auto ret = DeleteQuickFix(bundleName, statusCallback);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
@@ -134,25 +134,25 @@ ErrCode QuickFixManagerHost::HandleDeleteQuickFix(MessageParcel& data, MessagePa
 
 ErrCode QuickFixManagerHost::HandleCreateFd(MessageParcel& data, MessageParcel& reply)
 {
-    LOG_D(BMS_TAG_DEFAULT, "begin to HandleCreateFd.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to HandleCreateFd");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string fileName = data.ReadString();
     int32_t fd = -1;
     std::string path;
     auto ret = CreateFd(fileName, fd, path);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(BMS_TAG_DEFAULT, "write ret failed.");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         close(fd);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
         if (!reply.WriteFileDescriptor(fd)) {
-            LOG_E(BMS_TAG_DEFAULT, "write fd failed.");
+            LOG_E(BMS_TAG_DEFAULT, "write fd failed");
             close(fd);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         if (!reply.WriteString(path)) {
-            LOG_E(BMS_TAG_DEFAULT, "write path failed.");
+            LOG_E(BMS_TAG_DEFAULT, "write path failed");
             close(fd);
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }

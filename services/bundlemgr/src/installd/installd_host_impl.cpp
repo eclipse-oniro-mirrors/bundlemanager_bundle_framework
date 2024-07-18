@@ -300,10 +300,10 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
     std::string &bundleBackupDir, const DirType dirType)
 {
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -322,10 +322,10 @@ static void CreateNewBackupExtHomeDir(const std::string &bundleName, const int32
     std::string &bundleBackupDir, const DirType dirType)
 {
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -381,58 +381,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return res;
 }
 
-ErrCode InstalldHostImpl::ChmodBundleDataDir(const CreateDirParam &createDirParam)
-{
-    LOG_I(BMS_TAG_INSTALLD, "start bundleName:%{public}s", createDirParam.bundleName.c_str());
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        // data/app/el<>/<userId>/database/<bundleName>
-        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + ServiceConstants::DATABASE
-            + createDirParam.bundleName;
-        InstalldOperator::ChangeDirProperties(databaseDir, createDirParam.uid, ServiceConstants::DATABASE_DIR_GID);
-        InstalldOperator::ChangeDirPropertiesRecursively(databaseDir, createDirParam.uid,
-            ServiceConstants::DATABASE_DIR_GID);
-    }
-    std::string userId = std::to_string(createDirParam.userId);
-
-    // /data/service/el2/%/hmdfs/account/data/
-    std::string distributedfile = DISTRIBUTED_FILE + createDirParam.bundleName;
-    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
-    // /data/service/el2/%/hmdfs/non_account/data/
-    distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT + createDirParam.bundleName;
-    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(distributedfile, createDirParam.uid, ServiceConstants::DFS_GID);
-
-    // /data/service/el1/%/backup/bundles/
-    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL1 + createDirParam.bundleName;
-    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, ServiceConstants::BACKU_HOME_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid,
-        ServiceConstants::BACKU_HOME_GID);
-    // /data/service/el2/%/backup/bundles/
-    bundleBackupDir = BUNDLE_BACKUP_HOME_PATH_EL2 + createDirParam.bundleName;
-    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleBackupDir, createDirParam.uid, ServiceConstants::BACKU_HOME_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleBackupDir, createDirParam.uid,
-        ServiceConstants::BACKU_HOME_GID);
-
-    // /data/service/el2/%/share/
-    std::string bundleShareDir = SHARE_FILE_PATH + createDirParam.bundleName;
-    bundleShareDir = bundleShareDir.replace(bundleShareDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleShareDir, createDirParam.uid, createDirParam.gid);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleShareDir, createDirParam.uid, createDirParam.gid);
-
-    // /data/service/el2/%/hmdfs/cloud/data/
-    std::string bundleCloudDir = CLOUD_FILE_PATH + createDirParam.bundleName;
-    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, userId);
-    InstalldOperator::ChangeDirProperties(bundleCloudDir, createDirParam.uid, ServiceConstants::DFS_GID);
-    InstalldOperator::ChangeDirPropertiesRecursively(bundleCloudDir, createDirParam.uid, ServiceConstants::DFS_GID);
-    LOG_I(BMS_TAG_INSTALLD, "end bundleName:%{public}s", createDirParam.bundleName.c_str());
-    return ERR_OK;
-}
-
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -445,9 +393,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             "userId %{public}d uid %{public}d gid %{public}d", createDirParam.bundleName.c_str(),
             createDirParam.userId, createDirParam.uid, createDirParam.gid);
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
-    }
-    if (createDirParam.createDirFlag == CreateDirFlag::FIX_DIR_AND_FILES_PROPERTIES) {
-        return ChmodBundleDataDir(createDirParam);
     }
     unsigned int hapFlags = GetHapFlags(createDirParam.isPreInstallApp, createDirParam.debug,
         createDirParam.isDlpSandbox);
@@ -601,10 +546,10 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
 {
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -619,10 +564,10 @@ static ErrCode RemoveNewBackupExtHomeDir(const std::string &bundleName, const in
 {
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -637,10 +582,10 @@ static void CleanBackupExtHomeDir(const std::string &bundleName, const int useri
 {
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d", dirType);
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -653,10 +598,10 @@ static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int us
 {
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
-    LOG_D(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir begin, type %{public}d, path %{public}s.",
+    LOG_D(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
         dirType, bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d.", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d", dirType);
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -1751,7 +1696,7 @@ ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &
     nlohmann::json jsonBuf;
     std::string extensionConfigPath = GetExtensionConfigPath();
     if (!ReadFileIntoJson(extensionConfigPath, jsonBuf)) {
-        LOG_I(BMS_TAG_INSTALLD, "Parse file %{public}s failed.", extensionConfigPath.c_str());
+        LOG_I(BMS_TAG_INSTALLD, "Parse file %{public}s failed", extensionConfigPath.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
     }
     LoadNeedCreateSandbox(jsonBuf, typeList);
@@ -1775,7 +1720,7 @@ std::string InstalldHostImpl::GetExtensionConfigPath() const
 void InstalldHostImpl::LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList)
 {
     if (!object.contains(EXTENSION_CONFIG_NAME) || !object.at(EXTENSION_CONFIG_NAME).is_array()) {
-        LOG_E(BMS_TAG_INSTALLD, "Extension config not existed.");
+        LOG_E(BMS_TAG_INSTALLD, "Extension config not existed");
         return;
     }
 
@@ -1795,7 +1740,7 @@ bool InstalldHostImpl::LoadExtensionNeedCreateSandbox(const nlohmann::json &obje
 {
     if (!object.contains(EXTENSION_SERVICE_NEED_CREATE_SANDBOX) ||
         !object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).is_boolean()) {
-        LOG_E(BMS_TAG_INSTALLD, "need create sandbox config not existed.");
+        LOG_E(BMS_TAG_INSTALLD, "need create sandbox config not existed");
         return false;
     }
     return object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).get<bool>();

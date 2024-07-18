@@ -38,12 +38,12 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
     std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: invalid interface token!");
+        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: invalid interface token");
         return OBJECT_NULL;
     }
 
     if (funcMap_.find(code) == funcMap_.end()) {
-        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: unknown code!");
+        LOG_W(BMS_TAG_INSTALLER, "[OnRemoteRequest] fail: unknown code");
         return IRemoteStub<IBundleStreamInstaller>::OnRemoteRequest(code, data, reply, option);
     }
 
