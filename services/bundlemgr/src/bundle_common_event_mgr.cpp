@@ -44,6 +44,8 @@ constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* ATOMIC_SERVICE_MODULE_UPGRADE = "atomicServiceModuleUpgrade";
 constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
+constexpr const char* TYPE = "type";
+constexpr const char* RESULT_CODE = "resultCode";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -137,6 +139,8 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(APP_INDEX, installResult.appIndex);
     want.SetParam(BUNDLE_TYPE, installResult.bundleType);
     want.SetParam(ATOMIC_SERVICE_MODULE_UPGRADE, installResult.atomicServiceModuleUpgrade);
+    want.SetParam(TYPE, static_cast<int32_t>(installResult.type));
+    want.SetParam(RESULT_CODE, installResult.resultCode);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
