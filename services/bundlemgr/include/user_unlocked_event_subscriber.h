@@ -50,8 +50,6 @@ private:
     static bool CreateBundleCloudDir(const BundleInfo &bundleInfo, int32_t userId);
     static void CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t userId);
     static void CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId);
-
-    static void ChmodBundleDataDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

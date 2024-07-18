@@ -16,6 +16,7 @@
 #include "bundle_mgr_service_event_handler.h"
 
 #include <future>
+#include <sstream>
 #include <sys/stat.h>
 
 #include "accesstoken_kit.h"
@@ -47,6 +48,7 @@
 #include "dlp_permission_kit.h"
 #endif
 #include "event_report.h"
+#include "hmp_bundle_installer.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -76,6 +78,15 @@ const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
+const std::string MODULE_UPDATE_PATH = "module_update";
+const std::string MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
+const std::string MODULE_UPDATE_VALUE_UPDATE = "update";
+const std::string MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
+const std::string MODULE_UPDATE_VALUE_REVERT = "revert";
+const std::string MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
+const std::string MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
+const std::string MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
+const std::string MODULE_UPDATE_PARAM_EMPTY = "";
 const std::string FINGERPRINT = "fingerprint";
 const std::string UNKNOWN = "";
 const std::string VALUE_TRUE = "true";
@@ -108,6 +119,7 @@ constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/te
 constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
 constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* INNER_UNDER_LINE = "_";
+constexpr char SEPARATOR = '/';
 
 std::set<PreScanInfo> installList_;
 std::set<PreScanInfo> systemHspList_;
@@ -344,6 +356,10 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         CheckALLResourceInfo();
+    }
+
+    if (IsModuleUpdate()) {
+        HandleModuleUpdate();
     }
 
     needNotifyBundleScanStatus_ = true;
@@ -920,6 +936,21 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     }
 }
 
+bool BMSEventHandler::ProcessSystemHspInstall(const std::string &systemHspDir)
+{
+    LOG_I(BMS_TAG_DEFAULT, "Install systemHsp by bundleDir(%{public}s)", systemHspDir.c_str());
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.removable = false;
+    AppServiceFwkInstaller installer;
+    ErrCode ret = installer.Install({systemHspDir}, installParam);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "Install systemHsp %{public}s error", systemHspDir.c_str());
+        return false;
+    }
+    return true;
+}
+
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
     // Sort in descending order of install priority
@@ -1139,12 +1170,12 @@ void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &u
         runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
             .append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", runtimeAp.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", runtimeAp.c_str());
             continue;
         }
         mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
         if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", mergedAp.c_str());
+            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", mergedAp.c_str());
             continue;
         }
     }
@@ -1155,7 +1186,7 @@ void BMSEventHandler::ProcessRebootDeleteAotPath()
     std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
     removeAotPath.append("*");
     if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed!", removeAotPath.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", removeAotPath.c_str());
         return;
     }
 }
@@ -1960,6 +1991,345 @@ void BMSEventHandler::SaveSystemFingerprint()
     bmsPara->SaveBmsParam(FINGERPRINT, curSystemFingerprint);
 }
 
+bool BMSEventHandler::IsModuleUpdate()
+{
+    std::string paramValue;
+    if (!GetSystemParameter(MODULE_UPDATE_PARAM, paramValue) || paramValue.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "get system paramter failed");
+        return false;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "parameter %{public}s is %{public}s", MODULE_UPDATE_PARAM.c_str(), paramValue.c_str());
+    if (paramValue == MODULE_UPDATE_VALUE_UPDATE) {
+        moduleUpdateStatus_ = ModuleUpdateStatus::UPDATE;
+    } else if (paramValue == MODULE_UPDATE_VALUE_REVERT_BMS) {
+        moduleUpdateStatus_ = ModuleUpdateStatus::REVERT;
+    } else {
+        moduleUpdateStatus_ = ModuleUpdateStatus::DEFAULT;
+        return false;
+    }
+    return true;
+}
+
+void BMSEventHandler::HandleModuleUpdate()
+{
+    // 1. get hmp list and dir path
+    // key: hmp name, value: appServiceFwk path of the hmp
+    std::map<std::string, std::vector<std::string>> moduleUpdateAppServiceMap;
+    // key: hmp name, value: normal app path of the hmp
+    std::map<std::string, std::vector<std::string>> moduleUpdateNotAppServiceMap;
+    if (!GetModuleUpdatePathList(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap)) {
+        LOG_E(BMS_TAG_DEFAULT, "get module update path map failed");
+        return;
+    }
+    ProcessRevertAppPath(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    // 2. install all hmp, if install failed,
+    HandleInstallHmp(moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    // 3. handle install result
+    HandleInstallHmpResult();
+    // 4. handle module update uninstall
+    HandleHmpUninstall();
+}
+
+bool BMSEventHandler::CheckIsModuleUpdate(const std::string &str)
+{
+    return str.find(MODULE_UPDATE_PATH) == 0 || str.find(ServiceConstants::PATH_SEPARATOR + MODULE_UPDATE_PATH) == 0;
+}
+
+bool BMSEventHandler::GetModuleUpdatePathList(
+    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
+{
+#ifdef USE_PRE_BUNDLE_PROFILE
+    if (!LoadPreInstallProFile()) {
+        LOG_W(BMS_TAG_DEFAULT, "LoadPreInstallProFile failed");
+        return false;
+    }
+    std::vector<std::string> systemHspDirList;
+    for (const auto &item : systemHspList_) {
+        systemHspDirList.emplace_back(item.bundleDir);
+    }
+    FilterModuleUpdate(systemHspDirList, moduleUpdateAppServiceMap, true);
+    std::vector<std::string> preInstallDirs;
+    GetPreInstallDirFromLoadProFile(preInstallDirs);
+    FilterModuleUpdate(preInstallDirs, moduleUpdateNotAppServiceMap, false);
+    return true;
+#endif
+    LOG_W(BMS_TAG_DEFAULT, "USE_PRE_BUNDLE_PROFILE is not defined");
+    return false;
+}
+
+bool BMSEventHandler::HandleInstallHmp(
+    const std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+    const std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
+{
+    LOG_I(BMS_TAG_DEFAULT, "begin to HandleInstallHmp");
+    for (const auto &item : moduleUpdateAppServiceMap) {
+        LOG_I(BMS_TAG_DEFAULT, "begin to install hmp %{public}s", item.first.c_str());
+        if (!HandleInstallModuleUpdateSystemHsp(item.second)) {
+            LOG_E(BMS_TAG_DEFAULT, "hmp %{public}s install appServiceFwk failed", item.first.c_str());
+            moduleUpdateInstallResults_[item.first] = false;
+            continue;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install appService success", item.first.c_str());
+        moduleUpdateInstallResults_[item.first] = true;
+    }
+
+    for (const auto &item : moduleUpdateNotAppServiceMap) {
+        LOG_I(BMS_TAG_DEFAULT, "begin to install hmp %{public}s", item.first.c_str());
+        if (!HandleInstallModuleUpdateNormalApp(item.second)) {
+            LOG_E(BMS_TAG_DEFAULT, "hmp %{public}s install app failed", item.first.c_str());
+            moduleUpdateInstallResults_[item.first] = false;
+            continue;
+        }
+        auto iter = moduleUpdateInstallResults_.find(item.first);
+        if (iter != moduleUpdateInstallResults_.end() && !(iter->second)) {
+            LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install appService has been failed",
+                item.first.c_str());
+            continue;
+        }
+        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install success", item.first.c_str());
+        moduleUpdateInstallResults_[item.first] = true;
+    }
+    return true;
+}
+
+void BMSEventHandler::ProcessRevertAppPath(
+    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
+{
+    if (moduleUpdateStatus_ != ModuleUpdateStatus::REVERT) {
+        return;
+    }
+    std::vector<std::string> hmpList;
+    if (!GetRevertHmpList(hmpList, moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap)) {
+        LOG_E(BMS_TAG_DEFAULT, "get hmp path failed");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "revert hmp list: %{public}s", BundleUtil::ToString(hmpList).c_str());
+    for (auto it = moduleUpdateAppServiceMap.begin(); it != moduleUpdateAppServiceMap.end();) {
+        if (std::find(hmpList.begin(), hmpList.end(), it->first) == hmpList.end()) {
+            it = moduleUpdateAppServiceMap.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    for (auto it = moduleUpdateNotAppServiceMap.begin(); it != moduleUpdateNotAppServiceMap.end();) {
+        if (std::find(hmpList.begin(), hmpList.end(), it->first) == hmpList.end()) {
+            it = moduleUpdateNotAppServiceMap.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+bool BMSEventHandler::HandleInstallModuleUpdateSystemHsp(const std::vector<std::string> &appDirList)
+{
+    bool result = true;
+    for (const std::string &systemHspDir : appDirList) {
+        if (!ProcessSystemHspInstall(systemHspDir)) {
+            LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", systemHspDir.c_str());
+            result = false;
+        }
+    }
+
+    return result;
+}
+
+bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::string> &appDirList)
+{
+    bool result = true;
+    for (const std::string &appDir : appDirList) {
+        std::string normalizedAppDir = appDir;
+        if (!appDir.empty() && appDir.back() == SEPARATOR) {
+            normalizedAppDir = appDir.substr(0, appDir.size() - 1);
+        }
+
+        std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
+        auto res = installer->InstallNormalAppInHmp(normalizedAppDir);
+        if (res != ERR_OK) {
+            LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
+            result = false;
+        }
+    }
+
+    return result;
+}
+
+void BMSEventHandler::FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
+    std::map<std::string, std::vector<std::string>> &moduleUpdatePathMap, bool isAppService)
+{
+    for (const std::string &preInstallDir : preInstallDirs) {
+        if (!CheckIsModuleUpdate(preInstallDir)) {
+            continue;
+        }
+        std::string moduleUpdatePath = MODULE_UPDATE_PATH + ServiceConstants::PATH_SEPARATOR;
+        size_t start = preInstallDir.find(moduleUpdatePath);
+        if (start == std::string::npos) {
+            continue;
+        }
+        start += std::string(moduleUpdatePath).length();
+
+        size_t end = preInstallDir.find(ServiceConstants::PATH_SEPARATOR, start);
+        if (end == std::string::npos) {
+            continue;
+        }
+        std::string hmpName = preInstallDir.substr(start, end - start);
+        LOG_I(BMS_TAG_DEFAULT, "path %{public}s added to hmp %{public}s", preInstallDir.c_str(), hmpName.c_str());
+        moduleUpdatePathMap[hmpName].emplace_back(preInstallDir);
+        std::string bundleName = GetBundleNameByPreInstallPath(preInstallDir);
+        if (isAppService) {
+            LOG_I(BMS_TAG_DEFAULT, "appService %{public}s added to hmp %{public}s",
+                bundleName.c_str(), hmpName.c_str());
+            moduleUpdateAppService_[hmpName].insert(bundleName);
+        } else {
+            if (moduleUpdateAppService_[hmpName].find(bundleName) == moduleUpdateAppService_[hmpName].end()) {
+                LOG_I(BMS_TAG_DEFAULT, "app %{public}s added to hmp %{public}s", bundleName.c_str(), hmpName.c_str());
+                moduleUpdateNormalApp_[hmpName].insert(bundleName);
+            }
+        }
+        SaveHmpBundlePathInfo(hmpName, bundleName, preInstallDir, isAppService);
+    }
+}
+
+void BMSEventHandler::SaveHmpBundlePathInfo(const std::string &hmpName,
+    const std::string &bundleName, const std::string bundlePath, bool isAppService)
+{
+    HmpBundlePathInfo info;
+    info.bundleName = bundleName;
+    info.hmpName = hmpName;
+    auto it = hmpBundlePathInfos_.find(bundleName);
+    if (it != hmpBundlePathInfos_.end()) {
+        info = it->second;
+    }
+    if (isAppService) {
+        info.hspDir = bundlePath;
+    } else {
+        info.bundleDir = bundlePath;
+    }
+    hmpBundlePathInfos_[bundleName] = info;
+}
+
+bool BMSEventHandler::GetRevertHmpList(std::vector<std::string> &revertHmpList,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
+{
+    std::vector<std::string> hmpList;
+    GetHmpList(hmpList, moduleUpdateAppServiceMap, moduleUpdateNotAppServiceMap);
+    for (const std::string &hmp : hmpList) {
+        std::string hmpInstallPara = MODULE_UPDATE_INSTALL_RESULT + hmp;
+        std::string paramValue;
+        if (!GetSystemParameter(hmpInstallPara, paramValue) || paramValue != MODULE_UPDATE_INSTALL_RESULT_FALSE) {
+            continue;
+        }
+
+        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s need to revert", hmp.c_str());
+        revertHmpList.emplace_back(hmp);
+    }
+    return true;
+}
+
+void BMSEventHandler::GetHmpList(std::vector<std::string> &hmpList,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
+    std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap)
+{
+    std::set<std::string> hmpSet;
+    for (const auto &item : moduleUpdateAppServiceMap) {
+        hmpSet.insert(item.first);
+    }
+    for (const auto &item : moduleUpdateNotAppServiceMap) {
+        hmpSet.insert(item.first);
+    }
+    hmpList.assign(hmpSet.begin(), hmpSet.end());
+}
+
+std::string BMSEventHandler::GetBundleNameByPreInstallPath(const std::string& path)
+{
+    std::vector<std::string> parts;
+    std::string part;
+    std::stringstream ss(path);
+
+    while (getline(ss, part, SEPARATOR)) {
+        if (!part.empty()) {
+            parts.push_back(part);
+        }
+    }
+
+    if (!parts.empty()) {
+        return parts.back();
+    } else {
+        return std::string{};
+    }
+}
+
+void BMSEventHandler::HandleInstallHmpResult()
+{
+    ModuleUpdateRollBack();
+    ProcessModuleUpdateSystemParameters();
+}
+
+void BMSEventHandler::ModuleUpdateRollBack()
+{
+    if (moduleUpdateStatus_ != ModuleUpdateStatus::UPDATE) {
+        return;
+    }
+    for (const auto &item : moduleUpdateInstallResults_) {
+        LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install result %{public}d", item.first.c_str(), item.second);
+        if (item.second) {
+            continue;
+        }
+        LOG_W(BMS_TAG_DEFAULT, "hmp %{public}s need to rollback", item.first.c_str());
+        // rollback hmp which install failed
+        std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
+        installer->RollbackHmpBundle(moduleUpdateAppService_[item.first], moduleUpdateNormalApp_[item.first]);
+    }
+}
+
+void BMSEventHandler::ProcessModuleUpdateSystemParameters()
+{
+    if (moduleUpdateStatus_ == ModuleUpdateStatus::UPDATE) {
+        bool hasFailed = false;
+        for (const auto &item : moduleUpdateInstallResults_) {
+            if (item.second) {
+                LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s install success", item.first.c_str());
+                continue;
+            }
+            hasFailed = true;
+            LOG_W(BMS_TAG_DEFAULT, "hmp %{public}s install failed", item.first.c_str());
+            std::string parameter = MODULE_UPDATE_INSTALL_RESULT + item.first;
+            system::SetParameter(parameter, MODULE_UPDATE_INSTALL_RESULT_FALSE);
+        }
+        if (hasFailed) {
+            LOG_I(BMS_TAG_DEFAULT, "module update failed, parameter %{public}s modified to revert",
+                MODULE_UPDATE_PARAM.c_str());
+            system::SetParameter(MODULE_UPDATE_PARAM, MODULE_UPDATE_VALUE_REVERT);
+        } else {
+            LOG_I(BMS_TAG_DEFAULT, "module update success");
+            system::SetParameter(MODULE_UPDATE_PARAM, MODULE_UPDATE_PARAM_EMPTY);
+        }
+    } else if (moduleUpdateStatus_ == ModuleUpdateStatus::REVERT) {
+        LOG_I(BMS_TAG_DEFAULT, "revert end, all parameters modified to empty");
+        system::SetParameter(MODULE_UPDATE_PARAM, MODULE_UPDATE_PARAM_EMPTY);
+        for (const auto &item : moduleUpdateInstallResults_) {
+            std::string parameter = MODULE_UPDATE_INSTALL_RESULT + item.first;
+            system::SetParameter(parameter, MODULE_UPDATE_PARAM_EMPTY);
+        }
+    }
+}
+
+void BMSEventHandler::HandleHmpUninstall()
+{
+    for (const auto &item : hmpBundlePathInfos_) {
+        std::string hmpName = item.second.hmpName;
+        if (moduleUpdateStatus_ == ModuleUpdateStatus::UPDATE && !moduleUpdateInstallResults_[hmpName]) {
+            LOG_I(BMS_TAG_DEFAULT, "hmp %{public}s update failed, it has been rollback", hmpName.c_str());
+            continue;
+        }
+        std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
+        installer->UpdateBundleInfo(item.second.bundleName, item.second.bundleDir, item.second.hspDir);
+    }
+}
+
 bool BMSEventHandler::IsSystemUpgrade()
 {
     return IsTestSystemUpgrade() || IsSystemFingerprintChanged();
@@ -2014,7 +2384,7 @@ bool BMSEventHandler::GetSystemParameter(const std::string &key, std::string &va
     char firmware[VERSION_LEN] = {0};
     int32_t ret = GetParameter(key.c_str(), UNKNOWN.c_str(), firmware, VERSION_LEN);
     if (ret <= 0) {
-        LOG_E(BMS_TAG_DEFAULT, "GetParameter failed!");
+        LOG_E(BMS_TAG_DEFAULT, "GetParameter failed");
         return false;
     }
 

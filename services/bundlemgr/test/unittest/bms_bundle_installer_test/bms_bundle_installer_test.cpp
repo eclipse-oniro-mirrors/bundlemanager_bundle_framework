@@ -5015,7 +5015,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0100, Function | SmallTest |
     oldBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
     InnerBundleInfo oldInfo;
     oldInfo.SetBaseBundleInfo(oldBundleInfo);
- 
+
     BundleInfo newBundleInfo;
     newBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
     InnerBundleInfo newInfo;
@@ -5709,7 +5709,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallBundleFromBmsExtension_0200, Function 
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
     EXPECT_EQ(installResult, ERR_OK);
-    
+
     BaseBundleInstaller installer;
     auto ret = installer.UninstallBundleFromBmsExtension(BUNDLE_BACKUP_NAME);
     EXPECT_NE(ret, ERR_OK);
@@ -5923,7 +5923,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallHmpBundle_0200, Function | SmallTest | L
     std::string filePath = "file.path";
     bool isNeedRollback = true;
     ErrCode res = bundleInstallerHost.InstallHmpBundle(filePath, isNeedRollback);
-    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**

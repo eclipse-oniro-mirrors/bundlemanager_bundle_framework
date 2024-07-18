@@ -255,6 +255,7 @@ struct App {
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
     int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
+    std::string configuration;
 };
 
 struct Module {
@@ -1325,6 +1326,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_CONFIGURATION,
+        app.configuration,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1842,7 +1851,7 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
                 return true;
             }
             if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
-                APP_LOGE("preloads config in module.json is oversize!");
+                APP_LOGE("preloads config in module.json is oversize");
                 return false;
             }
             for (const auto &preload : preloadObj) {
@@ -1958,6 +1967,35 @@ MultiAppModeType ToMultiAppModeType(const std::string &type)
         return iter->second;
     }
     return MultiAppModeType::UNSPECIFIED;
+}
+
+bool ToInnerProfileConfiguration(
+    const BundleExtractor &bundleExtractor,
+    const std::string &configuration,
+    std::string &result)
+{
+    constexpr const char* PROFILE_PATH = "resources/base/profile/";
+    constexpr const char* PROFILE_PREFIX = "$profile:";
+    constexpr const char* JSON_SUFFIX = ".json";
+    auto pos = configuration.find(PROFILE_PREFIX);
+    if (pos == std::string::npos) {
+        APP_LOGD("invalid profile configuration");
+        return false;
+    }
+    std::string profileConfiguration = configuration.substr(pos + strlen(PROFILE_PREFIX));
+    std::string profilePath = PROFILE_PATH + profileConfiguration + JSON_SUFFIX;
+
+    if (!bundleExtractor.HasEntry(profilePath)) {
+        APP_LOGE("profile not exist");
+        return false;
+    }
+    std::stringstream profileStream;
+    if (!bundleExtractor.ExtractByName(profilePath, profileStream)) {
+        APP_LOGE("extract profile failed");
+        return false;
+    }
+    result = profileStream.str();
+    return true;
 }
 
 bool ToApplicationInfo(
@@ -2077,6 +2115,12 @@ bool ToApplicationInfo(
         }
     }
     applicationInfo.maxChildProcess = app.maxChildProcess;
+    if (app.configuration != "") {
+        if (!ToInnerProfileConfiguration(bundleExtractor, app.configuration, applicationInfo.configuration)) {
+            APP_LOGE("parse profile configuration fail %{public}s", app.configuration.c_str());
+            return false;
+        }
+    }
     return true;
 }
 

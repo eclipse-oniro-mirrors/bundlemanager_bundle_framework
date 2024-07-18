@@ -419,7 +419,8 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0100, Function | 
     AppServiceFwkInstaller appServiceFwkInstaller;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo oldInfo;
-    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_FALSE(result);
 }
 
@@ -437,7 +438,8 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0200, Function | 
 
     appServiceFwkInstaller.bundleName_ = BUNDLE_NAME_WRONG;
     infos[VERSION_ONE_LIBRARY_ONE_PATH] = oldInfo;
-    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_TRUE(result);
 }
 
@@ -462,7 +464,8 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0400, Function | 
     infos[VERSION_ONE_LIBRARY_ONE_PATH] = newInfo;
 
     InnerBundleInfo oldInfo;
-    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_FALSE(result);
 
     DeleteBundleInfo(BUNDLE_NAME);
@@ -498,7 +501,8 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0500, Function | 
     infos[VERSION_ONE_LIBRARY_ONE_PATH] = newInfo;
 
     InnerBundleInfo oldInfo;
-    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    bool isDowngrade = false;
+    bool result = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_FALSE(result);
 
     DeleteBundleInfo(BUNDLE_NAME);
@@ -978,12 +982,13 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, CheckNeedInstall_0010, Function | 
 
     std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo oldInfo;
-    auto res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    bool isDowngrade = false;
+    auto res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_FALSE(res);
 
     InnerBundleInfo info;
     infos.emplace(TEST_CREATE_FILE_PATH, info);
-    res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo);
+    res = appServiceFwkInstaller.CheckNeedInstall(infos, oldInfo, isDowngrade);
     EXPECT_TRUE(res);
 }
 

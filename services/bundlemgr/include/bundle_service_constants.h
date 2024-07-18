@@ -98,6 +98,7 @@ constexpr int32_t BMS_UID = 1000;
 constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t ACCOUNT_UID = 3058;
+constexpr int32_t MODULE_UPDATE_UID = 6666;
 constexpr int32_t BMS_GID = 1000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;

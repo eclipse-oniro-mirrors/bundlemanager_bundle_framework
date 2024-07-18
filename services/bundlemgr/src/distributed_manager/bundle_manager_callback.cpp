@@ -22,7 +22,7 @@ namespace AppExecFwk {
 BundleManagerCallback::BundleManagerCallback(const std::weak_ptr<BundleDistributedManager> &server)
     : server_(server)
 {
-    APP_LOGI("%{public}s", __func__);
+    APP_LOGI("BundleManagerCallback");
 }
 
 int32_t BundleManagerCallback::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)

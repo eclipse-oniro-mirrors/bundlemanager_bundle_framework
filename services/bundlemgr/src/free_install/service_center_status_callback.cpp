@@ -21,12 +21,12 @@ namespace AppExecFwk {
 ServiceCenterStatusCallback::ServiceCenterStatusCallback(const std::weak_ptr<BundleConnectAbilityMgr> &server)
     : server_(server)
 {
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s", __func__);
+    LOG_I(BMS_TAG_DEFAULT, "ServiceCenterStatusCallback");
 }
 
 int32_t ServiceCenterStatusCallback::OnInstallFinished(std::string installResult)
 {
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s", __func__);
+    LOG_I(BMS_TAG_DEFAULT, "OnInstallFinished");
     auto server = server_.lock();
     if (server == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "pointer is nullptr");
@@ -38,7 +38,7 @@ int32_t ServiceCenterStatusCallback::OnInstallFinished(std::string installResult
 
 int32_t ServiceCenterStatusCallback::OnDelayedHeartbeat(std::string installResult)
 {
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s", __func__);
+    LOG_I(BMS_TAG_DEFAULT, "OnDelayedHeartbeat");
     auto server = server_.lock();
     if (server == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "pointer is nullptr");
