@@ -29,6 +29,8 @@ const std::string IS_UNINSTALLED = "isUninstalled";
 const std::string MODULE_NAME = "moduleName";
 const std::string LABEL_ID = "labelId";
 const std::string ICON_ID = "iconId";
+const std::string SYSTEM_APP = "systemApp";
+const std::string BUNDLE_TYPE = "bundleType";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -42,84 +44,36 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[MODULE_NAME] = moduleName_;
     jsonObject[LABEL_ID] = labelId_;
     jsonObject[ICON_ID] = iconId_;
+    jsonObject[SYSTEM_APP] = systemApp_;
+    jsonObject[BUNDLE_TYPE] = bundleType_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_NAME,
-        bundleName_,
-        JsonType::STRING,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        VERSION_CODE,
-        versionCode_,
-        JsonType::NUMBER,
-        true,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_PATHS,
-        bundlePaths_,
-        JsonType::ARRAY,
-        true,
-        parseResult,
-        ArrayType::STRING);
-    GetValueIfFindKey<Constants::AppType>(jsonObject,
-        jsonObjectEnd,
-        APP_TYPE,
-        appType_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        REMOVABLE,
-        removable_,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        IS_UNINSTALLED,
-        isUninstalled_,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MODULE_NAME,
-        moduleName_,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        LABEL_ID,
-        labelId_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ICON_ID,
-        iconId_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, BUNDLE_NAME,
+        bundleName_, JsonType::STRING, true, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject, jsonObjectEnd, VERSION_CODE,
+        versionCode_, JsonType::NUMBER, true, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject, jsonObjectEnd, BUNDLE_PATHS,
+        bundlePaths_, JsonType::ARRAY, true, parseResult, ArrayType::STRING);
+    GetValueIfFindKey<Constants::AppType>(jsonObject, jsonObjectEnd, APP_TYPE,
+        appType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, REMOVABLE,
+        removable_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, IS_UNINSTALLED,
+        isUninstalled_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, MODULE_NAME,
+        moduleName_, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, LABEL_ID,
+        labelId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject, jsonObjectEnd, ICON_ID,
+        iconId_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, SYSTEM_APP,
+        systemApp_, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleType>(jsonObject, jsonObjectEnd, BUNDLE_TYPE,
+        bundleType_, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     return parseResult;
 }
 
@@ -135,6 +89,8 @@ std::string PreInstallBundleInfo::ToString() const
     jsonObject[MODULE_NAME] = moduleName_;
     jsonObject[LABEL_ID] = labelId_;
     jsonObject[ICON_ID] = iconId_;
+    jsonObject[SYSTEM_APP] = systemApp_;
+    jsonObject[BUNDLE_TYPE] = bundleType_;
     return jsonObject.dump();
 }
 

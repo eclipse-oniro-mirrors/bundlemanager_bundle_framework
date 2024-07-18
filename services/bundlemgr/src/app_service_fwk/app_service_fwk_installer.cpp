@@ -183,7 +183,9 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
         preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
         auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+        preInstallBundleInfo.SetBundleType(BundleType::APP_SERVICE_FWK);
         if (!bundleInfo.hapModuleInfos.empty() &&
             bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
             break;

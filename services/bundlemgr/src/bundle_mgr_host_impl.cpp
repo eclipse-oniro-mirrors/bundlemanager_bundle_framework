@@ -3839,26 +3839,14 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     }
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
-        BundleInfo bundleInfo;
-        if (!GetPreferableBundleInfoFromHapPaths(
-            recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
-            continue;
-        }
         RecoverableApplicationInfo recoverableApplication;
-        recoverableApplication.bundleName = bundleInfo.name;
-        recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
-        recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
-        recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+        recoverableApplication.bundleName = recoverableBundleInfo.GetBundleName();
+        recoverableApplication.labelId = recoverableBundleInfo.GetLabelId();
+        recoverableApplication.iconId = recoverableBundleInfo.GetIconId();
+        recoverableApplication.systemApp = recoverableBundleInfo.GetSystemApp();
         recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
-        if (!bundleInfo.hapModuleInfos.empty()) {
-            recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
-        }
-        if (bundleInfo.isNewVersion) {
-            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
-        } else if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].installationFree) {
-            recoverableApplication.bundleType = BundleType::ATOMIC_SERVICE;
-        }
+        recoverableApplication.moduleName = recoverableBundleInfo.GetModuleName();
+        recoverableApplication.bundleType = recoverableBundleInfo.GetBundleType();
         recoverableApplicaitons.emplace_back(recoverableApplication);
     }
     return ERR_OK;
