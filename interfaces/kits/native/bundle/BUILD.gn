@@ -33,6 +33,7 @@ ohos_shared_library("bundle_ndk") {
   cflags_cc = [ "-Os" ]
 
   use_exceptions = true
+  use_rtti = true
   deps = [
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
