@@ -1120,6 +1120,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
+    InnerProcessUninstallWrongBundle();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -3423,6 +3424,24 @@ void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &
         }
     }
     dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
+void BMSEventHandler::InnerProcessUninstallWrongBundle()
+{
+    InstallParam installParam;
+    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    std::vector<std::string> wrongBundleNameList;
+    wrongBundleNameList.emplace_back(Constants::SCENE_BOARD_BUNDLE_NAME);
+
+    for (const auto &bundle : wrongBundleNameList) {
+        SystemBundleInstaller installer;
+        if (!installer.UninstallSystemBundle(bundle, installParam)) {
+            LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundle.c_str(),
+                installParam.userId);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
