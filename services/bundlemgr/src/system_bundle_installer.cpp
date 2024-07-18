@@ -207,6 +207,23 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
     return true;
 }
 
+bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName, const InstallParam &installParam)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    MarkPreBundleSyeEventBootTag(false);
+    ErrCode result = UninstallBundle(bundleName, installParam);
+    if ((result != ERR_OK) && (result != ERR_APPEXECFWK_USER_NOT_INSTALL_HAP)) {
+        APP_LOGW("uninstall system bundle %{public}s userId %{public}d fail, error: %{public}d", bundleName.c_str(),
+            installParam.userId, result);
+        return false;
+    }
+    return true;
+}
+
 void SystemBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
 {
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
