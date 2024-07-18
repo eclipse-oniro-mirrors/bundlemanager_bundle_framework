@@ -5431,10 +5431,10 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     return otaInstall_ || HasAllOldModuleUpdate(oldInfo, newInfos);
 }
 
-ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo)
+ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdateToken:%{public}d",
-        bundleName_.c_str(), needUpdateToken);
+    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
+        bundleName_.c_str(), needUpdate);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
@@ -5446,11 +5446,11 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInf
             LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdateToken) {
+        if (needUpdate) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
-    if (needUpdateToken && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
+    if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }

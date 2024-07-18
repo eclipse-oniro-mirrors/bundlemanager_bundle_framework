@@ -32,7 +32,7 @@ struct OverlayModuleInfo : public Parcelable {
     std::string moduleName;
     std::string targetModuleName;
     std::string hapPath;
-    int32_t priority;
+    int32_t priority = 0;
     int32_t state = OVERLAY_INVALID; // 0 is for disable and 1 is for enable
 
     bool ReadFromParcel(Parcel &parcel);
