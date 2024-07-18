@@ -26,9 +26,12 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
     constexpr size_t FOO_MAX_LEN = 1024;
     constexpr size_t U32_AT_SIZE = 4;
+    const int32_t VERSION_LOW = 0;
     const std::string MODULE_NAME_TEST = "moduleName";
     const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
-    
+    const std::string VERSION_ONE_LIBRARY_ONE_PATH =
+      "/data/test/resource/bms/app_service_test/test_create_dir/test.hap";
+
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServiceFwk;
@@ -38,6 +41,27 @@ namespace OHOS {
         innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
         infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
         appServiceFwk.UpdateAppService(innerBundleInfo, infos, installParam);
+        InnerBundleInfo oldInfo;
+        InnerBundleInfo newInfo;
+        appServiceFwk.CheckNeedUpdate(newInfo, oldInfo);
+        std::string hspPath(data, size);
+        appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
+        appServiceFwk.ProcessNewModuleInstall(newInfo, oldInfo, hspPath);
+        bool isReplace = true;
+        bool noSkipsKill = false;
+        appServiceFwk.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath);
+        appServiceFwk.RemoveLowerVersionSoDir(VERSION_LOW);
+        std::string bundlePath(data, size);
+        std::string cpuAbi(data, size);
+        std::string targetSoPath(data, size);
+        std::string signatureFileDir(data, size);
+        bool isPreInstalledBundle = false;
+        appServiceFwk.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
+        std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+        appServiceFwk.DeliveryProfileToCodeSign(hapVerifyResults);
+        std::string developerId = hapVerifyResults[0].GetProvisionInfo().bundleInfo.developerId;
+        std::string odid;
+        appServiceFwk.GenerateOdid(infos, hapVerifyResults);
         return true;
     }
 }

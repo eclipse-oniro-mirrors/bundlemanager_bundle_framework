@@ -29,7 +29,9 @@ namespace OHOS {
     {
         VerifyManagerHostImpl impl;
         std::string bundleName;
+        std::vector<std::string> paths;
         impl.RemoveTempFiles(bundleName);
+        impl.RemoveTempFiles(paths);
         return true;
     }
 }

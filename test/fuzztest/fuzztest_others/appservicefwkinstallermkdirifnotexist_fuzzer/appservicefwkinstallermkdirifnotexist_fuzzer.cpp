@@ -32,6 +32,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     AppServiceFwkInstaller appServicefwk;
     appServicefwk.MkdirIfNotExist(VERSION_ONE_LIBRARY_ONE_PATH);
+    appServicefwk.MkdirIfNotExist(std::string(data, size));
     return true;
 }
 } // namespace OHOS

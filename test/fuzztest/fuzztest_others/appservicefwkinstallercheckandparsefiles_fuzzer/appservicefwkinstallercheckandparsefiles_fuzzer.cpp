@@ -33,7 +33,7 @@ namespace OHOS {
         installParam.isPreInstallApp = true;
         installParam.removable = false;
         AppServiceFwkInstaller appServicefwk;
-        std::vector<std::string> hspPaths;
+        std::vector<std::string> hspPaths = { std::string(data, size) };
         std::unordered_map<std::string, InnerBundleInfo> newInfos;
         appServicefwk.CheckAndParseFiles(hspPaths, installParam, newInfos);
         return true;

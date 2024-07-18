@@ -17,7 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#define private public
 #include "quick_fix_manager_host.h"
 #include "securec.h"
 
@@ -46,6 +46,11 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     MessageOption option;
     QuickFixManagerHost quickFixManagerHost;
     quickFixManagerHost.OnRemoteRequest(code, datas, reply, option);
+
+    quickFixManagerHost.HandleDeleteQuickFix(datas, reply);
+    quickFixManagerHost.HandleCreateFd(datas, reply);
+    quickFixManagerHost.HandleDeployQuickFix(datas, reply);
+    quickFixManagerHost.HandleSwitchQuickFix(datas, reply);
     return true;
 }
 }

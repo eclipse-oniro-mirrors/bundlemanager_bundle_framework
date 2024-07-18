@@ -13,30 +13,43 @@
  * limitations under the License.
  */
 
-#define private public
+#include "quickfixstatuscallbackproxy_fuzzer.h"
+
 #include <cstddef>
 #include <cstdint>
-
-#include "app_service_fwk/app_service_fwk_installer.h"
-
-#include "appservicefwkinstallerprocessinstall_fuzzer.h"
+#define private public
+#include "quick_fix_status_callback_proxy.h"
 #include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
-    constexpr size_t FOO_MAX_LEN = 1024;
-    constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t FOO_MAX_LEN = 1024;
+constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t DCAMERA_SHIFT_24 = 24;
+constexpr size_t DCAMERA_SHIFT_16 = 16;
+constexpr size_t DCAMERA_SHIFT_8 = 8;
 
-    bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
-    {
-        InstallParam installParam;
-        installParam.isPreInstallApp = true;
-        installParam.removable = false;
-        AppServiceFwkInstaller appServicefwk;
-        std::vector<std::string> hspPaths = { std::string(data, size) };
-        appServicefwk.ProcessInstall(hspPaths, installParam);
-        return true;
-    }
+uint32_t GetU32Data(const char* ptr)
+{
+    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
+}
+bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
+{
+    MessageParcel datas;
+    std::u16string descriptor = QuickFixStatusCallbackProxy::GetDescriptor();
+    datas.WriteInterfaceToken(descriptor);
+    datas.WriteBuffer(data, size);
+    datas.RewindRead(0);
+    MessageParcel reply;
+    sptr<IRemoteObject> object = nullptr;
+    QuickFixStatusCallbackProxy quickFixStatusCallbackProxy(object);
+    std::shared_ptr<QuickFixResult> result = nullptr;
+    quickFixStatusCallbackProxy.OnPatchDeployed(result);
+    quickFixStatusCallbackProxy.OnPatchSwitched(result);
+    quickFixStatusCallbackProxy.OnPatchDeleted(result);
+    quickFixStatusCallbackProxy.SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED, datas, reply);
+    return true;
+}
 }
 
 // Fuzzer entry point.
