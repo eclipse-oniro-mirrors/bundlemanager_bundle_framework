@@ -1002,6 +1002,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ORGANIZATION, applicationInfo.organization},
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
         {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess},
+        {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration}
     };
