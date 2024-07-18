@@ -52,6 +52,7 @@
                 "display_manager",
                 "ecological_rule_manager",
                 "eventhandler",
+                "faultloggerd",
                 "ffrt",
                 "hisysevent",
                 "hitrace",
