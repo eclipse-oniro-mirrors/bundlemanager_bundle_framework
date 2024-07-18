@@ -113,27 +113,6 @@ bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int3
 #endif
 }
 
-void BundleResourceHelper::SetApplicationEnabled(const std::string &bundleName,
-    bool enabled, const int32_t userId, int32_t appIndex)
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("bundleName: %{public}s, enable: %{public}d, userId: %{public}d", bundleName.c_str(), enabled, userId);
-    BundleResourceCallback callback;
-    callback.OnBundleStatusChanged(bundleName, enabled, userId, appIndex);
-#endif
-}
-
-void BundleResourceHelper::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, bool enabled, const int32_t userId, int32_t appIndex)
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("bundleName: %{public}s, abilityName: %{public}s, enable: %{public}d, userId: %{public}d",
-        bundleName.c_str(), abilityName.c_str(), enabled, userId);
-    BundleResourceCallback callback;
-    callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, enabled, userId);
-#endif
-}
-
 void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &resourceNames)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

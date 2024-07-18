@@ -93,10 +93,6 @@ bool BundleResourceProcess::GetAllResourceInfo(
     }
 
     for (const auto &item : bundleInfos) {
-        if (item.second.IsDisabled()) {
-            APP_LOGD("bundle %{public}s is disabled", item.second.GetBundleName().c_str());
-            continue;
-        }
         if (!IsBundleExist(item.second, userId)) {
             APP_LOGD("bundle %{public}s is not exist in userId: %{public}d",
                 item.second.GetBundleName().c_str(), userId);
@@ -159,10 +155,6 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
 
     if (!IsBundleExist(innerBundleInfo, userId)) {
         APP_LOGW("bundle %{public}s not exist in userId %{public}d", innerBundleInfo.GetBundleName().c_str(), userId);
-        return false;
-    }
-    if (innerBundleInfo.IsDisabled()) {
-        APP_LOGD("bundle %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
     std::vector<ResourceInfo> resourceInfos;
@@ -271,18 +263,8 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     InnerBundleUserInfo innerBundleUserInfo;
     if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
         for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
-            if (cloneInfo.second.enabled) {
-                appIndexes.emplace_back(cloneInfo.second.appIndex);
-            }
+            appIndexes.emplace_back(cloneInfo.second.appIndex);
         }
-    }
-    if (!innerBundleInfo.GetApplicationEnabled(innerBundleInfo.GetResponseUserId(userId))) {
-        if (appIndexes.empty()) {
-            APP_LOGW("bundle %{public}s is disabled in userId:%{public}d, no clone info",
-                innerBundleInfo.GetBundleName().c_str(), userId);
-            return false;
-        }
-        appIndexes.emplace_back(ServiceConstants::INVALID_GID);
     }
 
     ResourceInfo dynamicResourceInfo;
@@ -543,11 +525,6 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     }
     std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
     for (const auto &item : abilityInfos) {
-        if (!innerBundleInfo.IsAbilityEnabled(item.second, innerBundleInfo.GetResponseUserId(userId))) {
-            APP_LOGW("bundleName %{public}s abilityName %{public}s disable", item.second.bundleName.c_str(),
-                item.second.name.c_str());
-            continue;
-        }
         resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
     }
     // process overlay hap paths
