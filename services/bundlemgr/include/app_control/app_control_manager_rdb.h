@@ -65,6 +65,8 @@ public:
 private:
     ErrCode DeleteOldControlRule(const std::string &callingName, const std::string &controlRuleType,
         const std::string &appId, int32_t userId);
+    ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 };
 } // namespace AppExecFwk

@@ -21,6 +21,7 @@
 #include "bundle_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
+#include "abs_rdb_predicates.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -101,6 +102,11 @@ public:
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
     virtual ErrCode DeleteResourceInfo(const std::string &key)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
     {
         return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
