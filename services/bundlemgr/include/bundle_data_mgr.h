@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -44,6 +44,7 @@
 #include "inner_bundle_user_info.h"
 #include "module_info.h"
 #include "preinstall_data_storage_interface.h"
+#include "shortcut_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
 #endif
@@ -938,6 +939,13 @@ public:
         std::vector<ExtensionAbilityInfo> &infos) const;
     void QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos) const;
+
+    ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
+    ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
+    ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos);
+    ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
+    ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
+
 private:
     /**
      * @brief Init transferStates.
@@ -1168,6 +1176,7 @@ private:
     std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
     mutable std::mutex hspBundleNameMutex_;
     std::set<std::string> appServiceHspBundleName_;
+    std::shared_ptr<IShortcutDataStorage> shortcutStorage_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

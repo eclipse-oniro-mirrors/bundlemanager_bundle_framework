@@ -194,6 +194,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/navigation/router_item_compare.cpp",
   "${services_path}/bundlemgr/src/navigation/router_map_helper.cpp",
   "${services_path}/bundlemgr/src/navigation/sem_ver.cpp",
+  "${services_path}/bundlemgr/src/shortcut_data_storage_rdb.cpp",
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
   "${services_path}/bundlemgr/src/verify/verify_manager_host_impl.cpp",

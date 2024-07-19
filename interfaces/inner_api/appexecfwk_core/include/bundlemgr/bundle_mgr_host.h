@@ -806,6 +806,12 @@ private:
     ErrCode HandleGetCloneAppIndexes(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
