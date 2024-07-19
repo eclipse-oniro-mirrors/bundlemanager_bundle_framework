@@ -59,6 +59,11 @@ const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled b
 const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const int NOT_EXIST_USERID = -5;
+const int ALL_USERID = -3;
+const int32_t MAIN_APP_INDEX = -1;
+const int32_t CLONE_APP_INDEX_MAX = 6;
+const int32_t APP_INDEX = 1;
 }  // namespace
 
 class BmsBundleAppControlTest : public testing::Test {
@@ -1473,5 +1478,143 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4800, Function | Sma
     appControlManager->appRunningControlRuleResult_["100"] = ruleResult;
     ErrCode res = appControlManager->DeleteAppRunningControlRule(CALLER_BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4900
+ * @tc.name: test UpdateAppControlledInfo by AppControlManagerHostImpl
+ * @tc.desc: 1.UpdateAppControlledInfo test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4900, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->UpdateAppControlledInfo(NOT_EXIST_USERID);
+    EXPECT_FALSE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5000
+ * @tc.name: test UpdateAppControlledInfo by AppControlManagerHostImpl
+ * @tc.desc: 1.UpdateAppControlledInfo test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5000, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    impl->UpdateAppControlledInfo(ALL_USERID);
+    EXPECT_TRUE(dataMgr->bundleInfos_[BUNDLE_NAME].innerBundleUserInfos_.empty());
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5100
+ * @tc.name: test GetDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5100, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5200
+ * @tc.name: test GetDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.GetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->GetDisposedRuleForCloneApp(APPID, rule, MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = impl->GetDisposedRuleForCloneApp(APPID, rule, CLONE_APP_INDEX_MAX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = impl->GetDisposedRuleForCloneApp(APPID, rule, APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5300
+ * @tc.name: test SetDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5300, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->SetDisposedRuleForCloneApp(APPID, rule, MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = impl->SetDisposedRuleForCloneApp(APPID, rule, CLONE_APP_INDEX_MAX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5400
+ * @tc.name: test DeleteDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5400, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    DisposedRule rule;
+    auto ret = impl->DeleteDisposedRuleForCloneApp(APPID, MAIN_APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = impl->DeleteDisposedRuleForCloneApp(APPID, CLONE_APP_INDEX_MAX, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE);
+    ret = impl->DeleteDisposedRuleForCloneApp(APPID, APP_INDEX, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5500
+ * @tc.name: test CheckCanDispose by appControlManager
+ * @tc.desc: 1.CheckCanDispose test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5500, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    bool ret = appControlManager->CheckCanDispose(APPID, USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5600
+ * @tc.name: test CheckCanDispose by appControlManager
+ * @tc.desc: 1.CheckCanDispose test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5600, Function | SmallTest | Level1)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    ASSERT_NE(impl, nullptr);
+    auto appControlManager = impl->appControlManager_;
+    ASSERT_NE(appControlManager, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    appControlManager->noControllingList_.push_back(BUNDLE_NAME);
+    bool ret = appControlManager->CheckCanDispose(APPID, USERID);
+    EXPECT_TRUE(ret);
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
 }
 } // OHOS
