@@ -26,6 +26,9 @@ public:
     explicit BundleResourceEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~BundleResourceEventSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+
+private:
+    static void OnUserIdChanged(const int32_t oldUserId, const int32_t newUserId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
