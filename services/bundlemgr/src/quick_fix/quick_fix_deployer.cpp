@@ -333,9 +333,9 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
         if (!targetPath_.empty()) {
             nativeLibraryPath = PATCH_DIR + targetPath_ + ServiceConstants::PATH_SEPARATOR + libraryPath;
         } else {
-            nativeLibraryPath = ServiceConstants::PATCH_PATH
-                + std::to_string(appQuickFix.deployingAppqfInfo.versionCode)
-                + ServiceConstants::PATH_SEPARATOR + libraryPath;
+            nativeLibraryPath =
+                ServiceConstants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode) +
+                ServiceConstants::PATH_SEPARATOR + libraryPath;
         }
     } else {
         LOG_I(BMS_TAG_DEFAULT, "So(%{public}s) is not exist and set nativeLibraryPath(%{public}s) empty",
