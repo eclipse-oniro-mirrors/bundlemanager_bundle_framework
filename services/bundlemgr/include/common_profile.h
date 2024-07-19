@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -52,6 +52,7 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundl
 constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_HWASAN_ENABLED = "hwasanEnabled";
 
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
@@ -354,6 +355,7 @@ constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";
+constexpr const char* APP_HWASAN_ENABLED = "hwasanEnabled";
 constexpr const char* APP_CONFIGURATION = "configuration";
 constexpr const char* APP_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 // multiappmode

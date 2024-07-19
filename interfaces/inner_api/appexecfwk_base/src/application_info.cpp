@@ -132,6 +132,7 @@ const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string APPLICATION_APP_INDEX = "appIndex";
 const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const std::string APPLICATION_INSTALL_SOURCE = "installSource";
+const std::string APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const std::string APPLICATION_CONFIGURATION = "configuration";
 const std::string APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 }
@@ -559,6 +560,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     gwpAsanEnabled = parcel.ReadBool();
     applicationReservedFlag = parcel.ReadUint32();
     tsanEnabled = parcel.ReadBool();
+    hwasanEnabled = parcel.ReadBool();
     organization = Str16ToStr8(parcel.ReadString16());
     int32_t applicationEnvironmentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationEnvironmentsSize);
@@ -746,6 +748,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, gwpAsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, tsanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hwasanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
     for (auto &item : appEnvironments) {
@@ -1000,6 +1003,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_COMPILE_SDK_TYPE, applicationInfo.compileSdkType},
         {APPLICATION_RESOURCES_APPLY, applicationInfo.resourcesApply},
         {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
+        {APPLICATION_HWASAN_ENABLED, applicationInfo.hwasanEnabled},
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
         {APPLICATION_ORGANIZATION, applicationInfo.organization},
@@ -1203,6 +1207,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.maxChildProcess, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
         applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_HWASAN_ENABLED,
+        applicationInfo.hwasanEnabled, JsonType::BOOLEAN, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
         applicationInfo.configuration, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject, jsonObjectEnd, APPLICATION_CLOUD_FILE_SYNC_ENABLED,

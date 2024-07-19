@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2024 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -248,9 +248,11 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestAplDown:otaUpdateTestAplDown",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestAplUp:otaUpdateTestAplUp",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestAppField:otaUpdateTestAppField",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestAppField2:otaUpdateTestAppField2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestBasis:otaUpdateTestBasis",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestBasis/feature1:otaUpdateTestBasisFeature1",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestBasis/feature2:otaUpdateTestBasisFeature2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestBasis2:otaUpdateTestBasis2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestModuleField:otaUpdateTestModuleField",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestSignaIcon:otaUpdateTestSignaIcon",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/otaUpdateTestSoChanged:otaUpdateTestSoChanged",

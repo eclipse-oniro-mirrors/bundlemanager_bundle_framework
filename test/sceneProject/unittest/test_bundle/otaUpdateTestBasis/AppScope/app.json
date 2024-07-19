@@ -14,6 +14,7 @@
         "versionName": "1.0.0.0",
         "asanEnabled": true,
         "GWPAsanEnabled": true,
-        "tsanEnabled": false
+        "tsanEnabled": false,
+        "hwasanEnabled": false
     }
 }

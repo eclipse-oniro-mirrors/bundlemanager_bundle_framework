@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -638,6 +638,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.apiTargetVersion, 8);
         EXPECT_EQ(info.gwpAsanEnabled, false);
         EXPECT_EQ(info.tsanEnabled, false);
+        EXPECT_EQ(info.hwasanEnabled, false);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";
