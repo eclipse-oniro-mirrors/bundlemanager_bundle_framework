@@ -1155,7 +1155,8 @@ protected:
                 "appIndex":0,
                 "maxChildProcess": 0,
                 "installSource": "unknown",
-                "configuration":""
+                "configuration":"",
+                "cloudFileSyncEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [

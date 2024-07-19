@@ -256,6 +256,7 @@ struct App {
     MultiAppMode multiAppMode;
     int32_t maxChildProcess = OHOS::system::GetIntParameter(MAX_CHILD_PROCESS, 1);
     std::string configuration;
+    bool cloudFileSyncEnabled = false;
 };
 
 struct Module {
@@ -1334,6 +1335,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_CLOUD_FILE_SYNC_ENABLED,
+        app.cloudFileSyncEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2121,6 +2130,7 @@ bool ToApplicationInfo(
             return false;
         }
     }
+    applicationInfo.cloudFileSyncEnabled = app.cloudFileSyncEnabled;
     return true;
 }
 

@@ -1848,6 +1848,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->singleton = applicationInfo.singleton;
     baseApplicationInfo_->userDataClearable = applicationInfo.userDataClearable;
     baseApplicationInfo_->accessible = applicationInfo.accessible;
+    baseApplicationInfo_->cloudFileSyncEnabled = applicationInfo.cloudFileSyncEnabled;
 
     if (!baseApplicationInfo_->isSystemApp) {
         baseApplicationInfo_->isSystemApp = applicationInfo.isSystemApp;

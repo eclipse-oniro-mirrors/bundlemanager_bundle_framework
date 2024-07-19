@@ -173,6 +173,7 @@ RetApplicationInfo ConvertApplicationInfo(AppExecFwk::ApplicationInfo cAppInfo)
     appInfo.bundleType = static_cast<int32_t>(cAppInfo.bundleType);
     appInfo.debug = cAppInfo.debug;
     appInfo.dataUnclearable = !cAppInfo.userDataClearable;
+    appInfo.cloudFileSyncEnabled = cAppInfo.cloudFileSyncEnabled;
     return appInfo;
 }
 

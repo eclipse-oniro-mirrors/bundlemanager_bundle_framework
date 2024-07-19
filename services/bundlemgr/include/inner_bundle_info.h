@@ -639,6 +639,17 @@ public:
         }
         return abilityNames;
     }
+
+    bool GetCloudFileSyncEnabled() const
+    {
+        return baseApplicationInfo_->cloudFileSyncEnabled;
+    }
+
+    void SetCloudFileSyncEnabled(bool cloudFileSyncEnabled)
+    {
+        baseApplicationInfo_->cloudFileSyncEnabled = cloudFileSyncEnabled;
+    }
+
     /**
      * @brief Get version code in application.
      * @return Returns version code.
