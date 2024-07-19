@@ -1617,4 +1617,20 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5600, Function | Sma
     EXPECT_TRUE(ret);
     DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr()->bundleInfos_.erase(BUNDLE_NAME);
 }
+
+/**
+ * @tc.number: GetAbilityRunningControlRule_0100
+ * @tc.name: test running control rule
+ * @tc.require: issueI5MZ8K
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    std::string appId = "appId";
+    int32_t appIndex = 100;
+    int32_t userId = 100;
+    std::vector<DisposedRule> disposedRules;
+    ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
+    EXPECT_EQ(result, ERR_OK);
+}
 } // OHOS
