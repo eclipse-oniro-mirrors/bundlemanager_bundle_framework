@@ -402,8 +402,9 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
         LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
-        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({PERMISSION_DISPOSED_STATUS,
+        PERMISSION_GET_DISPOSED_STATUS})) {
+        LOG_W(BMS_TAG_DEFAULT, "verify get disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -467,8 +468,9 @@ ErrCode AppControlManagerHostImpl::GetDisposedRuleForCloneApp(const std::string 
         LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
-        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+    if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({PERMISSION_DISPOSED_STATUS,
+        PERMISSION_GET_DISPOSED_STATUS})) {
+        LOG_W(BMS_TAG_DEFAULT, "verify get disposed rule permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     if (appIndex < Constants::MAIN_APP_INDEX || appIndex > ServiceConstants::CLONE_APP_INDEX_MAX) {
