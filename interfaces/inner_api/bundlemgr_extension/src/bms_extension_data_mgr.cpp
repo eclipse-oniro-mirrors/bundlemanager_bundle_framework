@@ -383,5 +383,24 @@ ErrCode BmsExtensionDataMgr::DeleteResourceInfo(const std::string &key)
     APP_LOGD("call bundle mgr ext return %{public}d by key:%{private}s", ret, key.c_str());
     return ret;
 }
+
+ErrCode BmsExtensionDataMgr::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+    int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    if (Init() != ERR_OK || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
+    }
+    ErrCode ret = bundleMgrExtPtr->OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
+    APP_LOGD("call bundle mgr ext OptimizeDisposedPredicates, return %{public}d, result:%{private}s",
+        ret, absRdbPredicates.ToString().c_str());
+    return ret;
+}
 } // AppExecFwk
 } // OHOS

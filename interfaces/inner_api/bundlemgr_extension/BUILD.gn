@@ -46,6 +46,7 @@ ohos_shared_library("bundlemgr_extension") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "relational_store:native_rdb",
   ]
 
   subsystem_name = "bundlemanager"
