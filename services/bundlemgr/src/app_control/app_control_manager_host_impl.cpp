@@ -188,7 +188,8 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        LOG_W(BMS_TAG_DEFAULT, "calling permission denied, uid : %{public}d", uid);
+        LOG_W(BMS_TAG_DEFAULT, "calling permission denied, uid : %{public}d, pid : %{public}d",
+            uid, OHOS::IPCSkeleton::GetCallingPid());
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
