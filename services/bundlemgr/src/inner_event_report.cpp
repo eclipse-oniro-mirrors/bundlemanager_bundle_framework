@@ -236,7 +236,7 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             } },
         { BMSEventType::QUERY_OF_CONTINUE_TYPE,
             [](const EventInfo& eventInfo) {
-                InnerSendCpuSceneEvent(eventInfo);
+                InnerSendQueryOfContinueTypeEvent(eventInfo);
             } },
         { BMSEventType::FREE_INSTALL_EVENT,
             [](const EventInfo& eventInfo) {
