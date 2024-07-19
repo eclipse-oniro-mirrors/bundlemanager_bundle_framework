@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#define private public
 #include <cstddef>
 #include <cstdint>
 
@@ -65,7 +65,9 @@ constexpr uint8_t ENABLE = 2;
         bmsExtensionClient.GetUidByBundleName(bundleName, reinterpret_cast<uintptr_t>(data),
                                               uid);
         bmsExtensionClient.GetBundleNameByUid(reinterpret_cast<uintptr_t>(data), bundleName);
-                                             
+    
+        bmsExtensionClient.ModifyLauncherAbilityInfo(abilityInfo);
+        bmsExtensionClient.GetDataMgr();
         return true;
     }
 }
