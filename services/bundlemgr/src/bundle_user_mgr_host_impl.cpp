@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
+#include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
@@ -85,6 +86,7 @@ public:
         if (resultCode != ERR_OK && resultCode !=
             ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && needReInstall_) {
             APP_LOGI("needReInstall bundleName: %{public}s", bundleName_.c_str());
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName_, resultCode);
             SavePreInstallException(bundleName_);
         }
     }
@@ -100,7 +102,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
-    APP_LOGI("CreateNewUser user(%{public}d) start.", userId);
+    APP_LOGI("CreateNewUser user(%{public}d) start", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     if (CheckInitialUser() != ERR_OK) {
         APP_LOGE("CheckInitialUser failed");
@@ -135,14 +137,14 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     }
 
     if (dataMgr->HasUserId(userId)) {
-        APP_LOGE("Has create user %{public}d.", userId);
+        APP_LOGE("Has create user %{public}d", userId);
         return;
     }
 
     dataMgr->AddUserId(userId);
     std::set<PreInstallBundleInfo> preInstallBundleInfos;
     if (!GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos)) {
-        APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d.", userId);
+        APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
         return;
     }
 
@@ -213,6 +215,8 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 {
     if (userId == Constants::START_USERID) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
+        // need process main bundle status
+        BmsKeyEventMgr::ProcessMainBundleStatusFinally();
     }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -227,7 +231,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
-    APP_LOGI("RemoveUser user(%{public}d) start.", userId);
+    APP_LOGI("RemoveUser user(%{public}d) start", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -242,13 +246,13 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     }
 
     if (!dataMgr->HasUserId(userId)) {
-        APP_LOGE("Has remove user %{public}d.", userId);
+        APP_LOGE("Has remove user %{public}d", userId);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-        APP_LOGE("get all bundle info failed when userId %{public}d.", userId);
+        APP_LOGE("get all bundle info failed when userId %{public}d", userId);
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
@@ -294,11 +298,11 @@ ErrCode BundleUserMgrHostImpl::CheckInitialUser()
     }
 
     if (!dataMgr->HasInitialUserCreated()) {
-        APP_LOGI("Bms initial user do not created successfully and wait.");
+        APP_LOGI("Bms initial user do not created successfully and wait");
         std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
         dataMgr->SetBundlePromise(bundlePromise);
         bundlePromise->WaitForAllTasksExecute();
-        APP_LOGI("Bms initial user created successfully.");
+        APP_LOGI("Bms initial user created successfully");
     }
     return ERR_OK;
 }

@@ -201,7 +201,7 @@ bool CompatibleAbilityInfo::Marshalling(Parcel& parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(className));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
-    APP_LOGE("CompatibleAbilityInfo::Marshalling start to write application info.");
+    APP_LOGE("CompatibleAbilityInfo::Marshalling start to write application info");
     if (!parcel.WriteParcelable(&applicationInfo)) {
         return false;
     }

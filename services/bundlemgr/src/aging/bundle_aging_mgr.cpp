@@ -60,7 +60,7 @@ void StatisticsUsageStats(
 BundleAgingMgr::BundleAgingMgr()
 {
     InitAgingHandlerChain();
-    APP_LOGI("BundleAgingMgr is created.");
+    APP_LOGI("BundleAgingMgr is created");
 }
 
 BundleAgingMgr::~BundleAgingMgr()
@@ -187,7 +187,7 @@ bool BundleAgingMgr::InitAgingRequest()
     }
 
     if (!IsReachStartAgingThreshold()) {
-        APP_LOGI("Not reach agingThreshold and not need aging.");
+        APP_LOGI("Not reach agingThreshold and not need aging");
         return false;
     }
 
@@ -227,7 +227,7 @@ bool BundleAgingMgr::InitAgingRequest()
 
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
 {
-    APP_LOGD("BundleAging begin to process.");
+    APP_LOGD("BundleAging begin to process");
     if (InitAgingRequest()) {
         chain_.Process(request_);
     }

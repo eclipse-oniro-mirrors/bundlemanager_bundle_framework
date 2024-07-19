@@ -341,7 +341,7 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
     std::string profileName = resName.substr(pos + strlen(PROFILE_FILE_PREFIX));
     // hap is compressed status, get file content.
     if (isCompressed) {
-        APP_LOGD("compressed status.");
+        APP_LOGD("compressed status");
         std::unique_ptr<uint8_t[]> fileContentPtr = nullptr;
         size_t len = 0;
         if (resMgr->GetProfileDataByName(profileName.c_str(), len, fileContentPtr) != SUCCESS) {
@@ -532,6 +532,23 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 
+ErrCode BundleMgrClientImpl::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
+{
+    APP_LOGD("InstallHmpBundle begin");
+    if (filePath.empty()) {
+        APP_LOGE("InstallHmpBundle filePath is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    return bundleInstaller_->InstallHmpBundle(filePath, isNeedRollback);
+}
+
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");
@@ -573,7 +590,7 @@ ErrCode BundleMgrClientImpl::Connect()
 
 void BundleMgrClientImpl::OnDeath()
 {
-    APP_LOGD("BundleManagerService dead.");
+    APP_LOGD("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(mutex_);
     bundleMgr_ = nullptr;
     bundleInstaller_ = nullptr;

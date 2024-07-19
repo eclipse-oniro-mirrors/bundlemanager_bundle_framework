@@ -22,7 +22,7 @@ namespace AppExecFwk {
 BundleManagerCallback::BundleManagerCallback(const std::weak_ptr<BundleDistributedManager> &server)
     : server_(server)
 {
-    APP_LOGI("%{public}s", __func__);
+    APP_LOGI("BundleManagerCallback");
 }
 
 int32_t BundleManagerCallback::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
@@ -30,7 +30,7 @@ int32_t BundleManagerCallback::OnQueryRpcIdFinished(const std::string &queryRpcI
     APP_LOGI("OnQueryRpcIdFinished %{public}s", queryRpcIdResult.c_str());
     auto server = server_.lock();
     if (server == nullptr) {
-        APP_LOGE("pointer is nullptr.");
+        APP_LOGE("pointer is nullptr");
         return ERR_INVALID_VALUE;
     }
     server->OnQueryRpcIdFinished(queryRpcIdResult);

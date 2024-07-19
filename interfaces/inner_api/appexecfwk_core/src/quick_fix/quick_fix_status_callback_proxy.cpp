@@ -28,12 +28,12 @@ namespace AppExecFwk {
 QuickFixStatusCallbackProxy::QuickFixStatusCallbackProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IQuickFixStatusCallback>(object)
 {
-    LOG_I(BMS_TAG_DEFAULT, "create QuickFixStatusCallbackProxy.");
+    LOG_I(BMS_TAG_DEFAULT, "create QuickFixStatusCallbackProxy");
 }
 
 QuickFixStatusCallbackProxy::~QuickFixStatusCallbackProxy()
 {
-    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixStatusCallbackProxy.");
+    LOG_I(BMS_TAG_DEFAULT, "destroy QuickFixStatusCallbackProxy");
 }
 
 void QuickFixStatusCallbackProxy::OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result)

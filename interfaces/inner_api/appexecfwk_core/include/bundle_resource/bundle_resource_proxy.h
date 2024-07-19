@@ -39,6 +39,13 @@ public:
     virtual ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
         std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos) override;
 
+    virtual ErrCode AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId) override;
+
+    virtual ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const int32_t userId) override;
+
+    virtual ErrCode DeleteResourceInfo(const std::string &key) override;
+
 private:
     template<typename T>
     ErrCode GetParcelInfo(BundleResourceInterfaceCode code, MessageParcel &data, T &parcelInfo);

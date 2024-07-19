@@ -39,7 +39,7 @@ bool IsSupportCompressNativeLibs()
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGE("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -2395,7 +2395,7 @@ bool ToAbilityInfo(
     if (iterType != ProfileReader::ABILITY_TYPE_MAP.end()) {
         abilityInfo.type = iterType->second;
     } else {
-        APP_LOGE("ability type invalid.");
+        APP_LOGE("ability type invalid");
         return false;
     }
 
@@ -2422,7 +2422,7 @@ bool ToAbilityInfo(
     abilityInfo.deviceCapabilities = ability.deviceCapability;
     if (iterType->second == AbilityType::DATA &&
         ability.uri.find(ServiceConstants::DATA_ABILITY_URI_PREFIX) == std::string::npos) {
-        APP_LOGE("ability uri invalid.");
+        APP_LOGE("ability uri invalid");
         return false;
     }
     abilityInfo.uri = ability.uri;
@@ -2645,7 +2645,7 @@ ErrCode BundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(configJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed.");
+        APP_LOGE("Parser native so failed");
         return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
     }
     return ERR_OK;

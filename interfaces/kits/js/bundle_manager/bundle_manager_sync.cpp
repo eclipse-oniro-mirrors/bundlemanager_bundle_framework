@@ -254,7 +254,7 @@ napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info)
     }
     napi_value nIsEnabled = nullptr;
     NAPI_CALL(env, napi_get_boolean(env, isEnable, &nIsEnabled));
-    APP_LOGD("call IsApplicationEnabledSync done.");
+    APP_LOGD("call IsApplicationEnabledSync done");
     return nIsEnabled;
 }
 
@@ -289,7 +289,7 @@ napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info)
     }
     napi_value nIsEnabled = nullptr;
     NAPI_CALL(env, napi_get_boolean(env, isEnable, &nIsEnabled));
-    APP_LOGD("call IsAbilityEnabledSync done.");
+    APP_LOGD("call IsAbilityEnabledSync done");
     return nIsEnabled;
 }
 
@@ -341,7 +341,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
             }
         } else if (i == ARGS_POS_THREE) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -381,7 +381,7 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -390,7 +390,7 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
         }
     }
     if (extensionParamInfo.extensionTypeName.empty()) {
-        APP_LOGE("The input extensionAbilityType is empty.");
+        APP_LOGE("The input extensionAbilityType is empty");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_EXTENSION_ABILITY_TYPE_EMPTY_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
     }
@@ -593,7 +593,7 @@ napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info)
     APP_LOGD("call GetAbilityLabelSync done");
     return nAbilityLabel;
 #else
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
     napi_throw(env, error);
     return nullptr;
@@ -676,7 +676,7 @@ napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI getBundleArchiveInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -710,7 +710,7 @@ napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info)
     napi_value nBundleInfo = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, bundleFlags);
-    APP_LOGD("call getBundleArchiveInfoSync done.");
+    APP_LOGD("call getBundleArchiveInfoSync done");
     return nBundleInfo;
 }
 
@@ -719,7 +719,7 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI GetBundleNameByUidSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -747,7 +747,7 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     }
     napi_value nBundleName = nullptr;
     napi_create_string_utf8(env, bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName);
-    APP_LOGD("call GetBundleNameByUidSync done.");
+    APP_LOGD("call GetBundleNameByUidSync done");
     return nBundleName;
 }
 
@@ -756,7 +756,7 @@ ErrCode ParamsProcessGetProfileByAbilitySync(napi_env env, napi_callback_info in
 {
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
     }
@@ -932,7 +932,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI GetAppProvisionInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -945,7 +945,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId");
         }
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -967,7 +967,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     napi_value nAppProvisionInfo = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nAppProvisionInfo));
     CommonFunc::ConvertAppProvisionInfo(env, appProvisionInfo, nAppProvisionInfo);
-    APP_LOGD("call GetAppProvisionInfoSync done.");
+    APP_LOGD("call GetAppProvisionInfoSync done");
     return nAppProvisionInfo;
 }
 }  // namespace AppExecFwk

@@ -105,7 +105,6 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg);
  */
 napi_value FlushTypeInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
     const int FLUSH_TYPE_NO_FLUSH = 0;
     const int FLUSH_TYPE_PARTIAL_FLUSH = 1;
     const int FLUSH_TYPE_SYNC_FLUSH = 2;
@@ -141,7 +140,6 @@ napi_value FlushTypeInit(napi_env env, napi_value exports)
  */
 napi_value CompressLevelInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
     const int COMPRESS_LEVEL_NO_COMPRESSION = 0;
     const int COMPRESS_LEVEL_BEST_SPEED = 1;
     const int COMPRESS_LEVEL_BEST_COMPRESSION = 9;
@@ -171,8 +169,6 @@ napi_value CompressLevelInit(napi_env env, napi_value exports)
  */
 napi_value CompressFlushModeInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     napi_value CompressFlushMode = nullptr;
     napi_create_object(env, &CompressFlushMode);
     SetNamedProperty(env, CompressFlushMode, "NO_FLUSH", NO_FLUSH);
@@ -199,8 +195,6 @@ napi_value CompressFlushModeInit(napi_env env, napi_value exports)
  */
 napi_value CompressMethodInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     napi_value CompressMethod = nullptr;
     napi_create_object(env, &CompressMethod);
     SetNamedProperty(env, CompressMethod, "DEFLATED", DEFLATED);
@@ -221,7 +215,6 @@ napi_value CompressMethodInit(napi_env env, napi_value exports)
  */
 napi_value CompressStrategyInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
     const int COMPRESS_STRATEGY_DEFAULT_STRATEGY = 0;
     const int COMPRESS_STRATEGY_FILTERED = 1;
     const int COMPRESS_STRATEGY_HUFFMAN_ONLY = 2;
@@ -253,7 +246,6 @@ napi_value CompressStrategyInit(napi_env env, napi_value exports)
  */
 napi_value MemLevelInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
     const int MEM_LEVEL_MIN = 1;
     const int MEM_LEVEL_DEFAULT = 8;
     const int MEM_LEVEL_MAX = 9;
@@ -282,8 +274,6 @@ napi_value MemLevelInit(napi_env env, napi_value exports)
  */
 napi_value OffsetReferencePointInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     napi_value OffsetReferencePoint = nullptr;
     napi_create_object(env, &OffsetReferencePoint);
     SetNamedProperty(env, OffsetReferencePoint, "SEEK_SET", SEEK_SET);
@@ -306,8 +296,6 @@ napi_value OffsetReferencePointInit(napi_env env, napi_value exports)
  */
 napi_value ReturnStatusInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     napi_value ReturnStatus = nullptr;
     napi_create_object(env, &ReturnStatus);
     SetNamedProperty(env, ReturnStatus, "OK", OK);
@@ -331,8 +319,6 @@ napi_value ReturnStatusInit(napi_env env, napi_value exports)
  */
 napi_value ErrorCodeInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     const int ERROR_CODE_OK = 0;
     const int ERROR_CODE_STREAM_END = 1;
     const int ERROR_CODE_NEED_DICT = 2;
@@ -373,8 +359,6 @@ napi_value ErrorCodeInit(napi_env env, napi_value exports)
  */
 napi_value ZlibInit(napi_env env, napi_value exports)
 {
-    APP_LOGD("%{public}s,called", __func__);
-
     napi_property_descriptor properties[] = {
         DECLARE_NAPI_FUNCTION("zipFile", NAPI_ZipFile),
         DECLARE_NAPI_FUNCTION("unzipFile", NAPI_UnzipFile),
@@ -391,7 +375,6 @@ napi_value ZlibInit(napi_env env, napi_value exports)
 
 AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
 {
-    APP_LOGD("%{public}s called.", __func__);
     napi_status ret;
     napi_value global = 0;
     const napi_extended_error_info *errorInfo = nullptr;
@@ -399,10 +382,10 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
     if (ret != napi_ok) {
         napi_get_last_error_info(env, &errorInfo);
         if (errorInfo == nullptr) {
-            APP_LOGE("%{public}s errorInfo is null", __func__);
+            APP_LOGE("errorInfo is null");
             return nullptr;
         }
-        APP_LOGE("%{public}s get_global=%{public}d err:%{public}s", __func__, ret, errorInfo->error_message);
+        APP_LOGE("get_global=%{public}d err:%{public}s", ret, errorInfo->error_message);
     }
 
     AsyncZipCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncZipCallbackInfo {
@@ -410,16 +393,14 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
         .zlibCallbackInfo = nullptr,
     };
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s asyncCallbackInfo is null", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return nullptr;
     }
-    APP_LOGD("%{public}s end.", __func__);
     return asyncCallbackInfo;
 }
 
 napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
 {
-    APP_LOGD("%{public}s,called", __func__);
     // unwrap the param[0]
     napi_valuetype valueType = napi_valuetype::napi_undefined;
     napi_status rev = napi_typeof(env, argv, &valueType);
@@ -428,20 +409,20 @@ napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
     }
 
     if (valueType != napi_valuetype::napi_string) {
-        APP_LOGI("%{public}s called, Parameter type does not match", __func__);
+        APP_LOGI("Parameter type does not match");
         return nullptr;
     }
 
     size_t len;
     napi_status status = napi_get_value_string_utf8(env, argv, nullptr, 0, &len);
     if (status != napi_ok) {
-        APP_LOGI("%{public}s called, Get locale tag length failed", __func__);
+        APP_LOGI("Get locale tag length failed");
         return nullptr;
     }
     std::vector<char> buf(len + 1);
     status = napi_get_value_string_utf8(env, argv, buf.data(), len + 1, &len);
     if (status != napi_ok) {
-        APP_LOGI("%{public}s called, Get locale tag failed", __func__);
+        APP_LOGI("Get locale tag failed");
         return nullptr;
     }
     str = std::string(buf.data());
@@ -453,7 +434,6 @@ napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
 
 napi_value UnwrapStringArrayParam(std::vector<std::string> &stringArray, napi_env env, napi_value argv)
 {
-    APP_LOGD("%{public}s,called", __func__);
     // unwrap the param[0]
     napi_valuetype valueType = napi_valuetype::napi_undefined;
     napi_status rev = napi_typeof(env, argv, &valueType);
@@ -463,14 +443,14 @@ napi_value UnwrapStringArrayParam(std::vector<std::string> &stringArray, napi_en
 
     bool isArray = false;
     if (napi_is_array(env, argv, &isArray) != napi_ok || !isArray) {
-        APP_LOGI("%{public}s called, Parameter type does not match", __func__);
+        APP_LOGI("Parameter type does not match");
         return nullptr;
     }
 
     uint32_t size = 0U;
     napi_status status = napi_get_array_length(env, argv, &size);
     if (status != napi_ok || size == 0U) {
-        APP_LOGI("%{public}s called, Get string array length failed", __func__);
+        APP_LOGI("Get string array length failed");
         return nullptr;
     }
 
@@ -478,20 +458,20 @@ napi_value UnwrapStringArrayParam(std::vector<std::string> &stringArray, napi_en
     for (uint32_t i = 0; i < size; i++) {
         status = napi_get_element(env, argv, i, &result);
         if (status != napi_ok) {
-            APP_LOGI("%{public}s called, Get locale tag element failed", __func__);
+            APP_LOGI("Get locale tag element failed");
             return nullptr;
         }
         size_t strLen = 0;
         status = napi_get_value_string_utf8(env, result, nullptr, 0, &strLen);
         if (status != napi_ok) {
-            APP_LOGI("%{public}s called, Get locale tag length failed", __func__);
+            APP_LOGI("Get locale tag length failed");
             return nullptr;
         }
 
         std::vector<char> buf(strLen + 1);
         status = napi_get_value_string_utf8(env, result, buf.data(), strLen + 1, &strLen);
         if (status != napi_ok) {
-            APP_LOGI("%{public}s called, Get locale tag failed", __func__);
+            APP_LOGI("Get locale tag failed");
             return nullptr;
         }
         stringArray.push_back(std::string(buf.data()));
@@ -520,7 +500,7 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
     for (uint32_t index = 0; index < jsProCount; index++) {
         NAPI_CALL_BASE(env, napi_get_element(env, jsProNameList, index, &jsProName), false);
         std::string strProName = UnwrapStringFromJS(env, jsProName, std::string());
-        APP_LOGD("%{public}s called. Property name=%{public}s.", __func__, strProName.c_str());
+        APP_LOGD("Property name=%{public}s", strProName.c_str());
         NAPI_CALL_BASE(env, napi_get_named_property(env, arg, strProName.c_str(), &jsProValue), false);
         NAPI_CALL_BASE(env, napi_typeof(env, jsProValue, &jsValueType), false);
 
@@ -559,28 +539,27 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 
 napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc)
 {
-    APP_LOGD("%{public}s,called", __func__);
     size_t argcPromise = 3;
     if (argc < argcPromise) {
-        APP_LOGI("%{public}s called, param count is wrong", __func__);
+        APP_LOGI("param count is wrong");
         return nullptr;
     }
 
     // unwrap the param[0]
     if (UnwrapStringParam(param.src, env, args[0]) == nullptr) {
-        APP_LOGI("%{public}s called, args[0] error", __func__);
+        APP_LOGI("src unwrap error");
         return nullptr;
     }
 
     // unwrap the param[1]
     if (UnwrapStringParam(param.dest, env, args[1]) == nullptr) {
-        APP_LOGI("%{public}s called, args[1] error", __func__);
+        APP_LOGI("dest unwrap error");
         return nullptr;
     }
 
     // unwrap the param[2]
     if (!UnwrapOptionsParams(param.options, env, args[2])) {
-        APP_LOGI("%{public}s called, args[2] error", __func__);
+        APP_LOGI("options unwrap error");
         return nullptr;
     }
     // create reutrn
@@ -591,7 +570,6 @@ napi_value UnwrapZipParam(CallZipUnzipParam &param, napi_env env, napi_value *ar
 
 napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *args, size_t argc)
 {
-    APP_LOGD("%{public}s,called", __func__);
     size_t argcPromise = 3;
     if (argc < argcPromise) {
         return nullptr;
@@ -622,14 +600,13 @@ napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *
  */
 napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("%{public}s,called", __func__);
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     napi_value ret = 0;
     size_t argcAsync = 4;
     const size_t argcPromise = 3;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
+        APP_LOGE("Wrong argument count");
         return nullptr;
     }
 
@@ -644,30 +621,29 @@ napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
 
 napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackInfo *asyncZipCallbackInfo)
 {
-    APP_LOGD("%{public}s,called", __func__);
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     napi_value thisArg = nullptr;
     size_t argcAsync = 4;
     const size_t argcPromise = 3;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, &thisArg, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
+        APP_LOGE("Wrong argument count");
         return nullptr;
     }
     if (thisArg == nullptr) {
-        APP_LOGE("%{public}s, This argument is nullptr.", __func__);
+        APP_LOGE("thisArg is nullptr");
         return nullptr;
     }
     napi_valuetype valueTypeOfThis = napi_undefined;
     NAPI_CALL_BASE(env, napi_typeof(env, thisArg, &valueTypeOfThis), nullptr);
     if (valueTypeOfThis == napi_undefined) {
-        APP_LOGE("%{public}s, Wrong this value.", __func__);
+        APP_LOGE("Wrong this value");
         return nullptr;
     }
 
     CallZipUnzipParam param;
     if (UnwrapZipParam(param, env, args, argcAsync) == nullptr) {
-        APP_LOGE("%{public}s, call unwrapWant failed.", __func__);
+        APP_LOGE("unwrapWant failed");
         return nullptr;
     }
     napi_value promise = nullptr;
@@ -709,12 +685,12 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
     size_t argcPromise = 3;
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync < argcPromise || argcAsync > ARGS_MAX_COUNT) {
-        APP_LOGE("%{public}s, Wrong argument count.", __func__);
+        APP_LOGE("Wrong argument count");
         return nullptr;
     }
     CallZipUnzipParam param;
     if (UnwrapUnZipParam(param, env, args, argcAsync) == nullptr) {
-        APP_LOGE("%{public}s, call unwrap param failed.", __func__);
+        APP_LOGE("unwrap param failed");
         return nullptr;
     }
     AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
@@ -809,19 +785,19 @@ napi_value CompressFile(napi_env env, napi_callback_info info)
     APP_LOGD("napi begin CompressFile");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
-        APP_LOGE("init args failed!");
+        APP_LOGE("init args failed");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
         return nullptr;
     }
     CallZipUnzipParam param;
     if (!InitParam(param, env, args, true)) {
-        APP_LOGE("Init Param failed!");
+        APP_LOGE("Init Param failed");
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
         return nullptr;
     }
     AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
     if (asyncZipCallbackInfo == nullptr) {
-        APP_LOGE("asyncZipCallbackInfo nullptr!");
+        APP_LOGE("asyncZipCallbackInfo nullptr");
         return nullptr;
     }
     asyncZipCallbackInfo->param = param;

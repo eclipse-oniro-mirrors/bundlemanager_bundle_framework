@@ -81,7 +81,7 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
 {
     GetLauncherAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetLauncherAbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<GetLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -146,7 +146,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     APP_LOGI("GetLauncherAbilityInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -182,7 +182,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     napi_value nLauncherAbilityInfos = nullptr;
     NAPI_CALL(env, napi_create_array(env, &nLauncherAbilityInfos));
     CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nLauncherAbilityInfos);
-    APP_LOGI("call GetLauncherAbilityInfoSync done.");
+    APP_LOGI("call GetLauncherAbilityInfoSync done");
     return nLauncherAbilityInfos;
 }
 
@@ -212,7 +212,7 @@ void GetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *d
 {
     GetAllLauncherAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllLauncherAbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<GetAllLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -293,7 +293,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
 {
     GetShortcutInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetShortcutInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<GetShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -354,7 +354,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     APP_LOGI("GetShortcutInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -384,7 +384,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     napi_value nShortcutInfos = nullptr;
     NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
-    APP_LOGI("call GetShortcutInfoSync done.");
+    APP_LOGI("call GetShortcutInfoSync done");
     return nShortcutInfos;
 }
 

@@ -373,7 +373,7 @@ napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info)
     std::unique_ptr<AllBundleResourceInfoCallback> callbackPtr {asyncCallbackInfo};
     int32_t flags = 0;
     if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], flags)) {
-        APP_LOGE("Flags %{public}d invalid!", flags);
+        APP_LOGE("Flags %{public}d invalid", flags);
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
         return nullptr;
     }
@@ -469,7 +469,7 @@ napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info in
     std::unique_ptr<AllLauncherAbilityResourceInfoCallback> callbackPtr {asyncCallbackInfo};
     int32_t flags = 0;
     if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], flags)) {
-        APP_LOGE("Flags %{public}d invalid!", flags);
+        APP_LOGE("Flags %{public}d invalid", flags);
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, RESOURCE_FLAGS, TYPE_NUMBER);
         return nullptr;
     }

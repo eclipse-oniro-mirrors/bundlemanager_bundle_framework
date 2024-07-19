@@ -35,6 +35,7 @@ const std::string BUNDLE_NAME = "com.ohos.cloneinstall";
 const std::string MODULE_NAME_TEST = "moduleName";
 const std::int32_t installer = 1;
 const std::int32_t userId_ = 9989;
+const std::int32_t uid_ = 1;
 constexpr int32_t  CLONE_NUM = 4;
 }
 
@@ -56,6 +57,7 @@ public:
     std::shared_ptr<AppExecFwk::BundleCloneInstaller>  bundleCloneInstall_ = nullptr;
     int64_t installerId_ = 1;
     int32_t appIdx_ = 0;
+    int32_t appIdx2_ = 2;
     int32_t appIdxs_[CLONE_NUM] = {0};
 };
 
@@ -211,5 +213,49 @@ HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_002, TestSize.
 {
     EXPECT_EQ(bundleCloneInstall_->InstallCloneApp("", userId_, appIdx_),
         ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_003
+ * @tc.name: BmsBundleCloneInstallerTest
+ * @tc.desc: test UninstallCloneApp()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_003, TestSize.Level1)
+{
+    std::string bundleName = "bundleName";
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp("", userId_, appIdx_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME);
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX);
+    EXPECT_EQ(bundleCloneInstall_->UninstallCloneApp(bundleName, userId_, appIdx2_),
+        ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_004
+ * @tc.name: CreateCloneDataDir
+ * @tc.desc: test CreateCloneDataDir()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_004, TestSize.Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = 100;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    EXPECT_EQ(bundleCloneInstall_->CreateCloneDataDir(innerBundleInfo, userId_, uid_, appIdx_),
+        ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleCloneInstallerTest_005
+ * @tc.name: RemoveCloneDataDir
+ * @tc.desc: test RemoveCloneDataDir()
+ */
+HWTEST_F(BmsBundleCloneInstallerTest, BmsBundleCloneInstallerTest_005, TestSize.Level1)
+{
+    EXPECT_EQ(
+        bundleCloneInstall_->RemoveCloneDataDir("", userId_, appIdx_), ERR_APPEXECFWK_CLONE_INSTALL_INTERNAL_ERROR);
 }
 }

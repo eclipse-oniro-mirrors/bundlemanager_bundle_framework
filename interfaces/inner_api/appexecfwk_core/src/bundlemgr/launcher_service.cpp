@@ -33,7 +33,7 @@ const char* EMPTY_STRING = "";
 
 void LauncherService::LauncherServiceDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
 {
-    APP_LOGD("BundleManagerService dead.");
+    APP_LOGD("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     bundleMgr_ = nullptr;
 };
@@ -398,7 +398,7 @@ ErrCode LauncherService::GetShortcutInfoV9(
 
 void LauncherService::OnDeath()
 {
-    APP_LOGD("BundleManagerService dead.");
+    APP_LOGD("BundleManagerService dead");
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     bundleMgr_ = nullptr;
 }

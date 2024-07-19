@@ -73,7 +73,7 @@ static bool ParseType(napi_env env, napi_value value, std::string& result)
     }
     size_t size = 0;
     if (napi_get_value_string_utf8(env, value, nullptr, NAPI_RETURN_ZERO, &size) != napi_ok) {
-        APP_LOGE("napi_get_value_string_utf8 error.");
+        APP_LOGE("napi_get_value_string_utf8 error");
         return false;
     }
     result.reserve(size + 1);
@@ -92,22 +92,22 @@ static OHOS::sptr<OHOS::AppExecFwk::IDefaultApp> GetDefaultAppProxy()
 {
     auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityManager == nullptr) {
-        APP_LOGE("systemAbilityManager is null.");
+        APP_LOGE("systemAbilityManager is null");
         return nullptr;
     }
     auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     if (bundleMgrSa == nullptr) {
-        APP_LOGE("bundleMgrSa is null.");
+        APP_LOGE("bundleMgrSa is null");
         return nullptr;
     }
     auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
     if (bundleMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
+        APP_LOGE("iface_cast failed");
         return nullptr;
     }
     auto defaultAppProxy = bundleMgr->GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
-        APP_LOGE("GetDefaultAppProxy failed.");
+        APP_LOGE("GetDefaultAppProxy failed");
         return nullptr;
     }
     return defaultAppProxy;
@@ -259,7 +259,7 @@ void IsDefaultApplicationComplete(napi_env env, napi_status status, void *data)
 {
     DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -294,7 +294,7 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
-                APP_LOGE("type invalid!");
+                APP_LOGE("type invalid");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
@@ -372,7 +372,7 @@ napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
     NAPI_CALL(env, napi_get_boolean(env, isDefaultApp, &nRet));
-    APP_LOGD("call ResetDefaultApplicationSync done.");
+    APP_LOGD("call ResetDefaultApplicationSync done");
     return nRet;
 }
 
@@ -406,7 +406,7 @@ void GetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
 {
     DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -443,7 +443,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
-                APP_LOGE("type invalid!");
+                APP_LOGE("type invalid");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
@@ -453,7 +453,7 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -535,7 +535,7 @@ napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info)
     napi_value nBundleInfo = nullptr;
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     ConvertBundleInfo(env, nBundleInfo, bundleInfo);
-    APP_LOGD("call GetDefaultApplicationSync done.");
+    APP_LOGD("call GetDefaultApplicationSync done");
     return nBundleInfo;
 }
 
@@ -569,7 +569,7 @@ void SetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
 {
     DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -604,7 +604,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
-                APP_LOGE("type invalid!");
+                APP_LOGE("type invalid");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
@@ -620,7 +620,7 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else if (i == ARGS_POS_THREE) {
             if (valueType == napi_function) {
@@ -708,7 +708,7 @@ napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    APP_LOGD("call SetDefaultApplicationSync done.");
+    APP_LOGD("call SetDefaultApplicationSync done");
     return nRet;
 }
 
@@ -742,7 +742,7 @@ void ResetDefaultApplicationComplete(napi_env env, napi_status status, void *dat
 {
     DefaultAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<DefaultAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<DefaultAppCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -777,7 +777,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!ParseType(env, args[i], asyncCallbackInfo->type)) {
-                APP_LOGE("type invalid!");
+                APP_LOGE("type invalid");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
                 return nullptr;
             }
@@ -787,7 +787,7 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -867,7 +867,7 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
         return nRet;
     }
 
-    APP_LOGD("call ResetDefaultApplicationSync done.");
+    APP_LOGD("call ResetDefaultApplicationSync done");
     return nRet;
 }
 }

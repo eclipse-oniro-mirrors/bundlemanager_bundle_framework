@@ -47,7 +47,8 @@ enum class BMSEventType {
     QUERY_OF_CONTINUE_TYPE,
     AOT_COMPILE_SUMMARY,
     AOT_COMPILE_RECORD,
-    CPU_SCENE_ENTRY
+    CPU_SCENE_ENTRY,
+    FREE_INSTALL_EVENT
 };
 
 enum class BundleEventType {
@@ -137,6 +138,8 @@ struct EventInfo {
     int32_t sceneId = 0;
     std::string processName;
     int32_t appIndex = 0;
+    //for free install event
+    bool isFreeInstall = false;
 
     void Reset()
     {
@@ -174,6 +177,7 @@ struct EventInfo {
         sceneId = 0;
         processName.clear();
         appIndex = 0;
+        isFreeInstall = false;
     }
 };
 
@@ -252,6 +256,16 @@ public:
         const std::string &abilityName, ErrCode errCode, int32_t userId, const std::string &continueType);
 
     static void SendCpuSceneEvent(const std::string &processName, const int32_t sceneId);
+    /**
+     *@brief send free install event
+     *@param bundleName Indicates the bundleName.
+     *@param abilityName Indicates the abilityName.
+     *@param moduleName Indicates the moduleName.
+     *@param isFreeInstall Indicates the isFreeInstall.
+     *@param timeStamp Indicates the timeStamp.
+     */
+    static void SendFreeInstallEvent(const std::string &bundleName, const std::string &abilityName,
+        const std::string &moduleName, bool isFreeInstall, int64_t timeStamp);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -237,7 +237,6 @@ private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
 
-    ErrCode ChmodBundleDataDir(const CreateDirParam &createDirParam);
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         unsigned int hapFlags);
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);

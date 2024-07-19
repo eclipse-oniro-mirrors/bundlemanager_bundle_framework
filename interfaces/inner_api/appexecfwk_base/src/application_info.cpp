@@ -132,6 +132,7 @@ const std::string APP_ENVIRONMENTS_VALUE = "value";
 const std::string APPLICATION_APP_INDEX = "appIndex";
 const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const std::string APPLICATION_INSTALL_SOURCE = "installSource";
+const std::string APPLICATION_CONFIGURATION = "configuration";
 }
 
 bool MultiAppModeData::ReadFromParcel(Parcel &parcel)
@@ -580,6 +581,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appIndex = parcel.ReadInt32();
     maxChildProcess = parcel.ReadInt32();
     installSource = Str16ToStr8(parcel.ReadString16());
+
+    configuration = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -750,6 +753,8 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxChildProcess);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
     return true;
 }
 
@@ -793,7 +798,7 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         }
     }
     if (preloadModules.empty()) {
-        APP_LOGD("the module have no preloads.");
+        APP_LOGD("the module have no preloads");
         return false;
     }
     for (const ModuleInfo &moduleInfo : moduleInfos) {
@@ -803,10 +808,10 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         }
     }
     if (preloadModules.empty()) {
-        APP_LOGD("all preload modules exist locally.");
+        APP_LOGD("all preload modules exist locally");
         return false;
     }
-    APP_LOGD("need to process preload.");
+    APP_LOGD("need to process preload");
     return true;
 }
 
@@ -999,7 +1004,8 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
         {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess},
-        {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource}
+        {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
+        {APPLICATION_CONFIGURATION, applicationInfo.configuration}
     };
 }
 
@@ -1193,6 +1199,8 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         applicationInfo.maxChildProcess, JsonType::NUMBER, false, parseResult, ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_INSTALL_SOURCE,
         applicationInfo.installSource, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd, APPLICATION_CONFIGURATION,
+        applicationInfo.configuration, JsonType::STRING, false, parseResult, ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error : %{public}d", parseResult);
     }

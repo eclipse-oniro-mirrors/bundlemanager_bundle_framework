@@ -85,13 +85,13 @@ DefaultAppMgr& DefaultAppMgr::GetInstance()
 
 DefaultAppMgr::DefaultAppMgr()
 {
-    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppMgr.");
+    LOG_D(BMS_TAG_DEFAULT, "create DefaultAppMgr");
     Init();
 }
 
 DefaultAppMgr::~DefaultAppMgr()
 {
-    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppMgr.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy DefaultAppMgr");
     defaultAppDb_->UnRegisterDeathListener();
 }
 
@@ -576,7 +576,7 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
 
 bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
-    LOG_D(BMS_TAG_DEFAULT, "begin to verify browser skills.");
+    LOG_D(BMS_TAG_DEFAULT, "begin to verify browser skills");
     Want httpWant;
     httpWant.SetAction(ACTION_VIEW_DATA);
     httpWant.AddEntity(ENTITY_BROWSER);
@@ -592,7 +592,7 @@ bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
             return true;
         }
     }
-    LOG_W(BMS_TAG_DEFAULT, "browser skills is invalid.");
+    LOG_W(BMS_TAG_DEFAULT, "browser skills is invalid");
     return false;
 }
 
@@ -627,7 +627,7 @@ bool DefaultAppMgr::IsUserIdExist(int32_t userId) const
 {
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT, "get BundleDataMgr failed.");
+        LOG_W(BMS_TAG_DEFAULT, "get BundleDataMgr failed");
         return false;
     }
     return dataMgr->HasUserId(userId);

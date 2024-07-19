@@ -149,6 +149,7 @@ const std::string EMPTY_STRING = "";
 const std::string TEST_DATA_GROUP_ID = "1";
 const std::string TEST_URI_HTTPS = "https://www.test.com";
 const std::string TEST_URI_HTTP = "http://www.test.com";
+const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -2861,6 +2862,54 @@ HWTEST_F(BmsBundleDataMgrTest, TestGetShortcutInfos_0100, Function | MediumTest 
 }
 
 /**
+ * @tc.number: TestGetShortcutInfos_0200
+ * @tc.name: test GetShortcutInfos without abilityInfo metadata
+ * @tc.desc: 1.GetShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestGetShortcutInfos_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<ShortcutInfo> shortcutInfos;
+    info.isNewVersion_ = true;
+    info.innerModuleInfos_.clear();
+
+    AbilityInfo abilityInfo;
+    abilityInfo.resourcePath = RESOURCE_PATH;
+    abilityInfo.hapPath = HAP_FILE_PATH;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.entryAbilityKey = ABILITY_NAME_TEST;
+    info.innerModuleInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerModuleInfo));
+    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, abilityInfo));
+    info.GetShortcutInfos(shortcutInfos);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: TestGetShortcutInfos_0300
+ * @tc.name: test GetShortcutInfos with wrong abilityInfo
+ * @tc.desc: 1.GetShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestGetShortcutInfos_0300, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<ShortcutInfo> shortcutInfos;
+    info.isNewVersion_ = true;
+    info.innerModuleInfos_.clear();
+
+    AbilityInfo abilityInfo;
+    Metadata metadata(META_DATA_SHORTCUTS_NAME, BUNDLE_LABEL, MAIN_ENTRY);
+    abilityInfo.metadata.push_back(metadata);
+    abilityInfo.resourcePath = RESOURCE_PATH;
+    abilityInfo.hapPath = HAP_FILE_PATH;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.entryAbilityKey = ABILITY_NAME_TEST;
+    info.innerModuleInfos_.insert(std::make_pair(ABILITY_NAME_TEST, innerModuleInfo));
+    info.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME_TEST, abilityInfo));
+    info.GetShortcutInfos(shortcutInfos);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
  * @tc.number: TestIsAbilityEnabledV9_0100
  * @tc.name: test IsAbilityEnabledV9
  * @tc.desc: 1.IsAbilityEnabledV9
@@ -2871,6 +2920,21 @@ HWTEST_F(BmsBundleDataMgrTest, TestIsAbilityEnabledV9_0100, Function | MediumTes
     AbilityInfo abilityInfo;
     bool isEnable;
     ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, ServiceConstants::NOT_EXIST_USERID, isEnable);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: TestIsAbilityEnabledV9_0200
+ * @tc.name: test IsAbilityEnabledV9
+ * @tc.desc: 1.IsAbilityEnabledV9 with appIndex
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestIsAbilityEnabledV9_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    bool isEnable;
+    int32_t appIndex = 1;
+    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, ServiceConstants::NOT_EXIST_USERID, isEnable, appIndex);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -3844,6 +3908,25 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleWithReqPermissionsV9_0100, Function | Sm
 }
 
 /**
+ * @tc.number: GetBundleWithReqPermissionsV9_0200
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call GetBundleWithReqPermissionsV9 with appIndex 1
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleWithReqPermissionsV9_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    int32_t appIndex = 1;
+
+    BundleInfo bundleInfo;
+    bundleInfo.defPermissions.push_back("oho.permissions.test");
+    info.GetBundleWithReqPermissionsV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION),
+            Constants::ALL_USERID, bundleInfo, appIndex);
+    EXPECT_EQ(bundleInfo.defPermissions.size(), 1);
+}
+
+/**
  * @tc.number: ProcessBundleWithHapModuleInfoFlag_0100
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1. call ProcessBundleWithHapModuleInfoFlag, return false
@@ -3958,6 +4041,20 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0004, Function | SmallTest 
     res = bundleUserMgrHostImpl_->GetAllPreInstallBundleInfos(disallowList, USERID, preInstallBundleInfos);
     EXPECT_FALSE(res);
     bundleUserMgrHostImpl_->HandleNotifyBundleEvents();
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0500
+ * @tc.name: test HandleSceneBoard
+ * @tc.desc: test HandleSceneBoard function running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    bundleUserMgrHostImpl_->HandleSceneBoard(USERID);
+    ASSERT_NE(GetBundleDataMgr(), nullptr);
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST1);
 }
 
 /**

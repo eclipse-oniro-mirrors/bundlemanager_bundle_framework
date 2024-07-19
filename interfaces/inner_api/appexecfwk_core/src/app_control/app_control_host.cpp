@@ -28,12 +28,12 @@ namespace OHOS {
 namespace AppExecFwk {
 AppControlHost::AppControlHost()
 {
-    LOG_D(BMS_TAG_DEFAULT, "create AppControlHost.");
+    LOG_D(BMS_TAG_DEFAULT, "create AppControlHost");
 }
 
 AppControlHost::~AppControlHost()
 {
-    LOG_D(BMS_TAG_DEFAULT, "destroy AppControlHost.");
+    LOG_D(BMS_TAG_DEFAULT, "destroy AppControlHost");
 }
 
 int AppControlHost::OnRemoteRequest(
@@ -44,7 +44,7 @@ int AppControlHost::OnRemoteRequest(
     std::u16string descriptor = AppControlHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid.");
+        LOG_E(BMS_TAG_DEFAULT, "descriptor invalid");
         return OBJECT_NULL;
     }
 
@@ -326,7 +326,7 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
     int32_t userId = data.ReadInt32();
     if (want == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<Want> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedStatus(appId, *want, userId);
@@ -393,7 +393,7 @@ ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel
     std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
     int32_t userId = data.ReadInt32();
     if (disposedRule == nullptr) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_HOST), "ReadParcelable<disposedRule> failed.");
+        LOG_E(TAG_SET_DISPOSED_RULE(BMS_HOST), "ReadParcelable<disposedRule> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedRule(appId, *disposedRule, userId);
@@ -450,7 +450,7 @@ ErrCode AppControlHost::HandleSetDisposedRuleForCloneApp(MessageParcel& data, Me
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
     if (disposedRule == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed.");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedRuleForCloneApp(appId, *disposedRule, appIndex, userId);

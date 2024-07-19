@@ -1056,30 +1056,12 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_6000
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling CleanBundleDataDirByName of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
-    std::string bundleName = "com.acts.example";
-    int userid = 0;
-    int appIndex = 0;
-    ErrCode ret = installdProxy->CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_NE(ret,  ERR_OK);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_6100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling DeliverySignProfile of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1097,7 +1079,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | Sma
  * @tc.desc: 1. calling RemoveExtensionDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1114,7 +1096,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | Sma
  * @tc.desc: 1. calling RemoveExtensionDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1132,7 +1114,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | Sma
  * @tc.desc: 1. calling RemoveExtensionDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1150,7 +1132,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | Sma
  * @tc.desc: 1. calling IsExistExtensionDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1168,7 +1150,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | Sma
  * @tc.desc: 1. calling CreateExtensionDataDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1186,7 +1168,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | Sma
  * @tc.desc: 1. calling CreateExtensionDataDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);

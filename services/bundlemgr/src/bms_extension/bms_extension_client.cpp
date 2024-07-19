@@ -348,6 +348,34 @@ ErrCode BmsExtensionClient::GetBundleNameByUid(int32_t uid, std::string &bundleN
     return bmsExtensionImpl_->GetBundleNameByUid(uid, bundleName);
 }
 
+ErrCode BmsExtensionClient::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->AddResourceInfoByBundleName(bundleName, userId);
+}
+
+ErrCode BmsExtensionClient::AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const int32_t userId)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+}
+
+ErrCode BmsExtensionClient::DeleteResourceInfo(const std::string &key)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->DeleteResourceInfo(key);
+}
+
 void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const
 {
     if (abilityInfo.labelId == 0) {

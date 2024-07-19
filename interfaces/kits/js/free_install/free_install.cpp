@@ -70,7 +70,7 @@ void IsHapModuleRemovableExec(napi_env env, void *data)
 {
     HapModuleRemovableCallbackInfo *asyncCallbackInfo = reinterpret_cast<HapModuleRemovableCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
     asyncCallbackInfo->err = InnerIsHapModuleRemovable(asyncCallbackInfo->bundleName,
@@ -81,7 +81,7 @@ void IsHapModuleRemovableComplete(napi_env env, napi_status status, void *data)
 {
     HapModuleRemovableCallbackInfo *asyncCallbackInfo = reinterpret_cast<HapModuleRemovableCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<HapModuleRemovableCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -102,7 +102,7 @@ napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
     APP_LOGD("NAPI_IsHapModuleRemovable start");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
-        APP_LOGE("param count invalid.");
+        APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -162,7 +162,7 @@ void SetHapModuleUpgradeFlagExec(napi_env env, void *data)
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<SetHapModuleUpgradeFlagCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
     asyncCallbackInfo->err = InnerSetHapModuleUpgradeFlag(asyncCallbackInfo->bundleName,
@@ -174,7 +174,7 @@ void SetHapModuleUpgradeFlagComplete(napi_env env, napi_status status, void *dat
     SetHapModuleUpgradeFlagCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<SetHapModuleUpgradeFlagCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<SetHapModuleUpgradeFlagCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -565,7 +565,7 @@ void GetBundlePackInfoExec(napi_env env, void *data)
     GetBundlePackInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<GetBundlePackInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
     asyncCallbackInfo->err = InnerGetBundlePackInfo(asyncCallbackInfo->bundleName,
@@ -576,7 +576,7 @@ void GetBundlePackInfoComplete(napi_env env, napi_status status, void *data)
 {
     GetBundlePackInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetBundlePackInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<GetBundlePackInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -679,7 +679,7 @@ void GetDispatchInfoExec(napi_env env, void *data)
     GetDispatchInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<GetDispatchInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
     asyncCallbackInfo->err = InnerGetDispatchInfo(asyncCallbackInfo->version, asyncCallbackInfo->dispatchAPI);
@@ -689,7 +689,7 @@ void GetDispatchInfoComplete(napi_env env, napi_status status, void *data)
 {
     GetDispatchInfoCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetDispatchInfoCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<GetDispatchInfoCallbackInfo> callbackPtr {asyncCallbackInfo};

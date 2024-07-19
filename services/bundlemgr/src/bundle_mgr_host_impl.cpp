@@ -649,12 +649,12 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(BMS_TAG_QUERY, "check is system app failed.");
+        LOG_E(BMS_TAG_QUERY, "check is system app failed");
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        LOG_E(BMS_TAG_QUERY, "verify permission failed.");
+        LOG_E(BMS_TAG_QUERY, "verify permission failed");
         return false;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
@@ -724,10 +724,10 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 bool BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
     if (!BundlePermissionMgr::VerifyPreload(want)) {
-        APP_LOGE("ProcessPreload verify failed.");
+        APP_LOGE("ProcessPreload verify failed");
         return false;
     }
-    APP_LOGD("begin to process preload.");
+    APP_LOGD("begin to process preload");
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
@@ -1311,7 +1311,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFilesAutomatic(uint64_t cacheSize)
     std::vector<RunningProcessInfo> runningList;
     int result = appMgrProxy->GetAllRunningProcesses(runningList);
     if (result != ERR_OK) {
-        APP_LOGE("GetAllRunningProcesses failed.");
+        APP_LOGE("GetAllRunningProcesses failed");
         return ERR_BUNDLE_MANAGER_GET_ALL_RUNNING_PROCESSES_FAILED;
     }
 
@@ -1460,7 +1460,7 @@ bool BundleMgrHostImpl::CheckAppIndex(const std::string &bundleName, int32_t use
     std::vector<int32_t> appIndexes = dataMgr->GetCloneAppIndexes(bundleName, userId);
     bool isAppIndexValid = std::find(appIndexes.cbegin(), appIndexes.cend(), appIndex) == appIndexes.cend();
     if (isAppIndexValid) {
-        APP_LOGE("appIndex is not in the installed appIndexes range.");
+        APP_LOGE("appIndex is not in the installed appIndexes range");
         return false;
     }
     return true;
@@ -2078,7 +2078,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
 
     auto ret = dataMgr->SetApplicationEnabled(bundleName, 0, isEnable, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("Set application(%{public}s) enabled value faile.", bundleName.c_str());
+        APP_LOGE("Set application(%{public}s) enabled value faile", bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
         return ret;
     }
@@ -2219,7 +2219,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     }
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, 0, isEnabled, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("Set ability(%{public}s) enabled value failed.", abilityInfo.bundleName.c_str());
+        APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, 0);
         return ret;
@@ -2269,7 +2269,7 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
     }
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("Set ability(%{public}s) enabled value failed.", abilityInfo.bundleName.c_str());
+        APP_LOGE("Set ability(%{public}s) enabled value failed", abilityInfo.bundleName.c_str());
         EventReport::SendComponentStateSysEventForException(abilityInfo.bundleName, abilityInfo.name,
             userId, isEnabled, appIndex);
         return ret;
@@ -2435,12 +2435,12 @@ bool BundleMgrHostImpl::GetAllCommonEventInfo(const std::string &eventKey,
 {
     APP_LOGD("start GetAllCommonEventInfo, eventKey : %{public}s", eventKey.c_str());
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed.");
+        APP_LOGE("verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr.");
+        APP_LOGE("DataMgr is nullptr");
         return false;
     }
     return dataMgr->GetAllCommonEventInfo(eventKey, commonEventInfos);
@@ -3085,12 +3085,12 @@ bool BundleMgrHostImpl::GetAllBundleStats(int32_t userId, std::vector<int64_t> &
 {
     if (!BundlePermissionMgr::VerifyCallingPermissionsForAll({Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED,
         Constants::PERMISSION_GET_BUNDLE_INFO})) {
-        APP_LOGE("verify permission failed.");
+        APP_LOGE("verify permission failed");
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr.");
+        APP_LOGE("DataMgr is nullptr");
         return false;
     }
     return dataMgr->GetAllBundleStats(userId, bundleStats);
@@ -3756,7 +3756,7 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
 
 ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
 {
-    APP_LOGD("Called. BundleName: %{public}s.", bundleName.c_str());
+    APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("Non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;

@@ -201,5 +201,14 @@ ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo,
     }
     return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
+
+ErrCode BundleMgrClient::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    return impl_->InstallHmpBundle(filePath, isNeedRollback);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -9347,5 +9347,100 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameAndIndexForUid_0100, Function | MediumTest
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetNameAndIndexForUid_0100" << std::endl;
 }
+
+/**
+ * @tc.number: AddResourceInfoByBundleName_0001
+ * @tc.name: test BundleResourceProxy
+ * @tc.desc: 1.call AddResourceInfoByBundleName
+ */
+HWTEST_F(ActsBmsKitSystemTest, AddResourceInfoByBundleName_0001, Function | SmallTest | Level1)
+{
+    APP_LOGD("AddResourceInfoByBundleName_0001 start");
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::cout << "START AddResourceInfoByBundleName_0001 bundleMgrProxy is null" << std::endl;
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::cout << "START AddResourceInfoByBundleName_0001 proxy is null" << std::endl;
+            ErrCode ret = proxy->AddResourceInfoByBundleName(EMPTY_BUNDLE_NAME, USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+            ret = proxy->AddResourceInfoByBundleName(BASE_BUNDLE_NAME, -USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+            ret = proxy->AddResourceInfoByBundleName(BASE_BUNDLE_NAME, USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        } else {
+            APP_LOGE("AddResourceInfoByBundleName_0001 proxy is null");
+        }
+    } else {
+        APP_LOGE("AddResourceInfoByBundleName_0001 bundleMgrProxy is null");
+    }
+    APP_LOGD("AddResourceInfoByBundleName_0001 end");
+}
+
+/**
+ * @tc.number: AddResourceInfoByAbility_0001
+ * @tc.name: test BundleResourceProxy
+ * @tc.desc: 1.call AddResourceInfoByAbility
+ */
+HWTEST_F(ActsBmsKitSystemTest, AddResourceInfoByAbility_0001, Function | SmallTest | Level1)
+{
+    APP_LOGD("AddResourceInfoByAbility_0001 start");
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        std::cout << "AddResourceInfoByAbility_0001 bundleMgrProxy is null" << std::endl;
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::cout << "AddResourceInfoByAbility_0001 proxy is null" << std::endl;
+            ErrCode ret = proxy->AddResourceInfoByAbility(EMPTY_BUNDLE_NAME, BASE_MODULE_NAME, BASE_ABILITY_NAME,
+                USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+            ret = proxy->AddResourceInfoByAbility(BASE_BUNDLE_NAME, "", BASE_ABILITY_NAME, USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+            ret = proxy->AddResourceInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, "", USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+            ret = proxy->AddResourceInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, BASE_ABILITY_NAME, -USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+            ret = proxy->AddResourceInfoByAbility(BASE_BUNDLE_NAME, BASE_MODULE_NAME, BASE_ABILITY_NAME, USERID);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        } else {
+            APP_LOGE("AddResourceInfoByAbility_0001 proxy is null");
+        }
+    } else {
+        APP_LOGE("AddResourceInfoByAbility_0001 bundleMgrProxy is null");
+    }
+    APP_LOGD("AddResourceInfoByAbility_0001 end");
+}
+
+/**
+ * @tc.number: DeleteResourceInfo_0001
+ * @tc.name: test BundleResourceProxy
+ * @tc.desc: 1.call DeleteResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, DeleteResourceInfo_0001, Function | SmallTest | Level1)
+{
+    APP_LOGD("DeleteResourceInfo_0001 start");
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            ErrCode ret = proxy->DeleteResourceInfo("");
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+            ret = proxy->DeleteResourceInfo(BASE_BUNDLE_NAME);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        } else {
+            APP_LOGE("DeleteResourceInfo_0001 proxy is null");
+        }
+    } else {
+        APP_LOGE("DeleteResourceInfo_0001 bundleMgrProxy is null");
+    }
+    APP_LOGD("DeleteResourceInfo_0001 end");
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

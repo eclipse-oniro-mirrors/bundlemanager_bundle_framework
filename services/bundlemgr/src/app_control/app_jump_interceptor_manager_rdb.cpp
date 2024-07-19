@@ -59,16 +59,16 @@ AppJumpInterceptorManagerRdb::~AppJumpInterceptorManagerRdb()
 bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
 {
     if (eventSubscriber_ != nullptr) {
-        LOG_I(BMS_TAG_DEFAULT, "subscribeCommonEvent already subscribed.");
+        LOG_I(BMS_TAG_DEFAULT, "subscribeCommonEvent already subscribed");
         return true;
     }
     eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(shared_from_this());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->RegisterBundleEventCallback(eventSubscriber_)) {
-        LOG_E(BMS_TAG_DEFAULT, "subscribeCommonEvent subscribed failure.");
+        LOG_E(BMS_TAG_DEFAULT, "subscribeCommonEvent subscribed failure");
         return false;
     };
-    LOG_I(BMS_TAG_DEFAULT, "subscribeCommonEvent subscribed success.");
+    LOG_I(BMS_TAG_DEFAULT, "subscribeCommonEvent subscribed success");
     return true;
 }
 
@@ -102,11 +102,11 @@ ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<Ap
     int64_t insertNum = 0;
     bool ret = rdbDataManager_->BatchInsert(insertNum, valuesBuckets);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppJumpControlRule failed.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert AddAppJumpControlRule failed");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (valuesBuckets.size() != static_cast<uint64_t>(insertNum)) {
-        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected.");
+        LOG_E(BMS_TAG_DEFAULT, "BatchInsert size not expected");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -138,7 +138,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByCallerBundleName(const std::st
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByCallerBundleName callerBundleName:%{public}s, failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByCallerBundleName callerBundleName:%{public}s, failed",
             callerBundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -152,7 +152,7 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByTargetBundleName(const std::st
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByTargetBundleName targetBundleName:%{public}s, failed.",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteRuleByTargetBundleName targetBundleName:%{public}s, failed",
             targetBundleName.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }

@@ -35,7 +35,7 @@ AgingHandlerChain::~AgingHandlerChain()
 void AgingHandlerChain::AddHandler(const std::shared_ptr<AgingHandler> &handler)
 {
     if (handler == nullptr) {
-        APP_LOGE("agingHandler: invalid handler.");
+        APP_LOGE("agingHandler: invalid handler");
         return;
     }
 
@@ -45,7 +45,7 @@ void AgingHandlerChain::AddHandler(const std::shared_ptr<AgingHandler> &handler)
 bool AgingHandlerChain::Process(AgingRequest &request) const
 {
     if (!request.IsReachStartAgingThreshold()) {
-        APP_LOGI("Not reach agingThreshold and not need aging.");
+        APP_LOGI("Not reach agingThreshold and not need aging");
         return true;
     }
 
@@ -58,7 +58,7 @@ bool AgingHandlerChain::Process(AgingRequest &request) const
         }
     }
 
-    APP_LOGD("agingHandler: aging handler chain process done.");
+    APP_LOGD("agingHandler: aging handler chain process done");
     return isPassed;
 }
 

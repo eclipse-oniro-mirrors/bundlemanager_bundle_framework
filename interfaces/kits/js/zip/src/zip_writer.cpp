@@ -36,22 +36,19 @@ std::mutex g_mutex;;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 {
-    APP_LOGD("%{public}s called", __func__);
     char buf[kZipBufSize];
     if (!FilePathCheckValid(file_path.Value())) {
-        APP_LOGI(
-            "%{public}s called, filePath is invalid!!! file_path=%{public}s", __func__, file_path.Value().c_str());
+        APP_LOGI("filePath is invalid file_path=%{public}s", file_path.Value().c_str());
         return false;
     }
     if (!FilePath::PathIsValid(file_path)) {
-        APP_LOGI("!!! %{public}s called PathIsValid returns false !!!", __func__);
+        APP_LOGI("PathIsValid returns false");
         return false;
     }
 
     FILE *fp = fopen(file_path.Value().c_str(), "rb");
     if (fp == nullptr) {
-        APP_LOGI("%{public}s called, filePath to realPath failed! filePath:%{private}s,errno:%{public}s",
-            __func__,
+        APP_LOGI("filePath to realPath failed filePath:%{private}s errno:%{public}s",
             file_path.Value().c_str(), strerror(errno));
         return false;
     }
@@ -61,8 +58,7 @@ bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
         num_bytes = fread(buf, 1, kZipBufSize, fp);
         if (num_bytes > 0) {
             if (zipWriteInFileInZip(zip_file, buf, num_bytes) != ZIP_OK) {
-                APP_LOGI("%{public}s called, Could not write data to zip for path:%{private}s ",
-                    __func__, file_path.Value().c_str());
+                APP_LOGI("Could not write data to zip for path:%{private}s ", file_path.Value().c_str());
                 fclose(fp);
                 fp = nullptr;
                 return false;
@@ -79,7 +75,6 @@ bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 bool OpenNewFileEntry(
     zipFile zip_file, FilePath &path, bool isDirectory, struct tm *lastModified, const OPTIONS &options)
 {
-    APP_LOGD("%{public}s called", __func__);
     std::string strPath = path.Value();
 
     if (isDirectory) {
@@ -91,14 +86,11 @@ bool OpenNewFileEntry(
 
 bool CloseNewFileEntry(zipFile zip_file)
 {
-    APP_LOGD("%{public}s called", __func__);
     return zipCloseFileInZip(zip_file) == ZIP_OK;
 }
 
 bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absolutePath, const OPTIONS &options)
 {
-    APP_LOGD("%{public}s called", __func__);
-
     struct tm *lastModified = GetCurrentSystemTime();
     if (lastModified == nullptr) {
         return false;
@@ -108,7 +100,7 @@ bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absol
     }
     bool success = AddFileContentToZip(zip_file, absolutePath);
     if (!CloseNewFileEntry(zip_file)) {
-        APP_LOGI("!!! CloseNewFileEntry returnValule is false !!!");
+        APP_LOGI("CloseNewFileEntry returnValule is false");
         return false;
     }
     return success;
@@ -116,7 +108,7 @@ bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absol
 
 bool AddDirectoryEntryToZip(zipFile zip_file, FilePath &path, struct tm *lastModified, const OPTIONS &options)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGI("called");
     return OpenNewFileEntry(zip_file, path, true, lastModified, options) && CloseNewFileEntry(zip_file);
 }
 
@@ -131,7 +123,7 @@ zipFile ZipWriter::InitZipFileWithFd(PlatformFile zipFilefd)
 
     zipFile zip_file = OpenFdForZipping(zipFilefd, APPEND_STATUS_CREATE);
     if (!zip_file) {
-        APP_LOGI("%{public}s called, Couldn't create ZIP file for FD", __func__);
+        APP_LOGI("Couldn't create ZIP file for FD");
         return nullptr;
     }
     return zip_file;
@@ -141,15 +133,14 @@ zipFile ZipWriter::InitZipFileWithFile(const FilePath &zip_file_path)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     FilePath zipFilePath = zip_file_path;
-    APP_LOGD("%{public}s called", __func__);
     if (zipFilePath.Value().empty()) {
-        APP_LOGI("%{public}s called, Path is empty", __func__);
+        APP_LOGI("Path is empty");
         return nullptr;
     }
 
     zipFile zip_file = OpenForZipping(zipFilePath.Value(), APPEND_STATUS_CREATE);
     if (!zip_file) {
-        APP_LOGI("%{public}s called, Couldn't create ZIP file at path", __func__);
+        APP_LOGI("Couldn't create ZIP file at path");
         return nullptr;
     }
     return zip_file;
@@ -165,7 +156,6 @@ ZipWriter::~ZipWriter()
 
 bool ZipWriter::WriteEntries(const std::vector<std::pair<FilePath, FilePath>> &paths, const OPTIONS &options)
 {
-    APP_LOGD("%{public}s called", __func__);
     return AddEntries(paths, options) && Close(options);
 }
 
@@ -202,14 +192,14 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
             bool isDir = FilePath::IsDir(absolutePath);
             if (isValid && !isDir) {
                 if (!AddFileEntryToZip(zipFile_, relativePath, absolutePath, options)) {
-                    APP_LOGI("%{public}s called, Failed to write file", __func__);
+                    APP_LOGI("Failed to write file");
                     return false;
                 }
             } else {
                 // Missing file or directory case.
                 struct tm *last_modified = GetCurrentSystemTime();
                 if (!AddDirectoryEntryToZip(zipFile_, relativePath, last_modified, options)) {
-                    APP_LOGI("%{public}s called, Failed to write directory", __func__);
+                    APP_LOGI("Failed to write directory");
                     return false;
                 }
             }
