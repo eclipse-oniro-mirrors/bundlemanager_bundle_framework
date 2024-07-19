@@ -1123,7 +1123,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
-    InnerProcessUninstallWrongBundle();
+    InnerProcessRebootUninstallWrongBundle();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -3430,7 +3430,7 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
     LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover end");
 }
 
-void BMSEventHandler::InnerProcessUninstallWrongBundle()
+void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 {
     InstallParam installParam;
     installParam.userId = Constants::DEFAULT_USERID;
