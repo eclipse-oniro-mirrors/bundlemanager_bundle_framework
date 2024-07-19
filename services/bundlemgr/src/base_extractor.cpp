@@ -135,7 +135,7 @@ bool BaseExtractor::IsStageBasedModel(std::string abilityName)
 {
     auto &entryMap = zipFile_.GetAllEntries();
     std::vector<std::string> splitStrs;
-    OHOS::SplitStr(abilityName, "", splitStrs);
+    OHOS::SplitStr(abilityName, ".", splitStrs);
     std::string name = splitStrs.empty() ? abilityName : splitStrs.back();
     std::string entry = "assets/js/" + name + "/" + name + ".js";
     bool isStageBasedModel = entryMap.find(entry) != entryMap.end();

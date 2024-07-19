@@ -108,6 +108,7 @@ constexpr const char* BMS_TRUE = "true";
 const int32_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
+    "com.ohos.formrenderservice",
     "com.ohos.sceneboard",
     "com.ohos.callui",
     "com.ohos.mms",

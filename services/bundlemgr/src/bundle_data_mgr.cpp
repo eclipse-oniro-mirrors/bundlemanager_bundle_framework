@@ -1525,7 +1525,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                 }
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_APPLICATION)) {
                     info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
-                        userId, abilityinfo.applicationInfo);
+                        userId, abilityinfo.applicationInfo, appIndex);
                 }
                 if (!CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_PERMISSION)) {
                     abilityinfo.permissions.clear();
