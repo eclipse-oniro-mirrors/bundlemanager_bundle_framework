@@ -907,7 +907,7 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
         LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
-        return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     return reply.ReadInt32();
 }
