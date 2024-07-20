@@ -28,8 +28,8 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         VerifyManagerHostImpl impl;
-        const std::string sourcePath;
-        std::string fileDir;
+        const std::string sourcePath(data, size);
+        std::string fileDir(data, size);
         auto ret1 = impl.GetFileDir(sourcePath, fileDir);
         return true;
     }
