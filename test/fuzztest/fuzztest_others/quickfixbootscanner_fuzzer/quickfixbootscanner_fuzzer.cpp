@@ -13,28 +13,49 @@
  * limitations under the License.
  */
 
+#include "quickfixbootscanner_fuzzer.h"
 #define private public
-#include "verifymanagerhostimplmkdirIfnotexist_fuzzer.h"
-
-#include <cstddef>
-#include <cstdint>
-
+#include "quick_fix_boot_scanner.h"
 #include "securec.h"
-#include "verify_manager_host_impl.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+constexpr size_t MESSAGE_SIZE = 4;
+constexpr size_t DCAMERA_SHIFT_24 = 24;
+constexpr size_t DCAMERA_SHIFT_16 = 16;
+constexpr size_t DCAMERA_SHIFT_8 = 8;
 
+uint32_t GetU32Data(const char* ptr)
+{
+    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
+}
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    VerifyManagerHostImpl impl;
-    std::string dir(data, size);
-    auto ret1 = impl.MkdirIfNotExist(dir);
+    QuickFixBootScanner quickFixBootScanner;
+    quickFixBootScanner.ProcessQuickFixBootUp();
+    std::shared_ptr<QuickFixState> state_ = nullptr;
+    quickFixBootScanner.SetQuickFixState(state_);
+    quickFixBootScanner.ProcessState();
+    quickFixBootScanner.RestoreQuickFix();
+    std::string bundlePath (reinterpret_cast<const char*>(data), size);
+    std::string realPath (reinterpret_cast<const char*>(data), size);
+    std::vector<std::string> fileDir;
+    fileDir.push_back(bundlePath);
+    quickFixBootScanner.ProcessQuickFixDir(fileDir);
+    quickFixBootScanner.ReprocessQuickFix(realPath, bundlePath);
+    std::string bundleName(data, size);
+    std::string quickFixPath(data, size);
+    ApplicationInfo info;
+    quickFixBootScanner.GetApplicationInfo(bundleName, quickFixPath, info);
+    int32_t quickFixVersion = reinterpret_cast<uintptr_t>(data);
+    int32_t fileVersion = reinterpret_cast<uintptr_t>(data);
+    quickFixBootScanner.ProcessWithBundleHasQuickFixInfo(bundleName, quickFixPath, quickFixVersion, fileVersion);
+    quickFixBootScanner.RemoveInvalidDir();
     return true;
 }
-} // namespace OHOS
+}
 
 // Fuzzer entry point.
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
