@@ -5757,6 +5757,49 @@ HWTEST_F(BmsBundleInstallerTest, UpdateHapToken_0100, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: AllowSingletonChange_0100
+ * @tc.name: test AllowSingletonChange
+ * @tc.desc: test AllowSingletonChange of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, AllowSingletonChange_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "com.acts.example";
+    bool ret = installer.AllowSingletonChange(bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ExtractHnpFileDir_0100
+ * @tc.name: test ExtractHnpFileDir
+ * @tc.desc: test ExtractHnpFileDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractHnpFileDir_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string cpuAbi;
+    std::string hnpPackageInfoString;
+    std::string modulePath;
+    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageInfoString, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: AddBundleStatus_0100
+ * @tc.name: test AddBundleStatus
+ * @tc.desc: test AddBundleStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, AddBundleStatus_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    NotifyBundleEvents installRes;
+    installRes.abilityName = "testAbilityName";
+    installer.AddBundleStatus(installRes);
+    EXPECT_NE(installer.bundleEvents_.end().base()->abilityName.c_str(),
+        installRes.abilityName.c_str());
+}
+
+/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDirWithVector
  * @tc.desc: test CreateBundleDataDirWithVector of InstalldHostImpl

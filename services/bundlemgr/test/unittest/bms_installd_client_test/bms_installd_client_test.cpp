@@ -1543,5 +1543,81 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateExtensionDataDir_020
     ErrCode result = installClient_->CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetAllBundleStats_0100
+ * @tc.name: GetAllBundleStats
+ * @tc.desc: call GetAllBundleStats.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0100, TestSize.Level1)
+{
+    std::vector<std::string> bundleNames;
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetAllBundleStats_0200
+ * @tc.name: GetAllBundleStats
+ * @tc.desc: call GetAllBundleStats.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0200, TestSize.Level1)
+{
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("com.ohos.settings");
+    bundleNames.push_back("com.ohos.photos");
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    uids.push_back(100);
+    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetAllBundleStats_0300
+ * @tc.name: GetAllBundleStats
+ * @tc.desc: call GetAllBundleStats.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetAllBundleStats_0300, TestSize.Level1)
+{
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("com.ohos.settings");
+    bundleNames.push_back("com.ohos.photos");
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    uids.push_back(100);
+    uids.push_back(101);
+    ErrCode result = installClient_->GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_RemoveSignProfile_0100
+ * @tc.name: RemoveSignProfile
+ * @tc.desc: call RemoveSignProfile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0100, TestSize.Level1)
+{
+    std::string bundleName;
+    ErrCode result = installClient_->RemoveSignProfile(bundleName);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_RemoveSignProfile_0200
+ * @tc.name: RemoveSignProfile
+ * @tc.desc: call RemoveSignProfile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveSignProfile_0200, TestSize.Level1)
+{
+    std::string bundleName = "com.acts.settings";
+    ErrCode result = installClient_->RemoveSignProfile(bundleName);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS
