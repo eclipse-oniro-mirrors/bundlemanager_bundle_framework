@@ -337,6 +337,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -1139,6 +1140,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckCloudShaderDir();
     ProcessNewBackupDir();
     RefreshQuotaForAllUid();
+    ProcessCheckRecoverableApplicationInfo();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1499,6 +1501,65 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     constexpr int32_t mode = (S_IRWXU | S_IXGRP | S_IXOTH);
     result = InstalldClient::GetInstance()->Mkdir(ServiceConstants::CLOUD_SHADER_PATH, mode, info.uid, info.gid);
     LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
+}
+
+void BMSEventHandler::ProcessCheckRecoverableApplicationInfo()
+{
+    bool hasCheck = false;
+    CheckOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO, hasCheck);
+    if (hasCheck) {
+        LOG_D(BMS_TAG_DEFAULT, "recoverable app info has checked");
+        return;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "Need to check recoverable app info");
+    InnerProcessCheckRecoverableApplicationInfo();
+    UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
+}
+
+void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        BundleInfo bundleInfo;
+        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
+            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            preInstallBundleInfo.SetSystemApp(bundleInfo.applicationInfo.isSystemApp);
+            if (bundleInfo.isNewVersion) {
+                preInstallBundleInfo.SetBundleType(bundleInfo.applicationInfo.bundleType);
+            } else if (!bundleInfo.hapModuleInfos.empty() &&
+                bundleInfo.hapModuleInfos[0].installationFree) {
+                preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+            }
+            dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+            continue;
+        }
+        BundleMgrHostImpl impl;
+        auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
+        for (auto preinstalledAppPath: preinstalledAppPaths) {
+            BundleInfo archiveBundleInfo;
+            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, archiveBundleInfo)) {
+                LOG_E(BMS_TAG_DEFAULT, "Get bundle archive info fail");
+                break;
+            }
+            preInstallBundleInfo.SetSystemApp(archiveBundleInfo.applicationInfo.isSystemApp);
+            if (archiveBundleInfo.isNewVersion) {
+                preInstallBundleInfo.SetBundleType(archiveBundleInfo.applicationInfo.bundleType);
+            } else if (!archiveBundleInfo.hapModuleInfos.empty() &&
+                archiveBundleInfo.hapModuleInfos[0].installationFree) {
+                preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+            }
+            if (!archiveBundleInfo.hapModuleInfos.empty() &&
+                archiveBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                break;
+            }
+        }
+        dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+    }
 }
 
 static void SendToStorageQuota(const std::string &bundleName, const int32_t uid,

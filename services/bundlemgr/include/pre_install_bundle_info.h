@@ -243,6 +243,26 @@ public:
     {
         iconId_ = iconId;
     }
+    
+    bool GetSystemApp() const
+    {
+        return systemApp_;
+    }
+
+    void SetSystemApp(bool systemApp)
+    {
+        systemApp_ = systemApp;
+    }
+
+    BundleType GetBundleType() const
+    {
+        return bundleType_;
+    }
+
+    void SetBundleType(BundleType bundleType)
+    {
+        bundleType_ = bundleType;
+    }
 
 private:
     std::string bundleName_;
@@ -255,6 +275,8 @@ private:
     bool removable_ = true;
     bool isUninstalled_ = false;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
+    bool systemApp_ = false;
+    BundleType bundleType_ = BundleType::APP;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
