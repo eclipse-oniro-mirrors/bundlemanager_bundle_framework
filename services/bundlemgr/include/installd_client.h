@@ -19,11 +19,13 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 
 #include "nocopyable.h"
 #include "singleton.h"
 
+#include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "ipc/installd_interface.h"
@@ -242,15 +244,31 @@ private:
     template<typename F, typename... Args>
     ErrCode CallService(F func, Args&&... args)
     {
-        if (!GetInstalldProxy()) {
-            return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
+        int32_t maxRetryTimes = 2;
+        ErrCode errCode = ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
+        for (int32_t retryTimes = 0; retryTimes < maxRetryTimes; retryTimes++) {
+            if (!GetInstalldProxy()) {
+                return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
+            }
+            {
+                std::shared_lock<std::shared_mutex> readLock(mutex_);
+                if (installdProxy_ != nullptr) {
+                    errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
+                }
+            }
+            if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
+                APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
+                ResetInstalldProxy();
+            } else {
+                return errCode;
+            }
         }
-        return (installdProxy_->*func)(std::forward<Args>(args)...);
+        return errCode;
     }
 
 private:
     bool loadSaFinished_;
-    std::mutex mutex_;
+    std::shared_mutex mutex_;
     std::mutex loadSaMutex_;
     std::mutex getProxyMutex_;
     std::condition_variable loadSaCondition_;
