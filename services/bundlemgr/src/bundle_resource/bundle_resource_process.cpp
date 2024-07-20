@@ -50,28 +50,6 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
     return true;
 }
 
-bool BundleResourceProcess::GetResourceInfo(
-    const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId,
-    std::vector<ResourceInfo> &resourceInfo)
-{
-    if (userId != Constants::DEFAULT_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGW("userId:%{public}d current:%{public}d not same", userId, currentUserId);
-            return false;
-        }
-    }
-
-    if (!IsBundleExist(innerBundleInfo, userId)) {
-        APP_LOGW("%{public}s not exist in userId %{public}d",
-            innerBundleInfo.GetBundleName().c_str(), userId);
-        return false;
-    }
-
-    return InnerGetResourceInfo(innerBundleInfo, userId, resourceInfo);
-}
-
 bool BundleResourceProcess::GetAllResourceInfo(
     const int32_t userId,
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
@@ -81,28 +59,35 @@ bool BundleResourceProcess::GetAllResourceInfo(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    auto userIds = dataMgr->GetAllUser();
-    if (userIds.find(userId) == userIds.end()) {
+    if (!dataMgr->HasUserId(userId)) {
         APP_LOGE("userId %{public}d not exist", userId);
         return false;
     }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    if (bundleInfos.empty()) {
+    std::vector<std::string> allBundleNames = dataMgr->GetAllBundleName();
+    if (allBundleNames.empty()) {
         APP_LOGE("bundleInfos is empty");
         return false;
     }
 
-    for (const auto &item : bundleInfos) {
-        if (!IsBundleExist(item.second, userId)) {
-            APP_LOGD("bundle %{public}s is not exist in userId: %{public}d",
-                item.second.GetBundleName().c_str(), userId);
+    for (const auto &bundleName : allBundleNames) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+            continue;
+        }
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+            APP_LOGD("bundleName:%{public}s is shared", bundleName.c_str());
+            continue;
+        }
+        if (!IsBundleExist(innerBundleInfo, userId)) {
+            APP_LOGD("bundle %{public}s is not exist in userId: %{public}d", bundleName.c_str(), userId);
             continue;
         }
         std::vector<ResourceInfo> resourceInfos;
-        if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
-            APP_LOGW("%{public}s resourceInfo empty", item.second.GetBundleName().c_str());
+        if (!InnerGetResourceInfo(innerBundleInfo, userId, resourceInfos) || resourceInfos.empty()) {
+            APP_LOGW("%{public}s resourceInfo empty", bundleName.c_str());
         } else {
-            resourceInfosMap[item.second.GetBundleName()] = resourceInfos;
+            resourceInfosMap[bundleName] = resourceInfos;
         }
     }
     return true;
