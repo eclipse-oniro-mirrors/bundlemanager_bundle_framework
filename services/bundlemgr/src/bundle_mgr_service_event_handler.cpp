@@ -3257,23 +3257,10 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId == Constants::INVALID_USERID) {
-        userId = Constants::START_USERID;
-    }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    std::vector<std::string> bundleNames;
-    for (const auto &item : bundleInfos) {
-        bundleNames.emplace_back(item.first);
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (item.second.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
-            !innerBundleUserInfo.cloneInfos.empty()) {
-            // need process clone app resource
-            LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s has clone info", item.first.c_str());
-            for (const auto &clone : innerBundleUserInfo.cloneInfos) {
-                bundleNames.emplace_back(std::to_string(clone.second.appIndex) + INNER_UNDER_LINE + item.first);
-            }
-        }
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    if (bundleNames.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleNames is empty");
+        return;
     }
     std::vector<std::string> resourceNames;
     BundleResourceHelper::GetAllBundleResourceName(resourceNames);
@@ -3281,7 +3268,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
     std::set<std::string> needAddResourceBundles;
     for (const auto &bundleName : bundleNames) {
         if (std::find(resourceNames.begin(), resourceNames.end(), bundleName) == resourceNames.end()) {
-            needAddResourceBundles.insert(BundleResourceHelper::ParseBundleName(bundleName));
+            needAddResourceBundles.insert(bundleName);
         }
     }
     if (needAddResourceBundles.empty()) {
@@ -3291,7 +3278,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
 
     for (const auto &bundleName : needAddResourceBundles) {
         LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s add resource when reboot", bundleName.c_str());
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
 }

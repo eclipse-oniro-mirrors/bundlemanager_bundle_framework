@@ -274,38 +274,33 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
     const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource)
 {
     APP_LOGI("start process switch oldUserId:%{public}d to userId:%{public}d", oldUserId, userId);
-    std::vector<std::string> existResourceNames;
-    GetAllResourceName(existResourceNames);
-    if (existResourceNames.empty()) {
-        needDeleteAllResource = true;
-        return;
-    }
-    // delete not exist resource when switch userId
-    DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
-    // check which applications need to be parsed
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-        // not exist in resource rdb, need add
-        if (std::find(existResourceNames.begin(), existResourceNames.end(), iter->first) == existResourceNames.end()) {
-            ++iter;
+        // first, check oldUserId whether exist theme, if exist then need parse again
+        bool isOldUserExistTheme = InnerProcessWhetherThemeExist(iter->first, oldUserId);
+        bool isNewUserExistTheme = InnerProcessWhetherThemeExist(iter->first, userId);
+        if (!isOldUserExistTheme && !isNewUserExistTheme) {
+            APP_LOGD("bundleName:%{public}s not exist theme", iter->first.c_str());
+            iter = resourceInfosMap.erase(iter);
             continue;
         }
-        // first, check oldUserId whether exist theme, if exist then need parse again
-        if (InnerProcessWhetherThemeExist(iter->first, oldUserId)) {
-            APP_LOGI("bundleName:%{public}s oldUser:%{public}d exist theme, need parse icon again",
-                iter->first.c_str(), oldUserId);
+        APP_LOGI("bundleName:%{public}s oldUser:%{public}d or newUser:%{public}d exist theme",
+            iter->first.c_str(), oldUserId, userId);
+        if (isNewUserExistTheme) {
+            size_t size = iter->second.size();
+            for (size_t index = 0; index < size; ++index) {
+                // theme changed no need parse label
+                iter->second[index].labelNeedParse_ = false;
+                iter->second[index].label_ = Constants::EMPTY_STRING;
+                if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(iter->first) ==
+                    ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+                    // only need parse once
+                    iter->second[index].iconNeedParse_ = false;
+                }
+            }
+        } else {
             for (auto &resource : iter->second) {
                 resource.labelNeedParse_ = false;
                 resource.label_ = Constants::EMPTY_STRING;
-            }
-            ++iter;
-            continue;
-        }
-        // second, check current userId whether exist theme
-        if (!InnerProcessWhetherThemeExist(iter->first, userId)) {
-            // if not exist, no need to parse
-            if (iter->second.empty() || iter->second[0].appIndexes_.empty()) {
-                iter = resourceInfosMap.erase(iter);
-                continue;
             }
         }
         ++iter;

@@ -2174,6 +2174,7 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    std::set<int32_t> GetCloneBundleAppIndexes() const;
 
 private:
     bool IsExistLauncherAbility() const;

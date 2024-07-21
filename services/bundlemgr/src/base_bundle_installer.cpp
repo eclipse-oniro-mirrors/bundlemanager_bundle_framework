@@ -1436,7 +1436,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
-        BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 
@@ -1797,7 +1796,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_);
             return ERR_OK;
         }
     }
