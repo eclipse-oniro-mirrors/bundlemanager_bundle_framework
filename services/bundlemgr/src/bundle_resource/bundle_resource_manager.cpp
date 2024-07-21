@@ -254,17 +254,7 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     }
     // process labelNeedParse_
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
-        size_t size = iter->second.size();
-        for (size_t index = 0; index < size; ++index) {
-            // theme changed no need parse label
-            iter->second[index].labelNeedParse_ = false;
-            iter->second[index].label_ = Constants::EMPTY_STRING;
-            if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(iter->first) ==
-                ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
-                // only need parse once
-                iter->second[index].iconNeedParse_ = false;
-            }
-        }
+        ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
     }
     needDeleteAllResource = false;
 }
@@ -286,17 +276,7 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
         APP_LOGI("bundleName:%{public}s oldUser:%{public}d or newUser:%{public}d exist theme",
             iter->first.c_str(), oldUserId, userId);
         if (isNewUserExistTheme) {
-            size_t size = iter->second.size();
-            for (size_t index = 0; index < size; ++index) {
-                // theme changed no need parse label
-                iter->second[index].labelNeedParse_ = false;
-                iter->second[index].label_ = Constants::EMPTY_STRING;
-                if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(iter->first) ==
-                    ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
-                    // only need parse once
-                    iter->second[index].iconNeedParse_ = false;
-                }
-            }
+            ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
         } else {
             for (auto &resource : iter->second) {
                 resource.labelNeedParse_ = false;
@@ -699,6 +679,21 @@ bool BundleResourceManager::DeleteNotExistResourceInfo()
 {
     APP_LOGD("start delete not exist resource");
     return bundleResourceRdb_->DeleteNotExistResourceInfo();
+}
+
+void BundleResourceManager::ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos)
+{
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        // theme changed no need parse label
+        resourceInfos[index].labelNeedParse_ = false;
+        resourceInfos[index].label_ = Constants::EMPTY_STRING;
+        if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(resourceInfos[0].bundleName_) ==
+            ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+            // only need parse once
+            resourceInfos[index].iconNeedParse_ = false;
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS

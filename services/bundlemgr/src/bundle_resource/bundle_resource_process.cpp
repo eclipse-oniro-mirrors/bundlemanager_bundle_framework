@@ -100,6 +100,10 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return false;
+    }
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
@@ -121,6 +125,10 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
         return false;
     }
     InnerBundleInfo innerBundleInfo;

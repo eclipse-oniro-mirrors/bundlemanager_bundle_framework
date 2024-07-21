@@ -138,6 +138,8 @@ private:
     void DeleteNotExistResourceInfo(const std::string &bundleName,
         const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);
 
+    void ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;
     std::atomic_uint currentTaskNum_ = 0;
