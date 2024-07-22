@@ -1443,7 +1443,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
-        BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 
@@ -1521,7 +1520,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
-    BundleResourceHelper::DeleteResourceInfo(bundleName);
+    BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
@@ -1804,7 +1803,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_);
             return ERR_OK;
         }
     }

@@ -4549,5 +4549,16 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
     }
 }
+
+std::set<int32_t> InnerBundleInfo::GetCloneBundleAppIndexes() const
+{
+    std::set<int32_t> appIndexes;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos_) {
+        for (const auto &cloneInfo : innerBundleUserInfo.second.cloneInfos) {
+            appIndexes.insert(cloneInfo.second.appIndex);
+        }
+    }
+    return appIndexes;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

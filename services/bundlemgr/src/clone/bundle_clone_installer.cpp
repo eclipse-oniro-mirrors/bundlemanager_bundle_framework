@@ -228,15 +228,18 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     ScopeGuard createCloneDataDirGuard([&] { RemoveCloneDataDir(bundleName, userId, appIndex); });
 
     // process icon and label
-    if (!BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId)) {
-        APP_LOGW("add clone bundle resource info failed, bundleName:%{public}s appIndex:%{public}d",
-            bundleName.c_str(), appIndex);
+    {
+        auto appIndexes = info.GetCloneBundleAppIndexes();
+        // appIndex not exist, need parse
+        if (appIndexes.find(appIndex) == appIndexes.end()) {
+            BundleResourceHelper::AddCloneBundleResourceInfo(bundleName, appIndex, userId);
+        }
     }
     // total to commit, avoid rollback
     applyAccessTokenGuard.Dismiss();
     createCloneDataDirGuard.Dismiss();
     addCloneBundleGuard.Dismiss();
-    APP_LOGD("InstallCloneApp %{public}s succesfully", bundleName.c_str());
+    APP_LOGI("InstallCloneApp %{public}s appIndex:%{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 
@@ -288,9 +291,14 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         APP_LOGW("RemoveCloneDataDir failed");
     }
     // process icon and label
-    if (!BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId)) {
-        APP_LOGW("delete clone resource failed %{public}s appIndex %{public}d",
-            bundleName.c_str(), appIndex);
+    {
+        InnerBundleInfo info;
+        if (dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+            auto appIndexes = info.GetCloneBundleAppIndexes();
+            if (appIndexes.find(appIndex) == appIndexes.end()) {
+                BundleResourceHelper::DeleteCloneBundleResourceInfo(bundleName, appIndex, userId);
+            }
+        }
     }
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
@@ -299,7 +307,7 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
         appControlMgr->DeleteAllDisposedRuleByBundle(info, appIndex, userId);
     }
 #endif
-    APP_LOGD("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
+    APP_LOGI("UninstallCloneApp %{public}s _ %{public}d succesfully", bundleName.c_str(), appIndex);
     return ERR_OK;
 }
 
