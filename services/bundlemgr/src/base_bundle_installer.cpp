@@ -1072,7 +1072,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // check syscap
     result = CheckSysCap(bundlePaths);
-    CHECK_RESULT(result, "hap syscap check failed %{public}d");
+    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    if (!isSysCapValid) {
+        APP_LOGI("hap syscap check failed %{public}d", result);
+    }
     UpdateInstallerState(InstallerState::INSTALL_SYSCAP_CHECKED);                  // ---- 10%
 
     // verify signature info for all haps
@@ -1101,7 +1104,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
-    result = CheckInstallCondition(hapVerifyResults, newInfos);
+    result = CheckInstallCondition(hapVerifyResults, newInfos, isSysCapValid);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
@@ -3758,12 +3761,15 @@ void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &b
 
 ErrCode BaseBundleInstaller::CheckInstallCondition(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-    std::unordered_map<std::string, InnerBundleInfo> &infos)
+    std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid)
 {
-    ErrCode ret = bundleInstallChecker_->CheckDeviceType(infos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
+    ErrCode ret;
+    if (!isSysCapValid) {
+        ret = bundleInstallChecker_->CheckDeviceType(infos);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+        }
     }
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
     if (ret != ERR_OK) {

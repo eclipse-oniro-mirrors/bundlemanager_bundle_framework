@@ -381,7 +381,7 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        std::unordered_map<std::string, InnerBundleInfo> &infos);
+        std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
 
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
