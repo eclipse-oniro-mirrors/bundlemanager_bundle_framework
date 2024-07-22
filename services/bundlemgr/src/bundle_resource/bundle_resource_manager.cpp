@@ -56,23 +56,6 @@ BundleResourceManager::~BundleResourceManager()
 {
 }
 
-bool BundleResourceManager::AddResourceInfo(const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId, std::string hapPath)
-{
-    std::vector<ResourceInfo> resourceInfos;
-    if (!BundleResourceProcess::GetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
-        APP_LOGE("bundleName %{public}s GetResourceInfo failed", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
-
-    if (!hapPath.empty()) {
-        for (auto &info : resourceInfos) {
-            info.hapPath_ = hapPath;
-        }
-    }
-    return AddResourceInfos(userId, resourceInfos);
-}
-
 bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
@@ -88,19 +71,11 @@ bool BundleResourceManager::AddResourceInfoByBundleName(const std::string &bundl
         return false;
     }
     if (!resourceInfos.empty() && !resourceInfos[0].appIndexes_.empty()) {
-        bool needDeleteMainBundleResource = false;
         for (const int32_t appIndex : resourceInfos[0].appIndexes_) {
-            if (appIndex == ServiceConstants::INVALID_GID) {
-                needDeleteMainBundleResource = true;
-                continue;
-            }
             DeleteNotExistResourceInfo(bundleName, appIndex, resourceInfos);
             if (!AddCloneBundleResourceInfo(resourceInfos[0].bundleName_, appIndex)) {
                 APP_LOGW("bundleName:%{public}s add clone resource failed", bundleName.c_str());
             }
-        }
-        if (needDeleteMainBundleResource && !resourceInfos.empty()) {
-            DeleteResourceInfo(resourceInfos[0].bundleName_);
         }
     }
     APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
@@ -170,17 +145,9 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     // process clone bundle resource info
     for (const auto &item : resourceInfosMap) {
         if (!item.second.empty() && !item.second[0].appIndexes_.empty()) {
-            bool needDeleteMainBundleResource = false;
             APP_LOGI("start process bundle:%{public}s clone resource info", item.first.c_str());
             for (const int32_t appIndex : item.second[0].appIndexes_) {
-                if (appIndex == ServiceConstants::INVALID_GID) {
-                    needDeleteMainBundleResource = true;
-                    continue;
-                }
                 UpdateCloneBundleResourceInfo(item.first, appIndex, type);
-            }
-            if (needDeleteMainBundleResource) {
-                DeleteResourceInfo(item.first);
             }
         }
     }
@@ -287,17 +254,7 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
     }
     // process labelNeedParse_
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end(); ++iter) {
-        size_t size = iter->second.size();
-        for (size_t index = 0; index < size; ++index) {
-            // theme changed no need parse label
-            iter->second[index].labelNeedParse_ = false;
-            iter->second[index].label_ = Constants::EMPTY_STRING;
-            if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(iter->first) ==
-                ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
-                // only need parse once
-                iter->second[index].iconNeedParse_ = false;
-            }
-        }
+        ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
     }
     needDeleteAllResource = false;
 }
@@ -307,38 +264,23 @@ void BundleResourceManager::InnerProcessResourceInfoByUserIdChanged(
     const int32_t userId, const int32_t oldUserId, bool &needDeleteAllResource)
 {
     APP_LOGI("start process switch oldUserId:%{public}d to userId:%{public}d", oldUserId, userId);
-    std::vector<std::string> existResourceNames;
-    GetAllResourceName(existResourceNames);
-    if (existResourceNames.empty()) {
-        needDeleteAllResource = true;
-        return;
-    }
-    // delete not exist resource when switch userId
-    DeleteNotExistResourceInfo(resourceInfosMap, existResourceNames);
-    // check which applications need to be parsed
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-        // not exist in resource rdb, need add
-        if (std::find(existResourceNames.begin(), existResourceNames.end(), iter->first) == existResourceNames.end()) {
-            ++iter;
+        // first, check oldUserId whether exist theme, if exist then need parse again
+        bool isOldUserExistTheme = InnerProcessWhetherThemeExist(iter->first, oldUserId);
+        bool isNewUserExistTheme = InnerProcessWhetherThemeExist(iter->first, userId);
+        if (!isOldUserExistTheme && !isNewUserExistTheme) {
+            APP_LOGD("bundleName:%{public}s not exist theme", iter->first.c_str());
+            iter = resourceInfosMap.erase(iter);
             continue;
         }
-        // first, check oldUserId whether exist theme, if exist then need parse again
-        if (InnerProcessWhetherThemeExist(iter->first, oldUserId)) {
-            APP_LOGI("bundleName:%{public}s oldUser:%{public}d exist theme, need parse icon again",
-                iter->first.c_str(), oldUserId);
+        APP_LOGI("bundleName:%{public}s oldUser:%{public}d or newUser:%{public}d exist theme",
+            iter->first.c_str(), oldUserId, userId);
+        if (isNewUserExistTheme) {
+            ProcessResourceInfoNoNeedToParseOtherIcon(iter->second);
+        } else {
             for (auto &resource : iter->second) {
                 resource.labelNeedParse_ = false;
                 resource.label_ = Constants::EMPTY_STRING;
-            }
-            ++iter;
-            continue;
-        }
-        // second, check current userId whether exist theme
-        if (!InnerProcessWhetherThemeExist(iter->first, userId)) {
-            // if not exist, no need to parse
-            if (iter->second.empty() || iter->second[0].appIndexes_.empty()) {
-                iter = resourceInfosMap.erase(iter);
-                continue;
             }
         }
         ++iter;
@@ -737,6 +679,21 @@ bool BundleResourceManager::DeleteNotExistResourceInfo()
 {
     APP_LOGD("start delete not exist resource");
     return bundleResourceRdb_->DeleteNotExistResourceInfo();
+}
+
+void BundleResourceManager::ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos)
+{
+    size_t size = resourceInfos.size();
+    for (size_t index = 0; index < size; ++index) {
+        // theme changed no need parse label
+        resourceInfos[index].labelNeedParse_ = false;
+        resourceInfos[index].label_ = Constants::EMPTY_STRING;
+        if ((index > 0) && ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(resourceInfos[0].bundleName_) ==
+            ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+            // only need parse once
+            resourceInfos[index].iconNeedParse_ = false;
+        }
+    }
 }
 } // AppExecFwk
 } // OHOS

@@ -68,14 +68,6 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
         APP_LOGE("failed, manager is nullptr");
         return;
     }
-    if (userId != Constants::DEFAULT_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGW("bundleName:%{public}s, currentUserId: %{public}d, userId: %{public}d not same",
-                bundleName.c_str(), currentUserId, userId);
-            return;
-        }
-    }
     // add new resource info
     if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
         APP_LOGW("failed, bundleName:%{public}s", bundleName.c_str());
@@ -87,15 +79,7 @@ void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundle
 bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("start");
-    if ((userId != Constants::UNSPECIFIED_USERID) && (userId != Constants::DEFAULT_USERID)) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
-            return false;
-        }
-    }
-
+    APP_LOGI("start delete key %{public}s userId:%{public}d", key.c_str(), userId);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
@@ -110,27 +94,6 @@ bool BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int3
     return true;
 #else
     return false;
-#endif
-}
-
-void BundleResourceHelper::SetApplicationEnabled(const std::string &bundleName,
-    bool enabled, const int32_t userId, int32_t appIndex)
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("bundleName: %{public}s, enable: %{public}d, userId: %{public}d", bundleName.c_str(), enabled, userId);
-    BundleResourceCallback callback;
-    callback.OnBundleStatusChanged(bundleName, enabled, userId, appIndex);
-#endif
-}
-
-void BundleResourceHelper::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
-    const std::string &abilityName, bool enabled, const int32_t userId, int32_t appIndex)
-{
-#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("bundleName: %{public}s, abilityName: %{public}s, enable: %{public}d, userId: %{public}d",
-        bundleName.c_str(), abilityName.c_str(), enabled, userId);
-    BundleResourceCallback callback;
-    callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, enabled, userId);
 #endif
 }
 
@@ -193,14 +156,8 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
     const int32_t appIndex, const int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("start");
-    if (userId != Constants::UNSPECIFIED_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
-            return false;
-        }
-    }
+    APP_LOGI("start add clone bundle:%{public}s appIndex:%{public}d userId:%{public}d",
+        bundleName.c_str(), appIndex, userId);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");
@@ -211,6 +168,8 @@ bool BundleResourceHelper::AddCloneBundleResourceInfo(const std::string &bundleN
             bundleName.c_str(), appIndex);
         return false;
     }
+    APP_LOGI("end add clone bundle:%{public}s appIndex:%{public}d userId:%{public}d",
+        bundleName.c_str(), appIndex, userId);
     return true;
 #else
     APP_LOGI("bundle resource is not support");
@@ -222,15 +181,8 @@ bool BundleResourceHelper::DeleteCloneBundleResourceInfo(const std::string &bund
     const int32_t appIndex, const int32_t userId)
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGD("start");
-    if (userId != Constants::UNSPECIFIED_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (userId != currentUserId)) {
-            APP_LOGW("currentUserId: %{public}d, userId: %{public}d not same", currentUserId, userId);
-            return false;
-        }
-    }
-
+    APP_LOGI("start delete clone bundle:%{public}s appIndex:%{public}d userId:%{public}d",
+        bundleName.c_str(), appIndex, userId);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");

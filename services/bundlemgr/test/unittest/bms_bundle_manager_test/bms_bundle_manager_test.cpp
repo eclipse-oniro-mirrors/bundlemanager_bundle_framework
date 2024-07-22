@@ -5856,6 +5856,11 @@ HWTEST_F(BmsBundleManagerTest, GetRecoverableApplicationInfo_0100, Function | Me
     PreInstallBundleInfo preInstallBundleInfo;
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     preInstallBundleInfo.SetBundleName(BUNDLE_BACKUP_NAME);
+    preInstallBundleInfo.SetModuleName(MODULE_NAME);
+    preInstallBundleInfo.SetLabelId(BUNDLE_BACKUP_LABEL_ID);
+    preInstallBundleInfo.SetIconId(BUNDLE_BACKUP_ICON_ID);
+    preInstallBundleInfo.SetSystemApp(true);
+    preInstallBundleInfo.SetBundleType(BundleType::APP);
     preInstallBundleInfo.SetVersionCode(BUNDLE_BACKUP_VERSION);
     preInstallBundleInfo.AddBundlePath(bundlePath);
     preInstallBundleInfo.SetRemovable(true);

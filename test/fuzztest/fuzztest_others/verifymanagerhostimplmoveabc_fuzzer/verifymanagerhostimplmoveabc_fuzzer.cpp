@@ -28,8 +28,8 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         VerifyManagerHostImpl impl;
-        const std::string bundleName;
-        std::vector<std::string> abcPaths;
+        const std::string bundleName{data, size};
+        std::vector<std::string> abcPaths = { std::string(data, size) };
         auto ret1 = impl.MoveAbc(bundleName, abcPaths);
         return true;
     }

@@ -1891,6 +1891,7 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->appEnvironments = applicationInfo.appEnvironments;
     baseApplicationInfo_->maxChildProcess = applicationInfo.maxChildProcess;
     baseApplicationInfo_->installSource = applicationInfo.installSource;
+    baseApplicationInfo_->configuration = applicationInfo.configuration;
 }
 
 ErrCode InnerBundleInfo::GetApplicationEnabledV9(int32_t userId, bool &isEnabled, int32_t appIndex) const
@@ -4574,6 +4575,17 @@ void InnerBundleInfo::AdaptMainLauncherResourceInfo(ApplicationInfo &application
         applicationInfo.iconResource.moduleName = mainAbilityInfo.moduleName;
         applicationInfo.iconResource.bundleName = mainAbilityInfo.bundleName;
     }
+}
+
+std::set<int32_t> InnerBundleInfo::GetCloneBundleAppIndexes() const
+{
+    std::set<int32_t> appIndexes;
+    for (const auto &innerBundleUserInfo : innerBundleUserInfos_) {
+        for (const auto &cloneInfo : innerBundleUserInfo.second.cloneInfos) {
+            appIndexes.insert(cloneInfo.second.appIndex);
+        }
+    }
+    return appIndexes;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

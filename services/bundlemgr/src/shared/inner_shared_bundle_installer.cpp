@@ -425,6 +425,8 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+    preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
+    preInstallBundleInfo.SetBundleType(BundleType::SHARED);
     dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     return ERR_OK;
 }

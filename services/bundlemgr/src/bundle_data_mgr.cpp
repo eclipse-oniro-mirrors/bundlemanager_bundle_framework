@@ -62,15 +62,15 @@
 #include "bundle_overlay_data_manager.h"
 #endif
 #include "bundle_extractor.h"
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
+#include "type_descriptor.h"
+#include "utd_client.h"
+#endif
 
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 #include "app_domain_verify_mgr_client.h"
 #endif
 
-#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-#include "type_descriptor.h"
-#include "utd_client.h"
-#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -93,8 +93,8 @@ constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // profile path
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
-constexpr const char* ADDITION_PROFILE_PATH = "resources/base/profile/addition.json";
 constexpr const char* NETWORK_PROFILE_PATH = "resources/base/profile/network_config.json";
+constexpr const char* ADDITION_PROFILE_PATH = "resources/base/profile/addition.json";
 constexpr const char* UTD_SDT_PROFILE_PATH = "resources/rawfile/arkdata/utd/utd.json5";
 constexpr const char* PKG_CONTEXT_PROFILE_PATH = "pkgContextInfo.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
@@ -3084,18 +3084,15 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
     if (userId == Constants::ALL_USERID) {
         return GetAllBundleInfosV9(flags, bundleInfos);
     }
-
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -3103,7 +3100,6 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
-
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         auto flag = GET_BASIC_APPLICATION_INFO;
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
@@ -3113,7 +3109,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
             continue;
         }
-
+        uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+        if (((static_cast<uint32_t>(flags) & launchFlag) == launchFlag) && (innerBundleInfo.IsHideDesktopIcon())) {
+            LOG_D(BMS_TAG_QUERY, "bundleName %{public}s is hide desktopIcon",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
         BundleInfo bundleInfo;
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
@@ -3146,6 +3147,14 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         if (info.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+            continue;
+        }
+        if (((static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) ==
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) &&
+            (info.IsHideDesktopIcon())) {
+            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s is hide desktopIcon",
+                info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
@@ -7599,6 +7608,35 @@ ErrCode BundleDataMgr::SwitchUninstallState(const std::string &bundleName, const
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr)
+{
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    InnerBundleInfo &innerBundleInfo = infoItem->second;
+    ErrCode res = innerBundleInfo.AddCloneBundle(attr);
+    if (res != ERR_OK) {
+        APP_LOGE("innerBundleInfo addCloneBundleInfo fail");
+        return res;
+    }
+    APP_LOGD("update bundle info in memory for add clone, userId: %{public}d, appIndex: %{public}d",
+        attr.userId, attr.appIndex);
+    auto nowBundleStatus = innerBundleInfo.GetBundleStatus();
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        innerBundleInfo.SetBundleStatus(nowBundleStatus);
+        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    innerBundleInfo.SetBundleStatus(nowBundleStatus);
+    APP_LOGD("update bundle info in storage for add clone, userId: %{public}d, appIndex: %{public}d",
+        attr.userId, attr.appIndex);
+    return ERR_OK;
+}
+
 void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
     std::vector<AbilityInfo> &abilityInfos) const
 {
@@ -7650,35 +7688,6 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     APP_LOGI("AppDomainVerify is not enabled");
     return;
 #endif
-}
-
-ErrCode BundleDataMgr::AddCloneBundle(const std::string &bundleName, const InnerBundleCloneInfo &attr)
-{
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    auto infoItem = bundleInfos_.find(bundleName);
-    if (infoItem == bundleInfos_.end()) {
-        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-    InnerBundleInfo &innerBundleInfo = infoItem->second;
-    ErrCode res = innerBundleInfo.AddCloneBundle(attr);
-    if (res != ERR_OK) {
-        APP_LOGE("innerBundleInfo addCloneBundleInfo fail");
-        return res;
-    }
-    APP_LOGD("update bundle info in memory for add clone, userId: %{public}d, appIndex: %{public}d",
-        attr.userId, attr.appIndex);
-    auto nowBundleStatus = innerBundleInfo.GetBundleStatus();
-    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
-        innerBundleInfo.SetBundleStatus(nowBundleStatus);
-        APP_LOGW("update storage failed bundle:%{public}s", bundleName.c_str());
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-    innerBundleInfo.SetBundleStatus(nowBundleStatus);
-    APP_LOGD("update bundle info in storage for add clone, userId: %{public}d, appIndex: %{public}d",
-        attr.userId, attr.appIndex);
-    return ERR_OK;
 }
 
 ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const int32_t userId, int32_t appIndex)
@@ -7768,6 +7777,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 

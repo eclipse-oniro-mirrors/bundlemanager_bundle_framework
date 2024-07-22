@@ -328,11 +328,10 @@ ErrCode InstalldProxy::GetAllBundleStats(const std::vector<std::string> &bundleN
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_ALL_BUNDLE_STATS, data, reply, option);
     if (ret == ERR_OK) {
-        if (reply.ReadInt64Vector(&bundleStats)) {
-            return ERR_OK;
-        } else {
+        if (!reply.ReadInt64Vector(&bundleStats)) {
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+        return ERR_OK;
     }
     return ret;
 }
@@ -907,7 +906,7 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
         LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
-        return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
     return reply.ReadInt32();
 }

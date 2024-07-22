@@ -48,8 +48,6 @@ public:
     static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
 
 private:
-    static bool IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId);
-
     // used for show in settings
     static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         ResourceInfo &resourceInfo);
