@@ -209,7 +209,7 @@ private:
 
     void FetchPrivilegeCapabilityFromPreConfig(
         const std::string &bundleName,
-        const std::string &appSignature,
+        const std::vector<std::string> &appSignatures,
         AppPrivilegeCapability &appPrivilegeCapability);
 
     bool MatchSignature(const std::vector<std::string> &appSignatures, const std::string &signature);
