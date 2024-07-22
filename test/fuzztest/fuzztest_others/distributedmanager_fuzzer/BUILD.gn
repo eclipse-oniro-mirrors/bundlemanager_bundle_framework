@@ -47,7 +47,6 @@ ohos_fuzztest("DistributedManagerFuzzTest") {
 
   deps = [
     "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
 
