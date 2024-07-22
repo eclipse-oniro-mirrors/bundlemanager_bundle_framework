@@ -17,6 +17,16 @@
 
 #include "app_log_wrapper.h"
 
+#include <sys/ioctl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <cerrno>
+
+#define BMS_MONITOR_FL 0x00000002
+#define BMS_IOCTL_GET_FLAGS _IOR(0xf5, 70, unsigned int)
+#define BMS_IOCTL_SET_FLAGS _IOR(0xf5, 71, unsigned int)
+
 namespace OHOS {
 namespace AppExecFwk {
 BmsRdbOpenCallback::BmsRdbOpenCallback(const BmsRdbConfig &bmsRdbConfig)\
@@ -25,6 +35,23 @@ BmsRdbOpenCallback::BmsRdbOpenCallback(const BmsRdbConfig &bmsRdbConfig)\
 int32_t BmsRdbOpenCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
 {
     APP_LOGI("OnCreate");
+
+    int32_t fd = open((bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName).c_str(), O_RDWR, 0777);
+    if (fd < 0) {
+        APP_LOGW("Failed to open file");
+        return NativeRdb::E_OK;
+    }
+    unsigned int flags = 0;
+    if (ioctl(fd, BMS_IOCTL_GET_FLAGS, &flags) < 0) {
+        APP_LOGW("Failed to get flags, errno:%{public}d", errno);
+        return NativeRdb::E_OK;
+    }
+    flags |= BMS_MONITOR_FL;
+    if (ioctl(fd, BMS_IOCTL_SET_FLAGS, &flags) < 0) {
+        APP_LOGW("Failed to set flags, errno:%{public}d", errno);
+        return NativeRdb::E_OK;
+    }
+    APP_LOGI("Set delete monitor success");
     return NativeRdb::E_OK;
 }
 
