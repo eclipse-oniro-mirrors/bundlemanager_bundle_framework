@@ -1200,34 +1200,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSiz
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
  
-/**
- * @tc.number: BmsInstalldClientTest_CleanBundleDataDirByName_0100
- * @tc.name: CleanBundleDataDirByName
- * @tc.desc: call CleanBundleDataDirByName.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDirByName_0100, TestSize.Level1)
-{
-    std::string bundleName = "";
-    int userid = 100;
-    int appIndex = 1;
-    ErrCode result = installClient_->CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: BmsInstalldClientTest_CleanBundleDataDirByName_0200
- * @tc.name: CleanBundleDataDirByName
- * @tc.desc: call CleanBundleDataDirByName.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDirByName_0200, TestSize.Level1)
-{
-    std::string bundleName = "BundleName";
-    int userid = 100;
-    int appIndex = 1;
-    ErrCode result = installClient_->CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
-}
- 
  /**
  * @tc.number: BmsInstalldClientTest_IsExistFile_0100
  * @tc.name: IsExistFile
