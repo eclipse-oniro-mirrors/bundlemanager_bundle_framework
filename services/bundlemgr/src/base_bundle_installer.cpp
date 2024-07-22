@@ -156,7 +156,6 @@ BaseBundleInstaller::BaseBundleInstaller()
 BaseBundleInstaller::~BaseBundleInstaller()
 {
     bundlePaths_.clear();
-    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     toDeleteTempHapPath_.clear();
     signatureFileTmpMap_.clear();
 }
@@ -1254,6 +1253,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
+    // the hap coyied to security dir neet to be deleted before sync
+    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     ForceWriteToDisk();
     return result;
 }
