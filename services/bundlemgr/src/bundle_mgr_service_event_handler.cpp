@@ -106,6 +106,7 @@ const std::string OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
+constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
@@ -654,6 +655,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
 
     for (const auto &rootDir : rootDirList) {
         ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + MODULE_UPDATE_PRODUCT_SUFFIX);
     }
 
     hasLoadPreInstallProFile_ = true;
