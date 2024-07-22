@@ -37,10 +37,6 @@ public:
 
     ~BundleResourceManager();
     /**
-     * add bundle resource and launcher ability resource by innerBundleInfo, used when install hap
-     */
-    bool AddResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId, std::string hapPath = "");
-    /**
      * delete resource info
      */
     bool DeleteResourceInfo(const std::string &key);
