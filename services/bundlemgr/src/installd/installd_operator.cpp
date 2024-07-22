@@ -58,6 +58,7 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
+constexpr const char* HQF_DIR_PREFIX = "patch_";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -1350,6 +1351,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
     }
 
     struct dirent *ptr = nullptr;
+    bool isBundleCodeDir = dir.compare(Constants::BUNDLE_CODE_DIR) == 0;
     while ((ptr = readdir(directory)) != nullptr) {
         std::string currentName(ptr->d_name);
         if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
@@ -1360,7 +1362,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
         struct stat s;
         if (stat(curPath.c_str(), &s) == 0) {
             // directory
-            if (s.st_mode & S_IFDIR) {
+            if ((s.st_mode & S_IFDIR) && (isBundleCodeDir || BundleUtil::StartWith(currentName, HQF_DIR_PREFIX))) {
                 ObtainQuickFixFileDir(curPath, fileVec);
             }
 
