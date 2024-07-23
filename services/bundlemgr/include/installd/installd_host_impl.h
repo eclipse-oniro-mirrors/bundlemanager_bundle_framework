@@ -152,6 +152,11 @@ public:
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         bool isPreInstallApp, bool debug) override;
 
+    std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
+        const int32_t userId, const int32_t appIndex);
+    int64_t HandleAppDataSizeStats(const std::string &bundleName,
+        const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath);
+
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.
@@ -231,23 +236,18 @@ public:
     virtual ErrCode GetExtensionSandboxTypeList(std::vector<std::string> &typeList) override;
 
 private:
+    std::string GetExtensionConfigPath() const;
+    void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
+    bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
+    bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
     ErrCode CreateExtensionDir(const CreateDirParam &createDirParam, const std::string& parentDir,
         int32_t mode, int32_t gid, bool isLog = false);
     ErrCode RemoveExtensionDir(int32_t userId, const std::string &extensionBundleDir);
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
-
     ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
         unsigned int hapFlags);
     unsigned int GetHapFlags(const bool isPreInstallApp, const bool debug, const bool isDlpSandbox);
-    std::string GetAppDataPath(const std::string &bundleName, const std::string &el,
-        const int32_t userId, const int32_t appIndex);
-    int64_t HandleAppDataSizeStats(const std::string &bundleName,
-        const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath);
-    std::string GetExtensionConfigPath() const;
-    void LoadNeedCreateSandbox(const nlohmann::json &object, std::vector<std::string> &typeList);
-    bool LoadExtensionNeedCreateSandbox(const nlohmann::json &object, std::string extensionTypeName);
-    bool ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf);
     ErrCode InnerRemoveAtomicServiceBundleDataDir(const std::string &bundleName, const int32_t userId);
     ErrCode InnerRemoveBundleDataDir(const std::string &bundleName, const int32_t userId);
 };

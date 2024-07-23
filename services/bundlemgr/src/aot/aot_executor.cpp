@@ -310,7 +310,7 @@ ErrCode AOTExecutor::StopAOT()
     return ERR_OK;
 #else
     APP_LOGI("code signature disable, ignore");
-    return ERR_APPEXECFWK_INSTALLD_STOP_AOT_FAILED;
+    return ERR_OK;
 #endif
 }
 
