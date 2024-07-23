@@ -117,7 +117,7 @@ ErrCode AppControlManagerRdb::DeleteAppInstallControlRule(const std::string &cal
         absRdbPredicates.EqualTo(APP_ID, appId);
         bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
         if (!ret) {
-            LOG_E(BMS_TAG_DEFAULT, "Delete failed callingName:%{public}s appId:%{public}s userId:%{public}d",
+            LOG_E(BMS_TAG_DEFAULT, "Delete failed callingName:%{public}s appId:%{private}s userId:%{public}d",
                 callingName.c_str(), appId.c_str(), userId);
             return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
@@ -227,7 +227,7 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
         absRdbPredicates.EqualTo(APP_ID, rule.appId);
         bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
         if (!ret) {
-            LOG_E(BMS_TAG_DEFAULT, "Delete failed callingName:%{public}s appid:%{public}s userId:%{public}d",
+            LOG_E(BMS_TAG_DEFAULT, "Delete failed callingName:%{public}s appid:%{private}s userId:%{public}d",
                 callingName.c_str(), rule.appId.c_str(), userId);
             return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
         }
@@ -365,7 +365,7 @@ ErrCode AppControlManagerRdb::SetDisposedStatus(const std::string &callingName,
     valuesBucket.PutString(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed",
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{private}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -383,7 +383,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedStatus(const std::string &callingNam
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{private}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -467,7 +467,7 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
     valuesBucket.PutString(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{private}s failed.",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -485,7 +485,7 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed",
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus callingName:%{public}s appId:%{private}s failed",
             callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
@@ -505,7 +505,7 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &a
     }
     bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle appId:%{public}s failed", appId.c_str());
+        LOG_E(BMS_TAG_DEFAULT, "DeleteAllDisposedRuleByBundle appId:%{private}s failed", appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;

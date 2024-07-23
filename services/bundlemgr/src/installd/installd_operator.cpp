@@ -141,7 +141,7 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);

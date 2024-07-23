@@ -738,8 +738,9 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     std::string bundleName;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetNameForUid(uid, bundleName));
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleNameByUidSync failed, uid is %{public}d, bundleName is %{public}s",
-            uid, bundleName.c_str());
+        if (uid > Constants::BASE_APP_UID) {
+            APP_LOGE("failed uid: %{public}d bundleName: %{public}s", uid, bundleName.c_str());
+        }
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_NAME_BY_UID_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);

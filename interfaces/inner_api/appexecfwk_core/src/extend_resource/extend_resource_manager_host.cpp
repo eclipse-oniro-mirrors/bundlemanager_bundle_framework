@@ -41,7 +41,7 @@ int ExtendResourceManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& dat
     MessageParcel& reply, MessageOption& option)
 {
     BundleMemoryGuard memoryGuard;
-    APP_LOGI("ExtendResourceManagerHost OnRemoteRequest, message code : %{public}u", code);
+    APP_LOGI_NOFUNC("ExtendResourceManagerHost OnRemoteRequest, message code : %{public}u", code);
     std::u16string descriptor = ExtendResourceManagerHost::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
