@@ -49,11 +49,20 @@ private:
 
     ErrCode HandleDeleteResourceInfo(MessageParcel &data, MessageParcel &reply);
 
+    void ClearAshmem(sptr<Ashmem> &optMem);
+
+    int32_t AllocatAshmemNum();
+
+    ErrCode WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply);
+
     template<typename T>
-    ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
+    ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply);
 
     template<typename T>
     ErrCode WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply);
+
+    std::mutex bundleAshmemMutex_;
+    int32_t ashmemNum_ = 0;
 
     DISALLOW_COPY_AND_MOVE(BundleResourceHost);
 };

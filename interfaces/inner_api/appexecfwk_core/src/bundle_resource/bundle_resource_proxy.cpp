@@ -28,7 +28,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 200 * 1024 * 1024;
+constexpr int32_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 5 * 1024; // max ipc size 100MB
 bool GetData(void *&buffer, size_t size, const void *data)
 {
     if (data == nullptr) {
@@ -270,9 +271,16 @@ ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, Mes
     }
     size_t dataSize = reply.ReadUint32();
     void *buffer = nullptr;
-    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        if (GetParcelInfoFromAshMem(reply, buffer) != ERR_OK) {
+            APP_LOGE("read data from ashmem fail, length %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+            APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
 
     MessageParcel tmpParcel;
@@ -306,16 +314,24 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
         return res;
     }
 
-    size_t dataSize = static_cast<size_t>(reply.ReadInt32());
+    size_t dataSize = reply.ReadUint32();
     if (dataSize == 0) {
         APP_LOGW("Parcel no data");
         return ERR_OK;
     }
 
     void *buffer = nullptr;
-    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
-        APP_LOGE("read raw data fail, length %{public}zu", dataSize);
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGI("dataSize is too large, use ashmem");
+        if (GetParcelInfoFromAshMem(reply, buffer) != ERR_OK) {
+            APP_LOGE("read data from ashmem fail, length %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+            APP_LOGE("GetData failed dataSize: %{public}zu", dataSize);
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
 
     MessageParcel tempParcel;
@@ -338,6 +354,55 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
     return ERR_OK;
 }
 
+void BundleResourceProxy::ClearAshmem(sptr<Ashmem> &optMem)
+{
+    if (optMem != nullptr) {
+        optMem->UnmapAshmem();
+        optMem->CloseAshmem();
+    }
+}
+
+ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void *&data)
+{
+    sptr<Ashmem> ashMem = reply.ReadAshmem();
+    if (ashMem == nullptr) {
+        APP_LOGE("Ashmem is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!ashMem->MapReadOnlyAshmem()) {
+        APP_LOGE("MapReadOnlyAshmem failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t ashMemSize = ashMem->GetAshmemSize();
+    int32_t offset = 0;
+    const void* ashDataPtr = ashMem->ReadFromAshmem(ashMemSize, offset);
+    if (ashDataPtr == nullptr) {
+        APP_LOGE("ashDataPtr is nullptr");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ashMemSize == 0) || ashMemSize > MAX_PARCEL_CAPACITY) {
+        APP_LOGE("failed due to wrong size");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    data = malloc(ashMemSize);
+    if (data == nullptr) {
+        APP_LOGE("failed due to malloc data failed");
+        ClearAshmem(ashMem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (memcpy_s(data, ashMemSize, ashDataPtr, ashMemSize) != EOK) {
+        free(data);
+        ClearAshmem(ashMem);
+        APP_LOGE("failed due to memcpy_s failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ClearAshmem(ashMem);
+    return ERR_OK;
+}
 
 bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
     MessageParcel &data, MessageParcel &reply)
