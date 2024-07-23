@@ -24,6 +24,7 @@
 #include "bundle_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
+#include "abs_rdb_predicates.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -56,6 +57,8 @@ public:
     ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId);
     ErrCode DeleteResourceInfo(const std::string &key);
+    ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName);
 private:
     bool OpenHandler();

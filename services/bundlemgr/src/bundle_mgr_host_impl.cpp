@@ -2082,7 +2082,6 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
         return ret;
     }
-    BundleResourceHelper::SetApplicationEnabled(bundleName, isEnable, userId);
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -2136,7 +2135,6 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
         return ret;
     }
-    BundleResourceHelper::SetApplicationEnabled(bundleName, isEnable, userId, appIndex);
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -2224,11 +2222,6 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             userId, isEnabled, 0);
         return ret;
     }
-    std::string moduleName = abilityInfo.moduleName;
-    if (moduleName.empty()) {
-        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
-    }
-    BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
@@ -2274,12 +2267,6 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
             userId, isEnabled, appIndex);
         return ret;
     }
-    std::string moduleName = abilityInfo.moduleName;
-    if (moduleName.empty()) {
-        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
-    }
-    // todo
-    // BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
@@ -3852,26 +3839,14 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     }
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
-        BundleInfo bundleInfo;
-        if (!GetPreferableBundleInfoFromHapPaths(
-            recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
-            continue;
-        }
         RecoverableApplicationInfo recoverableApplication;
-        recoverableApplication.bundleName = bundleInfo.name;
-        recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
-        recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
-        recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+        recoverableApplication.bundleName = recoverableBundleInfo.GetBundleName();
+        recoverableApplication.labelId = recoverableBundleInfo.GetLabelId();
+        recoverableApplication.iconId = recoverableBundleInfo.GetIconId();
+        recoverableApplication.systemApp = recoverableBundleInfo.GetSystemApp();
         recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
-        if (!bundleInfo.hapModuleInfos.empty()) {
-            recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
-        }
-        if (bundleInfo.isNewVersion) {
-            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
-        } else if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].installationFree) {
-            recoverableApplication.bundleType = BundleType::ATOMIC_SERVICE;
-        }
+        recoverableApplication.moduleName = recoverableBundleInfo.GetModuleName();
+        recoverableApplication.bundleType = recoverableBundleInfo.GetBundleType();
         recoverableApplicaitons.emplace_back(recoverableApplication);
     }
     return ERR_OK;

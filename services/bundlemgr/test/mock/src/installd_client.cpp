@@ -15,7 +15,6 @@
 
 #include "installd_client.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "installd_death_recipient.h"
 #include "system_ability_definition.h"
@@ -224,7 +223,7 @@ bool InstalldClient::GetInstalldProxy()
 {
     if (installdProxy_ == nullptr) {
         APP_LOGD("try to get installd proxy");
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> writeLock(mutex_);
         if (installdProxy_ == nullptr) {
             sptr<IInstalld> tempProxy =
                 iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));

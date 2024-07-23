@@ -29,6 +29,7 @@
 #include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
+#include "bms_key_event_mgr.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_service.h"
@@ -336,6 +337,7 @@ void BMSEventHandler::BundleBootStartEvent()
     UpdateOtaFlag(OTAFlag::CHECK_SHADER_CAHCE_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_CLOUD_SHADER_DIR);
     UpdateOtaFlag(OTAFlag::CHECK_BACK_UP_DIR);
+    UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -357,6 +359,8 @@ void BMSEventHandler::BundleRebootStartEvent()
         ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
         CheckALLResourceInfo();
     }
+    // need process main bundle status
+    BmsKeyEventMgr::ProcessMainBundleStatusFinally();
 
     if (IsModuleUpdate()) {
         HandleModuleUpdate();
@@ -1120,6 +1124,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
+    InnerProcessRebootUninstallWrongBundle();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
@@ -1135,6 +1140,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessCheckCloudShaderDir();
     ProcessNewBackupDir();
     RefreshQuotaForAllUid();
+    ProcessCheckRecoverableApplicationInfo();
 }
 
 void BMSEventHandler::ProcessRebootDeleteArkAp()
@@ -1497,6 +1503,65 @@ void BMSEventHandler::InnerProcessCheckCloudShaderDir()
     LOG_I(BMS_TAG_DEFAULT, "Create cloud shader cache result: %{public}d", result);
 }
 
+void BMSEventHandler::ProcessCheckRecoverableApplicationInfo()
+{
+    bool hasCheck = false;
+    CheckOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO, hasCheck);
+    if (hasCheck) {
+        LOG_D(BMS_TAG_DEFAULT, "recoverable app info has checked");
+        return;
+    }
+    LOG_D(BMS_TAG_DEFAULT, "Need to check recoverable app info");
+    InnerProcessCheckRecoverableApplicationInfo();
+    UpdateOtaFlag(OTAFlag::CHECK_RECOVERABLE_APPLICATION_INFO);
+}
+
+void BMSEventHandler::InnerProcessCheckRecoverableApplicationInfo()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
+        return;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto &preInstallBundleInfo : preInstallBundleInfos) {
+        BundleInfo bundleInfo;
+        if (dataMgr->GetBundleInfo(preInstallBundleInfo.GetBundleName(),
+            BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, Constants::ALL_USERID)) {
+            preInstallBundleInfo.SetSystemApp(bundleInfo.applicationInfo.isSystemApp);
+            if (bundleInfo.isNewVersion) {
+                preInstallBundleInfo.SetBundleType(bundleInfo.applicationInfo.bundleType);
+            } else if (!bundleInfo.hapModuleInfos.empty() &&
+                bundleInfo.hapModuleInfos[0].installationFree) {
+                preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+            }
+            dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+            continue;
+        }
+        BundleMgrHostImpl impl;
+        auto preinstalledAppPaths = preInstallBundleInfo.GetBundlePaths();
+        for (auto preinstalledAppPath: preinstalledAppPaths) {
+            BundleInfo archiveBundleInfo;
+            if (!impl.GetBundleArchiveInfo(preinstalledAppPath, GET_BUNDLE_DEFAULT, archiveBundleInfo)) {
+                LOG_E(BMS_TAG_DEFAULT, "Get bundle archive info fail");
+                break;
+            }
+            preInstallBundleInfo.SetSystemApp(archiveBundleInfo.applicationInfo.isSystemApp);
+            if (archiveBundleInfo.isNewVersion) {
+                preInstallBundleInfo.SetBundleType(archiveBundleInfo.applicationInfo.bundleType);
+            } else if (!archiveBundleInfo.hapModuleInfos.empty() &&
+                archiveBundleInfo.hapModuleInfos[0].installationFree) {
+                preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+            }
+            if (!archiveBundleInfo.hapModuleInfos.empty() &&
+                archiveBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                break;
+            }
+        }
+        dataMgr->SavePreInstallBundleInfo(preInstallBundleInfo.GetBundleName(), preInstallBundleInfo);
+    }
+}
+
 static void SendToStorageQuota(const std::string &bundleName, const int32_t uid,
     const std::string &bundleDataDirPath, const int32_t limitSizeMb)
 {
@@ -1674,6 +1739,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             LOG_E(BMS_TAG_DEFAULT, "obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(scanPathIter, ERR_APPEXECFWK_PARSE_UNEXPECTED);
             SavePreInstallException(scanPathIter);
             continue;
         }
@@ -3252,23 +3318,10 @@ void BMSEventHandler::ProcessBundleResourceInfo()
         LOG_E(BMS_TAG_DEFAULT, "dataMgr is nullptr");
         return;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId == Constants::INVALID_USERID) {
-        userId = Constants::START_USERID;
-    }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    std::vector<std::string> bundleNames;
-    for (const auto &item : bundleInfos) {
-        bundleNames.emplace_back(item.first);
-        InnerBundleUserInfo innerBundleUserInfo;
-        if (item.second.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
-            !innerBundleUserInfo.cloneInfos.empty()) {
-            // need process clone app resource
-            LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s has clone info", item.first.c_str());
-            for (const auto &clone : innerBundleUserInfo.cloneInfos) {
-                bundleNames.emplace_back(std::to_string(clone.second.appIndex) + INNER_UNDER_LINE + item.first);
-            }
-        }
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    if (bundleNames.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "bundleNames is empty");
+        return;
     }
     std::vector<std::string> resourceNames;
     BundleResourceHelper::GetAllBundleResourceName(resourceNames);
@@ -3276,7 +3329,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
     std::set<std::string> needAddResourceBundles;
     for (const auto &bundleName : bundleNames) {
         if (std::find(resourceNames.begin(), resourceNames.end(), bundleName) == resourceNames.end()) {
-            needAddResourceBundles.insert(BundleResourceHelper::ParseBundleName(bundleName));
+            needAddResourceBundles.insert(bundleName);
         }
     }
     if (needAddResourceBundles.empty()) {
@@ -3286,7 +3339,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
 
     for (const auto &bundleName : needAddResourceBundles) {
         LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s add resource when reboot", bundleName.c_str());
-        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId);
+        BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");
 }
@@ -3303,11 +3356,53 @@ void BMSEventHandler::SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo)
     EventReport::SendBundleSystemEvent(BundleEventType::UPDATE, eventInfo);
 }
 
+void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
+    const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
+{
+    if (innerBundleInfos.empty()) {
+        LOG_W(BMS_TAG_DEFAULT, "innerBundleInfos is empty");
+        return;
+    }
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_W(BMS_TAG_DEFAULT, "dataMgr is nullptr");
+        return;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        LOG_W(BMS_TAG_DEFAULT, "get preinstalled bundle info failed :%{public}s", bundleName.c_str());
+        return;
+    }
+    if (innerBundleInfos.begin()->second.GetBaseBundleInfo().versionCode <= preInstallBundleInfo.GetVersionCode()) {
+        LOG_I(BMS_TAG_DEFAULT, "bundle no change");
+        return;
+    }
+    LOG_I(BMS_TAG_DEFAULT, "begin update preinstall DB for %{public}s", bundleName.c_str());
+    preInstallBundleInfo.ClearBundlePath();
+    bool findEntry = false;
+    for (const auto &item : innerBundleInfos) {
+        preInstallBundleInfo.AddBundlePath(item.first);
+        if (!findEntry) {
+            auto applicationInfo = item.second.GetBaseApplicationInfo();
+            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
+            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
+            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
+            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        }
+        auto bundleInfo = item.second.GetBaseBundleInfo();
+        if (!bundleInfo.hapModuleInfos.empty() &&
+            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            findEntry = true;
+        }
+    }
+    dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+}
+
 bool BMSEventHandler::IsQuickfixFlagExsit(const BundleInfo &bundleInfo)
 {
     // check the quickfix flag.
-    for (auto const &hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (auto const &metadata : hapModuleInfo.metadata) {
+    for (auto const & hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (auto const & metadata : hapModuleInfo.metadata) {
             if (metadata.name.compare("ohos.app.quickfix") == 0) {
                 return true;
             }
@@ -3383,46 +3478,22 @@ void BMSEventHandler::ProcessRebootQuickFixUnInstallAndRecover(const std::string
     LOG_I(BMS_TAG_DEFAULT, "ProcessRebootQuickFixUnInstallAndRecover end");
 }
 
-void BMSEventHandler::UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
-    const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
+void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
 {
-    if (innerBundleInfos.empty()) {
-        LOG_W(BMS_TAG_DEFAULT, "innerBundleInfos is empty");
-        return;
-    }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_W(BMS_TAG_DEFAULT, "dataMgr is nullptr");
-        return;
-    }
-    PreInstallBundleInfo preInstallBundleInfo;
-    if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        LOG_W(BMS_TAG_DEFAULT, "get preinstalled bundle info failed :%{public}s", bundleName.c_str());
-        return;
-    }
-    if (innerBundleInfos.begin()->second.GetBaseBundleInfo().versionCode <= preInstallBundleInfo.GetVersionCode()) {
-        LOG_I(BMS_TAG_DEFAULT, "bundle no change");
-        return;
-    }
-    LOG_I(BMS_TAG_DEFAULT, "begin update preinstall DB for %{public}s", bundleName.c_str());
-    preInstallBundleInfo.ClearBundlePath();
-    bool findEntry = false;
-    for (const auto &item : innerBundleInfos) {
-        preInstallBundleInfo.AddBundlePath(item.first);
-        if (!findEntry) {
-            auto applicationInfo = item.second.GetBaseApplicationInfo();
-            item.second.AdaptMainLauncherResourceInfo(applicationInfo);
-            preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
-            preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
-            preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
-        }
-        auto bundleInfo = item.second.GetBaseBundleInfo();
-        if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-            findEntry = true;
+    InstallParam installParam;
+    installParam.userId = Constants::DEFAULT_USERID;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    std::vector<std::string> wrongBundleNameList;
+    wrongBundleNameList.emplace_back(Constants::SCENE_BOARD_BUNDLE_NAME);
+
+    for (const auto &bundle : wrongBundleNameList) {
+        SystemBundleInstaller installer;
+        if (!installer.UninstallSystemBundle(bundle, installParam)) {
+            LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundle.c_str(),
+                installParam.userId);
         }
     }
-    dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

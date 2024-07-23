@@ -1124,5 +1124,396 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeleteEncryptionKeyId_0100
     ErrCode result = installClient_->DeleteEncryptionKeyId("");
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExecuteAOTd_0100
+ * @tc.name: ExecuteAOT
+ * @tc.desc: call ExecuteAOT.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExecuteAOTd_0100, TestSize.Level1)
+{
+    AOTArgs aotArgs;
+    std::vector<uint8_t> pendSignData;
+    ErrCode result = installClient_->ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_PendSignAOT_0100
+ * @tc.name: PendSignAOT
+ * @tc.desc: call PendSignAOT.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_PendSignAOT_0100, TestSize.Level1)
+{
+    std::string anFileName;
+    std::vector<uint8_t> signData;
+    ErrCode result = installClient_->PendSignAOT(anFileName, signData);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_StopAOT_0100
+ * @tc.name: StopAOT
+ * @tc.desc: call StopAOT.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_StopAOT_0100, TestSize.Level1)
+{
+    ErrCode result = installClient_->StopAOT();
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CreateBundleDataDirWithVector_0100
+ * @tc.name: CreateBundleDataDirWithVector
+ * @tc.desc: call CreateBundleDataDirWithVector.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDirWithVector_0100, TestSize.Level1)
+{
+    std::vector<CreateDirParam> createDirParams;
+    ErrCode result = installClient_->CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetDiskUsage_0100
+ * @tc.name: GetDiskUsage
+ * @tc.desc: call GetDiskUsage.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0100, TestSize.Level1)
+{
+    std::string dir;
+    bool isRealPath = true;
+    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_GetDiskUsage_0200
+ * @tc.name: GetDiskUsage
+ * @tc.desc: call GetDiskUsage.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetDiskUsage_0200, TestSize.Level1)
+{
+    std::string dir = "disk.path";
+    bool isRealPath = true;
+    ErrCode result = installClient_->GetDiskUsage(dir, isRealPath);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+ 
+ /**
+ * @tc.number: BmsInstalldClientTest_IsExistFile_0100
+ * @tc.name: IsExistFile
+ * @tc.desc: call IsExistFile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_IsExistFile_0100, TestSize.Level1)
+{
+    std::string path = "path.test";
+    bool isExist = true;
+    ErrCode result = installClient_->IsExistFile(path, isExist);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+ /**
+ * @tc.number: BmsInstalldClientTest_IsExistApFile_0100
+ * @tc.name: IsExistApFile
+ * @tc.desc: call IsExistApFile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_IsExistApFile_0100, TestSize.Level1)
+{
+    std::string path = "path.test";
+    bool isExist = true;
+    ErrCode result = installClient_->IsExistApFile(path, isExist);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_VerifyCodeSignature_0100
+ * @tc.name: VerifyCodeSignature
+ * @tc.desc: call VerifyCodeSignature.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignature_0100, TestSize.Level1)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "";
+    ErrCode result = installClient_->VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_VerifyCodeSignature_0200
+ * @tc.name: VerifyCodeSignature
+ * @tc.desc: call VerifyCodeSignature.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignature_0200, TestSize.Level1)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "module.path";
+    ErrCode result = installClient_->VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckEncryption_0100
+ * @tc.name: CheckEncryption
+ * @tc.desc: call CheckEncryption.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckEncryption_0100, TestSize.Level1)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    bool isEncryption = true;
+    ErrCode result = installClient_->CheckEncryption(checkEncryptionParam, isEncryption);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CheckEncryption_0200
+ * @tc.name: CheckEncryption
+ * @tc.desc: call CheckEncryption.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CheckEncryption_0200, TestSize.Level1)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "module.path";
+    bool isEncryption = true;
+    ErrCode result = installClient_->CheckEncryption(checkEncryptionParam, isEncryption);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MoveFiles_0100
+ * @tc.name: MoveFiles
+ * @tc.desc: call MoveFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFiles_0100, TestSize.Level1)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    bool isEncryption;
+    ErrCode result = installClient_->CheckEncryption(checkEncryptionParam, isEncryption);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_MoveFiles_0200
+ * @tc.name: MoveFiles
+ * @tc.desc: call MoveFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFiles_0200, TestSize.Level1)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "module.path";
+    bool isEncryption = true;
+    ErrCode result = installClient_->CheckEncryption(checkEncryptionParam, isEncryption);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractDriverSoFiles_0100
+ * @tc.name: ExtractDriverSoFiles
+ * @tc.desc: call ExtractDriverSoFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDriverSoFiles_0100, TestSize.Level1)
+{
+    std::string srcPath;
+    std::unordered_multimap<std::string, std::string> dirMap;
+    ErrCode result = installClient_->ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractDriverSoFiles_0200
+ * @tc.name: ExtractDriverSoFiles
+ * @tc.desc: call ExtractDriverSoFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDriverSoFiles_0200, TestSize.Level1)
+{
+    std::string srcPath = "src.path";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.insert(std::make_pair("key", "val1"));
+    ErrCode result = installClient_->ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_VerifyCodeSignatureForHap_0100
+ * @tc.name: VerifyCodeSignatureForHap
+ * @tc.desc: call VerifyCodeSignatureForHap.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignatureForHap_0100, TestSize.Level1)
+{
+    CodeSignatureParam codeSignatureParam;
+    ErrCode result = installClient_->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_VerifyCodeSignatureForHap_0200
+ * @tc.name: VerifyCodeSignatureForHap
+ * @tc.desc: call VerifyCodeSignatureForHap.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_VerifyCodeSignatureForHap_0200, TestSize.Level1)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "module.path";
+    ErrCode result = installClient_->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_DeliverySignProfile_0100
+ * @tc.name: DeliverySignProfile
+ * @tc.desc: call DeliverySignProfile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0100, TestSize.Level1)
+{
+    std::string bundleName;
+    int32_t profileBlockLength = 0;
+    unsigned char *profileBlock = new unsigned char[0];
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_DeliverySignProfile_0200
+ * @tc.name: DeliverySignProfile
+ * @tc.desc: call DeliverySignProfile.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_DeliverySignProfile_0200, TestSize.Level1)
+{
+    std::string bundleName = "bundleName";
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    ErrCode result = installClient_->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_StartInstalldService_0100
+ * @tc.name: StartInstalldService
+ * @tc.desc: call StartInstalldService.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_StartInstalldService_0100, TestSize.Level1)
+{
+    bool result = installClient_->StartInstalldService();
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractEncryptedSoFiles_0100
+ * @tc.name: ExtractEncryptedSoFiles
+ * @tc.desc: call ExtractEncryptedSoFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractEncryptedSoFiles_0100, TestSize.Level1)
+{
+    std::string hapPath;
+    const std::string realSoFilesPath;
+    const std::string cpuAbi;
+    std::string tmpSoPath;
+    int32_t uid = -1;
+    ErrCode result = installClient_->ExtractEncryptedSoFiles(hapPath,
+        realSoFilesPath, cpuAbi, tmpSoPath, uid);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_ExtractEncryptedSoFiles_0200
+ * @tc.name: ExtractEncryptedSoFiles
+ * @tc.desc: call ExtractEncryptedSoFiles.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractEncryptedSoFiles_0200, TestSize.Level1)
+{
+    std::string hapPath = "hap.path";
+    const std::string realSoFilesPath = "realSofiles.path";
+    const std::string cpuAbi = "cpuabi";
+    std::string tmpSoPath = "tmpso.path";
+    int32_t uid = 100;
+    ErrCode result = installClient_->ExtractEncryptedSoFiles(hapPath,
+        realSoFilesPath, cpuAbi, tmpSoPath, uid);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_RemoveExtensionDir_0100
+ * @tc.name: RemoveExtensionDir
+ * @tc.desc: call RemoveExtensionDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveExtensionDir_0100, TestSize.Level1)
+{
+    int32_t userId = -1;
+    const std::vector<std::string> extensionBundleDirs;
+    ErrCode result = installClient_->RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(result, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_RemoveExtensionDir_0200
+ * @tc.name: RemoveExtensionDir
+ * @tc.desc: call RemoveExtensionDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveExtensionDir_0200, TestSize.Level1)
+{
+    int32_t userId = 100;
+    std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back("com.bundleName.extension");
+    ErrCode result = installClient_->RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_IsExistExtensionDir_0100
+ * @tc.name: IsExistExtensionDir
+ * @tc.desc: call IsExistExtensionDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_IsExistExtensionDir_0100, TestSize.Level1)
+{
+    int32_t userId = -1;
+    std::string extensionBundleDir;
+    bool isExist;
+    ErrCode result = installClient_->IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_IsExistExtensionDir_0200
+ * @tc.name: IsExistExtensionDir
+ * @tc.desc: call IsExistExtensionDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_IsExistExtensionDir_0200, TestSize.Level1)
+{
+    int32_t userId = 100;
+    std::string extensionBundleDir = "com.extension.bundle";
+    bool isExist = true;
+    ErrCode result = installClient_->IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CreateExtensionDataDir_0100
+ * @tc.name: CreateExtensionDataDir
+ * @tc.desc: call CreateExtensionDataDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateExtensionDataDir_0100, TestSize.Level1)
+{
+    CreateDirParam createDirParam;
+    ErrCode result = installClient_->CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsInstalldClientTest_CreateExtensionDataDir_0200
+ * @tc.name: CreateExtensionDataDir
+ * @tc.desc: call CreateExtensionDataDir.
+ */
+HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateExtensionDataDir_0200, TestSize.Level1)
+{
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "bundleName";
+    createDirParam.userId  = 100;
+    createDirParam.uid = 100;
+    createDirParam.gid = 100;
+    createDirParam.extensionDirs.push_back("com.acts.extension");
+    ErrCode result = installClient_->CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+}
 } // namespace AppExecFwk
 } // namespace OHOS

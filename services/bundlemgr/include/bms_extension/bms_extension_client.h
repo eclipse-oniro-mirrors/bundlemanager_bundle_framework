@@ -61,6 +61,8 @@ public:
     ErrCode AddResourceInfoByAbility(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const int32_t userId);
     ErrCode DeleteResourceInfo(const std::string &key);
+    ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+        int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;

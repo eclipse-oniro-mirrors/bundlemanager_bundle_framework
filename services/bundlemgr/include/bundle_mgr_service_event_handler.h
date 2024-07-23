@@ -47,6 +47,7 @@ enum OTAFlag {
     CHECK_PREINSTALL_DATA = 0x00000400,
     CHECK_CLOUD_SHADER_DIR = 0x00000800,
     CHECK_BACK_UP_DIR = 0x00001000,
+    CHECK_RECOVERABLE_APPLICATION_INFO = 0x00002000,
 };
 
 enum class ScanResultCode {
@@ -510,6 +511,8 @@ private:
     void ProcessCheckCloudShaderDir();
     void InnerProcessCheckCloudShaderDir();
     void ProcessNewBackupDir();
+    void ProcessCheckRecoverableApplicationInfo();
+    void InnerProcessCheckRecoverableApplicationInfo();
 
     void PrepareBundleDirQuota(const std::string &bundleName, const int32_t uid,
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
@@ -595,6 +598,7 @@ private:
     void SendBundleUpdateFailedEvent(const BundleInfo &bundleInfo);
     void UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
+    void InnerProcessRebootUninstallWrongBundle();
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

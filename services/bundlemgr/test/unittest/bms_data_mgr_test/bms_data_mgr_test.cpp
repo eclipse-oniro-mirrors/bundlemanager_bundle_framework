@@ -2191,4 +2191,333 @@ HWTEST_F(BmsDataMgrTest, UpateCurDynamicIconModule_0100, Function | SmallTest | 
     ret = dataMgr->UpateCurDynamicIconModule(BUNDLE_NAME, moduleName);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: GetInnerBundleInfoUsers_0100
+ * @tc.name: test GetInnerBundleInfoUsers
+ * @tc.desc: 1.test obtain internal bundle information for users
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoUsers_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::set<int32_t> userIds;
+    bool ret = dataMgr->GetInnerBundleInfoUsers(bundleName, userIds);
+    EXPECT_EQ(ret, false);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->GetInnerBundleInfoUsers(BUNDLE_NAME, userIds);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0100
+ * @tc.name: test ResetAOTCompileStatus
+ * @tc.desc: 1.test reset AOT compilation status
+ */
+HWTEST_F(BmsDataMgrTest, ResetAOTCompileStatus_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::string moduleName = "";
+    int32_t triggerMode = 0;
+    ErrCode ret = dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    dataMgr->ResetAOTFlagsCommand(bundleName);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    dataMgr->ResetAOTFlagsCommand(BUNDLE_NAME);
+    ret = dataMgr->ResetAOTCompileStatus(BUNDLE_NAME, moduleName, triggerMode);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllExtensionInfos_0100
+ * @tc.name: test GetAllExtensionInfos
+ * @tc.desc: 1.test get all extended information
+ */
+HWTEST_F(BmsDataMgrTest, GetAllExtensionInfos_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    uint32_t flags = 0;
+    int32_t userId = 0;
+    InnerBundleInfo info;
+    std::vector<ExtensionAbilityInfo> infos;
+    int32_t appIndex = 0;
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), true);
+    ExtensionAbilityInfo extensionAbilityInfo;
+    info.InsertExtensionInfo("", extensionAbilityInfo);
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+    flags = 1;
+    dataMgr->GetAllExtensionInfos(flags, userId, info, infos, appIndex);
+    EXPECT_EQ(infos.empty(), false);
+}
+
+/**
+ * @tc.number: GetAppServiceHspBundleInfo_0100
+ * @tc.name: test GetAppServiceHspBundleInfo
+ * @tc.desc: 1.obtain information on the Hsp bundle for application service
+ */
+HWTEST_F(BmsDataMgrTest, GetAppServiceHspBundleInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    BundleInfo bundleInfo;
+    ErrCode ret = dataMgr->GetAppServiceHspBundleInfo(bundleName, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    std::map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    infos.emplace(BUNDLE_NAME, innerBundleInfo);
+    dataMgr->bundleInfos_.swap(infos);
+    ret = dataMgr->GetAppServiceHspBundleInfo(BUNDLE_NAME, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CanOpenLink_0100
+ * @tc.name: test CanOpenLink
+ * @tc.desc: 1.judge open link
+ */
+HWTEST_F(BmsDataMgrTest, CanOpenLink_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string link = "";
+    bool canOpen = false;
+    ErrCode ret = dataMgr->CanOpenLink(link, canOpen);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES);
+}
+
+/**
+ * @tc.number:GetOdid_0100
+ * @tc.name: test GetOdid
+ * @tc.desc: 1.test get odid
+ */
+HWTEST_F(BmsDataMgrTest, GetOdid_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string odid = "";
+    std::string developerId = "";
+    dataMgr->GenerateOdid(developerId, odid);
+    ErrCode ret = dataMgr->GetOdid(odid);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number:GetDeveloperIds_0100
+ * @tc.name: test GetDeveloperIds
+ * @tc.desc: 1.test get developer ids
+ */
+HWTEST_F(BmsDataMgrTest, GetDeveloperIds_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string appDistributionType = "";
+    std::vector<std::string> developerIdList;
+    int32_t userId = -1;
+    ErrCode ret = dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ret = dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
+    EXPECT_EQ(ret, ERR_OK);
+    dataMgr->bundleInfos_.clear();
+    ret = dataMgr->GetDeveloperIds(appDistributionType, developerIdList, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number:AddCloneBundle_0100
+ * @tc.name: test AddCloneBundle
+ * @tc.desc: 1.test add clone bundle
+ */
+HWTEST_F(BmsDataMgrTest, AddCloneBundle_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    InnerBundleCloneInfo attr;
+    ErrCode ret = dataMgr->AddCloneBundle(bundleName, attr);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ret = dataMgr->AddCloneBundle(BUNDLE_NAME, attr);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number:RemoveCloneBundle_0100
+ * @tc.name: test RemoveCloneBundle
+ * @tc.desc: 1.test remove clone bundle
+ */
+HWTEST_F(BmsDataMgrTest, RemoveCloneBundle_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    ErrCode ret = dataMgr->RemoveCloneBundle(bundleName, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    InnerBundleInfo innerBundleInfo;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ret = dataMgr->RemoveCloneBundle(BUNDLE_NAME, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number:QueryAbilityInfoByContinueType_0100
+ * @tc.name: test QueryAbilityInfoByContinueType
+ * @tc.desc: 1.query capability information by continuous type
+ */
+HWTEST_F(BmsDataMgrTest, QueryAbilityInfoByContinueType_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    std::string continueType = "";
+    AbilityInfo abilityInfo;
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    ErrCode ret = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    ret = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    appIndex = 1;
+    ret = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId, appIndex);
+    EXPECT_NE(ret, ERR_OK);
+    dataMgr->bundleInfos_.clear();
+    ret = dataMgr->QueryAbilityInfoByContinueType(bundleName, continueType, abilityInfo, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number:QueryAbilityInfoByContinueType_0200
+ * @tc.name: test QueryAbilityInfoByContinueType
+ * @tc.desc: 1.query capability information by continuous type
+ */
+HWTEST_F(BmsDataMgrTest, QueryAbilityInfoByContinueType_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    int32_t userId = Constants::ALL_USERID;
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    std::string bundleName = "";
+    std::string continueType = "";
+    AbilityInfo abilityInfo;
+    int32_t appIndex = 0;
+    ErrCode ret = dataMgr->QueryAbilityInfoByContinueType(BUNDLE_NAME, continueType, abilityInfo, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number:QueryCloneAbilityInfo_0100
+ * @tc.name: test QueryCloneAbilityInfo
+ * @tc.desc: 1.query cloning capability information
+ */
+HWTEST_F(BmsDataMgrTest, QueryCloneAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ElementName element;
+    int32_t flags = 0;
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    AbilityInfo abilityInfo;
+    ErrCode ret = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    ret = dataMgr->QueryCloneAbilityInfo(element, flags, userId, appIndex, abilityInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number:ExplicitQueryCloneAbilityInfo_0100
+ * @tc.name: test ExplicitQueryCloneAbilityInfo
+ * @tc.desc: 1.explicitly query cloning capability information
+ */
+HWTEST_F(BmsDataMgrTest, ExplicitQueryCloneAbilityInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    ElementName element;
+    int32_t flags = 0;
+    int32_t userId = -1;
+    int32_t appIndex = 0;
+    AbilityInfo abilityInfo;
+    ErrCode ret = dataMgr->ExplicitQueryCloneAbilityInfoV9(element, flags, userId, appIndex, abilityInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number:GetCloneBundleInfo_0100
+ * @tc.name: test GetCloneBundleInfo
+ * @tc.desc: 1.get clone bundle information
+ */
+HWTEST_F(BmsDataMgrTest, GetCloneBundleInfo_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    std::string bundleName = "";
+    int32_t flags = 0;
+    int32_t appIndex = 0;
+    BundleInfo bundleInfo;
+    int32_t userId = -1;
+    ErrCode ret = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    userId = Constants::ANY_USERID;
+    ret = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number:GetInnerBundleInfoWithFlags_0100
+ * @tc.name: test GetInnerBundleInfoWithFlags
+ * @tc.desc: 1.test using flags to obtain internal bundling information
+ */
+HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    int32_t userId = Constants::ALL_USERID;
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    BundleUserInfo userInfo;
+    userInfo.userId = userId;
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo = userInfo;
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    dataMgr->multiUserIdsSet_.insert(userId);
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    ErrCode res =
+        dataMgr->GetInnerBundleInfoWithFlagsV9(BUNDLE_NAME, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, userId);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

@@ -639,6 +639,17 @@ public:
         }
         return abilityNames;
     }
+
+    bool GetCloudFileSyncEnabled() const
+    {
+        return baseApplicationInfo_->cloudFileSyncEnabled;
+    }
+
+    void SetCloudFileSyncEnabled(bool cloudFileSyncEnabled)
+    {
+        baseApplicationInfo_->cloudFileSyncEnabled = cloudFileSyncEnabled;
+    }
+
     /**
      * @brief Get version code in application.
      * @return Returns version code.
@@ -2163,6 +2174,7 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    std::set<int32_t> GetCloneBundleAppIndexes() const;
 
 private:
     bool IsExistLauncherAbility() const;

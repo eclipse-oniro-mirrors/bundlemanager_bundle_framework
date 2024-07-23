@@ -80,6 +80,7 @@ namespace BundleManager {
         int32_t bundleType;
         bool debug;
         bool dataUnclearable;
+        bool cloudFileSyncEnabled;
     };
 
     struct CArrInt32 {

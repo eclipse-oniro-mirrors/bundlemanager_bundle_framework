@@ -30,7 +30,7 @@ constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     VerifyManagerHostImpl impl;
-    std::string bundleName;
+    std::string bundleName(data, size);
     auto ret1 = impl.GetCallingBundleName(bundleName);
     return true;
 }

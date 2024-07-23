@@ -50,28 +50,6 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
     return true;
 }
 
-bool BundleResourceProcess::GetResourceInfo(
-    const InnerBundleInfo &innerBundleInfo,
-    const int32_t userId,
-    std::vector<ResourceInfo> &resourceInfo)
-{
-    if (userId != Constants::DEFAULT_USERID) {
-        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId > 0) && (currentUserId != userId)) {
-            APP_LOGW("userId:%{public}d current:%{public}d not same", userId, currentUserId);
-            return false;
-        }
-    }
-
-    if (!IsBundleExist(innerBundleInfo, userId)) {
-        APP_LOGW("%{public}s not exist in userId %{public}d",
-            innerBundleInfo.GetBundleName().c_str(), userId);
-        return false;
-    }
-
-    return InnerGetResourceInfo(innerBundleInfo, userId, resourceInfo);
-}
-
 bool BundleResourceProcess::GetAllResourceInfo(
     const int32_t userId,
     std::map<std::string, std::vector<ResourceInfo>> &resourceInfosMap)
@@ -81,32 +59,31 @@ bool BundleResourceProcess::GetAllResourceInfo(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
-    auto userIds = dataMgr->GetAllUser();
-    if (userIds.find(userId) == userIds.end()) {
+    if (!dataMgr->HasUserId(userId)) {
         APP_LOGE("userId %{public}d not exist", userId);
         return false;
     }
-    const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
-    if (bundleInfos.empty()) {
+    std::vector<std::string> allBundleNames = dataMgr->GetAllBundleName();
+    if (allBundleNames.empty()) {
         APP_LOGE("bundleInfos is empty");
         return false;
     }
 
-    for (const auto &item : bundleInfos) {
-        if (item.second.IsDisabled()) {
-            APP_LOGD("bundle %{public}s is disabled", item.second.GetBundleName().c_str());
+    for (const auto &bundleName : allBundleNames) {
+        InnerBundleInfo innerBundleInfo;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
+            APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
             continue;
         }
-        if (!IsBundleExist(item.second, userId)) {
-            APP_LOGD("bundle %{public}s is not exist in userId: %{public}d",
-                item.second.GetBundleName().c_str(), userId);
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
+            APP_LOGD("bundleName:%{public}s is shared", bundleName.c_str());
             continue;
         }
         std::vector<ResourceInfo> resourceInfos;
-        if (!InnerGetResourceInfo(item.second, userId, resourceInfos)) {
-            APP_LOGW("%{public}s resourceInfo empty", item.second.GetBundleName().c_str());
+        if (!InnerGetResourceInfo(innerBundleInfo, userId, resourceInfos) || resourceInfos.empty()) {
+            APP_LOGW("%{public}s resourceInfo empty", bundleName.c_str());
         } else {
-            resourceInfosMap[item.second.GetBundleName()] = resourceInfos;
+            resourceInfosMap[bundleName] = resourceInfos;
         }
     }
     return true;
@@ -123,14 +100,13 @@ bool BundleResourceProcess::GetResourceInfoByBundleName(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return false;
+    }
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
-        return false;
-    }
-
-    if (!IsBundleExist(innerBundleInfo, userId)) {
-        APP_LOGW("bundle %{public}s not exist in userId %{public}d", innerBundleInfo.GetBundleName().c_str(), userId);
         return false;
     }
 
@@ -151,20 +127,16 @@ bool BundleResourceProcess::GetLauncherResourceInfoByAbilityName(
         APP_LOGE("dataMgr is nullptr");
         return false;
     }
+    if (!dataMgr->HasUserId(userId)) {
+        APP_LOGE("userId %{public}d not exist", userId);
+        return false;
+    }
     InnerBundleInfo innerBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
         return false;
     }
 
-    if (!IsBundleExist(innerBundleInfo, userId)) {
-        APP_LOGW("bundle %{public}s not exist in userId %{public}d", innerBundleInfo.GetBundleName().c_str(), userId);
-        return false;
-    }
-    if (innerBundleInfo.IsDisabled()) {
-        APP_LOGD("bundle %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
-        return false;
-    }
     std::vector<ResourceInfo> resourceInfos;
     if (GetAbilityResourceInfos(innerBundleInfo, userId, resourceInfos)) {
         for (const auto &info : resourceInfos) {
@@ -266,25 +238,6 @@ bool BundleResourceProcess::InnerGetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
 {
-    // for clone bundle
-    std::vector<int32_t> appIndexes;
-    InnerBundleUserInfo innerBundleUserInfo;
-    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        for (const auto &cloneInfo : innerBundleUserInfo.cloneInfos) {
-            if (cloneInfo.second.enabled) {
-                appIndexes.emplace_back(cloneInfo.second.appIndex);
-            }
-        }
-    }
-    if (!innerBundleInfo.GetApplicationEnabled(innerBundleInfo.GetResponseUserId(userId))) {
-        if (appIndexes.empty()) {
-            APP_LOGW("bundle %{public}s is disabled in userId:%{public}d, no clone info",
-                innerBundleInfo.GetBundleName().c_str(), userId);
-            return false;
-        }
-        appIndexes.emplace_back(ServiceConstants::INVALID_GID);
-    }
-
     ResourceInfo dynamicResourceInfo;
     bool hasDynamicIcon = GetDynamicIcon(innerBundleInfo, dynamicResourceInfo);
     if (!OnGetResourceInfo(innerBundleInfo, userId, resourceInfos)) {
@@ -310,10 +263,12 @@ bool BundleResourceProcess::InnerGetResourceInfo(
         ChangeDynamicIcon(resourceInfos, dynamicResourceInfo);
     }
     // for clone bundle
+    std::set<int32_t> appIndexes = innerBundleInfo.GetCloneBundleAppIndexes();
     if (!appIndexes.empty()) {
         APP_LOGI("bundleName:%{public}s contains clone bundle", innerBundleInfo.GetBundleName().c_str());
+        std::vector<int32_t> indexes(appIndexes.begin(), appIndexes.end());
         for (auto &info : resourceInfos) {
-            info.appIndexes_ = appIndexes;
+            info.appIndexes_ = indexes;
         }
     }
     return true;
@@ -344,12 +299,6 @@ bool BundleResourceProcess::OnGetResourceInfo(
     APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", bundleName.c_str(),
         static_cast<int32_t>(resourceInfos.size()));
     return !resourceInfos.empty();
-}
-
-bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId)
-{
-    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    return responseUserId != Constants::INVALID_USERID;
 }
 
 ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const AbilityInfo &info)
@@ -413,13 +362,6 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfos(
         return false;
     }
     for (const auto &info : abilityInfos) {
-        if (!info.applicationInfo.enabled) {
-            continue;
-        }
-        if (!innerBundleInfo.IsAbilityEnabled(info, innerBundleInfo.GetResponseUserId(userId))) {
-            APP_LOGW("abilityName %{public}s disable", info.name.c_str());
-            continue;
-        }
         resourceInfos.push_back(ConvertToLauncherAbilityResourceInfo(info));
     }
     // process overlay hap paths
@@ -543,11 +485,6 @@ bool BundleResourceProcess::GetAbilityResourceInfos(
     }
     std::map<std::string, AbilityInfo> abilityInfos = innerBundleInfo.GetInnerAbilityInfos();
     for (const auto &item : abilityInfos) {
-        if (!innerBundleInfo.IsAbilityEnabled(item.second, innerBundleInfo.GetResponseUserId(userId))) {
-            APP_LOGW("bundleName %{public}s abilityName %{public}s disable", item.second.bundleName.c_str(),
-                item.second.name.c_str());
-            continue;
-        }
         resourceInfos.emplace_back(ConvertToLauncherAbilityResourceInfo(item.second));
     }
     // process overlay hap paths

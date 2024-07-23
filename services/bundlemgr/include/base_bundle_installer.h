@@ -381,7 +381,7 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        std::unordered_map<std::string, InnerBundleInfo> &infos);
+        std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
 
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -520,7 +520,7 @@ private:
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    ErrCode UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo);
+    ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.

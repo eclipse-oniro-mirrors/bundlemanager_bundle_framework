@@ -52,6 +52,7 @@
                 "display_manager",
                 "ecological_rule_manager",
                 "eventhandler",
+                "faultloggerd",
                 "ffrt",
                 "hisysevent",
                 "hitrace",
@@ -93,7 +94,7 @@
         "build": {
             "sub_component": [
                 "//foundation/bundlemanager/bundle_framework:bms_target",
-                "//foundation/bundlemanager/bundle_framework/etc:bms.para.dac"
+                "//foundation/bundlemanager/bundle_framework/etc:bms_para"
             ],
             "inner_kits": [
                 {

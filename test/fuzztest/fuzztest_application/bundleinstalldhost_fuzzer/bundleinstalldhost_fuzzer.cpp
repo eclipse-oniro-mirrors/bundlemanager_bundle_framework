@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#define private public
 #include "bundleinstalldhost_fuzzer.h"
 
 #include <cstddef>
@@ -26,26 +27,22 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 24;
+constexpr uint32_t CODE_MAX = 50;
 static InstalldHost installdHost;
-
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
-}
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
-    MessageParcel datas;
-    std::u16string descriptor = InstalldHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
-    installdHost.OnRemoteRequest(code, datas, reply, option);
+    for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = InstalldHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
+        installdHost.OnRemoteRequest(code, datas, reply, option);
+    }
     return true;
 }
 }

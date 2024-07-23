@@ -302,6 +302,7 @@ struct ApplicationInfo : public Parcelable {
     int32_t maxChildProcess = 0;
 
     std::string installSource;
+    bool cloudFileSyncEnabled = false;
 
     std::string configuration;
 

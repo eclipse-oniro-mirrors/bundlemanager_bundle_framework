@@ -30,7 +30,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServiceFwk;
-        std::vector<std::string> moduleNameList;
+        std::vector<std::string> moduleNameList { std::string(data, size) };
         appServiceFwk.UninstallLowerVersion(moduleNameList);
         return true;
     }

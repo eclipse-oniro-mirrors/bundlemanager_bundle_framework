@@ -156,7 +156,6 @@ BaseBundleInstaller::BaseBundleInstaller()
 BaseBundleInstaller::~BaseBundleInstaller()
 {
     bundlePaths_.clear();
-    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     toDeleteTempHapPath_.clear();
     signatureFileTmpMap_.clear();
 }
@@ -768,7 +767,14 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
             preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
             preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+            preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
             auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+            if (bundleInfo.isNewVersion) {
+                preInstallBundleInfo.SetBundleType(applicationInfo.bundleType);
+            } else if (!bundleInfo.hapModuleInfos.empty() &&
+                bundleInfo.hapModuleInfos[0].installationFree) {
+                preInstallBundleInfo.SetBundleType(BundleType::ATOMIC_SERVICE);
+            }
             if (!bundleInfo.hapModuleInfos.empty() &&
                 bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
                 break;
@@ -1065,7 +1071,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // check syscap
     result = CheckSysCap(bundlePaths);
-    CHECK_RESULT(result, "hap syscap check failed %{public}d");
+    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    if (!isSysCapValid) {
+        APP_LOGI("hap syscap check failed %{public}d", result);
+    }
     UpdateInstallerState(InstallerState::INSTALL_SYSCAP_CHECKED);                  // ---- 10%
 
     // verify signature info for all haps
@@ -1094,7 +1103,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
-    result = CheckInstallCondition(hapVerifyResults, newInfos);
+    result = CheckInstallCondition(hapVerifyResults, newInfos, isSysCapValid);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
@@ -1244,6 +1253,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
+    // the hap coyied to security dir neet to be deleted before sync
+    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     ForceWriteToDisk();
     return result;
 }
@@ -1436,7 +1447,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
-        BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 
@@ -1514,7 +1524,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         LOG_I(BMS_TAG_INSTALLER, "Pre-installed app %{public}s detected, Marking as uninstalled", bundleName.c_str());
         MarkPreInstallState(bundleName, true);
     }
-    BundleResourceHelper::DeleteResourceInfo(bundleName);
+    BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
     // remove profile from code signature
     RemoveProfileFromCodeSign(bundleName);
     ClearDomainVerifyStatus(oldInfo.GetAppIdentifier(), bundleName);
@@ -1797,7 +1807,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
             GetInstallEventInfo(oldInfo, sysEventInfo_);
-            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, userId_);
             return ERR_OK;
         }
     }
@@ -3753,12 +3762,15 @@ void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &b
 
 ErrCode BaseBundleInstaller::CheckInstallCondition(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-    std::unordered_map<std::string, InnerBundleInfo> &infos)
+    std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid)
 {
-    ErrCode ret = bundleInstallChecker_->CheckDeviceType(infos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
+    ErrCode ret;
+    if (!isSysCapValid) {
+        ret = bundleInstallChecker_->CheckDeviceType(infos);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+        }
     }
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
     if (ret != ERR_OK) {
@@ -5432,10 +5444,10 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
     return otaInstall_ || HasAllOldModuleUpdate(oldInfo, newInfos);
 }
 
-ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo)
+ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdateToken:%{public}d",
-        bundleName_.c_str(), needUpdateToken);
+    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
+        bundleName_.c_str(), needUpdate);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
@@ -5447,11 +5459,11 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdateToken, InnerBundleInf
             LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdateToken) {
+        if (needUpdate) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
-    if (needUpdateToken && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
+    if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }

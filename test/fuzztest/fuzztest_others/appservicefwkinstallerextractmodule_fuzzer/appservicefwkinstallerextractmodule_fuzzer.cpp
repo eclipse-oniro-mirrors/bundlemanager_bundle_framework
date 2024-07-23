@@ -32,7 +32,7 @@ namespace OHOS {
         AppServiceFwkInstaller appServicefwk;
         InnerBundleInfo oldInfo;
         InnerBundleInfo newInfo;
-        std::string hspPaths;
+        std::string hspPaths = { std::string(data, size) };
         appServicefwk.ExtractModule(newInfo, hspPaths);
         appServicefwk.ExtractModule(oldInfo, newInfo, hspPaths);
         return true;

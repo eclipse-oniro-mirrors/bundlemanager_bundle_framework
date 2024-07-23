@@ -1498,6 +1498,11 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.apiReleaseType.c_str(), NAPI_AUTO_LENGTH,
         &nReleaseType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "releaseType", nReleaseType));
+
+    napi_value nCloudFileSyncEnabled;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.cloudFileSyncEnabled, &nCloudFileSyncEnabled));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "cloudFileSyncEnabled",
+        nCloudFileSyncEnabled));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)

@@ -293,6 +293,26 @@ ErrCode BundleParser::ParseExtTypeConfig(
     return preBundleProfile.TransformJsonToExtensionTypeList(jsonBuf, extensionTypeList);
 }
 
+bool BundleParser::CheckRouterData(nlohmann::json data) const
+{
+    if (data.find(ROUTER_MAP_DATA) == data.end()) {
+        APP_LOGW("data is not existed");
+        return false;
+    }
+    if (!data.at(ROUTER_MAP_DATA).is_object()) {
+        APP_LOGW("data is not a json object");
+        return false;
+    }
+    for (nlohmann::json::iterator kt = data.at(ROUTER_MAP_DATA).begin(); kt != data.at(ROUTER_MAP_DATA).end(); ++kt) {
+        // check every value is string
+        if (!kt.value().is_string()) {
+            APP_LOGW("Error: Value in data object for key %{public}s must be a string", kt.key().c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleParser::ParseRouterArray(
     const std::string &jsonString, std::vector<RouterItem> &routerArray) const
 {
@@ -336,26 +356,6 @@ ErrCode BundleParser::ParseRouterArray(
         routerArray.emplace_back(routerItem);
     }
     return ERR_OK;
-}
-
-bool BundleParser::CheckRouterData(nlohmann::json data) const
-{
-    if (data.find(ROUTER_MAP_DATA) == data.end()) {
-        APP_LOGW("data is not existed");
-        return false;
-    }
-    if (!data.at(ROUTER_MAP_DATA).is_object()) {
-        APP_LOGW("data is not a json object");
-        return false;
-    }
-    for (nlohmann::json::iterator kt = data.at(ROUTER_MAP_DATA).begin(); kt != data.at(ROUTER_MAP_DATA).end(); ++kt) {
-        // check every value is string
-        if (!kt.value().is_string()) {
-            APP_LOGW("Error: Value in data object for key %{public}s must be a string", kt.key().c_str());
-            return false;
-        }
-    }
-    return true;
 }
 
 ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::vector<std::string> &noDisablingList)

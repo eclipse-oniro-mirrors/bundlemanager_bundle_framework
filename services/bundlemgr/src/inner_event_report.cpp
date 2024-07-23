@@ -39,10 +39,12 @@ const std::string BUNDLE_STATE_CHANGE = "BUNDLE_STATE_CHANGE";
 const std::string BUNDLE_CLEAN_CACHE = "BUNDLE_CLEAN_CACHE";
 const std::string BMS_USER_EVENT = "BMS_USER_EVENT";
 const std::string BUNDLE_QUICK_FIX = "BUNDLE_QUICK_FIX";
-const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 const std::string CPU_SCENE_ENTRY = "CPU_SCENE_ENTRY";
 const std::string FREE_INSTALL_EVENT = "FREE_INSTALL_EVENT";
 static constexpr char PERFORMANCE_DOMAIN[] = "PERFORMANCE";
+const std::string AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
+const std::string AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
+const std::string QUERY_OF_CONTINUE_TYPE = "QUERY_OF_CONTINUE_TYPE";
 
 // event params
 const std::string EVENT_PARAM_PNAMEID = "PNAMEID";
@@ -69,8 +71,6 @@ const std::string EVENT_PARAM_HASH_VALUE = "HASH_VALUE";
 const std::string EVENT_PARAM_INSTALL_TIME = "INSTALL_TIME";
 const std::string EVENT_PARAM_APPLY_QUICK_FIX_FREQUENCY = "APPLY_QUICK_FIX_FREQUENCY";
 const std::string EVENT_PARAM_CONTINUE_TYPE = "CONTINUE_TYPE";
-const std::string AOT_COMPILE_SUMMARY = "AOT_COMPILE_SUMMARY";
-const std::string AOT_COMPILE_RECORD = "AOT_COMPILE_RECORD";
 const std::string EVENT_PARAM_PACKAGE_NAME = "PACKAGE_NAME";
 const std::string EVENT_PARAM_SCENE_ID = "SCENE_ID";
 const std::string EVENT_PARAM_HAPPEN_TIME = "HAPPEN_TIME";
@@ -222,9 +222,9 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendQuickFixEvent(eventInfo);
             } },
-        { BMSEventType::QUERY_OF_CONTINUE_TYPE,
+        { BMSEventType::CPU_SCENE_ENTRY,
             [](const EventInfo& eventInfo) {
-                InnerSendQueryOfContinueTypeEvent(eventInfo);
+                InnerSendCpuSceneEvent(eventInfo);
             } },
         { BMSEventType::AOT_COMPILE_SUMMARY,
             [](const EventInfo& eventInfo) {
@@ -234,9 +234,9 @@ std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)>
             [](const EventInfo& eventInfo) {
                 InnerSendAOTRecordEvent(eventInfo);
             } },
-        { BMSEventType::CPU_SCENE_ENTRY,
+        { BMSEventType::QUERY_OF_CONTINUE_TYPE,
             [](const EventInfo& eventInfo) {
-                InnerSendCpuSceneEvent(eventInfo);
+                InnerSendQueryOfContinueTypeEvent(eventInfo);
             } },
         { BMSEventType::FREE_INSTALL_EVENT,
             [](const EventInfo& eventInfo) {
@@ -494,16 +494,15 @@ void InnerEventReport::InnerSendQuickFixEvent(const EventInfo& eventInfo)
         EVENT_PARAM_HASH_VALUE, eventInfo.hashValue);
 }
 
-void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo)
+void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
 {
-    InnerEventWrite(
-        QUERY_OF_CONTINUE_TYPE,
-        HiSysEventType::BEHAVIOR,
-        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
-        EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
-        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
-        EVENT_PARAM_USERID, eventInfo.userId,
-        EVENT_PARAM_CONTINUE_TYPE, eventInfo.continueType);
+    HiSysEventWrite(
+        PERFORMANCE_DOMAIN,
+        CPU_SCENE_ENTRY,
+        HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
+        EVENT_PARAM_PACKAGE_NAME, eventInfo.processName,
+        EVENT_PARAM_SCENE_ID, std::to_string(eventInfo.sceneId).c_str(),
+        EVENT_PARAM_HAPPEN_TIME, eventInfo.timeStamp);
 }
 
 void InnerEventReport::InnerSendAOTSummaryEvent(const EventInfo& eventInfo)
@@ -531,15 +530,16 @@ void InnerEventReport::InnerSendAOTRecordEvent(const EventInfo& eventInfo)
         EVENT_PARAM_TIME, eventInfo.timeStamp);
 }
 
-void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
+void InnerEventReport::InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo)
 {
-    HiSysEventWrite(
-        PERFORMANCE_DOMAIN,
-        CPU_SCENE_ENTRY,
-        HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-        EVENT_PARAM_PACKAGE_NAME, eventInfo.processName,
-        EVENT_PARAM_SCENE_ID, std::to_string(eventInfo.sceneId).c_str(),
-        EVENT_PARAM_HAPPEN_TIME, eventInfo.timeStamp);
+    InnerEventWrite(
+        QUERY_OF_CONTINUE_TYPE,
+        HiSysEventType::BEHAVIOR,
+        EVENT_PARAM_BUNDLE_NAME, eventInfo.bundleName,
+        EVENT_PARAM_ABILITY_NAME, eventInfo.abilityName,
+        EVENT_PARAM_ERROR_CODE, eventInfo.errCode,
+        EVENT_PARAM_USERID, eventInfo.userId,
+        EVENT_PARAM_CONTINUE_TYPE, eventInfo.continueType);
 }
 
 void InnerEventReport::InnerSendFreeInstallEvent(const EventInfo& eventInfo)

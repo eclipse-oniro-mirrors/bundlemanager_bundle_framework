@@ -30,7 +30,6 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServicefwk;
-        std::vector<std::string> hspPaths;
         appServicefwk.MoveSoToRealPath("", "", "");
         return true;
     }

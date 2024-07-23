@@ -37,10 +37,6 @@ public:
 
     ~BundleResourceManager();
     /**
-     * add bundle resource and launcher ability resource by innerBundleInfo, used when install hap
-     */
-    bool AddResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId, std::string hapPath = "");
-    /**
      * delete resource info
      */
     bool DeleteResourceInfo(const std::string &key);
@@ -137,6 +133,8 @@ private:
 
     void DeleteNotExistResourceInfo(const std::string &bundleName,
         const int32_t appIndex, const std::vector<ResourceInfo> &resourceInfos);
+
+    void ProcessResourceInfoNoNeedToParseOtherIcon(std::vector<ResourceInfo> &resourceInfos);
 
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
     std::mutex mutex_;

@@ -16,6 +16,7 @@
 #include "system_bundle_installer.h"
 
 #include "app_log_wrapper.h"
+#include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
@@ -39,6 +40,9 @@ ErrCode SystemBundleInstaller::InstallSystemBundle(
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
+        if (result != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePath, result);
+        }
     }
     return result;
 }
@@ -78,6 +82,9 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle fail, error: %{public}d", errCode);
             result = errCode;
+            if (!filePaths.empty()) {
+                BmsKeyEventMgr::ProcessMainBundleInstallFailed(filePaths[0], result);
+            }
         }
         ResetInstallProperties();
     }
@@ -119,6 +126,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle %{public}s fail err %{public}d", bundleName.c_str(), errCode);
             result = errCode;
+            BmsKeyEventMgr::ProcessMainBundleInstallFailed(bundleName, result);
         }
         ResetInstallProperties();
     }
@@ -204,6 +212,23 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName,
     }
     CheckUninstallSystemHsp(bundleName);
 
+    return true;
+}
+
+bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName, const InstallParam &installParam)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+    MarkPreBundleSyeEventBootTag(false);
+    ErrCode result = UninstallBundle(bundleName, installParam);
+    if ((result != ERR_OK) && (result != ERR_APPEXECFWK_USER_NOT_INSTALL_HAP)) {
+        APP_LOGW("uninstall system bundle %{public}s userId %{public}d fail, error: %{public}d", bundleName.c_str(),
+            installParam.userId, result);
+        return false;
+    }
     return true;
 }
 
