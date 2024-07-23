@@ -926,6 +926,10 @@ void QuickFixDeployer::PrepareCodeSignatureParam(const AppQuickFix &appQuickFix,
     codeSignatureParam.appIdentifier = DEBUG_APP_IDENTIFIER;
     codeSignatureParam.isCompileSdkOpenHarmony =
         bundleInfo.applicationInfo.compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY;
+    // if not debug, so.diff contained, do not need to verify code signature for so
+    if (!isDebug_ || bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
+        codeSignatureParam.targetSoPath = "";
+    }
 }
 
 ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
@@ -936,9 +940,6 @@ ErrCode QuickFixDeployer::VerifyCodeSignatureForHqf(
     BundleInfo bundleInfo;
     if (GetBundleInfo(appQuickFix.bundleName, bundleInfo) != ERR_OK) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_EXISTED_BUNDLE_INFO;
-    }
-    if (!isDebug_ || bundleInfo.applicationInfo.appProvisionType != Constants::APP_PROVISION_TYPE_DEBUG) {
-        return ERR_OK;
     }
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     if (appQfInfo.hqfInfos.empty()) {
