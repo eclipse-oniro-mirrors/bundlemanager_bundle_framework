@@ -681,6 +681,27 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0012,
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixManagerHostImplTest_0013
+ * @tc.name: CreateFd
+ * @tc.desc: Verify CreateFd failed.
+ */
+HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0013, Function | SmallTest | Level0)
+{
+    auto ret = InstallBundle(BUNDLE_PATH);
+    EXPECT_EQ(ret, ERR_OK) << "Install bundle failed";
+
+    auto impl = std::make_shared<QuickFixManagerHostImpl>();
+    std::string fileName = "entry.hqf";
+    int32_t fd;
+    std::string path = "/data/app/el1/bundle/public/com.example.l3jsdemo/patch_1000001/";
+    auto result = impl->CreateFd(fileName, fd, path);
+    EXPECT_EQ(result, ERR_OK);
+
+    ret = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
+}
+
+/**
  * @tc.number: UpdateQuickFixStatus_0100
  * @tc.name: UpdateQuickFixStatus
  * @tc.desc: Verification function UpdateQuickFixStatus.
