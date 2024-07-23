@@ -44,10 +44,10 @@ enum class BMSEventType {
     BUNDLE_CLEAN_CACHE,
     BMS_USER_EVENT,
     APPLY_QUICK_FIX,
-    QUERY_OF_CONTINUE_TYPE,
+    CPU_SCENE_ENTRY,
     AOT_COMPILE_SUMMARY,
     AOT_COMPILE_RECORD,
-    CPU_SCENE_ENTRY,
+    QUERY_OF_CONTINUE_TYPE,
     FREE_INSTALL_EVENT
 };
 
@@ -125,9 +125,6 @@ struct EventInfo {
 
     // for quick fix
     int32_t applyQuickFixFrequency = 0;
-
-    //for query of continue type
-    std::string continueType;
     // AOT
     std::vector<std::string> totalBundleNames;
     uint32_t successCnt = 0;
@@ -138,6 +135,9 @@ struct EventInfo {
     int32_t sceneId = 0;
     std::string processName;
     int32_t appIndex = 0;
+    
+    //for query of continue type
+    std::string continueType;
     //for free install event
     bool isFreeInstall = false;
 
@@ -167,13 +167,13 @@ struct EventInfo {
         hideDesktopIcon = false;
         appDistributionType.clear();
         applyQuickFixFrequency = 0;
-        continueType.clear();
         totalBundleNames.clear();
         successCnt = 0;
         compileMode.clear();
         compileResult = false;
         failureReason.clear();
         costTimeSeconds = 0;
+        continueType.clear();
         sceneId = 0;
         processName.clear();
         appIndex = 0;
@@ -245,6 +245,7 @@ public:
      * @param userId Indicates the userId.
      */
     static void SendUserSysEvent(UserEventType userEventType, int32_t userId);
+    
     /**
      * @brief Send query abilityInfos by continueType system events.
      * @param bundleName Indicates the bundleName.
