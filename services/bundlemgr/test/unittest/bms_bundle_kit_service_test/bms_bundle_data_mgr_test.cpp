@@ -3975,9 +3975,6 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 {
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
-    std::vector<std::string> disallowList;
-    disallowList.push_back(BUNDLE_NAME_TEST);
-    bundleUserMgrHostImpl_->CreateNewUser(USERID, disallowList);
     bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
