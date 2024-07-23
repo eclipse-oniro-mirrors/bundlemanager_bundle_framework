@@ -171,4 +171,76 @@ HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0300
     res = BundlePermissionMgr::VerifySystemApp(beginSystemApiVersion);
     EXPECT_EQ(res, true);
 }
+
+/**
+ * @tc.number: BmsBundlePermissionStartFullTest_0400
+ * Function: MatchSignature
+ * @tc.name: test MatchSignature false
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0400, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    DefaultPermission permission;
+    std::vector<std::string> signatures;
+    res = BundlePermissionMgr::MatchSignature(permission, signatures);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionStartFullTest_0500
+ * Function: MatchSignature
+ * @tc.name: test MatchSignature false
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0500, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    DefaultPermission permission;
+    permission.appSignature.push_back("appSignature");
+    std::vector<std::string> signatures;
+    signatures.push_back("appSignature1");
+    res = BundlePermissionMgr::MatchSignature(permission, signatures);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionStartFullTest_0600
+ * Function: MatchSignature
+ * @tc.name: test MatchSignature false
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0600, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    DefaultPermission permission;
+    permission.appSignature.push_back("appSignature");
+    std::vector<std::string> signatures;
+    signatures.push_back("appSignature");
+    res = BundlePermissionMgr::MatchSignature(permission, signatures);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionStartFullTest_0700
+ * Function: VerifyPreload
+ * @tc.name: test VerifyPreload false
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionStartFullTest, BmsBundlePermissionStartFullTest_0700, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    DefaultPermission permission;
+    AAFwk::Want want;
+    res = BundlePermissionMgr::VerifyPreload(want);
+    EXPECT_EQ(res, false);
+}
 } // OHOS

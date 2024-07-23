@@ -363,6 +363,46 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
+
+/**
+ * @tc.number: SetEncryptionDirPolicy_0100
+ * @tc.name: test SetEncryptionDirPolicy
+ * @tc.desc: test SetEncryptionDirPolicy of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SetEncryptionDirPolicy_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    bool ret = installer.SetEncryptionDirPolicy(info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PrepareSkillUri_0100
+ * @tc.name: test PrepareSkillUri
+ * @tc.desc: test PrepareSkillUri of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<Skill> skills;
+    Skill skill;
+    OHOS::AppExecFwk::SkillUri uri;
+    uri.scheme = "https";
+    uri.host = "host";
+    uri.port = "port";
+    uri.path = "path";
+    uri.pathStartWith = "pathStartWith";
+    uri.pathRegex = "pathRegex";
+    uri.type = "type";
+    skill.domainVerify = true;
+    skill.uris.push_back(uri);
+    skills.push_back(skill);
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+    installer.PrepareSkillUri(skills, skillUris);
+    EXPECT_EQ(skills.at(0).uris.size(), skillUris.size());
+}
+
 /**
  * @tc.number: SystemInstall_0100
  * @tc.name: test the right system bundle file can be installed

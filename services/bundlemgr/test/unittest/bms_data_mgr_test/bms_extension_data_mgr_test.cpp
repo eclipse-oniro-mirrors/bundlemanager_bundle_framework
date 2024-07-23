@@ -658,4 +658,33 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0012, Function | SmallTest | Leve
     ErrCode res = bundleMgrExtTest.OptimizeDisposedPredicates(callingName, appId, USERID, 0, absRdbPredicates);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
 }
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0017
+ * @tc.name: GetBackupUninstallList
+ * @tc.desc: GetBackupUninstallList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0017, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    int32_t userId = 100;
+    std::set<std::string> uninstallBundles;
+    ErrCode res = bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallBundles);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0018
+ * @tc.name: ClearBackupUninstallFile
+ * @tc.desc: ClearBackupUninstallFile
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0018, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
 } // OHOS
