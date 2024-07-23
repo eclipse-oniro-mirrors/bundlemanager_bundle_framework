@@ -7274,19 +7274,20 @@ ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName,
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGD("can not find bundle %{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    if (innerBundleInfo.GetAppServiceHspInfo(bundleInfo) != ERR_OK) {
-        APP_LOGD("failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    auto res = innerBundleInfo.GetAppServiceHspInfo(bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGW("get hspInfo %{public}s fail", bundleName.c_str());
+        return res;
     }
     return ERR_OK;
 }
@@ -7774,7 +7775,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    
+
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 

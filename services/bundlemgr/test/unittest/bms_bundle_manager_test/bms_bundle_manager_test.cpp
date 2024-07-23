@@ -5781,13 +5781,13 @@ HWTEST_F(BmsBundleManagerTest, GetDependentBundleInfo_0001, Function | MediumTes
         GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+    auto ret1 = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
         GetDependentBundleInfoFlag::GET_APP_SERVICE_HSP_BUNDLE_INFO);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
-    ret = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
+    auto ret2 = hostImpl->GetDependentBundleInfo(BUNDLE_NAME, bundleInfo,
         GetDependentBundleInfoFlag::GET_ALL_DEPENDENT_BUNDLE_INFO);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret2, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**
