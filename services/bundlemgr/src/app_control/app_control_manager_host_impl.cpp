@@ -423,12 +423,13 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
 
 ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
+    LOG_D(BMS_TAG_DEFAULT, "host begin to SetDisposedRule");
     if (!BundlePermissionMgr::IsSystemApp()) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_IMPL), "non-system app calling system api");
+        LOG_E(BMS_TAG_DEFAULT, "non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_IMPL), "verify permission failed");
+        LOG_W(BMS_TAG_DEFAULT, "verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
@@ -443,7 +444,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     }
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, Constants::MAIN_APP_INDEX, userId);
     if (ret != ERR_OK) {
-        LOG_W(TAG_SET_DISPOSED_RULE(BMS_IMPL), "error: %{public}d", ret);
+        LOG_W(BMS_TAG_DEFAULT, "host GetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }

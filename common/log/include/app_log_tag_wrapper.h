@@ -16,7 +16,7 @@
 #ifndef OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H
 #define OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H
 
-#include <string>
+#include <map>
 
 #include "hilog/log.h"
 
@@ -33,24 +33,8 @@
 #endif
 
 #ifndef BMS_TAG_INSTALLD
-#define BMS_TAG_INSTALLD std::make_pair(0xD001122, "BMSInstalld")
+#define BMS_TAG_INSTALLD std::make_pair(0xD0011D0, "BMSInstalld")
 #endif
-
-#define BMS_DOMAIN_ID 0xD001120
-#define BMS_DOMAIN_ID_QUERY 0xD001121
-#define BMS_DOMAIN_ID_INSTALLD 0xD001122
-
-#define TAG_JOIN(domain, funcTag, extTag) std::make_pair(domain, "BMS" funcTag extTag)
-
-#define BMS_NAPI "Napi"
-#define BMS_PROXY "Proxy"
-#define BMS_HOST "Host"
-#define BMS_IMPL "Impl"
-#define BMS_MGR "Mgr"
-#define BMS_RDB "RDB"
-
-#define TAG_DISPOSED_RULE_BASE TAG_JOIN(BMS_DOMAIN_ID, "DisposedRuleBase", "")
-#define TAG_SET_DISPOSED_RULE(tag) TAG_JOIN(BMS_DOMAIN_ID, "SetDisposedRule", tag)
 
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
