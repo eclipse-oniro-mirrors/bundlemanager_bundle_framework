@@ -35,12 +35,12 @@ const int32_t DEFAULT_BUFFER_SIZE = 65536;
 ExtendResourceManagerProxy::ExtendResourceManagerProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IExtendResourceManager>(object)
 {
-    APP_LOGI("create ExtendResourceManagerProxy");
+    APP_LOGI_NOFUNC("create ExtendResourceManagerProxy");
 }
 
 ExtendResourceManagerProxy::~ExtendResourceManagerProxy()
 {
-    APP_LOGI("destroy ExtendResourceManagerProxy");
+    APP_LOGI_NOFUNC("destroy ExtendResourceManagerProxy");
 }
 
 ErrCode ExtendResourceManagerProxy::AddExtResource(
@@ -242,7 +242,7 @@ ErrCode ExtendResourceManagerProxy::GetDynamicIcon(
 
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("fail to GetDynamicIcon from server %{public}d", ret);
+        APP_LOGE_NOFUNC("GetDynamicIcon failed: %{public}d", ret);
         return ret;
     }
 

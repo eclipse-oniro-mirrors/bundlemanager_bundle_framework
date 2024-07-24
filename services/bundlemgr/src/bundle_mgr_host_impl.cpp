@@ -759,7 +759,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (isBrokerServiceExisted_) {
+        if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -795,7 +795,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    if (isBrokerServiceExisted_) {
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
     }
@@ -824,7 +824,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -856,7 +856,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     auto res = dataMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
@@ -1610,7 +1610,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
 {
-    APP_LOGD("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
+    APP_LOGI("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
@@ -2910,14 +2910,8 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGD("default app has been found and unnecessary to find from bms extension");
         return ret;
     }
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
-        APP_LOGI("contains app linking flag, no need to query from bms extension");
-        return ret;
-    }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
@@ -4224,6 +4218,17 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     }
     auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);
     if (it == noDisablingList.end()) {
+        return true;
+    }
+    return false;
+}
+
+bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGI("contains app linking flag, no need to query from bms extension");
         return true;
     }
     return false;

@@ -312,7 +312,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
 
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin GetShortcutInfo");
+    APP_LOGI_NOFUNC("napi begin GetShortcutInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -345,7 +345,7 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);
     callbackPtr.release();
-    APP_LOGI("call GetShortcutInfo done");
+    APP_LOGI_NOFUNC("call GetShortcutInfo done");
     return promise;
 }
 

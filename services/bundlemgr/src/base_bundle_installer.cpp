@@ -3039,7 +3039,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
 }
@@ -3049,7 +3049,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
@@ -5566,7 +5566,7 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
 }
 
@@ -5574,7 +5574,7 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 
