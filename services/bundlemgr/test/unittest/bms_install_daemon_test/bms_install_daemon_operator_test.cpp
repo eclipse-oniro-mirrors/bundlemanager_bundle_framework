@@ -1261,4 +1261,194 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7700, Function | Sma
     ret = InstalldOperator::ExtractFiles(hnpPackageInfo, extractParam);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_7800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteKeyId of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7800, Function | SmallTest | Level0)
+{
+    std::string keyId;
+    bool ret = InstalldOperator::DeleteKeyId(keyId);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetAtomicServiceBundleDataDir of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7900, Function | SmallTest | Level0)
+{
+    std::string bundleName;
+    int32_t userId = 100;
+    std::vector<std::string> allPathNames;
+    bool ret = InstalldOperator::GetAtomicServiceBundleDataDir(bundleName, userId, allPathNames);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleInstallNative of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8000, Function | SmallTest | Level0)
+{
+    std::string userId = "100";
+    std::string hnpRootPath = "/hnp/root/path";
+    std::string hapPath = "happath";
+    std::string cpuAbi = "cpuabi";
+    std::string packageName = "";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8100
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleInstallNative of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8100, Function | SmallTest | Level0)
+{
+    std::string userId = "100";
+    std::string hnpRootPath = "/hnp/root/path";
+    std::string hapPath = "";
+    std::string cpuAbi = "cpuabi";
+    std::string packageName = "com.acts.example";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8200
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleInstallNative of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8200, Function | SmallTest | Level0)
+{
+    std::string userId = "100";
+    std::string hnpRootPath = "/hnp/root/path";
+    std::string hapPath = "happath";
+    std::string cpuAbi = "";
+    std::string packageName = "com.acts.example";
+    bool ret = InstalldOperator::ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8300
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleUnInstallNative of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8300, Function | SmallTest | Level0)
+{
+    std::string userId = "";
+    std::string packageName = "";
+    bool ret = InstalldOperator::ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessBundleUnInstallNative of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8400, Function | SmallTest | Level0)
+{
+    std::string userId = "100";
+    std::string packageName = "com.acts.example";
+    bool ret = InstalldOperator::ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteFilesExceptDirs of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8500, Function | SmallTest | Level0)
+{
+    std::string dataPath = "/data/data.path";
+    std::vector<std::string> dirsToKeep;
+    bool ret = InstalldOperator::DeleteFilesExceptDirs(dataPath, dirsToKeep);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling DeleteFilesExceptDirs of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8600, Function | SmallTest | Level0)
+{
+    std::string dataPath = "";
+    std::vector<std::string> dirsToKeep;
+    bool ret = InstalldOperator::DeleteFilesExceptDirs(dataPath, dirsToKeep);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling InitialiseQuotaMounts of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8700, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::InitialiseQuotaMounts();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling GetDiskUsageFromQuota of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8800, Function | SmallTest | Level0)
+{
+    int32_t uid = 100;
+    int64_t ret = InstalldOperator::GetDiskUsageFromQuota(uid);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling PrepareEntryMap of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_8900, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.targetSoPath = "target/file.path";
+    std::vector<std::string> soEntryFiles;
+    Security::CodeSign::EntryMap entryMap;
+    bool ret = InstalldOperator::PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_9000
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling PerformCodeSignatureCheck of InstalldOperator
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9000, Function | SmallTest | Level0)
+{
+    CodeSignatureParam codeSignatureParam;
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode ret = InstalldOperator::PerformCodeSignatureCheck(codeSignatureParam, entryMap);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

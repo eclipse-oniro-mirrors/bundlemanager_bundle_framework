@@ -1184,4 +1184,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | Sma
     ErrCode res = installdProxy->CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(res,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_6700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling PrepareEntryMap of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    CodeSignatureParam codeSignatureParam;
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode res = hostImpl->PrepareEntryMap(codeSignatureParam, entryMap);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS
