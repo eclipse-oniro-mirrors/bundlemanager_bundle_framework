@@ -19,6 +19,7 @@
 #include "app_log_tag_wrapper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bms_extension_client.h"
 #include "bundle_util.h"
 #include "scope_guard.h"
 
@@ -451,7 +452,7 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
 {
     ErrCode code = DeleteDisposedRule(callingName, appId, appIndex, userId);
     if (code != ERR_OK) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_RDB), "DeleteDisposedStatus failed");
+        LOG_E(BMS_TAG_DEFAULT, "DeleteDisposedStatus failed.");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     int64_t timeStamp = BundleUtil::GetCurrentTime();
@@ -466,8 +467,8 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
     valuesBucket.PutString(APP_INDEX, std::to_string(appIndex));
     bool ret = rdbDataManager_->InsertData(valuesBucket);
     if (!ret) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_RDB), "callingName:%{public}s user:%{public}d index:%{public}d",
-            callingName.c_str(), userId, appIndex);
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+            callingName.c_str(), appId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     return ERR_OK;
@@ -510,6 +511,13 @@ ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &a
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+    int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    return bmsExtensionClient->OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
+}
+
 ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     const std::string &appId, DisposedRule &rule, int32_t appIndex, int32_t userId)
 {
@@ -520,6 +528,7 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
     absRdbPredicates.EqualTo(APP_INDEX, std::to_string(appIndex));
+    OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "GetAppInstallControlRule failed");

@@ -1054,6 +1054,42 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     ErrCode ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
+        const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
+    void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
+        ApplicationInfo &applicationInfo) const;
+    void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
+    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
+        BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
+    void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
+    void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
+        const ElementName &element, int32_t flags, int32_t userId) const;
+    void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
+        const ElementName &element, int32_t flags, int32_t userId) const;
+    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
+        int32_t appIndex, AbilityInfo &abilityInfo) const;
+    ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
+        int32_t appIndex, AbilityInfo &abilityInfo) const;
+    void ImplicitQueryCloneAbilityInfos(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
+    void ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
+    void ImplicitQueryCloneAbilityInfosV9(
+        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryCurCloneAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
+    void ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
+    ErrCode ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
+    bool ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos) const;
+    ErrCode ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId, int32_t appIndex = 0) const;
     ErrCode CheckInnerBundleInfoWithFlagsV9(
@@ -1091,43 +1127,6 @@ private:
     void ProcessAllowedAcls(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
     void FilterAbilityInfosByAppLinking(const Want &want, int32_t flags,
         std::vector<AbilityInfo> &abilityInfos) const;
-    void GetMatchLauncherAbilityInfosForCloneInfos(const InnerBundleInfo& info, const AbilityInfo &abilityInfo,
-        const InnerBundleUserInfo &bundleUserInfo, std::vector<AbilityInfo>& abilityInfos) const;
-    void ModifyApplicationInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo,
-        ApplicationInfo &applicationInfo) const;
-    void ModifyBundleInfoByCloneInfo(const InnerBundleCloneInfo &cloneInfo, BundleInfo &bundleInfo) const;
-    void GetCloneBundleInfos(const InnerBundleInfo& info, int32_t flags, int32_t userId,
-        BundleInfo &bundleInfo, std::vector<BundleInfo> &bundleInfos) const;
-    void GetBundleNameAndIndexByName(const std::string &keyName, std::string &bundleName, int32_t &appIndex) const;
-    void GetCloneAbilityInfos(std::vector<AbilityInfo> &abilityInfos,
-        const ElementName &element, int32_t flags, int32_t userId) const;
-    void GetCloneAbilityInfosV9(std::vector<AbilityInfo> &abilityInfos,
-        const ElementName &element, int32_t flags, int32_t userId) const;
-    ErrCode ExplicitQueryCloneAbilityInfo(const ElementName &element, int32_t flags, int32_t userId,
-        int32_t appIndex, AbilityInfo &abilityInfo) const;
-    ErrCode ExplicitQueryCloneAbilityInfoV9(const ElementName &element, int32_t flags, int32_t userId,
-        int32_t appIndex, AbilityInfo &abilityInfo) const;
-    void ImplicitQueryCloneAbilityInfos(
-        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
-    bool ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
-    void ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
-    void ImplicitQueryCloneAbilityInfosV9(
-        const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
-    bool ImplicitQueryCurCloneAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
-    void ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
-
-    bool ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
-    ErrCode ImplicitQueryCurCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
-    bool ImplicitQueryAllCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &infos) const;
-    ErrCode ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
-        std::vector<ExtensionAbilityInfo> &abilityInfos) const;
     void GetMultiLauncherAbilityInfo(const Want& want,
         const InnerBundleInfo& info, const InnerBundleUserInfo &bundleUserInfo,
         int64_t installTime, std::vector<AbilityInfo>& abilityInfos) const;

@@ -759,7 +759,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (isBrokerServiceExisted_) {
+        if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -795,7 +795,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    if (isBrokerServiceExisted_) {
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
     }
@@ -824,7 +824,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -856,7 +856,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     auto res = dataMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
@@ -2082,7 +2082,6 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, 0);
         return ret;
     }
-    BundleResourceHelper::SetApplicationEnabled(bundleName, isEnable, userId);
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, 0);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -2136,7 +2135,6 @@ ErrCode BundleMgrHostImpl::SetCloneApplicationEnabled(
         EventReport::SendComponentStateSysEventForException(bundleName, "", userId, isEnable, appIndex);
         return ret;
     }
-    BundleResourceHelper::SetApplicationEnabled(bundleName, isEnable, userId, appIndex);
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, appIndex);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -2224,11 +2222,6 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             userId, isEnabled, 0);
         return ret;
     }
-    std::string moduleName = abilityInfo.moduleName;
-    if (moduleName.empty()) {
-        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
-    }
-    BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, 0);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
@@ -2274,12 +2267,6 @@ ErrCode BundleMgrHostImpl::SetCloneAbilityEnabled(const AbilityInfo &abilityInfo
             userId, isEnabled, appIndex);
         return ret;
     }
-    std::string moduleName = abilityInfo.moduleName;
-    if (moduleName.empty()) {
-        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
-    }
-    // todo
-    // BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, appIndex);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
@@ -2923,14 +2910,8 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGD("default app has been found and unnecessary to find from bms extension");
         return ret;
     }
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
-        APP_LOGI("contains app linking flag, no need to query from bms extension");
-        return ret;
-    }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
@@ -3852,26 +3833,14 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
     }
     std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
     for (auto recoverableBundleInfo: recoverableBundleInfos) {
-        BundleInfo bundleInfo;
-        if (!GetPreferableBundleInfoFromHapPaths(
-            recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
-            continue;
-        }
         RecoverableApplicationInfo recoverableApplication;
-        recoverableApplication.bundleName = bundleInfo.name;
-        recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
-        recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
-        recoverableApplication.systemApp = bundleInfo.applicationInfo.isSystemApp;
+        recoverableApplication.bundleName = recoverableBundleInfo.GetBundleName();
+        recoverableApplication.labelId = recoverableBundleInfo.GetLabelId();
+        recoverableApplication.iconId = recoverableBundleInfo.GetIconId();
+        recoverableApplication.systemApp = recoverableBundleInfo.GetSystemApp();
         recoverableApplication.codePaths = recoverableBundleInfo.GetBundlePaths();
-        if (!bundleInfo.hapModuleInfos.empty()) {
-            recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
-        }
-        if (bundleInfo.isNewVersion) {
-            recoverableApplication.bundleType = bundleInfo.applicationInfo.bundleType;
-        } else if (!bundleInfo.hapModuleInfos.empty() &&
-            bundleInfo.hapModuleInfos[0].installationFree) {
-            recoverableApplication.bundleType = BundleType::ATOMIC_SERVICE;
-        }
+        recoverableApplication.moduleName = recoverableBundleInfo.GetModuleName();
+        recoverableApplication.bundleType = recoverableBundleInfo.GetBundleType();
         recoverableApplicaitons.emplace_back(recoverableApplication);
     }
     return ERR_OK;
@@ -4249,6 +4218,17 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     }
     auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);
     if (it == noDisablingList.end()) {
+        return true;
+    }
+    return false;
+}
+
+bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGI("contains app linking flag, no need to query from bms extension");
         return true;
     }
     return false;

@@ -29,7 +29,10 @@ namespace OHOS {
     {
         VerifyManagerHostImpl impl;
         std::vector<std::string> Paths;
+        std::string rootDir;
+        std::vector<std::string> names;
         impl.Rollback(Paths);
+        impl.Rollback(rootDir, names);
         return true;
     }
 }

@@ -450,97 +450,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0007, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0009
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfo, bundle not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0009, Function | SmallTest | Level0)
-{
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    InnerBundleInfo bundleInfo;
-    // userId not exist
-    bool ans = manager->AddResourceInfo(bundleInfo, 103);
-    EXPECT_FALSE(ans);
-
-    // bundle not exist
-    ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0010
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfo, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0010, Function | SmallTest | Level0)
-{
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = BUNDLE_NAME;
-    applicationInfo.bundleType = BundleType::SHARED;
-    InnerBundleInfo bundleInfo;
-    bundleInfo.SetBaseApplicationInfo(applicationInfo);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    // bundle exist but userId not exist
-    bool ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_FALSE(ans);
-    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
-    EXPECT_FALSE(ans);
-
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = USERID;
-    userInfo.bundleName = BUNDLE_NAME;
-    bundleInfo.AddInnerBundleUserInfo(userInfo);
-    // bundle exist, userId exist, SHARED resourceInfo is empty
-    ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_FALSE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0011
- * Function: BundleResourceManager
- * @tc.name: test BundleResourceManager
- * @tc.desc: 1. system running normally
- *           2. test AddResourceInfo, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0011, Function | SmallTest | Level0)
-{
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = BUNDLE_NAME;
-    InnerBundleInfo bundleInfo;
-    bundleInfo.SetBaseApplicationInfo(applicationInfo);
-
-    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
-    EXPECT_NE(manager, nullptr);
-    // bundle exist but userId not exist
-    bool ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_FALSE(ans);
-    // bundle exist but userId not exist
-    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
-    EXPECT_FALSE(ans);
-
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = USERID;
-    userInfo.bundleName = BUNDLE_NAME;
-    bundleInfo.AddInnerBundleUserInfo(userInfo);
-    // bundle exist, userId exist
-    ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_TRUE(ans);
-
-    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
-    EXPECT_TRUE(ans);
-
-    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
-    EXPECT_TRUE(ans);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0012
  * Function: BundleResourceManager
  * @tc.name: test BundleResourceManager
@@ -1264,45 +1173,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0053
- * Function: BundleResourceProcess
- * @tc.name: test BundleResourceProcess
- * @tc.desc: 1. system running normally
- *           2. test GetResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0053, Function | SmallTest | Level0)
-{
-    InnerBundleInfo bundleInfo;
-    std::vector<ResourceInfo> resourceInfos;
-    // bundleName not exist
-    bool ans = BundleResourceProcess::GetResourceInfo(bundleInfo, USERID, resourceInfos);
-    EXPECT_FALSE(ans);
-    EXPECT_TRUE(resourceInfos.empty());
-
-    // bundleName not exist
-    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 0, resourceInfos);
-    EXPECT_FALSE(ans);
-    EXPECT_TRUE(resourceInfos.empty());
-
-    // userId not exist
-    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 200, resourceInfos);
-    EXPECT_FALSE(ans);
-    EXPECT_TRUE(resourceInfos.empty());
-
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = BUNDLE_NAME;
-    bundleInfo.SetBaseApplicationInfo(applicationInfo);
-    InnerBundleUserInfo userInfo;
-    userInfo.bundleUserInfo.userId = USERID;
-    userInfo.bundleName = BUNDLE_NAME;
-    bundleInfo.AddInnerBundleUserInfo(userInfo);
-    // bundle and userId exist
-    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, USERID, resourceInfos);
-    EXPECT_TRUE(ans);
-    EXPECT_FALSE(resourceInfos.empty());
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0054
  * Function: BundleResourceProcess
  * @tc.name: test BundleResourceProcess
@@ -1862,103 +1732,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleResourceTest_0076
- * Function: BundleResourceCallback
- * @tc.name: test BundleResourceCallback
- * @tc.desc: 1. system running normally
- *           2. test BundleResourceCallback.OnBundleStatusChanged, bundle not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0076, Function | SmallTest | Level0)
-{
-    BundleResourceCallback callback;
-    std::string bundleName;
-    bool ans = callback.OnBundleStatusChanged(bundleName, true, USERID);
-    EXPECT_FALSE(ans);
-
-    bundleName = "bundleName";
-    ans = callback.OnBundleStatusChanged(bundleName, true, 200);
-    EXPECT_FALSE(ans);
-
-    ans = callback.OnBundleStatusChanged(bundleName, true, USERID); // bundleName not exist
-    EXPECT_FALSE(ans);
-
-    ans = callback.OnBundleStatusChanged(bundleName, false, USERID);
-    EXPECT_TRUE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0077
- * Function: BundleResourceCallback
- * @tc.name: test BundleResourceCallback
- * @tc.desc: 1. system running normally
- *           2. test BundleResourceCallback.OnBundleStatusChanged, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0077, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    BundleResourceCallback callback;
-    bool ans = callback.OnBundleStatusChanged(BUNDLE_NAME, true, USERID);
-    EXPECT_TRUE(ans);
-
-    ans = callback.OnBundleStatusChanged(BUNDLE_NAME, false, USERID); // bundleName exist
-    EXPECT_TRUE(ans);
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0078
- * Function: BundleResourceCallback
- * @tc.name: test BundleResourceCallback
- * @tc.desc: 1. system running normally
- *           2. test BundleResourceCallback.OnAbilityStatusChanged bundle not exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0078, Function | SmallTest | Level0)
-{
-    BundleResourceCallback callback;
-    std::string bundleName;
-    std::string moduleName;
-    std::string abilityName;
-    bool ans = callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, true, USERID);
-    EXPECT_FALSE(ans);
-
-    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, 200);
-    EXPECT_FALSE(ans);
-    // bundleName not exist
-    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
-    EXPECT_FALSE(ans);
-
-    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
-    EXPECT_TRUE(ans);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0079
- * Function: BundleResourceCallback
- * @tc.name: test BundleResourceCallback
- * @tc.desc: 1. system running normally
- *           2. test BundleResourceCallback.OnAbilityStatusChanged, bundle exist
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0079, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-
-    BundleResourceCallback callback;
-    bool ans  = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
-    EXPECT_TRUE(ans);
-
-    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
-    EXPECT_TRUE(ans);
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
  * @tc.number: BmsBundleResourceTest_0080
  * Function: GetAbilityResourceInfos
  * @tc.name: test GetAbilityResourceInfos
@@ -2014,8 +1787,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest
 
     std::vector<ResourceInfo> resourceInfos_2;
     ans = BundleResourceProcess::GetAbilityResourceInfos(bundleInfo, USERID, resourceInfos_2);
-    EXPECT_FALSE(ans);
-    EXPECT_TRUE(resourceInfos_2.empty());
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos_2.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -2497,78 +2270,6 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0101, Function | SmallTest
     auto ret = bundleResourceHostImpl->GetAllLauncherAbilityResourceInfo(0, infos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(infos.empty());
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0102
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test GetBundleResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
-    BundleResourceInfo info;
-    auto ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_EQ(info.bundleName, BUNDLE_NAME);
-    EXPECT_FALSE(info.icon.empty());
-    EXPECT_FALSE(info.label.empty());
-
-    // disable
-    BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, false, USERID);
-    EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
-    // enable
-    BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetApplicationEnabled(BUNDLE_NAME, 0, true, USERID);
-    EXPECT_EQ(code, ERR_OK);
-
-    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
-    EXPECT_EQ(unInstallResult, ERR_OK);
-}
-
-/**
- * @tc.number: BmsBundleResourceTest_0103
- * Function: GetBundleResourceInfo
- * @tc.name: test disable and enable
- * @tc.desc: 1. system running normally
- *           2. test GetLauncherAbilityResourceInfo
- */
-HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest | Level0)
-{
-    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
-    EXPECT_EQ(installResult, ERR_OK);
-    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
-    std::vector<LauncherAbilityResourceInfo> info;
-    auto ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_OK);
-    EXPECT_TRUE(info.size() == 1);
-
-    AbilityInfo abilityInfo;
-    abilityInfo.bundleName = BUNDLE_NAME;
-    abilityInfo.moduleName = MODULE_NAME;
-    abilityInfo.name = ABILITY_NAME;
-    // disable
-    BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
-    auto code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, false, USERID);
-    EXPECT_EQ(code, ERR_OK);
-    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-
-    // enable
-    BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
-    code = GetBundleDataMgr()->SetAbilityEnabled(abilityInfo, 0, true, USERID);
-    EXPECT_EQ(code, ERR_OK);
-
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }

@@ -3081,18 +3081,15 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
     if (userId == Constants::ALL_USERID) {
         return GetAllBundleInfosV9(flags, bundleInfos);
     }
-
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -3100,7 +3097,6 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
                 innerBundleInfo.GetBundleName().c_str());
             continue;
         }
-
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         auto flag = GET_BASIC_APPLICATION_INFO;
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
@@ -3110,7 +3106,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
             continue;
         }
-
+        uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
+        if (((static_cast<uint32_t>(flags) & launchFlag) == launchFlag) && (innerBundleInfo.IsHideDesktopIcon())) {
+            LOG_D(BMS_TAG_QUERY, "bundleName %{public}s is hide desktopIcon",
+                innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
         BundleInfo bundleInfo;
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
@@ -3143,6 +3144,14 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         if (info.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+            continue;
+        }
+        if (((static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) ==
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY)) &&
+            (info.IsHideDesktopIcon())) {
+            APP_LOGD("getAllBundleInfosV9 bundleName %{public}s is hide desktopIcon",
+                info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;

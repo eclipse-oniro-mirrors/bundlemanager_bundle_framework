@@ -30,7 +30,7 @@ constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     VerifyManagerHostImpl impl;
-    std::string rootDir;
+    std::string rootDir(data, size);
     std::vector<std::string> names;
     impl.Rollback(rootDir, names);
     return true;

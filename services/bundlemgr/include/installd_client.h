@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <string>
 
 #include "nocopyable.h"
@@ -250,7 +251,7 @@ private:
                 return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
             }
             {
-                std::lock_guard<std::mutex> lock(mutex_);
+                std::shared_lock<std::shared_mutex> readLock(mutex_);
                 if (installdProxy_ != nullptr) {
                     errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
                 }
@@ -267,7 +268,7 @@ private:
 
 private:
     bool loadSaFinished_;
-    std::mutex mutex_;
+    std::shared_mutex mutex_;
     std::mutex loadSaMutex_;
     std::mutex getProxyMutex_;
     std::condition_variable loadSaCondition_;

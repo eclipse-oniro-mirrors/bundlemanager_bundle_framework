@@ -40,9 +40,9 @@ static napi_value BundleInstallerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("recover", Recover),
         DECLARE_NAPI_FUNCTION("uninstall", Uninstall),
         DECLARE_NAPI_FUNCTION("updateBundleForSelf", UpdateBundleForSelf),
+        DECLARE_NAPI_FUNCTION("uninstallUpdates", UninstallAndRecover),
         DECLARE_NAPI_FUNCTION("addExtResource", AddExtResource),
         DECLARE_NAPI_FUNCTION("removeExtResource", RemoveExtResource),
-        DECLARE_NAPI_FUNCTION("uninstallUpdates", UninstallAndRecover),
         DECLARE_NAPI_FUNCTION("createAppClone", CreateAppClone),
         DECLARE_NAPI_FUNCTION("destroyAppClone", DestroyAppClone),
     };

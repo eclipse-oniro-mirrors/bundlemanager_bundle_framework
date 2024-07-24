@@ -33,7 +33,11 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::string bundleName;
     int32_t userId = 100;
     std::string relativePath;
+    std::vector<std::string> abcPaths;
     impl.GetRealPath(bundleName, userId, relativePath);
+    impl.CopyFilesToTempDir(bundleName, userId, abcPaths);
+    impl.GetBundleMutex(bundleName);
+
     return true;
 }
 } // namespace OHOS

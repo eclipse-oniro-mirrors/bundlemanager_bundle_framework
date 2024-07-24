@@ -1155,7 +1155,8 @@ protected:
                 "appIndex":0,
                 "maxChildProcess": 0,
                 "installSource": "unknown",
-                "configuration":""
+                "configuration":"",
+                "cloudFileSyncEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -2902,6 +2903,157 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5600, Function | Smal
     EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
     bundleInfo.RemoveGroupInfos(userId, TEST_NAME);
     EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5700
+ * @tc.name: Test UpdateDataGroupInfos
+ * @tc.desc: 1.Test the UpdateDataGroupInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.userId = userId;
+    dataGroupInfos.push_back(dataGroupInfo);
+    bundleInfo.dataGroupInfos_.insert(std::make_pair(TEST_NAME, dataGroupInfos));
+    std::vector<DataGroupInfo> dataGroupInfosNew;
+    DataGroupInfo dataGroupInfoNew;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMapNew;
+    dataGroupInfoNew.userId = userId;
+    dataGroupInfosNew.push_back(dataGroupInfoNew);
+    dataGroupInfoMapNew.insert(std::make_pair(TEST_NAME, dataGroupInfosNew));
+    bundleInfo.UpdateDataGroupInfos(dataGroupInfoMapNew);
+    EXPECT_FALSE(dataGroupInfoMapNew.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5800
+ * @tc.name: Test UpdateDataGroupInfos
+ * @tc.desc: 1.Test the UpdateDataGroupInfos with empty input
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.userId = userId;
+    dataGroupInfos.push_back(dataGroupInfo);
+    bundleInfo.dataGroupInfos_.insert(std::make_pair(TEST_NAME, dataGroupInfos));
+    std::vector<DataGroupInfo> dataGroupInfosNew;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMapNew;
+    bundleInfo.UpdateDataGroupInfos(dataGroupInfoMapNew);
+    EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5900
+ * @tc.name: Test IsAsanEnabled
+ * @tc.desc: 1.Test the IsAsanEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerModuleInfo.asanEnabled = true;
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    bool ret = bundleInfo.IsAsanEnabled();
+    EXPECT_TRUE(ret);
+    innerModuleInfo.asanEnabled = false;
+    innerModuleInfos.clear();
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.clear();
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    ret = bundleInfo.IsAsanEnabled();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6000
+ * @tc.name: Test IsGwpAsanEnabled
+ * @tc.desc: 1.Test the IsGwpAsanEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerModuleInfo.gwpAsanEnabled = true;
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    bool ret = bundleInfo.IsGwpAsanEnabled();
+    EXPECT_TRUE(ret);
+    innerModuleInfo.gwpAsanEnabled = false;
+    innerModuleInfos.clear();
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.clear();
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    ret = bundleInfo.IsGwpAsanEnabled();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6100
+ * @tc.name: Test SetUninstallState
+ * @tc.desc: 1.Test the SetUninstallState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetUninstallState(false);
+    EXPECT_FALSE(bundleInfo.uninstallState_);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6200
+ * @tc.name: Test GetAllExtensionDirsInSpecifiedModule
+ * @tc.desc: 1.Test the GetAllExtensionDirsInSpecifiedModule of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.moduleName = MODULE_NAME;
+    extensionAbilityInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    auto ret = bundleInfo.GetAllExtensionDirsInSpecifiedModule(MODULE_NAME);
+    EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6300
+ * @tc.name: Test GetAllExtensionDirs
+ * @tc.desc: 1.Test the GetAllExtensionDirs of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    auto ret = bundleInfo.GetAllExtensionDirs();
+    EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6400
+ * @tc.name: Test UpdateExtensionDataGroupInfo
+ * @tc.desc: 1.Test the UpdateExtensionDataGroupInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    std::vector<std::string> dataGroupIds;
+    dataGroupIds.push_back(TEST_UID);
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(TEST_NAME, extensionAbilityInfo));
+    bundleInfo.UpdateExtensionDataGroupInfo("1", dataGroupIds);
+    EXPECT_TRUE(bundleInfo.baseExtensionInfos_[TEST_NAME].validDataGroupIds.empty());
+    bundleInfo.UpdateExtensionDataGroupInfo(TEST_NAME, dataGroupIds);
+    EXPECT_FALSE(bundleInfo.baseExtensionInfos_[TEST_NAME].validDataGroupIds.empty());
 }
 
 /**

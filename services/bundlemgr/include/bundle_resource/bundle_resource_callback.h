@@ -40,13 +40,6 @@ public:
     bool OnSystemLanguageChange(const std::string &language,
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_LANGUE_CHANGE));
 
-    // for bundle enable or disable
-    bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId, int32_t appIndex = 0);
-
-    // for ability enable or disable
-    bool OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,
-        const std::string &abilityName, bool enabled, const int32_t userId);
-
     // for application theme changed
     bool OnApplicationThemeChanged(const std::string &theme,
         const uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));

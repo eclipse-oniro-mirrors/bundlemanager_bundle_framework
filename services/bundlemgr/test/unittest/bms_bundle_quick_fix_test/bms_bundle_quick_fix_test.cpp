@@ -1680,6 +1680,9 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0054, Function | SmallTest
         appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
         appQuickFix.deployingAppqfInfo.versionCode = 2;
         std::vector<HqfInfo> hqfInfo;
+        HqfInfo info;
+        info.hqfFilePath = "/data/test/hello.hqf";
+        hqfInfo.emplace_back(info);
         appQuickFix.deployingAppqfInfo.hqfInfos= hqfInfo;
         InnerAppQuickFix newInnerAppQuickFix;
         newInnerAppQuickFix.SetAppQuickFix(appQuickFix);

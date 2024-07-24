@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,7 +17,7 @@
 
 #include <cstddef>
 #include <cstdint>
-
+#define private public
 #include "default_app_host.h"
 #include "securec.h"
 
@@ -25,27 +25,21 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 4;
-constexpr size_t DCAMERA_SHIFT_24 = 24;
-constexpr size_t DCAMERA_SHIFT_16 = 16;
-constexpr size_t DCAMERA_SHIFT_8 = 8;
+constexpr uint32_t CODE_MAX = 3;
 
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-}
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
-    MessageParcel datas;
-    std::u16string descriptor = DefaultAppHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    DefaultAppHost defaultAppHost;
-    defaultAppHost.OnRemoteRequest(code, datas, reply, option);
+    for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = DefaultAppHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        DefaultAppHost defaultAppHost;
+        defaultAppHost.OnRemoteRequest(code, datas, reply, option);
+    }
     return true;
 }
 }

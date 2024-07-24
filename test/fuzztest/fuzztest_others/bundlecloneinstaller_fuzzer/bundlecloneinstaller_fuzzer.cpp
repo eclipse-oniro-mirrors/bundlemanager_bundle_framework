@@ -60,12 +60,19 @@ namespace OHOS {
         InnerBundleInfo info;
         int32_t userId = static_cast<int32_t>(GetU32Data(data));
         int32_t appIndex = static_cast<int32_t>(GetU32Data(data));
+
         SetBundleDataMgr();
         bundleCloneInstall.InstallCloneApp(bundleName, userId, appIndex);
         bundleCloneInstall.UninstallCloneApp(bundleName, userId, appIndex);
         bundleCloneInstall.UninstallAllCloneApps(bundleName, userId);
+
+        bundleCloneInstall.ProcessCloneBundleInstall(bundleName, userId, appIndex);
+        bundleCloneInstall.ProcessCloneBundleUninstall(bundleName, userId, appIndex);
+        bundleCloneInstall.ResetInstallProperties();
+
         bundleCloneInstall.CreateCloneDataDir(info, userId, UID, appIndex);
         bundleCloneInstall.RemoveCloneDataDir(bundleName, userId, appIndex);
+        bundleCloneInstall.GetDataMgr();
         return true;
     }
 }

@@ -380,15 +380,14 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         // from provision file
         ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
         // form install_list_capability.json, higher priority than provision file
-        FetchPrivilegeCapabilityFromPreConfig(
-            newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
-        // modify fingerprint to appId
+        // allow appIdentifier/appId/fingerprint
         newInfo.SetProvisionId(provisionInfo.appId);
+        std::vector<std::string> appSignatures;
+        appSignatures.emplace_back(provisionInfo.bundleInfo.appIdentifier);
+        appSignatures.emplace_back(newInfo.GetAppId());
+        appSignatures.emplace_back(provisionInfo.fingerprint);
         FetchPrivilegeCapabilityFromPreConfig(
-            newInfo.GetBundleName(), newInfo.GetAppId(), appPrivilegeCapability);
-        // allow appIdentifier
-        FetchPrivilegeCapabilityFromPreConfig(
-            newInfo.GetBundleName(), provisionInfo.bundleInfo.appIdentifier, appPrivilegeCapability);
+            newInfo.GetBundleName(), appSignatures, appPrivilegeCapability);
         // process bundleInfo by appPrivilegeCapability
         result = ProcessBundleInfoByPrivilegeCapability(appPrivilegeCapability, newInfo);
         if (result != ERR_OK) {
@@ -1178,7 +1177,7 @@ bool BundleInstallChecker::GetPrivilegeCapabilityValue(
 
 void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     const std::string &bundleName,
-    const std::string &appSignature,
+    const std::vector<std::string> &appSignatures,
     AppPrivilegeCapability &appPrivilegeCapability)
 {
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -1190,51 +1189,50 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
             bundleName.c_str());
         return;
     }
-    if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        if (!MatchOldSignatures(bundleName, configInfo.appSignature)) {
-            LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s signature verify failed in capability list",
-                bundleName.c_str());
-            return;
+    bool match = false;
+    for (const auto &signature : appSignatures) {
+        if (MatchSignature(configInfo.appSignature, signature)) {
+            match = true;
+            break;
         }
     }
+    if (!match && !MatchOldSignatures(bundleName, configInfo.appSignature)) {
+        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s signature verify failed in capability list",
+            bundleName.c_str());
+        return;
+    }
+
     appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_USE_PRIVILEGE_EXTENSION,
         configInfo.allowUsePrivilegeExtension, appPrivilegeCapability.allowUsePrivilegeExtension);
 
     appPrivilegeCapability.allowMultiProcess = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_APP_MULTI_PROCESS,
-        configInfo.allowMultiProcess, appPrivilegeCapability.allowMultiProcess);
+        ALLOW_APP_MULTI_PROCESS, configInfo.allowMultiProcess, appPrivilegeCapability.allowMultiProcess);
 
     appPrivilegeCapability.hideDesktopIcon = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_APP_DESKTOP_ICON_HIDE,
-        configInfo.hideDesktopIcon, appPrivilegeCapability.hideDesktopIcon);
+        ALLOW_APP_DESKTOP_ICON_HIDE, configInfo.hideDesktopIcon, appPrivilegeCapability.hideDesktopIcon);
 
     appPrivilegeCapability.allowQueryPriority = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_ABILITY_PRIORITY_QUERIED,
-        configInfo.allowQueryPriority, appPrivilegeCapability.allowQueryPriority);
+        ALLOW_ABILITY_PRIORITY_QUERIED, configInfo.allowQueryPriority, appPrivilegeCapability.allowQueryPriority);
 
     appPrivilegeCapability.allowExcludeFromMissions = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
         configInfo.allowExcludeFromMissions, appPrivilegeCapability.allowExcludeFromMissions);
 
     appPrivilegeCapability.allowMissionNotCleared = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_MISSION_NOT_CLEARED,
-        configInfo.allowMissionNotCleared, appPrivilegeCapability.allowMissionNotCleared);
+        ALLOW_MISSION_NOT_CLEARED, configInfo.allowMissionNotCleared, appPrivilegeCapability.allowMissionNotCleared);
 
     appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_FORM_VISIBLE_NOTIFY,
-        configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
+        ALLOW_FORM_VISIBLE_NOTIFY, configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
 
     appPrivilegeCapability.userDataClearable = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_APP_DATA_NOT_CLEARED,
-        configInfo.userDataClearable, appPrivilegeCapability.userDataClearable);
+        ALLOW_APP_DATA_NOT_CLEARED, configInfo.userDataClearable, appPrivilegeCapability.userDataClearable);
 
     appPrivilegeCapability.appShareLibrary = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_APP_SHARE_LIBRARY,
-        configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
+        ALLOW_APP_SHARE_LIBRARY, configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
+
     appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
-        ALLOW_ENABLE_NOTIFICATION,
-        configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
+        ALLOW_ENABLE_NOTIFICATION, configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
     LOG_D(BMS_TAG_INSTALLER, "AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }

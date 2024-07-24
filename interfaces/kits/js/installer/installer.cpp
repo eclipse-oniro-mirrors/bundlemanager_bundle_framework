@@ -405,10 +405,10 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CHECK_ENCRYPTION_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_DELIVERY_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
+        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE, ERROR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE },
     };
 }
@@ -1326,6 +1326,76 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
     return promise;
 }
 
+void UninstallAndRecoverExecuter(napi_env env, void *data)
+{
+    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    const std::string bundleName = asyncCallbackInfo->bundleName;
+    InstallResult &installResult = asyncCallbackInfo->installResult;
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
+    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    if (callback == nullptr || recipient == nullptr) {
+        APP_LOGE("callback or death recipient is nullptr");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    iBundleInstaller->UninstallAndRecover(bundleName, asyncCallbackInfo->installParam, callback);
+    installResult.resultMsg = callback->GetResultMsg();
+    installResult.resultCode = callback->GetResultCode();
+}
+
+napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("UninstallAndRecover called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("init param failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
+    callbackPtr->option = InstallOption::UNINSTALL_AND_RECOVER;
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], callbackPtr->bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid!", callbackPtr->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType != napi_object || !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGW("Parse installParam failed");
+            }
+        } else {
+            APP_LOGE("The number of parameters is incorrect.");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    callbackPtr->installParam.isUninstallAndRecover = true;
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER,
+        UninstallAndRecoverExecuter, OperationCompleted);
+    callbackPtr.release();
+    APP_LOGI("call UninstallAndRecover done");
+    return promise;
+}
+
 ErrCode InnerAddExtResource(
     const std::string &bundleName, const std::vector<std::string> &filePaths)
 {
@@ -1510,76 +1580,6 @@ napi_value RemoveExtResource(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "RemoveExtResource", RemoveExtResourceExec, RemoveExtResourceComplete);
     callbackPtr.release();
     APP_LOGD("call RemoveExtResource done");
-    return promise;
-}
-
-void UninstallAndRecoverExecuter(napi_env env, void *data)
-{
-    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is nullptr");
-        return;
-    }
-    const std::string bundleName = asyncCallbackInfo->bundleName;
-    InstallResult &installResult = asyncCallbackInfo->installResult;
-    if (bundleName.empty()) {
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
-        return;
-    }
-    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
-    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-        APP_LOGE("can not get iBundleInstaller");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
-        return;
-    }
-    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-    if (callback == nullptr || recipient == nullptr) {
-        APP_LOGE("callback or death recipient is nullptr");
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
-        return;
-    }
-    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-    iBundleInstaller->UninstallAndRecover(bundleName, asyncCallbackInfo->installParam, callback);
-    installResult.resultMsg = callback->GetResultMsg();
-    installResult.resultCode = callback->GetResultCode();
-}
-
-napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
-{
-    APP_LOGI("UninstallAndRecover called");
-    NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
-        APP_LOGE("init param failed");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
-    callbackPtr->option = InstallOption::UNINSTALL_AND_RECOVER;
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], callbackPtr->bundleName)) {
-                APP_LOGE("bundleName %{public}s invalid", callbackPtr->bundleName.c_str());
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType != napi_object || !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGW("Parse installParam failed");
-            }
-        } else {
-            APP_LOGE("The number of parameters is incorrect");
-            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-            return nullptr;
-        }
-    }
-    callbackPtr->installParam.isUninstallAndRecover = true;
-    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER,
-        UninstallAndRecoverExecuter, OperationCompleted);
-    callbackPtr.release();
-    APP_LOGI("call UninstallAndRecover done");
     return promise;
 }
 
