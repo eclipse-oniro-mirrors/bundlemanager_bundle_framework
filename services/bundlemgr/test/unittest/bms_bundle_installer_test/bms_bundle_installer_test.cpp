@@ -92,6 +92,8 @@ const int32_t ZERO_CODE = 0;
 const uint32_t COMPATIBLE_VERSION = 11;
 const std::string LOG = "log";
 const int32_t EDM_UID = 3057;
+const uint32_t INSTALLER_ID = 1;
+const uint32_t INDEX = 1;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -5879,6 +5881,18 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0010, Function | SmallTes
     bundleInstaller.innerInstallers_["test"] = std::make_shared<InnerSharedBundleInstaller>(path);
     bundleInstaller.SendBundleSystemEvent(eventTemplate, errCode);
     ASSERT_FALSE(bundleInstaller.innerInstallers_["test"]->isBundleExist_);
+}
+
+/**
+ * @tc.number: CreateSharedBundleTempDir_0100
+ * @tc.name: test CreateSharedBundleTempDir
+ * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateSharedBundleTempDir_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.CreateSharedBundleTempDir(INSTALLER_ID, INDEX);
+    EXPECT_FALSE(ret.empty());
 }
 
 } // OHOS
