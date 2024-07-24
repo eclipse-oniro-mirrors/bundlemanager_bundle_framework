@@ -418,7 +418,7 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
 
@@ -432,7 +432,7 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
 

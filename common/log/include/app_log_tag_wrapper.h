@@ -33,7 +33,7 @@
 #endif
 
 #ifndef BMS_TAG_INSTALLD
-#define BMS_TAG_INSTALLD std::make_pair(0xD0011D0, "BMSInstalld")
+#define BMS_TAG_INSTALLD std::make_pair(0xD001122, "BMSInstalld")
 #endif
 
 #ifndef APPEXECFWK_FUNC_FMT
@@ -57,5 +57,15 @@
 #define LOG_W(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_WARN,  label, fmt, ##__VA_ARGS__)
 #define LOG_E(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_ERROR, label, fmt, ##__VA_ARGS__)
 #define LOG_F(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_FATAL, label, fmt, ##__VA_ARGS__)
+
+#define APPEXECFWK_PRINT_LOG_NOFUNC(level, label, fmt, ...)                             \
+        ((void)HILOG_IMPL(LOG_CORE, level, label.first,                                 \
+        label.second, fmt, ##__VA_ARGS__))
+
+#define LOG_NOFUNC_D(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_DEBUG, label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_I(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_INFO,  label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_W(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_WARN,  label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_E(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_ERROR, label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_F(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_FATAL, label, fmt, ##__VA_ARGS__)
 
 #endif  // OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H
