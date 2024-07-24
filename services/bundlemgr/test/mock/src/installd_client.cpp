@@ -475,5 +475,10 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
 {
     return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
+
+int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
+{
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

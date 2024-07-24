@@ -888,4 +888,46 @@ HWTEST_F(BmsEventHandlerTest, MatchSignature_0102, Function | SmallTest | Level0
     ret = handler->MatchOldSignatures(preBundleConfigInfo, oldSignatures);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: CheckExtensionTypeInConfig_0100
+ * @tc.name: CheckExtensionTypeInConfig
+ * @tc.desc: test CheckExtensionTypeInConfig
+ */
+HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::string typeName;
+    auto ret = handler->CheckExtensionTypeInConfig(typeName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckExtensionTypeInConfig_0200
+ * @tc.name: CheckExtensionTypeInConfig
+ * @tc.desc: test CheckExtensionTypeInConfig
+ */
+HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::string typeName;
+    handler->LoadPreInstallProFile();
+    auto ret = handler->CheckExtensionTypeInConfig(typeName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CheckExtensionTypeInConfig_0300
+ * @tc.name: CheckExtensionTypeInConfig
+ * @tc.desc: test CheckExtensionTypeInConfig
+ */
+HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    handler->LoadPreInstallProFile();
+    handler->ParsePreBundleProFile(BUNDLE_PATH);
+    std::string typeName = BUNDLE_TEST_NAME;
+    auto ret = handler->CheckExtensionTypeInConfig(typeName);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

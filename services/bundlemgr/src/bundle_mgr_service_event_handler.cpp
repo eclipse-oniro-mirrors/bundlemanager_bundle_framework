@@ -106,6 +106,7 @@ const std::string OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
+constexpr const char* MODULE_UPDATE_PRODUCT_SUFFIX = "/etc/app/module_update";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
@@ -654,6 +655,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
 
     for (const auto &rootDir : rootDirList) {
         ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + MODULE_UPDATE_PRODUCT_SUFFIX);
     }
 
     hasLoadPreInstallProFile_ = true;
@@ -1734,7 +1736,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     }
 
     for (auto &scanPathIter : scanPathList) {
-        LOG_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
@@ -1760,7 +1762,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        LOG_I(BMS_TAG_DEFAULT, "OTA process bundle(%{public}s) by path(%{public}s)",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process bundle(%{public}s) by path(%{public}s)",
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
@@ -1792,7 +1794,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             // Generally, when the versionCode of Hap is greater than the installed versionCode,
             // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
             if (hasInstalledInfo.versionCode < hapVersionCode) {
-                LOG_I(BMS_TAG_DEFAULT, "OTA update module(%{public}s) by path(%{public}s)",
+                LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA update module(%{public}s) by path(%{public}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
                 updateBundle = true;
                 break;
@@ -2752,7 +2754,7 @@ bool BMSEventHandler::OTAInstallSystemBundleNeedCheckUser(
     installParam.isOTA = true;
     SystemBundleInstaller installer;
     ErrCode ret = installer.OTAInstallSystemBundleNeedCheckUser(filePaths, installParam, bundleName, appType);
-    LOG_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "bundle %{public}s with return code: %{public}d", bundleName.c_str(), ret);
     if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         ret = ERR_OK;
     }

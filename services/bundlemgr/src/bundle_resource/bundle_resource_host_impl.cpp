@@ -47,7 +47,7 @@ ErrCode BundleResourceHostImpl::GetBundleResourceInfo(const std::string &bundleN
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex)) {
-        APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
+        APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;
@@ -76,7 +76,7 @@ ErrCode BundleResourceHostImpl::GetLauncherAbilityResourceInfo(const std::string
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (!manager->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex)) {
-        APP_LOGE("get resource failed, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
+        APP_LOGE_NOFUNC("get resource failed -n %{public}s -f %{public}u", bundleName.c_str(), flags);
         return CheckBundleNameValid(bundleName, appIndex);
     }
     return ERR_OK;

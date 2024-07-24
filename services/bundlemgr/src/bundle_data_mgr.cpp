@@ -723,8 +723,9 @@ bool BundleDataMgr::QueryAbilityInfos(
     (void)ImplicitQueryAbilityInfos(want, flags, requestUserId, abilityInfos);
     ImplicitQueryCloneAbilityInfos(want, flags, requestUserId, abilityInfos);
     if (abilityInfos.size() == 0) {
-        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s",
-            want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
+        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s"
+            " userId:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(),
+            requestUserId);
         return false;
     }
     return true;
@@ -767,8 +768,9 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         if (ret != ERR_OK) {
             return ret;
         }
-        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s",
-            want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
+        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s"
+            " userId:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(),
+            requestUserId);
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
@@ -2325,17 +2327,14 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     }
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY,
-            "GetApplicationInfoV9 failed, bundleName:%{public}s, requestUserId:%{public}d",
-            appName.c_str(), requestUserId);
+        LOG_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d", appName.c_str(), requestUserId);
         return ret;
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY,
-            "GetApplicationInfoV9 failed, bundleName:%{public}s, responseUserId:%{public}d",
+        LOG_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed -n:%{public}s -u:%{public}d",
             appName.c_str(), responseUserId);
         return ret;
     }
@@ -4679,7 +4678,7 @@ bool BundleDataMgr::GetPreInstallBundleInfo(
         return false;
     }
     if (!preInstallDataStorage_->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
-        APP_LOGW("get preInstall bundleInfo failed by bundle(%{public}s)", bundleName.c_str());
+        APP_LOGW_NOFUNC("get preInstall bundleInfo failed -n: %{public}s", bundleName.c_str());
         return false;
     }
     return true;
@@ -4885,8 +4884,9 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         return false;
     }
     if (extensionInfos.size() == 0) {
-        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo, action:%{public}s uri:%{private}s type:%{public}s",
-            want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
+        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s"
+            " userId:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(),
+            requestUserId);
         return false;
     }
     LOG_D(BMS_TAG_QUERY, "query extensionAbilityInfo successfully");
@@ -4923,7 +4923,9 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
         return ret;
     }
     if (extensionInfos.empty()) {
-        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo");
+        LOG_W(BMS_TAG_QUERY, "no matching abilityInfo action:%{public}s uri:%{private}s type:%{public}s"
+            " userId:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(),
+            requestUserId);
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     LOG_D(BMS_TAG_QUERY, "QueryExtensionAbilityInfosV9 success");

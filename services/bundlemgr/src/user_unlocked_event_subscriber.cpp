@@ -107,7 +107,7 @@ bool UpdateAppDataMgr::CreateBundleDataDir(
         }
     }
     if (!isExist) {
-        APP_LOGI("path: %{public}s not exist, need create", baseBundleDataDir.c_str());
+        APP_LOGI_NOFUNC("path: %{public}s need CreateBundleDataDir", baseBundleDataDir.c_str());
         CreateDirParam createDirParam;
         createDirParam.userId = userId;
         createDirParam.bundleName = bundleInfo.name;
@@ -198,14 +198,14 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
-            APP_LOGW("failed to SetDirApl baseDir dir");
+            APP_LOGW_NOFUNC("failed to SetDirApl baseDir dir");
             continue;
         }
         std::string baseDataDir = baseBundleDataDir + ServiceConstants::DATABASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
             bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
             bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG) != ERR_OK) {
-            APP_LOGW("failed to SetDirApl baseDataDir dir");
+            APP_LOGW_NOFUNC("failed to SetDirApl baseDataDir dir");
         }
     }
 }

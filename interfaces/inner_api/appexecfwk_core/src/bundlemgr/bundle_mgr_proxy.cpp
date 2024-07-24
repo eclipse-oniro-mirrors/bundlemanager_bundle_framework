@@ -212,7 +212,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
+        LOG_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -4253,7 +4253,7 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO, data, bundleInfo);
     if (res != ERR_OK) {
-        APP_LOGE("GetUninstalledBundleInfo from server failed error %{public}d", res);
+        APP_LOGE_NOFUNC("GetUninstalledBundleInfo failed: %{public}d", res);
         return res;
     }
     return ERR_OK;
