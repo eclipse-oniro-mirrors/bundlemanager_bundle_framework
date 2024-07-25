@@ -28,6 +28,7 @@
 #include "json_serializer.h"
 #include "mime_type_mgr.h"
 #include "parcel.h"
+#include "shortcut_data_storage_rdb.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -71,6 +72,7 @@ public:
     void TearDown();
     const std::shared_ptr<BundleDataMgr> GetDataMgr() const;
     AbilityInfo GetDefaultAbilityInfo() const;
+    ShortcutInfo InitShortcutInfo();
 
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
@@ -128,6 +130,21 @@ AbilityInfo BmsDataMgrTest::GetDefaultAbilityInfo() const
 const std::shared_ptr<BundleDataMgr> BmsDataMgrTest::GetDataMgr() const
 {
     return dataMgr_;
+}
+
+ShortcutInfo BmsDataMgrTest::InitShortcutInfo()
+{
+    ShortcutInfo shortcutInfos;
+    shortcutInfos.id = "id_test1";
+    shortcutInfos.bundleName = "com.ohos.hello";
+    shortcutInfos.hostAbility = "hostAbility";
+    shortcutInfos.icon = "$media:16777224";
+    shortcutInfos.label = "shortcutLabel";
+    shortcutInfos.disableMessage = "shortcutDisableMessage";
+    shortcutInfos.isStatic = true;
+    shortcutInfos.isHomeShortcut = true;
+    shortcutInfos.isEnables = true;
+    return shortcutInfos;
 }
 
 /**
@@ -2519,5 +2536,168 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest 
     ErrCode res =
         dataMgr->GetInnerBundleInfoWithFlagsV9(BUNDLE_NAME, GET_ABILITY_INFO_DEFAULT, innerBundleInfo, userId);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AddDesktopShortcutInfo_0001
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (rdbDataManager_ == nullptr)
+ */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_FALSE(ret);
+}
+
+// /**
+//  * @tc.number: AddDesktopShortcutInfo_0002
+//  * @tc.name: AddDesktopShortcutInfo
+//  * @tc.desc: 1. system run normally
+//  *           2. enter if (rdbDataManager_ == nullptr)
+//  */
+HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+
+    bool ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_TRUE(ret);
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+    EXPECT_FALSE(ret);
+}
+
+// /**
+//  * @tc.number: DeleteDesktopShortcutInfo_0001
+//  * @tc.name: DeleteDesktopShortcutInfo
+//  * @tc.desc: 1. system run normally
+//  *           2. enter if (rdbDataManager_ == nullptr)
+//  */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_FALSE(ret);
+
+    shortcutDataStorageRdb = nullptr;
+}
+
+// /**
+//  * @tc.number: DeleteDesktopShortcutInfo_0002
+//  * @tc.name: DeleteDesktopShortcutInfo
+//  * @tc.desc: 1. system run normally
+//  *           2. enter if (rdbDataManager_ == nullptr)
+//  */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    bool isIdIllegal = false;
+    shortcutDataStorageRdb->AddDesktopShortcutInfo(shortcutInfo, USERID, isIdIllegal);
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_FALSE(ret);
+
+    shortcutDataStorageRdb = nullptr;
+}
+
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_0001
+ * @tc.name: GetAllDesktopShortcutInfo
+ * @tc.desc: 1. enter if (!BundlePermissionMgr::IsSystemApp())
+ *           2. system run normally
+ *           3. enter if (!rdbDataManager_->QueryAllData(datas))
+ */
+HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    vecShortcutInfo.push_back(shortcutInfo);
+    shortcutDataStorageRdb->rdbDataManager_->rdbStore_ = nullptr;
+
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_NE(shortcutDataStorageRdb->rdbDataManager_, nullptr);
+
+    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+
+    vecShortcutInfo.clear();
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_TRUE(vecShortcutInfo.empty());
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
+
+    shortcutDataStorageRdb = nullptr;
+}
+
+// /**
+//  * @tc.number: GetAllDesktopShortcutInfo_0002
+//  * @tc.name: GetAllDesktopShortcutInfo
+//  * @tc.desc: 1. enter if (!BundlePermissionMgr::IsSystemApp())
+//  *           2. system run normally
+//  *           3. enter if (!rdbDataManager_->QueryAllData(datas))
+//  */
+HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    ShortcutInfo shortcutInfo = BmsDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    vecShortcutInfo.push_back(shortcutInfo);
+    shortcutDataStorageRdb->rdbDataManager_->rdbStore_ = nullptr;
+
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_NE(shortcutDataStorageRdb->rdbDataManager_, nullptr);
+
+    shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+
+    vecShortcutInfo.clear();
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_TRUE(vecShortcutInfo.empty());
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
+
+    shortcutDataStorageRdb = nullptr;
 }
 } // OHOS

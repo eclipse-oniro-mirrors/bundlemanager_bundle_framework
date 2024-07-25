@@ -334,6 +334,7 @@ public:
     void ClearDataMgr();
     void ResetDataMgr();
     void RemoveBundleinfo(const std::string &bundleName);
+    ShortcutInfo InitShortcutInfo();
 
 public:
     static std::shared_ptr<InstalldService> installdService_;
@@ -859,6 +860,21 @@ void ICleanCacheCallbackTest::OnCleanCacheFinished(bool succeeded)
 sptr<IRemoteObject> ICleanCacheCallbackTest::AsObject()
 {
     return nullptr;
+}
+
+ShortcutInfo BmsBundleDataMgrTest::InitShortcutInfo()
+{
+    ShortcutInfo shortcutInfos;
+    shortcutInfos.id = "id_test1";
+    shortcutInfos.bundleName = "com.ohos.hello";
+    shortcutInfos.hostAbility = "hostAbility";
+    shortcutInfos.icon = "$media:16777224";
+    shortcutInfos.label = "shortcutLabel";
+    shortcutInfos.disableMessage = "shortcutDisableMessage";
+    shortcutInfos.isStatic = true;
+    shortcutInfos.isHomeShortcut = true;
+    shortcutInfos.isEnables = true;
+    return shortcutInfos;
 }
 
 class IBundleStatusCallbackTest : public IBundleStatusCallback {
@@ -5401,5 +5417,203 @@ HWTEST_F(BmsBundleDataMgrTest, CheckIsModuleNeedUpdate_0100, Function | MediumTe
     innerBundleInfo.InsertAbilitiesInfo(keyName, abilityInfoExt);
     bool isModuleNeedUpdate = bundleConnectAbility->CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
     EXPECT_EQ(isModuleNeedUpdate, false);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplAddDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostImplAddDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+
+    ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = bundleMgrHostImpl_->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplAddDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostImplAddDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+
+    ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplDeleteDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostImplDeleteDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+
+    ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplDeleteDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostImplDeleteDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+
+    ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplGetAllDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostImplGetAllDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> lcalBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(lcalBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    vecShortcutInfo.push_back(shortcutInfo);
+
+    ErrCode ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostImplGetAllDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostImplGetAllDesktopShortcutInfo
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    std::shared_ptr<BundleMgrHostImpl> localBundleMgrHostImpl = std::make_shared<BundleMgrHostImpl>();
+    ASSERT_NE(localBundleMgrHostImpl, nullptr);
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::vector<ShortcutInfo> vecShortcutInfo;
+    vecShortcutInfo.push_back(shortcutInfo);
+
+    ErrCode ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_NE(ret, ERR_OK);
+
+    bundleMgrService_->dataMgr_ = nullptr;
+    ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BundleDataMgrAddDesktopShortcutInfo_0001
+ * @tc.name: BundleDataMgrAddDesktopShortcutInfo
+ * ShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrAddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(localBundleDataMgr, nullptr);
+    int32_t userID = -1;
+    ErrCode ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userID = -1;
+    shortcutInfo.id = userID;
+    ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleDataMgrAddDesktopShortcutInfo_0002
+ * @tc.name: BundleDataMgrAddDesktopShortcutInfo
+ * ShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrAddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(localBundleDataMgr, nullptr);
+    int32_t userID = -1;
+    ErrCode ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    userID = -1;
+    shortcutInfo.id = userID;
+    ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleDataMgrDeleteDesktopShortcutInfo_0001
+ * @tc.name: BundleDataMgrDeleteDesktopShortcutInfo
+ * ShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrDeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(localBundleDataMgr, nullptr);
+
+    ErrCode ret = localBundleDataMgr->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BundleDataMgrDeleteDesktopShortcutInfo_0002
+ * @tc.name: BundleDataMgrDeleteDesktopShortcutInfo
+ * ShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrDeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleDataMgr> localBundleDataMgr = std::make_shared<BundleDataMgr>();
+    ASSERT_NE(localBundleDataMgr, nullptr);
+
+    ErrCode ret = localBundleDataMgr->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 }
