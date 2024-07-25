@@ -63,6 +63,10 @@ private:
     static void InnerEventWrite(const std::string &eventName,
         HiSysEventType type, Types... keyValues);
 
+    template<typename... Types>
+    static void InnerEventWriteForBundleManager(const std::string &eventName,
+        HiSysEventType type, Types... keyValues);
+
     static std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)> bmsSysEventMap_;
 };
 }  // namespace AppExecFwk
