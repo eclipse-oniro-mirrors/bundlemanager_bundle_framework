@@ -634,9 +634,8 @@ bool BundleDataMgr::QueryAbilityInfo(const Want &want, int32_t flags, int32_t us
     if (!bundleName.empty() && !abilityName.empty()) {
         bool ret = ExplicitQueryAbilityInfo(want, flags, requestUserId, abilityInfo, appIndex);
         if (!ret) {
-            LOG_D(BMS_TAG_QUERY,
-                "explicit queryAbilityInfo error bundleName:%{public}s abilityName:%{public}s",
-                bundleName.c_str(), abilityName.c_str());
+            LOG_W(BMS_TAG_QUERY, "explicit query error bundle:%{public}s ability:%{public}s userId:%{public}d"
+                " appIndex:%{public}d", bundleName.c_str(), abilityName.c_str(), userId, appIndex);
             return false;
         }
         return true;
@@ -717,6 +716,10 @@ bool BundleDataMgr::QueryAbilityInfos(
         }
         // get cloneApp's abilityInfos
         GetCloneAbilityInfos(abilityInfos, element, flags, userId);
+        if (abilityInfos.empty()) {
+            LOG_W(BMS_TAG_QUERY, "explicit query error bundle:%{public}s ability:%{public}s userId:%{public}d",
+                bundleName.c_str(), abilityName.c_str(), userId);
+        }
         return !abilityInfos.empty();
     }
     // implicit query
@@ -757,6 +760,8 @@ ErrCode BundleDataMgr::QueryAbilityInfosV9(
         // get cloneApp's abilityInfos
         GetCloneAbilityInfosV9(abilityInfos, element, flags, userId);
         if (abilityInfos.empty()) {
+            LOG_W(BMS_TAG_QUERY, "explicit query error bundle:%{public}s ability:%{public}s userId:%{public}d",
+                bundleName.c_str(), abilityName.c_str(), userId);
             return ret;
         }
         return ERR_OK;
@@ -4868,8 +4873,8 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         ExtensionAbilityInfo info;
         bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
         if (!ret) {
-            LOG_D(BMS_TAG_QUERY, "explicit query error bundleName:%{public}s extensionName:%{public}s",
-                bundleName.c_str(), extensionName.c_str());
+            LOG_W(BMS_TAG_QUERY, "explicit query error bundle:%{public}s extension:%{public}s userId:%{public}d"
+                " appIndex:%{public}d", bundleName.c_str(), extensionName.c_str(), userId, appIndex);
             return false;
         }
         extensionInfos.emplace_back(info);
@@ -4879,8 +4884,9 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
     bool ret = ImplicitQueryExtensionInfos(want, flags, requestUserId, extensionInfos, appIndex);
     if (!ret) {
         LOG_D(BMS_TAG_QUERY,
-            "implicit queryExtension error action:%{public}s uri:%{private}s type:%{public}s",
-            want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
+            "implicit queryExtension error action:%{public}s uri:%{private}s type:%{public}s"
+            " userId:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str(),
+            requestUserId);
         return false;
     }
     if (extensionInfos.size() == 0) {
@@ -4911,7 +4917,8 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
         ExtensionAbilityInfo info;
         ErrCode ret = ExplicitQueryExtensionInfoV9(want, flags, requestUserId, info, appIndex);
         if (ret != ERR_OK) {
-            LOG_D(BMS_TAG_QUERY, "explicit queryExtensionInfo error");
+            LOG_W(BMS_TAG_QUERY, "explicit query error bundle:%{public}s extension:%{public}s userId:%{public}d"
+                " appIndex:%{public}d", bundleName.c_str(), extensionName.c_str(), userId, appIndex);
             return ret;
         }
         extensionInfos.emplace_back(info);
