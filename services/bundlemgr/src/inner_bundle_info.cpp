@@ -4419,7 +4419,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     int32_t appIndex,
     ApplicationInfo &appInfo) const
 {
-    if (appIndex == 0) {
+    if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
             appInfo.removable = false;
         }
