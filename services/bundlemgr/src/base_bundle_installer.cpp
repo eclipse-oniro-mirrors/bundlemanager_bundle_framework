@@ -1049,7 +1049,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     if (inBundlePaths.empty() && sharedBundleInstaller.NeedToInstall()) {
         result = sharedBundleInstaller.Install(sysEventInfo_);
-        sync();
         bundleType_ = BundleType::SHARED;
         LOG_I(BMS_TAG_INSTALLER, "install cross-app shared bundles only, result : %{public}d", result);
         return result;
@@ -1253,9 +1252,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
-    // the hap coyied to security dir neet to be deleted before sync
     BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
-    ForceWriteToDisk();
     return result;
 }
 
@@ -5471,16 +5468,6 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
     }
     LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s end", bundleName_.c_str());
     return ERR_OK;
-}
-
-void BaseBundleInstaller::ForceWriteToDisk() const
-{
-    auto task = []() {
-        LOG_I(BMS_TAG_INSTALLER, "sync begin");
-        sync();
-        LOG_I(BMS_TAG_INSTALLER, "sync end");
-    };
-    std::thread(task).detach();
 }
 
 #ifdef APP_DOMAIN_VERIFY_ENABLED
