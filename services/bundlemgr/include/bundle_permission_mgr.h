@@ -72,9 +72,6 @@ public:
 
     static int32_t ClearUserGrantedPermissionState(const Security::AccessToken::AccessTokenID tokenId);
 
-    static Security::AccessToken::HapPolicyParams CreateHapPolicyParam(const InnerBundleInfo &innerBundleInfo,
-        const std::vector<Security::AccessToken::PermissionStateFull> &permissions);
-        
     static bool GetAllReqPermissionStateFull(Security::AccessToken::AccessTokenID tokenId,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionState);
 
