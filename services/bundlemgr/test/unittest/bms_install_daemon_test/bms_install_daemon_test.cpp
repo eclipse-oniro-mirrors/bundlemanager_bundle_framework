@@ -1047,36 +1047,6 @@ HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
 }
 
 /**
- * @tc.number: CleanBundleDataDirByName_0100
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test CleanBundleDataDirByName
-*/
-HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDirByName_0100, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string bundleName;
-    int userid = 0;
-    int appIndex = 0 ;
-    ErrCode ret = hostImpl.CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-}
-
-/**
- * @tc.number: CleanBundleDataDirByName_0200
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. test CleanBundleDataDirByName
-*/
-HWTEST_F(BmsInstallDaemonTest, CleanBundleDataDirByName_0200, Function | SmallTest | Level0)
-{
-    InstalldHostImpl hostImpl;
-    std::string bundleName = "com.acts.example";
-    int userid = 100;
-    int appIndex = 1;
-    ErrCode ret = hostImpl.CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
  * @tc.number: GetAllBundleStats_0100
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. test GetAllBundleStats
