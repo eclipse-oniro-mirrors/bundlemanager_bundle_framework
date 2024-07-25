@@ -2031,13 +2031,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
 {
-    if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
-        if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
-            (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
-            LOG_E(BMS_TAG_INSTALLER, "same versionCode, appIdentifier or appId is not same");
-            return false;
-        }
-    }
     // for versionCode update
     if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
         (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {

@@ -5039,11 +5039,13 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest |
     oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
     InnerBundleInfo oldInfo;
     oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
 
     BundleInfo newBundleInfo;
     newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
     InnerBundleInfo newInfo;
     newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080EDXXXX");
 
     BaseBundleInstaller installer;
     bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
