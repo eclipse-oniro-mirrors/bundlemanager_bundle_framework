@@ -53,6 +53,14 @@ void LauncherService::init()
     bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
 }
 
+LauncherService::~LauncherService()
+{
+    APP_LOGD("destroy LauncherService");
+    if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
+}
+
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
 {
     if (bundleMgr_ == nullptr) {
@@ -386,6 +394,13 @@ ErrCode LauncherService::GetShortcutInfoV9(
         }
     }
     return ERR_OK;
+}
+
+void LauncherService::OnDeath()
+{
+    APP_LOGD("BundleManagerService dead");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
