@@ -6949,7 +6949,6 @@ void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
     const std::vector<std::string> &dataGroupIdList, int32_t userId) const
 {
     APP_LOGD("GenerateDataGroupInfos called for user: %{public}d", userId);
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (dataGroupIdList.empty() || bundleInfos_.empty()) {
         APP_LOGW("dataGroupIdList or bundleInfos_ data is empty");
         return;
@@ -6977,6 +6976,7 @@ void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
 void BundleDataMgr::GetDataGroupIndexMap(
     std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
 {
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     for (const auto &bundleInfo : bundleInfos_) {
         for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
             for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &dataGroupInfo) {
@@ -7776,7 +7776,7 @@ ErrCode BundleDataMgr::QueryCloneAbilityInfo(const ElementName &element, int32_t
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    
+
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     InnerBundleInfo innerBundleInfo;
 

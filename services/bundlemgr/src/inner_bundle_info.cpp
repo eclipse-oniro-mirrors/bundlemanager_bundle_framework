@@ -4449,7 +4449,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     int32_t appIndex,
     BundleInfo &bundleInfo) const
 {
-    if (appIndex == 0) {
+    if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         bundleInfo.uid = innerBundleUserInfo.uid;
         if (!innerBundleUserInfo.gids.empty()) {
             bundleInfo.gid = innerBundleUserInfo.gids[0];
