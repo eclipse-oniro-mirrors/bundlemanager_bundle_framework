@@ -3055,6 +3055,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto result = InnerProcessNativeLibs(info, modulePath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to InnerProcessNativeLibs, error is %{public}d", result);
@@ -3431,7 +3432,6 @@ ErrCode BaseBundleInstaller::RenameModuleDir(const InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     return bundleInstallChecker_->CheckSysCap(bundlePaths);
 }
 
@@ -4434,6 +4434,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
 
 ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // size of code signature files should be same with the size of hap and hsp
     if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
         LOG_E(BMS_TAG_INSTALLER, "each hap or hsp needs to be verified code signature");
@@ -4988,6 +4989,7 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
     std::vector<std::string> &bundlePaths)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!installParam.withCopyHaps) {
         LOG_D(BMS_TAG_INSTALLER, "no need to copy preInstallApp to secure dir");
         return ERR_OK;
