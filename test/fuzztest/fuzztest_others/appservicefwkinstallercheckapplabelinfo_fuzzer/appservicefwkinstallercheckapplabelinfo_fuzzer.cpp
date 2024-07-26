@@ -31,9 +31,9 @@ namespace OHOS {
     {
         AppServiceFwkInstaller appServicefwk;
         InnerBundleInfo innerBundleInfo;
-        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+        innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
         std::unordered_map<std::string, InnerBundleInfo> infos;
-        std::string path = "/data/test/resource/bms/install_bundle/test_create_dir/test.hap";
+        std::string path = std::string(data, size);
         infos.emplace(path, innerBundleInfo);
         appServicefwk.CheckAppLabelInfo(infos);
         return true;

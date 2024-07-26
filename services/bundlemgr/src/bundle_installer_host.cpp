@@ -36,6 +36,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string GET_MANAGER_FAIL = "fail to get bundle installer manager";
+const std::string MODULE_UPDATE_DIR = "/module_update/";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;
@@ -793,7 +794,7 @@ void BundleInstallerHost::HandleInstallCloneApp(MessageParcel &data, MessageParc
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
- 
+
     LOG_I(BMS_TAG_INSTALLER, "receive Install CLone App Request");
 
     auto ret = InstallCloneApp(bundleName, userId, appIndex);
@@ -833,7 +834,7 @@ void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessagePa
     std::string bundleName = Str16ToStr8(data.ReadString16());
     int32_t userId = data.ReadInt32();
     int32_t appIndex = data.ReadInt32();
- 
+
     LOG_I(BMS_TAG_INSTALLER, "receive Uninstall CLone App Request");
 
     auto ret = UninstallCloneApp(bundleName, userId, appIndex);
@@ -859,12 +860,14 @@ void BundleInstallerHost::HandleInstallHmpBundle(MessageParcel &data, MessagePar
 ErrCode BundleInstallerHost::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
 {
     LOG_D(BMS_TAG_INSTALLER, "install hmp bundle filePath: %{public}s", filePath.c_str());
-    if (filePath.empty()) {
-        LOG_E(BMS_TAG_INSTALLER, "install hmp bundle failed due to empty filePath");
+    if (filePath.empty() || filePath.find(MODULE_UPDATE_DIR) != 0 ||
+        filePath.find("..") != std::string::npos) {
+        LOG_E(BMS_TAG_INSTALLER, "install hmp bundle failed due to invalid filePath: %{public}s", filePath.c_str());
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
-        LOG_E(BMS_TAG_INSTALLER, "InstallHmpBundle permission denied");
+    int32_t uid = IPCSkeleton::GetCallingUid();
+    if (uid != ServiceConstants::MODULE_UPDATE_UID) {
+        LOG_E(BMS_TAG_INSTALLER, "callingName is invalid, uid: %{public}d", uid);
         return ERR_APPEXECFWK_PERMISSION_DENIED;
     }
     std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();

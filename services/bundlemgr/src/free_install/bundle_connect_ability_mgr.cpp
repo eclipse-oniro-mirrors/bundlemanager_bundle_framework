@@ -165,12 +165,12 @@ void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityIn
     const std::string dataString = GetJsonStrFromInfo(targetAbilityInfo);
     LOG_I(BMS_TAG_DEFAULT, "TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
     if (!data.WriteString16(Str8ToStr16(dataString))) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "failed to WriteParcelable targetAbilityInfo");
         return;
     }
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed to get remote object", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
         return;
     }
     int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
@@ -620,7 +620,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
     if (node == freeInstallParamsMap_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "Can not find node in %{public}s function", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "Can not find node");
         return;
     }
     serialQueue_->CancelDelayTask(installResult.result.transactId);
@@ -655,7 +655,7 @@ void BundleConnectAbilityMgr::OnDelayedHeartbeat(std::string installResultStr)
     std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
     if (node == freeInstallParamsMap_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "Can not find node in %{public}s function", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "Can not find node");
         return;
     }
     serialQueue_->CancelDelayTask(installResult.result.transactId);
@@ -671,7 +671,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(transactId);
     if (node == freeInstallParamsMap_.end()) {
-        LOG_E(BMS_TAG_DEFAULT, "Can not find node in %{public}s function", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "Can not find node");
         return;
     }
     freeInstallParams = node->second;
@@ -701,7 +701,7 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
     const std::string dataString = GetJsonStrFromInfo(targetAbilityInfo);
     LOG_I(BMS_TAG_DEFAULT, "TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
     if (!data.WriteString16(Str8ToStr16(dataString))) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "failed to WriteParcelable targetAbilityInfo");
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
@@ -712,14 +712,14 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         return;
     }
     if (!data.WriteRemoteObject(callback)) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed to WriteRemoteObject callbcak", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "failed to WriteRemoteObject callbcak");
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
         return;
     }
     serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
     if (serviceCenterRemoteObject_ == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "%{public}s failed to get remote object", __func__);
+        LOG_E(BMS_TAG_DEFAULT, "failed to get remote object");
         CallAbilityManager(FreeInstallErrorCode::CONNECT_ERROR, want, userId, freeInstallParams.callback);
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;

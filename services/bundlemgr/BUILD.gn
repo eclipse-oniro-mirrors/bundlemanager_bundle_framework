@@ -508,6 +508,11 @@ ohos_shared_library("installs") {
     cflags += [ "-DWITH_SELINUX" ]
   }
 
+  if (dfx_sigdump_handler_enabled) {
+    external_deps += [ "faultloggerd:dfx_sigdump_handler" ]
+    defines += [ "DFX_SIGDUMP_HANDLER_ENABLE" ]
+  }
+
   install_enable = true
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"

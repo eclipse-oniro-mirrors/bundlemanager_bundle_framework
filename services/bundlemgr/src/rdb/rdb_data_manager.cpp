@@ -182,7 +182,7 @@ bool RdbDataManager::UpdateOrInsertData(
     int32_t rowId = -1;
     auto ret = rdbStore->Update(rowId, valuesBucket, absRdbPredicates);
     if ((ret == NativeRdb::E_OK) && (rowId == 0)) {
-        APP_LOGI("data not exist, need insert data");
+        APP_LOGI_NOFUNC("data not exist, need insert data");
         int64_t rowIdInsert = -1;
         ret = rdbStore->InsertWithConflictResolution(
             rowIdInsert, bmsRdbConfig_.tableName, valuesBucket, NativeRdb::ConflictResolution::ON_CONFLICT_REPLACE);

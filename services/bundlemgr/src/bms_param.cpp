@@ -55,7 +55,7 @@ bool BmsParam::GetBmsParam(const std::string &key, std::string &value)
 bool BmsParam::SaveBmsParam(const std::string &paramKeyInfo, const std::string &paramValueInfo)
 {
     if (paramKeyInfo.empty() || paramValueInfo.empty()) {
-        APP_LOGE("key or value is empty!");
+        APP_LOGE("key or value is empty");
         return false;
     }
 

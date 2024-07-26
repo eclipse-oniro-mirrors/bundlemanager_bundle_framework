@@ -73,6 +73,8 @@ public:
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool UninstallSystemBundle(const std::string &bundleName);
+
+    bool UninstallSystemBundle(const std::string &bundleName, const InstallParam &installParam);
     /**
      * @brief Deleting apps while retaining user data.
      * @param bundleName Indicates the bundle name.

@@ -273,7 +273,6 @@ static void ConvertApplicationInfo(napi_env env, napi_value objAppInfo, const Ap
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "name", nName));
-    APP_LOGI("ConvertApplicationInfo name=%{public}s", appInfo.name.c_str());
 
     napi_value nCodePath;
     NAPI_CALL_RETURN_VOID(
@@ -1103,7 +1102,7 @@ static napi_value ParseInt(napi_env env, int &param, napi_value args)
     // create result code
     napi_value result = nullptr;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
+    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error");
     return result;
 }
 
@@ -1283,7 +1282,7 @@ static napi_value ParseStringArray(napi_env env, std::vector<std::string> &strin
     // create result code
     napi_value result;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
+    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error");
     return result;
 }
 
@@ -1395,7 +1394,7 @@ static bool ParseWant(napi_env env, Want &want, napi_value args)
         napi_status status = napi_get_named_property(env, elementProp, "bundleName", &prop);
         napi_typeof(env, prop, &valueType);
         if ((status != napi_ok) || (valueType != napi_string)) {
-            APP_LOGE("elementName bundleName incorrect!");
+            APP_LOGE("elementName bundleName incorrect");
             return false;
         }
         elementBundleName = GetStringFromNAPI(env, prop);
@@ -1404,7 +1403,7 @@ static bool ParseWant(napi_env env, Want &want, napi_value args)
         status = napi_get_named_property(env, elementProp, "abilityName", &prop);
         napi_typeof(env, prop, &valueType);
         if ((status != napi_ok) || (valueType != napi_string)) {
-            APP_LOGE("elementName abilityName incorrect!");
+            APP_LOGE("elementName abilityName incorrect");
             return false;
         }
         elementAbilityName = GetStringFromNAPI(env, prop);
@@ -1416,7 +1415,7 @@ static bool ParseWant(napi_env env, Want &want, napi_value args)
             status = napi_get_named_property(env, elementProp, "moduleName", &prop);
             napi_typeof(env, prop, &valueType);
             if ((status != napi_ok) || (valueType != napi_string)) {
-                APP_LOGE("elementName moduleName incorrect!");
+                APP_LOGE("elementName moduleName incorrect");
                 return false;
             }
             elementModuleName = GetStringFromNAPI(env, prop);
@@ -1586,7 +1585,7 @@ static napi_value ParseString(napi_env env, std::string &param, napi_value args)
     // create result code
     napi_value result;
     napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error!");
+    NAPI_ASSERT(env, status == napi_ok, "napi_create_int32 error");
     return result;
 }
 
@@ -1849,19 +1848,19 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("args type incorrect!");
+        APP_LOGE("args type incorrect");
         return false;
     }
     napi_value property = nullptr;
     bool hasKey = false;
     napi_has_named_property(env, args, "moduleName", &hasKey);
     if (!hasKey) {
-        APP_LOGE("parse HashParam failed due to moduleName is not exist!");
+        APP_LOGE("parse HashParam failed due to moduleName is not exist");
         return false;
     }
     napi_status status = napi_get_named_property(env, args, "moduleName", &property);
     if (status != napi_ok) {
-        APP_LOGE("napi get named moduleName property error!");
+        APP_LOGE("napi get named moduleName property error");
         return false;
     }
     ParseString(env, key, property);
@@ -1875,12 +1874,12 @@ static bool ParseHashParam(napi_env env, std::string &key, std::string &value, n
     hasKey = false;
     napi_has_named_property(env, args, "hashValue", &hasKey);
     if (!hasKey) {
-        APP_LOGE("parse HashParam failed due to hashValue is not exist!");
+        APP_LOGE("parse HashParam failed due to hashValue is not exist");
         return false;
     }
     status = napi_get_named_property(env, args, "hashValue", &property);
     if (status != napi_ok) {
-        APP_LOGE("napi get named hashValue property error!");
+        APP_LOGE("napi get named hashValue property error");
         return false;
     }
     ParseString(env, value, property);
@@ -1900,7 +1899,7 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, "hashParams", &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named hashParams property error!");
+            APP_LOGE("napi get named hashParams property error");
             return false;
         }
         bool isArray = false;
@@ -1909,7 +1908,7 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
         napi_valuetype valueAryType = napi_undefined;
         NAPI_CALL_BASE(env, napi_is_array(env, property, &isArray), false);
         if (!isArray) {
-            APP_LOGE("hashParams is not array!");
+            APP_LOGE("hashParams is not array");
             return false;
         }
 
@@ -1942,13 +1941,13 @@ static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, "userId", &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named userId property error!");
+            APP_LOGE("napi get named userId property error");
             return false;
         }
         napi_valuetype valueType;
         napi_typeof(env, property, &valueType);
         if (valueType != napi_number) {
-            APP_LOGE("param(userId) type incorrect!");
+            APP_LOGE("param(userId) type incorrect");
             return false;
         }
 
@@ -1966,13 +1965,13 @@ static bool ParseInstallFlag(napi_env env, napi_value args, InstallFlag &install
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, "installFlag", &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named installFlag property error!");
+            APP_LOGE("napi get named installFlag property error");
             return false;
         }
         napi_valuetype valueType;
         napi_typeof(env, property, &valueType);
         if (valueType != napi_number) {
-            APP_LOGE("param(installFlag) type incorrect!");
+            APP_LOGE("param(installFlag) type incorrect");
             return false;
         }
 
@@ -1991,13 +1990,13 @@ static bool ParseIsKeepData(napi_env env, napi_value args, bool &isKeepData)
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, "isKeepData", &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named isKeepData property error!");
+            APP_LOGE("napi get named isKeepData property error");
             return false;
         }
         napi_valuetype valueType;
         napi_typeof(env, property, &valueType);
         if (valueType != napi_boolean) {
-            APP_LOGE("param(isKeepData) type incorrect!");
+            APP_LOGE("param(isKeepData) type incorrect");
             return false;
         }
 
@@ -2014,13 +2013,13 @@ static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowd
         napi_value property = nullptr;
         napi_status status = napi_get_named_property(env, args, "crowdtestDeadline", &property);
         if (status != napi_ok) {
-            APP_LOGE("napi get named crowdtestDeadline property error!");
+            APP_LOGE("napi get named crowdtestDeadline property error");
             return false;
         }
         napi_valuetype valueType;
         napi_typeof(env, property, &valueType);
         if (valueType != napi_number) {
-            APP_LOGE("param(crowdtestDeadline) type incorrect!");
+            APP_LOGE("param(crowdtestDeadline) type incorrect");
             return false;
         }
         NAPI_CALL_BASE(env, napi_get_value_int64(env, property, &crowdtestDeadline), false);
@@ -2033,7 +2032,7 @@ static bool ParseInstallParam(napi_env env, InstallParam &installParam, napi_val
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("args type incorrect!");
+        APP_LOGE("args type incorrect");
         return false;
     }
 
@@ -2435,14 +2434,14 @@ napi_value WrapUndefinedToJS(napi_env env)
 
 AsyncGetBundleGidsCallbackInfo *CreateAsyncGetBundleGidsCallbackInfo(napi_env env)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGI("called");
     AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncGetBundleGidsCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
 
-    APP_LOGI("%{public}s end", __func__);
+    APP_LOGI("end");
     return asyncCallbackInfo;
 }
 
@@ -2483,12 +2482,12 @@ void GetBundleGidsAsyncComplete(napi_env env, napi_status status, void *data)
     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
     NAPI_CALL_RETURN_VOID(env,
         napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[PARAM0]), result, &callResult));
-    APP_LOGI("NAPI_GetApplicationInfo, main event thread complete end");
+    APP_LOGI("main event thread complete end");
 }
 
 void GetBundleGidsPromiseComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGI("NAPI_GetBundleGids, main event thread complete");
+    APP_LOGI("main event thread complete begin");
     AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo = static_cast<AsyncGetBundleGidsCallbackInfo *>(data);
     std::unique_ptr<AsyncGetBundleGidsCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result = nullptr;
@@ -2500,15 +2499,15 @@ void GetBundleGidsPromiseComplete(napi_env env, napi_status status, void *data)
         result = GetCallbackErrorValue(env, asyncCallbackInfo->err);
         NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
     }
-    APP_LOGI("NAPI_GetApplicationInfo, main event thread complete end");
+    APP_LOGI("main event thread complete end");
 }
 
 napi_value GetBundleGidsAsync(
     napi_env env, napi_value *args, const size_t argCallback, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, asyncCallback", __func__);
+    APP_LOGI("asyncCallback");
     if (args == nullptr || asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, param == nullptr", __func__);
+        APP_LOGE("param == nullptr");
         return nullptr;
     }
 
@@ -2528,15 +2527,15 @@ napi_value GetBundleGidsAsync(
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
-    APP_LOGI("%{public}s, asyncCallback end", __func__);
+    APP_LOGI("asyncCallback end");
     return result;
 }
 
 napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, promise", __func__);
+    APP_LOGI("promise");
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, param == nullptr", __func__);
+        APP_LOGE("param == nullptr");
         return nullptr;
     }
     napi_value resourceName = nullptr;
@@ -2550,15 +2549,15 @@ napi_value GetBundleGidsPromise(napi_env env, AsyncGetBundleGidsCallbackInfo *as
                 GetBundleGidsExecute, GetBundleGidsPromiseComplete,
                 reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    APP_LOGI("%{public}s, promise end", __func__);
+    APP_LOGI("promise end");
     return promise;
 }
 
 napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBundleGidsCallbackInfo *asyncCallbackInfo)
 {
-    APP_LOGI("%{public}s, asyncCallback", __func__);
+    APP_LOGI("asyncCallback");
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("%{public}s, asyncCallbackInfo == nullptr", __func__);
+        APP_LOGE("asyncCallbackInfo is nullptr");
         return nullptr;
     }
 
@@ -2570,7 +2569,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argcAsync, args, nullptr, nullptr));
     if (argcAsync > argCountWithAsync) {
-        APP_LOGE("%{public}s, Wrong argument count", __func__);
+        APP_LOGE("Wrong argument count");
         return nullptr;
     }
 
@@ -2587,7 +2586,7 @@ napi_value GetBundleGidsWrap(napi_env env, napi_callback_info info, AsyncGetBund
     } else {
         ret = GetBundleGidsPromise(env, asyncCallbackInfo);
     }
-    APP_LOGI("%{public}s, asyncCallback end", __func__);
+    APP_LOGI("asyncCallback end");
     return ret;
 }
 
@@ -2601,12 +2600,12 @@ napi_value GetBundleGids(napi_env env, napi_callback_info info)
     std::unique_ptr<AsyncGetBundleGidsCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value ret = GetBundleGidsWrap(env, info, asyncCallbackInfo);
     if (ret == nullptr) {
-        APP_LOGE("%{public}s ret == nullptr", __func__);
+        APP_LOGE("ret == nullptr");
         ret = WrapVoidToJS(env);
     } else {
         callbackPtr.release();
     }
-    APP_LOGI("%{public}s end", __func__);
+    APP_LOGI("end");
     return ret;
 }
 
@@ -2687,7 +2686,7 @@ bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::Ability
     napi_valuetype valueType;
     NAPI_CALL_BASE(env, napi_typeof(env, param, &valueType), false);
     if (valueType != napi_object) {
-        APP_LOGE("param type mismatch!");
+        APP_LOGE("param type mismatch");
         return false;
     }
 
@@ -3802,12 +3801,12 @@ napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->hapFilePath)) {
-                APP_LOGE("hapFilePath %{public}s invalid!", asyncCallbackInfo->hapFilePath.c_str());
+                APP_LOGE("hapFilePath %{public}s invalid", asyncCallbackInfo->hapFilePath.c_str());
                 asyncCallbackInfo->err = PARAM_TYPE_ERROR;
             }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags)) {
-                APP_LOGE("flags %{public}d invalid!", asyncCallbackInfo->flags);
+                APP_LOGE("flags %{public}d invalid", asyncCallbackInfo->flags);
                 asyncCallbackInfo->err = PARAM_TYPE_ERROR;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -4677,7 +4676,7 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     if (argc > ARGS_SIZE_THREE || argc < ARGS_SIZE_TWO) {
-        APP_LOGE("wrong number of arguments!");
+        APP_LOGE("wrong number of arguments");
         return nullptr;
     }
 
@@ -4786,7 +4785,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
 
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
     if (argc > ARGS_SIZE_THREE || argc < ARGS_SIZE_TWO) {
-        APP_LOGE("wrong number of arguments!");
+        APP_LOGE("wrong number of arguments");
         return nullptr;
     }
 
@@ -5344,7 +5343,6 @@ static void InnerRecover(napi_env env, const std::string &bundleName, InstallPar
 
 napi_value Recover(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("called");
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = {nullptr};
     NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));

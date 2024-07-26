@@ -68,8 +68,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    CHECK_RESULT(result, "hap syscap check failed %{public}d");
-
+    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    if (!isSysCapValid) {
+        APP_LOGI("hap syscap check failed %{public}d", result);
+    }
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     result = bundleInstallChecker_->CheckMultipleHapsSignInfo(bundlePaths, hapVerifyResults);
@@ -91,8 +93,13 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     sendStartSharedBundleInstallNotify(checkParam, parsedBundles_);
 
     // check device type
-    result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
-    CHECK_RESULT(result, "check device type failed %{public}d");
+    if (!isSysCapValid) {
+        result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
+        if (result != ERR_OK) {
+            APP_LOGE("check device type failed %{public}d", result);
+            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+        }
+    }
 
     // check label info
     result = CheckAppLabelInfo();
@@ -425,6 +432,8 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
     preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
     preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+    preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
+    preInstallBundleInfo.SetBundleType(BundleType::SHARED);
     dataMgr->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     return ERR_OK;
 }
@@ -731,7 +740,7 @@ ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
         return ERR_OK;
     }
     if (hapVerifyResults.empty()) {
-        APP_LOGE("no sign info in the all haps!");
+        APP_LOGE("no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 

@@ -30,7 +30,7 @@ constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     AppServiceFwkInstaller appServicefwk;
-    std::vector<std::string> hspPaths;
+    std::vector<std::string> hspPaths = { std::string(data, size) };
     InstallParam installParam;
     installParam.isPreInstallApp = true;
     installParam.removable = false;

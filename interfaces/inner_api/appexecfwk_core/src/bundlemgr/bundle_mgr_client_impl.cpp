@@ -136,7 +136,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const HapModuleInfo &hapModuleInfo, c
         APP_LOGE("no valid file can be obtained");
         return false;
     }
-    int32_t InfoSize = profileInfos.size();
+    int32_t InfoSize = static_cast<int32_t>(profileInfos.size());
     APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
     return true;
 }
@@ -154,7 +154,7 @@ bool BundleMgrClientImpl::GetResConfigFile(const ExtensionAbilityInfo &extension
         APP_LOGE("no valid file can be obtained");
         return false;
     }
-    int32_t InfoSize = profileInfos.size();
+    int32_t InfoSize = static_cast<int32_t>(profileInfos.size());
     APP_LOGD("The size of the profile info is : %{public}d", InfoSize);
     return true;
 }
@@ -530,6 +530,23 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
 
     std::lock_guard<std::mutex> lock(mutex_);
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
+}
+
+ErrCode BundleMgrClientImpl::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
+{
+    APP_LOGD("InstallHmpBundle begin");
+    if (filePath.empty()) {
+        APP_LOGE("InstallHmpBundle filePath is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    ErrCode result = Connect();
+    if (result != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(mutex_);
+    return bundleInstaller_->InstallHmpBundle(filePath, isNeedRollback);
 }
 
 ErrCode BundleMgrClientImpl::Connect()

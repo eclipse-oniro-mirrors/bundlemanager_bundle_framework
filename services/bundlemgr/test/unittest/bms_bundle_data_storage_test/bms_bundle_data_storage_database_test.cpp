@@ -60,8 +60,16 @@ const std::string WRONG_MODULEPACKAGE = ".modulePackage.";
 const std::string WRONG = ".wrong.";
 const std::string APP_INDEX = "appIndex";
 const std::string USERID = "userId";
+const std::string DEPENDENT_NAME = "DependentModule";
+const std::string CONTINUE_TYPES = "Test";
+const std::string HNPPACKAGE = "hnpPackage";
+const std::string HNPPACKAGETYPE = "type";
+const std::string URI = "dataability://test";
 int32_t state = 0;
 int32_t versionCode = 0;
+int32_t userId = 1;
+int32_t userId2 = 2;
+int32_t appIndex = 1;
 const int32_t FLAG = 0;
 // This field is used to ensure OTA upgrade and cannot be added randomly.
 const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
@@ -397,7 +405,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "multiAppMode": {
             "multiAppModeType":2,
             "maxCount":5
-        }
+        },
+        "configuration":""
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -515,7 +524,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "multiAppMode": {
                 "multiAppModeType":2,
                 "maxCount":5
-            }
+            },
+            "configuration":""
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1144,7 +1154,9 @@ protected:
                 },
                 "appIndex":0,
                 "maxChildProcess": 0,
-                "installSource": "unknown"
+                "installSource": "unknown",
+                "configuration":"",
+                "cloudFileSyncEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -2395,6 +2407,653 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3000, Function | Smal
     InnerBundleInfo info;
     std::string ret = info.GetInnerModuleInfoHnpPath("");
     EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3100
+ * @tc.name: Test GetAllDependentModuleNames
+ * @tc.desc: 1.Test the GetAllDependentModuleNames of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    Dependency dependency;
+    dependency.moduleName = DEPENDENT_NAME;
+    moduleInfo.dependencies.push_back(dependency);
+    bundleInfo.innerModuleInfos_[TEST_KEY] = moduleInfo;
+    std::vector<std::string> dependentModuleNames;
+    bool ret = bundleInfo.GetAllDependentModuleNames(MODULE_NAME, dependentModuleNames);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3200
+ * @tc.name: Test FindAbilityInfo
+ * @tc.desc: 1.Test the FindAbilityInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    auto ret = bundleInfo.FindAbilityInfo(CONTINUE_TYPES, userId);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3300
+ * @tc.name: Test FindAbilityInfo
+ * @tc.desc: 1.Test the FindAbilityInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    std::vector<std::string> continueTypes;
+    continueTypes.push_back(CONTINUE_TYPES);
+    abilityInfo.continueType = continueTypes;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(BUNDLE_NAME, abilityInfo));
+    auto ret = bundleInfo.FindAbilityInfo(CONTINUE_TYPES, userId);
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3400
+ * @tc.name: Test GetAllSharedDependencies
+ * @tc.desc: 1.Test the GetAllSharedDependencies of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    Dependency dependency;
+    dependency.moduleName = DEPENDENT_NAME;
+    moduleInfo.dependencies.push_back(dependency);
+    bundleInfo.innerModuleInfos_[MODULE_NAME] = moduleInfo;
+    std::vector<Dependency> dependencies;
+    bool ret = bundleInfo.GetAllSharedDependencies(MODULE_NAME, dependencies);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3500
+ * @tc.name: Test GetApplicationInfo
+ * @tc.desc: 1.Test the GetApplicationInfo with baseApplicationInfo_ == nullptr
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = WRONG_MODULEPACKAGE;
+    std::vector<Metadata> data;
+    Metadata data1;
+    data1.name = NAME;
+    data.emplace_back(data1);
+    innerModuleInfo.metadata = data;
+    info.InsertInnerModuleInfo(WRONG_MODULEPACKAGE, innerModuleInfo);
+    const int32_t failedId = -5;
+    const int32_t flags = 0;
+    ApplicationInfo appInfo2;
+    info.GetApplicationInfo(flags, failedId, appInfo2);
+    EXPECT_EQ(appInfo2.metadata[WRONG_MODULEPACKAGE].empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3600
+ * @tc.name: Test GetInnerModuleInfoHnpInfo
+ * @tc.desc: 1.Test the GetInnerModuleInfoHnpInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    InnerModuleInfo innerModuleInfo;
+    HnpPackage hnpPackage;
+    std::vector<HnpPackage> hnpPackages;
+    hnpPackage.package = HNPPACKAGE;
+    hnpPackage.type = HNPPACKAGETYPE;
+    hnpPackages.push_back(hnpPackage);
+    innerModuleInfo.hnpPackages = hnpPackages;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    info.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    auto ret = info.GetInnerModuleInfoHnpInfo(MODULE_NAME);
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3700
+ * @tc.name: Test GetInnerModuleInfoHnpPath
+ * @tc.desc: 1.Test the GetInnerModuleInfoHnpPath of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    InnerModuleInfo innerModuleInfo;
+    HnpPackage hnpPackage;
+    std::vector<HnpPackage> hnpPackages;
+    hnpPackage.package = HNPPACKAGE;
+    hnpPackage.type = HNPPACKAGETYPE;
+    hnpPackages.push_back(hnpPackage);
+    innerModuleInfo.hnpPackages = hnpPackages;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerModuleInfo.moduleHnpsPath = MODULE_PACKGE;
+    info.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    auto ret = info.GetInnerModuleInfoHnpPath(MODULE_NAME);
+    EXPECT_NE(ret, "");
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3800
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo));
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    bundleInfo.baseAbilityInfos_.clear();
+    AbilityInfo abilityInfo2;
+    abilityInfo2.name = ABILITY_NAME;
+    abilityInfo2.moduleName = BUNDLE_NAME;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo2));
+    ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    bundleInfo.baseAbilityInfos_.clear();
+    AbilityInfo abilityInfo3;
+    abilityInfo3.name = ABILITY_NAME;
+    abilityInfo3.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo3));
+    ret = bundleInfo.SetCloneAbilityEnabled("", ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_3900
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_3900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.baseAbilityInfos_.clear();
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4000
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(ABILITY_NAME, abilityInfo));
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, "", true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4100
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerBundleUserInfo innerBundleUserInfo;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4200
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    std::vector<std::string> disabledAbilities;
+    disabledAbilities.push_back(ABILITY_NAME);
+    innerBundleCloneInfo.disabledAbilities = disabledAbilities;
+    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4300
+ * @tc.name: Test SetCloneAbilityEnabled
+ * @tc.desc: 1.Test the SetCloneAbilityEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME;
+    abilityInfo.moduleName = MODULE_NAME_TEST;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair("_1", abilityInfo));
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    std::vector<std::string> disabledAbilities;
+    disabledAbilities.push_back("");
+    innerBundleCloneInfo.disabledAbilities = disabledAbilities;
+    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneAbilityEnabled(MODULE_NAME_TEST, ABILITY_NAME, true, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4400
+ * @tc.name: Test SetInnerModuleNeedDelete
+ * @tc.desc: 1.Test the SetInnerModuleNeedDelete of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    info.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    info.SetInnerModuleNeedDelete(MODULE_NAME, true);
+    EXPECT_TRUE(info.innerModuleInfos_.at(MODULE_NAME).needDelete);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4500
+ * @tc.name: Test SetCloneApplicationEnabled
+ * @tc.desc: 1.Test the SetCloneApplicationEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair(MODULE_NAME, innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4600
+ * @tc.name: Test SetCloneApplicationEnabled
+ * @tc.desc: 1.Test the SetCloneApplicationEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    std::vector<std::string> disabledAbilities;
+    disabledAbilities.push_back(MODULE_NAME);
+    innerBundleCloneInfo.disabledAbilities = disabledAbilities;
+    cloneInfos.insert(std::make_pair(MODULE_NAME, innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4700
+ * @tc.name: Test SetCloneApplicationEnabled
+ * @tc.desc: 1.Test the SetCloneApplicationEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
+    InnerBundleCloneInfo innerBundleCloneInfo;
+    std::vector<std::string> disabledAbilities;
+    disabledAbilities.push_back("");
+    innerBundleCloneInfo.disabledAbilities = disabledAbilities;
+    cloneInfos.insert(std::make_pair("1", innerBundleCloneInfo));
+    innerBundleUserInfo.cloneInfos = cloneInfos;
+    bundleInfo.innerBundleUserInfos_.insert(std::make_pair("_1", innerBundleUserInfo));
+    auto ret = bundleInfo.SetCloneApplicationEnabled(true, appIndex, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4800
+ * @tc.name: Test GetQuickFixHqfInfos
+ * @tc.desc: 1.Test the GetQuickFixHqfInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = MODULE_NAME;
+    bundleInfo.hqfInfos_.push_back(hqfInfo);
+    std::vector<HqfInfo> hqfInfos;
+    hqfInfos = bundleInfo.GetQuickFixHqfInfos();
+    EXPECT_FALSE(hqfInfos.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_4900
+ * @tc.name: Test RemoveOverlayModuleInfo
+ * @tc.desc: 1.Test the RemoveOverlayModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_4900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    bundleInfo.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    bundleInfo.RemoveOverlayModuleInfo(MODULE_NAME, BUNDLE_NAME, MODULE_NAME);
+    EXPECT_FALSE(bundleInfo.innerModuleInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5000
+ * @tc.name: Test RemoveOverlayModuleInfo
+ * @tc.desc: 1.Test the RemoveOverlayModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    OverlayModuleInfo overlayModuleInfo;
+    overlayModuleInfo.bundleName = BUNDLE_NAME;
+    overlayModuleInfo.moduleName = MODULE_NAME;
+    overlayModuleInfos.push_back(overlayModuleInfo);
+    innerModuleInfo.overlayModuleInfo = overlayModuleInfos;
+    bundleInfo.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    bundleInfo.RemoveOverlayModuleInfo(MODULE_NAME, BUNDLE_NAME, MODULE_NAME);
+    EXPECT_FALSE(bundleInfo.innerModuleInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5100
+ * @tc.name: Test KeepOldOverlayConnection
+ * @tc.desc: 1.Test the KeepOldOverlayConnection of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerBundleInfo bundleInfoNew;
+    InnerModuleInfo innerModuleInfo;
+    InnerModuleInfo innerModuleInfoNew;
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    OverlayModuleInfo overlayModuleInfo;
+    overlayModuleInfo.bundleName = BUNDLE_NAME;
+    overlayModuleInfo.moduleName = MODULE_NAME;
+    overlayModuleInfos.push_back(overlayModuleInfo);
+    innerModuleInfo.overlayModuleInfo = overlayModuleInfos;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    bundleInfo.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfo));
+    bundleInfoNew.innerModuleInfos_.insert(std::make_pair(MODULE_NAME, innerModuleInfoNew));
+    bundleInfo.KeepOldOverlayConnection(bundleInfoNew);
+    EXPECT_FALSE(bundleInfoNew.innerModuleInfos_[MODULE_NAME].overlayModuleInfo.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5200
+ * @tc.name: Test FindExtensionAbilityInfoByUri
+ * @tc.desc: 1.Test the FindExtensionAbilityInfoByUri of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.uri = URI;
+    ExtensionAbilityInfo baseExtensionInfo;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, baseExtensionInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5300
+ * @tc.name: Test FindExtensionAbilityInfoByUri
+ * @tc.desc: 1.Test the FindExtensionAbilityInfoByUri of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.baseExtensionInfos_.clear();
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.uri = URI;
+    ExtensionAbilityInfo baseExtensionInfo;
+    bool ret = bundleInfo.FindExtensionAbilityInfoByUri(URI, baseExtensionInfo);
+    EXPECT_FALSE(ret);
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    ret = bundleInfo.FindExtensionAbilityInfoByUri("URI", baseExtensionInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5400
+ * @tc.name: Test FindAbilityInfosByUri
+ * @tc.desc: 1.Test the FindAbilityInfosByUri of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.uri = URI;
+    std::vector<AbilityInfo> abilityInfos;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, abilityInfo));
+    bundleInfo.FindAbilityInfosByUri("test", abilityInfos, userId);
+    EXPECT_FALSE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5500
+ * @tc.name: Test FindAbilityInfosByUri
+ * @tc.desc: 1.Test the FindAbilityInfosByUri of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.uri = URI;
+    std::vector<AbilityInfo> abilityInfos;
+    bundleInfo.baseAbilityInfos_.insert(std::make_pair(TEST_ABILITY_NAME, abilityInfo));
+    bundleInfo.FindAbilityInfosByUri(URI, abilityInfos, userId);
+    EXPECT_TRUE(abilityInfos.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5600
+ * @tc.name: Test RemoveGroupInfos
+ * @tc.desc: 1.Test the RemoveGroupInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.userId = userId;
+    dataGroupInfos.push_back(dataGroupInfo);
+    bundleInfo.dataGroupInfos_.insert(std::make_pair(TEST_NAME, dataGroupInfos));
+    bundleInfo.RemoveGroupInfos(userId, "1");
+    EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+    bundleInfo.RemoveGroupInfos(userId2, TEST_NAME);
+    EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+    bundleInfo.RemoveGroupInfos(userId, TEST_NAME);
+    EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5700
+ * @tc.name: Test UpdateDataGroupInfos
+ * @tc.desc: 1.Test the UpdateDataGroupInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.userId = userId;
+    dataGroupInfos.push_back(dataGroupInfo);
+    bundleInfo.dataGroupInfos_.insert(std::make_pair(TEST_NAME, dataGroupInfos));
+    std::vector<DataGroupInfo> dataGroupInfosNew;
+    DataGroupInfo dataGroupInfoNew;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMapNew;
+    dataGroupInfoNew.userId = userId;
+    dataGroupInfosNew.push_back(dataGroupInfoNew);
+    dataGroupInfoMapNew.insert(std::make_pair(TEST_NAME, dataGroupInfosNew));
+    bundleInfo.UpdateDataGroupInfos(dataGroupInfoMapNew);
+    EXPECT_FALSE(dataGroupInfoMapNew.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5800
+ * @tc.name: Test UpdateDataGroupInfos
+ * @tc.desc: 1.Test the UpdateDataGroupInfos with empty input
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<DataGroupInfo> dataGroupInfos;
+    DataGroupInfo dataGroupInfo;
+    dataGroupInfo.userId = userId;
+    dataGroupInfos.push_back(dataGroupInfo);
+    bundleInfo.dataGroupInfos_.insert(std::make_pair(TEST_NAME, dataGroupInfos));
+    std::vector<DataGroupInfo> dataGroupInfosNew;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfoMapNew;
+    bundleInfo.UpdateDataGroupInfos(dataGroupInfoMapNew);
+    EXPECT_FALSE(bundleInfo.dataGroupInfos_.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_5900
+ * @tc.name: Test IsAsanEnabled
+ * @tc.desc: 1.Test the IsAsanEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_5900, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerModuleInfo.asanEnabled = true;
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    bool ret = bundleInfo.IsAsanEnabled();
+    EXPECT_TRUE(ret);
+    innerModuleInfo.asanEnabled = false;
+    innerModuleInfos.clear();
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.clear();
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    ret = bundleInfo.IsAsanEnabled();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6000
+ * @tc.name: Test IsGwpAsanEnabled
+ * @tc.desc: 1.Test the IsGwpAsanEnabled of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6000, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerModuleInfo.gwpAsanEnabled = true;
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    bool ret = bundleInfo.IsGwpAsanEnabled();
+    EXPECT_TRUE(ret);
+    innerModuleInfo.gwpAsanEnabled = false;
+    innerModuleInfos.clear();
+    innerModuleInfos.push_back(innerModuleInfo);
+    bundleInfo.innerSharedModuleInfos_.clear();
+    bundleInfo.innerSharedModuleInfos_.insert(std::make_pair(TEST_NAME, innerModuleInfos));
+    ret = bundleInfo.IsGwpAsanEnabled();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6100
+ * @tc.name: Test SetUninstallState
+ * @tc.desc: 1.Test the SetUninstallState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetUninstallState(false);
+    EXPECT_FALSE(bundleInfo.uninstallState_);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6200
+ * @tc.name: Test GetAllExtensionDirsInSpecifiedModule
+ * @tc.desc: 1.Test the GetAllExtensionDirsInSpecifiedModule of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.moduleName = MODULE_NAME;
+    extensionAbilityInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    auto ret = bundleInfo.GetAllExtensionDirsInSpecifiedModule(MODULE_NAME);
+    EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6300
+ * @tc.name: Test GetAllExtensionDirs
+ * @tc.desc: 1.Test the GetAllExtensionDirs of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.needCreateSandbox = true;
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(MODULE_NAME, extensionAbilityInfo));
+    auto ret = bundleInfo.GetAllExtensionDirs();
+    EXPECT_FALSE(ret.empty());
+}
+
+/**
+ * @tc.number: InnerBundleInfo_6400
+ * @tc.name: Test UpdateExtensionDataGroupInfo
+ * @tc.desc: 1.Test the UpdateExtensionDataGroupInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_6400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo bundleInfo;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    std::vector<std::string> dataGroupIds;
+    dataGroupIds.push_back(TEST_UID);
+    bundleInfo.baseExtensionInfos_.insert(std::make_pair(TEST_NAME, extensionAbilityInfo));
+    bundleInfo.UpdateExtensionDataGroupInfo("1", dataGroupIds);
+    EXPECT_TRUE(bundleInfo.baseExtensionInfos_[TEST_NAME].validDataGroupIds.empty());
+    bundleInfo.UpdateExtensionDataGroupInfo(TEST_NAME, dataGroupIds);
+    EXPECT_FALSE(bundleInfo.baseExtensionInfos_[TEST_NAME].validDataGroupIds.empty());
 }
 
 /**

@@ -278,13 +278,13 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
 
     bool ret = data.WriteInterfaceToken(GetDescriptor());
     if (!ret) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to write interface token into the parcel!");
+        LOG_E(BMS_TAG_INSTALLER, "fail to write interface token into the parcel");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
     ret = data.WriteParcelable(&installParam);
     if (!ret) {
-        LOG_E(BMS_TAG_INSTALLER, "fail to write parameter into the parcel!");
+        LOG_E(BMS_TAG_INSTALLER, "fail to write parameter into the parcel");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }

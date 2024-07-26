@@ -405,10 +405,10 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CHECK_ENCRYPTION_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_DELIVERY_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
+        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_NATIVE_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-        { IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED, ERROR_INSTALL_FAILED_CONTROLLED},
         { IStatusReceiver::ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE, ERROR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE },
     };
 }
@@ -586,7 +586,7 @@ static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleNa
     }
     if (property != nullptr) {
         if (!CommonFunc::ParseString(env, property, bundleName)) {
-            APP_LOGE("ParseString failed!");
+            APP_LOGE("ParseString failed");
             return false;
         }
     }
@@ -610,7 +610,7 @@ static bool ParseModuleName(napi_env env, napi_value args, std::string &moduleNa
     }
     if (property != nullptr) {
         if (!CommonFunc::ParseString(env, property, moduleName)) {
-            APP_LOGE("ParseString failed!");
+            APP_LOGE("ParseString failed");
             return false;
         }
     }
@@ -628,7 +628,7 @@ static bool ParseVersionCode(napi_env env, napi_value args, int32_t &versionCode
     napi_value property = nullptr;
     bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
     if (!res) {
-        APP_LOGE("parse versionCode failed!");
+        APP_LOGE("parse versionCode failed");
         return res;
     }
     if (property != nullptr) {
@@ -791,7 +791,7 @@ static bool ParseSpecifiedDistributionType(napi_env env, napi_value args, std::s
     }
     if (property != nullptr) {
         if (!CommonFunc::ParseString(env, property, specifiedDistributionType)) {
-            APP_LOGE("ParseString failed!");
+            APP_LOGE("ParseString failed");
             return false;
         }
     }
@@ -815,7 +815,7 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     }
     if (property != nullptr) {
         if (!CommonFunc::ParseString(env, property, additionalInfo)) {
-            APP_LOGE("ParseString failed!");
+            APP_LOGE("ParseString failed");
             return false;
         }
     }
@@ -881,7 +881,7 @@ static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &u
         !ParseModuleName(env, args, uninstallParam.moduleName) ||
         !ParseVersionCode(env, args, uninstallParam.versionCode) ||
         !ParseUserId(env, args, uninstallParam.userId)) {
-            APP_LOGE("Parse UninstallParam faied!");
+            APP_LOGE("Parse UninstallParam faied");
             return false;
     }
     return true;
@@ -1027,7 +1027,7 @@ napi_value Install(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseStringArray(env, callbackPtr->hapFiles, args[i])) {
-                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                APP_LOGE("Flags %{public}s invalid", callbackPtr->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
@@ -1156,7 +1156,7 @@ napi_value UninstallByUninstallParam(napi_env env, napi_callback_info info,
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!ParseUninstallParam(env, args[i], callbackPtr->uninstallParam)) {
-                APP_LOGE("parse uninstallParam failed!");
+                APP_LOGE("parse uninstallParam failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
@@ -1200,7 +1200,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], callbackPtr->bundleName)) {
-                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                APP_LOGE("Flags %{public}s invalid", callbackPtr->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
@@ -1286,7 +1286,7 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseStringArray(env, callbackPtr->hapFiles, args[i])) {
-                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                APP_LOGE("Flags %{public}s invalid", callbackPtr->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
@@ -1323,193 +1323,6 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         OperationCompleted);
     callbackPtr.release();
     APP_LOGI("call UpdateBundleForSelf done");
-    return promise;
-}
-
-ErrCode InnerAddExtResource(
-    const std::string &bundleName, const std::vector<std::string> &filePaths)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    std::vector<std::string> destFiles;
-    ErrCode ret = extResourceManager->CopyFiles(filePaths, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("CopyFiles failed");
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
-    ret = extResourceManager->AddExtResource(bundleName, destFiles);
-    if (ret != ERR_OK) {
-        APP_LOGE("AddExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-void AddExtResourceExec(napi_env env, void *data)
-{
-    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    asyncCallbackInfo->err = InnerAddExtResource(
-        asyncCallbackInfo->bundleName, asyncCallbackInfo->filePaths);
-}
-
-void AddExtResourceComplete(napi_env env, napi_status status, void *data)
-{
-    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-
-    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_POS_TWO] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-    } else {
-        result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, ADD_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
-    }
-
-    CommonFunc::NapiReturnDeferred<ExtResourceCallbackInfo>(
-        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
-}
-
-napi_value AddExtResource(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("AddExtResource called");
-    NapiArg args(env, info);
-    ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return nullptr;
-    }
-    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("bundleName invalid!");
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (CommonFunc::ParseStringArray(env, asyncCallbackInfo->filePaths, args[i]) == nullptr) {
-                APP_LOGE("filePaths invalid!");
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
-                return nullptr;
-            }
-        }
-    }
-    auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
-        env, asyncCallbackInfo, "AddExtResource", AddExtResourceExec, AddExtResourceComplete);
-    callbackPtr.release();
-    APP_LOGD("call AddExtResource done");
-    return promise;
-}
-
-ErrCode InnerRemoveExtResource(
-    const std::string &bundleName, const std::vector<std::string> &moduleNames)
-{
-    auto extResourceManager = CommonFunc::GetExtendResourceManager();
-    if (extResourceManager == nullptr) {
-        APP_LOGE("extResourceManager is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    ErrCode ret = extResourceManager->RemoveExtResource(bundleName, moduleNames);
-    if (ret != ERR_OK) {
-        APP_LOGE("RemoveExtResource failed");
-    }
-
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-void RemoveExtResourceExec(napi_env env, void *data)
-{
-    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    asyncCallbackInfo->err = InnerRemoveExtResource(
-        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleNames);
-}
-
-void RemoveExtResourceComplete(napi_env env, napi_status status, void *data)
-{
-    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return;
-    }
-
-    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[ARGS_POS_TWO] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-    } else {
-        result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, REMOVE_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
-    }
-
-    CommonFunc::NapiReturnDeferred<ExtResourceCallbackInfo>(
-        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
-}
-
-napi_value RemoveExtResource(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("RemoveExtResource called");
-    NapiArg args(env, info);
-    ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null");
-        return nullptr;
-    }
-    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
-        APP_LOGE("param count invalid");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("bundleName invalid!");
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (CommonFunc::ParseStringArray(env, asyncCallbackInfo->moduleNames, args[i]) == nullptr) {
-                APP_LOGE("moduleNames invalid!");
-                BusinessError::ThrowParameterTypeError(
-                    env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_ARRAY);
-                return nullptr;
-            }
-        }
-    }
-    auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
-        env, asyncCallbackInfo, "RemoveExtResource", RemoveExtResourceExec, RemoveExtResourceComplete);
-    callbackPtr.release();
-    APP_LOGD("call RemoveExtResource done");
     return promise;
 }
 
@@ -1570,7 +1383,7 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
                 APP_LOGW("Parse installParam failed");
             }
         } else {
-            APP_LOGE("The number of parameters is incorrect");
+            APP_LOGE("The number of parameters is incorrect.");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
             return nullptr;
         }
@@ -1580,6 +1393,193 @@ napi_value UninstallAndRecover(napi_env env, napi_callback_info info)
         UninstallAndRecoverExecuter, OperationCompleted);
     callbackPtr.release();
     APP_LOGI("call UninstallAndRecover done");
+    return promise;
+}
+
+ErrCode InnerAddExtResource(
+    const std::string &bundleName, const std::vector<std::string> &filePaths)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    std::vector<std::string> destFiles;
+    ErrCode ret = extResourceManager->CopyFiles(filePaths, destFiles);
+    if (ret != ERR_OK) {
+        APP_LOGE("CopyFiles failed");
+        return CommonFunc::ConvertErrCode(ret);
+    }
+
+    ret = extResourceManager->AddExtResource(bundleName, destFiles);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddExtResource failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void AddExtResourceExec(napi_env env, void *data)
+{
+    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerAddExtResource(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->filePaths);
+}
+
+void AddExtResourceComplete(napi_env env, napi_status status, void *data)
+{
+    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, ADD_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
+
+    CommonFunc::NapiReturnDeferred<ExtResourceCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value AddExtResource(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("AddExtResource called");
+    NapiArg args(env, info);
+    ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName invalid");
+                BusinessError::ThrowParameterTypeError(
+                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (CommonFunc::ParseStringArray(env, asyncCallbackInfo->filePaths, args[i]) == nullptr) {
+                APP_LOGE("filePaths invalid");
+                BusinessError::ThrowParameterTypeError(
+                    env, ERROR_PARAM_CHECK_ERROR, FILE_PATH, TYPE_ARRAY);
+                return nullptr;
+            }
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
+        env, asyncCallbackInfo, "AddExtResource", AddExtResourceExec, AddExtResourceComplete);
+    callbackPtr.release();
+    APP_LOGD("call AddExtResource done");
+    return promise;
+}
+
+ErrCode InnerRemoveExtResource(
+    const std::string &bundleName, const std::vector<std::string> &moduleNames)
+{
+    auto extResourceManager = CommonFunc::GetExtendResourceManager();
+    if (extResourceManager == nullptr) {
+        APP_LOGE("extResourceManager is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    ErrCode ret = extResourceManager->RemoveExtResource(bundleName, moduleNames);
+    if (ret != ERR_OK) {
+        APP_LOGE("RemoveExtResource failed");
+    }
+
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void RemoveExtResourceExec(napi_env env, void *data)
+{
+    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    asyncCallbackInfo->err = InnerRemoveExtResource(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleNames);
+}
+
+void RemoveExtResourceComplete(napi_env env, napi_status status, void *data)
+{
+    ExtResourceCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtResourceCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, REMOVE_EXT_RESOURCE, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
+
+    CommonFunc::NapiReturnDeferred<ExtResourceCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value RemoveExtResource(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("RemoveExtResource called");
+    NapiArg args(env, info);
+    ExtResourceCallbackInfo *asyncCallbackInfo = new (std::nothrow) ExtResourceCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<ExtResourceCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName invalid");
+                BusinessError::ThrowParameterTypeError(
+                    env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (CommonFunc::ParseStringArray(env, asyncCallbackInfo->moduleNames, args[i]) == nullptr) {
+                APP_LOGE("moduleNames invalid");
+                BusinessError::ThrowParameterTypeError(
+                    env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_ARRAY);
+                return nullptr;
+            }
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<ExtResourceCallbackInfo>(
+        env, asyncCallbackInfo, "RemoveExtResource", RemoveExtResourceExec, RemoveExtResourceComplete);
+    callbackPtr.release();
+    APP_LOGD("call RemoveExtResource done");
     return promise;
 }
 
@@ -1620,7 +1620,7 @@ void CreateAppCloneComplete(napi_env env, napi_status status, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<CreateAppCloneCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1674,7 +1674,7 @@ napi_value CreateAppClone(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGW("parse bundleName failed!");
+                APP_LOGW("parse bundleName failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
@@ -1735,7 +1735,7 @@ void DestroyAppCloneComplete(napi_env env, napi_status status, void *data)
 {
     CreateAppCloneCallbackInfo *asyncCallbackInfo = reinterpret_cast<CreateAppCloneCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<CreateAppCloneCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -1773,19 +1773,19 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGW("parse bundleName failed!");
+                APP_LOGW("parse bundleName failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->appIndex)) {
-                APP_LOGW("parse appIndex failed!");
+                APP_LOGW("parse appIndex failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_INDEX, TYPE_NUMBER);
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("The number of parameters is incorrect");

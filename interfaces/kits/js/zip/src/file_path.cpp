@@ -248,7 +248,7 @@ bool FilePath::DirectoryExists(const FilePath &path)
         return S_ISDIR(fileInfo.st_mode);
     }
 
-    APP_LOGD("!!!stat returns an error.!!!");
+    APP_LOGD("stat returns an error");
     return false;
 }
 bool FilePath::IsDir(const FilePath &path)

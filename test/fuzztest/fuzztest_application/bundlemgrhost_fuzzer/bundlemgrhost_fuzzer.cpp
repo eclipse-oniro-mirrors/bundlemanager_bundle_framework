@@ -25,27 +25,22 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 133;
-constexpr size_t DCAMERA_SHIFT_24 = 24;
-constexpr size_t DCAMERA_SHIFT_16 = 16;
-constexpr size_t DCAMERA_SHIFT_8 = 8;
+constexpr uint32_t CODE_MAX = 155;
 
-uint32_t GetU32Data(const char* ptr)
-{
-    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
-}
+
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
-    MessageParcel datas;
-    std::u16string descriptor = BundleMgrHost::GetDescriptor();
-    datas.WriteInterfaceToken(descriptor);
-    datas.WriteBuffer(data, size);
-    datas.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    BundleMgrHost bundleMgrHost;
-    bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
+    for (uint32_t code = 0; code <= CODE_MAX; code++) {
+        MessageParcel datas;
+        std::u16string descriptor = BundleMgrHost::GetDescriptor();
+        datas.WriteInterfaceToken(descriptor);
+        datas.WriteBuffer(data, size);
+        datas.RewindRead(0);
+        MessageParcel reply;
+        MessageOption option;
+        BundleMgrHost bundleMgrHost;
+        bundleMgrHost.OnRemoteRequest(code, datas, reply, option);
+    }
     return true;
 }
 }

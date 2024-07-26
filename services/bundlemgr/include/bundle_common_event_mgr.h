@@ -62,9 +62,9 @@ struct NotifyBundleEvents {
     std::string appIdentifier;
     bool isModuleUpdate = false;
     std::string appDistributionType;
-    int32_t appIndex = 0;
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
+    int32_t appIndex = 0;
     bool isApplicationEnabled = true;
 };
 

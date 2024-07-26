@@ -15,7 +15,6 @@
 
 #include "installd_client.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "if_system_ability_manager.h"
 #include "installd/installd_load_callback.h"
@@ -231,7 +230,7 @@ ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<s
 
 void InstalldClient::ResetInstalldProxy()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::shared_mutex> writeLock(mutex_);
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
@@ -480,7 +479,7 @@ ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
 {
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> writeLock(mutex_);
         installdProxy_ = iface_cast<IInstalld>(remoteObject);
     }
 
@@ -494,7 +493,7 @@ void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remot
 void InstalldClient::OnLoadSystemAbilityFail()
 {
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::unique_lock<std::shared_mutex> writeLock(mutex_);
         installdProxy_ = nullptr;
     }
 

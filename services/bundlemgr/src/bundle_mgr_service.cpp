@@ -525,7 +525,7 @@ void BundleMgrService::NotifyBundleScanStatus()
 
 void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d added", systemAbilityId);
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
     }

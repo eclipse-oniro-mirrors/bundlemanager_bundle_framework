@@ -15,7 +15,7 @@
 
 #include "disposed_rule.h"
 
-#include "app_log_tag_wrapper.h"
+#include "app_log_wrapper.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
 #include "parcel_macro.h"
@@ -47,7 +47,7 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
         std::string elementUri = Str16ToStr8(parcel.ReadString16());
         ElementName elementName;
         if (!elementName.ParseURI(elementUri)) {
-            LOG_W(TAG_DISPOSED_RULE_BASE, "parse elementName failed");
+            APP_LOGW("parse elementName failed");
         }
         elementList.emplace_back(elementName);
     }
@@ -77,7 +77,7 @@ DisposedRule *DisposedRule::Unmarshalling(Parcel &parcel)
 {
     DisposedRule *info = new (std::nothrow) DisposedRule();
     if (info && !info->ReadFromParcel(parcel)) {
-        LOG_W(TAG_DISPOSED_RULE_BASE, "read from parcel failed");
+        APP_LOGW("read from parcel failed");
         delete info;
         info = nullptr;
     }
@@ -86,6 +86,7 @@ DisposedRule *DisposedRule::Unmarshalling(Parcel &parcel)
 
 void to_json(nlohmann::json &jsonObject, const ElementName &elementName)
 {
+    APP_LOGD("elementName to_json bundleName %{public}s", elementName.GetBundleName().c_str());
     jsonObject = nlohmann::json {
         {Constants::BUNDLE_NAME, elementName.GetBundleName()},
         {Constants::MODULE_NAME, elementName.GetModuleName()},
@@ -139,7 +140,7 @@ void from_json(const nlohmann::json &jsonObject, ElementName &elementName)
         ArrayType::NOT_ARRAY);
     elementName.SetDeviceID(deviceId);
     if (parseResult != ERR_OK) {
-        LOG_E(TAG_DISPOSED_RULE_BASE, "read elementName error : %{public}d", parseResult);
+        APP_LOGE("read elementName error : %{public}d", parseResult);
     }
 }
 
@@ -220,7 +221,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
-        LOG_E(TAG_DISPOSED_RULE_BASE, "read disposedRule error : %{public}d", parseResult);
+        APP_LOGE("read disposedRule error : %{public}d", parseResult);
     }
 }
 
@@ -233,9 +234,10 @@ std::string DisposedRule::ToString() const
 
 bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
 {
+    APP_LOGD("FromString %{public}s", ruleString.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
     if (jsonObject.is_discarded()) {
-        LOG_E(TAG_DISPOSED_RULE_BASE, "failed parse ruleString: %{public}s", ruleString.c_str());
+        APP_LOGE("failed parse ruleString: %{public}s", ruleString.c_str());
         return false;
     }
     from_json(jsonObject, rule);

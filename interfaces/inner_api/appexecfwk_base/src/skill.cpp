@@ -416,7 +416,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
             if (regex_match(optParamUri, regex)) {
                 return true;
             }
-        } catch(...) {
+        } catch (const std::regex_error& e) {
             APP_LOGE("regex error");
         }
     }

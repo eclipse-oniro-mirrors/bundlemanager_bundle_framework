@@ -127,7 +127,12 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
     CHECK_RESULT(result, "CheckAndParseFiles failed %{public}d");
 
     InnerBundleInfo oldInfo;
-    if (!CheckNeedInstall(newInfos, oldInfo)) {
+    bool isDowngrade = false;
+    if (!CheckNeedInstall(newInfos, oldInfo, isDowngrade)) {
+        if (isDowngrade) {
+            APP_LOGE("version down grade install");
+            return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
+        }
         APP_LOGI("need not to install");
         return ERR_OK;
     }
@@ -178,7 +183,9 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
         preInstallBundleInfo.SetLabelId(applicationInfo.labelResource.id);
         preInstallBundleInfo.SetIconId(applicationInfo.iconResource.id);
         preInstallBundleInfo.SetModuleName(applicationInfo.labelResource.moduleName);
+        preInstallBundleInfo.SetSystemApp(applicationInfo.isSystemApp);
         auto bundleInfo = innerBundleInfo.second.GetBaseBundleInfo();
+        preInstallBundleInfo.SetBundleType(BundleType::APP_SERVICE_FWK);
         if (!bundleInfo.hapModuleInfos.empty() &&
             bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
             break;
@@ -208,7 +215,10 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    CHECK_RESULT(result, "Hsp syscap check failed %{public}d");
+    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    if (!isSysCapValid) {
+        APP_LOGI("Hsp syscap check failed %{public}d", result);
+    }
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
@@ -229,8 +239,13 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
-    result = bundleInstallChecker_->CheckDeviceType(newInfos);
-    CHECK_RESULT(result, "Check device type failed %{public}d");
+    if (!isSysCapValid) {
+        result = bundleInstallChecker_->CheckDeviceType(newInfos);
+        if (result != ERR_OK) {
+            APP_LOGE("Check device type failed : %{public}d", result);
+            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+        }
+    }
 
     result = CheckAppLabelInfo(newInfos);
     CHECK_RESULT(result, "Check app label failed %{public}d");
@@ -785,7 +800,7 @@ void AppServiceFwkInstaller::SendBundleSystemEvent(
 }
 
 bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos,
-    InnerBundleInfo &oldInfo)
+    InnerBundleInfo &oldInfo, bool &isDowngrade)
 {
     if (infos.empty()) {
         APP_LOGW("innerbundleinfos is empty");
@@ -804,6 +819,7 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         return false;
     }
     if (oldInfo.GetVersionCode() > versionCode_) {
+        isDowngrade = true;
         APP_LOGW("version code is lower than current app service");
         return false;
     }
@@ -887,7 +903,7 @@ ErrCode AppServiceFwkInstaller::DeliveryProfileToCodeSign(
         return ERR_OK;
     }
     if (hapVerifyResults.empty()) {
-        APP_LOGE("no sign info in the all haps!");
+        APP_LOGE("no sign info in the all haps");
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 

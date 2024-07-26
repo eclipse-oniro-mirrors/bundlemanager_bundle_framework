@@ -58,6 +58,7 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
+constexpr const char* HQF_DIR_PREFIX = "patch_";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -140,7 +141,7 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);
@@ -677,76 +678,6 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
         }
     }
 
-    return ret;
-}
-
-void InstalldOperator::ChangeDirProperties(const std::string &path, int32_t uid, int32_t gid)
-{
-    struct stat s;
-    if ((stat(path.c_str(), &s) == 0) && (((s.st_mode & S_ISGID) != S_ISGID) ||
-        (static_cast<int32_t>(s.st_uid) != uid) || (static_cast<int32_t>(s.st_gid) != gid))) {
-        LOG_I(BMS_TAG_INSTALLD, "dir :%{private}s need change mode, uid:%{public}d, gid:%{public}d",
-            path.c_str(), uid, gid);
-        if (chown(path.c_str(), INSTALLS_UID, INSTALLS_UID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{private}s ownership, errno:%{public}d", path.c_str(), errno);
-        }
-        if (chmod(path.c_str(), s.st_mode | S_ISGID) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "chmod path:%{private}s failed, errno:%{public}d",
-                path.c_str(), errno);
-        }
-        if (chown(path.c_str(), uid, gid) != 0) {
-            LOG_W(BMS_TAG_INSTALLD, "fail to change %{private}s ownership, uid=%{public}d, errno:%{public}d",
-                path.c_str(), uid, errno);
-        }
-    }
-}
-
-bool InstalldOperator::ChangeDirPropertiesRecursively(const std::string &path, int32_t uid, int32_t gid)
-{
-    std::string subPath;
-    bool ret = true;
-    DIR *dir = opendir(path.c_str());
-    if (dir == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to opendir:%{private}s, errno:%{public}d", path.c_str(), errno);
-        return false;
-    }
-    struct dirent *ptr = nullptr;
-    while ((ptr = readdir(dir)) != nullptr) {
-        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
-            continue;
-        }
-        subPath = OHOS::IncludeTrailingPathDelimiter(path) + std::string(ptr->d_name);
-        struct stat s;
-        if ((stat(subPath.c_str(), &s) == 0)) {
-            if ((ptr->d_type == DT_DIR) && (((s.st_mode & S_ISGID) != S_ISGID) ||
-                (static_cast<int32_t>(s.st_uid) != uid) || (static_cast<int32_t>(s.st_gid) != gid))) {
-                LOG_I(BMS_TAG_INSTALLD, "dir :%{private}s need change mode, uid:%{public}d, gid:%{public}d,",
-                    subPath.c_str(), uid, gid);
-                if ((chown(subPath.c_str(), INSTALLS_UID, INSTALLS_UID) == 0) &&
-                    (chmod(subPath.c_str(), s.st_mode | S_ISGID) == 0) &&
-                    (chown(subPath.c_str(), uid, gid) == 0)) {
-                    LOG_I(BMS_TAG_INSTALLD, "change %{private}s ownership success", subPath.c_str(), errno);
-                } else {
-                    LOG_E(BMS_TAG_INSTALLD, "chmod and chown path:%{public}s failed, errno:%{public}d",
-                        subPath.c_str(), errno);
-                }
-            }
-            if ((ptr->d_type != DT_DIR) && ((static_cast<int32_t>(s.st_uid) != uid) ||
-                (static_cast<int32_t>(s.st_gid) != gid))) {
-                LOG_I(BMS_TAG_INSTALLD, "file: %{private}s need change uid %{public}d gid:%{public}d",
-                    subPath.c_str(), uid, gid);
-                if (chown(subPath.c_str(), uid, gid) != 0) {
-                    LOG_E(BMS_TAG_INSTALLD, "fail to change %{public}s ownership, uid=%{public}d, errno:%{public}d",
-                        subPath.c_str(), uid, errno);
-                }
-            }
-        }
-
-        if (ptr->d_type == DT_DIR) {
-            ret = ChangeDirPropertiesRecursively(subPath, uid, gid);
-        }
-    }
-    closedir(dir);
     return ret;
 }
 
@@ -1420,6 +1351,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
     }
 
     struct dirent *ptr = nullptr;
+    bool isBundleCodeDir = dir.compare(Constants::BUNDLE_CODE_DIR) == 0;
     while ((ptr = readdir(directory)) != nullptr) {
         std::string currentName(ptr->d_name);
         if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
@@ -1430,7 +1362,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
         struct stat s;
         if (stat(curPath.c_str(), &s) == 0) {
             // directory
-            if (s.st_mode & S_IFDIR) {
+            if ((s.st_mode & S_IFDIR) && (isBundleCodeDir || BundleUtil::StartWith(currentName, HQF_DIR_PREFIX))) {
                 ObtainQuickFixFileDir(curPath, fileVec);
             }
 

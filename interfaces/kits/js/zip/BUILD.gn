@@ -21,8 +21,8 @@ config("zip_config") {
     "${kits_path}/js/common",
     "napi/common",
     "napi/class_checksum",
-    "napi/class_gzip",
     "napi/class_zip",
+    "napi/class_gzip",
   ]
 
   defines = [

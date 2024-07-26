@@ -1058,28 +1058,10 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5900, Function | Sma
 /**
  * @tc.number: InstalldHostImplTest_6000
  * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling CleanBundleDataDirByName of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
-    std::string bundleName = "com.acts.example";
-    int userid = 0;
-    int appIndex = 0;
-    ErrCode ret = installdProxy->CleanBundleDataDirByName(bundleName, userid, appIndex);
-    EXPECT_NE(ret,  ERR_OK);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_6100
- * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling DeliverySignProfile of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6000, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1089,6 +1071,23 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | Sma
     const unsigned char * profileBlock = new unsigned char[0];
     ErrCode ret = installdProxy->DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
     EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling RemoveExtensionDir of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+  
+    int32_t  userid = 0;
+    std::vector<std::string> extensionBundleDirs;
+    ErrCode ret = installdProxy->RemoveExtensionDir(userid, extensionBundleDirs);
+    EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
 /**
@@ -1104,6 +1103,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6200, Function | Sma
   
     int32_t  userid = 0;
     std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back("");
     ErrCode ret = installdProxy->RemoveExtensionDir(userid, extensionBundleDirs);
     EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
@@ -1121,7 +1121,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | Sma
   
     int32_t  userid = 0;
     std::vector<std::string> extensionBundleDirs;
-    extensionBundleDirs.push_back("");
+    extensionBundleDirs.push_back("com.acts.extension");
     ErrCode ret = installdProxy->RemoveExtensionDir(userid, extensionBundleDirs);
     EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
@@ -1129,28 +1129,10 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6300, Function | Sma
 /**
  * @tc.number: InstalldHostImplTest_6400
  * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling RemoveExtensionDir of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
-    int32_t  userid = 0;
-    std::vector<std::string> extensionBundleDirs;
-    extensionBundleDirs.push_back("com.acts.extension");
-    ErrCode ret = installdProxy->RemoveExtensionDir(userid, extensionBundleDirs);
-    EXPECT_EQ(ret,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_6500
- * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling IsExistExtensionDir of hostImpl
  * @tc.require: issueI5VW01
 */
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | SmallTest | Level0)
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6400, Function | SmallTest | Level0)
 {
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
@@ -1160,6 +1142,24 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | Sma
     bool isExist = true;
     installdProxy->IsExistExtensionDir(userid, extensionBundleDir, isExist);
     EXPECT_EQ(isExist,  true);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6500
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CreateExtensionDataDir of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6500, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+  
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.userId = -1;
+    ErrCode res = installdProxy->CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(res,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 
 /**
@@ -1174,24 +1174,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6600, Function | Sma
     EXPECT_NE(installdProxy, nullptr);
   
     CreateDirParam createDirParam;
-    createDirParam.bundleName = "";
-    createDirParam.userId = -1;
-    ErrCode res = installdProxy->CreateExtensionDataDir(createDirParam);
-    EXPECT_EQ(res,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_6700
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling CreateExtensionDataDir of hostImpl
- * @tc.require: issueI5VW01
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | SmallTest | Level0)
-{
-    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
-    EXPECT_NE(installdProxy, nullptr);
-  
-    CreateDirParam createDirParam;
     createDirParam.bundleName = TEST_STRING;
     createDirParam.userId = 0;
     createDirParam.uid = 0;
@@ -1201,5 +1183,20 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | Sma
     createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
     ErrCode res = installdProxy->CreateExtensionDataDir(createDirParam);
     EXPECT_EQ(res,  ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_6700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling PrepareEntryMap of hostImpl
+ * @tc.require: issueI5VW01
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_6700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    CodeSignatureParam codeSignatureParam;
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode res = hostImpl->PrepareEntryMap(codeSignatureParam, entryMap);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS

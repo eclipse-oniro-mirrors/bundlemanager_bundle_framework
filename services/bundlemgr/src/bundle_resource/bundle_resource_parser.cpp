@@ -154,7 +154,7 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
-            APP_LOGW("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            APP_LOGW_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
@@ -209,7 +209,7 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, Re
         return false;
     }
     if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
     return true;
@@ -320,7 +320,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         return false;
     }
     if (resourceInfo.iconId_ <= 0) {
-        APP_LOGE("iconId is 0 or less than 0");
+        APP_LOGE_NOFUNC("iconId is 0 or less than 0");
         return false;
     }
     // parse json

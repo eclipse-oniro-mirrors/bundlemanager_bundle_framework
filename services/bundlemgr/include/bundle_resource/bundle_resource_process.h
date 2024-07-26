@@ -28,9 +28,6 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceProcess {
 public:
-    // get LauncherAbilityResourceInfo and BundleResourceInfo
-    static bool GetResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
-        std::vector<ResourceInfo> &resourceInfo);
     // get LauncherAbilityResourceInfo and BundleResourceInfo by bundleName
     static bool GetResourceInfoByBundleName(const std::string &bundleName, const int32_t userId,
         std::vector<ResourceInfo> &resourceInfo);
@@ -48,8 +45,6 @@ public:
     static void GetTargetBundleName(const std::string &bundleName, std::string &targetBundleName);
 
 private:
-    static bool IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId);
-
     // used for show in settings
     static bool GetBundleResourceInfo(const InnerBundleInfo &innerBundleInfo, const int32_t userId,
         ResourceInfo &resourceInfo);

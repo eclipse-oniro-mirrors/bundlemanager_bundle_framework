@@ -376,6 +376,16 @@ ErrCode BmsExtensionClient::DeleteResourceInfo(const std::string &key)
     return bmsExtensionImpl_->DeleteResourceInfo(key);
 }
 
+ErrCode BmsExtensionClient::OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
+    int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->OptimizeDisposedPredicates(callingName, appId, userId, appIndex, absRdbPredicates);
+}
+
 void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const
 {
     if (abilityInfo.labelId == 0) {

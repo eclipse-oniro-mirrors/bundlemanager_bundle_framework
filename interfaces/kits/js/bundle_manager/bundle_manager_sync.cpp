@@ -33,9 +33,9 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
+constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
@@ -341,7 +341,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
             }
         } else if (i == ARGS_POS_THREE) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -381,7 +381,7 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
-                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -738,8 +738,9 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     std::string bundleName;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetNameForUid(uid, bundleName));
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleNameByUidSync failed, uid is %{public}d, bundleName is %{public}s",
-            uid, bundleName.c_str());
+        if (uid > Constants::BASE_APP_UID) {
+            APP_LOGE("failed uid: %{public}d bundleName: %{public}s", uid, bundleName.c_str());
+        }
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_NAME_BY_UID_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -945,7 +946,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId");
         }
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();

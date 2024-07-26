@@ -42,7 +42,7 @@ void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, co
 {
     APP_LOGD("BundleMonitorOn Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {
-        APP_LOGE("input wrong type for on interface!");
+        APP_LOGE("input wrong type for on interface");
         return;
     }
     if (type == ADD) {
@@ -75,7 +75,7 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, c
 {
     APP_LOGD("BundleMonitorOff Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {
-        APP_LOGE("input wrong type for off interface!");
+        APP_LOGE("input wrong type for off interface");
         return;
     }
     if (type == ADD) {
@@ -94,7 +94,7 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, const std::string &ty
 {
     APP_LOGD("BundleMonitorOff Enter");
     if (type != ADD && type != UPDATE && type != REMOVE) {
-        APP_LOGE("input wrong type for off interface!");
+        APP_LOGE("input wrong type for off interface");
         return;
     }
     if (type == ADD) {

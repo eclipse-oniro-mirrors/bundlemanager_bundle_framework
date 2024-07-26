@@ -30,7 +30,7 @@ constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     VerifyManagerHostImpl impl;
-    std::string dir;
+    std::string dir(data, size);
     auto ret1 = impl.MkdirIfNotExist(dir);
     return true;
 }

@@ -381,7 +381,7 @@ private:
         std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        std::unordered_map<std::string, InnerBundleInfo> &infos);
+        std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid);
 
     ErrCode CheckInstallPermission(const InstallParam &installParam,
         std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
@@ -520,7 +520,7 @@ private:
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info, bool forException = false) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    ErrCode UpdateHapToken(bool needUpdateToken, InnerBundleInfo &newInfo);
+    ErrCode UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo);
     ErrCode SetDirApl(const InnerBundleInfo &info);
     /**
      * @brief Check to set isRemovable true when install.
@@ -675,7 +675,10 @@ private:
     void GenerateOdid(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
     void SetAppDistributionType(const std::unordered_map<std::string, InnerBundleInfo> &infos);
-    void ForceWriteToDisk() const;
+    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    ErrCode DeleteShaderCache(const std::string &bundleName) const;
+    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
+    bool VerifyActivationLock() const;
     std::vector<std::string> GenerateScreenLockProtectionDir(const std::string &bundleName) const;
     void CreateScreenLockProtectionDir();
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
@@ -689,10 +692,6 @@ private:
         const std::string &bundleDataDirPath, const int32_t limitSize) const;
     void VerifyDomain();
     void ClearDomainVerifyStatus(const std::string &appIdentifier, const std::string &bundleName) const;
-    ErrCode CreateShaderCache(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    ErrCode DeleteShaderCache(const std::string &bundleName) const;
-    void CreateCloudShader(const std::string &bundleName, int32_t uid, int32_t gid) const;
-    bool VerifyActivationLock() const;
     void SetAtomicServiceModuleUpgrade(const InnerBundleInfo &oldInfo);
     void UpdateExtensionSandboxInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
