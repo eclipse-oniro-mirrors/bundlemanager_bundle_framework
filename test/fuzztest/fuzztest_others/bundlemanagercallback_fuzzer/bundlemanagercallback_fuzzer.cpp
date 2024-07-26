@@ -31,6 +31,7 @@ constexpr size_t MESSAGE_SIZE = 21;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
+std::string INSTALL_RESULT = "installResult";
 uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
@@ -40,8 +41,8 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     auto server = std::make_shared<BundleDistributedManager>();
     std::weak_ptr<BundleDistributedManager> serverWptr = server;
     BundleManagerCallback bundleManagerCallback(serverWptr);
-    std::string RpcIdResult(data, size);
-    bundleManagerCallback.OnQueryRpcIdFinished(RpcIdResult);
+    std::string installResult = INSTALL_RESULT;
+    bundleManagerCallback.OnQueryRpcIdFinished(installResult);
     return true;
 }
 }
