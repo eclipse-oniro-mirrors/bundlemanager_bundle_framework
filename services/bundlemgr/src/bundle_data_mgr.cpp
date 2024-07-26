@@ -7332,12 +7332,23 @@ void BundleDataMgr::AddAppHspBundleName(const BundleType type, const std::string
     }
 }
 
-void BundleDataMgr::CreateGroupDir(int32_t userId, const std::string &bundleName) const
+void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const
 {
     std::vector<DataGroupInfo> infos;
-    if (!QueryDataGroupInfos(bundleName, userId, infos) || infos.empty()) {
+    auto dataGroupInfos = innerBundleInfo.GetDataGroupInfos();
+    for (const auto &item : dataGroupInfos) {
+        auto dataGroupIter = std::find_if(std::begin(item.second), std::end(item.second),
+            [userId](const DataGroupInfo &info) {
+            return info.userId == userId;
+        });
+        if (dataGroupIter != std::end(item.second)) {
+            infos.push_back(*dataGroupIter);
+        }
+    }
+    if (infos.empty()) {
         return;
     }
+
     for (const DataGroupInfo &dataGroupInfo : infos) {
         std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
@@ -7346,7 +7357,7 @@ void BundleDataMgr::CreateGroupDir(int32_t userId, const std::string &bundleName
             DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         if (result != ERR_OK) {
             APP_LOGW("%{public}s group dir %{public}s userId %{public}d failed",
-                bundleName.c_str(), dataGroupInfo.uuid.c_str(), userId);
+                innerBundleInfo.GetBundleName().c_str(), dataGroupInfo.uuid.c_str(), userId);
         }
     }
 }
@@ -7376,7 +7387,7 @@ ErrCode BundleDataMgr::CreateBundleDataDir(int32_t userId) const
         createDirParam.extensionDirs = info.GetAllExtensionDirs();
         createDirParams.emplace_back(createDirParam);
 
-        CreateGroupDir(responseUserId, info.GetBundleName());
+        CreateGroupDir(info, responseUserId);
     }
     lock.unlock();
     auto res = InstalldClient::GetInstance()->CreateBundleDataDirWithVector(createDirParams);

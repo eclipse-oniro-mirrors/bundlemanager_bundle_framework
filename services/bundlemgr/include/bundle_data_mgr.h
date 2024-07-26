@@ -1025,7 +1025,7 @@ private:
 #endif
 
     void FilterAbilityInfosByModuleName(const std::string &moduleName, std::vector<AbilityInfo> &abilityInfos) const;
-    void CreateGroupDir(int32_t userId, const std::string &bundleName) const;
+    void CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
 
     void FilterExtensionAbilityInfosByModuleName(const std::string &moduleName,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
