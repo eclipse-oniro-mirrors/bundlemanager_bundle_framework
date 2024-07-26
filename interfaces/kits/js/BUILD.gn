@@ -34,6 +34,7 @@ group("napi_packages") {
       "launchermgr:innerbundlemanager",
       "overlay:overlay",
       "package:package",
+      "shortcut_manager:shortcutmanager",
       "zip:tools_zip",
     ]
   }

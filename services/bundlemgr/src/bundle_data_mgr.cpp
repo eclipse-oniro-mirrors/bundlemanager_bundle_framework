@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -71,6 +71,7 @@
 #include "app_domain_verify_mgr_client.h"
 #endif
 
+#include "shortcut_data_storage_rdb.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -130,6 +131,7 @@ BundleDataMgr::BundleDataMgr()
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorageRdb>();
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
+    shortcutStorage_ = std::make_shared<ShortcutDataStorageRdb>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);
     if (baseAppUid_ < Constants::BASE_APP_UID || baseAppUid_ >= MAX_APP_UID) {
         baseAppUid_ = Constants::BASE_APP_UID;
@@ -3716,6 +3718,10 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
     }
+    auto task = [this, bundleName]() {
+        DeleteDesktopShortcutInfo(bundleName);
+    };
+    ffrt::submit(task);
 }
 
 bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
@@ -7718,6 +7724,10 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
+    auto task = [this, bundleName, userId, appIndex]() {
+        DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
+    };
+    ffrt::submit(task);
     return ERR_OK;
 }
 
@@ -8094,6 +8104,93 @@ ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &
         }
     }
     FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    bool isEnabled = false;
+    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled);
+    if (ret != ERR_OK) {
+        APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, ret);
+        return ret;
+    }
+    if (!isEnabled) {
+        APP_LOGD("BundleName: %{public}s is disabled", shortcutInfo.bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    bool isIdIllegal = false;
+    if (!shortcutStorage_->AddDesktopShortcutInfo(shortcutInfo, userId, isIdIllegal)) {
+        if (isIdIllegal) {
+            return ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL;
+        }
+        return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (!shortcutStorage_->DeleteDesktopShortcutInfo(shortcutInfo, userId)) {
+        return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGW("Input invalid userid, userId:%{public}d", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::vector<ShortcutInfo> datas;
+    shortcutStorage_->GetAllDesktopShortcutInfo(userId, datas);
+    for (const auto &data : datas) {
+        bool isEnabled = false;
+        ErrCode ret = IsApplicationEnabled(data.bundleName, data.appIndex, isEnabled);
+        if (ret != ERR_OK) {
+            APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
+                data.bundleName.c_str(), data.appIndex, ret);
+            continue;
+        }
+        if (!isEnabled) {
+            APP_LOGD("BundleName: %{public}s is disabled", data.bundleName.c_str());
+            continue;
+        }
+        shortcutInfos.emplace_back(data);
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const std::string &bundleName)
+{
+    APP_LOGD("DeleteDesktopShortcutInfo by uninstall, bundleName:%{public}s", bundleName.c_str());
+    if (!shortcutStorage_->DeleteDesktopShortcutInfo(bundleName)) {
+        return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+{
+    APP_LOGD(
+        "DeleteDesktopShortcutInfo by remove cloneApp, bundleName:%{public}s, userId:%{public}d, appIndex:%{public}d",
+        bundleName.c_str(), userId, appIndex);
+    if (!shortcutStorage_->DeleteDesktopShortcutInfo(bundleName, userId, appIndex)) {
+        return ERR_SHORTCUT_MANAGER_INTERNAL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -179,6 +179,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     IS_CLONE_APPLICATION_ENABLED,
     SET_CLONE_ABILITY_ENABLED,
     IS_CLONE_ABILITY_ENABLED,
+    ADD_DESKTOP_SHORTCUT_INFO,
+    DELETE_DESKTOP_SHORTCUT_INFO,
+    GET_ALL_DESKTOP_SHORTCUT_INFO,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

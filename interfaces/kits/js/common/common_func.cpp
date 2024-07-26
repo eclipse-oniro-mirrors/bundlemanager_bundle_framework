@@ -174,6 +174,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE, ERROR_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP, ERROR_INVALID_APPINDEX },
+    { ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL, ERROR_SHORTCUT_ID_ILLEGAL_ERROR },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -2088,6 +2089,14 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, intents, index, intent));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "wants", intents));
+    // wrap appIndex
+    napi_value appIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.appIndex, &appIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIndex", appIndex));
+    // wrap sourceType
+    napi_value sourceType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.sourceType, &sourceType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "sourceType", sourceType));
 }
 
 void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
@@ -2338,7 +2347,7 @@ bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutInten
     napi_get_named_property(env, param, "targetModule", &prop);
     std::string targetModule;
     if (!ParseString(env, prop, targetModule)) {
-        return false;
+        targetModule = "";
     }
     shortcutIntent.targetModule = targetModule;
 
@@ -2354,7 +2363,7 @@ bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutInten
     napi_get_named_property(env, param, "parameters", &prop);
     std::map<std::string, std::string> parameters;
     if (!ParseParameters(env, prop, parameters)) {
-        return false;
+        parameters.clear();
     }
     shortcutIntent.parameters = parameters;
     return true;
@@ -2413,7 +2422,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "moduleName", &prop);
     std::string moduleName;
     if (!ParseString(env, prop, moduleName)) {
-        return false;
+        moduleName = "";
     }
     shortcutInfo.moduleName = moduleName;
 
@@ -2421,7 +2430,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "hostAbility", &prop);
     std::string hostAbility;
     if (!ParseString(env, prop, hostAbility)) {
-        return false;
+        hostAbility = "";
     }
     shortcutInfo.hostAbility = hostAbility;
 
@@ -2429,7 +2438,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "icon", &prop);
     std::string icon;
     if (!ParseString(env, prop, icon)) {
-        return false;
+        icon = "";
     }
     shortcutInfo.icon = icon;
 
@@ -2437,7 +2446,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "iconId", &prop);
     int32_t iconId;
     if (!ParseInt(env, prop, iconId)) {
-        return false;
+        iconId = 0;
     }
     shortcutInfo.iconId = iconId;
 
@@ -2445,7 +2454,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "label", &prop);
     std::string label;
     if (!ParseString(env, prop, label)) {
-        return false;
+        label = "";
     }
     shortcutInfo.label = label;
 
@@ -2453,7 +2462,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "labelId", &prop);
     int32_t labelId;
     if (!ParseInt(env, prop, labelId)) {
-        return false;
+        labelId = 0;
     }
     shortcutInfo.labelId = labelId;
 
@@ -2461,9 +2470,25 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "wants", &prop);
     std::vector<ShortcutIntent> intents;
     if (!ParseShortcutWantArray(env, prop, intents)) {
-        return false;
+        intents.clear();
     }
     shortcutInfo.intents = intents;
+
+    // parse appIndex
+    napi_get_named_property(env, param, "appIndex", &prop);
+    int32_t appIndex;
+    if (!ParseInt(env, prop, appIndex)) {
+        return false;
+    }
+    shortcutInfo.appIndex = appIndex;
+
+    // parse sourceType
+    napi_get_named_property(env, param, "sourceType", &prop);
+    int32_t sourceType;
+    if (!ParseInt(env, prop, sourceType)) {
+        return false;
+    }
+    shortcutInfo.sourceType = sourceType;
     return true;
 }
 

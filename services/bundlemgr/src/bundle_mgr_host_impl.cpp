@@ -4223,6 +4223,60 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     return false;
 }
 
+ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+}
+
+ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+}
+
 bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
 {
     if ((static_cast<uint32_t>(flags) &
