@@ -2799,4 +2799,274 @@ HWTEST_F(BmsBundleParserTest, TestParse_6800, Function | SmallTest | Level1)
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
 }
+
+/**
+ * @tc.number: BundleParser_0100
+ * @tc.name: Test ReadFileIntoJson
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0100, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string filePath;
+    nlohmann::json jsonBuf;
+    bool ret = bundleParser.ReadFileIntoJson(filePath, jsonBuf);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleParser_0200
+ * @tc.name: Test ReadFileIntoJson
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0200, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string filePath = "config/sharefs/com.ohos.settings/appid";
+    nlohmann::json jsonBuf;
+    bool ret = bundleParser.ReadFileIntoJson(filePath, jsonBuf);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleParser_0300
+ * @tc.name: Test ParsePackInfo
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0300, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string pathName = "com.ohos.settings";
+    BundlePackInfo bundlePackInfo;
+    ErrCode ret = bundleParser.ParsePackInfo(pathName, bundlePackInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+}
+
+/**
+ * @tc.number: BundleParser_0400
+ * @tc.name: Test ParseSysCap
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0400, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string pathName = "com.ohos.settings";
+    std::vector<std::string> sysCaps;
+    ErrCode ret = bundleParser.ParseSysCap(pathName, sysCaps);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_UNEXPECTED);
+}
+
+/**
+ * @tc.number: BundleParser_0500
+ * @tc.name: Test ParsePreInstallConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0500, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode ret = bundleParser.ParsePreInstallConfig(configFile, scanInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_0600
+ * @tc.name: Test ParsePreInstallConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0600, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile = "config.cfg";
+    std::set<PreScanInfo> scanInfos;
+    ErrCode ret = bundleParser.ParsePreInstallConfig(configFile, scanInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_0700
+ * @tc.name: Test ParsePreUnInstallConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0700, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile;
+    std::set<std::string> uninstallList;
+    ErrCode ret = bundleParser.ParsePreUnInstallConfig(configFile, uninstallList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_0800
+ * @tc.name: Test ParsePreUnInstallConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0800, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile = "config.cfg";
+    std::set<std::string> uninstallList;
+    ErrCode ret = bundleParser.ParsePreUnInstallConfig(configFile, uninstallList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_0900
+ * @tc.name: Test ParsePreInstallAbilityConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_0900, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile;
+    std::set<PreBundleConfigInfo> preBundleConfigInfos;
+    ErrCode ret = bundleParser.ParsePreInstallAbilityConfig(configFile, preBundleConfigInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1000
+ * @tc.name: Test ParsePreInstallAbilityConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1000, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile = "config.cfg";
+    std::set<PreBundleConfigInfo> preBundleConfigInfos;
+    ErrCode ret = bundleParser.ParsePreInstallAbilityConfig(configFile, preBundleConfigInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1100
+ * @tc.name: Test ParseDefaultPermission
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1100, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string permissionFile;
+    std::set<DefaultPermission> defaultPermissions;
+    ErrCode ret = bundleParser.ParseDefaultPermission(permissionFile, defaultPermissions);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1200
+ * @tc.name: Test ParseDefaultPermission
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1200, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string permissionFile = "permission.file";
+    std::set<DefaultPermission> defaultPermissions;
+    ErrCode ret = bundleParser.ParseDefaultPermission(permissionFile, defaultPermissions);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1300
+ * @tc.name: Test ParseExtTypeConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1300, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile;
+    std::set<std::string> extensionTypeList;
+    ErrCode ret = bundleParser.ParseExtTypeConfig(configFile, extensionTypeList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1400
+ * @tc.name: Test ParseExtTypeConfig
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1400, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configFile = "config.cfg";
+    std::set<std::string> extensionTypeList;
+    ErrCode ret = bundleParser.ParseExtTypeConfig(configFile, extensionTypeList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BundleParser_1500
+ * @tc.name: Test ParseRouterArray
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1500, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string jsonString;
+    std::vector<RouterItem> routerArray;
+    ErrCode ret = bundleParser.ParseRouterArray(jsonString, routerArray);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_NO_PROFILE);
+}
+
+/**
+ * @tc.number: BundleParser_1600
+ * @tc.name: Test ParseRouterArray
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1600, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string jsonString = "{\"Name\" : \"zhangsan\"}";
+    std::vector<RouterItem> routerArray;
+    ErrCode ret = bundleParser.ParseRouterArray(jsonString, routerArray);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: BundleParser_1700
+ * @tc.name: Test ParseNoDisablingList
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1700, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configPath;
+    std::vector<std::string> noDisablingList;
+    ErrCode ret = bundleParser.ParseNoDisablingList(configPath, noDisablingList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+}
+
+/**
+ * @tc.number: BundleParser_1800
+ * @tc.name: Test ParseNoDisablingList
+ * @tc.desc: test the interface of BundleParser
+ */
+HWTEST_F(BmsBundleParserTest, BundleParser_1800, Function | MediumTest | Level1)
+{
+    BundleParser bundleParser;
+
+    std::string configPath = "config.cfg";
+    std::vector<std::string> noDisablingList;
+    ErrCode ret = bundleParser.ParseNoDisablingList(configPath, noDisablingList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL);
+}
 } // OHOS

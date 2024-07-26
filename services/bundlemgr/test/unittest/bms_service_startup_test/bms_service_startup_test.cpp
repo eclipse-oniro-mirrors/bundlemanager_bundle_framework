@@ -1122,6 +1122,25 @@ HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTes
 }
 
 /**
+* @tc.number: PreInstallExceptionMgr_0002
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test LoadPreInstallExceptionInfosFromDb
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0002, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    bool ret = preInstallExceptionMgr != nullptr;
+    EXPECT_EQ(ret, true);
+
+    ret = preInstallExceptionMgr->LoadPreInstallExceptionInfosFromDb();
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: CreateStream_0100
  * @tc.name: CreateStream
  * @tc.desc: CreateStream when param is empty.
