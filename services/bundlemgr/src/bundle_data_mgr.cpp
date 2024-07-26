@@ -3285,7 +3285,7 @@ bool BundleDataMgr::IsBundleExist(const std::string &bundleName) const
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
-    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return false;
