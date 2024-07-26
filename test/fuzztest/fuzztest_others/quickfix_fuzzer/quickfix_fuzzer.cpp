@@ -28,17 +28,17 @@ namespace OHOS {
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
     std::vector<std::string> bundleFilePaths;
-    std::string bundleFilePath(reinterpret_cast<const char*>(data), size);
+    std::string bundleFilePath;
     bundleFilePaths.push_back(bundleFilePath);
-    sptr<IQuickFixStatusCallback> statusCallback;
     bool isDebug = false;
     std::string targetPath;
-    std::string bundleName(reinterpret_cast<const char*>(data), size);
+    std::string bundleName;
     bool enable = false;
-    std::shared_ptr<QuickFixer> quickFixMgr_;
-    quickFixMgr_->DeployQuickFix(bundleFilePaths, isDebug, targetPath);
-    quickFixMgr_->SwitchQuickFix(bundleName, enable);
-    quickFixMgr_->DeleteQuickFix(bundleName);
+    sptr<IQuickFixStatusCallback> statusCallback;
+    QuickFixer quickFixMgr_(statusCallback);
+    quickFixMgr_.DeployQuickFix(bundleFilePaths, isDebug, targetPath);
+    quickFixMgr_.SwitchQuickFix(bundleName, enable);
+    quickFixMgr_.DeleteQuickFix(bundleName);
     return true;
 }
 } // namespace OHOS
