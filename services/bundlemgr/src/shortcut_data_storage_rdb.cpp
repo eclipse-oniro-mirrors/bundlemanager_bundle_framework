@@ -57,7 +57,7 @@ bool ShortcutDataStorageRdb::AddDesktopShortcutInfo(const ShortcutInfo &shortcut
         APP_LOGE("rdbDataManager is null");
         return false;
     }
-    if (!ShortcutIdVerification(shortcutInfo)) {
+    if (!ShortcutIdVerification(shortcutInfo, userId)) {
         APP_LOGD("ShortcutIdVerification is fail");
         isIdIllegal = true;
         return false;
@@ -162,7 +162,7 @@ bool ShortcutDataStorageRdb::DeleteDesktopShortcutInfo(const std::string &bundle
     return ret;
 }
 
-bool ShortcutDataStorageRdb::ShortcutIdVerification(const ShortcutInfo &shortcutInfo)
+bool ShortcutDataStorageRdb::ShortcutIdVerification(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     if (shortcutInfo.id.empty()) {
         APP_LOGD("ShortcutInfo id is empty");
@@ -171,6 +171,8 @@ bool ShortcutDataStorageRdb::ShortcutIdVerification(const ShortcutInfo &shortcut
     NativeRdb::AbsRdbPredicates absRdbPredicates(SHORTCUT_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, shortcutInfo.bundleName);
     absRdbPredicates.EqualTo(SHORTCUT_ID, shortcutInfo.id);
+    absRdbPredicates.EqualTo(APP_INDEX, shortcutInfo.appIndex);
+    absRdbPredicates.EqualTo(USER_ID, userId);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("absSharedResultSet is null");
