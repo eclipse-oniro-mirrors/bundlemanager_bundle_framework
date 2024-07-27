@@ -48,6 +48,7 @@ constexpr int32_t DEFAULT_APP_INDEX = 0;
 constexpr int32_t INVALID_UID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t FOUNDATION_UID = 5523;
+constexpr int32_t CODE_PROTECT_UID = 7666;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
