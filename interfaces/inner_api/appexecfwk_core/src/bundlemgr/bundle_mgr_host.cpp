@@ -561,6 +561,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleGetAllDesktopShortcutInfo(data, reply);
             break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
+            errCode = this->HandleGetOdidByBundleName(data, reply);
+            break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -3915,6 +3918,24 @@ ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, Mess
         APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string odid;
+    auto ret = GetOdidByBundleName(bundleName, odid);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

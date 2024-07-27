@@ -9442,5 +9442,59 @@ HWTEST_F(ActsBmsKitSystemTest, DeleteResourceInfo_0001, Function | SmallTest | L
     APP_LOGD("DeleteResourceInfo_0001 end");
 }
 
+/**
+ * @tc.number: GetOdidByBundleName_0001
+ * @tc.name: test GetOdidByBundleName interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
+ *           2.install the app
+ *           3.call GetOdidByBundleName
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetOdidByBundleName_0001, Function | MediumTest | Level1)
+{
+std::cout << "START GetOdidByBundleName_0001" << std::endl;
+std::vector<std::string> resvec;
+std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+std::string appName = "com.example.ohosproject.hmservice";
+Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+CommonTool commonTool;
+std::string installResult = commonTool.VectorToStr(resvec);
+EXPECT_EQ(installResult, "Success") << "install fail!";
+
+sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+ASSERT_NE(bundleMgrProxy, nullptr);
+
+std::string odid;
+auto queryResult = bundleMgrProxy->GetOdidByBundleName(appName, odid);
+
+EXPECT_EQ(queryResult, ERR_OK);
+EXPECT_EQ(odid.size(), ODID_LENGTH);
+
+resvec.clear();
+Uninstall(appName, resvec);
+std::string uninstallResult = commonTool.VectorToStr(resvec);
+EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+std::cout << "END GetOdidByBundleName_0001" << std::endl;
+}
+
+/**
+ * @tc.number: GetOdidByBundleName_0002
+ * @tc.name: test GetOdidByBundleName interface
+ * @tc.desc: GetOdid failed for calling bundle name is invalid
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetOdidByBundleName_0002, Function | MediumTest | Level1)
+{
+std::cout << "START GetOdidByBundleName_0002" << std::endl;
+sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+ASSERT_NE(bundleMgrProxy, nullptr);
+
+std::string odid;
+auto queryResult = bundleMgrProxy->GetOdidByBundleName("", odid);
+
+EXPECT_NE(queryResult, ERR_OK);
+EXPECT_TRUE(odid.empty());
+
+std::cout << "END GetOdidByBundleName_0002" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

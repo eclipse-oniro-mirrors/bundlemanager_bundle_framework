@@ -7478,6 +7478,21 @@ ErrCode BundleDataMgr::GetOdid(std::string &odid) const
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::string &odid) const
+{
+    APP_LOGI("start GetOdidByBundleName, bundleName %{public}s", bundleName.c_str());
+    InnerBundleInfo innerBundleInfo;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto &item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &bundleInfo = item->second;
+    bundleInfo.GetOdid(odid);
+    return ERR_OK;
+}
+
 void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
 {
     if (newInfo.GetTsanEnabled()) {

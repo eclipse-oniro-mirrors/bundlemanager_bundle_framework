@@ -5120,5 +5120,31 @@ ErrCode BundleMgrProxy::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sh
     return GetParcelableInfosWithErrCode<ShortcutInfo>(
         BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO, data, shortcutInfos);
 }
+
+ErrCode BundleMgrProxy::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("GetOdidByBundleName Called");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        odid = reply.ReadString();
+    }
+    APP_LOGD("GetOdidByBundleName ret: %{public}d, odid: %{private}s", ret, odid.c_str());
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
