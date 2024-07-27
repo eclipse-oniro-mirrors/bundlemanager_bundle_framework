@@ -8125,6 +8125,23 @@ ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAppIdByBundleName(
+    const std::string &bundleName, std::string &appId) const
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    if (innerBundleInfo.IsDisabled()) {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    appId = innerBundleInfo.GetBaseBundleInfo().appId;
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     int32_t requestUserId = GetUserId(userId);

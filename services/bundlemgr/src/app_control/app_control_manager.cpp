@@ -23,6 +23,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
+#include "hitrace_meter.h"
 #include "parameters.h"
 
 namespace OHOS {
@@ -264,19 +265,19 @@ ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& wan
 ErrCode AppControlManager::GetAppRunningControlRule(
     const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    BundleInfo bundleInfo;
-    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
+    std::string appId;
+    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
     if (ret != ERR_OK) {
-        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "AppControl GetBundleInfoV9 failed bundle:%{public}s", bundleName.c_str());
+        LOG_W(BMS_TAG_DEFAULT, "getAppId failed,-n:%{public}s", bundleName.c_str());
         return ret;
     }
-    std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
+    std::string key = appId + std::string("_") + std::to_string(userId);
     std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     if (appRunningControlRuleResult_.find(key) != appRunningControlRuleResult_.end()) {
         controlRuleResult = appRunningControlRuleResult_[key];
@@ -286,7 +287,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         }
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRuleResult);
+    ret = appControlManagerDb_->GetAppRunningControlRule(appId, userId, controlRuleResult);
     if (ret != ERR_OK) {
         controlRuleResult.controlMessage = INVALID_MESSAGE;
     }
@@ -450,29 +451,20 @@ void AppControlManager::DeleteAbilityRunningRuleCache(std::string &key)
 ErrCode AppControlManager::GetAbilityRunningControlRule(
     const std::string &bundleName, int32_t appIndex, int32_t userId, std::vector<DisposedRule> &disposedRules)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    BundleInfo bundleInfo;
-    ErrCode ret = ERR_OK;
-    if (appIndex == Constants::MAIN_APP_INDEX) {
-        ret = dataMgr->GetBundleInfoV9(bundleName,
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
-        if (ret != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoV9 failed");
-            return ret;
-        }
-    } else {
-        ret = dataMgr->GetCloneBundleInfo(bundleName,
-        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), appIndex, bundleInfo, userId);
-        if (ret != ERR_OK) {
-            LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoV9 failed");
-            return ret;
-        }
+
+    std::string appId;
+    ErrCode ret = dataMgr->GetAppIdByBundleName(bundleName, appId);
+    if (ret != ERR_OK) {
+        LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoAppId failed");
+        return ret;
     }
-    std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId) + std::string("_")
+    std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_")
         + std::to_string(appIndex);
     std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
     auto iter = abilityRunningControlRuleCache_.find(key);
@@ -480,7 +472,7 @@ ErrCode AppControlManager::GetAbilityRunningControlRule(
         disposedRules = iter->second;
         return ERR_OK;
     }
-    ret = appControlManagerDb_->GetAbilityRunningControlRule(bundleInfo.appId, appIndex, userId, disposedRules);
+    ret = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
     if (ret != ERR_OK) {
         LOG_W(BMS_TAG_DEFAULT, "GetAbilityRunningControlRule from rdb failed");
         return ret;

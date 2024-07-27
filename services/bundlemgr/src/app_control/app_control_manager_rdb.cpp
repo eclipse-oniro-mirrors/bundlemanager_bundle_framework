@@ -19,6 +19,7 @@
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
 #include "bundle_util.h"
+#include "hitrace_meter.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -250,6 +251,7 @@ ErrCode AppControlManagerRdb::DeleteAppRunningControlRule(const std::string &cal
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callingName,
     int32_t userId, std::vector<std::string> &appIds)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
@@ -290,6 +292,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
 ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     int32_t userId, AppRunningControlRuleResult &controlRuleResult)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, RUNNING_CONTROL);
@@ -561,6 +564,7 @@ ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
 ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
     const std::string &appId, int32_t appIndex, int32_t userId, std::vector<DisposedRule>& disposedRules)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_DEFAULT, "rdb begin to GetAbilityRunningControlRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
