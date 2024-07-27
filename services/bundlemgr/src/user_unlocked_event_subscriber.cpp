@@ -50,7 +50,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     std::string action = data.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
-        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d unlocked", userId);
+        APP_LOGI_NOFUNC("UserUnlockedEventSubscriber -u %{public}d unlocked", userId);
         std::lock_guard<std::mutex> lock(mutex_);
         if ((userId_ != userId)) {
             userId_ = userId;
@@ -63,10 +63,10 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     }
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
         int32_t userId = data.GetCode();
-        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d switched", userId);
+        APP_LOGI_NOFUNC("UserUnlockedEventSubscriber -u %{public}d switched", userId);
         std::lock_guard<std::mutex> lock(mutex_);
         if (AccountHelper::IsOsAccountVerified(userId) && (userId_ != userId)) {
-            APP_LOGI("UserUnlockedEventSubscriber userId:%{public}d unlocked", userId);
+            APP_LOGI_NOFUNC("UserUnlockedEventSubscriber -u %{public}d unlocked", userId);
             userId_ = userId;
             std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
             updateDataDirThread.detach();
@@ -237,7 +237,7 @@ void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bun
 
 void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
-    APP_LOGI("process new back up dir, start");
+    APP_LOGI_NOFUNC("process new back up dir, start");
     for (const auto &bundleInfo : bundleInfos) {
         if (bundleInfo.appIndex > 0) {
             APP_LOGI("bundleName:%{public}s appIndex %{public}d clone app no need to create",
@@ -252,7 +252,7 @@ void UpdateAppDataMgr::ProcessNewBackupDir(const std::vector<BundleInfo> &bundle
             CreateNewBackupDir(bundleInfo, userId);
         }
     }
-    APP_LOGI("process new back up dir, end");
+    APP_LOGI_NOFUNC("process new back up dir, end");
 }
 
 void UpdateAppDataMgr::CreateNewBackupDir(const BundleInfo &bundleInfo, int32_t userId)

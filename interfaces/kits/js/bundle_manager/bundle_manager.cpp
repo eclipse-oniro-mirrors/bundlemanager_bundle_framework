@@ -3561,7 +3561,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfoV9 failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+        APP_LOGE_NOFUNC("GetBundleInfoV9 failed -n %{public}s -f %{public}d -u %{public}d",
             bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
@@ -4487,7 +4487,8 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
     if (ret != SUCCESS) {
-        APP_LOGE("GetSpecifiedDistributionType failed, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGE_NOFUNC("GetSpecifiedDistributionType failed -n %{public}s ret:%{public}d",
+            bundleName.c_str(), ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);

@@ -600,12 +600,12 @@ const std::map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
 
 StatusReceiverProxy::StatusReceiverProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IStatusReceiver>(object)
 {
-    APP_LOGI("create status receiver proxy instance");
+    APP_LOGD("create status receiver proxy instance");
 }
 
 StatusReceiverProxy::~StatusReceiverProxy()
 {
-    APP_LOGI("destroy status receiver proxy instance");
+    APP_LOGD("destroy status receiver proxy instance");
 }
 
 void StatusReceiverProxy::OnStatusNotify(const int32_t progress)

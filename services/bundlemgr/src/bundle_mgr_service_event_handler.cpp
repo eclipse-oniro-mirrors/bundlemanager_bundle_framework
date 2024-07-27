@@ -612,7 +612,7 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
                 continue;
             }
 
-            LOG_I(BMS_TAG_DEFAULT, "cfgDir: %{public}s ", cfgDir);
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "GetPreInstallRootDirList cfgDir: %{public}s", cfgDir);
             rootDirList.emplace_back(cfgDir);
         }
 
@@ -2975,7 +2975,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
     auto &bundleName = preBundleConfigInfo.bundleName;
     InnerBundleInfo innerBundleInfo;
     if (!FetchInnerBundleInfo(bundleName, innerBundleInfo)) {
-        LOG_W(BMS_TAG_DEFAULT, "App(%{public}s) is not installed", bundleName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "App(%{public}s) is not installed", bundleName.c_str());
         return;
     }
     // match both fingerprint and appId
@@ -3337,7 +3337,7 @@ void BMSEventHandler::ProcessBundleResourceInfo()
     }
 
     for (const auto &bundleName : needAddResourceBundles) {
-        LOG_I(BMS_TAG_DEFAULT, "bundleName: %{public}s add resource when reboot", bundleName.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s add resource when reboot", bundleName.c_str());
         BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
     }
     LOG_I(BMS_TAG_DEFAULT, "ProcessBundleResourceInfo end");

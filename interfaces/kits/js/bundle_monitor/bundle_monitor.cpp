@@ -113,7 +113,7 @@ napi_value Unregister(napi_env env, napi_callback_info info)
         return nullptr;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
-        APP_LOGE("unregister bundle status callback failed due to lack of permission");
+        APP_LOGE_NOFUNC("no permission to unregister bundle status callback");
         BusinessError::ThrowError(env, ERROR_PERMISSION_DENIED_ERROR, PERMISSION_OFF_DENIED);
         return nullptr;
     }

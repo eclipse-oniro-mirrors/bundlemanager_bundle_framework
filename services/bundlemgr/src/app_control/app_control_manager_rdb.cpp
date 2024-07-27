@@ -310,7 +310,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        LOG_W(BMS_TAG_DEFAULT, "invalid size 0");
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "control rule invalid size 0");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
     }
     ret = absSharedResultSet->GoToFirstRow();

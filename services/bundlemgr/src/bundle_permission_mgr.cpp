@@ -292,7 +292,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
         AccessToken::PermissionState::PERMISSION_GRANTED) {
         return true;
     }
-    LOG_E(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
+    LOG_NOFUNC_E(BMS_TAG_DEFAULT, "permission denied caller:%{public}u", callerToken);
     return false;
 }
 
@@ -310,7 +310,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionsForAll(const std::vector<std::
     for (auto deniedPermission : permissionNames) {
         errorMessage += deniedPermission + " ";
     }
-    LOG_E(BMS_TAG_DEFAULT, "%{public}s denied callerToken:%{public}u", errorMessage.c_str(), callerToken);
+    LOG_NOFUNC_E(BMS_TAG_DEFAULT, "%{public}s denied callerToken:%{public}u", errorMessage.c_str(), callerToken);
     return false;
 }
 

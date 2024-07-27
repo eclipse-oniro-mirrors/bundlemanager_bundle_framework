@@ -278,12 +278,12 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
     bool ans = true;
     if (resourceInfo.labelNeedParse_ && !ParseLabelResourceByResourceManager(
         resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
-        APP_LOGE("ParseLabelResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseLabelResource failed, key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
     if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE("ParseIconResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseIconResource failed, key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 

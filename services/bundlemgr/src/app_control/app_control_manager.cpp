@@ -281,7 +281,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoV9 failed");
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "AppControl GetBundleInfoV9 failed bundle:%{public}s", bundleName.c_str());
         return ret;
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
