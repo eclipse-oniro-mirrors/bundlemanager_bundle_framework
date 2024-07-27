@@ -156,6 +156,7 @@ BaseBundleInstaller::BaseBundleInstaller()
 BaseBundleInstaller::~BaseBundleInstaller()
 {
     bundlePaths_.clear();
+    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     toDeleteTempHapPath_.clear();
     signatureFileTmpMap_.clear();
 }
@@ -1252,7 +1253,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
-    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
     return result;
 }
 
