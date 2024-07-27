@@ -223,7 +223,7 @@ bool InstalldClient::GetInstalldProxy()
 {
     if (installdProxy_ == nullptr) {
         APP_LOGD("try to get installd proxy");
-        std::unique_lock<std::shared_mutex> writeLock(mutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         if (installdProxy_ == nullptr) {
             sptr<IInstalld> tempProxy =
                 iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));

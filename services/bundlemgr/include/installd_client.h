@@ -250,11 +250,8 @@ private:
             if (!GetInstalldProxy()) {
                 return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
             }
-            {
-                std::shared_lock<std::shared_mutex> readLock(mutex_);
-                if (installdProxy_ != nullptr) {
-                    errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
-                }
+            if (installdProxy_ != nullptr) {
+                errCode = (installdProxy_->*func)(std::forward<Args>(args)...);
             }
             if (errCode == ERR_APPEXECFWK_INSTALLD_SERVICE_DIED) {
                 APP_LOGE("CallService failed, retry times: %{public}d", retryTimes + 1);
@@ -268,7 +265,7 @@ private:
 
 private:
     bool loadSaFinished_;
-    std::shared_mutex mutex_;
+    std::mutex mutex_;
     std::mutex loadSaMutex_;
     std::mutex getProxyMutex_;
     std::condition_variable loadSaCondition_;
