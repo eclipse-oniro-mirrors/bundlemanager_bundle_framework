@@ -34,7 +34,7 @@ public:
     bool DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
 private:
-    bool ShortcutIdVerification(const ShortcutInfo &shortcutInfo);
+    bool ShortcutIdVerification(const ShortcutInfo &shortcutInfo, int32_t userId);
     void GetDesktopShortcutInfosByDefaultUserId(std::vector<ShortcutInfo> &shortcutInfos);
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };
