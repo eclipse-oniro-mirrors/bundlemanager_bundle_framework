@@ -52,7 +52,6 @@ ohos_fuzztest("BundleAgingMgrFuzzTest") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gtest_main",
   ]
   include_dirs += [ "${services_path}/bundlemgr/include/aging" ]
   deps += bundle_install_deps

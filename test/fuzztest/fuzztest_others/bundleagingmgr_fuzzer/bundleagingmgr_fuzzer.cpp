@@ -26,21 +26,10 @@ constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    BundleAgingMgr bundleAgingMgr;
+    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
     std::shared_ptr<BundleDataMgr> dataMgr = nullptr;
-    bundleAgingMgr.Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    bundleAgingMgr.InitAgingtTimer();
-    bundleAgingMgr.InitAgingHandlerChain();
-    bundleAgingMgr.Process(dataMgr);
-    bundleAgingMgr.CheckPrerequisite(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    bundleAgingMgr.InitAgingTimerInterval();
-    bundleAgingMgr.InitAgingBatteryThresold();
-    bundleAgingMgr.InitAgingRequest();
-    bundleAgingMgr.ResetRequest();
-    bundleAgingMgr.IsReachStartAgingThreshold();
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
-    bundleAgingMgr.ScheduleLoopTask();
+    bundleAgingMgr->Start(BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
+    bundleAgingMgr->InitAgingtTimer();
     return true;
 }
 
