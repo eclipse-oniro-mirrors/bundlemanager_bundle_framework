@@ -2634,9 +2634,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuotactl, proxy get error");
         return;
     }
-
-    LOG_I(BMS_TAG_INSTALLER, "SendToStorageQuota bundleName=%{public}s, uid=%{public}d, bundleDataDirPath=%{public}s,"
-        "limitSizeMb=%{public}d", bundleName.c_str(), uid, bundleDataDirPath.c_str(), limitSizeMb);
+    
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
@@ -2648,7 +2646,6 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
     const std::string &bundleDataDirPath, const int32_t limitSize) const
 {
     if (limitSize == 0) {
-        LOG_I(BMS_TAG_INSTALLER, "cancel bundleName:%{public}s uid:%{public}d quota", bundleName.c_str(), uid);
         SendToStorageQuota(bundleName, uid, bundleDataDirPath, 0);
         return;
     }

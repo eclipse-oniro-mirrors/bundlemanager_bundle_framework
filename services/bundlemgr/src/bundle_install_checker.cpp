@@ -1197,7 +1197,7 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         }
     }
     if (!match && !MatchOldSignatures(bundleName, configInfo.appSignature)) {
-        LOG_E(BMS_TAG_INSTALLER, "bundleName: %{public}s signature verify failed in capability list",
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "bundleName: %{public}s signature verify failed in capability list",
             bundleName.c_str());
         return;
     }

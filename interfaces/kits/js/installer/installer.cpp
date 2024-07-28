@@ -168,7 +168,7 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
  */
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("GetBundleInstaller called");
+    APP_LOGI_NOFUNC("napi GetBundleInstaller called");
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, SECOND_PARAM)) {
         APP_LOGE("GetBundleInstaller args init failed");
@@ -206,7 +206,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         executeFunc,
         GetBundleInstallerCompleted);
     callbackPtr.release();
-    APP_LOGI("call GetBundleInstaller done");
+    APP_LOGI_NOFUNC("call GetBundleInstaller done");
     return promise;
 }
 
@@ -1243,7 +1243,7 @@ napi_value Recover(napi_env env, napi_callback_info info)
 
 napi_value Uninstall(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("Uninstall called");
+    APP_LOGI_NOFUNC("Uninstall called");
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::UNINSTALL;
     // uninstall uninstallParam
@@ -1254,7 +1254,7 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     if (firstType == napi_object) {
         return UninstallByUninstallParam(env, info, callbackPtr);
     }
-    APP_LOGI("call Uninstall done");
+    APP_LOGI_NOFUNC("call Uninstall done");
     return UninstallOrRecover(env, info, callbackPtr);
 }
 

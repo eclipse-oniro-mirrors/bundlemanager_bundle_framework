@@ -25,7 +25,7 @@
 #endif
 
 #ifndef BMS_TAG_INSTALLER
-#define BMS_TAG_INSTALLER std::make_pair(0xD001101, "BMSInstaller")
+#define BMS_TAG_INSTALLER std::make_pair(0xD001120, "BMSInstaller")
 #endif
 
 #ifndef BMS_TAG_QUERY

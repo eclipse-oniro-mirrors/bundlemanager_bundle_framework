@@ -2619,7 +2619,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
-            APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
+            APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
             continue;
         }
         AbilityInfo abilityInfo = ability.second;
@@ -2681,7 +2681,7 @@ void InnerBundleInfo::GetBundleWithAbilities(
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
-                APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
+                APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
                 continue;
             }
             AbilityInfo abilityInfo = ability.second;
@@ -3341,14 +3341,14 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetApplicationEnabled not find:%{public}s bundleUserInfo in userId: %{public}d",
+        APP_LOGE_NOFUNC("SetCloneApplicationEnabled not find:%{public}s bundleUserInfo in userId:%{public}d",
             GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
     if (iter == infoItem->second.cloneInfos.end()) {
-        APP_LOGE("SetApplicationEnabled not find:%{public}d appIndex in userId: %{public}d",
+        APP_LOGE_NOFUNC("SetCloneApplicationEnabled not find:%{public}d appIndex in userId:%{public}d",
             appIndex, userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }

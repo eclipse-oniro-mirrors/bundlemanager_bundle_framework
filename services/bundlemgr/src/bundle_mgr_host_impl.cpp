@@ -313,7 +313,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     int32_t appIndex = 0;
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "GetBundleNameForUid failed, uid is %{public}d", uid);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
@@ -4123,9 +4123,6 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
 ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
     int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
 {
-    APP_LOGI("start bundleName: %{public}s with user: %{public}d, appIndex: %{public}d, flag: %{public}d",
-        bundleName.c_str(), userId, appIndex, flags);
-
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -4134,6 +4131,10 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetCloneBundleInfo failed bundleName empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
     auto dataMgr = GetDataMgrFromService();
@@ -4144,7 +4145,7 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
         APP_LOGE(
-            "finish name: %{public}s user: %{public}d, appIndex: %{public}d, flag: %{public}d, err: %{public}d",
+            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
             bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }

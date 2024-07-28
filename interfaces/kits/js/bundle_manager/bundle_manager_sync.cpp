@@ -958,8 +958,8 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo));
     if (ret != ERR_OK) {
-        APP_LOGE("GetAppProvisionInfoSync failed, bundleName is %{public}s, userId is %{public}d",
-            bundleName.c_str(), userId);
+        APP_LOGE("GetAppProvisionInfoSync failed -n %{public}s -u %{public}d ret:%{public}d",
+            bundleName.c_str(), userId, ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_APP_PROVISION_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

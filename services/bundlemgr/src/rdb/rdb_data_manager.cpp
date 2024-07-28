@@ -347,7 +347,7 @@ bool RdbDataManager::CreateTable()
     for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
         int32_t insertRet = rdbStore->ExecuteSql(sql);
         if (insertRet != NativeRdb::E_OK) {
-            APP_LOGW("ExecuteSql insertColumnSql failed, insertRet: %{public}d", insertRet);
+            APP_LOGW_NOFUNC("ExecuteSql insertColumnSql failed ret: %{public}d", insertRet);
         }
     }
     return true;

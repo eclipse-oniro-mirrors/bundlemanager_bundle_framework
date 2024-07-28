@@ -139,7 +139,7 @@ bool BundleMgrProxy::GetApplicationInfo(
     }
 
     if (!GetParcelableInfo<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFO, data, appInfo)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
         return false;
     }
     return true;
@@ -175,7 +175,7 @@ bool BundleMgrProxy::GetApplicationInfo(
 
     if (!GetParcelableInfo<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS, data, appInfo)) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "fail to GetApplicationInfo from server");
         return false;
     }
     return true;
@@ -212,7 +212,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
         BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed: %{public}d", res);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetApplicationInfoV9 failed: %{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -470,7 +470,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleInfoForSelf failed err:%{public}d", res);
         return res;
     }
     return ERR_OK;
@@ -622,7 +622,7 @@ bool BundleMgrProxy::GetBundleInfos(
 ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_QUERY, "begin to get bundle infos");
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "begin to get bundleinfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosV9 due to write InterfaceToken fail");
@@ -636,7 +636,7 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         LOG_E(BMS_TAG_QUERY, "fail to GetBundleInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    LOG_I(BMS_TAG_QUERY, "get bundle infos end");
+    LOG_NOFUNC_I(BMS_TAG_QUERY, "get bundleinfos end");
     return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
@@ -1579,7 +1579,7 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
 
     if (!GetParcelableInfo<HapModuleInfo>(
         BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)) {
-        APP_LOGE("fail to GetHapModuleInfo from server");
+        APP_LOGE_NOFUNC("fail to GetHapModuleInfo from server");
         return false;
     }
     return true;
@@ -4401,7 +4401,7 @@ bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParce
     }
 
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        APP_LOGE_NOFUNC("GetParcelableInfo reply false");
         return false;
     }
 
