@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "common_func.h"
 #include "business_error.h"
+#include "node_api.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -26,10 +27,27 @@ namespace {
     constexpr size_t ARGS_ONE = 1;
 }
 
-ZlibCallbackInfo::ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback)
-    : env_(env), callback_(callback), deferred_(deferred), isCallBack_(isCallback) {}
+void HandleEnvCleanup(void *data)
+{
+    APP_LOGD("HandleEnvCleanup data null? %{public}d", data == nullptr);
+    if (data != nullptr) {
+        ZlibCallbackInfo *callbackInfo = static_cast<ZlibCallbackInfo *>(data);
+        callbackInfo->SetValid(false);
+    }
+}
 
-ZlibCallbackInfo::~ZlibCallbackInfo() {}
+ZlibCallbackInfo::ZlibCallbackInfo(napi_env env, napi_ref callback, napi_deferred deferred, bool isCallback)
+    : env_(env), callback_(callback), deferred_(deferred), isCallBack_(isCallback)
+{
+    napi_status status = napi_add_env_cleanup_hook(env_, HandleEnvCleanup, this);
+    APP_LOGD("ZlibCallbackInfo() status %{public}d", status);
+}
+
+ZlibCallbackInfo::~ZlibCallbackInfo()
+{
+    napi_status status = napi_remove_env_cleanup_hook(env_, HandleEnvCleanup, this);
+    APP_LOGD("~ZlibCallbackInfo() status %{public}d", status);
+}
 
 int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 {
@@ -91,6 +109,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
 
 void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
 {
+    APP_LOGD("OnZipUnZipFinish ret %{public}d", result);
     std::lock_guard<std::mutex> lock(validMutex_);
     if (!valid_) {
         APP_LOGE("module exported object is invalid");
@@ -171,6 +190,9 @@ void ZlibCallbackInfo::SetValid(bool valid)
 {
     std::lock_guard<std::mutex> lock(validMutex_);
     valid_ = valid;
+    if (!valid) {
+        env_ = nullptr;
+    }
 }
 }  // namespace LIBZIP
 }  // namespace AppExecFwk

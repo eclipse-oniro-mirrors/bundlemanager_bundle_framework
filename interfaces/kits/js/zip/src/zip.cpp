@@ -576,51 +576,6 @@ bool Zips(const std::vector<std::string> &srcFiles, const std::string &destPath,
     PostTask(innerTask);
     return true;
 }
-
-ErrCode DoZip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles)
-{
-    FilePath srcDir(srcPath);
-    FilePath destFile(destPath);
-    APP_LOGD("srcDir=%{private}s, destFile=%{private}s", srcDir.Value().c_str(), destFile.Value().c_str());
-
-    if (srcDir.Value().size() == 0) {
-        return ERR_ZLIB_SRC_FILE_DISABLED;
-    }
-    if (destFile.Value().size() == 0) {
-        return ERR_ZLIB_DEST_FILE_DISABLED;
-    }
-    if (includeHiddenFiles) {
-        return ZipWithFilterCallback(srcDir, destFile, options, ExcludeNoFilesFilter);
-    } else {
-        return ZipWithFilterCallback(srcDir, destFile, options, ExcludeHiddenFilesFilter);
-    }
-    return ERR_OK;
-}
-
-ErrCode DoZips(const std::vector<std::string> &srcFiles, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles)
-{
-    std::vector<FilePath> srcFilesPath;
-    for (auto iter = srcFiles.begin(); iter != srcFiles.end(); ++iter) {
-        FilePath srcFile(*iter);
-        if (srcFile.Value().size() == 0) {
-            return ERR_ZLIB_SRC_FILE_DISABLED;
-        }
-        srcFilesPath.push_back(srcFile);
-    }
-    FilePath destFile(destPath);
-    if (destFile.Value().size() == 0) {
-        return ERR_ZLIB_DEST_FILE_DISABLED;
-    }
-    if (includeHiddenFiles) {
-        return ZipsWithFilterCallback(srcFilesPath, destFile, options, ExcludeNoFilesFilter);
-    } else {
-        return ZipsWithFilterCallback(srcFilesPath, destFile, options, ExcludeHiddenFilesFilter);
-    }
-    return ERR_OK;
-}
-
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS
