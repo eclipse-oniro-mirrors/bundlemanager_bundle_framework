@@ -3719,10 +3719,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     if (appServiceHspBundleName_.find(bundleName) != appServiceHspBundleName_.end()) {
         appServiceHspBundleName_.erase(bundleName);
     }
-    auto task = [this, bundleName]() {
-        DeleteDesktopShortcutInfo(bundleName);
-    };
-    ffrt::submit(task);
+    DeleteDesktopShortcutInfo(bundleName);
 }
 
 bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
@@ -7735,10 +7732,7 @@ ErrCode BundleDataMgr::RemoveCloneBundle(const std::string &bundleName, const in
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     innerBundleInfo.SetBundleStatus(nowBundleStatus);
-    auto task = [this, bundleName, userId, appIndex]() {
-        DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
-    };
-    ffrt::submit(task);
+    DeleteDesktopShortcutInfo(bundleName, userId, appIndex);
     return ERR_OK;
 }
 
