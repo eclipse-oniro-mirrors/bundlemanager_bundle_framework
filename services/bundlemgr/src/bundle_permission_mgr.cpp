@@ -467,7 +467,8 @@ bool BundlePermissionMgr::IsSystemApp()
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
-        LOG_E(BMS_TAG_DEFAULT, "system app verification failed");
+        LOG_E(BMS_TAG_DEFAULT, "IsSystemApp %{public}d,%{public}d,%{public}u",
+            IPCSkeleton::GetCallingUid(), IPCSkeleton::GetCallingPid(), callerToken);
         return false;
     }
     LOG_D(BMS_TAG_DEFAULT, "caller tokenType is not hap, ignore");
