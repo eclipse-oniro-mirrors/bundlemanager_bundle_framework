@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
+constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // allow max 1GB resource size
 constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
 bool GetData(void *&buffer, size_t size, const void *data)
 {
