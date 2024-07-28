@@ -203,7 +203,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
-    LOG_D(BMS_TAG_INSTALLD, "start to delete dir %{public}s", path.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "del %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
