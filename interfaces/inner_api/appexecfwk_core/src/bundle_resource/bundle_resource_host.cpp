@@ -28,7 +28,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // max allow 1 GB resource size
-constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 5 * 1024; // max ipc size 100MB
+constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
 const std::string BUNDLE_RESOURCE_ASHMEM_NAME = "bundleResourceAshemeName";
 }
 BundleResourceHost::BundleResourceHost()
