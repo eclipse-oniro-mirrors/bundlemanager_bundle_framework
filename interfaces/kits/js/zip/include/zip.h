@@ -172,12 +172,6 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, const OPTION
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo);
 
 ErrCode GetOriginalSize(const std::string &srcFile, int64_t &originalSize);
-
-ErrCode DoZip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles);
-
-ErrCode DoZips(const std::vector<std::string> &srcFiles, const std::string &destPath, const OPTIONS &options,
-    bool includeHiddenFiles);
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
 }  // namespace OHOS

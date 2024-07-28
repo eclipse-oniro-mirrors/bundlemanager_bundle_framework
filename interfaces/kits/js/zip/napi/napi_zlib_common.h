@@ -39,11 +39,6 @@ struct CallZipUnzipParam {
     OPTIONS options;
 };
 
-struct CompressCallbackInfo : public BaseCallbackInfo {
-    explicit CompressCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    CallZipUnzipParam param;
-};
-
 struct AsyncZipCallbackInfo {
     napi_async_work asyncWork;
     CallZipUnzipParam param;

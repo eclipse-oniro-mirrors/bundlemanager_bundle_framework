@@ -19,7 +19,6 @@
 #include <vector>
 
 #include "app_log_wrapper.h"
-#include "errors.h"
 #include "file_path.h"
 #include "bundle_errors.h"
 #include "business_error.h"
@@ -781,61 +780,6 @@ void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
     }
 }
 
-void CompressExcuteExec(napi_env env, void *data)
-{
-    APP_LOGD("CompressExcuteExec begin");
-    CompressCallbackInfo *callbackInfo = reinterpret_cast<CompressCallbackInfo *>(data);
-    if (callbackInfo == nullptr) {
-        APP_LOGE("CompressCallbackInfo is nullptr");
-        return;
-    }
-    if (callbackInfo->err != NO_ERROR) {
-        return;
-    }
-    if (callbackInfo->param.srcFiles.size() > 0) {
-        callbackInfo->err =
-            DoZips(callbackInfo->param.srcFiles, callbackInfo->param.dest, callbackInfo->param.options, false);
-    } else {
-        callbackInfo->err =
-            DoZip(callbackInfo->param.src, callbackInfo->param.dest, callbackInfo->param.options, false);
-    }
-    APP_LOGD("CompressExcuteExec end");
-}
-
-void CompressExcuteComplete(napi_env env, napi_status status, void *data)
-{
-    APP_LOGD("CompressExcuteComplete begin");
-    CompressCallbackInfo *callbackInfo = reinterpret_cast<CompressCallbackInfo *>(data);
-    if (callbackInfo == nullptr) {
-        APP_LOGE("CompressCallbackInfo is nullptr");
-        return;
-    }
-    std::unique_ptr<CompressCallbackInfo> callbackPtr {callbackInfo};
-
-    napi_value result[ARGS_SIZE_ONE] = {0};
-    ErrCode errCode = CommonFunc::ConvertErrCode(callbackInfo->err);
-    APP_LOGD("ErrCode is %{public}d - %{public}d", errCode, callbackInfo->err);
-    if (errCode == ERR_OK) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
-    } else {
-        result[0] = BusinessError::CreateCommonError(env, errCode, "");
-    }
-    if (callbackInfo->deferred) {
-        if (errCode == ERR_OK) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, callbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, ARGS_SIZE_ONE, result, &placeHolder));
-    }
-    APP_LOGD("CompressExcuteComplete end");
-}
-
-
 napi_value CompressFile(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin CompressFile");
@@ -851,27 +795,35 @@ napi_value CompressFile(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM);
         return nullptr;
     }
-    CompressCallbackInfo *callbackInfo = new (std::nothrow) CompressCallbackInfo(env);
-    if (callbackInfo == nullptr) {
-        APP_LOGE("compressCallbackInfo nullptr");
+    AsyncZipCallbackInfo *asyncZipCallbackInfo = CreateZipAsyncCallbackInfo(env);
+    if (asyncZipCallbackInfo == nullptr) {
+        APP_LOGE("asyncZipCallbackInfo nullptr");
         return nullptr;
     }
-    callbackInfo->param = param;
-    if (args.GetArgc() > ARGS_SIZE_THREE) {
-        napi_value nvalue = args.GetArgv(ARGS_POS_THREE);
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, nvalue, &valueType);
-        if (valueType == napi_function) {
-            NAPI_CALL(env, napi_create_reference(env, nvalue, NAPI_RETURN_ONE, &callbackInfo->callback));
+    asyncZipCallbackInfo->param = param;
+    std::unique_ptr<AsyncZipCallbackInfo> callbackPtr {asyncZipCallbackInfo};
+    asyncZipCallbackInfo->zlibCallbackInfo =
+                std::make_shared<ZlibCallbackInfo>(env, nullptr, nullptr, false);
+    asyncZipCallbackInfo->zlibCallbackInfo->SetDeliverErrCode(true);
+    if (args.GetMaxArgc() > PARAM3) {
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL_BASE(env, napi_typeof(env, args[PARAM3], &valuetype), nullptr);
+        if (valuetype == napi_function) {
+            napi_ref callbackRef = nullptr;
+            NAPI_CALL(env, napi_create_reference(env, args[PARAM3], NAPI_RETURN_ONE, &callbackRef));
+            asyncZipCallbackInfo->zlibCallbackInfo->SetCallback(callbackRef);
+            asyncZipCallbackInfo->zlibCallbackInfo->SetIsCallback(true);
         }
     }
-    std::unique_ptr<CompressCallbackInfo> callbackPtr {callbackInfo};
-
-    auto promise = CommonFunc::AsyncCallNativeMethod<CompressCallbackInfo>(
-        env, callbackInfo, "CompressFile", CompressExcuteExec, CompressExcuteComplete);
-
+    napi_value promise = nullptr;
+    if (!asyncZipCallbackInfo->zlibCallbackInfo->GetIsCallback()) {
+        napi_deferred deferred;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncZipCallbackInfo->zlibCallbackInfo->SetDeferred(deferred);
+    }
+    CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
-    APP_LOGD("napi done CompressFile");
+    APP_LOGD("napi end CompressFile");
     return promise;
 }
 
