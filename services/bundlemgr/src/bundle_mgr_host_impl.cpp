@@ -1699,7 +1699,7 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID) {
+    if (uid != Constants::FOUNDATION_UID && uid != Constants::CODE_PROTECT_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
