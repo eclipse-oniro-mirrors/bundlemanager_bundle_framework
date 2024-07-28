@@ -26,12 +26,12 @@ namespace AppExecFwk {
 BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
     : installerId_(installerId), statusReceiver_(statusReceiver)
 {
-    LOG_I(BMS_TAG_INSTALLER, "create bundle installer instance, the installer id is %{public}" PRId64 "", installerId_);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "create bundle installer instance id:%{public}" PRId64 "", installerId_);
 }
 
 BundleInstaller::~BundleInstaller()
 {
-    LOG_I(BMS_TAG_INSTALLER, "destroy installer id is %{public}" PRId64 "", installerId_);
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy installer id:%{public}" PRId64 "", installerId_);
 }
 
 void BundleInstaller::Install(const std::string &bundleFilePath, const InstallParam &installParam)

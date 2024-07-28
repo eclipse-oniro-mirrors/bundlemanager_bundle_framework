@@ -1473,8 +1473,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
-    APP_LOGD("start CleanBundleCacheFiles, bundleName:%{public}s,userId:%{public}d,appIndex:%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
