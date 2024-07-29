@@ -4825,6 +4825,113 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0610, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleQuickFixTest_0620
+ * Function: ProcessPatchDeployStart
+ * @tc.name: test ProcessPatchDeployStart
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0620, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        std::vector<std::string> bundleFilePaths;
+        bundleFilePaths.push_back(HAP_FILE_PATH1);
+        BundleInfo bundleInfo;
+        std::unordered_map<std::string, AppQuickFix> infos;
+        AppQuickFix appQuickFix;
+        infos.emplace("appQuickFix_1", appQuickFix);
+        ErrCode ret = deployer->ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME);
+    }
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0630
+ * Function: ExtractEncryptedSoFiles
+ * @tc.name: test ExtractEncryptedSoFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0630, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        BundleInfo bundleInfo;
+        std::string tmpSoPath;
+        std::string moduleName;
+        int32_t uid = -1;
+        bool ret = deployer->ExtractEncryptedSoFiles(bundleInfo, moduleName, uid, tmpSoPath);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0640
+ * Function: ExtractEncryptedSoFiles
+ * @tc.name: test ExtractEncryptedSoFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0640, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        BundleInfo bundleInfo;
+        HapModuleInfo hapModuleInfo;
+        hapModuleInfo.moduleName = BUNDLE_NAME;
+        bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+        std::string tmpSoPath = FILE1_PATH;
+        int32_t uid = -1;
+        bool ret = deployer->ExtractEncryptedSoFiles(bundleInfo, BUNDLE_NAME, uid, tmpSoPath);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0650
+ * Function: ExtractEncryptedSoFiles
+ * @tc.name: test ExtractEncryptedSoFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0650, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        BundleInfo bundleInfo;
+        HapModuleInfo hapModuleInfo;
+        hapModuleInfo.moduleName = BUNDLE_NAME;
+        ApplicationInfo applicationInfo;
+        bundleInfo.applicationInfo.cpuAbi = "cpuAbi_test";
+        bundleInfo.applicationInfo.nativeLibraryPath = VALID_FILE_PATH_4;
+        bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+        std::string tmpSoPath = FILE1_PATH;
+        int32_t uid = -1;
+        bool ret = deployer->ExtractEncryptedSoFiles(bundleInfo, BUNDLE_NAME, uid, tmpSoPath);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0660
+ * Function: ExtractQuickFixResFile
+ * @tc.name: test ExtractQuickFixResFile
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0660, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    AppQuickFix appQuickFix = CreateAppQuickFix();
+    std::vector<HqfInfo> hqfInfo;
+    HqfInfo hqf;
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.moduleName = BUNDLE_NAME;
+    hqf.moduleName = BUNDLE_NAME;
+    appQuickFix.deployingAppqfInfo.hqfInfos = hqfInfo;
+    BundleInfo bundleInfo;
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    auto ret = deployer->ExtractQuickFixResFile(appQuickFix, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED);
+}
+
+/**
  * @tc.number: DeployQuickFix_0001
  * Function: DeployQuickFix
  * @tc.name: test DeployQuickFix

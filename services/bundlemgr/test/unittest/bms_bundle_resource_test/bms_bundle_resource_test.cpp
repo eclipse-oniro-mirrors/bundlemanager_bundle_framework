@@ -3709,5 +3709,29 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0162, Function | SmallTest
         manager->DeleteResourceInfo("1_notExist");
     }
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0163
+ * Function: AddCloneBundleResourceInfo
+ * @tc.name: test AddCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0163, Function | SmallTest | Level0)
+{
+    int32_t appIndex = 1;
+    bool ret = BundleResourceHelper::AddCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0164
+ * Function: DeleteCloneBundleResourceInfo
+ * @tc.name: test DeleteCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0164, Function | SmallTest | Level0)
+{
+    int32_t appIndex = 1;
+    bool ret = BundleResourceHelper::DeleteCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
+    EXPECT_TRUE(ret);
+}
 #endif
 } // OHOS
