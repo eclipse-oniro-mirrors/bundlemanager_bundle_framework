@@ -377,7 +377,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
 {
     if (!info.IsRemovable()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
     if (!info.GetUninstallState()) {
@@ -394,7 +394,8 @@ ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo
 
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
-    LOG_I(BMS_TAG_INSTALLER, "begin to process cross-app %{public}s uninstall", uninstallParam.bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process cross-app %{public}s uninstall",
+        uninstallParam.bundleName.c_str());
     const std::string &bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
@@ -415,7 +416,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     ErrCode ret = CheckUninstallInnerBundleInfo(info, bundleName);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
         return ret;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {

@@ -44,12 +44,12 @@ int32_t UPPER_DLP_TYPE_BOUND = 3;
 
 BundleInstallerHost::BundleInstallerHost()
 {
-    LOG_I(BMS_TAG_INSTALLER, "create bundle installer host instance");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "create bundle installer host instance");
 }
 
 BundleInstallerHost::~BundleInstallerHost()
 {
-    LOG_I(BMS_TAG_INSTALLER, "destroy bundle installer host instance");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy bundle installer host instance");
 }
 
 bool BundleInstallerHost::Init()

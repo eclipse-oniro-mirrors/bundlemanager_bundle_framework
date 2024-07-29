@@ -902,7 +902,7 @@ void InstalldHost::AddCloseInstalldTask()
             LOG_E(BMS_TAG_INSTALLD, "fail to unload to system ability manager");
             return;
         }
-        LOG_I(BMS_TAG_INSTALLD, "unload Installd successfully");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "unload Installd successfully");
     };
     handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
     LOG_D(BMS_TAG_INSTALLD, "send unload task successfully");

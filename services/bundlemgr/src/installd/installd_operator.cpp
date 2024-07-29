@@ -613,7 +613,7 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "realOldPath %{public}s, errno:%{public}d", realOldPath.c_str(), errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realOldPath:%{public}s errno:%{public}d", realOldPath.c_str(), errno);
         return false;
     }
 
@@ -819,7 +819,7 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
         LOG_D(BMS_TAG_INSTALLD, "path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
         return true;
     }
-    LOG_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
+    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
         path.c_str());
     return false;
 }
