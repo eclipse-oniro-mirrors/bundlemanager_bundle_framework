@@ -47,18 +47,28 @@ CArrString VectorToCArrString(std::vector<std::string> &vec)
     char** result = new char* [vec.size()];
     if (result == nullptr) {
         LOGE("VectorToCArrString malloc failed");
-        return {result, vec.size()};
+        return {nullptr, 0};
     }
+    size_t temp = 0;
     for (size_t i = 0; i < vec.size(); i++) {
         result[i] = new char[vec[i].length() + 1];
         if (result[i] == nullptr) {
-            LOGE("VectorToCArrString malloc failed");
-            return {result, vec.size()};
+            break;
         }
         auto res = strcpy_s(result[i], vec[i].length() + 1, vec[i].c_str());
         if (res != EOK) {
             LOGE("failed to strcpy_s.")
         }
+        temp++;
+    }
+
+    if (temp != vec.size()) {
+        for (size_t j = temp; j > 0; j--) {
+            delete result[j - 1];
+            result[j - 1] = nullptr;
+        }
+        delete[] result;
+        return {nullptr, 0};
     }
     return {result, vec.size()};
 }
