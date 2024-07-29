@@ -117,7 +117,7 @@ ErrCode HmpBundleInstaller::InstallSystemHspInHmp(const std::string &bundleDir) 
     return ret;
 }
 
-ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
+ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, bool removable)
 {
     auto pos = bundleDir.rfind('/');
     auto bundleName = pos != std::string::npos ? bundleDir.substr(pos + 1) : "";
@@ -130,6 +130,7 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
     installParam.copyHapToInstallPath = false;
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
     ErrCode ret = InstallBundle(bundleDir, installParam, Constants::AppType::SYSTEM_APP);
     ResetInstallProperties();
     if (ret == ERR_OK) {

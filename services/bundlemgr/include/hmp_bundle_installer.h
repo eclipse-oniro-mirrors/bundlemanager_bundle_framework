@@ -33,7 +33,7 @@ public:
 
     ErrCode InstallSystemHspInHmp(const std::string &bundleDir) const;
 
-    ErrCode InstallNormalAppInHmp(const std::string &bundleDir);
+    ErrCode InstallNormalAppInHmp(const std::string &bundleDir, bool removable = true);
 
     std::set<int32_t> GetRequiredUserIds(std::string bundleName) const;
 
