@@ -3295,6 +3295,7 @@ std::vector<DefinePermission> InnerBundleInfo::GetAllDefinePermissions() const
 
 std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
+    std::unordered_map<std::string, std::string> moduleNameMap;
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
         if (info.second.needDelete) {
@@ -3303,23 +3304,60 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
         for (auto item : info.second.requestPermissions) {
             item.moduleName = info.second.moduleName;
             requestPermissions.push_back(item);
+            if (moduleNameMap.find(item.moduleName) == moduleNameMap.end()) {
+                moduleNameMap[item.moduleName] = info.second.distro.moduleType;
+            }
         }
     }
     if (!requestPermissions.empty()) {
-        std::sort(requestPermissions.begin(), requestPermissions.end(),
-            [](RequestPermission reqPermA, RequestPermission reqPermB) {
-                if (reqPermA.name == reqPermB.name) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                }
-                return reqPermA.name < reqPermB.name;
-            });
-        auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
-            [](RequestPermission reqPermA, RequestPermission reqPermB) {
-                return reqPermA.name == reqPermB.name;
-            });
-        requestPermissions.erase(iter, requestPermissions.end());
+        InnerProcessRequestPermissions(moduleNameMap, requestPermissions);
     }
     return requestPermissions;
+}
+
+void InnerBundleInfo::InnerProcessRequestPermissions(
+    const std::unordered_map<std::string, std::string> &moduleNameMap,
+    std::vector<RequestPermission> &requestPermissions) const
+{
+    std::sort(requestPermissions.begin(), requestPermissions.end(),
+        [&moduleNameMap](RequestPermission reqPermA, RequestPermission reqPermB) {
+            if (reqPermA.name == reqPermB.name) {
+                if ((reqPermA.reasonId == 0) || (reqPermB.reasonId == 0)) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                auto moduleTypeA = moduleNameMap.find(reqPermA.moduleName);
+                if (moduleTypeA == moduleNameMap.end()) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                auto moduleTypeB = moduleNameMap.find(reqPermB.moduleName);
+                if (moduleTypeB == moduleNameMap.end()) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                if ((moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) &&
+                    ((moduleTypeB->second == Profile::MODULE_TYPE_ENTRY))) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                } else if (moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) {
+                    return true;
+                } else if (moduleTypeB->second == Profile::MODULE_TYPE_ENTRY) {
+                    return false;
+                }
+                if ((moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) &&
+                    ((moduleTypeB->second == Profile::MODULE_TYPE_FEATURE))) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                } else if (moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) {
+                    return true;
+                } else if (moduleTypeB->second == Profile::MODULE_TYPE_FEATURE) {
+                    return false;
+                }
+                return reqPermA.reasonId > reqPermB.reasonId;
+            }
+            return reqPermA.name < reqPermB.name;
+        });
+    auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
+        [](RequestPermission reqPermA, RequestPermission reqPermB) {
+            return reqPermA.name == reqPermB.name;
+        });
+    requestPermissions.erase(iter, requestPermissions.end());
 }
 
 ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
