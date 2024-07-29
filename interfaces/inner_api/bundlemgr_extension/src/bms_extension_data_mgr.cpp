@@ -329,6 +329,21 @@ bool BmsExtensionDataMgr::IsAppInBlocklist(const std::string &bundleName)
     return bundleMgrExtPtr->IsAppInBlocklist(bundleName);
 }
 
+bool BmsExtensionDataMgr::CheckWhetherCanBeUninstalled(const std::string &bundleName)
+{
+    if ((Init() != ERR_OK) || handler_ == nullptr) {
+        APP_LOGW("link failed");
+        return true;
+    }
+    auto bundleMgrExtPtr =
+        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+    if (bundleMgrExtPtr == nullptr) {
+        APP_LOGW("GetBundleMgrExt failed");
+        return true;
+    }
+    return bundleMgrExtPtr->CheckWhetherCanBeUninstalled(bundleName);
+}
+
 ErrCode BmsExtensionDataMgr::AddResourceInfoByBundleName(const std::string &bundleName, const int32_t userId)
 {
     if (Init() != ERR_OK || handler_ == nullptr) {
