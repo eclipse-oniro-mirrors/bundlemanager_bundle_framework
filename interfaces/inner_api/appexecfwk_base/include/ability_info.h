@@ -107,6 +107,7 @@ enum class SupportWindowMode {
 enum class LinkType {
     DEEP_LINK = 0,
     APP_LINK,
+    DEFAULT_APP,
 };
 
 struct AbilityInfo;
