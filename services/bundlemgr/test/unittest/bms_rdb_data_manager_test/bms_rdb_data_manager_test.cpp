@@ -264,6 +264,27 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0200, Function | SmallT
     EXPECT_TRUE(ret);
 }
 
+/**
+ * @tc.number: PreInstallDataStorageRdb_0300
+ * @tc.name: LoadPreInstallBundleInfo
+ * @tc.desc: 1.LoadPreInstallBundleInfo
+ * @tc.require: issueI56WB8
+ */
+HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0300, Function | SmallTest | Level1)
+{
+    std::unique_ptr<IPreInstallDataStorage> preInstallDataStorage =
+        std::make_unique<PreInstallDataStorageRdb>();
+    PreInstallBundleInfo preInstallBundleInfo1;
+    preInstallBundleInfo1.SetBundleName(TEST_BUNDLE_NAME);
+    preInstallBundleInfo1.SetVersionCode(TEST_VERSION);
+    bool ret = preInstallDataStorage->SavePreInstallStorageBundleInfo(preInstallBundleInfo1);
+    EXPECT_TRUE(ret);
+
+    std::string bundleName;
+    PreInstallBundleInfo preInstallBundleInfo;
+    ret = preInstallDataStorage->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    EXPECT_FALSE(ret);
+}
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: DefaultAppRdb_0100

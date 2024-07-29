@@ -2844,6 +2844,87 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BaseExtractor_0500
+ * @tc.name: Test Init
+ * @tc.desc: 1.Test Init of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    bool ret = extractor.Init();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseExtractor_0600
+ * @tc.name: Test GetZipFileNames
+ * @tc.desc: 1.Test GetZipFileNames of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0600, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    std::vector<std::string> fileNames;
+    fileNames.push_back("test1.zip");
+    fileNames.push_back("test2.zip");
+    bool ret = extractor.GetZipFileNames(fileNames);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseExtractor_0700
+ * @tc.name: Test IsDirExist
+ * @tc.desc: 1.Test IsDirExist of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0700, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = false;
+
+    std::string dir = "/data";
+    bool ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+
+    dir = "";
+    ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+
+    extractor.initial_ = true;
+    dir = "/data";
+    ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0800
+ * @tc.name: Test IsStageBasedModel
+ * @tc.desc: 1.Test IsStageBasedModel of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0800, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = false;
+
+    std::string abilityName = "EntryAbility";
+    bool ret = extractor.IsStageBasedModel(abilityName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0900
+ * @tc.name: Test IsNewVersion
+ * @tc.desc: 1.Test IsNewVersion of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0900, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    bool ret = extractor.IsNewVersion();
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: InstallFailed_0100
  * @tc.name: Test CheckHapHashParams
  * @tc.desc: 1.Test CheckHapHashParams of BundleInstallChecker
