@@ -930,4 +930,283 @@ HWTEST_F(BmsEventHandlerTest, CheckExtensionTypeInConfig_0300, Function | SmallT
     auto ret = handler->CheckExtensionTypeInConfig(typeName);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: ScanAndAnalyzeUserDatas_0100
+ * @tc.name: ScanAndAnalyzeUserDatas
+ * @tc.desc: test ScanAndAnalyzeUserDatas
+ */
+HWTEST_F(BmsEventHandlerTest, ScanAndAnalyzeUserDatas_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
+    auto ret = handler->ScanAndAnalyzeUserDatas(userMaps);
+    EXPECT_EQ(ret, ScanResultCode::SCAN_NO_DATA);
+}
+
+/**
+ * @tc.number: AddTaskParallel_0100
+ * @tc.name: AddTaskParallel
+ * @tc.desc: test AddTaskParallel
+ */
+HWTEST_F(BmsEventHandlerTest, AddTaskParallel_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    int32_t taskPriority = 1;
+    int32_t userId = 1;
+    std::vector<PreScanInfo> tasks;
+    PreScanInfo preScanInfo;
+    tasks.push_back(preScanInfo);
+    handler->AddTaskParallel(taskPriority, tasks, userId);
+    EXPECT_FALSE(tasks.empty());
+}
+
+/**
+ * @tc.number: ProcessCheckAppDataDir_0100
+ * @tc.name: ProcessCheckAppDataDir
+ * @tc.desc: test ProcessCheckAppDataDir
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessCheckAppDataDir_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    int32_t userId = 1;
+    info.bundleUserInfo.userId = userId;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    handler->ProcessCheckAppDataDir();
+    EXPECT_FALSE(dataMgr->bundleInfos_.empty());
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: OTAInstallSystemHsp_0100
+ * @tc.name: OTAInstallSystemHsp
+ * @tc.desc: test OTAInstallSystemHsp
+ */
+HWTEST_F(BmsEventHandlerTest, OTAInstallSystemHsp_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::vector<std::string> filePaths;
+    filePaths.push_back(BUNDLE_PATH);
+    auto ret = handler->OTAInstallSystemHsp(filePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedHspByHash_0100
+ * @tc.name: IsNeedToUpdateSharedHspByHash
+ * @tc.desc: test IsNeedToUpdateSharedHspByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedHspByHash_0200
+ * @tc.name: IsNeedToUpdateSharedHspByHash
+ * @tc.desc: test IsNeedToUpdateSharedHspByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.buildHash = "buildHashTest";
+    newInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
+    oldInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
+    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedHspByHash_0300
+ * @tc.name: IsNeedToUpdateSharedHspByHash
+ * @tc.desc: test IsNeedToUpdateSharedHspByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedHspByHash_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.buildHash = "buildHashTest";
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.buildHash = "buildHashTest2";
+    newInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo);
+    oldInfo.innerModuleInfos_.emplace(BUNDLE_NAME, innerModuleInfo2);
+    bool ret = handler->IsNeedToUpdateSharedHspByHash(oldInfo, newInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DeletePreInfoInDb_0100
+ * @tc.name: DeletePreInfoInDb
+ * @tc.desc: test DeletePreInfoInDb
+ */
+HWTEST_F(BmsEventHandlerTest, DeletePreInfoInDb_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    handler->DeletePreInfoInDb(BUNDLE_NAME, BUNDLE_PATH, false);
+    EXPECT_NE(dataMgr->preInstallDataStorage_, nullptr);
+}
+
+/**
+ * @tc.number: UpdateRemovable_0100
+ * @tc.name: UpdateRemovable
+ * @tc.desc: test UpdateRemovable
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateRemovable_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    handler->UpdateRemovable(BUNDLE_NAME, false);
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
+}
+
+/**
+ * @tc.number: UpdateAllPrivilegeCapability_0100
+ * @tc.name: UpdateAllPrivilegeCapability
+ * @tc.desc: test UpdateAllPrivilegeCapability
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateAllPrivilegeCapability_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    handler->UpdateAllPrivilegeCapability();
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
+}
+
+/**
+ * @tc.number: UpdatePrivilegeCapability_0100
+ * @tc.name: UpdatePrivilegeCapability
+ * @tc.desc: test UpdatePrivilegeCapability
+ */
+HWTEST_F(BmsEventHandlerTest, UpdatePrivilegeCapability_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    PreBundleConfigInfo preBundleConfigInfo;
+    handler->UpdatePrivilegeCapability(preBundleConfigInfo);
+    EXPECT_TRUE(dataMgr->bundleInfos_.empty());
+}
+
+/**
+ * @tc.number: FetchInnerBundleInfo_0100
+ * @tc.name: FetchInnerBundleInfo
+ * @tc.desc: test FetchInnerBundleInfo
+ */
+HWTEST_F(BmsEventHandlerTest, FetchInnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    int32_t userId = 1;
+    info.bundleUserInfo.userId = userId;
+    innerBundleUserInfos["_100"] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    dataMgr->bundleInfos_.emplace(BUNDLE_NAME, innerBundleInfo);
+    InnerBundleInfo innerBundleInfo2;
+    bool ret = handler->FetchInnerBundleInfo(BUNDLE_NAME, innerBundleInfo2);
+    EXPECT_TRUE(ret);
+    dataMgr->bundleInfos_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: IsQuickfixFlagExsit_0100
+ * @tc.name: IsQuickfixFlagExsit
+ * @tc.desc: test IsQuickfixFlagExsit
+ */
+HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    BundleInfo bundleInfo;
+    Metadata metadata;
+    metadata.name = "ohos.app.quickfix";
+    HapModuleInfo hapModuleInfo;
+    hapModuleInfo.metadata.push_back(metadata);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    bool ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsQuickfixFlagExsit_0200
+ * @tc.name: IsQuickfixFlagExsit
+ * @tc.desc: test IsQuickfixFlagExsit
+ */
+HWTEST_F(BmsEventHandlerTest, IsQuickfixFlagExsit_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    BundleInfo bundleInfo;
+    bool ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    EXPECT_FALSE(ret);
+    HapModuleInfo hapModuleInfo;
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    EXPECT_FALSE(ret);
+    bundleInfo.hapModuleInfos.clear();
+    Metadata metadata;
+    metadata.name = "test";
+    hapModuleInfo.metadata.push_back(metadata);
+    bundleInfo.hapModuleInfos.push_back(hapModuleInfo);
+    ret = handler->IsQuickfixFlagExsit(bundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetValueFromJson_0100
+ * @tc.name: GetValueFromJson
+ * @tc.desc: test GetValueFromJson
+ */
+HWTEST_F(BmsEventHandlerTest, GetValueFromJson_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    nlohmann::json jsonObject = R"(
+    {
+        "list": [
+            {
+                "key": "value"
+            },
+            {
+                "key2": "value"
+            }
+        ]
+    }
+    )"_json;
+    bool ret = handler->GetValueFromJson(jsonObject);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UpdatePreinstallDBForUninstalledBundle_0100
+ * @tc.name: UpdatePreinstallDBForUninstalledBundle
+ * @tc.desc: test UpdatePreinstallDBForUninstalledBundle
+ */
+HWTEST_F(BmsEventHandlerTest, UpdatePreinstallDBForUninstalledBundle_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::unordered_map<std::string, InnerBundleInfo> innerBundleInfos;
+    InnerBundleInfo innerBundleInfo;
+    handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);
+    EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
+    innerBundleInfos.insert({ BUNDLE_NAME, innerBundleInfo });
+    handler->UpdatePreinstallDBForUninstalledBundle(BUNDLE_NAME, innerBundleInfos);
+    EXPECT_NE(innerBundleInfo.baseBundleInfo_, nullptr);
+}
 } // OHOS
