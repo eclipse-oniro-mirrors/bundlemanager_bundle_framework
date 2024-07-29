@@ -9509,6 +9509,51 @@ HWTEST_F(BmsBundleKitServiceTest, QueryCloneAbilityInfo_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: GetCloneBundleInfo_0100
+ * @tc.name: test GetCloneBundleInfo
+ * @tc.desc: 1.Test the GetCloneBundleInfo by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCloneBundleInfo_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 1;
+    int32_t appIndex = 0;
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetCloneBundleInfo(BUNDLE_NAME_DEMO, flags, appIndex, bundleInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetCloneAppIndexes_0100
+ * @tc.name: test GetCloneAppIndexes
+ * @tc.desc: 1.Test the GetCloneAppIndexes by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<int32_t> appIndexes;
+    ErrCode ret = hostImpl->GetCloneAppIndexes(BUNDLE_NAME_DEMO, appIndexes, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryCloneExtensionAbilityInfoWithAppIndex_0100
+ * @tc.name: test QueryCloneExtensionAbilityInfoWithAppIndex
+ * @tc.desc: 1.Test the QueryCloneExtensionAbilityInfoWithAppIndex by BundleMgrHostImpl
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryCloneExtensionAbilityInfoWithAppIndex_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ElementName element;
+    int32_t flags = 1;
+    int32_t appIndex = 0;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    ErrCode ret = hostImpl->QueryCloneExtensionAbilityInfoWithAppIndex(
+        element, flags, appIndex, extensionAbilityInfo, DEFAULT_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
  * @tc.number: GetBundlePackInfo_0100
  * @tc.name: Test GetBundlePackInfo
  * @tc.desc: 1.Test the GetBundlePackInfo by BundleMgrHostImpl

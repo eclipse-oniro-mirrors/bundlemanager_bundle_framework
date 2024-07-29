@@ -2786,6 +2786,149 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0400, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: ZipFile_0500
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetAllEntries
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0500, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntryMap ret = file.GetAllEntries();
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: ZipFile_0600
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test HasEntry
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0600, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string entryName = "entryName";
+    bool ret = file.HasEntry(entryName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0700
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetEntry
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0700, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string entryName = "entryName";
+    ZipEntry resultEntry;
+    bool ret = file.GetEntry(entryName, resultEntry);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0800
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetDataOffsetRelative
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0800, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string f = "test.file";
+    ZipPos offset;
+    uint32_t length = 100;
+    bool ret = file.GetDataOffsetRelative(f, offset, length);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0900
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckEndDir
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0900, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    EndDir endDir;
+    bool ret = file.CheckEndDir(endDir);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_1000
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test ParseAllEntries
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1000, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    bool ret = file.ParseAllEntries();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ZipFile_1100
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetLocalHeaderSize
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1100, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    uint16_t nameSize = 100;
+    uint16_t extraSize = 100;
+    size_t ret = file.GetLocalHeaderSize(nameSize, extraSize);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: ZipFile_1200
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetEntryDataOffset
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1200, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    ZipEntry zipEntry;
+    uint16_t extraSize = 100;
+    ZipPos ret = file.GetEntryDataOffset(zipEntry, extraSize);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: ZipFile_1300
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckDataDesc
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1300, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    ZipEntry zipEntry;
+    LocalHeader localHeader;
+    bool ret = file.CheckDataDesc(zipEntry, localHeader);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ZipFile_1400
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test InitZStream
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1400, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    z_stream zstream;
+    bool ret = file.InitZStream(zstream);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: BaseExtractor_0100
  * @tc.name: Test HasEntry
  * @tc.desc: 1.Test HasEntry of BaseExtractor

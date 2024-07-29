@@ -16,6 +16,7 @@
 #define private public
 
 #include <gtest/gtest.h>
+#include <string>
 
 #include "bundle_info.h"
 #include "router_item_compare.h"
@@ -1222,5 +1223,55 @@ HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0012, Function | SmallTest | Le
 
     RouterMapHelper::MergeRouter(info);
     EXPECT_EQ(info.routerArray.size(), 4);
+}
+
+/**
+ * @tc.number: RouterMapMerge_0013
+ * @tc.name: test merge function for router map
+ * @tc.desc: 1.RouterMapMerge
+ */
+HWTEST_F(BmsBundleNavigationTest, RouterMapMerge_0013, Function | SmallTest | Level0)
+{
+    ASSERT_EQ(routerArrayTest_.size(), ROUTER_ITEM_TEST_SIZE);
+
+    std::string a = "-1";
+    std::string b = "-1";
+    int32_t ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 1);
+
+    a = "2";
+    b = "1";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 1);
+
+    a = "2";
+    b = "1";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 1);
+
+    a = "1";
+    b = "0";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 1);
+
+    a = "0";
+    b = "1";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, -1);
+
+    a = "1";
+    b = "2";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, -1);
+
+    a = "2";
+    b = "1";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 1);
+
+    a = "2";
+    b = "2";
+    ret = RouterMapHelper::CompareIdentifiers(a, b);
+    EXPECT_EQ(ret, 0);
 }
 } // OHOS

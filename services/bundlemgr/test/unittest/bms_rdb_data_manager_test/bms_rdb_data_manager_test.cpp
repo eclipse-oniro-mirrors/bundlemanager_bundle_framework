@@ -285,6 +285,128 @@ HWTEST_F(BmsRdbDataManagerTest, PreInstallDataStorageRdb_0300, Function | SmallT
     ret = preInstallDataStorage->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: RdbDataManager_0300
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0300, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    int64_t outInsertNum = 0;
+    std::vector<NativeRdb::ValuesBucket> valuesBuckets;
+    bool ret = rdbDataManager->BatchInsert(outInsertNum, valuesBuckets);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RdbDataManager_0400
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0400, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    bool ret = rdbDataManager->UpdateData(valuesBucket, absRdbPredicates);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RdbDataManager_0500
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0500, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    bool ret = rdbDataManager->DeleteData(absRdbPredicates);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RdbDataManager_0600
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0600, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    bool ret = rdbDataManager->CreateTable();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: RdbDataManager_0700
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0700, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    auto ret = rdbDataManager->QueryByStep(absRdbPredicates);
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_0800
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0800, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    NativeRdb::ValuesBucket valuesBucket;
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    bool ret = rdbDataManager->UpdateOrInsertData(valuesBucket, absRdbPredicates);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RdbDataManager_0900
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_0900, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    auto ret = rdbDataManager->GetRdbStore();
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: RdbDataManager_1000
+ * @tc.name: test ClearCache
+ * @tc.desc: 1.test the interface of RdbDataManager
+ */
+HWTEST_F(BmsRdbDataManagerTest, RdbDataManager_1000, Function | SmallTest | Level1)
+{
+    auto rdbDataManager = OpenDbAndTable();
+    EXPECT_TRUE(rdbDataManager != nullptr);
+
+    NativeRdb::AbsRdbPredicates absRdbPredicates("TableName");
+    auto ret = rdbDataManager->QueryData(absRdbPredicates);
+    EXPECT_EQ(ret, nullptr);
+}
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: DefaultAppRdb_0100
