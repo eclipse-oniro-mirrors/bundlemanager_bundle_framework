@@ -26,6 +26,7 @@ constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
+const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -33,7 +34,7 @@ uint32_t GetU32Data(const char* ptr)
 }
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    std::string bundleName(data, size);
+    std::string bundleName = BUNDLE_NAME;
     QuickFixSwitcher quickFixSwitcher(bundleName, true);
     quickFixSwitcher.Execute();
     quickFixSwitcher.SwitchQuickFix();

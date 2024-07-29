@@ -16,7 +16,8 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("QuickFixDataMgrFuzzerTest") {
+ohos_fuzztest("QuickFixDataMgrFuzzTest") {
+  fuzz_config_file = "../../../fuzztest/fuzztest_others/quickfixdatamgr_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [

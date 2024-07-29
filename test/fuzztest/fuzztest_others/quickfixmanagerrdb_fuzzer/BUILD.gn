@@ -16,7 +16,9 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("QuickFixManagerrDbFuzzerTest") {
+ohos_fuzztest("QuickFixManagerRdbFuzzTest") {
+  fuzz_config_file =
+      "../../../fuzztest/fuzztest_others/quickfixmanagerrdb_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
