@@ -997,6 +997,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
     callbackPtr->err = callbackPtr->installResult.resultCode;
+    APP_LOGI("installer callback");
     CommonFunc::NapiReturnDeferred<AsyncInstallCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
