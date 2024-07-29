@@ -16,12 +16,7 @@
 #include "syscap_tool.h"
 
 #include <arpa/inet.h>
-#include <errno.h>
 #include <securec.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
 
 #include "hilog/log_c.h"
 

@@ -17,7 +17,6 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_resource_event_subscriber.h"
-#include "resource_info.h"
 #ifdef ABILITY_RUNTIME_ENABLE
 #include "app_mgr_client.h"
 #include "bundle_resource_observer.h"

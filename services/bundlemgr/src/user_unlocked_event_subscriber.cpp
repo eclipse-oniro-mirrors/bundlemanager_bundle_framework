@@ -16,14 +16,9 @@
 #include "user_unlocked_event_subscriber.h"
 
 #include <sys/stat.h>
-#include <thread>
 
 #include "account_helper.h"
-#include "app_control_manager.h"
-#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
-#include "common_event_manager.h"
-#include "common_event_support.h"
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif

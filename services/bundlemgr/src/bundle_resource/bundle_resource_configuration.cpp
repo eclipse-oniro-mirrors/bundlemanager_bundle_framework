@@ -16,13 +16,10 @@
 #include "bundle_resource_configuration.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_system_state.h"
-#include "bundle_util.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
 #endif
-#include <unordered_map>
 
 namespace OHOS {
 namespace AppExecFwk {

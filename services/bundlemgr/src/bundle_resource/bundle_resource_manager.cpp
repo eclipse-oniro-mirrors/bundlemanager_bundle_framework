@@ -15,18 +15,10 @@
 
 #include "bundle_resource_manager.h"
 
-#include <thread>
-#include <unistd.h>
-
-#include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
-#include "bundle_promise.h"
 #include "bundle_util.h"
-#include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
-#include "bundle_system_state.h"
 #include "event_report.h"
 #include "thread_pool.h"
 

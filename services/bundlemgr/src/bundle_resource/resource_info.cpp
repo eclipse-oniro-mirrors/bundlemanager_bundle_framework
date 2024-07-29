@@ -15,7 +15,6 @@
 
 #include "resource_info.h"
 
-#include "nlohmann/json.hpp"
 #include "json_util.h"
 
 namespace OHOS {

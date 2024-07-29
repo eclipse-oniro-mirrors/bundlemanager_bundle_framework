@@ -15,8 +15,6 @@
 
 #include "serial_queue.h"
 
-#include <limits>
-
 #include "app_log_wrapper.h"
 
 namespace OHOS {

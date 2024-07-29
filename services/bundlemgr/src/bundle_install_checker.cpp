@@ -15,15 +15,10 @@
 
 #include "bundle_install_checker.h"
 
-#include <regex>
-
 #include "app_log_tag_wrapper.h"
-#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_util.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "privilege_extension_ability_type.h"

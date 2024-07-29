@@ -15,15 +15,8 @@
 
 #include "default_app_data.h"
 
-#include <mutex>
-
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_util.h"
-#include "common_profile.h"
 #include "default_app_mgr.h"
-#include "nlohmann/json.hpp"
 
 namespace OHOS {
 namespace AppExecFwk {

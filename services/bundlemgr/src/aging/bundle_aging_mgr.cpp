@@ -12,16 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "aging/bundle_aging_mgr.h"
 
-#include "account_helper.h"
 #include "battery_srv_client.h"
-#include "bundle_active_period_stats.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
-#include "bundle_util.h"
 #include "display_power_mgr_client.h"
-#include "ffrt.h"
 #include "parameter.h"
 
 namespace OHOS {

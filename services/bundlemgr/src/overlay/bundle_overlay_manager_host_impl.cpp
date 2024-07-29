@@ -15,13 +15,9 @@
 
 #include "bundle_overlay_manager_host_impl.h"
 
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_manager.h"
-#include "bundle_util.h"
-#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
