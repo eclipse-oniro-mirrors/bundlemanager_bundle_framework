@@ -27,6 +27,11 @@ constexpr size_t MESSAGE_SIZE = 4;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
+const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
+const uint32_t QUICK_FIX_VERSION_CODE = 1;
+const uint32_t BUNDLE_VERSION_CODE = 1;
+const std::string QUICK_FIX_VERSION_NAME = "1.0";
+const std::string BUNDLE_VERSION_NAME = "1.0";
 
 void DoSomething2(const char* data, size_t size) {}
 
@@ -34,6 +39,25 @@ uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
 }
+
+AppQuickFix CreateAppQuickFix()
+{
+    AppqfInfo appInfo;
+    appInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    appInfo.versionName = QUICK_FIX_VERSION_NAME;
+    appInfo.type = QuickFixType::PATCH;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    hqfInfo.type = QuickFixType::PATCH;
+    appInfo.hqfInfos.push_back(hqfInfo);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = BUNDLE_VERSION_CODE;
+    appQuickFix.versionName = BUNDLE_VERSION_NAME;
+    appQuickFix.deployingAppqfInfo = appInfo;
+    return appQuickFix;
+}
+
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     std::string targetPath(data, size);
@@ -58,12 +82,12 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixDeployer.GetBundleInfo(bundleName, bundleInfo);
     quickFixDeployer.ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
     std::unordered_map<std::string, AppQuickFix> infos1;
-    const AppQuickFix &appQuickFix = infos1.begin()->second;
+    const AppQuickFix appQuickFix = CreateAppQuickFix();
     quickFixDeployer.ProcessHotReloadDeployStart(bundleInfo, appQuickFix);
     quickFixDeployer.ProcessPatchDeployEnd(appQuickFix, targetPath);
     quickFixDeployer.ProcessHotReloadDeployEnd(appQuickFix, targetPath);
-    AppQuickFix newAppQuickFix;
-    AppQuickFix oldAppQuickFix;
+    AppQuickFix newAppQuickFix = CreateAppQuickFix();
+    AppQuickFix oldAppQuickFix = CreateAppQuickFix();
     quickFixDeployer.CheckPatchVersionCode(newAppQuickFix, oldAppQuickFix);
     QuickFixMark mark;
     mark.bundleName = appQuickFix.bundleName;

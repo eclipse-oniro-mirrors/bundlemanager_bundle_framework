@@ -16,7 +16,7 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("DefaultAppHostFuzzerTest") {
+ohos_fuzztest("DefaultAppHostFuzzTest") {
   use_exceptions = true
   module_out_path = module_output_path
   fuzz_config_file = "../../../fuzztest/fuzztest_others/defaultapphost_fuzzer"

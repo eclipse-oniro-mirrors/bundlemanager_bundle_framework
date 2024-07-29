@@ -16,7 +16,7 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("BundleConnectAbilityMgrFuzzerTest") {
+ohos_fuzztest("BundleConnectAbilityMgrFuzzTest") {
   fuzz_config_file =
       "../../../fuzztest/fuzztest_others/bundleconnectabilitymgr_fuzzer"
   use_exceptions = true
