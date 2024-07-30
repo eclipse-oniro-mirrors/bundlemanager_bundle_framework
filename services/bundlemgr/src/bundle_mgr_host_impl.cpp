@@ -4287,5 +4287,20 @@ bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
     }
     return false;
 }
+
+ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+{
+    APP_LOGD("start GetOdidByBundleName");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetOdidByBundleName(bundleName, odid);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

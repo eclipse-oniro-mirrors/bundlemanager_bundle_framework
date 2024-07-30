@@ -905,6 +905,7 @@ public:
     ErrCode CreateBundleDataDir(int32_t userId) const;
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
+    ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
 
     /**
      * @brief Check whether the link can be opened.

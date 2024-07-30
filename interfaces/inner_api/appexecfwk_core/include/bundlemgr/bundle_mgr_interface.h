@@ -1545,6 +1545,11 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

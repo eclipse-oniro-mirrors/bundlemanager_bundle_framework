@@ -1082,6 +1082,7 @@ public:
 
     virtual ErrCode GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos) override;
 
+    virtual ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) override;
 private:
     /**
      * @brief Send a command message from the proxy object.

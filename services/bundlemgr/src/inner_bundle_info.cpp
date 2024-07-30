@@ -4245,6 +4245,11 @@ void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::strin
     odid = odid_;
 }
 
+void InnerBundleInfo::GetOdid(std::string &odid) const
+{
+    odid = odid_;
+}
+
 void InnerBundleInfo::AddAllowedAcls(const std::vector<std::string> &allowedAcls)
 {
     for (const auto &acl : allowedAcls) {
