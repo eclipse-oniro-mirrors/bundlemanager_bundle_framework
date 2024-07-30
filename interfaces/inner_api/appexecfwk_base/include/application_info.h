@@ -295,8 +295,6 @@ struct ApplicationInfo : public Parcelable {
     uint32_t applicationReservedFlag = 0;
     bool tsanEnabled = false;
     bool hwasanEnabled = false;
-
-    std::string organization;
     std::vector<ApplicationEnvironment> appEnvironments;
     std::string organization;
 
