@@ -2291,13 +2291,13 @@ HWTEST_F(BmsDataMgrTest, GetAppServiceHspBundleInfo_0100, Function | SmallTest |
     std::string bundleName = "";
     BundleInfo bundleInfo;
     ErrCode ret = dataMgr->GetAppServiceHspBundleInfo(bundleName, bundleInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
     std::map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo;
     infos.emplace(BUNDLE_NAME, innerBundleInfo);
     dataMgr->bundleInfos_.swap(infos);
     ret = dataMgr->GetAppServiceHspBundleInfo(BUNDLE_NAME, bundleInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**

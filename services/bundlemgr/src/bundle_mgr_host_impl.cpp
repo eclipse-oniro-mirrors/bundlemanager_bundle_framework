@@ -333,7 +333,7 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
     switch (flag) {
         case GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO: {
             if (!VerifyDependency(sharedBundleName)) {
-                APP_LOGE("verify dependency failed");
+                APP_LOGE("failed");
                 return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
             }
             return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
@@ -347,7 +347,7 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
                 return ERR_OK;
             }
             if (!VerifyDependency(sharedBundleName)) {
-                APP_LOGE("verify dependency failed");
+                APP_LOGE("failed");
                 return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
             }
             return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
@@ -3422,7 +3422,7 @@ bool BundleMgrHostImpl::VerifyDependency(const std::string &sharedBundleName)
 
     InnerBundleInfo callingBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(callingBundleName, callingBundleInfo)) {
-        APP_LOGE("get callingBundleInfo failed");
+        APP_LOGE("get %{public}s failed", callingBundleName.c_str());
         return false;
     }
 
