@@ -294,9 +294,8 @@ struct ApplicationInfo : public Parcelable {
 
     uint32_t applicationReservedFlag = 0;
     bool tsanEnabled = false;
-
-    std::string organization;
     std::vector<ApplicationEnvironment> appEnvironments;
+    std::string organization;
 
     MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;

@@ -55,10 +55,10 @@ const std::string UID = "uid";
 const std::string APP_INDEX = "appIndex";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 const std::string EXTENSION_PROCESS_MODE = "extensionProcessMode";
+const std::string SKILLS = "skills";
 const std::string NEED_CREATE_SANDBOX = "needCreateSandbox";
 const std::string DATA_GROUP_IDS = "dataGroupIds";
 const std::string JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
-const std::string SKILLS = "skills";
 
 const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
     { "form", ExtensionAbilityType::FORM },
@@ -83,8 +83,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "action", ExtensionAbilityType::ACTION },
     { "adsService", ExtensionAbilityType::ADS_SERVICE },
     { "embeddedUI", ExtensionAbilityType::EMBEDDED_UI },
-    { "insightIntentUI", ExtensionAbilityType::INSIGHT_INTENT_UI },
     { "statusBarView", ExtensionAbilityType::STATUS_BAR_VIEW },
+    { "insightIntentUI", ExtensionAbilityType::INSIGHT_INTENT_UI },
     { "autoFill/password", ExtensionAbilityType::AUTO_FILL_PASSWORD },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
     { "ui", ExtensionAbilityType::UI },
@@ -107,9 +107,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
     { "sysPicker/photoPicker", ExtensionAbilityType::SYSPICKER_PHOTOPICKER },
-    { "sysPicker/camera", ExtensionAbilityType::SYSPICKER_CAMERA },
     { "sysPicker/navigation", ExtensionAbilityType::SYSPICKER_NAVIGATION },
     { "sysPicker/appSelector", ExtensionAbilityType::SYSPICKER_APPSELECTOR },
+    { "sysPicker/camera", ExtensionAbilityType::SYSPICKER_CAMERA },
     { "sysPicker/filePicker", ExtensionAbilityType::SYSPICKER_FILEPICKER },
     { "sysPicker/audioPicker", ExtensionAbilityType::SYSPICKER_AUDIOPICKER },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
@@ -230,6 +230,18 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     extensionProcessMode = static_cast<ExtensionProcessMode>(parcel.ReadInt32());
+    int32_t skillsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillsSize, &skills);
+    for (auto i = 0; i < skillsSize; i++) {
+        std::unique_ptr<Skill> extensionSkillPtr(parcel.ReadParcelable<Skill>());
+        if (!extensionSkillPtr) {
+            APP_LOGE("ReadParcelable<SkillForExtension> failed");
+            return false;
+        }
+        skills.emplace_back(*extensionSkillPtr);
+    }
+
     needCreateSandbox = parcel.ReadBool();
     int32_t dataGroupIdsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIdsSize);
@@ -243,18 +255,6 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < validDataGroupIdsSize; i++) {
         dataGroupIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    int32_t skillsSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillsSize);
-    CONTAINER_SECURITY_VERIFY(parcel, skillsSize, &skills);
-    for (auto i = 0; i < skillsSize; i++) {
-        std::unique_ptr<Skill> extensionSkillPtr(parcel.ReadParcelable<Skill>());
-        if (!extensionSkillPtr) {
-            APP_LOGE("ReadParcelable<SkillForExtension> failed");
-            return false;
-        }
-        skills.emplace_back(*extensionSkillPtr);
-    }
-
     return true;
 }
 
@@ -326,6 +326,10 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         MarshallingSkillUri(parcel, uri);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(extensionProcessMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
+    for (auto &skill : skills) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
+    }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, needCreateSandbox);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataGroupIds.size());
     for (auto &dataGroupId : dataGroupIds) {
@@ -334,10 +338,6 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, validDataGroupIds.size());
     for (auto &dataGroupId : validDataGroupIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataGroupId));
-    }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
-    for (auto &skill : skills) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
     return true;
 }
@@ -373,10 +373,10 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {UID, extensionInfo.uid},
         {APP_INDEX, extensionInfo.appIndex},
         {EXTENSION_PROCESS_MODE, extensionInfo.extensionProcessMode},
+        {JSON_KEY_SKILLS, extensionInfo.skills},
         {NEED_CREATE_SANDBOX, extensionInfo.needCreateSandbox},
         {DATA_GROUP_IDS, extensionInfo.dataGroupIds},
-        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds},
-        {JSON_KEY_SKILLS, extensionInfo.skills},
+        {JSON_KEY_VALID_DATA_GROUP_IDS, extensionInfo.validDataGroupIds}
     };
 }
 
@@ -601,6 +601,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<Skill>>(jsonObject,
+        jsonObjectEnd,
+        SKILLS,
+        extensionInfo.skills,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         NEED_CREATE_SANDBOX,
@@ -625,14 +633,6 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::vector<Skill>>(jsonObject,
-        jsonObjectEnd,
-        SKILLS,
-        extensionInfo.skills,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error : %{public}d", parseResult);
     }

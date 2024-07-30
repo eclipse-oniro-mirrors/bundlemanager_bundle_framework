@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+
 #include "application_info.h"
 #include "parcel.h"
 #include "skill.h"
@@ -174,8 +175,8 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
-    void UpdateNeedCreateSandbox();
     bool MarshallingSkillUri(Parcel &parcel, SkillUriForAbilityAndExtension uri) const;
+    void UpdateNeedCreateSandbox();
 };
 
 ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);
