@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #define private public
+#define protected public
 
 #include <gtest/gtest.h>
 
@@ -5884,5 +5885,34 @@ HWTEST_F(BmsBundleManagerTest, GetRecoverableApplicationInfo_0100, Function | Me
     }
     ret = preInstallDataStorage->DeletePreInstallStorageBundleInfo(preInstallBundleInfo);
     EXPECT_TRUE(ret);
+}
+
+/**
+* @tc.number: InitVerifyManager_0010
+* @tc.name: test InitVerifyManager
+* @tc.desc: 1.test initialize the verify manager
+*/
+HWTEST_F(BmsBundleManagerTest, InitVerifyManager_0010, Function | SmallTest | Level1)
+{
+    bool ret = DelayedSingleton<BundleMgrService>::GetInstance()->InitVerifyManager();
+    EXPECT_EQ(ret, true);
+    auto result = DelayedSingleton<BundleMgrService>::GetInstance()->GetVerifyManager();
+    EXPECT_NE(result, nullptr);
+}
+
+/**
+* @tc.number: InitExtendResourceManager_0010
+* @tc.name: test InitExtendResourceManager
+* @tc.desc: 1.test initialize the extended resource manager
+*/
+HWTEST_F(BmsBundleManagerTest, InitExtendResourceManager_0010, Function | SmallTest | Level1)
+{
+    bool ret = DelayedSingleton<BundleMgrService>::GetInstance()->InitExtendResourceManager();
+    EXPECT_EQ(ret, true);
+    int32_t systemAbilityId = COMMON_EVENT_SERVICE_ID;
+    std::string deviceId;
+    DelayedSingleton<BundleMgrService>::GetInstance()->OnAddSystemAbility(systemAbilityId, deviceId);
+    auto result = DelayedSingleton<BundleMgrService>::GetInstance()->GetExtendResourceManager();
+    EXPECT_NE(result, nullptr);
 }
 } // OHOS
