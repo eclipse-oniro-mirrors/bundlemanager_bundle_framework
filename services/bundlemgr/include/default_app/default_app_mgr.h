@@ -16,7 +16,7 @@
 #ifndef FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 #define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 
-#include<set>
+#include <set>
 
 #include "default_app_db_interface.h"
 #include "nocopyable.h"
