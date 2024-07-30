@@ -238,8 +238,8 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
 {
     // judge whether the bundle theme exists
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-        if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-            !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+        if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+            !BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
             iter = resourceInfosMap.erase(iter);
         } else {
             ++iter;
@@ -313,10 +313,10 @@ void BundleResourceManager::DeleteNotExistResourceInfo(
 
 bool BundleResourceManager::InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId)
 {
-    if (BundleUtil::IsExistFile(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
-        return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName);
+    if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
+        return BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName);
     }
-    return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
+    return BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
 }
 
 bool BundleResourceManager::AddResourceInfosByMap(

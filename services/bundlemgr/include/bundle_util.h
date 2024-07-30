@@ -133,11 +133,23 @@ public:
      */
     static bool IsExistFile(const std::string &path);
     /**
+     * @brief Is file exist.
+     * @param path Indicates path.
+     * @return Returns result.
+     */
+    static bool IsExistFileNoLog(const std::string &path);
+    /**
      * @brief Is dir exist.
      * @param path Indicates path.
      * @return Returns result.
      */
     static bool IsExistDir(const std::string &path);
+    /**
+     * @brief Is dir exist.
+     * @param path Indicates path.
+     * @return Returns result.
+     */
+    static bool IsExistDirNoLog(const std::string &path);
     /**
      * @brief Rename file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
