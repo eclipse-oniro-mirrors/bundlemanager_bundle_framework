@@ -183,6 +183,8 @@ static void ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value val
 static void ConvertParameters(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos);
 
+static bool CheckShortcutInfo(const ShortcutInfo &shortcutInfo);
+
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };
