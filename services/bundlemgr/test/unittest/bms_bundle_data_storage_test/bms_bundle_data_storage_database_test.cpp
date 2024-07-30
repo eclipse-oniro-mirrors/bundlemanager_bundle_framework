@@ -3397,4 +3397,74 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, OTA_InnerBundleInfoJsonSerializer_000
     auto ret = innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
     EXPECT_EQ(ret, 0);
 }
+
+/**
+ * @tc.number: InnerProcessRequestPermissions_0001
+ * @tc.name: test InnerProcessRequestPermissions
+ * @tc.desc: 1.system running normally
+ *           2.InnerProcessRequestPermissions
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerProcessRequestPermissions_0001, Function | SmallTest | Level1)
+{
+    std::vector<RequestPermission> requestPermissions;
+    RequestPermission permission;
+    permission.name = "aaa";
+    permission.moduleName = "entry";
+    permission.reasonId = 0;
+    requestPermissions.emplace_back(permission);
+
+    RequestPermission permission_1;
+    permission_1.name = "aaa";
+    permission_1.moduleName = "entry";
+    permission_1.reasonId = 0;
+    requestPermissions.emplace_back(permission_1);
+
+    RequestPermission permission_2;
+    permission_2.name = "aaa";
+    permission_2.moduleName = "entry";
+    permission_2.reasonId = 100;
+    requestPermissions.emplace_back(permission_2);
+
+    RequestPermission permission_3;
+    permission_3.name = "aaa";
+    permission_3.moduleName = "entry";
+    permission_3.reasonId = 200;
+    requestPermissions.emplace_back(permission_3);
+
+    RequestPermission permission_4;
+    permission_4.name = "aaa";
+    permission_4.moduleName = "feature";
+    permission_4.reasonId = 300;
+    requestPermissions.emplace_back(permission_4);
+
+    RequestPermission permission_5;
+    permission_5.name = "aaa";
+    permission_5.moduleName = "feature";
+    permission_5.reasonId = 400;
+    requestPermissions.emplace_back(permission_5);
+
+    RequestPermission permission_6;
+    permission_6.name = "aaa";
+    permission_6.moduleName = "feature";
+    permission_6.reasonId = 500;
+    requestPermissions.emplace_back(permission_6);
+
+    RequestPermission permission_7;
+    permission_7.name = "aaa";
+    permission_7.moduleName = "entry";
+    permission_7.reasonId = 600;
+    requestPermissions.emplace_back(permission_7);
+
+    std::unordered_map<std::string, std::string> moduleNameMap;
+    moduleNameMap["entry"] = "entry";
+    moduleNameMap["feature"] = "feature";
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InnerProcessRequestPermissions(moduleNameMap, requestPermissions);
+    EXPECT_EQ(requestPermissions.size(), 1);
+    if (!requestPermissions.empty()) {
+        EXPECT_EQ(requestPermissions[0].reasonId, permission_7.reasonId);
+        EXPECT_EQ(requestPermissions[0].moduleName, permission_7.moduleName);
+    }
+}
 } // OHOS

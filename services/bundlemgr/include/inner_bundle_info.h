@@ -2196,6 +2196,9 @@ private:
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    void InnerProcessRequestPermissions(
+        const std::unordered_map<std::string, std::string> &moduleNameMap,
+        std::vector<RequestPermission> &requestPermissions) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
