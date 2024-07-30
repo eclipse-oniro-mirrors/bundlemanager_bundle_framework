@@ -561,7 +561,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     applicationReservedFlag = parcel.ReadUint32();
     tsanEnabled = parcel.ReadBool();
     hwasanEnabled = parcel.ReadBool();
-    organization = Str16ToStr8(parcel.ReadString16());
     int32_t applicationEnvironmentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, applicationEnvironmentsSize);
     CONTAINER_SECURITY_VERIFY(parcel, applicationEnvironmentsSize, &appEnvironments);
@@ -749,7 +748,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, tsanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, hwasanEnabled);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appEnvironments.size());
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
