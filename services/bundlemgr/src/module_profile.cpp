@@ -2525,12 +2525,14 @@ bool ToInnerBundleInfo(
     bool findEntry = false;
     for (const Profile::Ability &ability : moduleJson.module.abilities) {
         AbilityInfo abilityInfo;
+        bool isMainElement = false;
         ToAbilityInfo(moduleJson, ability, transformParam, abilityInfo);
         if (innerModuleInfo.mainAbility == abilityInfo.name) {
             innerModuleInfo.icon = abilityInfo.iconPath;
             innerModuleInfo.iconId = abilityInfo.iconId;
             innerModuleInfo.label = abilityInfo.label;
             innerModuleInfo.labelId = abilityInfo.labelId;
+            isMainElement = true;
         }
         std::string key;
         key.append(moduleJson.app.bundleName).append(".")
@@ -2540,7 +2542,7 @@ bool ToInnerBundleInfo(
         innerBundleInfo.InsertSkillInfo(key, ability.skills);
         ToAbilitySkills(ability.skills, abilityInfo);
         innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
-        if (findEntry) {
+        if (findEntry && !isMainElement) {
             continue;
         }
         // get entry ability

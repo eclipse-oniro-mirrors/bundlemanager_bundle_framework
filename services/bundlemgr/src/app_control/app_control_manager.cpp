@@ -281,7 +281,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_DEFAULT, "DataMgr GetBundleInfoV9 failed");
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "AppControl GetBundleInfoV9 failed bundle:%{public}s", bundleName.c_str());
         return ret;
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
@@ -350,16 +350,14 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
     const DisposedRule& rule, int32_t appIndex, int32_t userId)
 {
     if (!CheckCanDispose(appId, userId)) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_MGR), "appid in white-list");
+        LOG_E(BMS_TAG_DEFAULT, "appid in white-list");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, appIndex, userId);
     if (ret != ERR_OK) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_MGR), "set rule to rdb failed");
+        LOG_E(BMS_TAG_DEFAULT, "SetDisposedStatus to rdb failed");
         return ret;
     }
-    LOG_I(TAG_SET_DISPOSED_RULE(BMS_MGR), "%{public}s set rule, user:%{public}d index:%{public}d",
-        callerName.c_str(), userId, appIndex);
     std::string key = appId + std::string("_") + std::to_string(userId) + std::string("_") + std::to_string(appIndex);
     {
         std::lock_guard<std::mutex> lock(abilityRunningControlRuleMutex_);
@@ -368,6 +366,8 @@ ErrCode AppControlManager::SetDisposedRule(const std::string &callerName, const 
             abilityRunningControlRuleCache_.erase(iter);
         }
     }
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s set rule, user:%{public}d index:%{public}d",
+        callerName.c_str(), userId, appIndex);
     commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString(), appIndex);
     return ERR_OK;
 }

@@ -43,6 +43,8 @@ const std::string JSON_KEY_BUNDLE_TARGET_CLASS = "targetClass";
 const std::string JSON_KEY_BUNDLE_PARAMETERS = "parameters";
 const std::string JSON_KEY_ICON_ID = "iconId";
 const std::string JSON_KEY_LABEL_ID = "labelId";
+const std::string JSON_KEY_APP_INDEX = "appIndex";
+const std::string JSON_KEY_SOURCE_TYPE = "sourceType";
 const std::string SHORTCUTS = "shortcuts";
 const std::string SHORTCUT_ID = "shortcutId";
 const std::string SHORTCUT_WANTS = "wants";
@@ -84,6 +86,8 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
         }
         intents.emplace_back(shortcutIntent);
     }
+    appIndex = parcel.ReadInt32();
+    sourceType = parcel.ReadInt32();
     return true;
 }
 
@@ -125,6 +129,8 @@ bool ShortcutInfo::Marshalling(Parcel &parcel) const
             WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dataItem.second));
         }
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sourceType);
     return true;
 }
 
@@ -154,6 +160,8 @@ void to_json(nlohmann::json &jsonObject, const ShortcutInfo &shortcutInfo)
         {JSON_KEY_BUNDLE_INTENTS, shortcutInfo.intents},
         {JSON_KEY_ICON_ID, shortcutInfo.iconId},
         {JSON_KEY_LABEL_ID, shortcutInfo.labelId},
+        {JSON_KEY_APP_INDEX, shortcutInfo.appIndex},
+        {JSON_KEY_SOURCE_TYPE, shortcutInfo.sourceType},
   };
 }
 
@@ -302,6 +310,22 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         jsonObjectEnd,
         JSON_KEY_LABEL_ID,
         shortcutInfo.labelId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_APP_INDEX,
+        shortcutInfo.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SOURCE_TYPE,
+        shortcutInfo.sourceType,
         JsonType::NUMBER,
         false,
         parseResult,

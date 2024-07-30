@@ -27,11 +27,17 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
+const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
+const std::string BUNDLE_PATH = "test.hap";
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-    std::shared_ptr<BundleMgrService> bundleMgrService_;
+    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    bundleMgrService_->InitBmsParam();
+    bundleMgrService_->InitPreInstallExceptionMgr();
+
     auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    bundleMgrService_->GetBmsParam();
     std::set<std::string> oldExceptionPaths;
     oldExceptionPaths.insert(std::string(data, size));
     std::set<std::string> oldExceptionBundleNames;
@@ -45,19 +51,23 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     exceptionBundleNames.insert(std::string(data, size));
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
 
-    preInstallExceptionMgr->SavePreInstallExceptionBundleName(std::string(data, size));
-    preInstallExceptionMgr->SavePreInstallExceptionPath(std::string(data, size));
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
+    preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
-    preInstallExceptionMgr->DeletePreInstallExceptionBundleName(std::string(data, size));
-    preInstallExceptionMgr->DeletePreInstallExceptionPath(std::string(data, size));
+    preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
+    preInstallExceptionMgr->DeletePreInstallExceptionPath(BUNDLE_PATH);
     preInstallExceptionMgr->GetAllPreInstallExceptionInfo(exceptionPaths, exceptionBundleNames);
 
-    for (const auto& pathIter : oldExceptionPaths) {
-        preInstallExceptionMgr->SavePreInstallExceptionPath(pathIter);
+    if (oldExceptionPaths.size() > 0) {
+        for (const auto& pathIter : oldExceptionPaths) {
+            preInstallExceptionMgr->SavePreInstallExceptionPath(pathIter);
+        }
     }
 
-    for (const auto& bundleNameIter : oldExceptionBundleNames) {
-        preInstallExceptionMgr->SavePreInstallExceptionPath(bundleNameIter);
+    if (oldExceptionBundleNames.size() > 0) {
+        for (const auto& bundleNameIter : oldExceptionBundleNames) {
+            preInstallExceptionMgr->SavePreInstallExceptionPath(bundleNameIter);
+        }
     }
     return true;
 }

@@ -2533,11 +2533,13 @@ bool ToInnerBundleInfo(
             APP_LOGE("parse to abilityInfo failed");
             return false;
         }
+        bool isMainAbility = false;
         if (innerModuleInfo.mainAbility == abilityInfo.name) {
             innerModuleInfo.icon = abilityInfo.iconPath;
             innerModuleInfo.iconId = abilityInfo.iconId;
             innerModuleInfo.label = abilityInfo.label;
             innerModuleInfo.labelId = abilityInfo.labelId;
+            isMainAbility = true;
         }
         if (abilityInfo.type == AbilityType::PAGE) {
             isExistPageAbility = true;
@@ -2563,13 +2565,13 @@ bool ToInnerBundleInfo(
             formInfos.emplace_back(formInfo);
         }
         innerBundleInfo.InsertFormInfos(keyName, formInfos);
-        if (!find) {
+        if (!find || isMainAbility) {
             for (const auto &skill : ability.skills) {
                 bool isEntryAction = std::find_if(skill.actions.begin(), skill.actions.end(),
                     entryActionMatcher) != skill.actions.end();
                 bool isEntryEntity = std::find(skill.entities.begin(), skill.entities.end(),
                     Constants::ENTITY_HOME) != skill.entities.end();
-                if (isEntryAction && isEntryEntity && (!find)) {
+                if (isEntryAction && isEntryEntity && (!find || isMainAbility)) {
                     innerModuleInfo.entryAbilityKey = keyName;
                     // if there is main ability, it's label will be the application's label
                     applicationInfo.label = ability.label;

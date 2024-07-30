@@ -40,12 +40,12 @@ constexpr int32_t DELAY_INTERVAL_SECONDS = 60;
 
 BundleInstallerManager::BundleInstallerManager()
 {
-    LOG_I(BMS_TAG_INSTALLER, "create bundle installer manager instance");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "create bundle installer manager instance");
 }
 
 BundleInstallerManager::~BundleInstallerManager()
 {
-    LOG_I(BMS_TAG_INSTALLER, "destroy bundle installer manager instance");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "destroy bundle installer manager instance");
 }
 
 void BundleInstallerManager::CreateInstallTask(
@@ -62,7 +62,7 @@ void BundleInstallerManager::CreateInstallTask(
         installer->Install(bundleFilePath, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "InstallTask : bundleFilePath : " + bundleFilePath);
+    AddTask(task, "InstallTask path:" + bundleFilePath);
 }
 
 void BundleInstallerManager::CreateRecoverTask(
@@ -79,7 +79,7 @@ void BundleInstallerManager::CreateRecoverTask(
         installer->Recover(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "RecoverTask : bundleName : " + bundleName);
+    AddTask(task, "RecoverTask -n " + bundleName);
 }
 
 void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &bundleFilePaths,
@@ -100,7 +100,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     for (const auto &bundleFilePath : bundleFilePaths) {
         paths.append(bundleFilePath).append(" ");
     }
-    AddTask(task, "InstallTask : bundleFilePaths : " + paths);
+    AddTask(task, "InstallTask path:" + paths);
 }
 
 void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bundleName,
@@ -118,7 +118,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         installer->InstallByBundleName(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "InstallTask : bundleName : " + bundleName);
+    AddTask(task, "InstallTask -n " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(
@@ -135,7 +135,7 @@ void BundleInstallerManager::CreateUninstallTask(
         installer->Uninstall(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask : bundleName : " + bundleName);
+    AddTask(task, "UninstallTask -n " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, const std::string &modulePackage,
@@ -152,7 +152,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         installer->Uninstall(bundleName, modulePackage, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask : bundleName : " + bundleName);
+    AddTask(task, "UninstallTask -n " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstallParam,
@@ -169,7 +169,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         installer->Uninstall(uninstallParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallTask : bundleName : " + uninstallParam.bundleName);
+    AddTask(task, "UninstallTask -n " + uninstallParam.bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bundleName,
@@ -186,7 +186,7 @@ void BundleInstallerManager::CreateUninstallAndRecoverTask(const std::string &bu
         installer->UninstallAndRecover(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
-    AddTask(task, "UninstallAndRecover: bundleName : " + bundleName);
+    AddTask(task, "UninstallAndRecover -n " + bundleName);
 }
 
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
@@ -200,9 +200,9 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
     std::lock_guard<std::mutex> guard(mutex_);
-    LOG_I(BMS_TAG_INSTALLER, "hold mutex");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "hold mutex");
     if (threadPool_ == nullptr) {
-        LOG_I(BMS_TAG_INSTALLER, "begin to start InstallerThreadPool");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to start InstallerThreadPool");
         threadPool_ = std::make_shared<ThreadPool>(THREAD_POOL_NAME);
         threadPool_->Start(THREAD_NUMBER);
         threadPool_->SetMaxTaskNum(MAX_TASK_NUMBER);
@@ -210,29 +210,29 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         std::thread t(delayCloseTask);
         t.detach();
     }
-    LOG_I(BMS_TAG_INSTALLER, "add task, taskName : %{public}s", taskName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "add task taskName:%{public}s", taskName.c_str());
     threadPool_->AddTask(task);
 }
 
 void BundleInstallerManager::DelayStopThreadPool()
 {
-    LOG_I(BMS_TAG_INSTALLER, "DelayStopThreadPool begin");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DelayStopThreadPool begin");
     BundleMemoryGuard memoryGuard;
 
     do {
-        LOG_I(BMS_TAG_INSTALLER, "sleep for 60s");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "sleep for 60s");
         std::this_thread::sleep_for(std::chrono::seconds(DELAY_INTERVAL_SECONDS));
     } while (threadPool_ != nullptr && threadPool_->GetCurTaskNum() != 0);
 
     std::lock_guard<std::mutex> guard(mutex_);
     if (threadPool_ == nullptr) {
-        LOG_I(BMS_TAG_INSTALLER, "InstallerThreadPool is null, no need to stop");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "InstallerThreadPool is null, no need to stop");
         return;
     }
-    LOG_I(BMS_TAG_INSTALLER, "begin to stop InstallerThreadPool");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to stop InstallerThreadPool");
     threadPool_->Stop();
     threadPool_ = nullptr;
-    LOG_I(BMS_TAG_INSTALLER, "DelayStopThreadPool end");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "DelayStopThreadPool end");
 }
 
 size_t BundleInstallerManager::GetCurTaskNum()

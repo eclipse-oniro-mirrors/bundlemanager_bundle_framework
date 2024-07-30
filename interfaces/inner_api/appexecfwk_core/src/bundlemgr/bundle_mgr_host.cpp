@@ -36,11 +36,11 @@ namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
-const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+const int32_t MAX_STATUS_VECTOR_NUM = 1000;
 constexpr int32_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
@@ -551,6 +551,15 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::IS_CLONE_ABILITY_ENABLED):
             errCode = this->HandleIsCloneAbilityEnabled(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::ADD_DESKTOP_SHORTCUT_INFO):
+            errCode = this->HandleAddDesktopShortcutInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::DELETE_DESKTOP_SHORTCUT_INFO):
+            errCode = this->HandleDeleteDesktopShortcutInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO):
+            errCode = this->HandleGetAllDesktopShortcutInfo(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -3853,6 +3862,57 @@ ErrCode BundleMgrHost::HandleQueryCloneExtensionAbilityInfoWithAppIndex(MessageP
     }
     if (ret == ERR_OK && !reply.WriteParcelable(&extensionAbilityInfo)) {
         APP_LOGE("write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<ShortcutInfo> shortcutInfo(data.ReadParcelable<ShortcutInfo>());
+    if (shortcutInfo == nullptr) {
+        APP_LOGE("ReadParcelable<ShortcutInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    auto ret = AddDesktopShortcutInfo(*shortcutInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<ShortcutInfo> shortcutInfo(data.ReadParcelable<ShortcutInfo>());
+    if (shortcutInfo == nullptr) {
+        APP_LOGE("ReadParcelable<ShortcutInfo> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    auto ret = DeleteDesktopShortcutInfo(*shortcutInfo, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<ShortcutInfo> infos;
+    auto ret = GetAllDesktopShortcutInfo(userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

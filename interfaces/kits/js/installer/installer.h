@@ -90,9 +90,9 @@ napi_value Recover(napi_env env, napi_callback_info info);
 napi_value Uninstall(napi_env env, napi_callback_info info);
 napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
 napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info);
+napi_value UninstallAndRecover(napi_env env, napi_callback_info info);
 napi_value AddExtResource(napi_env env, napi_callback_info info);
 napi_value RemoveExtResource(napi_env env, napi_callback_info info);
-napi_value UninstallAndRecover(napi_env env, napi_callback_info info);
 napi_value CreateAppClone(napi_env env, napi_callback_info info);
 napi_value DestroyAppClone(napi_env env, napi_callback_info info);
 } // AppExecFwk

@@ -30,6 +30,7 @@
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "parcel.h"
+#include "abs_rdb_predicates.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -640,5 +641,50 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0011, Function | SmallTest | Leve
     bool pass = false;
     ErrCode res = bundleMgrExtTest.VerifyActivationLock(pass);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0012
+ * @tc.name: OptimizeDisposedPredicates
+ * @tc.desc: OptimizeDisposedPredicates
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0012, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    bool pass = false;
+    std::string callingName = "";
+    std::string appId = "";
+    NativeRdb::AbsRdbPredicates absRdbPredicates("");
+    ErrCode res = bundleMgrExtTest.OptimizeDisposedPredicates(callingName, appId, USERID, 0, absRdbPredicates);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0017
+ * @tc.name: GetBackupUninstallList
+ * @tc.desc: GetBackupUninstallList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0017, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    int32_t userId = 100;
+    std::set<std::string> uninstallBundles;
+    ErrCode res = bmsExtensionDataMgr.GetBackupUninstallList(userId, uninstallBundles);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0018
+ * @tc.name: ClearBackupUninstallFile
+ * @tc.desc: ClearBackupUninstallFile
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0018, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
 }
 } // OHOS

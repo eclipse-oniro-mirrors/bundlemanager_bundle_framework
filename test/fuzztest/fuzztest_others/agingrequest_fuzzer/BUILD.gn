@@ -16,7 +16,7 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("AgingRequestFuzzerTest") {
+ohos_fuzztest("AgingRequestFuzzTest") {
   use_exceptions = true
   module_out_path = module_output_path
   fuzz_config_file = "../../../fuzztest/fuzztest_others/agingrequest_fuzzer"
@@ -52,8 +52,6 @@ ohos_fuzztest("AgingRequestFuzzerTest") {
   deps = [
     "${base_path}:appexecfwk_base",
     "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
   ]
   include_dirs += [ "${services_path}/bundlemgr/include/aging" ]
   deps += bundle_install_deps

@@ -15,6 +15,8 @@
 
 #include "bundle_resource_event_subscriber.h"
 
+#include <thread>
+
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_resource_callback.h"
@@ -46,11 +48,18 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
                 APP_LOGE("oldId:%{public}s parse failed", oldId.c_str());
                 oldUserId = Constants::INVALID_USERID;
             }
-            callback.OnUserIdSwitched(oldUserId, data.GetCode());
+            std::thread userIdChangedThread(OnUserIdChanged, oldUserId, data.GetCode());
+            userIdChangedThread.detach();
         }
         isFirstSwitch = false;
     }
     // for other event
+}
+
+void BundleResourceEventSubscriber::OnUserIdChanged(const int32_t oldUserId, const int32_t newUserId)
+{
+    BundleResourceCallback callback;
+    callback.OnUserIdSwitched(oldUserId, newUserId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

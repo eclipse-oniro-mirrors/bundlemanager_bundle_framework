@@ -122,15 +122,15 @@ const std::string APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotificati
 const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 const std::string APPLICATION_TSAN_ENABLED = "tsanEnabled";
-const std::string APPLICATION_ORGANIZATION = "organization";
 const std::string APPLICATION_APP_ENVIRONMENTS = "appEnvironments";
 const std::string APPLICATION_MULTI_APP_MODE = "multiAppMode";
 const std::string APPLICATION_MULTI_APP_MODE_TYPE = "multiAppModeType";
 const std::string APPLICATION_MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxCount";
 const std::string APP_ENVIRONMENTS_NAME = "name";
 const std::string APP_ENVIRONMENTS_VALUE = "value";
-const std::string APPLICATION_APP_INDEX = "appIndex";
+const std::string APPLICATION_ORGANIZATION = "organization";
 const std::string APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
+const std::string APPLICATION_APP_INDEX = "appIndex";
 const std::string APPLICATION_INSTALL_SOURCE = "installSource";
 const std::string APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const std::string APPLICATION_CONFIGURATION = "configuration";
@@ -573,6 +573,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         }
         appEnvironments.emplace_back(*applicationEnvironment);
     }
+    organization = Str16ToStr8(parcel.ReadString16());
 
     std::unique_ptr<MultiAppModeData> multiAppModePtr(parcel.ReadParcelable<MultiAppModeData>());
     if (!multiAppModePtr) {
@@ -580,9 +581,8 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     multiAppMode = *multiAppModePtr;
-
-    appIndex = parcel.ReadInt32();
     maxChildProcess = parcel.ReadInt32();
+    appIndex = parcel.ReadInt32();
     installSource = Str16ToStr8(parcel.ReadString16());
 
     configuration = Str16ToStr8(parcel.ReadString16());
@@ -754,9 +754,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     for (auto &item : appEnvironments) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(organization));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &multiAppMode);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, maxChildProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(installSource));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(configuration));
@@ -1006,11 +1007,11 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_HWASAN_ENABLED, applicationInfo.hwasanEnabled},
         {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag},
         {APPLICATION_TSAN_ENABLED, applicationInfo.tsanEnabled},
-        {APPLICATION_ORGANIZATION, applicationInfo.organization},
         {APPLICATION_APP_ENVIRONMENTS, applicationInfo.appEnvironments},
+        {APPLICATION_ORGANIZATION, applicationInfo.organization},
         {APPLICATION_MULTI_APP_MODE, applicationInfo.multiAppMode},
-        {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_MAX_CHILD_PROCESS, applicationInfo.maxChildProcess},
+        {APPLICATION_APP_INDEX, applicationInfo.appIndex},
         {APPLICATION_INSTALL_SOURCE, applicationInfo.installSource},
         {APPLICATION_CONFIGURATION, applicationInfo.configuration},
         {APPLICATION_CLOUD_FILE_SYNC_ENABLED, applicationInfo.cloudFileSyncEnabled}

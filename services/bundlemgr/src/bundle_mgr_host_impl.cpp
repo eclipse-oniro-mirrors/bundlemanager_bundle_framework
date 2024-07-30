@@ -313,7 +313,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     int32_t appIndex = 0;
     auto ret = dataMgr->GetBundleNameAndIndexForUid(uid, bundleName, appIndex);
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "GetBundleNameForUid failed, uid is %{public}d", uid);
+        LOG_NOFUNC_E(BMS_TAG_QUERY, "GetBundleNameForUid failed uid:%{public}d", uid);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId, appIndex);
@@ -759,7 +759,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     }
     bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
     if (!res) {
-        if (isBrokerServiceExisted_) {
+        if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
             auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
             return (bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo) == ERR_OK);
         }
@@ -795,7 +795,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    if (isBrokerServiceExisted_) {
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
     }
@@ -824,7 +824,7 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos, true) == ERR_OK) {
         LOG_D(BMS_TAG_QUERY, "query ability infos from bms extension successfully");
         return ERR_OK;
@@ -856,7 +856,7 @@ ErrCode BundleMgrHostImpl::BatchQueryAbilityInfos(
     }
     auto res = dataMgr->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos);
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
@@ -1473,8 +1473,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = BundleUtil::GetUserIdByCallingUid();
     }
-    APP_LOGD("start CleanBundleCacheFiles, bundleName:%{public}s,userId:%{public}d,appIndex:%{public}d",
-        bundleName.c_str(), userId, appIndex);
+    APP_LOGI("start -n %{public}s -u %{public}d -i %{public}d", bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -1610,7 +1609,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId, const int appIndex)
 {
-    APP_LOGD("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
+    APP_LOGI("start CleanBundleDataFiles, bundleName : %{public}s, userId:%{public}d, appIndex:%{public}d",
         bundleName.c_str(), userId, appIndex);
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES system api denied");
@@ -1699,7 +1698,7 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         return false;
     }
     auto uid = IPCSkeleton::GetCallingUid();
-    if (uid != Constants::FOUNDATION_UID) {
+    if (uid != Constants::FOUNDATION_UID && uid != Constants::CODE_PROTECT_UID) {
         APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
@@ -2910,14 +2909,8 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGD("default app has been found and unnecessary to find from bms extension");
         return ret;
     }
-    if ((static_cast<uint32_t>(flags) &
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
-        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
-        APP_LOGI("contains app linking flag, no need to query from bms extension");
-        return ret;
-    }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-    if (isBrokerServiceExisted_ &&
+    if (!IsAppLinking(flags) && isBrokerServiceExisted_ &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
@@ -4129,9 +4122,6 @@ ErrCode BundleMgrHostImpl::QueryCloneAbilityInfo(const ElementName &element,
 ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int32_t flags,
     int32_t appIndex, BundleInfo &bundleInfo, int32_t userId)
 {
-    APP_LOGI("start bundleName: %{public}s with user: %{public}d, appIndex: %{public}d, flag: %{public}d",
-        bundleName.c_str(), userId, appIndex, flags);
-
     if (!BundlePermissionMgr::IsSystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -4140,6 +4130,10 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         && !BundlePermissionMgr::IsBundleSelfCalling(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE_NOFUNC("GetCloneBundleInfo failed bundleName empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
     auto dataMgr = GetDataMgrFromService();
@@ -4150,7 +4144,7 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
         APP_LOGE(
-            "finish name: %{public}s user: %{public}d, appIndex: %{public}d, flag: %{public}d, err: %{public}d",
+            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
             bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
@@ -4224,6 +4218,71 @@ bool BundleMgrHostImpl::CheckCanSetEnable(const std::string &bundleName)
     }
     auto it = std::find(noDisablingList.begin(), noDisablingList.end(), bundleName);
     if (it == noDisablingList.end()) {
+        return true;
+    }
+    return false;
+}
+
+ErrCode BundleMgrHostImpl::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->AddDesktopShortcutInfo(shortcutInfo, userId);
+}
+
+ErrCode BundleMgrHostImpl::DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->DeleteDesktopShortcutInfo(shortcutInfo, userId);
+}
+
+ErrCode BundleMgrHostImpl::GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+{
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_MANAGER_SHORTCUT)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllDesktopShortcutInfo(userId, shortcutInfos);
+}
+
+bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) ==
+        static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APP_LINKING)) {
+        APP_LOGI("contains app linking flag, no need to query from bms extension");
         return true;
     }
     return false;

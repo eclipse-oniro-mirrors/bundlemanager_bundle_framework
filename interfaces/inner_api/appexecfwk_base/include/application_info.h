@@ -298,6 +298,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string organization;
     std::vector<ApplicationEnvironment> appEnvironments;
+    std::string organization;
 
     MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;

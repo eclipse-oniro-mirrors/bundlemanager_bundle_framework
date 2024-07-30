@@ -16,7 +16,7 @@ import("../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundle_framework"
 
-ohos_fuzztest("DefaultAppRdbFuzzerTest") {
+ohos_fuzztest("DefaultAppRdbFuzzTest") {
   fuzz_config_file = "../../../fuzztest/fuzztest_others/defaultapprdb_fuzzer"
   use_exceptions = true
   module_out_path = module_output_path
@@ -25,28 +25,17 @@ ohos_fuzztest("DefaultAppRdbFuzzerTest") {
     "//third_party/json/include",
   ]
   sources = bundle_mgr_source
-  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
-  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
+    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   ]
 
-  sources += [
-    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
-    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
-    "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
-    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
-  ]
+  sources +=
+      [ "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp" ]
 
   sources += bundle_install_sources
-  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
-  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   sources += [ "defaultapprdb_fuzzer.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]

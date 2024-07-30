@@ -26,11 +26,35 @@ constexpr size_t MESSAGE_SIZE = 4;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
+const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
+const uint32_t QUICK_FIX_VERSION_CODE = 1;
+const uint32_t BUNDLE_VERSION_CODE = 1;
+const std::string QUICK_FIX_VERSION_NAME = "1.0";
+const std::string BUNDLE_VERSION_NAME = "1.0";
 
 uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
 }
+
+AppQuickFix CreateAppQuickFix()
+{
+    AppqfInfo appInfo;
+    appInfo.versionCode = QUICK_FIX_VERSION_CODE;
+    appInfo.versionName = QUICK_FIX_VERSION_NAME;
+    appInfo.type = QuickFixType::PATCH;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    hqfInfo.type = QuickFixType::PATCH;
+    appInfo.hqfInfos.push_back(hqfInfo);
+    AppQuickFix appQuickFix;
+    appQuickFix.bundleName = BUNDLE_NAME;
+    appQuickFix.versionCode = BUNDLE_VERSION_CODE;
+    appQuickFix.versionName = BUNDLE_VERSION_NAME;
+    appQuickFix.deployingAppqfInfo = appInfo;
+    return appQuickFix;
+}
+
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     QuickFixChecker quickFixChecker;
@@ -38,7 +62,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
     quickFixChecker.CheckMultipleHqfsSignInfo(bundlePaths, hapVerifyRes);
     std::unordered_map<std::string, AppQuickFix> infos;
-    const AppQuickFix &appQuickFix = infos.begin()->second;
+    AppQuickFix appQuickFix = CreateAppQuickFix();
     infos.emplace("appQuickFix_1", appQuickFix);
     quickFixChecker.CheckAppQuickFixInfos(infos);
     quickFixChecker.CheckMultiNativeSo(infos);
@@ -47,8 +71,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     quickFixChecker.CheckPatchWithInstalledBundle(appQuickFix, bundleInfo, provisionInfo);
     quickFixChecker.CheckHotReloadWithInstalledBundle(appQuickFix, bundleInfo);
     quickFixChecker.CheckSignatureInfo(bundleInfo, provisionInfo);
-    quickFixChecker.GetAppDistributionType(static_cast<Security::Verify::AppDistType>
-      (reinterpret_cast<uintptr_t>(data)));
+    quickFixChecker.GetAppDistributionType(Security::Verify::AppDistType::APP_GALLERY);
     quickFixChecker.CheckCommonWithInstalledBundle(appQuickFix, bundleInfo);
     quickFixChecker.CheckModuleNameExist(bundleInfo, infos);
     quickFixChecker.GetAppProvisionType(Security::Verify::ProvisionType::DEBUG);

@@ -196,7 +196,8 @@ bool BundleResourceManager::AddResourceInfos(const int32_t userId, std::vector<R
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfos(userId, resourceInfos)) {
-        APP_LOGW("key:%{public}s Parse failed, need to modify label and icon", resourceInfos[0].GetKey().c_str());
+        APP_LOGW_NOFUNC("key:%{public}s Parse failed, need to modify label and icon",
+            resourceInfos[0].GetKey().c_str());
         ProcessResourceInfoWhenParseFailed(resourceInfos[0]);
     }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
@@ -418,7 +419,7 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
 
@@ -432,7 +433,7 @@ bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bu
         APP_LOGD("success, bundleName:%{public}s", bundleName.c_str());
         return true;
     }
-    APP_LOGE("%{public}s not exist in resource rdb", bundleName.c_str());
+    APP_LOGE_NOFUNC("%{public}s not exist in resource rdb", bundleName.c_str());
     return false;
 }
 

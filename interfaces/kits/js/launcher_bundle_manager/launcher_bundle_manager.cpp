@@ -100,7 +100,7 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin to GetLauncherAbilityInfo");
+    APP_LOGI_NOFUNC("napi begin to GetLauncherAbilityInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -137,13 +137,13 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<GetLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete);
     callbackPtr.release();
-    APP_LOGI("call GetLauncherAbilityInfo done");
+    APP_LOGI_NOFUNC("call GetLauncherAbilityInfo done");
     return promise;
 }
 
 napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("GetLauncherAbilityInfoSync called");
+    APP_LOGI_NOFUNC("napi GetLauncherAbilityInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
@@ -182,7 +182,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     napi_value nLauncherAbilityInfos = nullptr;
     NAPI_CALL(env, napi_create_array(env, &nLauncherAbilityInfos));
     CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nLauncherAbilityInfos);
-    APP_LOGI("call GetLauncherAbilityInfoSync done");
+    APP_LOGI_NOFUNC("call GetLauncherAbilityInfoSync done");
     return nLauncherAbilityInfos;
 }
 
@@ -231,7 +231,7 @@ void GetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *d
 
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin to GetAllLauncherAbilityInfo");
+    APP_LOGI_NOFUNC("napi begin to GetAllLauncherAbilityInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -265,7 +265,7 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
         GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
-    APP_LOGI("call GetAllLauncherAbilityInfo done");
+    APP_LOGI_NOFUNC("call GetAllLauncherAbilityInfo done");
     return promise;
 }
 
@@ -312,7 +312,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
 
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin GetShortcutInfo");
+    APP_LOGI_NOFUNC("napi begin GetShortcutInfo");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -345,13 +345,13 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);
     callbackPtr.release();
-    APP_LOGI("call GetShortcutInfo done");
+    APP_LOGI_NOFUNC("call GetShortcutInfo done");
     return promise;
 }
 
 napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("GetShortcutInfoSync called");
+    APP_LOGI_NOFUNC("napi GetShortcutInfoSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
@@ -384,7 +384,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     napi_value nShortcutInfos = nullptr;
     NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
-    APP_LOGI("call GetShortcutInfoSync done");
+    APP_LOGI_NOFUNC("call GetShortcutInfoSync done");
     return nShortcutInfos;
 }
 
@@ -446,7 +446,7 @@ void StartShortcutComplete(napi_env env, napi_status status, void *data)
 
 napi_value StartShortcut(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("napi begin StartShortcut");
+    APP_LOGI_NOFUNC("napi begin StartShortcut");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -481,7 +481,7 @@ napi_value StartShortcut(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<StartShortcutCallbackInfo>(
         env, asyncCallbackInfo, "StartShortcut", StartShortcutExec, StartShortcutComplete);
     callbackPtr.release();
-    APP_LOGI("call StartShortcut done");
+    APP_LOGI_NOFUNC("call StartShortcut done");
     return promise;
 }
 }

@@ -229,7 +229,7 @@ ErrCode BundleParser::ParsePreInstallConfig(
     APP_LOGD("Parse preInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
+        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -244,7 +244,7 @@ ErrCode BundleParser::ParsePreUnInstallConfig(
     APP_LOGD("Parse PreUnInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
+        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -272,7 +272,7 @@ ErrCode BundleParser::ParseDefaultPermission(
     APP_LOGD("Parse DefaultPermission from %{private}s", permissionFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(permissionFile, jsonBuf)) {
-        APP_LOGE("Parse file %{public}s failed", permissionFile.c_str());
+        APP_LOGE_NOFUNC("Parse file %{public}s failed", permissionFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -285,7 +285,7 @@ ErrCode BundleParser::ParseExtTypeConfig(
 {
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse file failed");
+        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 

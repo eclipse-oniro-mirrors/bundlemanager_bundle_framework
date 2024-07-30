@@ -973,4 +973,239 @@ HWTEST_F(BmsInstallDaemonTest, OnStop_0001, Function | SmallTest | Level0)
     bool isRead = service->IsServiceReady();
     EXPECT_FALSE(isRead);
 }
+
+/**
+ * @tc.number: ProcessBundleInstallNative_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test ProcessBundleInstallNative
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBundleInstallNative_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string userId = "100";
+    std::string hnpRootPath = "/hnp/root";
+    std::string hapPath = "/hnp/root/path";
+    std::string cpuAbi = "cpuAbi";
+    std::string packageName = "com.acts.example";
+    ErrCode ret = hostImpl.ProcessBundleInstallNative(userId, hnpRootPath, hapPath, cpuAbi, packageName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_INSTALL_FAILED);
+}
+
+/**
+ * @tc.number: ProcessBundleUnInstallNative_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test ProcessBundleUnInstallNative
+*/
+HWTEST_F(BmsInstallDaemonTest, ProcessBundleUnInstallNative_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string userId = "100";
+    std::string packageName = "com.acts.example";
+    ErrCode ret = hostImpl.ProcessBundleUnInstallNative(userId, packageName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PendSignAOT_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test PendSignAOT
+*/
+HWTEST_F(BmsInstallDaemonTest, PendSignAOT_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string anFileName = "fileName";
+    std::vector<uint8_t> signData;
+    ErrCode ret = hostImpl.PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CreateBundleDataDirWithVector__0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test CreateBundleDataDirWithVector
+*/
+HWTEST_F(BmsInstallDaemonTest, CreateBundleDataDirWithVector__0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<CreateDirParam> createDirParams;
+    ErrCode ret = hostImpl.CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDiskUsage_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetDiskUsage
+*/
+HWTEST_F(BmsInstallDaemonTest, GetDiskUsage_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string dir = "dir/path/";
+    bool isRealPath = true;
+    int64_t ret = hostImpl.GetDiskUsage(dir, isRealPath);
+    EXPECT_EQ(ret, 0);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetAllBundleStats
+*/
+HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> bundleNames;
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    ErrCode ret = hostImpl.GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test GetAllBundleStats
+*/
+HWTEST_F(BmsInstallDaemonTest, GetAllBundleStats_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back("com.acts.example1");
+    bundleNames.push_back("com.acts.example2");
+    int32_t userId = 100;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    uids.push_back(101);
+    uids.push_back(102);
+    ErrCode ret = hostImpl.GetAllBundleStats(bundleNames, userId, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractEncryptedSoFiles_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test ExtractEncryptedSoFiles
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractEncryptedSoFiles_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string hapPath;
+    std::string realSoFilesPath;
+    std::string cpuAbi;
+    std::string tmpSoPath;
+    int32_t uid = 100;
+    ErrCode ret = hostImpl.ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_NOT_SUPPORT_CODE_ENCRYPTION);
+}
+
+/**
+ * @tc.number: DeliverySignProfile_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test DeliverySignProfile
+*/
+HWTEST_F(BmsInstallDaemonTest, DeliverySignProfile_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    std::string bundleName;
+    int32_t profileBlockLength = 0;
+    unsigned char *profileBlock = new unsigned char[0];
+    ErrCode ret = hostImpl.DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test RemoveExtensionDir
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = -1;
+    std::vector<std::string> extensionBundleDirs;
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_0200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test RemoveExtensionDir
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back("");
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_0300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test RemoveExtensionDir
+*/
+HWTEST_F(BmsInstallDaemonTest, RemoveExtensionDir_0300, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back("com.ohos.settings");
+    ErrCode ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test IsExistExtensionDir
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = -1;
+    std::string extensionBundleDir = "";
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isExist);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0200
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test IsExistExtensionDir
+*/
+HWTEST_F(BmsInstallDaemonTest, IsExistExtensionDir_0200, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::string extensionBundleDir = "com.ohos.settings";
+    bool isExist = false;
+    ErrCode ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isExist);
+}
+
+/**
+ * @tc.number: CreateExtensionDataDir_0100
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. test CreateExtensionDataDir
+*/
+HWTEST_F(BmsInstallDaemonTest, CreateExtensionDataDir_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "com.acts.example";
+    createDirParam.userId = 100;
+    createDirParam.uid = 100;
+    createDirParam.gid = 100;
+    createDirParam.apl = "apl";
+    createDirParam.extensionDirs.push_back("com.acts.example");
+    ErrCode ret = hostImpl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED);
+}
 } // OHOS

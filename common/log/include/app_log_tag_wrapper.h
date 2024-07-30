@@ -16,7 +16,7 @@
 #ifndef OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H
 #define OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H
 
-#include <string>
+#include <map>
 
 #include "hilog/log.h"
 
@@ -25,7 +25,7 @@
 #endif
 
 #ifndef BMS_TAG_INSTALLER
-#define BMS_TAG_INSTALLER std::make_pair(0xD001101, "BMSInstaller")
+#define BMS_TAG_INSTALLER std::make_pair(0xD001120, "BMSInstaller")
 #endif
 
 #ifndef BMS_TAG_QUERY
@@ -35,22 +35,6 @@
 #ifndef BMS_TAG_INSTALLD
 #define BMS_TAG_INSTALLD std::make_pair(0xD001122, "BMSInstalld")
 #endif
-
-#define BMS_DOMAIN_ID 0xD001120
-#define BMS_DOMAIN_ID_QUERY 0xD001121
-#define BMS_DOMAIN_ID_INSTALLD 0xD001122
-
-#define TAG_JOIN(domain, funcTag, extTag) std::make_pair(domain, "BMS" funcTag extTag)
-
-#define BMS_NAPI "Napi"
-#define BMS_PROXY "Proxy"
-#define BMS_HOST "Host"
-#define BMS_IMPL "Impl"
-#define BMS_MGR "Mgr"
-#define BMS_RDB "RDB"
-
-#define TAG_DISPOSED_RULE_BASE TAG_JOIN(BMS_DOMAIN_ID, "DisposedRuleBase", "")
-#define TAG_SET_DISPOSED_RULE(tag) TAG_JOIN(BMS_DOMAIN_ID, "SetDisposedRule", tag)
 
 #ifndef APPEXECFWK_FUNC_FMT
 #define APPEXECFWK_FUNC_FMT "%{public}s:%{public}s:%{public}d "
@@ -73,5 +57,15 @@
 #define LOG_W(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_WARN,  label, fmt, ##__VA_ARGS__)
 #define LOG_E(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_ERROR, label, fmt, ##__VA_ARGS__)
 #define LOG_F(label, fmt, ...) APPEXECFWK_PRINT_LOG(LOG_FATAL, label, fmt, ##__VA_ARGS__)
+
+#define APPEXECFWK_PRINT_LOG_NOFUNC(level, label, fmt, ...)                             \
+        ((void)HILOG_IMPL(LOG_CORE, level, label.first,                                 \
+        label.second, fmt, ##__VA_ARGS__))
+
+#define LOG_NOFUNC_D(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_DEBUG, label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_I(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_INFO,  label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_W(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_WARN,  label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_E(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_ERROR, label, fmt, ##__VA_ARGS__)
+#define LOG_NOFUNC_F(label, fmt, ...) APPEXECFWK_PRINT_LOG_NOFUNC(LOG_FATAL, label, fmt, ##__VA_ARGS__)
 
 #endif  // OHOS_APPEXECFWK_HILOG_TAG_WRAPPER_H

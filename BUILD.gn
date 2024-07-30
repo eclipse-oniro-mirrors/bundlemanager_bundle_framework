@@ -35,16 +35,19 @@ group("bms_target") {
 group("test_target") {
   testonly = true
 
-  deps = [
-    "common/test:unittest",
-    "interfaces/inner_api/test/unittest:unittest",
-    "interfaces/kits/js/zip/test:unittest",
-    "services/bundlemgr/test:unittest",
-    "services/test/moduletest/common/bms:moduletest",
-    "test/benchmarktest:benchmarktest",
-    "test/fuzztest:fuzztest",
-    "test/resource/bmssystemtestability/abilitySrc:bms_system_test_app",
-    "test/sceneProject:test_hap",
-    "test/systemtest/common/bms:systemtest_bms",
-  ]
+  deps = [ "test/fuzztest:fuzztest" ]
+
+  if (!use_libfuzzer) {
+    deps += [
+      "common/test:unittest",
+      "interfaces/inner_api/test/unittest:unittest",
+      "interfaces/kits/js/zip/test:unittest",
+      "services/bundlemgr/test:unittest",
+      "services/test/moduletest/common/bms:moduletest",
+      "test/benchmarktest:benchmarktest",
+      "test/resource/bmssystemtestability/abilitySrc:bms_system_test_app",
+      "test/sceneProject:test_hap",
+      "test/systemtest/common/bms:systemtest_bms",
+    ]
+  }
 }

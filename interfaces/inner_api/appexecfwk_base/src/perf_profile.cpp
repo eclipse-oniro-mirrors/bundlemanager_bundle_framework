@@ -273,30 +273,30 @@ void PerfProfile::Dump() const
     if ((bundleScanEnd_ > bundleScanStart_) || (bundleInstallTime_ > 0) ||
         (bundleUninstallEnd_ > bundleUninstallStart_) || (bundleParseEnd_ > bundleParseStart_) ||
         (abilityLoadEnd_ > abilityLoadStart_) || (bmsLoadEnd_ > bmsLoadStart_) || (amsLoadEnd_ > amsLoadStart_)) {
-        APP_LOGI("start\n");
+        APP_LOGD("start\n");
         if (bmsLoadEnd_ > bmsLoadStart_) {
-            APP_LOGI("BmsLoadTime: %{public}" PRId64 "(ms) \n", (bmsLoadEnd_ - bmsLoadStart_));
+            APP_LOGD("BmsLoadTime: %{public}" PRId64 "(ms) \n", (bmsLoadEnd_ - bmsLoadStart_));
         }
         if (bundleScanEnd_ > bundleScanStart_) {
-            APP_LOGI("BundleScanTime: %{public}" PRId64 "(ms) \n", (bundleScanEnd_ - bundleScanStart_));
+            APP_LOGD("BundleScanTime: %{public}" PRId64 "(ms) \n", (bundleScanEnd_ - bundleScanStart_));
         }
         if (bundleInstallTime_ > 0) {
-            APP_LOGI("BundleInstallTime: %{public}" PRId64 "(ms) \n", bundleInstallTime_);
+            APP_LOGD("BundleInstallTime: %{public}" PRId64 "(ms) \n", bundleInstallTime_);
         }
         if (bundleUninstallEnd_ > bundleUninstallStart_) {
-            APP_LOGI("BundleUninstallTime: %{public}" PRId64 "(ms) \n", (bundleUninstallEnd_ - bundleUninstallStart_));
+            APP_LOGD("BundleUninstallTime: %{public}" PRId64 "(ms) \n", (bundleUninstallEnd_ - bundleUninstallStart_));
         }
         if (bundleParseEnd_ > bundleParseStart_) {
-            APP_LOGI("BundleParseTime: %{public}" PRId64 "(ms) \n", (bundleParseEnd_ - bundleParseStart_));
+            APP_LOGD("BundleParseTime: %{public}" PRId64 "(ms) \n", (bundleParseEnd_ - bundleParseStart_));
         }
         if (amsLoadEnd_ > amsLoadStart_) {
-            APP_LOGI("AmsLoadTime: %{public}" PRId64 "(ms) \n", (amsLoadEnd_ - amsLoadStart_));
+            APP_LOGD("AmsLoadTime: %{public}" PRId64 "(ms) \n", (amsLoadEnd_ - amsLoadStart_));
         }
         if (abilityLoadEnd_ > abilityLoadStart_) {
-            APP_LOGI("AbilityLoadTime: %{public}" PRId64 "(ms) \n", (abilityLoadEnd_ - abilityLoadStart_));
-            APP_LOGI("AppForkTime: %{public}" PRId64 "(ms) \n", (appForkEnd_ - appForkStart_));
+            APP_LOGD("AbilityLoadTime: %{public}" PRId64 "(ms) \n", (abilityLoadEnd_ - abilityLoadStart_));
+            APP_LOGD("AppForkTime: %{public}" PRId64 "(ms) \n", (appForkEnd_ - appForkStart_));
         }
-        APP_LOGI("end\n");
+        APP_LOGD("end\n");
     }
 }
 }  // namespace AppExecFwk

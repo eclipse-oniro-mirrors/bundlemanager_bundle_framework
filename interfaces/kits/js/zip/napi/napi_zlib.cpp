@@ -823,6 +823,7 @@ napi_value CompressFile(napi_env env, napi_callback_info info)
     }
     CompressExcute(env, asyncZipCallbackInfo);
     callbackPtr.release();
+    APP_LOGD("napi end CompressFile");
     return promise;
 }
 

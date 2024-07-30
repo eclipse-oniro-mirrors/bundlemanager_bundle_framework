@@ -27,7 +27,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr size_t MAX_PARCEL_CAPACITY = 200 * 1024 * 1024; // 200M
+constexpr size_t MAX_PARCEL_CAPACITY = 1024 * 1024 * 1024; // max allow 1 GB resource size
+constexpr size_t MAX_IPC_ALLOWED_CAPACITY = 100 * 1024 * 1024; // max ipc size 100MB
+const std::string BUNDLE_RESOURCE_ASHMEM_NAME = "bundleResourceAshemeName";
 }
 BundleResourceHost::BundleResourceHost()
 {
@@ -185,10 +187,57 @@ ErrCode BundleResourceHost::HandleDeleteResourceInfo(MessageParcel &data, Messag
     return ERR_OK;
 }
 
-template<typename T>
-ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const
+void BundleResourceHost::ClearAshmem(sptr<Ashmem> &optMem)
 {
-    Parcel tmpParcel;
+    if (optMem != nullptr) {
+        optMem->UnmapAshmem();
+        optMem->CloseAshmem();
+    }
+}
+
+int32_t BundleResourceHost::AllocatAshmemNum()
+{
+    std::lock_guard<std::mutex> lock(bundleAshmemMutex_);
+    return ashmemNum_++;
+}
+
+ErrCode BundleResourceHost::WriteParcelableIntoAshmem(MessageParcel &tempParcel, MessageParcel &reply)
+{
+    size_t dataSize = tempParcel.GetDataSize();
+    // The ashmem name must be unique.
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (BUNDLE_RESOURCE_ASHMEM_NAME + std::to_string(AllocatAshmemNum())).c_str(), dataSize);
+    if (ashmem == nullptr) {
+        APP_LOGE("Create shared memory failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    // Set the read/write mode of the ashme.
+    if (!ashmem->MapReadAndWriteAshmem()) {
+        APP_LOGE("Map shared memory fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    // Write the size and content of each item to the ashmem.
+    int32_t offset = 0;
+    if (!ashmem->WriteToAshmem(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize, offset)) {
+        APP_LOGE("Write info to shared memory fail");
+        ClearAshmem(ashmem);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteAshmem(ashmem)) {
+        ClearAshmem(ashmem);
+        APP_LOGE("Write ashmem to tempParcel fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ClearAshmem(ashmem);
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply)
+{
+    MessageParcel tmpParcel;
     (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!tmpParcel.WriteParcelable(&parcelInfo)) {
         APP_LOGE("write parcel failed");
@@ -199,7 +248,10 @@ ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGI("datasize is too large, use ashmem");
+        return WriteParcelableIntoAshmem(tmpParcel, reply);
+    }
     if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tmpParcel.GetData()), dataSize)) {
         APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -210,7 +262,7 @@ ErrCode BundleResourceHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &
 template<typename T>
 ErrCode BundleResourceHost::WriteVectorToParcel(std::vector<T> &parcelVector, MessageParcel &reply)
 {
-    Parcel tempParcel;
+    MessageParcel tempParcel;
     (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!tempParcel.WriteInt32(parcelVector.size())) {
         APP_LOGE("write failed");
@@ -225,17 +277,19 @@ ErrCode BundleResourceHost::WriteVectorToParcel(std::vector<T> &parcelVector, Me
     }
 
     size_t dataSize = tempParcel.GetDataSize();
-    if (!reply.WriteInt32(static_cast<int32_t>(dataSize))) {
+    if (!reply.WriteUint32(dataSize)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.WriteRawData(
-        reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
-        APP_LOGE("Failed to write data");
+    if (dataSize > MAX_IPC_ALLOWED_CAPACITY) {
+        APP_LOGI("datasize is too large, use ashmem");
+        return WriteParcelableIntoAshmem(tempParcel, reply);
+    }
+    if (!reply.WriteRawData(reinterpret_cast<uint8_t *>(tempParcel.GetData()), dataSize)) {
+        APP_LOGE("write parcel failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     return ERR_OK;
 }
 } // AppExecFwk

@@ -175,7 +175,7 @@ public:
     InnerBundleInfo();
     InnerBundleInfo &operator=(const InnerBundleInfo &info);
     ~InnerBundleInfo();
-        /**
+    /**
      * @brief Transform the InnerBundleInfo object to json.
      * @param jsonObject Indicates the obtained json object.
      * @return
@@ -785,7 +785,7 @@ public:
      * @param userId Indicates the user ID.
      * @return Returns the gid.
      */
-    int32_t GetGid(int32_t userId = Constants::UNSPECIFIED_USERID) const
+    int GetGid(int32_t userId = Constants::UNSPECIFIED_USERID) const
     {
         InnerBundleUserInfo innerBundleUserInfo;
         if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
@@ -1049,13 +1049,13 @@ public:
 
     bool HasEntry() const;
 
+    bool IsHsp() const;
+
     /**
      * @brief Insert formInfo.
      * @param keyName Indicates object as key.
      * @param formInfos Indicates the formInfo object as value.
      */
-    bool IsHsp() const;
-
     void InsertFormInfos(const std::string &keyName, const std::vector<FormInfo> &formInfos)
     {
         formInfos_.emplace(keyName, formInfos);
@@ -2119,9 +2119,9 @@ public:
     bool GetOverlayModuleState(const std::string &moduleName, int32_t userId, int32_t &state) const;
 
     void SetOverlayModuleState(const std::string &moduleName, int32_t state, int32_t userId);
- 
+
     void SetOverlayModuleState(const std::string &moduleName, int32_t state);
- 
+
     void ClearOverlayModuleStates(const std::string &moduleName);
 
     void SetInnerModuleNeedDelete(const std::string &moduleName, const bool needDelete);
@@ -2208,6 +2208,9 @@ private:
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
     void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
+    void InnerProcessRequestPermissions(
+        const std::unordered_map<std::string, std::string> &moduleNameMap,
+        std::vector<RequestPermission> &requestPermissions) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;

@@ -41,11 +41,11 @@ struct InnerBundleUserInfo {
     // app install control
     bool isRemovable = true;
 
-    // appIndex -> cloneInfo
-    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
-
     // encryption key id
     std::string keyId;
+
+    // appIndex -> cloneInfo
+    std::map<std::string, InnerBundleCloneInfo> cloneInfos;
 
     bool operator() (const InnerBundleUserInfo& info) const
     {

@@ -48,6 +48,7 @@ constexpr int32_t DEFAULT_APP_INDEX = 0;
 constexpr int32_t INVALID_UID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t FOUNDATION_UID = 5523;
+constexpr int32_t CODE_PROTECT_UID = 7666;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
 constexpr int32_t MAX_APP_UID = 65535;
@@ -70,6 +71,7 @@ constexpr const char* PERMISSION_RUN_DYN_CODE = "ohos.permission.RUN_DYN_CODE";
 constexpr const char* PERMISSION_ACCESS_DYNAMIC_ICON = "ohos.permission.ACCESS_DYNAMIC_ICON";
 constexpr const char* PERMISSION_START_SHORTCUT = "ohos.permission.START_SHORTCUT";
 constexpr const char* PERMISSION_INSTALL_CLONE_BUNDLE = "ohos.permission.INSTALL_CLONE_BUNDLE";
+constexpr const char* PERMISSION_MANAGER_SHORTCUT = "ohos.permission.MANAGE_SHORTCUTS";
 
 enum class AppType {
     SYSTEM_APP = 0,
@@ -111,6 +113,7 @@ constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHAN
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
 constexpr int32_t INITIAL_SANDBOX_APP_INDEX = 1000;
+constexpr int32_t MAX_APP_INDEX = 100;
 constexpr int32_t MAX_SANDBOX_APP_INDEX = INITIAL_SANDBOX_APP_INDEX + 100;
 
 // app-distribution-type

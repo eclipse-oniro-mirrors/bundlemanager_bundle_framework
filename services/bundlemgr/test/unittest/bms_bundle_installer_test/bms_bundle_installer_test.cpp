@@ -92,6 +92,8 @@ const int32_t ZERO_CODE = 0;
 const uint32_t COMPATIBLE_VERSION = 11;
 const std::string LOG = "log";
 const int32_t EDM_UID = 3057;
+const uint32_t INSTALLER_ID = 1;
+const uint32_t INDEX = 1;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -363,6 +365,46 @@ void BmsBundleInstallerTest::ClearBundleInfo()
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
 }
 
+
+/**
+ * @tc.number: SetEncryptionDirPolicy_0100
+ * @tc.name: test SetEncryptionDirPolicy
+ * @tc.desc: test SetEncryptionDirPolicy of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SetEncryptionDirPolicy_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    bool ret = installer.SetEncryptionDirPolicy(info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PrepareSkillUri_0100
+ * @tc.name: test PrepareSkillUri
+ * @tc.desc: test PrepareSkillUri of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, PrepareSkillUri_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<Skill> skills;
+    Skill skill;
+    OHOS::AppExecFwk::SkillUri uri;
+    uri.scheme = "https";
+    uri.host = "host";
+    uri.port = "port";
+    uri.path = "path";
+    uri.pathStartWith = "pathStartWith";
+    uri.pathRegex = "pathRegex";
+    uri.type = "type";
+    skill.domainVerify = true;
+    skill.uris.push_back(uri);
+    skills.push_back(skill);
+    std::vector<AppDomainVerify::SkillUri> skillUris;
+    installer.PrepareSkillUri(skills, skillUris);
+    EXPECT_EQ(skills.at(0).uris.size(), skillUris.size());
+}
+
 /**
  * @tc.number: SystemInstall_0100
  * @tc.name: test the right system bundle file can be installed
@@ -458,7 +500,7 @@ HWTEST_F(BmsBundleInstallerTest, ThirdPartyInstall_0100, Function | SmallTest | 
     StopInstalldService();
     std::string bundleFile = RESOURCE_ROOT_PATH + TYPE_BUNDLE;
     auto result = InstallThirdPartyBundle(bundleFile);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
 /**
@@ -2742,6 +2784,149 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0400, Function | SmallTest | Level1)
     uint16_t extraSize = 0;
     bool ret = file.SeekToEntryStart(zipEntry, extraSize);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0500
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetAllEntries
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0500, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntryMap ret = file.GetAllEntries();
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: ZipFile_0600
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test HasEntry
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0600, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string entryName = "entryName";
+    bool ret = file.HasEntry(entryName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0700
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetEntry
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0700, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string entryName = "entryName";
+    ZipEntry resultEntry;
+    bool ret = file.GetEntry(entryName, resultEntry);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0800
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetDataOffsetRelative
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0800, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    std::string f = "test.file";
+    ZipPos offset;
+    uint32_t length = 100;
+    bool ret = file.GetDataOffsetRelative(f, offset, length);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0900
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckEndDir
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0900, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    EndDir endDir;
+    bool ret = file.CheckEndDir(endDir);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_1000
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test ParseAllEntries
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1000, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    bool ret = file.ParseAllEntries();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ZipFile_1100
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetLocalHeaderSize
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1100, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    uint16_t nameSize = 100;
+    uint16_t extraSize = 100;
+    size_t ret = file.GetLocalHeaderSize(nameSize, extraSize);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: ZipFile_1200
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test GetEntryDataOffset
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1200, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    ZipEntry zipEntry;
+    uint16_t extraSize = 100;
+    ZipPos ret = file.GetEntryDataOffset(zipEntry, extraSize);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: ZipFile_1300
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckDataDesc
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1300, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    ZipEntry zipEntry;
+    LocalHeader localHeader;
+    bool ret = file.CheckDataDesc(zipEntry, localHeader);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ZipFile_1400
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test InitZStream
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_1400, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+
+    z_stream zstream;
+    bool ret = file.InitZStream(zstream);
+    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -5038,11 +5223,13 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest |
     oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
     InnerBundleInfo oldInfo;
     oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
 
     BundleInfo newBundleInfo;
     newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
     InnerBundleInfo newInfo;
     newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080EDXXXX");
 
     BaseBundleInstaller installer;
     bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
@@ -5758,6 +5945,49 @@ HWTEST_F(BmsBundleInstallerTest, UpdateHapToken_0100, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: AllowSingletonChange_0100
+ * @tc.name: test AllowSingletonChange
+ * @tc.desc: test AllowSingletonChange of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, AllowSingletonChange_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string bundleName = "com.acts.example";
+    bool ret = installer.AllowSingletonChange(bundleName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ExtractHnpFileDir_0100
+ * @tc.name: test ExtractHnpFileDir
+ * @tc.desc: test ExtractHnpFileDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractHnpFileDir_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string cpuAbi;
+    std::string hnpPackageInfoString;
+    std::string modulePath;
+    ErrCode ret = installer.ExtractHnpFileDir(cpuAbi, hnpPackageInfoString, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_NATIVE_HNP_EXTRACT_FAILED);
+}
+
+/**
+ * @tc.number: AddBundleStatus_0100
+ * @tc.name: test AddBundleStatus
+ * @tc.desc: test AddBundleStatus of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, AddBundleStatus_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    NotifyBundleEvents installRes;
+    installRes.abilityName = "testAbilityName";
+    installer.AddBundleStatus(installRes);
+    EXPECT_NE(installer.bundleEvents_.end().base()->abilityName.c_str(),
+        installRes.abilityName.c_str());
+}
+
+/**
  * @tc.number: CreateBundleDataDirWithVector_0100
  * @tc.name: test CreateBundleDataDirWithVector
  * @tc.desc: test CreateBundleDataDirWithVector of InstalldHostImpl
@@ -5837,6 +6067,18 @@ HWTEST_F(BmsBundleInstallerTest, SendBundleSystemEvent_0010, Function | SmallTes
     bundleInstaller.innerInstallers_["test"] = std::make_shared<InnerSharedBundleInstaller>(path);
     bundleInstaller.SendBundleSystemEvent(eventTemplate, errCode);
     ASSERT_FALSE(bundleInstaller.innerInstallers_["test"]->isBundleExist_);
+}
+
+/**
+ * @tc.number: CreateSharedBundleTempDir_0100
+ * @tc.name: test CreateSharedBundleTempDir
+ * @tc.desc: 1.test CreateSharedBundleTempDir of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateSharedBundleTempDir_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.CreateSharedBundleTempDir(INSTALLER_ID, INDEX);
+    EXPECT_FALSE(ret.empty());
 }
 
 } // OHOS

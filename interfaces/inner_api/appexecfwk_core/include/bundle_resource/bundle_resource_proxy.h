@@ -54,6 +54,10 @@ private:
     ErrCode GetVectorParcelInfo(
         BundleResourceInterfaceCode code, MessageParcel &data, std::vector<T> &parcelInfos);
 
+    ErrCode GetParcelInfoFromAshMem(MessageParcel &reply, void *&data);
+
+    void ClearAshmem(sptr<Ashmem> &optMem);
+
     bool SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<BundleResourceProxy> delegator_;

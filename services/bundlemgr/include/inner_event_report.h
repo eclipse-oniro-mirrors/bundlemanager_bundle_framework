@@ -53,14 +53,18 @@ private:
     static void InnerSendBundleCleanCacheEvent(const EventInfo& eventInfo);
     static void InnerSendUserEvent(const EventInfo& eventInfo);
     static void InnerSendQuickFixEvent(const EventInfo& eventInfo);
-    static void InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo);
+    static void InnerSendCpuSceneEvent(const EventInfo& eventInfo);
     static void InnerSendAOTSummaryEvent(const EventInfo& eventInfo);
     static void InnerSendAOTRecordEvent(const EventInfo& eventInfo);
-    static void InnerSendCpuSceneEvent(const EventInfo& eventInfo);
+    static void InnerSendQueryOfContinueTypeEvent(const EventInfo& eventInfo);
     static void InnerSendFreeInstallEvent(const EventInfo& eventInfo);
 
     template<typename... Types>
     static void InnerEventWrite(const std::string &eventName,
+        HiSysEventType type, Types... keyValues);
+
+    template<typename... Types>
+    static void InnerEventWriteForBundleManager(const std::string &eventName,
         HiSysEventType type, Types... keyValues);
 
     static std::unordered_map<BMSEventType, void (*)(const EventInfo& eventInfo)> bmsSysEventMap_;

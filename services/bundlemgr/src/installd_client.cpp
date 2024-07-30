@@ -15,7 +15,6 @@
 
 #include "installd_client.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "if_system_ability_manager.h"
 #include "installd/installd_load_callback.h"

@@ -58,6 +58,7 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 constexpr const char* PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 constexpr const char* PREFIX_TARGET_PATH = "/print_service/";
+constexpr const char* HQF_DIR_PREFIX = "patch_";
 #if defined(CODE_ENCRYPTION_ENABLE)
 static const char LIB_CODE_CRYPTO_SO_PATH[] = "system/lib/libcode_crypto_metadata_process_utils.z.so";
 static const char LIB64_CODE_CRYPTO_SO_PATH[] = "system/lib64/libcode_crypto_metadata_process_utils.z.so";
@@ -140,7 +141,7 @@ bool InstalldOperator::IsExistFile(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        LOG_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "stat fail %{public}d", errno);
         return false;
     }
     return S_ISREG(buf.st_mode);
@@ -202,7 +203,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
-    LOG_D(BMS_TAG_INSTALLD, "start to delete dir %{public}s", path.c_str());
+    LOG_I(BMS_TAG_INSTALLD, "del %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -612,7 +613,7 @@ bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &
     realOldPath.reserve(PATH_MAX);
     realOldPath.resize(PATH_MAX - 1);
     if (realpath(oldPath.c_str(), &(realOldPath[0])) == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "realOldPath %{public}s, errno:%{public}d", realOldPath.c_str(), errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "realOldPath:%{public}s errno:%{public}d", realOldPath.c_str(), errno);
         return false;
     }
 
@@ -818,7 +819,7 @@ bool InstalldOperator::CheckPathIsSame(const std::string &path, int32_t mode, co
         LOG_D(BMS_TAG_INSTALLD, "path :%{public}s mode uid and gid are same, no need to create again", path.c_str());
         return true;
     }
-    LOG_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
+    LOG_NOFUNC_W(BMS_TAG_INSTALLD, "path:%{public}s exist, but mode uid or gid are not same, need to create again",
         path.c_str());
     return false;
 }
@@ -1350,6 +1351,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
     }
 
     struct dirent *ptr = nullptr;
+    bool isBundleCodeDir = dir.compare(Constants::BUNDLE_CODE_DIR) == 0;
     while ((ptr = readdir(directory)) != nullptr) {
         std::string currentName(ptr->d_name);
         if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
@@ -1360,7 +1362,7 @@ bool InstalldOperator::ObtainQuickFixFileDir(const std::string &dir, std::vector
         struct stat s;
         if (stat(curPath.c_str(), &s) == 0) {
             // directory
-            if (s.st_mode & S_IFDIR) {
+            if ((s.st_mode & S_IFDIR) && (isBundleCodeDir || BundleUtil::StartWith(currentName, HQF_DIR_PREFIX))) {
                 ObtainQuickFixFileDir(curPath, fileVec);
             }
 

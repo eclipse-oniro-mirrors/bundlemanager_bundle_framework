@@ -393,12 +393,12 @@ ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel
     std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
     int32_t userId = data.ReadInt32();
     if (disposedRule == nullptr) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_HOST), "ReadParcelable<disposedRule> failed");
+        LOG_E(BMS_TAG_DEFAULT, "ReadParcelable<disposedRule> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = SetDisposedRule(appId, *disposedRule, userId);
     if (!reply.WriteInt32(ret)) {
-        LOG_E(TAG_SET_DISPOSED_RULE(BMS_HOST), "write ret failed");
+        LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

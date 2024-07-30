@@ -81,6 +81,7 @@ const std::string INVALID_FILE_SUFFIX_PATH = "/data/test/invalidSuffix.txt";
 const std::string INVALID_FILE_PATH_1 = "/data/service/el1/public/bms/bundle_manager_service/hello.hqf";
 const std::string INVALID_FILE_PATH_2 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/../hello.hqf";
 const std::string VALID_FILE_PATH_3 = "/data/service/el1/public/bms/bundle_manager_service/quick_fix/hello.hqf";
+const std::string VALID_FILE_PATH_4 = "../";
 const std::string INVALID_FILE_NAME = "..hello.hqf";
 const std::string VALID_FILE_NAME = "hello.hqf";
 }  // namespace
@@ -1680,6 +1681,9 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0054, Function | SmallTest
         appQuickFix.deployingAppqfInfo.type = QuickFixType::HOT_RELOAD;
         appQuickFix.deployingAppqfInfo.versionCode = 2;
         std::vector<HqfInfo> hqfInfo;
+        HqfInfo info;
+        info.hqfFilePath = "/data/test/hello.hqf";
+        hqfInfo.emplace_back(info);
         appQuickFix.deployingAppqfInfo.hqfInfos= hqfInfo;
         InnerAppQuickFix newInnerAppQuickFix;
         newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
@@ -4119,6 +4123,23 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0300, Function | SmallTe
 }
 
 /**
+ * @tc.number: QuickFixManagerHostImpl_0400
+ * @tc.name: Test QuickFixManagerHostImpl.CopyHqfToSecurityDir
+ * @tc.desc: Expected Failure
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHostImpl_0400, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(VALID_FILE_PATH_4);
+
+    std::vector<std::string> securityFilePaths;
+
+    auto ret = quickFixMgrHostImpl.CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
+}
+
+/**
  * @tc.number: QuickFixDataMgr_0100
  * @tc.name: Test QuickFixDataMgr
  * @tc.desc: 1.Test the failed scene of QuickFixDataMgr
@@ -4875,5 +4896,105 @@ HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0003, Function | SmallTest | Leve
         ret = deployer->CheckHqfResourceIsValid(paths, bundleInfo);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_RELEASE_HAP_HAS_RESOURCES_FILE_FAILED);
     }
+}
+
+/**
+ * @tc.number: QuickFixManagerHost_0100
+ * @tc.name: test OnRemoteRequest by QuickFixManagerHost
+ * @tc.desc: OnRemoteRequest
+ */
+HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerHost_0100, Function | SmallTest | Level0)
+{
+    QuickFixManagerHostImpl quickFixMgrHostImpl;
+
+    uint32_t code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX);
+    ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX);
+    ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+
+    code = static_cast<uint32_t>(QuickFixManagerInterfaceCode::CREATE_FD);
+    ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+    
+    code = -1;
+    ret = quickFixMgrHostImpl.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: DeployQuickFixResult_0300
+ * @tc.name: Test ReadFromParcel
+ * @tc.desc: 1.Test the ReadFromParcel of DeployQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFixResult_0300, Function | SmallTest | Level0)
+{
+    DeployQuickFixResult result;
+
+    Parcel parcel;
+    bool ret = result.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: DeployQuickFixResult_0400
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of DeployQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFixResult_0400, Function | SmallTest | Level0)
+{
+    DeployQuickFixResult result;
+
+    Parcel parcel;
+    DeployQuickFixResult* ret = result.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: SwitchQuickFixResult_0300
+ * @tc.name: Test ReadFromParcel
+ * @tc.desc: 1.Test the ReadFromParcel of SwitchQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0300, Function | SmallTest | Level0)
+{
+    SwitchQuickFixResult result;
+    Parcel parcel;
+    bool ret = result.ReadFromParcel(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SwitchQuickFixResult_0400
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of SwitchQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0400, Function | SmallTest | Level0)
+{
+    SwitchQuickFixResult result;
+    Parcel parcel;
+    SwitchQuickFixResult* ret = result.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: SwitchQuickFixResult_0500
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of SwitchQuickFixResult
+ */
+HWTEST_F(BmsBundleQuickFixTest, SwitchQuickFixResult_0500, Function | SmallTest | Level0)
+{
+    SwitchQuickFixResult result;
+    Parcel parcel;
+    std::string ret = result.ToString();
+    EXPECT_FALSE(ret.empty());
 }
 } // OHOS

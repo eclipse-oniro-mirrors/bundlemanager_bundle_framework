@@ -33,9 +33,9 @@ namespace OHOS {
 namespace AppExecFwk {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
+constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
@@ -738,8 +738,9 @@ napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info)
     std::string bundleName;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetNameForUid(uid, bundleName));
     if (ret != ERR_OK) {
-        APP_LOGE("GetBundleNameByUidSync failed, uid is %{public}d, bundleName is %{public}s",
-            uid, bundleName.c_str());
+        if (uid > Constants::BASE_APP_UID) {
+            APP_LOGE("failed uid: %{public}d bundleName: %{public}s", uid, bundleName.c_str());
+        }
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_NAME_BY_UID_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
@@ -957,8 +958,8 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo));
     if (ret != ERR_OK) {
-        APP_LOGE("GetAppProvisionInfoSync failed, bundleName is %{public}s, userId is %{public}d",
-            bundleName.c_str(), userId);
+        APP_LOGE("GetAppProvisionInfoSync failed -n %{public}s -u %{public}d ret:%{public}d",
+            bundleName.c_str(), userId, ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_APP_PROVISION_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);

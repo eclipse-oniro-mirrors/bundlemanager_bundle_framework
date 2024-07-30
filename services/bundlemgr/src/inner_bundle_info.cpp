@@ -2629,7 +2629,7 @@ void InnerBundleInfo::GetBundleWithAbilitiesV9(
         bool isEnabled = IsAbilityEnabled(ability.second, userId, appIndex);
         if (!(static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
             && !isEnabled) {
-            APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
+            APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
             continue;
         }
         AbilityInfo abilityInfo = ability.second;
@@ -2691,7 +2691,7 @@ void InnerBundleInfo::GetBundleWithAbilities(
             bool isEnabled = IsAbilityEnabled(ability.second, userId);
             if (!(static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_DISABLE)
                 && !isEnabled) {
-                APP_LOGW("%{public}s disabled,", ability.second.name.c_str());
+                APP_LOGW_NOFUNC("ability:%{public}s disabled,", ability.second.name.c_str());
                 continue;
             }
             AbilityInfo abilityInfo = ability.second;
@@ -3305,6 +3305,7 @@ std::vector<DefinePermission> InnerBundleInfo::GetAllDefinePermissions() const
 
 std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
+    std::unordered_map<std::string, std::string> moduleNameMap;
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
         if (info.second.needDelete) {
@@ -3313,23 +3314,60 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
         for (auto item : info.second.requestPermissions) {
             item.moduleName = info.second.moduleName;
             requestPermissions.push_back(item);
+            if (moduleNameMap.find(item.moduleName) == moduleNameMap.end()) {
+                moduleNameMap[item.moduleName] = info.second.distro.moduleType;
+            }
         }
     }
     if (!requestPermissions.empty()) {
-        std::sort(requestPermissions.begin(), requestPermissions.end(),
-            [](RequestPermission reqPermA, RequestPermission reqPermB) {
-                if (reqPermA.name == reqPermB.name) {
-                    return reqPermA.reasonId > reqPermB.reasonId;
-                }
-                return reqPermA.name < reqPermB.name;
-            });
-        auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
-            [](RequestPermission reqPermA, RequestPermission reqPermB) {
-                return reqPermA.name == reqPermB.name;
-            });
-        requestPermissions.erase(iter, requestPermissions.end());
+        InnerProcessRequestPermissions(moduleNameMap, requestPermissions);
     }
     return requestPermissions;
+}
+
+void InnerBundleInfo::InnerProcessRequestPermissions(
+    const std::unordered_map<std::string, std::string> &moduleNameMap,
+    std::vector<RequestPermission> &requestPermissions) const
+{
+    std::sort(requestPermissions.begin(), requestPermissions.end(),
+        [&moduleNameMap](RequestPermission reqPermA, RequestPermission reqPermB) {
+            if (reqPermA.name == reqPermB.name) {
+                if ((reqPermA.reasonId == 0) || (reqPermB.reasonId == 0)) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                auto moduleTypeA = moduleNameMap.find(reqPermA.moduleName);
+                if (moduleTypeA == moduleNameMap.end()) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                auto moduleTypeB = moduleNameMap.find(reqPermB.moduleName);
+                if (moduleTypeB == moduleNameMap.end()) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
+                if ((moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) &&
+                    ((moduleTypeB->second == Profile::MODULE_TYPE_ENTRY))) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                } else if (moduleTypeA->second == Profile::MODULE_TYPE_ENTRY) {
+                    return true;
+                } else if (moduleTypeB->second == Profile::MODULE_TYPE_ENTRY) {
+                    return false;
+                }
+                if ((moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) &&
+                    ((moduleTypeB->second == Profile::MODULE_TYPE_FEATURE))) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                } else if (moduleTypeA->second == Profile::MODULE_TYPE_FEATURE) {
+                    return true;
+                } else if (moduleTypeB->second == Profile::MODULE_TYPE_FEATURE) {
+                    return false;
+                }
+                return reqPermA.reasonId > reqPermB.reasonId;
+            }
+            return reqPermA.name < reqPermB.name;
+        });
+    auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
+        [](RequestPermission reqPermA, RequestPermission reqPermB) {
+            return reqPermA.name == reqPermB.name;
+        });
+    requestPermissions.erase(iter, requestPermissions.end());
 }
 
 ErrCode InnerBundleInfo::SetApplicationEnabled(bool enabled, int32_t userId)
@@ -3351,14 +3389,14 @@ ErrCode InnerBundleInfo::SetCloneApplicationEnabled(bool enabled, int32_t appInd
     auto& key = NameAndUserIdToKey(GetBundleName(), userId);
     auto infoItem = innerBundleUserInfos_.find(key);
     if (infoItem == innerBundleUserInfos_.end()) {
-        APP_LOGE("SetApplicationEnabled not find:%{public}s bundleUserInfo in userId: %{public}d",
+        APP_LOGE_NOFUNC("SetCloneApplicationEnabled not find:%{public}s bundleUserInfo in userId:%{public}d",
             GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
     auto iter = infoItem->second.cloneInfos.find(std::to_string(appIndex));
     if (iter == infoItem->second.cloneInfos.end()) {
-        APP_LOGE("SetApplicationEnabled not find:%{public}d appIndex in userId: %{public}d",
+        APP_LOGE_NOFUNC("SetCloneApplicationEnabled not find:%{public}d appIndex in userId:%{public}d",
             appIndex, userId);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
     }
@@ -4446,7 +4484,7 @@ bool InnerBundleInfo::GetApplicationInfoAdaptBundleClone(
     int32_t appIndex,
     ApplicationInfo &appInfo) const
 {
-    if (appIndex == 0) {
+    if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
             appInfo.removable = false;
         }
@@ -4476,7 +4514,7 @@ bool InnerBundleInfo::GetBundleInfoAdaptBundleClone(
     int32_t appIndex,
     BundleInfo &bundleInfo) const
 {
-    if (appIndex == 0) {
+    if (appIndex == 0 || appIndex > Constants::INITIAL_SANDBOX_APP_INDEX) {
         bundleInfo.uid = innerBundleUserInfo.uid;
         if (!innerBundleUserInfo.gids.empty()) {
             bundleInfo.gid = innerBundleUserInfo.gids[0];

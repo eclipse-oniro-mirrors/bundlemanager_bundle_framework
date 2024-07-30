@@ -23,8 +23,8 @@
 
 #include "common/common_func.h"
 #include "create_checksum.h"
-#include "create_gzip.h"
 #include "create_zip.h"
+#include "create_gzip.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -965,7 +965,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin");
+    APP_LOGI_NOFUNC("napi QueryAbilityInfos");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid");
@@ -1017,7 +1017,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
         env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
-    APP_LOGI("end");
+    APP_LOGI_NOFUNC("napi QueryAbilityInfos end");
     return promise;
 }
 
@@ -2508,7 +2508,7 @@ ErrCode InnerGetDynamicIcon(const std::string &bundleName, std::string &moduleNa
 
     ErrCode ret = extResourceManager->GetDynamicIcon(bundleName, moduleName);
     if (ret != ERR_OK) {
-        APP_LOGE("GetDynamicIcon failed");
+        APP_LOGE_NOFUNC("GetDynamicIcon failed");
     }
 
     return CommonFunc::ConvertErrCode(ret);
@@ -3408,11 +3408,9 @@ static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Qu
         APP_LOGD("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
         return;
     }
-    APP_LOGI("put applicationInfo to cache");
     napi_ref cacheApplicationInfo = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
-    APP_LOGI("put applicationInfo to cache locked");
     cache[query] = cacheApplicationInfo;
 }
 
@@ -3482,7 +3480,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetApplicationInfoV9(bundleName, flags, userId, appInfo));
     if (ret != NO_ERROR) {
-        APP_LOGE_NOFUNC("GetApplicationInfo failed, bundleName: %{public}s, flags: %{public}d, userId: %{public}d",
+        APP_LOGE_NOFUNC("GetApplicationInfo failed -n:%{public}s -f: %{public}d -u: %{public}d",
             bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
@@ -3563,7 +3561,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId));
     if (ret != NO_ERROR) {
-        APP_LOGE("GetBundleInfoV9 failed, bundleName is %{public}s, flags is %{public}d, userId is %{public}d",
+        APP_LOGE_NOFUNC("GetBundleInfoV9 failed -n %{public}s -f %{public}d -u %{public}d",
             bundleName.c_str(), flags, userId);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_SYNC, BUNDLE_PERMISSIONS);
@@ -4489,7 +4487,8 @@ napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
     if (ret != SUCCESS) {
-        APP_LOGE("GetSpecifiedDistributionType failed, bundleName is %{public}s", bundleName.c_str());
+        APP_LOGE_NOFUNC("GetSpecifiedDistributionType failed -n %{public}s ret:%{public}d",
+            bundleName.c_str(), ret);
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);

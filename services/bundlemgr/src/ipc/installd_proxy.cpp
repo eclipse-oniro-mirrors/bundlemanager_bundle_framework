@@ -32,12 +32,12 @@ constexpr int32_t MAX_STRING_SIZE = 1024;
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd proxy instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd proxy instance created");
 }
 
 InstalldProxy::~InstalldProxy()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd proxy instance is destroyed");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd proxy instance destroyed");
 }
 
 ErrCode InstalldProxy::CreateBundleDir(const std::string &bundleDir)
@@ -906,7 +906,7 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
         LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
     }
     return reply.ReadInt32();
 }

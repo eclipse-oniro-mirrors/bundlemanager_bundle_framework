@@ -377,7 +377,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo &info, const std::string &bundleName)
 {
     if (!info.IsRemovable()) {
-        LOG_E(BMS_TAG_INSTALLER, "uninstall system app");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
     if (!info.GetUninstallState()) {
@@ -394,7 +394,8 @@ ErrCode BaseBundleInstaller::CheckUninstallInnerBundleInfo(const InnerBundleInfo
 
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
-    LOG_I(BMS_TAG_INSTALLER, "begin to process cross-app %{public}s uninstall", uninstallParam.bundleName.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process cross-app %{public}s uninstall",
+        uninstallParam.bundleName.c_str());
     const std::string &bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
@@ -415,7 +416,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     ErrCode ret = CheckUninstallInnerBundleInfo(info, bundleName);
     if (ret != ERR_OK) {
-        LOG_W(BMS_TAG_INSTALLER, "CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "CheckUninstallInnerBundleInfo failed, errcode: %{public}d", ret);
         return ret;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
@@ -1050,7 +1051,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     if (inBundlePaths.empty() && sharedBundleInstaller.NeedToInstall()) {
         result = sharedBundleInstaller.Install(sysEventInfo_);
-        sync();
         bundleType_ = BundleType::SHARED;
         LOG_I(BMS_TAG_INSTALLER, "install cross-app shared bundles only, result : %{public}d", result);
         return result;
@@ -1072,7 +1072,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // check syscap
     result = CheckSysCap(bundlePaths);
-    CHECK_RESULT(result, "hap syscap check failed %{public}d");
+    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    if (!isSysCapValid) {
+        APP_LOGI("hap syscap check failed %{public}d", result);
+    }
     UpdateInstallerState(InstallerState::INSTALL_SYSCAP_CHECKED);                  // ---- 10%
 
     // verify signature info for all haps
@@ -1101,7 +1104,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check install verifyActivation failed %{public}d");
     result = CheckInstallPermission(installParam, hapVerifyResults);
     CHECK_RESULT(result, "check install permission failed %{public}d");
-    result = CheckInstallCondition(hapVerifyResults, newInfos);
+    result = CheckInstallCondition(hapVerifyResults, newInfos, isSysCapValid);
     CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
@@ -1251,7 +1254,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     VerifyDomain();
-    ForceWriteToDisk();
     return result;
 }
 
@@ -2027,13 +2029,6 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
 {
-    if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
-        if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
-            (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
-            LOG_E(BMS_TAG_INSTALLER, "same versionCode, appIdentifier or appId is not same");
-            return false;
-        }
-    }
     // for versionCode update
     if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) &&
         (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
@@ -2640,9 +2635,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuotactl, proxy get error");
         return;
     }
-
-    LOG_I(BMS_TAG_INSTALLER, "SendToStorageQuota bundleName=%{public}s, uid=%{public}d, bundleDataDirPath=%{public}s,"
-        "limitSizeMb=%{public}d", bundleName.c_str(), uid, bundleDataDirPath.c_str(), limitSizeMb);
+    
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
@@ -2654,7 +2647,6 @@ void BaseBundleInstaller::PrepareBundleDirQuota(const std::string &bundleName, c
     const std::string &bundleDataDirPath, const int32_t limitSize) const
 {
     if (limitSize == 0) {
-        LOG_I(BMS_TAG_INSTALLER, "cancel bundleName:%{public}s uid:%{public}d quota", bundleName.c_str(), uid);
         SendToStorageQuota(bundleName, uid, bundleDataDirPath, 0);
         return;
     }
@@ -3035,7 +3027,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
 }
@@ -3045,12 +3037,13 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(ServiceConstants::PATH_SEPARATOR).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto result = InnerProcessNativeLibs(info, modulePath);
     if (result != ERR_OK) {
         LOG_E(BMS_TAG_INSTALLER, "fail to InnerProcessNativeLibs, error is %{public}d", result);
@@ -3427,7 +3420,6 @@ ErrCode BaseBundleInstaller::RenameModuleDir(const InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CheckSysCap(const std::vector<std::string> &bundlePaths)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     return bundleInstallChecker_->CheckSysCap(bundlePaths);
 }
 
@@ -3758,12 +3750,15 @@ void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &b
 
 ErrCode BaseBundleInstaller::CheckInstallCondition(
     std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-    std::unordered_map<std::string, InnerBundleInfo> &infos)
+    std::unordered_map<std::string, InnerBundleInfo> &infos, bool isSysCapValid)
 {
-    ErrCode ret = bundleInstallChecker_->CheckDeviceType(infos);
-    if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
+    ErrCode ret;
+    if (!isSysCapValid) {
+        ret = bundleInstallChecker_->CheckDeviceType(infos);
+        if (ret != ERR_OK) {
+            LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+        }
     }
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
     if (ret != ERR_OK) {
@@ -4381,6 +4376,10 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
         return result;
     }
 
+    if (dataMgr_->DeleteDesktopShortcutInfo(bundleName, userId_, 0) != ERR_OK) {
+        LOG_W(BMS_TAG_INSTALLER, "fail to delete shortcut info");
+    }
+
     return ERR_OK;
 }
 
@@ -4427,6 +4426,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
 
 ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     // size of code signature files should be same with the size of hap and hsp
     if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
         LOG_E(BMS_TAG_INSTALLER, "each hap or hsp needs to be verified code signature");
@@ -4981,6 +4981,7 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
 ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
     std::vector<std::string> &bundlePaths)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (!installParam.withCopyHaps) {
         LOG_D(BMS_TAG_INSTALLER, "no need to copy preInstallApp to secure dir");
         return ERR_OK;
@@ -5464,16 +5465,6 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
     return ERR_OK;
 }
 
-void BaseBundleInstaller::ForceWriteToDisk() const
-{
-    auto task = []() {
-        LOG_I(BMS_TAG_INSTALLER, "sync begin");
-        sync();
-        LOG_I(BMS_TAG_INSTALLER, "sync end");
-    };
-    std::thread(task).detach();
-}
-
 #ifdef APP_DOMAIN_VERIFY_ENABLED
 void BaseBundleInstaller::PrepareSkillUri(const std::vector<Skill> &skills,
     std::vector<AppDomainVerify::SkillUri> &skillUris) const
@@ -5559,7 +5550,7 @@ ErrCode BaseBundleInstaller::CreateShaderCache(const std::string &bundleName, in
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "CreateShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->Mkdir(shaderCachePath, S_IRWXU, uid, gid);
 }
 
@@ -5567,7 +5558,7 @@ ErrCode BaseBundleInstaller::DeleteShaderCache(const std::string &bundleName) co
 {
     std::string shaderCachePath;
     shaderCachePath.append(ServiceConstants::SHADER_CACHE_PATH).append(bundleName);
-    LOG_I(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
+    LOG_D(BMS_TAG_INSTALLER, "DeleteShaderCache %{public}s", shaderCachePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(shaderCachePath);
 }
 

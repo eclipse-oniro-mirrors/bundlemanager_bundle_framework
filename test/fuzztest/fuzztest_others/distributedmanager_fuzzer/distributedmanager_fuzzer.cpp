@@ -31,6 +31,12 @@ constexpr size_t MESSAGE_SIZE = 21;
 constexpr size_t DCAMERA_SHIFT_24 = 24;
 constexpr size_t DCAMERA_SHIFT_16 = 16;
 constexpr size_t DCAMERA_SHIFT_8 = 8;
+const std::string EMPTY_STRING = "";
+std::string DEVICE_ID_NORMAL = "deviceId";
+const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
+std::string BUNDLE_NAME_MY_APPLICATION = "com.example.MyApplication";
+std::string MODULE_NAME_MY_APPLICATION = "com.example.MyModuleName";
+std::string ABILITY_NAME_MY_APPLICATION = "com.example.MyApplication.MainAbility";
 uint32_t GetU32Data(const char* ptr)
 {
     return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
@@ -42,11 +48,19 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     int32_t missionId = static_cast<int32_t>(GetU32Data(data));
     int32_t userId = static_cast<int32_t>(GetU32Data(data));
     sptr<IRemoteObject> callerToken = nullptr;
+    std::string deviceId = DEVICE_ID_NORMAL;
+    std::string bundleName = BUNDLE_NAME_TEST;
+    std::string moduleName = MODULE_NAME_MY_APPLICATION;
+    std::string abilityName = ABILITY_NAME_MY_APPLICATION;
+    want.SetElementName(deviceId, bundleName, moduleName, abilityName);
     bundleDistributedManager.CheckAbilityEnableInstall(want, missionId, userId, callerToken);
-    std::string queryRpcIdResult(data, size);
-    bundleDistributedManager.OnQueryRpcIdFinished(queryRpcIdResult);
+    std::string nullString = EMPTY_STRING;
+    bundleDistributedManager.OnQueryRpcIdFinished(EMPTY_STRING);
     TargetAbilityInfo targetAbilityInfo;
     bundleDistributedManager.ConvertTargetAbilityInfo(want, targetAbilityInfo);
+    targetAbilityInfo.targetInfo.abilityName = ABILITY_NAME_MY_APPLICATION;
+    targetAbilityInfo.targetInfo.moduleName = MODULE_NAME_MY_APPLICATION;
+    targetAbilityInfo.targetInfo.bundleName = BUNDLE_NAME_MY_APPLICATION;
     bundleDistributedManager.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     int32_t resultCode = static_cast<int32_t>(GetU32Data(data));
     const std::string transactId(data, size);

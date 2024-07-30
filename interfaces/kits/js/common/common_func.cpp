@@ -82,7 +82,6 @@ constexpr const char* SKILLS = "skills";
 constexpr const char* MAX_ADDITIONAL_NUMBER = "maxCount";
 constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE = "multiAppMode";
-constexpr const char* ORIENTATION_ID = "orientationId";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -146,13 +145,17 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED, ERROR_REMOVE_EXTEND_RESOURCE },
     { ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED, ERROR_GET_EXTEND_RESOURCE },
     { ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED, ERROR_GET_DYNAMIC_ICON },
+    { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED, ERROR_DISABLE_DYNAMIC_ICON },
     { ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED, ERROR_ENABLE_DYNAMIC_ICON },
     { ERR_BUNDLE_MANAGER_INVALID_SCHEME, ERROR_INVALID_LINK },
     { ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES, ERROR_SCHEME_NOT_IN_QUERYSCHEMES },
-    { ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID, ERROR_INVALID_DEVELOPERID },
     { ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
     { ERR_APPEXECFWK_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
+    { ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID, ERROR_INVALID_DEVELOPERID },
+    { ERR_APPEXECFWK_NATIVE_INSTALL_FAILED, ERROR_INSTALL_NATIVE_FAILED},
+    { ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
+    { ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE, ERROR_INVALID_APPINDEX},
     { ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, ERROR_START_SHORTCUT_ERROR },
     { ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
@@ -162,19 +165,16 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
+    { ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
-    { ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER, ERROR_INVALID_APPINDEX },
-    { ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE, ERROR_APP_NOT_SUPPORTED_MULTI_TYPE },
-    { ERR_APPEXECFWK_NATIVE_INSTALL_FAILED, ERROR_INSTALL_NATIVE_FAILED},
-    { ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
-    { ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE, ERROR_INVALID_APPINDEX},
     { ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP, ERROR_INVALID_APPINDEX },
+    { ERR_SHORTCUT_MANAGER_SHORTCUT_ID_ILLEGAL, ERROR_SHORTCUT_ID_ILLEGAL_ERROR },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -1084,9 +1084,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindowSize));
     ConvertWindowSize(env, abilityInfo, nWindowSize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "windowSize", nWindowSize));
-    napi_value nAppIndex;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.appIndex, &nAppIndex));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APP_INDEX, nAppIndex));
+    
     napi_value nSkills;
     size = abilityInfo.skills.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSkills));
@@ -1097,9 +1095,9 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSkills, index, nSkill));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, SKILLS, nSkills));
-    napi_value nOrientationId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.orientationId, &nOrientationId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ORIENTATION_ID, nOrientationId));
+    napi_value nAppIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, abilityInfo.appIndex, &nAppIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APP_INDEX, nAppIndex));
 }
 
 void CommonFunc::ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbilityInfo> &extensionInfos,
@@ -2091,6 +2089,14 @@ void CommonFunc::ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutI
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, intents, index, intent));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "wants", intents));
+    // wrap appIndex
+    napi_value appIndex;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.appIndex, &appIndex));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIndex", appIndex));
+    // wrap sourceType
+    napi_value sourceType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, shortcutInfo.sourceType, &sourceType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "sourceType", sourceType));
 }
 
 void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value)
@@ -2341,7 +2347,7 @@ bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutInten
     napi_get_named_property(env, param, "targetModule", &prop);
     std::string targetModule;
     if (!ParseString(env, prop, targetModule)) {
-        return false;
+        targetModule = "";
     }
     shortcutIntent.targetModule = targetModule;
 
@@ -2357,7 +2363,7 @@ bool CommonFunc::ParseShortcutWant(napi_env env, napi_value param, ShortcutInten
     napi_get_named_property(env, param, "parameters", &prop);
     std::map<std::string, std::string> parameters;
     if (!ParseParameters(env, prop, parameters)) {
-        return false;
+        parameters.clear();
     }
     shortcutIntent.parameters = parameters;
     return true;
@@ -2416,7 +2422,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "moduleName", &prop);
     std::string moduleName;
     if (!ParseString(env, prop, moduleName)) {
-        return false;
+        moduleName = "";
     }
     shortcutInfo.moduleName = moduleName;
 
@@ -2424,7 +2430,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "hostAbility", &prop);
     std::string hostAbility;
     if (!ParseString(env, prop, hostAbility)) {
-        return false;
+        hostAbility = "";
     }
     shortcutInfo.hostAbility = hostAbility;
 
@@ -2432,7 +2438,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "icon", &prop);
     std::string icon;
     if (!ParseString(env, prop, icon)) {
-        return false;
+        icon = "";
     }
     shortcutInfo.icon = icon;
 
@@ -2440,7 +2446,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "iconId", &prop);
     int32_t iconId;
     if (!ParseInt(env, prop, iconId)) {
-        return false;
+        iconId = 0;
     }
     shortcutInfo.iconId = iconId;
 
@@ -2448,7 +2454,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "label", &prop);
     std::string label;
     if (!ParseString(env, prop, label)) {
-        return false;
+        label = "";
     }
     shortcutInfo.label = label;
 
@@ -2456,7 +2462,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "labelId", &prop);
     int32_t labelId;
     if (!ParseInt(env, prop, labelId)) {
-        return false;
+        labelId = 0;
     }
     shortcutInfo.labelId = labelId;
 
@@ -2464,9 +2470,25 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "wants", &prop);
     std::vector<ShortcutIntent> intents;
     if (!ParseShortcutWantArray(env, prop, intents)) {
-        return false;
+        intents.clear();
     }
     shortcutInfo.intents = intents;
+
+    // parse appIndex
+    napi_get_named_property(env, param, "appIndex", &prop);
+    int32_t appIndex;
+    if (!ParseInt(env, prop, appIndex)) {
+        return false;
+    }
+    shortcutInfo.appIndex = appIndex;
+
+    // parse sourceType
+    napi_get_named_property(env, param, "sourceType", &prop);
+    int32_t sourceType;
+    if (!ParseInt(env, prop, sourceType)) {
+        return false;
+    }
+    shortcutInfo.sourceType = sourceType;
     return true;
 }
 

@@ -44,23 +44,23 @@ REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
 
 InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd service instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service instance created");
 }
 
 
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd service instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service instance created");
 }
 
 InstalldService::~InstalldService()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd service instance is destroyed");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service instance destroyed");
 }
 
 void InstalldService::OnStart()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd OnStart");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd OnStart");
     Start();
     if (!Publish(hostImpl_)) {
         LOG_E(BMS_TAG_INSTALLD, "Publish failed");
@@ -76,27 +76,27 @@ void InstalldService::OnStop()
 #ifdef DFX_SIGDUMP_HANDLER_ENABLE
     DeinitSigDumpHandler();
 #endif
-    LOG_I(BMS_TAG_INSTALLD, "installd OnStop");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd OnStop");
 }
 
 bool InstalldService::Init()
 {
     if (isReady_) {
-        LOG_W(BMS_TAG_INSTALLD, "the installd service is already ready");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "the installd service is already ready");
         return false;
     }
     // installd service need mask 000
     umask(INSTALLD_UMASK);
     hostImpl_ = new (std::nothrow) InstalldHostImpl();
     if (hostImpl_ == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "InstalldHostImpl Init failed");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "InstalldHostImpl Init failed");
         return false;
     }
     if (!InitDir(ServiceConstants::HAP_COPY_PATH)) {
-        LOG_I(BMS_TAG_INSTALLD, "HAP_COPY_PATH is already exists");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "HAP_COPY_PATH is already exists");
     }
     if (!InitDir(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)) {
-        LOG_I(BMS_TAG_INSTALLD, "BUNDLE_RESOURCE_RDB_PATH is already exists");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "BUNDLE_RESOURCE_RDB_PATH is already exists");
     }
     return true;
 }
@@ -104,11 +104,11 @@ bool InstalldService::Init()
 bool InstalldService::InitDir(const std::string &path)
 {
     if (InstalldOperator::IsExistDir(path)) {
-        LOG_I(BMS_TAG_INSTALLD, "Path already exists");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLD, "Path already exists");
         return false;
     }
     if (!InstalldOperator::MkOwnerDir(path, true, Constants::FOUNDATION_UID, ServiceConstants::BMS_GID)) {
-        LOG_E(BMS_TAG_INSTALLD, "create path failed, errno : %{public}d", errno);
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "create path failed errno:%{public}d", errno);
         return false;
     }
     return true;
@@ -117,24 +117,24 @@ bool InstalldService::InitDir(const std::string &path)
 void InstalldService::Start()
 {
     if (!Init()) {
-        LOG_E(BMS_TAG_INSTALLD, "init fail");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "init fail");
         return;
     }
     isReady_ = true;
-    LOG_I(BMS_TAG_INSTALLD, "installd service start successfully");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service start successfully");
 }
 
 void InstalldService::Stop()
 {
     if (!isReady_) {
-        LOG_W(BMS_TAG_INSTALLD, "the installd service is already stopped");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLD, "the installd service is already stopped");
         return;
     }
     // remove installd service from system ability manager.
     // since we can't handle the fail case, just ignore the result.
     SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
-    LOG_I(BMS_TAG_INSTALLD, "installd service stop successfully");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service stop successfully");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

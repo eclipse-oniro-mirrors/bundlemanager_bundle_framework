@@ -417,21 +417,31 @@ void BundleUserMgrHostImpl::UninstallBackupUninstallList(int32_t userId)
         APP_LOGI("userId : %{public}d, back uninstall list is empty", userId);
         return;
     }
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+    auto installer = GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("installer is nullptr");
         return;
     }
-    std::vector<BundleInfo> bundleInfos;
+
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    g_installedHapNum = 0;
+    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
+    int32_t totalHapNum = static_cast<int32_t>(uninstallList.size());
     for (const auto &bundleName : uninstallList) {
-        BundleInfo bundleInfo;
-        if (dataMgr->GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId)) {
-            bundleInfos.emplace_back(bundleInfo);
-        }
+        InstallParam installParam;
+        installParam.userId = userId;
+        installParam.needSendEvent = false;
+        installParam.isPreInstallApp = true;
+        sptr<UserReceiverImpl> userReceiverImpl(
+            new (std::nothrow) UserReceiverImpl(bundleName, false));
+        userReceiverImpl->SetBundlePromise(bundlePromise);
+        userReceiverImpl->SetTotalHapNum(totalHapNum);
+        installer->Uninstall(bundleName, installParam, userReceiverImpl);
     }
-    if (!bundleInfos.empty()) {
-        InnerUninstallBundle(userId, bundleInfos);
+    if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
+        bundlePromise->WaitForAllTasksExecute();
     }
+    IPCSkeleton::SetCallingIdentity(identity);
     bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
 }
 }  // namespace AppExecFwk

@@ -44,11 +44,7 @@ ohos_fuzztest("BundleManagerCallbackFuzzTest") {
     "-Wno-unused-variable",
     "-fno-omit-frame-pointer",
   ]
-  deps = [
-    "${core_path}:appexecfwk_core",
-    "//third_party/googletest:gmock_main",
-    "//third_party/googletest:gtest_main",
-  ]
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 

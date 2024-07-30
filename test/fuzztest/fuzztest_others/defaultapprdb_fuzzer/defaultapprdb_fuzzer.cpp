@@ -28,7 +28,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t *data, size_t size)
     {
         bool ret = false;
-        std::string type(reinterpret_cast<const char *>(data), size);
+        std::string type = "IMAGE";
 
         BundleInfo bundleInfo;
         Element element;

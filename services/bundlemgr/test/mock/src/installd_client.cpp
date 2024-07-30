@@ -15,7 +15,6 @@
 
 #include "installd_client.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "installd_death_recipient.h"
 #include "system_ability_definition.h"
@@ -475,6 +474,11 @@ bool InstalldClient::StartInstalldService()
 ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &typeList)
 {
     return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
+}
+
+int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
+{
+    return 0;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

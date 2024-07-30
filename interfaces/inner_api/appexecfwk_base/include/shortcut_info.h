@@ -64,6 +64,8 @@ struct ShortcutInfo : public Parcelable {
     bool isStatic = false;
     bool isHomeShortcut = false;
     bool isEnables = false;
+    int32_t appIndex = 0;
+    int32_t sourceType = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

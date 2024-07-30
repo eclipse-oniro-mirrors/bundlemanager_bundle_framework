@@ -1633,4 +1633,75 @@ HWTEST_F(BmsBundleAppControlTest, GetAbilityRunningControlRule_0100, Function | 
     ErrCode result = appControlManagerDb_->GetAbilityRunningControlRule(appId, appIndex, userId, disposedRules);
     EXPECT_EQ(result, ERR_OK);
 }
+
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5700
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5700, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+
+    std::string appId;
+    DisposedRule disposedRule;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->SetDisposedRule(appId, disposedRule, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5800
+ * @tc.name: test SetDisposedRuleForCloneApp by AppControlManager
+ * @tc.desc: 1.SetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5800, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+
+    std::string appId;
+    DisposedRule disposedRule;
+    int32_t appIndex = 0;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->SetDisposedRuleForCloneApp(appId, disposedRule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_5900
+ * @tc.name: test SetDisposedRuleForCloneApp by AppControlManager
+ * @tc.desc: 1.SetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_5900, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+
+    std::string appId;
+    DisposedRule rule;
+    int32_t appIndex = 0;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->GetDisposedRuleForCloneApp(appId, rule, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_6000
+ * @tc.name: test SetDisposedRuleForCloneApp by AppControlManager
+ * @tc.desc: 1.SetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+
+    std::string appId;
+    int32_t appIndex = 0;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
