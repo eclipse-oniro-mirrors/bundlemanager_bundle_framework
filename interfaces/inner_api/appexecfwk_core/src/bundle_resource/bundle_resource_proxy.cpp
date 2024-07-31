@@ -383,7 +383,7 @@ ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void 
         ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ashMemSize == 0) || ashMemSize > MAX_PARCEL_CAPACITY) {
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
         APP_LOGE("failed due to wrong size");
         ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
