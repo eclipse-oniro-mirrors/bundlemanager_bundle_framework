@@ -2193,7 +2193,8 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
         }
 
         std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
-        auto res = installer->InstallNormalAppInHmp(normalizedAppDir);
+        bool removable = GetRemovableInfo(appDir);
+        auto res = installer->InstallNormalAppInHmp(normalizedAppDir, removable);
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
             result = false;
@@ -2201,6 +2202,18 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
     }
 
     return result;
+}
+
+bool BMSEventHandler::GetRemovableInfo(const std::string& bundleDir)
+{
+    auto it = std::find_if(installList_.begin(), installList_.end(), [&bundleDir](const PreScanInfo& info) {
+        return info.bundleDir == bundleDir;
+    });
+    if (it != installList_.end()) {
+        return it->removable;
+    }
+    LOG_W(BMS_TAG_DEFAULT, "%{public}s not found", bundleDir.c_str());
+    return true;
 }
 
 void BMSEventHandler::FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
