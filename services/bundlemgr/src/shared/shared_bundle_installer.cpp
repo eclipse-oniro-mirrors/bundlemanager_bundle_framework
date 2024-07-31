@@ -15,7 +15,6 @@
 
 #include "shared_bundle_installer.h"
 
-#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "scope_guard.h"
 

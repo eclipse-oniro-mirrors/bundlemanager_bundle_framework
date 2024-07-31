@@ -15,14 +15,9 @@
 
 #include "bundle_distributed_manager.h"
 
-#include "app_log_wrapper.h"
-#include "ability_manager_client.h"
 #include "bundle_manager_callback.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
-#include "free_install_params.h"
-#include "json_util.h"
-#include "scope_guard.h"
 #include "syscap_interface.h"
 
 #ifdef BMS_DEVICE_INFO_MANAGER_ENABLE

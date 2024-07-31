@@ -17,8 +17,6 @@
 
 #include "app_control_constants.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bms_extension_client.h"
 #include "bundle_util.h"
 #include "scope_guard.h"

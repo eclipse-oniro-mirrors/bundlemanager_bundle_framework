@@ -75,6 +75,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -414,6 +415,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -688,6 +690,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

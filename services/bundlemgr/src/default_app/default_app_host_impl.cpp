@@ -16,15 +16,9 @@
 #include "default_app_host_impl.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
-#include "bundle_permission_mgr.h"
-#include "bundle_promise.h"
-#include "bundle_util.h"
-#include "element.h"
 #include "hitrace_meter.h"
 #include "ipc_skeleton.h"
-#include "status_receiver_host.h"
 
 namespace OHOS {
 namespace AppExecFwk {

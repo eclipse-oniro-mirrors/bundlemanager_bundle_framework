@@ -16,8 +16,6 @@
 #include "service_center_connection.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -15,7 +15,6 @@
 
 #include "installd_death_recipient.h"
 
-#include "app_log_wrapper.h"
 #include "installd_client.h"
 
 namespace OHOS {

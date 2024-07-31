@@ -15,13 +15,8 @@
 
 #include "quick_fix_mgr.h"
 
-#include <cinttypes>
-
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
-#include "datetime_ex.h"
-#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
