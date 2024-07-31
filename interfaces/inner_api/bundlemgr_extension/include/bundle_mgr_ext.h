@@ -114,6 +114,10 @@ public:
     {
         return false;
     }
+    virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
+    {
+        return true;
+    }
 };
 
 } // AppExecFwk

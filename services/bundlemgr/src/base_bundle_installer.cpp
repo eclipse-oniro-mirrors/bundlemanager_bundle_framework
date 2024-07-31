@@ -1414,6 +1414,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_UNINSTALL;
     }
 
+    if (!CheckWhetherCanBeUninstalled(bundleName)) {
+        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
+    }
+
     // reboot scan case will not kill the bundle
     if (installParam.noSkipsKill) {
         // kill the bundle process during uninstall.
@@ -5688,6 +5692,18 @@ bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName) const
         return true;
     }
     return false;
+}
+
+bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName) const
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    LOG_I(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
+    bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    if (!res) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall %{public}s rejected", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

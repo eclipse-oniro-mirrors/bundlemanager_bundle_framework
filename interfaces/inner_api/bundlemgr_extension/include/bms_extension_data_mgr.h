@@ -60,6 +60,7 @@ public:
     ErrCode OptimizeDisposedPredicates(const std::string &callingName, const std::string &appId,
         int32_t userId, int32_t appIndex, NativeRdb::AbsRdbPredicates &absRdbPredicates);
     bool IsAppInBlocklist(const std::string &bundleName);
+    bool CheckWhetherCanBeUninstalled(const std::string &bundleName);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;
