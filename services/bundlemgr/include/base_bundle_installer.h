@@ -706,10 +706,10 @@ private:
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
+    bool InitDataMgr();
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool InitDataMgr();
     bool IsAppInBlocklist(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;

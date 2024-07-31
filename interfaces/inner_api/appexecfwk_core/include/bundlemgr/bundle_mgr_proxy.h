@@ -1045,14 +1045,6 @@ public:
     virtual ErrCode SwitchUninstallState(const std::string &bundleName, const bool &state) override;
 
     /**
-     * @brief Get preinstalled application infos.
-     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
-     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
-     */
-    virtual ErrCode GetAllPreinstalledApplicationInfos(
-        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
-
-    /**
      * @brief Query the AbilityInfo by continueType.
      * @param bundleName Indicates the bundle name of the application.
      * @param continueType Indicates the continue type of the ability.
@@ -1062,6 +1054,14 @@ public:
      */
     virtual ErrCode QueryAbilityInfoByContinueType(const std::string &bundleName, const std::string &continueType,
         AbilityInfo &abilityInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    /**
+     * @brief Get preinstalled application infos.
+     * @param preinstalledApplicationInfos Indicates all of the obtained PreinstalledApplicationInfo objects.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode GetAllPreinstalledApplicationInfos(
+        std::vector<PreinstalledApplicationInfo> &preinstalledApplicationInfos) override;
 
     virtual ErrCode QueryCloneAbilityInfo(const ElementName &element,
         int32_t flags, int32_t appIndex, AbilityInfo &abilityInfo, int32_t userId) override;
