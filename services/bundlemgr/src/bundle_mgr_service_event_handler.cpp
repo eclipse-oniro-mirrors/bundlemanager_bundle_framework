@@ -2227,7 +2227,6 @@ bool BMSEventHandler::GetRemovableInfo(const std::string& bundleDir)
     auto it = std::find_if(installList_.begin(), installList_.end(), [&bundleDir](const PreScanInfo& info) {
         return info.bundleDir == bundleDir;
     });
-
     if (it != installList_.end()) {
         return it->removable;
     }
