@@ -4110,10 +4110,6 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (bundleName.empty()) {
-        APP_LOGE_NOFUNC("GetCloneBundleInfo failed bundleName empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
