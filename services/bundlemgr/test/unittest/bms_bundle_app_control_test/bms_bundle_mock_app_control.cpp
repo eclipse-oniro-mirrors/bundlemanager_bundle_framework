@@ -347,7 +347,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0020, Function | SmallTe
     AppRunningControlRuleResult controlRuleResult;
 
     auto res = mgr.GetAppRunningControlRule("", Constants::INVALID_USERID, controlRuleResult);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -380,7 +380,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0010, Function |
 
     setuid(AppControlConstants::FOUNDATION_UID);
     auto res = impl.GetAppRunningControlRule("", USERID, controlRuleResult);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
