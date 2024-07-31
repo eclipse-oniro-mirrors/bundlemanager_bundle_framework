@@ -2477,7 +2477,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "appIndex", &prop);
     int32_t appIndex;
     if (!ParseInt(env, prop, appIndex)) {
-        return false;
+        appIndex = -1;
     }
     shortcutInfo.appIndex = appIndex;
 
@@ -2485,9 +2485,17 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "sourceType", &prop);
     int32_t sourceType;
     if (!ParseInt(env, prop, sourceType)) {
-        return false;
+        sourceType = -1;
     }
     shortcutInfo.sourceType = sourceType;
+    return true;
+}
+
+bool CommonFunc::CheckShortcutInfo(const ShortcutInfo &shortcutInfo)
+{
+    if (shortcutInfo.appIndex < 0 || shortcutInfo.sourceType == -1) {
+        return false;
+    }
     return true;
 }
 
