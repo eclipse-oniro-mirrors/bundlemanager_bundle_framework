@@ -82,6 +82,7 @@ const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const char* CREATE_APP_CLONE = "CreateAppClone";
 const char* DESTROY_APP_CLONE = "destroyAppClone";
+const char* INSTALL_EXISTED = "installExisted";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -1800,6 +1801,105 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo.get(), DESTROY_APP_CLONE, DestroyAppCloneExec, DestroyAppCloneComplete);
     asyncCallbackInfo.release();
     APP_LOGI("call napi destroyAppTwin done");
+    return promise;
+}
+
+static ErrCode InnerInstallExisted(std::string &bundleName, int32_t userId)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
+    APP_LOGD("InstallExisted result is %{public}d", result);
+    return result;
+}
+
+void InstallExistedExec(napi_env env, void *data)
+{
+    InstallExistedCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallExistedCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
+        return;
+    }
+    APP_LOGD("InstallExistedExec param: bundleName = %{public}s, userId = %{public}d",
+        asyncCallbackInfo->bundleName.c_str(),
+        asyncCallbackInfo->userId);
+    asyncCallbackInfo->err =
+        InnerInstallExisted(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
+}
+
+void InstallExistedComplete(napi_env env, napi_status status, void *data)
+{
+    InstallExistedCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallExistedCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<InstallExistedCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
+    APP_LOGD("InstallExistedComplete err is %{public}d", asyncCallbackInfo->err);
+
+    napi_value result[ARGS_SIZE_ONE] = {0};
+    if (asyncCallbackInfo->err == SUCCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
+    } else {
+        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            INSTALL_EXISTED, Constants::PERMISSION_INSTALL_BUNDLE);
+    }
+    CommonFunc::NapiReturnDeferred<InstallExistedCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value InstallExisted(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("begin to InstallExisted");
+    NapiArg args(env, info);
+    std::unique_ptr<InstallExistedCallbackInfo> asyncCallbackInfo = std::make_unique<InstallExistedCallbackInfo>(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGW("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    size_t argc = args.GetMaxArgc();
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGW("parse bundleName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("parse userId failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+                return nullptr;
+            }
+        } else {
+            APP_LOGW("The number of parameters is incorrect");
+            BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (asyncCallbackInfo->userId == Constants::UNSPECIFIED_USERID) {
+        asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<InstallExistedCallbackInfo>(
+        env, asyncCallbackInfo.get(), INSTALL_EXISTED, InstallExistedExec, InstallExistedComplete);
+    asyncCallbackInfo.release();
+    APP_LOGI("call napi InstallExisted done");
     return promise;
 }
 } // AppExecFwk

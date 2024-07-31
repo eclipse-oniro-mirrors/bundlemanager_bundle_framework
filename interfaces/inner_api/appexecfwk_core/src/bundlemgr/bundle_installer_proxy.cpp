@@ -779,5 +779,35 @@ ErrCode BundleInstallerProxy::InstallHmpBundle(const std::string &filePath, bool
     }
     return reply.ReadInt32();
 }
+
+ErrCode BundleInstallerProxy::InstallExisted(const std::string &bundleName, int32_t userId)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write descriptor");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteString16(Str8ToStr16(bundleName))) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write bundleName");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        LOG_E(BMS_TAG_INSTALLER, "failed to write userId");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+
+    auto ret =
+        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_EXISTED, data, reply, option);
+    if (!ret) {
+        LOG_E(BMS_TAG_INSTALLER, "installExisted failed due to send request fail");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_WRITE_PARCEL_ERROR;
+    }
+
+    return reply.ReadInt32();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
