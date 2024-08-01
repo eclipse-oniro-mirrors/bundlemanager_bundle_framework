@@ -18,6 +18,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -214,6 +219,11 @@ ohos_unittest("BmsBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -394,6 +404,11 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -580,6 +595,11 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -738,6 +758,11 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 }
 
 ohos_unittest("BmsBundleInstallCheckerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -881,6 +906,11 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1024,6 +1054,11 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 }
 
 ohos_unittest("BmsSystemBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1174,6 +1209,11 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleInstallDriverTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1364,6 +1404,11 @@ ohos_unittest("BmsBundleInstallDriverTest") {
 }
 
 ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]

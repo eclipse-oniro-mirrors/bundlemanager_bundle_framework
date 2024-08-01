@@ -630,6 +630,9 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveBundleCodeDir_0010, Function
 
     InnerBundleInfo info;
     auto res = appServiceFwkInstaller.RemoveBundleCodeDir(info);
+    if (appServiceFwkInstaller.dataMgr_ == nullptr) {
+        appServiceFwkInstaller.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
     appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
     EXPECT_NE(res, ERR_OK);
 }
@@ -1088,6 +1091,9 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0100, Fu
 {
     AppServiceFwkInstaller installer;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    if (installer.dataMgr_ == nullptr) {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
     EXPECT_NE(ret, ERR_OK);
 }
