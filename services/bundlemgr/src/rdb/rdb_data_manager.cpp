@@ -27,6 +27,7 @@ const int32_t BMS_KEY_INDEX = 0;
 const int32_t BMS_VALUE_INDEX = 1;
 const int32_t WRITE_TIMEOUT = 300; // 300s
 const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
+const std::string BMS_BACK_UP_RDB_NAME = "/bms-backup.db";
 }
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
@@ -70,13 +71,41 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
+    if ((rdbStore_ == nullptr) || (errCode != NativeRdb::E_OK)) {
+        APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
+        return nullptr;
+    }
+    NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
+    int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
+
+    if ((rebuildType != NativeRdb::RebuiltType::NONE)) {
+        APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
+            rebuildCode, static_cast<int32_t>(rebuildType));
+        int32_t restoreRet = rdbStore_->Restore(bmsRdbConfig_.dbPath + BMS_BACK_UP_RDB_NAME);
+        if (restoreRet != NativeRdb::E_OK) {
+            APP_LOGE("rdb restore failed ret:%{public}d", restoreRet);
+        }
+    }
+
     if (rdbStore_ != nullptr) {
         DelayCloseRdbStore();
     }
-    if ((rdbStore_ == nullptr) || (errCode != NativeRdb::E_OK)) {
-        APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
-    }
     return rdbStore_;
+}
+
+void RdbDataManager::BackupRdb()
+{
+    APP_LOGI("%{public}s backup start", bmsRdbConfig_.dbName.c_str());
+    auto rdbStore = GetRdbStore();
+    if (rdbStore == nullptr) {
+        APP_LOGE("RdbStore is null");
+        return;
+    }
+    auto ret = rdbStore->Backup(bmsRdbConfig_.dbPath + BMS_BACK_UP_RDB_NAME);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("Backup failed, errCode:%{public}d", ret);
+    }
+    APP_LOGI("%{public}s backup end", bmsRdbConfig_.dbName.c_str());
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
