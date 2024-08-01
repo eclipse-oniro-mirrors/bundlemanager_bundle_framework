@@ -16,6 +16,7 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
+#include <cstdint>
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
@@ -123,6 +124,9 @@ static bool EndsWith(const std::string &sourceString, const std::string &targetS
 #define HMFS_IOCTL_MAGIC 0xf5
 #define HMFS_IOC_SET_ASDP_ENCRYPTION_POLICY _IOW(HMFS_IOCTL_MAGIC, 84, struct fscrypt_asdp_policy)
 #define FORCE_PROTECT 0x0
+#define HMFS_MONITOR_FL 0x00000002
+#define HMF_IOCTL_HW_GET_FLAGS _IOR(0xf5, 70, unsigned int)
+#define HMF_IOCTL_HW_SET_FLAGS _IOR(0xf5, 71, unsigned int)
 
 struct fscrypt_asdp_policy {
     char version;
@@ -2216,6 +2220,37 @@ bool InstalldOperator::GetAtomicServiceBundleDataDir(const std::string &bundleNa
     }
     closedir(dir);
     return !allPathNames.empty();
+}
+
+void InstalldOperator::AddDeleteDfx(const std::string &path)
+{
+    int32_t fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
+        return;
+    }
+    unsigned int flags = 0;
+    int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
+        close(fd);
+        return;
+    }
+    if (flags & HMFS_MONITOR_FL) {
+        LOG_D(BMS_TAG_INSTALLD, "Delete Control flag is already set");
+        close(fd);
+        return;
+    }
+    flags |= HMFS_MONITOR_FL;
+    ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "add dfx flag  failed errno:%{public}d path %{public}s", errno, path.c_str());
+        close(fd);
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is set succeed", path.c_str());
+    close(fd);
+    return;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
