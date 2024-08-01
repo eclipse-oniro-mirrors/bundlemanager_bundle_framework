@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
+const int32_t CLOSE_TIME = 15; // delay 15s stop rdbStore
 }
 
 BundleResourceRdb::BundleResourceRdb()
@@ -126,6 +127,7 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         APP_LOGE("BatchInsert size not expected");
         return false;
     }
+    BackupRdb();
     return ret;
 }
 
@@ -252,6 +254,7 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
 bool BundleResourceRdb::DeleteAllResourceInfo()
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
+    BackupRdb();
     // delete all resource info
     return rdbDataManager_->DeleteData(absRdbPredicates);
 }
@@ -548,6 +551,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         absRdbPredicates.Clear();
     }
+    BackupRdb();
     return ret;
 }
 
@@ -601,6 +605,28 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     info.ParseKey(key);
     bundleResourceInfo.bundleName = info.bundleName_;
     bundleResourceInfo.appIndex = info.appIndex_;
+}
+
+void BundleResourceRdb::BackupRdb()
+{
+    if (isBackingUp_) {
+        return;
+    }
+    auto ptr = shared_from_this();
+    auto task = [ptr] {
+        APP_LOGI("bundleResource.db backup start");
+        if ((ptr != nullptr) && (ptr->rdbDataManager_ != nullptr)) {
+            ptr->isBackingUp_ = true;
+            std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+            ptr->rdbDataManager_->BackupRdb();
+            ptr->isBackingUp_ = false;
+            APP_LOGI("bundleResource.db backup end");
+            return;
+        }
+        APP_LOGE("bundleResource.db ptr or rdb is null");
+    };
+    std::thread backUpThread(task);
+    backUpThread.detach();
 }
 } // AppExecFwk
 } // OHOS

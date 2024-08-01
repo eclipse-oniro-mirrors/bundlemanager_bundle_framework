@@ -51,6 +51,8 @@ public:
     bool UpdateOrInsertData(
         const NativeRdb::ValuesBucket &valuesBucket, const NativeRdb::AbsRdbPredicates &absRdbPredicates);
 
+    void BackupRdb();
+
 private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     std::mutex rdbMutex_;
