@@ -5014,6 +5014,7 @@ HWTEST_F(BmsBundleDataMgrTest, BatchQueryAbilityInfos_0200, Function | MediumTes
  */
 HWTEST_F(BmsBundleDataMgrTest, GetCloneBundleInfos_0001, Function | MediumTest | Level1)
 {
+    ResetDataMgr();
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME_DEMO;
     BundleInfo bundleInfo;
