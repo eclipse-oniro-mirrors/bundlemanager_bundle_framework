@@ -35,9 +35,9 @@ public:
 
     ErrCode InstallNormalAppInHmp(const std::string &bundleDir, bool removable = true);
 
-    std::set<int32_t> GetRequiredUserIds(std::string bundleName) const;
+    std::set<int32_t> GetRequiredUserIds(std::string bundleName);
 
-    std::set<std::string> GetRollbackHapList(std::set<std::string> hapList) const;
+    std::set<std::string> GetRollbackHapList(std::set<std::string> hapList);
 
     void RollbackHmpBundle(const std::set<std::string> &systemHspList,
         const std::set<std::string> &hapList);
@@ -64,6 +64,12 @@ private:
 
     void UpdateBundleInfoForHmp(const std::string &filePath, std::set<std::string> hapList,
         std::set<std::string> systemHspList);
+
+    bool GetIsRemovable(const std::string &bundleName);
+
+    bool InitDataMgr();
+
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
 
     DISALLOW_COPY_AND_MOVE(HmpBundleInstaller);
 };
