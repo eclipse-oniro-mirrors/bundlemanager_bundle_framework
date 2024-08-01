@@ -1230,7 +1230,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
-    RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
+    RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
@@ -4952,10 +4952,10 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
-void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
+void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
 {
-    if (!isOTA) {
+    if (!installParam.isOTA || installParam.copyHapToInstallPath) {
         return;
     }
     for (const auto &info : newInfos) {
@@ -4963,7 +4963,8 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
         if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
             continue;
         }
-        if (!InstalldClient::GetInstance()->RemoveDir(oldHapPath)) {
+        LOG_I(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
+        if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
     }

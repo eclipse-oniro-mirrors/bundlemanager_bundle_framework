@@ -5784,8 +5784,11 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0010, Function | SmallTest | 
     innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = false;
+    installParam.copyHapToInstallPath = true;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(false, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
@@ -5812,8 +5815,11 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0020, Function | SmallTest | 
     innerModuleInfo.hapPath = "/system/app/module01/module01.hap";
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
@@ -5840,10 +5846,44 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | 
     innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, -1);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: RemoveOldHapIfOTA_0040
+ * @tc.name: RemoveOldHapIfOTAQuickFix
+ * @tc.desc: test RemoveOldHapIfOTA when quickfix
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0040, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace(bundleFile, newInfo);
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
+    oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
+
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = true;
+    BaseBundleInstaller installer;
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
+    auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
 
