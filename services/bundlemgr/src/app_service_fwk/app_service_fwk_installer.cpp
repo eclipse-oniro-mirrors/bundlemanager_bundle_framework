@@ -575,6 +575,10 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
 void AppServiceFwkInstaller::RollBack()
 {
     APP_LOGI("RollBack: %{public}s", bundleName_.c_str());
+    if (newInnerBundleInfo_.IsPreInstallApp()) {
+        APP_LOGW("pre bundle: %{public}s no rollback", bundleName_.c_str());
+        return;
+    }
     // 1.RemoveBundleDir
     RemoveBundleCodeDir(newInnerBundleInfo_);
 
