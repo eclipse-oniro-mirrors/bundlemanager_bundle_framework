@@ -1254,7 +1254,7 @@ bool BundleInstallChecker::MatchSignature(
     const std::vector<std::string> &appSignatures, const std::string &signature)
 {
     if (appSignatures.empty() || signature.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "appSignature of signature is empty");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "appSignature of signature is empty");
         return false;
     }
 
@@ -1381,24 +1381,24 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
-            LOG_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_PHONE) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
-            LOG_W(BMS_TAG_INSTALLER, "current deviceType is phone and bundle is matched with default");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "current deviceType is phone and bundle is matched with default");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_DEFAULT) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) != devVec.end())) {
-            LOG_W(BMS_TAG_INSTALLER, "current deviceType is default and bundle is matched with phone");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "current deviceType is default and bundle is matched with phone");
             continue;
         }
 
         if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
@@ -1522,7 +1522,7 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
             int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
-                LOG_W(BMS_TAG_INSTALLER, "GetParameter failed");
+                LOG_D(BMS_TAG_INSTALLER, "GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
                 LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");

@@ -187,11 +187,11 @@ BMSEventHandler::~BMSEventHandler()
 
 void BMSEventHandler::BmsStartEvent()
 {
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent start");
     BeforeBmsStart();
     OnBmsStarting();
     AfterBmsStart();
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent end");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent end");
 }
 
 void BMSEventHandler::BeforeBmsStart()
@@ -209,7 +209,7 @@ void BMSEventHandler::OnBmsStarting()
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
-        LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
         BundleRebootStartEvent();
         return;
     }
@@ -1617,14 +1617,14 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     std::list<std::string> bundleDirs;
     std::list<std::string> sharedBundleDirs;
     for (const auto &installInfo : installList_) {
-        LOG_I(BMS_TAG_DEFAULT, "Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            LOG_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot",
+                installInfo.bundleDir.c_str());
             continue;
         }
 
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
-            LOG_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
             sharedBundleDirs.emplace_back(installInfo.bundleDir);
         } else {
             bundleDirs.emplace_back(installInfo.bundleDir);
@@ -1676,7 +1676,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) by path(%{public}s)",
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
@@ -1687,7 +1687,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process bundle(%{public}s) by path(%{public}s)",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process -n %{public}s path:%{public}s",
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
@@ -1764,8 +1764,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
-                LOG_E(BMS_TAG_DEFAULT, "bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
-                    "installed bundle(%{public}d)", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
+                LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
+                    "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
             }
@@ -1870,7 +1870,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
-    LOG_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
