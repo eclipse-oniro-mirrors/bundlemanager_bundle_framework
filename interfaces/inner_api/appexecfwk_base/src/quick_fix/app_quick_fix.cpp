@@ -26,10 +26,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string APP_QUICK_FIX_VERSION_CODE = "versionCode";
-const std::string APP_QUICK_FIX_VERSION_NAME = "versionName";
-const std::string APP_QUICK_FIX_DEPLOYED_APP_QF_INFO = "deployedAppqfInfo";
-const std::string APP_QUICK_FIX_DEPLOYING_APP_QF_INFO = "deployingAppqfInfo";
+const char* APP_QUICK_FIX_VERSION_CODE = "versionCode";
+const char* APP_QUICK_FIX_VERSION_NAME = "versionName";
+const char* APP_QUICK_FIX_DEPLOYED_APP_QF_INFO = "deployedAppqfInfo";
+const char* APP_QUICK_FIX_DEPLOYING_APP_QF_INFO = "deployingAppqfInfo";
 }
 
 void to_json(nlohmann::json &jsonObject, const AppQuickFix &appQuickFix)

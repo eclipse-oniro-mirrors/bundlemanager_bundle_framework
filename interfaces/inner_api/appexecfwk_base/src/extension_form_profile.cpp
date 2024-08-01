@@ -27,8 +27,8 @@ namespace {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const int32_t MAX_FORM_NAME = 127;
-const int32_t DEFAULT_RECT_SHAPE = 1;
+const int8_t MAX_FORM_NAME = 127;
+const int8_t DEFAULT_RECT_SHAPE = 1;
 const std::map<std::string, FormsColorMode> formColorModeMap = {
     {"auto",  FormsColorMode::AUTO_MODE},
     {"dark",  FormsColorMode::DARK_MODE},
@@ -77,19 +77,19 @@ struct ExtensionFormProfileInfo {
     std::string formConfigAbility;
     std::string type = "JS";
     std::string uiSyntax = "hml";
-    bool formVisibleNotify = false;
-    bool isDefault = false;
-    bool updateEnabled = false;
     std::string scheduledUpdateTime = "";
     int32_t updateDuration = 0;
     std::string defaultDimension;
-    std::vector<std::string> supportDimensions {};
-    std::vector<Metadata> metadata {};
+    bool formVisibleNotify = false;
+    bool isDefault = false;
+    bool updateEnabled = false;
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = false;
     bool fontScaleFollowSystem = true;
     std::vector<std::string> supportShapes {};
+    std::vector<std::string> supportDimensions {};
+    std::vector<Metadata> metadata {};
 };
 
 struct ExtensionFormProfileInfoStruct {

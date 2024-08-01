@@ -26,22 +26,22 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_VERSION = "version";
-const std::string JSON_KEY_TARGETINFO = "targetInfo";
-const std::string JSON_KEY_TARGETEXTSETTING = "targetExtSetting";
-const std::string JSON_KEY_EXTINFO = "extInfo";
-const std::string JSON_KEY_TRANSACTID = "transactId";
-const std::string JSON_KEY_FLAGS = "flags";
-const std::string JSON_KEY_REASONFLAG = "reasonFlag";
-const std::string JSON_KEY_CALLINGUID = "callingUid";
-const std::string JSON_KEY_CALLINGAPPTYPE = "callingAppType";
-const std::string JSON_KEY_CALLINGBUNDLENAMES = "callingBundleNames";
-const std::string JSON_KEY_CALLINGAPPIDS = "callingAppIds";
-const std::string JSON_KEY_PRELOAD_MODULE_NAMES = "preloadModuleNames";
-const std::string JSON_KEY_ACTION = "action";
-const std::string JSON_KEY_URI = "uri";
-const std::string JSON_KEY_TYPE = "type";
-const std::string JSON_KEY_EMBEDDED = "embedded";
+const char* JSON_KEY_VERSION = "version";
+const char* JSON_KEY_TARGETINFO = "targetInfo";
+const char* JSON_KEY_TARGETEXTSETTING = "targetExtSetting";
+const char* JSON_KEY_EXTINFO = "extInfo";
+const char* JSON_KEY_TRANSACTID = "transactId";
+const char* JSON_KEY_FLAGS = "flags";
+const char* JSON_KEY_REASONFLAG = "reasonFlag";
+const char* JSON_KEY_CALLINGUID = "callingUid";
+const char* JSON_KEY_CALLINGAPPTYPE = "callingAppType";
+const char* JSON_KEY_CALLINGBUNDLENAMES = "callingBundleNames";
+const char* JSON_KEY_CALLINGAPPIDS = "callingAppIds";
+const char* JSON_KEY_PRELOAD_MODULE_NAMES = "preloadModuleNames";
+const char* JSON_KEY_ACTION = "action";
+const char* JSON_KEY_URI = "uri";
+const char* JSON_KEY_TYPE = "type";
+const char* JSON_KEY_EMBEDDED = "embedded";
 }  // namespace
 
 void to_json(nlohmann::json &jsonObject, const TargetExtSetting &targetExtSetting)

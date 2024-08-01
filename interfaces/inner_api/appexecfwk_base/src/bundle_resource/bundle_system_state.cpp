@@ -21,9 +21,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SEPARATOR = "/";
-const std::string JSON_KEY_COLOR_MODE = "colorMode";
-const std::string JSON_KEY_LANGUAGE = "language";
+const char* JSON_KEY_COLOR_MODE = "colorMode";
+const char* JSON_KEY_LANGUAGE = "language";
 }
 
 BundleSystemState::BundleSystemState()

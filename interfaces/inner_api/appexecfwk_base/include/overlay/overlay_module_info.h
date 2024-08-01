@@ -21,7 +21,7 @@
 #include "parcel.h"
 namespace OHOS {
 namespace AppExecFwk {
-enum OverlayState : int32_t {
+enum OverlayState : int8_t {
     OVERLAY_DISABLED = 0,
     OVERLAY_ENABLE,
     OVERLAY_INVALID,
