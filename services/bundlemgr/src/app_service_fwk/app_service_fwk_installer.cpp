@@ -23,11 +23,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string HSP_VERSION_PREFIX = "v";
-const std::string HSP_PATH = ", path: ";
-const std::string SHARED_MODULE_TYPE = "shared";
-const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
-const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+const char* HSP_VERSION_PREFIX = "v";
+const char* HSP_PATH = ", path: ";
+const char* SHARED_MODULE_TYPE = "shared";
+const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -385,7 +385,8 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
         newInfo.GetCurrentModulePackage().c_str(), bundlePath.c_str());
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
@@ -416,7 +417,8 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
 {
     ErrCode result = ERR_OK;
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
     CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
@@ -869,7 +871,8 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(uint32_t versionCode)
         return ERR_OK;
     }
     std::string bundleDir =
-        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
+        std::string(AppExecFwk::Constants::BUNDLE_CODE_DIR) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     APP_LOGI("RemoveDir %{public}s", versionDir.c_str());

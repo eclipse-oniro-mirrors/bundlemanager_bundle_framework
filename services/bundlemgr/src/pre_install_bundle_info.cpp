@@ -20,17 +20,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string BUNDLE_NAME = "bundleName";
-const std::string VERSION_CODE = "versionCode";
-const std::string BUNDLE_PATHS = "bundlePaths";
-const std::string APP_TYPE = "appType";
-const std::string REMOVABLE = "removable";
-const std::string IS_UNINSTALLED = "isUninstalled";
-const std::string MODULE_NAME = "moduleName";
-const std::string LABEL_ID = "labelId";
-const std::string ICON_ID = "iconId";
-const std::string SYSTEM_APP = "systemApp";
-const std::string BUNDLE_TYPE = "bundleType";
+const char* BUNDLE_NAME = "bundleName";
+const char* VERSION_CODE = "versionCode";
+const char* BUNDLE_PATHS = "bundlePaths";
+const char* APP_TYPE = "appType";
+const char* REMOVABLE = "removable";
+const char* IS_UNINSTALLED = "isUninstalled";
+const char* MODULE_NAME = "moduleName";
+const char* LABEL_ID = "labelId";
+const char* ICON_ID = "iconId";
+const char* SYSTEM_APP = "systemApp";
+const char* BUNDLE_TYPE = "bundleType";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const

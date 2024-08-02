@@ -16,6 +16,7 @@
 #include <map>
 #include <mutex>
 #include <set>
+#include <unordered_map>
 
 #include"extension_form_profile.h"
 #include "json_util.h"
@@ -29,12 +30,12 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
-const std::map<std::string, FormsColorMode> formColorModeMap = {
+const std::unordered_map<std::string, FormsColorMode> formColorModeMap = {
     {"auto",  FormsColorMode::AUTO_MODE},
     {"dark",  FormsColorMode::DARK_MODE},
     {"light", FormsColorMode::LIGHT_MODE}
 };
-const std::map<std::string, int32_t> dimensionMap = {
+const std::unordered_map<std::string, int32_t> dimensionMap = {
     {"1*2", 1},
     {"2*2", 2},
     {"2*4", 3},
@@ -43,16 +44,16 @@ const std::map<std::string, int32_t> dimensionMap = {
     {"1*1", 6},
     {"6*4", 7}
 };
-const std::map<std::string, int32_t> shapeMap = {
+const std::unordered_map<std::string, int32_t> shapeMap = {
     {"rect", 1},
     {"circle", 2}
 };
-const std::map<std::string, FormType> formTypeMap = {
+const std::unordered_map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
     {"eTS", FormType::ETS}
 };
 
-const std::map<std::string, FormType> uiSyntaxMap = {
+const std::unordered_map<std::string, FormType> uiSyntaxMap = {
     {"hml", FormType::JS},
     {"arkts", FormType::ETS}
 };

@@ -29,8 +29,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string APP_MARKET_CALLING = "app market";
-    const std::string INVALID_MESSAGE = "INVALID_MESSAGE";
+    const char* APP_MARKET_CALLING = "app market";
+    const char* INVALID_MESSAGE = "INVALID_MESSAGE";
 }
 
 AppControlManager::AppControlManager()

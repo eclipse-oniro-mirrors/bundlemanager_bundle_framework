@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum ErrorCode {
+enum ErrorCode : int8_t {
     NO_ERROR = 0,
     CONNECT_FAILED = -100,
     SEND_REQUEST_FAILED = -101,

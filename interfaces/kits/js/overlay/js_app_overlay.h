@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum OverlayOption : uint32_t {
+enum OverlayOption : uint8_t {
     OPTION_SET_OVERLAY_ENABLED,
     OPTION_SET_OVERLAY_ENABLED_BY_BUNDLE,
     OPTION_GET_OVERLAY_MODULE_INFO,

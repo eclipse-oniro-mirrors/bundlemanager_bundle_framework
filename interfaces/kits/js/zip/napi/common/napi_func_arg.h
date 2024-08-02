@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
-enum ArgumentCount {
+enum ArgumentCount : uint8_t {
     ZERO = 0,
     ONE = 1,
     TWO = 2,
@@ -32,7 +32,7 @@ enum ArgumentCount {
     SEVEN = 7,
 };
 
-enum ArgumentPosition {
+enum ArgumentPosition : uint8_t {
     FIRST = 0,
     SECOND = 1,
     THIRD = 2,

@@ -32,7 +32,7 @@ constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_p
 constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
-const int32_t BASE_API_VERSION = 1000;
+const int16_t BASE_API_VERSION = 1000;
 }
 
 using namespace OHOS::Security;

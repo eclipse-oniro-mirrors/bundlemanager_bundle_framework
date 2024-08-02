@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t DLP_SANDBOX_APP_INDEX = 1000;
+const int16_t DLP_SANDBOX_APP_INDEX = 1000;
 } // namespace
 
 using namespace OHOS::Security;

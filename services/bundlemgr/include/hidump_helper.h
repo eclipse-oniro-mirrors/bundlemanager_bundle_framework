@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class HidumpFlag {
+enum class HidumpFlag : uint8_t {
     UNKNOW = 0,
     GET_HELP,
     GET_ABILITY,

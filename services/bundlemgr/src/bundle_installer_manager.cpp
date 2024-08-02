@@ -25,13 +25,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INSTALL_TASK = "Install_Task";
-const std::string UNINSTALL_TASK = "Uninstall_Task";
-const std::string RECOVER_TASK = "Recover_Task";
-const std::string THREAD_POOL_NAME = "InstallerThreadPool";
+const char* INSTALL_TASK = "Install_Task";
+const char* UNINSTALL_TASK = "Uninstall_Task";
+const char* RECOVER_TASK = "Recover_Task";
+const char* THREAD_POOL_NAME = "InstallerThreadPool";
 const unsigned int TIME_OUT_SECONDS = 60 * 5;
-constexpr int32_t MAX_TASK_NUMBER = 10;
-constexpr int32_t DELAY_INTERVAL_SECONDS = 60;
+constexpr int8_t MAX_TASK_NUMBER = 10;
+constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
 }
 
 BundleInstallerManager::BundleInstallerManager()

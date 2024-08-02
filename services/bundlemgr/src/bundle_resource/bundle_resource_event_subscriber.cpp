@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string OLD_USER_ID = "oldId";
+const char* OLD_USER_ID = "oldId";
 }
 BundleResourceEventSubscriber::BundleResourceEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)

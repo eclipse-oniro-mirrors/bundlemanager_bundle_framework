@@ -22,9 +22,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-const std::string SEPARATOR = "/";
 const std::regex FILE_PATH_REGEX(".*");
-const std::string ZIP_THREAD = "ZipThread";
+const char* ZIP_THREAD = "ZipThread";
 }  // namespace
 using namespace OHOS::AppExecFwk;
 

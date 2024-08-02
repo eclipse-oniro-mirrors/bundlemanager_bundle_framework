@@ -1133,7 +1133,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    std::string tempHapPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH +
+    std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");

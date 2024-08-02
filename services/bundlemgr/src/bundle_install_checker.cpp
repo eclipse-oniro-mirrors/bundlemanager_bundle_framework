@@ -28,41 +28,41 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
-const std::string PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
-const std::string PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
-const std::string PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
-const std::string PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
-const std::string PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
-const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
-const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
-const std::string PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
-const std::string PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
-const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
-const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
-const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
-const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
-const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
-const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
-const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
-const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
-const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
-const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
-const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
-const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
-const std::string APL_NORMAL = "normal";
-const std::string SLASH = "/";
-const std::string DOUBLE_SLASH = "//";
-const std::string SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
-const std::string VALUE_TRUE = "true";
-const std::string VALUE_TRUE_BOOL = "1";
-const std::string VALUE_FALSE = "false";
-const std::string NONISOLATION_ONLY = "nonisolationOnly";
-const std::string ISOLATION_ONLY = "isolationOnly";
-const std::string SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
-const std::string SUPPORT_APP_TYPES_SEPARATOR = ",";
-const int32_t SLAH_OFFSET = 2;
-const int32_t THRESHOLD_VAL_LEN = 40;
+const char* PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
+const char* PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
+const char* PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
+const char* PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
+const char* PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
+const char* PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
+const char* PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
+const char* PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
+const char* PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
+const char* PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
+const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
+const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
+const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
+const char* ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
+const char* ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const char* ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
+const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
+const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
+const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+const char* APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
+const char* BUNDLE_NAME_XTS_TEST = "com.acts.";
+const char* APL_NORMAL = "normal";
+const char* SLASH = "/";
+const char* DOUBLE_SLASH = "//";
+const char* SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
+const char* VALUE_TRUE = "true";
+const char* VALUE_TRUE_BOOL = "1";
+const char* VALUE_FALSE = "false";
+const char* NONISOLATION_ONLY = "nonisolationOnly";
+const char* ISOLATION_ONLY = "isolationOnly";
+const char* SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
+const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
+const int8_t SLAH_OFFSET = 2;
+const int8_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
@@ -1497,8 +1497,8 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
 
 bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string &isolationMode)
 {
-    if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) ||
-        (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL.c_str()) == 0)) {
+    if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE) == 0) ||
+        (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL) == 0)) {
         if (isolationMode == NONISOLATION_ONLY) {
             LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");
             return false;
@@ -1519,7 +1519,7 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
         for (const auto &moduleInfo : moduleInfos) {
             std::string isolationMode = moduleInfo.second.isolationMode;
             char szIsolationModeThresholdMb[THRESHOLD_VAL_LEN] = {0};
-            int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
+            int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE, "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
                 LOG_W(BMS_TAG_INSTALLER, "GetParameter failed");

@@ -23,13 +23,13 @@ namespace AppExecFwk {
 namespace {
     int32_t g_defaultAppJson = ERR_OK;
     std::mutex g_mutex;
-    const std::string INFOS = "infos";
-    const std::string BUNDLE_NAME = "bundleName";
-    const std::string MODULE_NAME = "moduleName";
-    const std::string ABILITY_NAME = "abilityName";
-    const std::string EXTENSION_NAME = "extensionName";
-    const std::string TYPE = "type";
-    const std::string APP_TYPE = "appType";
+    const char* INFOS = "infos";
+    const char* BUNDLE_NAME = "bundleName";
+    const char* MODULE_NAME = "moduleName";
+    const char* ABILITY_NAME = "abilityName";
+    const char* EXTENSION_NAME = "extensionName";
+    const char* TYPE = "type";
+    const char* APP_TYPE = "appType";
 }
 
 std::string DefaultAppData::ToString() const

@@ -38,7 +38,7 @@ using namespace std::chrono_literals;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr unsigned int INSTALLD_UMASK = 0000;
+constexpr uint8_t INSTALLD_UMASK = 0000;
 }
 REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
 

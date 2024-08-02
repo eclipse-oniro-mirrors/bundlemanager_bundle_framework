@@ -24,18 +24,18 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SEPARATOR = "/";
-const std::string ABCS_DIR = "abcs";
-const std::string ABCS_TEMP_DIR = "temp/";
-const std::string DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
-const std::string DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
-const std::string DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
-const std::string DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
-const std::string DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
-const std::string DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
-const std::string DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
-const std::string DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
-const std::string DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
+const char* SEPARATOR = "/";
+const char* ABCS_DIR = "abcs";
+const char* ABCS_TEMP_DIR = "temp/";
+const char* DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+const char* DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+const char* DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
+const char* DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+const char* DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+const char* DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+const char* DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+const char* DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+const char* DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 constexpr const char* ABC_FILE_SUFFIX = ".abc";
 
 bool IsValidPath(const std::string &path)
@@ -70,56 +70,56 @@ std::string GetTempRootDir(const std::string &bundleName)
 bool GetDataDir(const std::string &path, std::string &suffix, std::string &el, std::string &baseType)
 {
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_BASE)) {
-        suffix = path.substr(DATA_STORAGE_EL1_BASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL1_BASE));
         el = ServiceConstants::DIR_EL1;
         baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL1_DATABASE)) {
-        suffix = path.substr(DATA_STORAGE_EL1_DATABASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL1_DATABASE));
         el = ServiceConstants::DIR_EL1;
         baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_BASE)) {
-        suffix = path.substr(DATA_STORAGE_EL2_BASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL2_BASE));
         el = ServiceConstants::DIR_EL2;
         baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL2_DATABASE)) {
-        suffix = path.substr(DATA_STORAGE_EL2_DATABASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL2_DATABASE));
         el = ServiceConstants::DIR_EL2;
         baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_BASE)) {
-        suffix = path.substr(DATA_STORAGE_EL3_BASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL3_BASE));
         el = ServiceConstants::DIR_EL3;
         baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL3_DATABASE)) {
-        suffix = path.substr(DATA_STORAGE_EL3_DATABASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL3_DATABASE));
         el = ServiceConstants::DIR_EL3;
         baseType = ServiceConstants::DATABASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_BASE)) {
-        suffix = path.substr(DATA_STORAGE_EL4_BASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL4_BASE));
         el = ServiceConstants::DIR_EL4;
         baseType = ServiceConstants::BASE;
         return true;
     }
 
     if (BundleUtil::StartWith(path, DATA_STORAGE_EL4_DATABASE)) {
-        suffix = path.substr(DATA_STORAGE_EL4_DATABASE.size());
+        suffix = path.substr(strlen(DATA_STORAGE_EL4_DATABASE));
         el = ServiceConstants::DIR_EL4;
         baseType = ServiceConstants::DATABASE;
         return true;
@@ -243,7 +243,7 @@ std::string VerifyManagerHostImpl::GetRealPath(
 
     std::string filePath;
     if (BundleUtil::StartWith(path, DATA_STORAGE_BUNDLE)) {
-        auto suffix = path.substr(DATA_STORAGE_BUNDLE.size());
+        auto suffix = path.substr(strlen(DATA_STORAGE_BUNDLE));
         filePath.append(Constants::BUNDLE_CODE_DIR).append(ServiceConstants::PATH_SEPARATOR)
             .append(bundleName).append(ServiceConstants::PATH_SEPARATOR).append(suffix);
         return filePath;

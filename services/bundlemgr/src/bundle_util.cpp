@@ -42,12 +42,12 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const size_t ORIGIN_STRING_LENGTH = 32;
+const int8_t ORIGIN_STRING_LENGTH = 32;
 constexpr char UUID_SEPARATOR = '-';
 const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
-const int64_t SPACE_NEED_DOUBLE = 2;
-const uint32_t UUID_LENGTH_MAX = 512;
+const int8_t SPACE_NEED_DOUBLE = 2;
+const uint16_t UUID_LENGTH_MAX = 512;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
 // hmdfs and sharefs config
@@ -57,7 +57,6 @@ constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
-const std::string EMPTY_STRING = "";
 #ifdef CONFIG_POLOCY_ENABLE
     const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
 #endif
@@ -336,7 +335,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
         return;
     }
 
-    realBundleDir += (ServiceConstants::PATH_SEPARATOR + BUNDLE_ID_FILE);
+    realBundleDir += (std::string(ServiceConstants::PATH_SEPARATOR) + BUNDLE_ID_FILE);
 
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
@@ -383,18 +382,19 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
 {
     std::time_t curTime = std::time(0);
     std::string tempDir = ServiceConstants::HAP_COPY_PATH;
+    std::string pathseparator = ServiceConstants::PATH_SEPARATOR;
     if (type == DirType::STREAM_INSTALL_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::STREAM_INSTALL_PATH;
+        tempDir += pathseparator + ServiceConstants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::QUICK_FIX_PATH;
+        tempDir += pathseparator + ServiceConstants::QUICK_FIX_PATH;
     } else if (type == DirType::SIG_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::SIGNATURE_FILE_PATH;
+        tempDir += pathseparator + ServiceConstants::SIGNATURE_FILE_PATH;
     } else if (type == DirType::PGO_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + PGO_FILE_PATH;
+        tempDir += pathseparator + PGO_FILE_PATH;
     } else if (type == DirType::ABC_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + ABC_FILE_PATH;
+        tempDir += pathseparator + ABC_FILE_PATH;
     } else if (type == DirType::EXT_RESOURCE_FILE_DIR) {
-        tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::EXT_RESOURCE_FILE_PATH;
+        tempDir += pathseparator + ServiceConstants::EXT_RESOURCE_FILE_PATH;
     } else {
         return "";
     }
@@ -413,7 +413,7 @@ std::string BundleUtil::CreateSharedBundleTempDir(uint32_t installerId, uint32_t
 {
     std::time_t curTime = std::time(0);
     std::string tempDir = ServiceConstants::HAP_COPY_PATH;
-    tempDir += ServiceConstants::PATH_SEPARATOR + ServiceConstants::STREAM_INSTALL_PATH;
+    tempDir += std::string(ServiceConstants::PATH_SEPARATOR) + ServiceConstants::STREAM_INSTALL_PATH;
     tempDir += ServiceConstants::PATH_SEPARATOR + std::to_string(curTime) + std::to_string(installerId)
         + Constants::FILE_UNDERLINE + std::to_string(index)+ ServiceConstants::PATH_SEPARATOR;
     return CreateTempDir(tempDir);
@@ -744,7 +744,7 @@ bool BundleUtil::RevertToRealPath(const std::string &sandBoxPath, const std::str
     }
 
     realPath = sandBoxPath;
-    std::string relaDataPath = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+    std::string relaDataPath = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(BundleUtil::GetUserIdByCallingUid()) + ServiceConstants::BASE + bundleName;
     realPath.replace(realPath.find(ServiceConstants::SANDBOX_DATA_PATH),
         std::string(ServiceConstants::SANDBOX_DATA_PATH).size(), relaDataPath);

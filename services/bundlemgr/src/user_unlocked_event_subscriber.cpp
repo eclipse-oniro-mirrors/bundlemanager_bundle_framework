@@ -27,11 +27,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-static constexpr int32_t MODE_BASE = 07777;
-static constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
-const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
+static constexpr int16_t MODE_BASE = 07777;
+static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
+const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
@@ -138,7 +138,7 @@ void UpdateAppDataMgr::CreateDataGroupDir(const BundleInfo &bundleInfo, int32_t 
         return;
     }
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,

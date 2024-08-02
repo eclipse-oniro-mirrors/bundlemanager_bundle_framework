@@ -80,14 +80,15 @@ const char* PGO_PARAM = "pgoParams";
 const char* PGO_FILE_PATH = "pgoFilePath";
 const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-const char* CREATE_APP_CLONE = "CreateAppClone";
-const char* DESTROY_APP_CLONE = "destroyAppClone";
+const std::string INSTALL_PARAM = "installParam";
+const std::string CREATE_APP_CLONE = "CreateAppClone";
+const std::string DESTROY_APP_CLONE = "destroyAppClone";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
-constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
-constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
-constexpr int32_t ILLEGAL_APP_INDEX = -1;
+constexpr int16_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
+constexpr int16_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+constexpr int8_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
 bool g_isSystemApp = false;

@@ -42,7 +42,7 @@ namespace {
     constexpr const char* PARSE_SHORTCUT_INFO = "ParseShortCutInfo";
     constexpr const char* PARSE_START_OPTIONS = "ParseStartOptions";
     constexpr const char* START_SHORTCUT = "StartShortcut";
-    const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+    const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
 
     const std::map<int32_t, int32_t> START_SHORTCUT_RES_MAP = {
         {ERR_OK, ERR_OK},

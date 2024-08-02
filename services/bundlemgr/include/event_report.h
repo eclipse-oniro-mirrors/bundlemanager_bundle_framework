@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class BMSEventType {
+enum class BMSEventType : uint8_t {
     UNKNOW = 0,
     /***********FAULT EVENT**************/
     BUNDLE_INSTALL_EXCEPTION,
@@ -51,7 +51,7 @@ enum class BMSEventType {
     FREE_INSTALL_EVENT
 };
 
-enum class BundleEventType {
+enum class BundleEventType : uint8_t {
     UNKNOW = 0,
     INSTALL,
     UNINSTALL,
@@ -60,7 +60,7 @@ enum class BundleEventType {
     QUICK_FIX
 };
 
-enum class InstallScene {
+enum class InstallScene : uint8_t {
     NORMAL = 0,
     BOOT,
     REBOOT,
@@ -68,14 +68,14 @@ enum class InstallScene {
     REMOVE_USER,
 };
 
-enum HiSysEventType {
+enum HiSysEventType : uint8_t {
     FAULT     = 1,    // system fault event
     STATISTIC = 2,    // system statistic event
     SECURITY  = 3,    // system security event
     BEHAVIOR  = 4     // system behavior event
 };
 
-enum class UserEventType {
+enum class UserEventType : uint8_t {
     UNKNOW = 0,
     CREATE_START,
     CREATE_END,

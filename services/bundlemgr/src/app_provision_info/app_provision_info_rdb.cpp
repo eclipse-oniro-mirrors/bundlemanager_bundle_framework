@@ -20,43 +20,43 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string APP_PROVISION_INFO_RDB_TABLE_NAME = "app_provision_info";
+const char* APP_PROVISION_INFO_RDB_TABLE_NAME = "app_provision_info";
 // app provision info table key
-const std::string BUNDLE_NAME = "BUNDLE_NAME";
-const std::string VERSION_CODE = "VERSION_CODE";
-const std::string VERSION_NAME = "VERSION_NAME";
-const std::string UUID = "UUID";
-const std::string TYPE = "TYPE";
-const std::string APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
-const std::string DEVELOPER_ID = "DEVELOPER_ID";
-const std::string CERTIFICATE = "CERTIFICATE";
-const std::string APL = "APL";
-const std::string ISSUER = "ISSUER";
-const std::string VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
-const std::string VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
-const std::string SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
-const std::string ADDITIONAL_INFO = "ADDITIONAL_INFO";
-const std::string DEFAULT_VALUE = "";
-const std::string APP_IDENTIFIER = "APP_IDENTIFIER";
-const std::string APP_SERVICE_CAPABILITIES = "APP_SERVICE_CAPABILITIES";
-const std::string ORGANIZATION = "ORGANIZATION";
-const int32_t INDEX_BUNDLE_NAME = 0;
-const int32_t INDEX_VERSION_CODE = 1;
-const int32_t INDEX_VERSION_NAME = 2;
-const int32_t INDEX_UUID = 3;
-const int32_t INDEX_TYPE = 4;
-const int32_t INDEX_APP_DISTRIBUTION_TYPE = 5;
-const int32_t INDEX_DEVELOPER_ID = 6;
-const int32_t INDEX_CERTIFICATE = 7;
-const int32_t INDEX_APL = 8;
-const int32_t INDEX_ISSUER = 9;
-const int32_t INDEX_VALIDITY_NOT_BEFORE = 10;
-const int32_t INDEX_VALIDITY_NOT_AFTER = 11;
-const int32_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
-const int32_t INDEX_ADDITIONAL_INFO = 13;
-const int32_t INDEX_APP_IDENTIFIER = 14;
-const int32_t INDEX_APP_SERVICE_CAPABILITIES = 15;
-const int32_t INDEX_ORGANIZATION = 16;
+const char* BUNDLE_NAME = "BUNDLE_NAME";
+const char* VERSION_CODE = "VERSION_CODE";
+const char* VERSION_NAME = "VERSION_NAME";
+const char* UUID = "UUID";
+const char* TYPE = "TYPE";
+const char* APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
+const char* DEVELOPER_ID = "DEVELOPER_ID";
+const char* CERTIFICATE = "CERTIFICATE";
+const char* APL = "APL";
+const char* ISSUER = "ISSUER";
+const char* VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
+const char* VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
+const char* SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
+const char* ADDITIONAL_INFO = "ADDITIONAL_INFO";
+const char* DEFAULT_VALUE = "";
+const char* APP_IDENTIFIER = "APP_IDENTIFIER";
+const char* APP_SERVICE_CAPABILITIES = "APP_SERVICE_CAPABILITIES";
+const char* ORGANIZATION = "ORGANIZATION";
+const int8_t INDEX_BUNDLE_NAME = 0;
+const int8_t INDEX_VERSION_CODE = 1;
+const int8_t INDEX_VERSION_NAME = 2;
+const int8_t INDEX_UUID = 3;
+const int8_t INDEX_TYPE = 4;
+const int8_t INDEX_APP_DISTRIBUTION_TYPE = 5;
+const int8_t INDEX_DEVELOPER_ID = 6;
+const int8_t INDEX_CERTIFICATE = 7;
+const int8_t INDEX_APL = 8;
+const int8_t INDEX_ISSUER = 9;
+const int8_t INDEX_VALIDITY_NOT_BEFORE = 10;
+const int8_t INDEX_VALIDITY_NOT_AFTER = 11;
+const int8_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
+const int8_t INDEX_ADDITIONAL_INFO = 13;
+const int8_t INDEX_APP_IDENTIFIER = 14;
+const int8_t INDEX_APP_SERVICE_CAPABILITIES = 15;
+const int8_t INDEX_ORGANIZATION = 16;
 }
 
 AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
@@ -64,24 +64,25 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
     APP_LOGD("create AppProvisionInfoManagerRdb");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = ServiceConstants::BUNDLE_RDB_NAME;
-    bmsRdbConfig.tableName = APP_PROVISION_INFO_RDB_TABLE_NAME;
+    std::string appprovisioninfordbtablename = APP_PROVISION_INFO_RDB_TABLE_NAME;
+    bmsRdbConfig.tableName = appprovisioninfordbtablename;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
-        + APP_PROVISION_INFO_RDB_TABLE_NAME
+        + appprovisioninfordbtablename
         + "(BUNDLE_NAME TEXT PRIMARY KEY NOT NULL, "
         + "VERSION_CODE INTEGER, VERSION_NAME TEXT, UUID TEXT, "
         + "TYPE TEXT, APP_DISTRIBUTION_TYPE TEXT, DEVELOPER_ID TEXT, CERTIFICATE TEXT, "
         + "APL TEXT, ISSUER TEXT, VALIDITY_NOT_BEFORE INTEGER, VALIDITY_NOT_AFTER INTEGER);");
     // SPECIFIED_DISTRIBUTED_TYPE and ADDITIONAL_INFO insert to old database
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
         " ADD SPECIFIED_DISTRIBUTED_TYPE TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
         " ADD ADDITIONAL_INFO TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
         " ADD APP_IDENTIFIER TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
         " ADD APP_SERVICE_CAPABILITIES TEXT;"));
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_PROVISION_INFO_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + appprovisioninfordbtablename +
         " ADD ORGANIZATION TEXT;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

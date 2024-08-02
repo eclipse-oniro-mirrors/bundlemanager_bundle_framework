@@ -18,38 +18,36 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t COMMON_PRIORITY = 0;
-const int32_t HIGH_PRIORITY = 1;
-const std::string INSTALL_LIST = "install_list";
-const std::string UNINSTALL_LIST = "uninstall_list";
-const std::string EXTENSION_TYPE = "extensionType";
-const std::string RECOVER_LIST = "recover_list";
-const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
-const std::string APP_DIR = "app_dir";
-const std::string REMOVABLE = "removable";
-const std::string PRIORITY = "priority";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string TYPE_NAME = "name";
-const std::string KEEP_ALIVE = "keepAlive";
-const std::string SINGLETON = "singleton";
-const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
-const std::string RUNNING_RESOURCES_APPLY = "runningResourcesApply";
-const std::string APP_SIGNATURE = "app_signature";
-const std::string ASSOCIATED_WAKE_UP = "associatedWakeUp";
-const std::string RESOURCES_PATH_1 = "/app/ohos.global.systemres";
-const std::string RESOURCES_PATH_2 = "/app/SystemResources";
-const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
-const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
-const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
-const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
-const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
-const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
-const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
-const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
-const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
-const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
-const std::string ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
-const std::string RESOURCES_APPLY = "resourcesApply";
+const int8_t COMMON_PRIORITY = 0;
+const int8_t HIGH_PRIORITY = 1;
+const char* INSTALL_LIST = "install_list";
+const char* UNINSTALL_LIST = "uninstall_list";
+const char* EXTENSION_TYPE = "extensionType";
+const char* RECOVER_LIST = "recover_list";
+const char* APP_DIR = "app_dir";
+const char* REMOVABLE = "removable";
+const char* BUNDLE_NAME = "bundleName";
+const char* TYPE_NAME = "name";
+const char* KEEP_ALIVE = "keepAlive";
+const char* SINGLETON = "singleton";
+const char* ALLOW_COMMON_EVENT = "allowCommonEvent";
+const char* RUNNING_RESOURCES_APPLY = "runningResourcesApply";
+const char* APP_SIGNATURE = "app_signature";
+const char* ASSOCIATED_WAKE_UP = "associatedWakeUp";
+const char* RESOURCES_PATH_1 = "/app/ohos.global.systemres";
+const char* RESOURCES_PATH_2 = "/app/SystemResources";
+const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
+const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
+const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
+const char* ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
+const char* ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const char* ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
+const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
+const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
+const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+const char* ALLOW_APP_RUN_WHEN_DEVICE_FIRST_LOCKED = "allowAppRunWhenDeviceFirstLocked";
+const char* RESOURCES_APPLY = "resourcesApply";
 }
 
 ErrCode PreBundleProfile::TransformTo(

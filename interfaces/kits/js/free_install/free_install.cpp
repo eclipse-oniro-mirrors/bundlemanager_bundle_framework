@@ -28,7 +28,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-enum class UpgradeFlag {
+enum class UpgradeFlag : int8_t {
     NOT_UPGRADE = 0,
     SINGLE_UPGRADE = 1,
     RELATION_UPGRADE = 2,

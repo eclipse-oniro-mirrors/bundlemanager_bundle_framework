@@ -30,8 +30,8 @@ namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
 // Numbers of pending entries that trigger writting them to the ZIP file.
-constexpr size_t g_MaxPendingEntriesCount = 50;
-const std::string SEPARATOR = "/";
+constexpr uint8_t g_MaxPendingEntriesCount = 50;
+const char* SEPARATOR = "/";
 std::mutex g_mutex;;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
@@ -181,7 +181,7 @@ bool ZipWriter::FlushEntriesIfNeeded(bool force, const OPTIONS &options)
         return true;
     }
     while (pendingEntries_.size() >= g_MaxPendingEntriesCount || (force && !pendingEntries_.empty())) {
-        size_t entry_count = std::min(pendingEntries_.size(), g_MaxPendingEntriesCount);
+        size_t entry_count = std::min(pendingEntries_.size(), size_t(g_MaxPendingEntriesCount));
         std::vector<std::pair<FilePath, FilePath>> relativePaths;
         relativePaths.insert(relativePaths.begin(), pendingEntries_.begin(), pendingEntries_.begin() + entry_count);
         pendingEntries_.erase(pendingEntries_.begin(), pendingEntries_.begin() + entry_count);

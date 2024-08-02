@@ -229,7 +229,7 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
     handler->SaveInstallInfoToCache(info);
-    EXPECT_EQ(info.GetAppCodePath(), Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR);
+    EXPECT_EQ(info.GetAppCodePath(), std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR);
 }
 
 /**

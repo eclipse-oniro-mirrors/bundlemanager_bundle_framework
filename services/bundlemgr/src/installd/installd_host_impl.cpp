@@ -53,8 +53,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
-const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
     "/files",
@@ -62,15 +62,15 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
-const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
-const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
-const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
-const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-const std::string BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
-const std::string BUNDLE_BACKUP_INNER_DIR = "/.backup";
+const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
+const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
+const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
+const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
+const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 constexpr const char* EXTENSION_CONFIG_DEFAULT_PATH = "/system/etc/ams_extension_config.json";
 #ifdef CONFIG_POLOCY_ENABLE
 constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.json";
@@ -78,7 +78,7 @@ constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.js
 constexpr const char* EXTENSION_CONFIG_NAME = "ams_extension_config";
 constexpr const char* EXTENSION_TYPE_NAME = "extension_type_name";
 constexpr const char* EXTENSION_SERVICE_NEED_CREATE_SANDBOX = "need_create_sandbox";
-enum class DirType {
+enum class DirType : uint8_t {
     DIR_EL1,
     DIR_EL2,
 };
@@ -301,9 +301,9 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
 {
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -323,9 +323,9 @@ static void CreateNewBackupExtHomeDir(const std::string &bundleName, const int32
 {
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -547,9 +547,9 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -565,9 +565,9 @@ static ErrCode RemoveNewBackupExtHomeDir(const std::string &bundleName, const in
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -583,9 +583,9 @@ static void CleanBackupExtHomeDir(const std::string &bundleName, const int useri
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d", int(dirType));
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -599,9 +599,9 @@ static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int us
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        dirType, bundleBackupDir.c_str());
+        int(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d", dirType);
+        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d", int(dirType));
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -864,7 +864,8 @@ int64_t InstalldHostImpl::HandleAppDataSizeStats(const std::string &bundleName,
     const int32_t userId, const int32_t appIndex, std::vector<std::string> &cachePath)
 {
     std::vector<std::string> bundlePath;
-    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
+    bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
+        ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
     bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
     // ark profile
     bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);
@@ -945,7 +946,8 @@ ErrCode InstalldHostImpl::GetAllBundleStats(const std::vector<std::string> &bund
         const auto &bundleName = bundleNames[index];
         const auto &uid = uids[index];
         std::vector<std::string> bundlePath;
-        bundlePath.push_back(Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
+        bundlePath.push_back(std::string(Constants::BUNDLE_CODE_DIR) +
+            ServiceConstants::PATH_SEPARATOR + bundleName); // bundle code
         bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
         // ark profile
         bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + ServiceConstants::PATH_SEPARATOR + bundleName);

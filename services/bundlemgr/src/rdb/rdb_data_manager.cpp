@@ -21,12 +21,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string BMS_KEY = "KEY";
-const std::string BMS_VALUE = "VALUE";
-const int32_t BMS_KEY_INDEX = 0;
-const int32_t BMS_VALUE_INDEX = 1;
-const int32_t WRITE_TIMEOUT = 300; // 300s
-const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
+const char* BMS_KEY = "KEY";
+const char* BMS_VALUE = "VALUE";
+const int8_t BMS_KEY_INDEX = 0;
+const int8_t BMS_VALUE_INDEX = 1;
+const int16_t WRITE_TIMEOUT = 300; // 300s
+const int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 }
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)

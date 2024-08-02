@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SEPARATOR = "/";
+const char* SEPARATOR = "/";
 constexpr const char* EXT_RESOURCE_FILE_SUFFIX = ".hsp";
 
 bool IsFileNameValid(const std::string &fileName)

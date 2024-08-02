@@ -29,8 +29,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t WAIT_TIMES = 40;
-const int32_t EACH_TIME = 1000; // 1000ms
+const int8_t WAIT_TIMES = 40;
+const int16_t EACH_TIME = 1000; // 1000ms
 } // namespace
 using namespace OHOS::Security;
 BundleMgrCommonEventSubscriber::BundleMgrCommonEventSubscriber(

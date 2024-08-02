@@ -148,7 +148,7 @@ struct ExtendResourceInfo {
     std::string filePath;
 };
 
-enum InstallExceptionStatus : int32_t {
+enum InstallExceptionStatus : uint8_t {
     INSTALL_START = 1,
     INSTALL_FINISH,
     UPDATING_EXISTED_START,
@@ -166,7 +166,7 @@ struct InstallMark {
 };
 class InnerBundleInfo {
 public:
-    enum class BundleStatus {
+    enum class BundleStatus : uint8_t {
         ENABLED = 1,
         DISABLED,
     };

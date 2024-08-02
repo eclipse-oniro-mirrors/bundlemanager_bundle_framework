@@ -42,7 +42,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
-const int32_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
+const int16_t EL5_FILEKEY_SERVICE_ABILITY_ID = 8250;
 } // namespace
 
 const bool REGISTER_RESULT =

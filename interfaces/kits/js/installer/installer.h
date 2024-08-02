@@ -31,7 +31,7 @@ struct InstallResult {
     std::string resultMsg;
 };
 
-enum class InstallOption {
+enum class InstallOption : uint8_t {
     INSTALL = 0,
     RECOVER = 1,
     UNINSTALL = 2,

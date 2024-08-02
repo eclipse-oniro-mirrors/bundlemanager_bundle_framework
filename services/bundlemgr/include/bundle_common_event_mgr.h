@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class NotifyType {
+enum class NotifyType : uint8_t {
     INSTALL = 1,
     UPDATE,
     UNINSTALL_BUNDLE,
@@ -43,7 +43,7 @@ enum class NotifyType {
     START_INSTALL,
 };
 
-enum class SandboxInstallType : uint32_t {
+enum class SandboxInstallType : uint8_t {
     INSTALL = 0,
     UNINSTALL,
 };

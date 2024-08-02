@@ -28,13 +28,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
-static const std::string ROUTER_MAP = "routerMap";
-static const std::string ROUTER_MAP_DATA = "data";
-static const std::string ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
-static const size_t DATA_MAX_LENGTH = 4096;
+static const char* ROUTER_MAP = "routerMap";
+static const char* ROUTER_MAP_DATA = "data";
+static const char* ROUTER_ITEM_KEY_CUSTOM_DATA = "customData";
+static const uint16_t DATA_MAX_LENGTH = 4096;
 const char* NO_DISABLING_CONFIG_KEY = "residentProcessInExtremeMemory";
 const char* NO_DISABLING_KEY_BUNDLE_NAME = "bundleName";
 

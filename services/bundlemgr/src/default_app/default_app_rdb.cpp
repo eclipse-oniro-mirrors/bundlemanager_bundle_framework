@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t INITIAL_USER_ID = -1;
-const std::string DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
-const std::string BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
+constexpr int8_t INITIAL_USER_ID = -1;
+const char* DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
+const char* BACK_UP_DEFAULT_APP_JSON_PATH = "/etc/app/backup_default_app.json";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 }
 DefaultAppRdb::DefaultAppRdb()

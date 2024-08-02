@@ -24,7 +24,7 @@ namespace {
 const std::vector<std::string> DRIVER_PROPERTIES {
     "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend"
 };
-const std::string TEMP_PREFIX = "temp_";
+const char* TEMP_PREFIX = "temp_";
 } // namespace
 
 ErrCode DriverInstaller::CopyAllDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,

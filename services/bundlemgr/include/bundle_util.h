@@ -25,7 +25,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class DirType {
+enum class DirType : uint8_t {
     STREAM_INSTALL_DIR = 0,
     QUICK_FIX_DIR = 1,
     SIG_FILE_DIR = 2,

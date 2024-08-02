@@ -31,16 +31,16 @@
 
 using namespace OHOS::AppExecFwk;
 namespace {
-const std::string REGISTERCALLBACK = "BundleStatusChange";
-const std::string UNREGISTERCALLBACK = "BundleStatusChange";
-const std::string TYPE_MISMATCH = "type mismatch";
-constexpr int32_t NAPI_RETURN_ZERO = 0;
-constexpr int32_t OPERATION_SUCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
-constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
-constexpr int32_t INDEX_ONE = 1;
-constexpr int32_t INDEX_TWO = 2;
-constexpr int32_t INDEX_THREE = 3;
+const char* REGISTERCALLBACK = "BundleStatusChange";
+const char* UNREGISTERCALLBACK = "BundleStatusChange";
+const char* TYPE_MISMATCH = "type mismatch";
+constexpr int8_t NAPI_RETURN_ZERO = 0;
+constexpr int8_t OPERATION_SUCESS = 0;
+constexpr int8_t OPERATION_FAILED = 1;
+constexpr int8_t OPERATION_TYPE_MIAMATCH = 2;
+constexpr int8_t INDEX_ONE = 1;
+constexpr int8_t INDEX_TWO = 2;
+constexpr int8_t INDEX_THREE = 3;
 }
 
 struct AsyncHandleBundleContext {

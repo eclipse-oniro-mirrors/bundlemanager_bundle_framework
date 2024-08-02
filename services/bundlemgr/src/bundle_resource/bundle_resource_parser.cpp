@@ -34,8 +34,8 @@ const char* FOREGROUND = "foreground";
 const char* BACKGROUND = "background";
 const char CHAR_COLON = ':';
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
-const int32_t BADGE_SIZE = 62;
+const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+const int8_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {

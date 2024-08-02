@@ -64,21 +64,21 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
-constexpr int32_t DATA_GROUP_INDEX_START = 1;
-constexpr int32_t UUID_LENGTH = 36;
-constexpr int32_t PROFILE_PREFIX_LENGTH = 9;
+constexpr int8_t DATA_GROUP_INDEX_START = 1;
+constexpr int8_t UUID_LENGTH = 36;
+constexpr int8_t PROFILE_PREFIX_LENGTH = 9;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 // share action
 constexpr const char* SHARE_ACTION = "ohos.want.action.sendData";
-const std::string WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
-const std::string SUMMARY_TOTAL_COUNT = "totalCount";
-const std::string WANT_PARAM_SUMMARY = "summary";
-constexpr int32_t DEFAULT_SUMMARY_COUNT = 0;
+const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
+const char* SUMMARY_TOTAL_COUNT = "totalCount";
+const char* WANT_PARAM_SUMMARY = "summary";
+constexpr int8_t DEFAULT_SUMMARY_COUNT = 0;
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
-constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+constexpr int8_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // profile path
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
 constexpr const char* NETWORK_PROFILE_PATH = "resources/base/profile/network_config.json";
@@ -89,9 +89,9 @@ constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 constexpr const char* SCHEME_HTTPS = "https";
-const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
-const std::string ENTRY = "entry";
-const std::string CLONE_BUNDLE_PREFIX = "clone_";
+const char* BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
+const char* ENTRY = "entry";
+const char* CLONE_BUNDLE_PREFIX = "clone_";
 
 const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -104,11 +104,11 @@ const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr const char* URI_SEPARATOR = "://";
-constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
-constexpr int32_t INVALID_BUNDLEID = -1;
+constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
+constexpr int8_t INVALID_BUNDLEID = -1;
 constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
-constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
+constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -247,7 +247,8 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
     auto stateRange = transferStates_.equal_range(state);
     for (auto previousState = stateRange.first; previousState != stateRange.second; ++previousState) {
         if (item->second == previousState->second) {
-            APP_LOGD("update result:success, current:%{public}d, state:%{public}d", previousState->second, state);
+            APP_LOGD("update result:success, current:%{public}d, state:%{public}d",
+                int(previousState->second), int(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
                 DeleteBundleInfo(bundleName, state);
@@ -258,7 +259,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
         }
     }
     APP_LOGW("bundleName: %{public}s, update result:fail, reason:incorrect current:%{public}d, state:%{public}d",
-        bundleName.c_str(), item->second, state);
+        bundleName.c_str(), int(item->second), int(state));
     return false;
 }
 
@@ -1959,7 +1960,7 @@ void BundleDataMgr::GetBundleNameAndIndexByName(
         appIndex = 0;
         return;
     }
-    bundleName = keyName.substr(pos + CLONE_BUNDLE_PREFIX.size());
+    bundleName = keyName.substr(pos + strlen(CLONE_BUNDLE_PREFIX));
 }
 
 std::vector<int32_t> BundleDataMgr::GetCloneAppIndexes(const std::string &bundleName, int32_t userId) const
@@ -6499,7 +6500,7 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     std::string path;
     if (aotCompileStatus == AOTCompileStatus::COMPILE_SUCCESS) {
         abi = ServiceConstants::ARM64_V8A;
-        path = ServiceConstants::ARM64 + ServiceConstants::PATH_SEPARATOR;
+        path = std::string(ServiceConstants::ARM64) + ServiceConstants::PATH_SEPARATOR;
     }
     item->second.SetArkNativeFileAbi(abi);
     item->second.SetArkNativeFilePath(path);
@@ -6923,7 +6924,7 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
         APP_LOGW("get uuid by data group id failed");
         return false;
     }
-    dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
+    dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR + std::to_string(userId)
         + ServiceConstants::DATA_GROUP_PATH + uuid;
     APP_LOGD("groupDir: %{private}s", dir.c_str());
     return true;
@@ -7352,7 +7353,7 @@ void BundleDataMgr::CreateGroupDir(const InnerBundleInfo &innerBundleInfo, int32
     }
 
     for (const DataGroupInfo &dataGroupInfo : infos) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
