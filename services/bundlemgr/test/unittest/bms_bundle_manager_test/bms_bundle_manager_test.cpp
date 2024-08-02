@@ -4958,6 +4958,37 @@ HWTEST_F(BmsBundleManagerTest, AgingUtilTest_0001, Function | SmallTest | Level1
 }
 
 /**
+ * @tc.number: AgingUtilTest_0002
+ * @tc.name: test GetNowSysTimeMs
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, AgingUtilTest_0002, Function | SmallTest | Level1)
+{
+    std::vector<AgingBundleInfo> bundles;
+    AgingBundleInfo bundle1("bundle1", 0, 0);
+    AgingBundleInfo bundle2("bundle2", 0, 0);
+    bundles.push_back(bundle1);
+    bundles.push_back(bundle2);
+    AgingUtil::SortAgingBundles(bundles);
+
+    int64_t ret = AgingUtil::GetNowSysTimeMs();
+    EXPECT_NE(ret, 0);
+}
+
+/**
+ * @tc.number: AgingUtilTest_0003
+ * @tc.name: test GetUnusedTimeMsBaseOnCurrentTime
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, AgingUtilTest_0003, Function | SmallTest | Level1)
+{
+    int64_t currentTimeMs = 1722583028;
+    int32_t days = 10;
+    int64_t ret = AgingUtil::GetUnusedTimeMsBaseOnCurrentTime(currentTimeMs, days);
+    EXPECT_NE(ret, 0);
+}
+
+/**
  * @tc.number: GetInstallerIdTest_001
  * @tc.name: test Marshalling
  * @tc.desc: 1.system run normally
