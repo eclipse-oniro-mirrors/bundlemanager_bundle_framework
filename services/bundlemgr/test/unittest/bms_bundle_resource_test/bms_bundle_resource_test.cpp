@@ -27,6 +27,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_drawable.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_callback.h"
@@ -3732,6 +3733,164 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0164, Function | SmallTest
     int32_t appIndex = 1;
     bool ret = BundleResourceHelper::DeleteCloneBundleResourceInfo(BUNDLE_NAME, false, USERID);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0165
+ * Function: AddResourceInfoByBundleName
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0165, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->AddResourceInfoByBundleName("", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleResourceHostImpl->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0166
+ * Function: AddResourceInfoByAbility
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByAbility
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0166, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    auto ret = bundleResourceHostImpl->AddResourceInfoByAbility("", "", "", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, "", "", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, "", USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleResourceHostImpl->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0167
+ * Function: DeleteResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0167, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::string key = "test_key";
+    auto ret = bundleResourceHostImpl->DeleteResourceInfo("");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleResourceHostImpl->DeleteResourceInfo(key);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0168
+ * Function: CheckBundleNameValid
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test CheckBundleNameValid
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0168, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    int32_t appIndex = 1;
+    auto ret = bundleResourceHostImpl->CheckBundleNameValid(BUNDLE_NAME, 0);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = bundleResourceHostImpl->CheckBundleNameValid(BUNDLE_NAME, appIndex);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0169
+ * Function: GetIconResourceByDrawableNoTheme
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetIconResourceByDrawableNoTheme
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0169, Function | SmallTest | Level0)
+{
+    BundleResourceDrawable drawable;
+    uint32_t iconId = 1;
+    int32_t density = 1;
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ResourceInfo resourceInfo;
+    bool ret = drawable.GetIconResourceByDrawableNoTheme(iconId, density, resourceManager, resourceInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0170
+ * Function: OnUserIdChanged
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test OnUserIdChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0170, Function | SmallTest | Level0)
+{
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<BundleResourceEventSubscriber>(subscribeInfo);
+    int32_t oldUserId = 1;
+    int32_t newUserId = 2;
+    subscriberPtr->OnUserIdChanged(oldUserId, newUserId);
+    EXPECT_NE(subscriberPtr, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0171
+ * Function: UpdateCloneBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test UpdateCloneBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0171, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    std::string bundleName = "bundleName/moduleName/abilityName";
+    int32_t appIndex = 1;
+    uint32_t type = static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE);
+    resourceInfo.bundleName_ = bundleName;
+    resourceInfo.icon_ = "data:image/png";
+    resourceInfo.foreground_.push_back(1);
+    resourceInfo.label_ = "xxxx";
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ret = manager->bundleResourceRdb_->AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ret);
+    ret = manager->UpdateCloneBundleResourceInfo(bundleName, appIndex, 0);
+    EXPECT_FALSE(ret);
+    ret = manager->UpdateCloneBundleResourceInfo(bundleName, appIndex, type);
+    EXPECT_FALSE(ret);
+    // delete key
+    ret = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0172
+ * Function: ProcessResourceInfoNoNeedToParseOtherIcon
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test ProcessResourceInfoNoNeedToParseOtherIcon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0172, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    resourceInfos.push_back(resourceInfo);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    manager->ProcessResourceInfoNoNeedToParseOtherIcon(resourceInfos);
+    EXPECT_FALSE(resourceInfos[0].labelNeedParse_);
+    EXPECT_EQ(resourceInfos[0].label_, "");
 }
 #endif
 } // OHOS
