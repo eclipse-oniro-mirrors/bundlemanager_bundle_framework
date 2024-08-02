@@ -484,6 +484,20 @@ bool BundleUtil::IsExistFile(const std::string &path)
     return S_ISREG(buf.st_mode);
 }
 
+bool BundleUtil::IsExistFileNoLog(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
+        return false;
+    }
+
+    return S_ISREG(buf.st_mode);
+}
+
 bool BundleUtil::IsExistDir(const std::string &path)
 {
     if (path.empty()) {
@@ -493,6 +507,20 @@ bool BundleUtil::IsExistDir(const std::string &path)
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
         APP_LOGE("fail stat errno:%{public}d", errno);
+        return false;
+    }
+
+    return S_ISDIR(buf.st_mode);
+}
+
+bool BundleUtil::IsExistDirNoLog(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+
+    struct stat buf = {};
+    if (stat(path.c_str(), &buf) != 0) {
         return false;
     }
 

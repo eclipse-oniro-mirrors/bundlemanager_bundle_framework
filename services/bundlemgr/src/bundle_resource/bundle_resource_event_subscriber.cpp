@@ -39,6 +39,8 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
     std::string action = data.GetWant().GetAction();
     BundleResourceCallback callback;
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
+        int32_t userId = data.GetCode();
+        APP_LOGI("switch to userId:%{public}d", userId);
         // when reboot, user 0 switch to user 100, no need to flush resource rdb
         static bool isFirstSwitch = true;
         if (!isFirstSwitch) {
@@ -48,10 +50,12 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
                 APP_LOGE("oldId:%{public}s parse failed", oldId.c_str());
                 oldUserId = Constants::INVALID_USERID;
             }
-            std::thread userIdChangedThread(OnUserIdChanged, oldUserId, data.GetCode());
+            std::thread userIdChangedThread(OnUserIdChanged, oldUserId, userId);
             userIdChangedThread.detach();
+        } else {
+            APP_LOGI("first switch to userId:%{public}d", userId);
+            isFirstSwitch = false;
         }
-        isFirstSwitch = false;
     }
     // for other event
 }
