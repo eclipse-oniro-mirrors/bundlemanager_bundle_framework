@@ -353,9 +353,9 @@ constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* APP_CONFIGURATION = "configuration";
 // multiappmode
 constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";
-constexpr const char* APP_CONFIGURATION = "configuration";
 constexpr const char* APP_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 constexpr const char* MULTI_APP_MODE_TYPE = "multiAppModeType";
 constexpr const char* MULTI_APP_MODE_MAX_ADDITIONAL_NUMBER = "maxCount";
