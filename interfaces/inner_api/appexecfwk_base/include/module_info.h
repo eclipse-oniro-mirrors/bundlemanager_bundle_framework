@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum ProfileType {
+enum ProfileType : int8_t {
     INTENT_PROFILE = 1,
     ADDITION_PROFILE = 2,
     NETWORK_PROFILE = 3,

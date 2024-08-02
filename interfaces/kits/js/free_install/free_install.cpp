@@ -39,16 +39,16 @@ const std::vector<int32_t> BUNDLE_PACK_FLAGS = {
     BundlePackFlag::GET_BUNDLE_SUMMARY,
     BundlePackFlag::GET_MODULE_SUMMARY,
 };
-const std::string RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
-const std::string RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
-const std::string RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
-const std::string RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
-const std::string DISPATCH_INFO_VERSION = "1";
-const std::string DISPATCH_INFO_DISPATCH_API = "1.0";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string MODULE_NAME = "moduleName";
-const std::string UPGRADE_FLAG = "upgradeFlag";
-const std::string BUNDLE_PACK_FLAG = "bundlePackFlag";
+const char* RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE = "isHapModuleRemovable";
+const char* RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG = "setHapModuleUpgradeFlag";
+const char* RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO = "getBundlePackInfo";
+const char* RESOURCE_NAME_OF_GET_DISPATCH_INFO = "getDispatchInfo";
+const char* DISPATCH_INFO_VERSION = "1";
+const char* DISPATCH_INFO_DISPATCH_API = "1.0";
+const char* BUNDLE_NAME = "bundleName";
+const char* MODULE_NAME = "moduleName";
+const char* UPGRADE_FLAG = "upgradeFlag";
+const char* BUNDLE_PACK_FLAG = "bundlePackFlag";
 }
 
 static ErrCode InnerIsHapModuleRemovable(const std::string &bundleName,

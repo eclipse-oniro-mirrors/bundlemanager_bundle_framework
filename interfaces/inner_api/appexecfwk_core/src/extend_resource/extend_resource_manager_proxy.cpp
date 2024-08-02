@@ -29,7 +29,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SEPARATOR = "/";
+const char* SEPARATOR = "/";
 const int32_t DEFAULT_BUFFER_SIZE = 65536;
 }
 ExtendResourceManagerProxy::ExtendResourceManagerProxy(const sptr<IRemoteObject> &object)
@@ -351,12 +351,12 @@ bool ExtendResourceManagerProxy::SendRequest(
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("failed to send request %{public}d due to remote object null", code);
+        APP_LOGE("failed to send request %{public}hhd due to remote object null", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error %{public}d in transact %{public}d", result, code);
+        APP_LOGE("receive error %{public}d in transact %{public}hhd", result, code);
         return false;
     }
     return true;

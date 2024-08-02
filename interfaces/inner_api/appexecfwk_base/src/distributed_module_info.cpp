@@ -27,7 +27,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_ABILITIES = "abilities";
+const char* JSON_KEY_ABILITIES = "abilities";
 }
 bool DistributedModuleInfo::ReadFromParcel(Parcel &parcel)
 {

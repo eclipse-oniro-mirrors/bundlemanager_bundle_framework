@@ -24,13 +24,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_BUNDLE_NAME = "bundleName";
-const std::string JSON_KEY_MODULE_NAME = "moduleName";
-const std::string JSON_KEY_LABEL_ID = "labelId";
-const std::string JSON_KEY_ICON_ID = "iconId";
-const std::string JSON_KEY_SYSTEM_APP = "systemApp";
-const std::string JSON_KEY_BUNDLE_TYPE = "bundleType";
-const std::string JSON_KEY_CODE_PATHS = "codePaths";
+const char* JSON_KEY_BUNDLE_NAME = "bundleName";
+const char* JSON_KEY_MODULE_NAME = "moduleName";
+const char* JSON_KEY_LABEL_ID = "labelId";
+const char* JSON_KEY_ICON_ID = "iconId";
+const char* JSON_KEY_SYSTEM_APP = "systemApp";
+const char* JSON_KEY_BUNDLE_TYPE = "bundleType";
+const char* JSON_KEY_CODE_PATHS = "codePaths";
 }
 
 bool RecoverableApplicationInfo::ReadFromParcel(Parcel &parcel)
