@@ -52,10 +52,10 @@ private:
     bool IsSupportARM64() const;
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
-        const std::string &compileMode, bool isEnanleBaselinePgo = false) const;
+        const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
     ErrCode HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
-        const std::string &compileMode, bool isEnanleBaselinePgo = false) const;
+        const std::string &compileMode, bool isEnableBaselinePgo = false) const;
     EventInfo HandleCompileWithBundle(const std::string &bundleName, const std::string &compileMode,
         std::shared_ptr<BundleDataMgr> dataMgr) const;
     ErrCode HandleCompileBundles(const std::vector<std::string> &bundleNames, const std::string &compileMode,
@@ -76,6 +76,12 @@ private:
     bool GetUserBehaviourAppList(std::vector<std::string> &bundleNames, int32_t size) const;
     bool IsOTACompileSwitchOn() const;
     void ReportSysEvent(const std::map<std::string, EventInfo> &sysEventMap) const;
+    
+    void DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId) const;
+    void ClearArkAp(const std::string &oldAOTVersion, const std::string &curAOTVersion) const;
+    std::string GetCurAOTVersion() const;
+    bool GetOldAOTVersion(std::string &oldAOTVersion) const;
+    void SaveAOTVersion(const std::string &curAOTVersion) const;
 private:
     mutable std::mutex executeMutex_;
     mutable std::mutex idleMutex_;

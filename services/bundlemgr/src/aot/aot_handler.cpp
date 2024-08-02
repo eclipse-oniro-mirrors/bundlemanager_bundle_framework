@@ -34,6 +34,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 using UserStatusFunc = ErrCode (*)(int32_t, std::vector<std::string>&, std::vector<std::string>&);
+using AOTVersionFunc = ErrCode (*)(std::string&);
 // ark compile option parameter key
 constexpr const char* INSTALL_COMPILE_MODE = "persist.bm.install.arkopt";
 constexpr const char* IDLE_COMPILE_MODE = "persist.bm.idle.arkopt";
@@ -80,7 +81,11 @@ constexpr const char* COMPILE_NONE = "none";
 
 constexpr const char* USER_STATUS_SO_NAME = "libuser_status_client.z.so";
 constexpr const char* USER_STATUS_FUNC_NAME = "GetUserPreferenceApp";
+constexpr const char* ARK_SO_NAME = "libark_jsruntime.so";
+constexpr const char* AOT_VERSION_FUNC_NAME = "GetAOTVersion";
 constexpr const char* BM_AOT_TEST = "bm.aot.test";
+const std::string AOT_VERSION = "aot_version";
+
 }
 
 AOTHandler::AOTHandler()
@@ -134,7 +139,7 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
 }
 
 std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, const std::string &moduleName,
-    const std::string &compileMode, bool isEnanleBaselinePgo) const
+    const std::string &compileMode, bool isEnableBaselinePgo) const
 {
     AOTArgs aotArgs;
     aotArgs.bundleName = info.GetBundleName();
@@ -186,7 +191,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(const InnerBundleInfo &info, con
     bool deviceIsScreenOff = CheckDeviceState();
     aotArgs.isScreenOff = static_cast<uint32_t>(deviceIsScreenOff);
 
-    aotArgs.isEnanleBaselinePgo = static_cast<uint32_t>(isEnanleBaselinePgo);
+    aotArgs.isEnableBaselinePgo = static_cast<uint32_t>(isEnableBaselinePgo);
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
@@ -263,6 +268,52 @@ void AOTHandler::ClearArkCacheDir() const
         ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
         APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
     });
+}
+
+void AOTHandler::ClearArkAp(const std::string &oldAOTVersion, const std::string &curAOTVersion) const
+{
+    APP_LOGI("oldAOTVersion(%{public}s), curAOTVersion(%{public}s)",
+        oldAOTVersion.c_str(), curAOTVersion.c_str());
+    if (!oldAOTVersion.empty() && curAOTVersion == oldAOTVersion) {
+        APP_LOGI("Version not changed");
+        return;
+    }
+
+    APP_LOGI("ClearArkAp start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
+            bundleInfos, userId) != ERR_OK) {
+            APP_LOGE("GetAllBundleInfos failed");
+            continue;
+        }
+        for (const auto &bundleInfo : bundleInfos) {
+            DeleteArkAp(bundleInfo, userId);
+        }
+    }
+    APP_LOGI("ClearArkAp end");
+}
+
+void AOTHandler::DeleteArkAp(const BundleInfo &bundleInfo, const int32_t userId) const
+{
+    std::string arkProfilePath;
+    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(ServiceConstants::PATH_SEPARATOR).append(bundleInfo.name).append(ServiceConstants::PATH_SEPARATOR);
+    for (const auto &moduleName : bundleInfo.moduleNames) {
+        std::string runtimeAp = arkProfilePath;
+        std::string mergedAp = arkProfilePath;
+        runtimeAp.append(PGO_RT_AP_PREFIX).append(moduleName)
+            .append(ServiceConstants::PGO_FILE_SUFFIX);
+        (void)InstalldClient::GetInstance()->RemoveDir(runtimeAp);
+        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
+        (void)InstalldClient::GetInstance()->RemoveDir(mergedAp);
+    }
 }
 
 void AOTHandler::HandleResetAOT(const std::string &bundleName, bool isAllBundle) const
@@ -425,6 +476,11 @@ void AOTHandler::HandleOTA()
 {
     APP_LOGI("HandleOTA begin");
     ClearArkCacheDir();
+    std::string curAOTVersion = GetCurAOTVersion();
+    std::string oldAOTVersion;
+    (void)GetOldAOTVersion(oldAOTVersion);
+    ClearArkAp(oldAOTVersion, curAOTVersion);
+    SaveAOTVersion(curAOTVersion);
     ResetAOTFlags();
     HandleOTACompile();
 }
@@ -643,10 +699,10 @@ void AOTHandler::HandleIdleWithSingleHap(
 }
 
 ErrCode AOTHandler::HandleCompileWithSingleHap(const InnerBundleInfo &info, const std::string &moduleName,
-    const std::string &compileMode, bool isEnanleBaselinePgo) const
+    const std::string &compileMode, bool isEnableBaselinePgo) const
 {
     APP_LOGI("HandleCompileWithSingleHap, moduleName : %{public}s", moduleName.c_str());
-    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnanleBaselinePgo);
+    std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode, isEnableBaselinePgo);
     return AOTInternal(aotArgs, info.GetVersionCode());
 }
 
@@ -829,6 +885,54 @@ ErrCode AOTHandler::HandleCompileModules(const std::vector<std::string> &moduleN
         }
     });
     return ret;
+}
+
+std::string AOTHandler::GetCurAOTVersion() const
+{
+    APP_LOGI("GetCurAOTVersion begin");
+    void* handle = dlopen(ARK_SO_NAME, RTLD_NOW);
+    if (handle == nullptr) {
+        APP_LOGE("get aot version dlopen failed : %{public}s", dlerror());
+        return Constants::EMPTY_STRING;
+    }
+    AOTVersionFunc aotVersionFunc = reinterpret_cast<AOTVersionFunc>(dlsym(handle, AOT_VERSION_FUNC_NAME));
+    if (aotVersionFunc == nullptr) {
+        APP_LOGE("get aot version dlsym failed : %{public}s", dlerror());
+        dlclose(handle);
+        return Constants::EMPTY_STRING;
+    }
+    std::string aotVersion;
+    ErrCode ret = aotVersionFunc(aotVersion);
+    APP_LOGI("GetCurAOTVersion ret : %{public}d, aotVersion: %{public}s", ret, aotVersion.c_str());
+    return aotVersion;
+}
+
+bool AOTHandler::GetOldAOTVersion(std::string &oldAOTVersion) const
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+    bmsPara->GetBmsParam(AOT_VERSION, oldAOTVersion);
+    if (oldAOTVersion.empty()) {
+        APP_LOGI("oldAOTVersion is empty");
+        return false;
+    }
+    return true;
+}
+
+void AOTHandler::SaveAOTVersion(const std::string &curAOTVersion) const
+{
+    if (curAOTVersion.empty()) {
+        return;
+    }
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return;
+    }
+    bmsPara->SaveBmsParam(AOT_VERSION, curAOTVersion);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

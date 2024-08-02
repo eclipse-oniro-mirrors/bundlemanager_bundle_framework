@@ -121,7 +121,7 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, optBCRangeVal);
     optBCRangeList = Str16ToStr8(optBCRangeVal);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnanleBaselinePgo);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
     return true;
 }
 
@@ -147,7 +147,7 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(optBCRangeList));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isScreenOff);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnanleBaselinePgo);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEnableBaselinePgo);
     return true;
 }
 
@@ -180,7 +180,7 @@ std::string AOTArgs::ToString() const
         + ", isEncryptedBundle = " + std::to_string(isEncryptedBundle)
         + ", optBCRangeList = " + optBCRangeList
         + ", isScreenOff = " + std::to_string(isScreenOff)
-        + ", isEnanleBaselinePgo = " + std::to_string(isEnanleBaselinePgo) + "]";
+        + ", isEnableBaselinePgo = " + std::to_string(isEnableBaselinePgo) + "]";
     ret.append(" hspVector = ");
     for (const auto &hspInfo : hspVector) {
         ret.append(hspInfo.ToString());

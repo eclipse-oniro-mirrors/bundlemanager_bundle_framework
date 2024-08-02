@@ -404,12 +404,6 @@ void BMSEventHandler::OnBundleRebootStart() {}
 
 void BMSEventHandler::ProcessRebootBundle() {}
 
-void BMSEventHandler::ProcessRebootDeleteArkAp() {}
-
-void BMSEventHandler::DeleteArkAp(BundleInfo const& bundleInfo, int32_t const& userId) {}
-
-void BMSEventHandler::ProcessRebootDeleteAotPath() {}
-
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool& result)
 {
     return true;
