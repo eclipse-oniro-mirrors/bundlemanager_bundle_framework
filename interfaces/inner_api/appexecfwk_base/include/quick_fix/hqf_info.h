@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class QuickFixType {
+enum class QuickFixType : int8_t {
     UNKNOWN = 0,
     PATCH = 1,
     HOT_RELOAD = 2

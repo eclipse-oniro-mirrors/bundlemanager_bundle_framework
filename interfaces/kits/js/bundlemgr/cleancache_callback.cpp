@@ -19,8 +19,8 @@
 #include "napi/native_common.h"
 
 namespace {
-constexpr int32_t OPERATION_SUCCESS = 0;
-constexpr int32_t OPERATION_FAILED = 1;
+constexpr int8_t OPERATION_SUCCESS = 0;
+constexpr int8_t OPERATION_FAILED = 1;
 }
 
 CleanCacheCallback::CleanCacheCallback(int32_t err) : err_(err)

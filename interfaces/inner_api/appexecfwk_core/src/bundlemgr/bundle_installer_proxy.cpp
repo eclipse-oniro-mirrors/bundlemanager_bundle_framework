@@ -34,7 +34,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SEPARATOR = "/";
+const char* SEPARATOR = "/";
 } // namespace
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)

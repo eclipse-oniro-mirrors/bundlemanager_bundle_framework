@@ -24,14 +24,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string WANT = "want";
-const std::string COMPONENT_TYPE = "componentType";
-const std::string DISPOSED_TYPE = "disposedType";
-const std::string CONTROL_TYPE = "controlType";
-const std::string ELEMENT_LIST = "elementList";
-const std::string PRIORITY = "priority";
-const std::string DEVICE_ID = "deviceId";
-const std::string IS_EDM = "isEdm";
+const char* WANT = "want";
+const char* COMPONENT_TYPE = "componentType";
+const char* DISPOSED_TYPE = "disposedType";
+const char* CONTROL_TYPE = "controlType";
+const char* ELEMENT_LIST = "elementList";
+const char* PRIORITY = "priority";
+const char* DEVICE_ID = "deviceId";
+const char* IS_EDM = "isEdm";
 }  // namespace
 
 bool DisposedRule::ReadFromParcel(Parcel &parcel)

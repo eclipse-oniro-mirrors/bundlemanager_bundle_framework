@@ -25,14 +25,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_RESULT_TRANSACTID = "transactId";
-const std::string JSON_KEY_RESULT_RESULTMSG = "resultMsg";
-const std::string JSON_KEY_RESULT_RETCODE = "retCode";
-const std::string JSON_KEY_PROGRESS_DOWNLOADSIZE = "downloadSize";
-const std::string JSON_KEY_PROGRESS_TOTALSIZE = "totalSize";
-const std::string JSON_KEY_INSTALLRESULT_VERSION = "version";
-const std::string JSON_KEY_INSTALLRESULT_RESULT = "result";
-const std::string JSON_KEY_INSTALLRESULT_PROGRESS = "progress";
+const char* JSON_KEY_RESULT_TRANSACTID = "transactId";
+const char* JSON_KEY_RESULT_RESULTMSG = "resultMsg";
+const char* JSON_KEY_RESULT_RETCODE = "retCode";
+const char* JSON_KEY_PROGRESS_DOWNLOADSIZE = "downloadSize";
+const char* JSON_KEY_PROGRESS_TOTALSIZE = "totalSize";
+const char* JSON_KEY_INSTALLRESULT_VERSION = "version";
+const char* JSON_KEY_INSTALLRESULT_RESULT = "result";
+const char* JSON_KEY_INSTALLRESULT_PROGRESS = "progress";
 }  //  namespace
 
 void to_json(nlohmann::json &jsonObject, const Result &result)

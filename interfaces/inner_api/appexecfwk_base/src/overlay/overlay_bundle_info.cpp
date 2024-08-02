@@ -25,10 +25,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string BUNDLE_OVERLAY_BUNDLE_NAME = "bundleName";
-const std::string BUNDLE_OVERLAY_BUNDLE_DIR = "bundleDir";
-const std::string BUNDLE_OVERLAY_BUNDLE_STATE = "state";
-const std::string BUNDLE_OVERLAY_BUNDLE_PRIORITY = "priority";
+const char* BUNDLE_OVERLAY_BUNDLE_NAME = "bundleName";
+const char* BUNDLE_OVERLAY_BUNDLE_DIR = "bundleDir";
+const char* BUNDLE_OVERLAY_BUNDLE_STATE = "state";
+const char* BUNDLE_OVERLAY_BUNDLE_PRIORITY = "priority";
 } // namespace
 bool OverlayBundleInfo::ReadFromParcel(Parcel &parcel)
 {

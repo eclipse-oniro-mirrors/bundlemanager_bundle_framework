@@ -34,20 +34,19 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
-const std::string TYPE_WANT = "want";
-const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
-const std::string SET_DISPOSED_STATUS = "SetDisposedStatus";
-const std::string GET_DISPOSED_STATUS = "GetDisposedStatus";
-const std::string DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
-const std::string SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
-const std::string DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
-const std::string GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
-const std::string APP_ID = "appId";
-const std::string APP_INDEX = "appIndex";
-const std::string DISPOSED_WANT = "disposedWant";
-const std::string DISPOSED_RULE = "disposedRule";
-const std::string DISPOSED_RULE_TYPE = "DisposedRule";
+const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
+const char* TYPE_WANT = "want";
+const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+const char* SET_DISPOSED_STATUS = "SetDisposedStatus";
+const char* GET_DISPOSED_STATUS = "GetDisposedStatus";
+const char* DELETE_DISPOSED_STATUS = "DeleteDisposedStatus";
+const char* SET_DISPOSED_STATUS_SYNC = "SetDisposedStatusSync";
+const char* DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
+const char* GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
+const char* APP_ID = "appId";
+const char* DISPOSED_WANT = "disposedWant";
+const char* DISPOSED_RULE = "disposedRule";
+const char* DISPOSED_RULE_TYPE = "DisposedRule";
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -540,7 +539,7 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
         return false;
     }
     napi_value prop = nullptr;
-    napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
+    napi_get_named_property(env, nRule, TYPE_WANT, &prop);
     AAFwk::Want want;
     if (!UnwrapWant(env, prop, want)) {
         APP_LOGW("parse want failed");
