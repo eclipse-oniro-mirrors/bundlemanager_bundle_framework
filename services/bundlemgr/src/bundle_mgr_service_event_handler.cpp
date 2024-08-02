@@ -812,7 +812,11 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
 
     if (!bundleExist) {
         dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
-        dataMgr->AddInnerBundleInfo(bundleName, info);
+        if (!dataMgr->AddInnerBundleInfo(bundleName, info)) {
+            LOG_E(BMS_TAG_DEFAULT, "add bundle %{public}s failed", bundleName.c_str());
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_FAIL);
+            return;
+        }
         dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
         return;
     }
