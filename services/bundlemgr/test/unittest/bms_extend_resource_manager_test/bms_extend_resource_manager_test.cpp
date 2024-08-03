@@ -458,4 +458,47 @@ HWTEST_F(BmsExtendResourceManagerTest, DynamicIconTest_0500, Function | SmallTes
     ret = impl.GetDynamicIcon(BUNDLE_NAME2, moudleName);
     EXPECT_FALSE(moudleName.empty());
 }
+
+/**
+ * @tc.number: CreateFd_0100
+ * @tc.name: test CreateFd
+ * @tc.desc: 1.test create fd by bundle name and path
+ */
+HWTEST_F(BmsExtendResourceManagerTest, CreateFd_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string fileName;
+    int32_t fd = 0;
+    std::string path = FILE_PATH;
+    ErrCode code = impl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(code, ERR_EXT_RESOURCE_MANAGER_CREATE_FD_FAILED);
+    code = impl.CreateFd(BUNDLE_NAME, fd, path);
+    EXPECT_NE(code, ERR_OK);
+}
+
+/**
+ * @tc.number: ResetBundleResourceIcon_0100
+ * @tc.name: test ResetBundleResourceIcon
+ * @tc.desc: 1.reset bundle resource icon
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ResetBundleResourceIcon_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    bool ret = impl.ResetBundleResourceIcon(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ParseBundleResource_0100
+ * @tc.name: test ParseBundleResource
+ * @tc.desc: 1.analyze bundled package resources
+ */
+HWTEST_F(BmsExtendResourceManagerTest, ParseBundleResource_0100, Function | SmallTest | Level1)
+{
+    ExtendResourceManagerHostImpl impl;
+    std::string bundleName = BUNDLE_NAME;
+    ExtendResourceInfo extendResourceInfo;
+    bool ret = impl.ParseBundleResource(bundleName, extendResourceInfo);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS
