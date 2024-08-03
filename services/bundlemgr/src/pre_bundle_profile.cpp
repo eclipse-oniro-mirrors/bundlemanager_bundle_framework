@@ -56,7 +56,7 @@ ErrCode PreBundleProfile::TransformTo(
     const nlohmann::json &jsonBuf,
     std::set<PreScanInfo> &scanInfos) const
 {
-    APP_LOGI("transform jsonBuf to PreScanInfos");
+    APP_LOGI_NOFUNC("transform jsonBuf to PreScanInfos");
     if (jsonBuf.is_discarded()) {
         APP_LOGE("profile format error");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

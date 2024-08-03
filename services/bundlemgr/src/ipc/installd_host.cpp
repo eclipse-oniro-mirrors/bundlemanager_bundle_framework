@@ -233,7 +233,7 @@ void InstalldHost::InitEventHandler()
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
 {
     std::string bundleDir = Str16ToStr8(data.ReadString16());
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "HandleCreateBundleDir %{public}s", bundleDir.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "CreateBundleDir %{public}s", bundleDir.c_str());
     ErrCode result = CreateBundleDir(bundleDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
@@ -245,7 +245,7 @@ bool InstalldHost::HandleExtractModuleFiles(MessageParcel &data, MessageParcel &
     std::string targetPath = Str16ToStr8(data.ReadString16());
     std::string targetSoPath = Str16ToStr8(data.ReadString16());
     std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    LOG_I(BMS_TAG_INSTALLD, "extract module %{public}s", targetPath.c_str());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "ExtractModuleFiles %{public}s", targetPath.c_str());
     ErrCode result = ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;

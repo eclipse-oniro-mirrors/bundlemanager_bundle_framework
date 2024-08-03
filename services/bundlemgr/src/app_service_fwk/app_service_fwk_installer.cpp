@@ -69,12 +69,12 @@ void BuildCheckParam(
 AppServiceFwkInstaller::AppServiceFwkInstaller()
     : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
 {
-    APP_LOGI("AppServiceFwk installer instance is created");
+    APP_LOGI_NOFUNC("AppServiceFwk installer instance created");
 }
 
 AppServiceFwkInstaller::~AppServiceFwkInstaller()
 {
-    APP_LOGI("AppServiceFwk installer instance is destroyed");
+    APP_LOGI_NOFUNC("AppServiceFwk installer instance destroyed");
 }
 
 ErrCode AppServiceFwkInstaller::Install(
@@ -128,7 +128,7 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
             APP_LOGE("version down grade install");
             return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
         }
-        APP_LOGI("need not to install");
+        APP_LOGI_NOFUNC("fwk not need install");
         return ERR_OK;
     }
     ScopeGuard stateGuard([&] {
@@ -164,7 +164,7 @@ void AppServiceFwkInstaller::SavePreInstallBundleInfo(
     preInstallBundleInfo.SetVersionCode(versionCode_);
     preInstallBundleInfo.SetIsUninstalled(false);
     for (const std::string &bundlePath : deleteBundlePath_) {
-        APP_LOGI("preInstallBundleInfo delete path %{public}s", bundlePath.c_str());
+        APP_LOGI_NOFUNC("preInstallBundleInfo delete path %{public}s", bundlePath.c_str());
         preInstallBundleInfo.DeleteBundlePath(bundlePath);
     }
     for (const auto &item : newInfos) {
@@ -195,7 +195,6 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     const std::vector<std::string> &hspPaths, InstallParam &installParam,
     std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
-    APP_LOGI("CheckAndParseFiles Start");
     InstallCheckParam checkParam;
     BuildCheckParam(installParam, checkParam);
 
@@ -261,7 +260,6 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     GenerateOdid(newInfos, hapVerifyResults);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
-    APP_LOGI("End, size %{public}zu", newInfos.size());
     return result;
 }
 
@@ -381,7 +379,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
 ErrCode AppServiceFwkInstaller::ExtractModule(
     InnerBundleInfo &newInfo, const std::string &bundlePath)
 {
-    APP_LOGI("begin ExtractModule with %{public}s bundlePath %{public}s",
+    APP_LOGI_NOFUNC("begin ExtractModule with %{public}s bundlePath %{public}s",
         newInfo.GetCurrentModulePackage().c_str(), bundlePath.c_str());
     ErrCode result = ERR_OK;
     std::string bundleDir =
@@ -444,7 +442,6 @@ ErrCode AppServiceFwkInstaller::ExtractModule(InnerBundleInfo &oldInfo,
 
 ErrCode AppServiceFwkInstaller::MkdirIfNotExist(const std::string &dir)
 {
-    APP_LOGI("mkdir %{public}s", dir.c_str());
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
     CHECK_RESULT(result, "Check if dir exist failed %{public}d");
@@ -463,15 +460,12 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
     const std::string &versionDir,
     InnerBundleInfo &newInfo)
 {
-    APP_LOGI("ProcessNativeLibrary param %{public}s  %{public}s %{public}s %{public}s",
-        bundlePath.c_str(), moduleDir.c_str(), moduleName.c_str(), versionDir.c_str());
+    APP_LOGI_NOFUNC("ProcessNativeLibrary %{public}s %{public}s", bundlePath.c_str(), moduleDir.c_str());
     std::string cpuAbi;
     std::string nativeLibraryPath;
     if (!newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath)) {
         return ERR_OK;
     }
-    APP_LOGI("FetchNativeSoAttrs sucess with cpuAbi %{public}s nativeLibraryPath %{public}s",
-        cpuAbi.c_str(), nativeLibraryPath.c_str());
     if (newInfo.IsCompressNativeLibs(moduleName)) {
         std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
         if (tempNativeLibraryPath.empty()) {
@@ -481,8 +475,7 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
 
         std::string tempSoPath =
             versionDir + AppExecFwk::ServiceConstants::PATH_SEPARATOR + tempNativeLibraryPath;
-        APP_LOGI("TempSoPath %{public}s cpuAbi %{public}s bundlePath %{public}s",
-            tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
+        APP_LOGI_NOFUNC("TempSoPath %{public}s cpuAbi %{public}s", tempSoPath.c_str(), cpuAbi.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "Extract module files failed %{public}d");
@@ -591,7 +584,7 @@ ErrCode AppServiceFwkInstaller::UpdateAppService(
     std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InstallParam &installParam)
 {
-    APP_LOGI("UpdateAppService for bundle %{public}s", oldInfo.GetBundleName().c_str());
+    APP_LOGI_NOFUNC("UpdateAppService for bundle %{public}s", oldInfo.GetBundleName().c_str());
     auto oldVersionCode = oldInfo.GetVersionCode();
     // update
     ErrCode result = ERR_OK;
@@ -615,13 +608,13 @@ ErrCode AppServiceFwkInstaller::ProcessBundleUpdateStatus(InnerBundleInfo &oldIn
     InnerBundleInfo &newInfo, const std::string &hspPath)
 {
     std::string moduleName = newInfo.GetCurrentModulePackage();
-    APP_LOGI("ProcessBundleUpdateStatus for module %{public}s", moduleName.c_str());
+    APP_LOGI_NOFUNC("ProcessBundleUpdateStatus for module %{public}s", moduleName.c_str());
     if (moduleName.empty()) {
         APP_LOGE("get current package failed");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
     if (versionUpgrade_) {
-        APP_LOGI("uninstallModuleVec_ insert module %{public}s", moduleName.c_str());
+        APP_LOGI_NOFUNC("uninstallModuleVec_ insert module %{public}s", moduleName.c_str());
         uninstallModuleVec_.emplace_back(moduleName);
     }
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
@@ -660,7 +653,7 @@ ErrCode AppServiceFwkInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     std::string oldHspPath = oldInfo.GetModuleHapPath(moduleName);
     if (!oldHspPath.empty()) {
-        APP_LOGI("deleteBundlePath_ insert path %{public}s", oldHspPath.c_str());
+        APP_LOGI_NOFUNC("deleteBundlePath_ insert path %{public}s", oldHspPath.c_str());
         deleteBundlePath_.emplace_back(oldHspPath);
     }
 
@@ -721,7 +714,7 @@ ErrCode AppServiceFwkInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo
 
 ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::string> &moduleNameList)
 {
-    APP_LOGI("start to uninstall lower version module");
+    APP_LOGI_NOFUNC("start to uninstall lower version module");
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfo(info, isExist) || !isExist) {
@@ -734,7 +727,6 @@ ErrCode AppServiceFwkInstaller::UninstallLowerVersion(const std::vector<std::str
     }
 
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
-    APP_LOGI("bundleName %{public}s moduleVec size %{public}zu", bundleName_.c_str(), moduleVec.size());
     InnerBundleInfo oldInfo = info;
     for (const auto &package : moduleVec) {
         if (find(moduleNameList.begin(), moduleNameList.end(), package) == moduleNameList.end()) {
@@ -809,7 +801,8 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
         return true;
     }
-    APP_LOGI("oldVersionCode: %{public}d, new version Code: %{public}d", oldInfo.GetVersionCode(), versionCode_);
+    APP_LOGI_NOFUNC("fwk install old version:%{public}d new version:%{public}d",
+        oldInfo.GetVersionCode(), versionCode_);
 
     if ((oldInfo.GetVersionCode() == versionCode_) &&
         oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
@@ -835,10 +828,10 @@ bool AppServiceFwkInstaller::CheckNeedUpdate(const InnerBundleInfo &newInfo, con
 {
     auto oldVersionCode = oldInfo.GetVersionCode();
     if (oldVersionCode > versionCode_) {
-        APP_LOGW("version code is lower than current app service");
+        APP_LOGW_NOFUNC("fwk new version code is lower than current");
         return false;
     } else if (oldVersionCode < versionCode_) {
-        APP_LOGW("upgrade, old version is %{public}d, new version is %{public}d", oldVersionCode, versionCode_);
+        APP_LOGW_NOFUNC("fwk upgrade old version:%{public}d new version: %{public}d", oldVersionCode, versionCode_);
         versionUpgrade_ = true;
         return true;
     }
@@ -872,7 +865,7 @@ ErrCode AppServiceFwkInstaller::RemoveLowerVersionSoDir(uint32_t versionCode)
         AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName_;
     std::string versionDir = bundleDir
         + AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
-    APP_LOGI("RemoveDir %{public}s", versionDir.c_str());
+    APP_LOGI_NOFUNC("RemoveLowerVersionSoDir %{public}s", versionDir.c_str());
     return InstalldClient::GetInstance()->RemoveDir(versionDir);
 }
 

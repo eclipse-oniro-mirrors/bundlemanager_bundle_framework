@@ -3474,7 +3474,7 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
-        APP_LOGE("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
+        APP_LOGE("-u %{public}d has not -m %{public}s", userId, moduleName.c_str());
         return false;
     }
 

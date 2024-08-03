@@ -28,7 +28,7 @@ constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 
 BundleResourceRdb::BundleResourceRdb()
 {
-    APP_LOGI("create");
+    APP_LOGI_NOFUNC("BundleResourceRdb create");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = BundleResourceConstants::BUNDLE_RESOURCE_RDB_NAME;
     bmsRdbConfig.dbPath = BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH;
@@ -213,7 +213,7 @@ bool BundleResourceRdb::GetResourceNameByBundleName(
     const int32_t appIndex,
     std::vector<std::string> &keyName)
 {
-    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI_NOFUNC("GetResourceName -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -577,7 +577,7 @@ bool BundleResourceRdb::DeleteNotExistResourceInfo()
 {
     // need delete not current systemState resource
     std::string systemState = BundleSystemState::GetInstance().ToString();
-    APP_LOGI("current systemState:%{public}s", systemState.c_str());
+    APP_LOGI_NOFUNC("current systemState:%{public}s", systemState.c_str());
     NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     absRdbPredicates.NotEqualTo(BundleResourceConstants::SYSTEM_STATE, systemState);
     return rdbDataManager_->DeleteData(absRdbPredicates);

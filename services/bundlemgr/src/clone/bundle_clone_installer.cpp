@@ -95,7 +95,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
 ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
 {
     // All clone will be uninstalled when the original application is updated or uninstalled
-    APP_LOGI("begin");
+    APP_LOGI_NOFUNC("UninstallAllCloneApps begin");
     if (bundleName.empty()) {
         APP_LOGE("UninstallAllCloneApps failed due to empty bundle name");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
@@ -117,7 +117,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
-        APP_LOGE("the origin application is not installed at current user");
+        APP_LOGE_NOFUNC("the origin application is not installed at current user");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
     ErrCode result = ERR_OK;
@@ -127,7 +127,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
     }
-    APP_LOGI("end");
+    APP_LOGI_NOFUNC("UninstallAllCloneApps end");
     return result;
 }
 

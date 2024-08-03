@@ -1740,7 +1740,7 @@ bool InstalldHostImpl::LoadExtensionNeedCreateSandbox(const nlohmann::json &obje
 {
     if (!object.contains(EXTENSION_SERVICE_NEED_CREATE_SANDBOX) ||
         !object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).is_boolean()) {
-        LOG_E(BMS_TAG_INSTALLD, "need create sandbox config not existed");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "need create sandbox config not existed");
         return false;
     }
     return object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).get<bool>();

@@ -289,7 +289,7 @@ bool BundleResourceProcess::OnGetResourceInfo(
             resourceInfos.push_back(info);
         }
     }
-    APP_LOGI("end, bundleName:%{public}s, resourceInfo.size:%{public}d", bundleName.c_str(),
+    APP_LOGI_NOFUNC("OnGetResourceInfo -n %{public}s size:%{public}d", bundleName.c_str(),
         static_cast<int32_t>(resourceInfos.size()));
     return !resourceInfos.empty();
 }
