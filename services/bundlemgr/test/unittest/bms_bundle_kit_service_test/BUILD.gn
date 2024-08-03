@@ -18,6 +18,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleDataMgrTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -191,6 +196,11 @@ ohos_unittest("BmsBundleDataMgrTest") {
 }
 
 ohos_unittest("BmsBundleKitServiceTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -358,6 +368,11 @@ ohos_unittest("BmsBundleKitServiceTest") {
 }
 
 ohos_unittest("BmsBundleGetWindowPropertiesTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]

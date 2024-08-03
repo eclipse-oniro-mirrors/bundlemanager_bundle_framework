@@ -17,6 +17,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundlePermissionDefListTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -190,6 +195,11 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
 }
 
 ohos_unittest("BmsBundlePermissionGrantTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -361,6 +371,11 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
 }
 
 ohos_unittest("BmsBundlePermissionFalseTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -538,6 +553,11 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
 }
 
 ohos_unittest("BmsBundlePermissionStartFullTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -714,6 +734,11 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
 }
 
 ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -891,6 +916,11 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
 }
 
 ohos_unittest("BmsBundlePermissionTokenTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -1063,6 +1093,11 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
 }
 
 ohos_unittest("BmsBundlePermissionGetRequestTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]

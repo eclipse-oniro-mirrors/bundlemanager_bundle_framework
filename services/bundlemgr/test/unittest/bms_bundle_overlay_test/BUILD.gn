@@ -17,6 +17,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleOverlayCheckerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -214,6 +219,11 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
 }
 
 ohos_unittest("BmsBundleOverlayIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -360,6 +370,11 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
 }
 
 ohos_unittest("BmsBundleManagerOverlayIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -496,6 +511,11 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
 }
 
 ohos_unittest("BmsBundleSetOverlayEnabledTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -633,6 +653,11 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
 }
 
 ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
