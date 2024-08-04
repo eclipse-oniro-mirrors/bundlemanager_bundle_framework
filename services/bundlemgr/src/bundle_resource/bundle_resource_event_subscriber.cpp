@@ -39,16 +39,16 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
     std::string action = data.GetWant().GetAction();
     BundleResourceCallback callback;
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        int32_t oldUserId = Constants::INVALID_USERID;
+        int32_t oldUserId = Constants::UNSPECIFIED_USERID;
         std::string oldId = data.GetWant().GetStringParam(OLD_USER_ID);
         if (oldId.empty() || !OHOS::StrToInt(oldId, oldUserId)) {
             APP_LOGE("oldId:%{public}s parse failed", oldId.c_str());
-            oldUserId = Constants::INVALID_USERID;
+            oldUserId = Constants::UNSPECIFIED_USERID;
         }
         int32_t userId = data.GetCode();
-        // when boot, user 0 switch to user 100, no need to flush resource rdb
-        if (oldUserId == Constants::DEFAULT_USERID) {
-            APP_LOGI("switch userId 0 to %{public}d", userId);
+        // when boot, user 0 or -1 switch to user 100, no need to flush resource rdb
+        if ((oldUserId == Constants::DEFAULT_USERID) || (oldUserId == Constants::INVALID_USERID)) {
+            APP_LOGI("switch userId %{public}d to %{public}d, no need to process", oldUserId, userId);
             return;
         }
         APP_LOGI("switch userId %{public}d to %{public}d", oldUserId, userId);
