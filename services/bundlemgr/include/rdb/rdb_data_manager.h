@@ -59,6 +59,8 @@ private:
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
     bool isInitial_ = false;
 
+    static std::mutex restoreRdbMutex_;
+
     BmsRdbConfig bmsRdbConfig_;
 };
 }  // namespace AppExecFwk
