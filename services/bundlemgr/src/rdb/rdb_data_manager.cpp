@@ -30,6 +30,8 @@ const int32_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 const std::string BMS_BACK_UP_RDB_NAME = "/bms-backup.db";
 }
 
+std::mutex RdbDataManager::restoreRdbMutex_;
+
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
     : bmsRdbConfig_(bmsRdbConfig)
 {
@@ -51,6 +53,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
     if (rdbStore_ != nullptr) {
         return rdbStore_;
     }
+    std::lock_guard<std::mutex> restoreLock(restoreRdbMutex_);
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     rdbStoreConfig.SetWriteTime(WRITE_TIMEOUT);
@@ -71,14 +74,14 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
-    if ((rdbStore_ == nullptr) || (errCode != NativeRdb::E_OK)) {
+    if (rdbStore_ == nullptr) {
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         return nullptr;
     }
+
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
-
-    if ((rebuildType != NativeRdb::RebuiltType::NONE)) {
+    if (rebuildType == NativeRdb::RebuiltType::REBUILT) {
         APP_LOGI("start %{public}s restore ret %{public}d, type:%{public}d", bmsRdbConfig_.dbName.c_str(),
             rebuildCode, static_cast<int32_t>(rebuildType));
         int32_t restoreRet = rdbStore_->Restore(bmsRdbConfig_.dbPath + BMS_BACK_UP_RDB_NAME);
