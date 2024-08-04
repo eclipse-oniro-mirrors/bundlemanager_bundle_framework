@@ -71,6 +71,8 @@ constexpr const char* LOG = "log";
 constexpr const char* HSP_VERSION_PREFIX = "v";
 constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* BMS_SERVICE_PATH = "/data/service";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
@@ -306,6 +308,7 @@ ErrCode BaseBundleInstaller::Recover(
 ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, const InstallParam &installParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    CheckSystemFreeSizeAndClean();
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s bundle uninstall", bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
 
@@ -502,6 +505,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    CheckSystemFreeSizeAndClean();
     LOG_I(BMS_TAG_INSTALLER, "begin to process %{public}s module in %{public}s uninstall",
         modulePackage.c_str(), bundleName.c_str());
     PerfProfile::GetInstance().SetBundleUninstallStartTime(GetTickCount());
@@ -5709,6 +5713,15 @@ bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundle
         return false;
     }
     return true;
+}
+void BaseBundleInstaller::CheckSystemFreeSizeAndClean() const
+{
+    if (BundleUtil::CheckSystemFreeSize(BMS_SERVICE_PATH, FIVE_MB)) {
+        return;
+    }
+    BundleMgrHostImpl impl;
+    ErrCode ret = impl.CleanBundleCacheFilesAutomatic(FIVE_MB);
+    LOG_I(BMS_TAG_INSTALLER, "clean disk ret:%{public}d", ret);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
