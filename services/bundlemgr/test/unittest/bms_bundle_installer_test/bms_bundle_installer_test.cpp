@@ -6250,4 +6250,21 @@ HWTEST_F(BmsBundleInstallerTest, ReadFileIntoJson_0100, Function | SmallTest | L
     bool ret = hostImpl.ReadFileIntoJson(filePath, jsonBuf);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: VerifyCodeSignatureForNativeFiles_0100
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: test VerifyCodeSignatureForNativeFiles of BundleInstallerManager
+*/
+HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForNativeFiles_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    ErrCode ret = appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS
