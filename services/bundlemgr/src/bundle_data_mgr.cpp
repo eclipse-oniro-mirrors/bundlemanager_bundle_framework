@@ -174,7 +174,7 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
 
 void BundleDataMgr::CompatibleOldBundleStateInKvDb()
 {
-    for (auto& bundleInfoItem : bundleInfos_) {
+    for (const auto& bundleInfoItem : bundleInfos_) {
         for (auto& innerBundleUserInfoItem : bundleInfoItem.second.GetInnerBundleUserInfos()) {
             auto& bundleUserInfo = innerBundleUserInfoItem.second.bundleUserInfo;
             if (bundleUserInfo.IsInitialState()) {
@@ -197,7 +197,7 @@ void BundleDataMgr::LoadAllBundleStateDataFromJsonDb()
         return;
     }
 
-    for (auto& bundleState : bundleStateInfos) {
+    for (const auto& bundleState : bundleStateInfos) {
         auto infoItem = bundleInfos_.find(bundleState.first);
         if (infoItem == bundleInfos_.end()) {
             APP_LOGW("BundleName(%{public}s) not exist in cache", bundleState.first.c_str());

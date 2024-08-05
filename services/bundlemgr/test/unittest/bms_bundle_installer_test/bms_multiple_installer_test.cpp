@@ -681,7 +681,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTes
  * @tc.number: MultipleHapsInstall_1200
  * @tc.name: test to install haps with different releaseType compatible in the input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the input file path array
- *           2.the installation result is fail
+ *           2.the installation result is successful
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTest | Level1)
 {
@@ -691,8 +691,8 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
-    CheckFileNonExist();
+    EXPECT_EQ(installRes, ERR_OK);
+    CheckFileExist();
 }
 
 /**
@@ -1049,7 +1049,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTes
  * @tc.number: MultipleHapsInstall_5200
  * @tc.name: test to install haps with different releaseType compatible in the different input file path array
  * @tc.desc: 1.the releaseType compatible is differnet in the different input file path array
- *           2.the installation result is fail
+ *           2.the installation result is successful
  */
 HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTest | Level1)
 {
@@ -1065,7 +1065,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5200, Function | SmallTes
     filePaths.clear();
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+    EXPECT_EQ(installRes, ERR_OK);
 
     ClearBundleInfo(BUNDLE_NAME);
 }

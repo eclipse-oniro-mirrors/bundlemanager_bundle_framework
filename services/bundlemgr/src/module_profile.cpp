@@ -25,7 +25,7 @@ namespace AppExecFwk {
 namespace {
 const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
 const int32_t THRESHOLD_VAL_LEN = 40;
-constexpr uint8_t MAX_MODULE_NAME = 31;
+constexpr uint8_t MAX_MODULE_NAME = 128;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
@@ -1702,11 +1702,11 @@ bool CheckBundleNameIsValid(const std::string &bundleName)
 bool CheckModuleNameIsValid(const std::string &moduleName)
 {
     if (moduleName.empty()) {
-        APP_LOGE("bundleName is empty");
+        APP_LOGE("module name is empty");
         return false;
     }
     if (moduleName.size() > MAX_MODULE_NAME) {
-        APP_LOGE("bundleName size too long");
+        APP_LOGE("module name size too long");
         return false;
     }
     if (moduleName.find(ServiceConstants::RELATIVE_PATH) != std::string::npos) {
