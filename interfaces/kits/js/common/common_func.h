@@ -56,6 +56,8 @@ static sptr<IVerifyManager> GetVerifyManager();
 
 static sptr<IExtendResourceManager> GetExtendResourceManager();
 
+static bool CheckBundleFlagWithPermission(int32_t flag);
+
 static bool ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
     std::vector<napi_value> &valueVec);
 

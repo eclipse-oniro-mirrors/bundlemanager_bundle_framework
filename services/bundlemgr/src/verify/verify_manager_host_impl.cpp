@@ -24,18 +24,18 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* SEPARATOR = "/";
-const char* ABCS_DIR = "abcs";
-const char* ABCS_TEMP_DIR = "temp/";
-const char* DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
-const char* DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
-const char* DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
-const char* DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
-const char* DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
-const char* DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
-const char* DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
-const char* DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
-const char* DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
+constexpr const char* SEPARATOR = "/";
+constexpr const char* ABCS_DIR = "abcs";
+constexpr const char* ABCS_TEMP_DIR = "temp/";
+constexpr const char* DATA_STORAGE_BUNDLE = "/data/storage/el1/bundle/";
+constexpr const char* DATA_STORAGE_EL1_BASE = "/data/storage/el1/base/";
+constexpr const char* DATA_STORAGE_EL1_DATABASE  = "/data/storage/el1/database/";
+constexpr const char* DATA_STORAGE_EL2_BASE = "/data/storage/el2/base/";
+constexpr const char* DATA_STORAGE_EL2_DATABASE = "/data/storage/el2/database/";
+constexpr const char* DATA_STORAGE_EL3_BASE = "/data/storage/el3/base/";
+constexpr const char* DATA_STORAGE_EL3_DATABASE = "/data/storage/el3/database/";
+constexpr const char* DATA_STORAGE_EL4_BASE = "/data/storage/el4/base/";
+constexpr const char* DATA_STORAGE_EL4_DATABASE = "/data/storage/el4/database/";
 constexpr const char* ABC_FILE_SUFFIX = ".abc";
 
 bool IsValidPath(const std::string &path)

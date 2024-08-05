@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
-const char* SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
+constexpr const char* SYSTEM_PARAM_DATA_SIZE_THRESHOLD = "persist.sys.bms.aging.policy.data.size.threshold";
+constexpr const char* SYSTEM_PARAM_RECENILY_USED_THRESHOLD = "persist.sys.bms.aging.policy.recently.used.threshold";
 }
 int64_t AgingRequest::totalDataBytesThreshold_ = AgingConstants::DEFAULT_AGING_DATA_SIZE_THRESHOLD;
 int64_t AgingRequest::oneDayTimeMs_ = AgingConstants::ONE_DAYS_MS;

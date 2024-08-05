@@ -28,41 +28,41 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
-const char* PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
-const char* PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
-const char* PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
-const char* PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
-const char* PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
-const char* PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
-const char* PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
-const char* PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
-const char* PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
-const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
-const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
-const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
-const char* ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
-const char* ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
-const char* ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
-const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
-const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
-const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
-const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
-const char* APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
-const char* BUNDLE_NAME_XTS_TEST = "com.acts.";
-const char* APL_NORMAL = "normal";
-const char* SLASH = "/";
-const char* DOUBLE_SLASH = "//";
-const char* SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
-const char* VALUE_TRUE = "true";
-const char* VALUE_TRUE_BOOL = "1";
-const char* VALUE_FALSE = "false";
-const char* NONISOLATION_ONLY = "nonisolationOnly";
-const char* ISOLATION_ONLY = "isolationOnly";
-const char* SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
-const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
-const int8_t SLAH_OFFSET = 2;
-const int8_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* PRIVILEGE_ALLOW_APP_DATA_NOT_CLEARED = "AllowAppDataNotCleared";
+constexpr const char* PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
+constexpr const char* PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
+constexpr const char* PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
+constexpr const char* PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
+constexpr const char* PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
+constexpr const char* PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
+constexpr const char* PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
+constexpr const char* PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
+constexpr const char* PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
+constexpr const char* ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
+constexpr const char* ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
+constexpr const char* ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
+constexpr const char* ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
+constexpr const char* ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+constexpr const char* ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
+constexpr const char* ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
+constexpr const char* ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
+constexpr const char* ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+constexpr const char* ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
+constexpr const char* APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
+constexpr const char* BUNDLE_NAME_XTS_TEST = "com.acts.";
+constexpr const char* APL_NORMAL = "normal";
+constexpr const char* SLASH = "/";
+constexpr const char* DOUBLE_SLASH = "//";
+constexpr const char* SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
+constexpr const char* VALUE_TRUE = "true";
+constexpr const char* VALUE_TRUE_BOOL = "1";
+constexpr const char* VALUE_FALSE = "false";
+constexpr const char* NONISOLATION_ONLY = "nonisolationOnly";
+constexpr const char* ISOLATION_ONLY = "isolationOnly";
+constexpr const char* SUPPORT_APP_TYPES = "const.bms.supportAppTypes";
+constexpr const char* SUPPORT_APP_TYPES_SEPARATOR = ",";
+constexpr int8_t SLAH_OFFSET = 2;
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
@@ -1254,7 +1254,7 @@ bool BundleInstallChecker::MatchSignature(
     const std::vector<std::string> &appSignatures, const std::string &signature)
 {
     if (appSignatures.empty() || signature.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "appSignature of signature is empty");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "appSignature of signature is empty");
         return false;
     }
 
@@ -1381,24 +1381,24 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
     for (const auto &info : infos) {
         std::vector<std::string> devVec = info.second.GetDeviceType(info.second.GetCurrentModulePackage());
         if (devVec.empty()) {
-            LOG_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "deviceTypes is empty");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_PHONE) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
-            LOG_W(BMS_TAG_INSTALLER, "current deviceType is phone and bundle is matched with default");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "current deviceType is phone and bundle is matched with default");
             continue;
         }
 
         if ((deviceType == DEVICE_TYPE_OF_DEFAULT) &&
             (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) != devVec.end())) {
-            LOG_W(BMS_TAG_INSTALLER, "current deviceType is default and bundle is matched with phone");
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "current deviceType is default and bundle is matched with phone");
             continue;
         }
 
         if (find(devVec.begin(), devVec.end(), deviceType) == devVec.end()) {
-            LOG_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "%{public}s is not supported", deviceType.c_str());
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
@@ -1522,7 +1522,7 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
             int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE, "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
-                LOG_W(BMS_TAG_INSTALLER, "GetParameter failed");
+                LOG_D(BMS_TAG_INSTALLER, "GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
                 LOG_E(BMS_TAG_INSTALLER, "check isolation mode failed");

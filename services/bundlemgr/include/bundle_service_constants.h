@@ -27,7 +27,7 @@ namespace ServiceConstants {
 constexpr const char* ASSETS_DIR = "assets";
 constexpr const char* RESOURCES_INDEX = "resources.index";
 constexpr int8_t INVALID_GID = -1;
-const int8_t BUNDLE_RDB_VERSION = 1;
+constexpr int8_t BUNDLE_RDB_VERSION = 1;
 constexpr const char* PATH_SEPARATOR = "/";
 constexpr const char* LIBS = "libs/";
 constexpr const char* AN = "an/";

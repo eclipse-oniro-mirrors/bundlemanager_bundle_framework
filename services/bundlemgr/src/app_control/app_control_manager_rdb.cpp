@@ -25,25 +25,25 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const char* APP_CONTROL_RDB_TABLE_NAME = "app_control";
-    const char* RUNNING_CONTROL = "RunningControl";
-    const char* DISPOSED_RULE = "DisposedRule";
-    const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
-    const char* DEFAULT = "default";
-    const int8_t CALLING_NAME_INDEX = 1;
-    const int8_t APP_ID_INDEX = 4;
-    const int8_t CONTROL_MESSAGE_INDEX = 5;
-    const int8_t DISPOSED_STATUS_INDEX = 6;
+    constexpr const char* APP_CONTROL_RDB_TABLE_NAME = "app_control";
+    constexpr const char* RUNNING_CONTROL = "RunningControl";
+    constexpr const char* DISPOSED_RULE = "DisposedRule";
+    constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
+    constexpr const char* DEFAULT = "default";
+    constexpr int8_t CALLING_NAME_INDEX = 1;
+    constexpr int8_t APP_ID_INDEX = 4;
+    constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
+    constexpr int8_t DISPOSED_STATUS_INDEX = 6;
     // app control table key
-    const char* CALLING_NAME = "CALLING_NAME";
-    const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
-    const char* USER_ID = "USER_ID";
-    const char* APP_ID = "APP_ID";
-    const char* CONTROL_MESSAGE = "CONTROL_MESSAGE";
-    const char* DISPOSED_STATUS = "DISPOSED_STATUS";
-    const char* PRIORITY = "PRIORITY";
-    const char* TIME_STAMP = "TIME_STAMP";
-    const char* APP_INDEX = "APP_INDEX";
+    constexpr const char* CALLING_NAME = "CALLING_NAME";
+    constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
+    constexpr const char* USER_ID = "USER_ID";
+    constexpr const char* APP_ID = "APP_ID";
+    constexpr const char* CONTROL_MESSAGE = "CONTROL_MESSAGE";
+    constexpr const char* DISPOSED_STATUS = "DISPOSED_STATUS";
+    constexpr const char* PRIORITY = "PRIORITY";
+    constexpr const char* TIME_STAMP = "TIME_STAMP";
+    constexpr const char* APP_INDEX = "APP_INDEX";
 
     enum class PRIORITY : uint16_t {
         EDM = 100,

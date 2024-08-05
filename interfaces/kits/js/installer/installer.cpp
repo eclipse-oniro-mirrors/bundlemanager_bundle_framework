@@ -80,9 +80,8 @@ const char* PGO_PARAM = "pgoParams";
 const char* PGO_FILE_PATH = "pgoFilePath";
 const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-const std::string INSTALL_PARAM = "installParam";
-const std::string CREATE_APP_CLONE = "CreateAppClone";
-const std::string DESTROY_APP_CLONE = "destroyAppClone";
+constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
+constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 

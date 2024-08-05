@@ -28,9 +28,9 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace ffrt;
 namespace {
-const int8_t CHECK_ABILITY_ENABLE_INSTALL = 1;
-const uint16_t OUT_TIME = 3000;
-const char* DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
+constexpr int8_t CHECK_ABILITY_ENABLE_INSTALL = 1;
+constexpr uint16_t OUT_TIME = 3000;
+constexpr const char* DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 // syscap

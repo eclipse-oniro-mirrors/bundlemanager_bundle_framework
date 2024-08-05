@@ -196,6 +196,15 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
     return result;
 }
 
+bool CommonFunc::CheckBundleFlagWithPermission(int32_t flag)
+{
+    if ((flag & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
+        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
+        return false;
+    }
+    return true;
+}
+
 bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
 {
     napi_valuetype valuetype = napi_undefined;

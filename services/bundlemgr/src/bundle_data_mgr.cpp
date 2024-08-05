@@ -72,9 +72,9 @@ constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 // share action
 constexpr const char* SHARE_ACTION = "ohos.want.action.sendData";
-const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
-const char* SUMMARY_TOTAL_COUNT = "totalCount";
-const char* WANT_PARAM_SUMMARY = "summary";
+constexpr const char* WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
+constexpr const char* SUMMARY_TOTAL_COUNT = "totalCount";
+constexpr const char* WANT_PARAM_SUMMARY = "summary";
 constexpr int8_t DEFAULT_SUMMARY_COUNT = 0;
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
@@ -868,8 +868,8 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found -n %{public}s -m %{public}s -a %{public}s",
-            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
+            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -916,8 +916,8 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found -n %{public}s -m %{public}s -a %{public}s",
-            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found UIAbility -n %{public}s -m %{public}s "
+            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 
@@ -1678,7 +1678,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     }
     std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
     if (shareActionSkills.empty()) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "shareActionSkills is empty");
+        LOG_D(BMS_TAG_QUERY, "shareActionSkills is empty");
         return false;
     }
     auto wantParams = want.GetParams();

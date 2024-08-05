@@ -53,8 +53,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
-const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
     "/files",
@@ -62,15 +62,15 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
-const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
-const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
-const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
-const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
-const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
-const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
-const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
-const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
+constexpr const char* CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2 = "/data/service/el2/%/backup/bundles/";
+constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1 = "/data/service/el1/%/backup/bundles/";
+constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 constexpr const char* EXTENSION_CONFIG_DEFAULT_PATH = "/system/etc/ams_extension_config.json";
 #ifdef CONFIG_POLOCY_ENABLE
 constexpr const char* EXTENSION_CONFIG_FILE_PATH = "/etc/ams_extension_config.json";
@@ -1742,7 +1742,7 @@ bool InstalldHostImpl::LoadExtensionNeedCreateSandbox(const nlohmann::json &obje
 {
     if (!object.contains(EXTENSION_SERVICE_NEED_CREATE_SANDBOX) ||
         !object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).is_boolean()) {
-        LOG_E(BMS_TAG_INSTALLD, "need create sandbox config not existed");
+        LOG_NOFUNC_E(BMS_TAG_INSTALLD, "need create sandbox config not existed");
         return false;
     }
     return object.at(EXTENSION_SERVICE_NEED_CREATE_SANDBOX).get<bool>();

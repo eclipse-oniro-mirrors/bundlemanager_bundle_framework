@@ -24,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int16_t LOAD_SA_TIMEOUT_MS = 4 * 1000;
+constexpr int16_t LOAD_SA_TIMEOUT_MS = 4 * 1000;
 } // namespace
 
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)

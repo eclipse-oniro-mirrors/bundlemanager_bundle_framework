@@ -59,7 +59,7 @@ constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
 constexpr const char* IS_SCREEN_OFF = "isScreenOff";
 constexpr const char* PGO_DIR = "pgoDir";
 #if defined(CODE_SIGNATURE_ENABLE)
-const int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
+constexpr int16_t ERR_AOT_COMPILER_SIGN_FAILED = 10004;
 #endif
 }
 

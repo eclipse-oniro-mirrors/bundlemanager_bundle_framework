@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int8_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 31;
 bool IsSupportCompressNativeLibs()
 {
@@ -2651,7 +2651,7 @@ OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) co
     auto isModulePriorityExisted = moduleJson.contains(Profile::MODULE_TARGET_PRIORITY);
     if (!isTargetBundleExisted && !isAppPriorityExisted && !isTargetModuleNameExisted &&
         !isModulePriorityExisted) {
-        APP_LOGW("current hap not overlayed hap");
+        APP_LOGW_NOFUNC("not overlayed hap");
         return overlayMsg;
     }
     if (!isTargetModuleNameExisted) {

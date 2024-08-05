@@ -28,7 +28,7 @@ namespace AppExecFwk {
 namespace {
 constexpr int8_t INDEX_ZERO = 0;
 constexpr int16_t UNSUPPORTED_FEATURE_ERRCODE = 801;
-const char* UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
+constexpr const char* UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
 constexpr int8_t INDEX_ONE = 1;
 constexpr int8_t INDEX_TWO = 2;
 constexpr int8_t INDEX_THREE = 3;

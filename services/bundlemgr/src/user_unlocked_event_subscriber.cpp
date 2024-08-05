@@ -29,9 +29,9 @@ namespace AppExecFwk {
 namespace {
 static constexpr int16_t MODE_BASE = 07777;
 static constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
-const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
-const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
-const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL1_NEW = "/data/app/el1/%/base/";
+constexpr const char* BUNDLE_BACKUP_HOME_PATH_EL2_NEW = "/data/app/el2/%/base/";
+constexpr const char* BUNDLE_BACKUP_INNER_DIR = "/.backup";
 }
 UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)

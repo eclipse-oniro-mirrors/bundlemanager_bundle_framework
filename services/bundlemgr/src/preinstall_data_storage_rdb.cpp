@@ -38,7 +38,7 @@ PreInstallDataStorageRdb::~PreInstallDataStorageRdb()
 bool PreInstallDataStorageRdb::LoadAllPreInstallBundleInfos(
     std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
 {
-    APP_LOGI("Load all prebundle data to vector");
+    APP_LOGI_NOFUNC("Load all prebundle data to vector");
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;

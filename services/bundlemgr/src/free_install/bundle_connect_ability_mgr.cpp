@@ -28,16 +28,16 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
-const char* PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
-const char* PARAM_SUB_PACKAGE_NAME = "ohos.param.atomicservice.subpackageName";
-const char* PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE = "send_to_erms_targetAppDistType";
-const char* PARAM_FREEINSTALL_EMBEDDED = "send_to_erms_embedded";
-const char* PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE = "send_to_erms_targetAppProvisionType";
-const char* PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
-const char* DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
-const char* DEFAULT_VERSION = "1";
-const char* CONNECT_ABILITY_QUEUE = "ConnectAbilityQueue";
+constexpr const char* PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
+constexpr const char* PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
+constexpr const char* PARAM_SUB_PACKAGE_NAME = "ohos.param.atomicservice.subpackageName";
+constexpr const char* PARAM_FREEINSTALL_TARGET_APP_DIST_TYPE = "send_to_erms_targetAppDistType";
+constexpr const char* PARAM_FREEINSTALL_EMBEDDED = "send_to_erms_embedded";
+constexpr const char* PARAM_FREEINSTALL_TARGET_APP_PROVISION_TYPE = "send_to_erms_targetAppProvisionType";
+constexpr const char* PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
+constexpr const char* DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
+constexpr const char* DEFAULT_VERSION = "1";
+constexpr const char* CONNECT_ABILITY_QUEUE = "ConnectAbilityQueue";
 constexpr uint8_t CALLING_TYPE_HARMONY = 2;
 constexpr uint8_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint8_t BIT_ONE_FRONT_MODE = 0;

@@ -28,14 +28,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* TYPE_JSON = "json";
-const char* TYPE_PNG = "png";
-const char* FOREGROUND = "foreground";
-const char* BACKGROUND = "background";
-const char CHAR_COLON = ':';
+constexpr const char* TYPE_JSON = "json";
+constexpr const char* TYPE_PNG = "png";
+constexpr const char* FOREGROUND = "foreground";
+constexpr const char* BACKGROUND = "background";
+constexpr char CHAR_COLON = ':';
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
-const int8_t BADGE_SIZE = 62;
+constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+constexpr int8_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {
@@ -338,7 +338,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         // encode base64
         return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
     }
-    APP_LOGI("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
+    APP_LOGI_NOFUNC("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
     // density 0
     BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
@@ -424,7 +424,7 @@ bool BundleResourceParser::ParseForegroundAndBackgroundResource(
     const int32_t density,
     ResourceInfo &resourceInfo)
 {
-    APP_LOGI("key:%{public}s start parse layered-image", resourceInfo.GetKey().c_str());
+    APP_LOGI_NOFUNC("key:%{public}s start parse layered-image", resourceInfo.GetKey().c_str());
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
         return false;

@@ -22,10 +22,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int8_t PERIOD_ANNUALLY = 4;
-const char* SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
-const char* SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
-const char* AGING_TASK = "AgingTask";
+constexpr int8_t PERIOD_ANNUALLY = 4;
+constexpr const char* SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
+constexpr const char* SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
+constexpr const char* AGING_TASK = "AgingTask";
 
 void StatisticsUsageStats(
     const std::vector<DeviceUsageStats::BundleActivePackageStats> &useStats,

@@ -20,7 +20,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* SHARED_TYPE = "shared";
+constexpr const char* SHARED_TYPE = "shared";
 constexpr int8_t OVERLAY_MAXIMUM_PRIORITY = 100;
 } // namespace
 
@@ -37,7 +37,7 @@ ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
     for (auto &info : newInfos) {
         info.second.SetUserId(userId);
         if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
-            APP_LOGW("the hap is not overlay hap");
+            APP_LOGD("the hap is not overlay hap");
             continue;
         }
         if (isInternalOverlayExisted && isExternalOverlayExisted) {

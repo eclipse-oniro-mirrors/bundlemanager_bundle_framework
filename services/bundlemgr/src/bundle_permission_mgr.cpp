@@ -32,7 +32,7 @@ constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_p
 constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
-const int16_t BASE_API_VERSION = 1000;
+constexpr int16_t BASE_API_VERSION = 1000;
 }
 
 using namespace OHOS::Security;
@@ -147,7 +147,7 @@ AccessToken::HapPolicyParams BundlePermissionMgr::CreateHapPolicyParam(const Inn
     hapPolicy.permList = permDef;
     hapPolicy.permStateList = GetPermissionStateFullList(innerBundleInfo);
     hapPolicy.aclRequestedList = innerBundleInfo.GetAllowedAcls();
-    LOG_I(BMS_TAG_DEFAULT, "%{public}s apl:%{public}s req permission size:%{public}zu, acls size:%{public}zu",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "-n %{public}s apl:%{public}s req permission size:%{public}zu, acls size:%{public}zu",
         innerBundleInfo.GetBundleName().c_str(), apl.c_str(), hapPolicy.permStateList.size(),
         hapPolicy.aclRequestedList.size());
     // default permission list
@@ -210,8 +210,6 @@ std::vector<AccessToken::PermissionStateFull> BundlePermissionMgr::GetPermission
     const InnerBundleInfo &innerBundleInfo)
 {
     auto reqPermissions = innerBundleInfo.GetAllRequestPermissions();
-    LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s requestPermission size :%{public}zu",
-        innerBundleInfo.GetBundleName().c_str(), reqPermissions.size());
     std::vector<AccessToken::PermissionStateFull> permStateFullList;
     if (!reqPermissions.empty()) {
         for (const auto &reqPermission : reqPermissions) {
@@ -357,7 +355,7 @@ bool BundlePermissionMgr::GetDefaultPermission(
 {
     auto iter = defaultPermissions_.find(bundleName);
     if (iter == defaultPermissions_.end()) {
-        LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s does not exist in defaultPermissions",
+        LOG_NOFUNC_W(BMS_TAG_DEFAULT, "-n %{public}s not exist in defaultPermissions",
             bundleName.c_str());
         return false;
     }
@@ -671,7 +669,7 @@ int32_t BundlePermissionMgr::InitHapToken(const InnerBundleInfo &innerBundleInfo
 int32_t BundlePermissionMgr::UpdateHapToken(
     Security::AccessToken::AccessTokenIDEx& tokenIdeEx, const InnerBundleInfo &innerBundleInfo)
 {
-    LOG_I(BMS_TAG_DEFAULT, "start, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start UpdateHapToken -n %{public}s", innerBundleInfo.GetBundleName().c_str());
     AccessToken::UpdateHapInfoParams updateHapInfoParams;
     updateHapInfoParams.appIDDesc = innerBundleInfo.GetAppId();
     updateHapInfoParams.apiVersion = innerBundleInfo.GetBaseApplicationInfo().apiTargetVersion;
@@ -682,11 +680,11 @@ int32_t BundlePermissionMgr::UpdateHapToken(
 
     auto ret = AccessToken::AccessTokenKit::UpdateHapToken(tokenIdeEx, updateHapInfoParams, hapPolicy);
     if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-        LOG_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "UpdateHapToken failed, bundleName:%{public}s errCode:%{public}d",
             innerBundleInfo.GetBundleName().c_str(), ret);
         return ret;
     }
-    LOG_I(BMS_TAG_DEFAULT, "end, update hap token bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "end UpdateHapToken");
     return ERR_OK;
 }
 }  // namespace AppExecFwk

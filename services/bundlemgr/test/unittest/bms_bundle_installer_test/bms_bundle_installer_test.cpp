@@ -2025,6 +2025,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo info;
+    installer.InitDataMgr();
     ErrCode res = installer.RemoveBundle(info, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 
@@ -4532,6 +4533,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallHspVersion_0010, TestSize.Level1)
     int32_t versionCode = 9;
     InnerBundleInfo info;
     std::string uninstallDir;
+    installer.InitDataMgr();
     auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
@@ -4728,6 +4730,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     InnerBundleInfo info;
+    installer.InitDataMgr();
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR);
 }
@@ -4765,6 +4768,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     EXPECT_TRUE(ret3);
 
     BaseBundleInstaller installer;
+    installer.InitDataMgr();
     installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
@@ -6057,6 +6061,7 @@ HWTEST_F(BmsBundleInstallerTest, UpdateHapToken_0100, Function | SmallTest | Lev
     innerBundleUserInfos.try_emplace(BUNDLE_NAME, info);
     newInfo.innerBundleUserInfos_ = innerBundleUserInfos;
     BaseBundleInstaller installer;
+    installer.InitDataMgr();
     auto ret = installer.UpdateHapToken(true, newInfo);
     EXPECT_NE(ret, ERR_OK);
 

@@ -20,43 +20,43 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* APP_PROVISION_INFO_RDB_TABLE_NAME = "app_provision_info";
+constexpr const char* APP_PROVISION_INFO_RDB_TABLE_NAME = "app_provision_info";
 // app provision info table key
-const char* BUNDLE_NAME = "BUNDLE_NAME";
-const char* VERSION_CODE = "VERSION_CODE";
-const char* VERSION_NAME = "VERSION_NAME";
-const char* UUID = "UUID";
-const char* TYPE = "TYPE";
-const char* APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
-const char* DEVELOPER_ID = "DEVELOPER_ID";
-const char* CERTIFICATE = "CERTIFICATE";
-const char* APL = "APL";
-const char* ISSUER = "ISSUER";
-const char* VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
-const char* VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
-const char* SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
-const char* ADDITIONAL_INFO = "ADDITIONAL_INFO";
-const char* DEFAULT_VALUE = "";
-const char* APP_IDENTIFIER = "APP_IDENTIFIER";
-const char* APP_SERVICE_CAPABILITIES = "APP_SERVICE_CAPABILITIES";
-const char* ORGANIZATION = "ORGANIZATION";
-const int8_t INDEX_BUNDLE_NAME = 0;
-const int8_t INDEX_VERSION_CODE = 1;
-const int8_t INDEX_VERSION_NAME = 2;
-const int8_t INDEX_UUID = 3;
-const int8_t INDEX_TYPE = 4;
-const int8_t INDEX_APP_DISTRIBUTION_TYPE = 5;
-const int8_t INDEX_DEVELOPER_ID = 6;
-const int8_t INDEX_CERTIFICATE = 7;
-const int8_t INDEX_APL = 8;
-const int8_t INDEX_ISSUER = 9;
-const int8_t INDEX_VALIDITY_NOT_BEFORE = 10;
-const int8_t INDEX_VALIDITY_NOT_AFTER = 11;
-const int8_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
-const int8_t INDEX_ADDITIONAL_INFO = 13;
-const int8_t INDEX_APP_IDENTIFIER = 14;
-const int8_t INDEX_APP_SERVICE_CAPABILITIES = 15;
-const int8_t INDEX_ORGANIZATION = 16;
+constexpr const char* BUNDLE_NAME = "BUNDLE_NAME";
+constexpr const char* VERSION_CODE = "VERSION_CODE";
+constexpr const char* VERSION_NAME = "VERSION_NAME";
+constexpr const char* UUID = "UUID";
+constexpr const char* TYPE = "TYPE";
+constexpr const char* APP_DISTRIBUTION_TYPE = "APP_DISTRIBUTION_TYPE";
+constexpr const char* DEVELOPER_ID = "DEVELOPER_ID";
+constexpr const char* CERTIFICATE = "CERTIFICATE";
+constexpr const char* APL = "APL";
+constexpr const char* ISSUER = "ISSUER";
+constexpr const char* VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
+constexpr const char* VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
+constexpr const char* SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
+constexpr const char* ADDITIONAL_INFO = "ADDITIONAL_INFO";
+constexpr const char* DEFAULT_VALUE = "";
+constexpr const char* APP_IDENTIFIER = "APP_IDENTIFIER";
+constexpr const char* APP_SERVICE_CAPABILITIES = "APP_SERVICE_CAPABILITIES";
+constexpr const char* ORGANIZATION = "ORGANIZATION";
+constexpr int8_t INDEX_BUNDLE_NAME = 0;
+constexpr int8_t INDEX_VERSION_CODE = 1;
+constexpr int8_t INDEX_VERSION_NAME = 2;
+constexpr int8_t INDEX_UUID = 3;
+constexpr int8_t INDEX_TYPE = 4;
+constexpr int8_t INDEX_APP_DISTRIBUTION_TYPE = 5;
+constexpr int8_t INDEX_DEVELOPER_ID = 6;
+constexpr int8_t INDEX_CERTIFICATE = 7;
+constexpr int8_t INDEX_APL = 8;
+constexpr int8_t INDEX_ISSUER = 9;
+constexpr int8_t INDEX_VALIDITY_NOT_BEFORE = 10;
+constexpr int8_t INDEX_VALIDITY_NOT_AFTER = 11;
+constexpr int8_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
+constexpr int8_t INDEX_ADDITIONAL_INFO = 13;
+constexpr int8_t INDEX_APP_IDENTIFIER = 14;
+constexpr int8_t INDEX_APP_SERVICE_CAPABILITIES = 15;
+constexpr int8_t INDEX_ORGANIZATION = 16;
 }
 
 AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()

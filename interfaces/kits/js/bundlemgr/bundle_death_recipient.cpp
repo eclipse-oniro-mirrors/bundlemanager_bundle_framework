@@ -22,7 +22,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const char* STRING_FAIL = "[BUNDLER_MANAGER_SERVICE_UNAVAILABLE]";
+    constexpr const char* STRING_FAIL = "[BUNDLER_MANAGER_SERVICE_UNAVAILABLE]";
 }
 BundleDeathRecipient::BundleDeathRecipient(const sptr<StatusReceiverHost> &statusReceiver,
     const sptr<QuickFixStatusCallbackHost> &callback) : statusReceiver_(statusReceiver), quickFixCallback_(callback)

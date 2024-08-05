@@ -21,17 +21,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const char* APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME = "app_jump_interceptor";
+    constexpr const char* APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME = "app_jump_interceptor";
 
-    const int8_t CALLER_PKG_INDEX = 1;
-    const int8_t TARGET_PKG_INDEX = 2;
-    const int8_t SELECT_STATUS_INDEX = 3;
+    constexpr int8_t CALLER_PKG_INDEX = 1;
+    constexpr int8_t TARGET_PKG_INDEX = 2;
+    constexpr int8_t SELECT_STATUS_INDEX = 3;
     // app jump interceptor table key
-    const char* CALLER_PKG = "CALLER_PKG";
-    const char* TARGET_PKG = "TARGET_PKG";
-    const char* SELECT_STATUS = "SELECT_STATUS";
-    const char* USER_ID = "USER_ID";
-    const char* MODIFIED_TIME = "MODIFIED_TIME";
+    constexpr const char* CALLER_PKG = "CALLER_PKG";
+    constexpr const char* TARGET_PKG = "TARGET_PKG";
+    constexpr const char* SELECT_STATUS = "SELECT_STATUS";
+    constexpr const char* USER_ID = "USER_ID";
+    constexpr const char* MODIFIED_TIME = "MODIFIED_TIME";
 }
 
 AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()

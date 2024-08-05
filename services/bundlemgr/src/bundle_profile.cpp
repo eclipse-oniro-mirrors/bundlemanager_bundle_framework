@@ -24,8 +24,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int8_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};

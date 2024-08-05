@@ -2316,6 +2316,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, MatchSignature_0102, Function | SmallTest 
 {
     BundleInstallChecker installChecker;
     std::vector<std::string> appSignatures;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     bool res = installChecker.MatchOldSignatures("", appSignatures);
     EXPECT_FALSE(res);
 }

@@ -24,9 +24,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
-const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
-const char* PATCH_DIR = "patch/";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+constexpr const char* PATCH_DIR = "patch/";
 }
 
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug,

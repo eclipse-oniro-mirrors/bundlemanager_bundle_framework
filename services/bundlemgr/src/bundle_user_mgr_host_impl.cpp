@@ -32,9 +32,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
-const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
-const uint8_t FACTOR = 8;
-const uint8_t INTERVAL = 6;
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr uint8_t FACTOR = 8;
+constexpr uint8_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 

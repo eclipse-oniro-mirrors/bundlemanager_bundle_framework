@@ -31,7 +31,7 @@ namespace LIBZIP {
 namespace {
 // Numbers of pending entries that trigger writting them to the ZIP file.
 constexpr uint8_t g_MaxPendingEntriesCount = 50;
-const char* SEPARATOR = "/";
+constexpr const char* SEPARATOR = "/";
 std::mutex g_mutex;;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)

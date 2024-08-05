@@ -2686,7 +2686,7 @@ bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
-    LOG_I(BMS_TAG_QUERY, "uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
+    LOG_I(BMS_TAG_QUERY, "uri:%{private}s -u %{public}d", uri.c_str(), userId);
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {

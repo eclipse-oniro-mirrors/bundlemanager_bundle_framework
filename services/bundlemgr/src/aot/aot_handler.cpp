@@ -41,15 +41,15 @@ constexpr const char* IDLE_COMPILE_MODE = "persist.bm.idle.arkopt";
 constexpr const char* OTA_COMPILE_MODE = "persist.bm.ota.arkopt";
 
 constexpr const char* COMPILE_OPTCODE_RANGE_KEY = "ark.optcode.range";
-const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
+constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 
 constexpr const char* UPDATE_TYPE = "persist.dupdate_engine.update_type";
-const char* UPDATE_TYPE_MANUAL = "manual";
-const char* UPDATE_TYPE_NIGHT = "night";
+constexpr const char* UPDATE_TYPE_MANUAL = "manual";
+constexpr const char* UPDATE_TYPE_NIGHT = "night";
 
 constexpr const char* OTA_COMPILE_SWITCH = "const.bms.optimizing_apps.switch";
 constexpr const char* OTA_COMPILE_SWITCH_DEFAULT = "off";
-const char* OTA_COMPILE_SWITCH_ON = "on";
+constexpr const char* OTA_COMPILE_SWITCH_ON = "on";
 
 constexpr const char* OTA_COMPILE_TIME = "persist.bms.optimizing_apps.timing";
 constexpr int16_t OTA_COMPILE_TIME_DEFAULT = 4 * 60; // 4min
@@ -64,15 +64,15 @@ constexpr const char* OTA_COMPILE_STATUS = "bms.optimizing_apps.status";
 constexpr const char* OTA_COMPILE_STATUS_BEGIN = "0";
 constexpr const char* OTA_COMPILE_STATUS_END = "1";
 
-const char* QUEUE_NAME = "OTAQueue";
-const char* TASK_NAME = "OTACompileTimer";
+constexpr const char* QUEUE_NAME = "OTAQueue";
+constexpr const char* TASK_NAME = "OTACompileTimer";
 
 constexpr uint16_t CONVERSION_FACTOR = 1000; // s to ms
 
-const char* FAILURE_REASON_TIME_OUT = "timeout";
-const char* FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
-const char* FAILURE_REASON_NOT_STAGE_MODEL = "not stage model";
-const char* FAILURE_REASON_COMPILE_FAILED = "compile failed";
+constexpr const char* FAILURE_REASON_TIME_OUT = "timeout";
+constexpr const char* FAILURE_REASON_BUNDLE_NOT_EXIST = "bundle not exist";
+constexpr const char* FAILURE_REASON_NOT_STAGE_MODEL = "not stage model";
+constexpr const char* FAILURE_REASON_COMPILE_FAILED = "compile failed";
 
 constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* PGO_RT_AP_PREFIX = "rt_";

@@ -27,16 +27,16 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 constexpr int8_t MAX_TASK_NUMBER = 2;
-const char* THREAD_POOL_NAME = "BundleResourceThreadPool";
+constexpr const char* THREAD_POOL_NAME = "BundleResourceThreadPool";
 constexpr int8_t CHECK_INTERVAL = 30; // 30ms
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
 constexpr int8_t SCENE_ID_UPDATE_RESOURCE = 1 << 1;
-const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
-const char* THEME_ICONS_A = "/a/app/icons/";
-const char* THEME_ICONS_B = "/b/app/icons/";
-const char* INNER_UNDER_LINE = "_";
-const char* THEME_ICONS_A_FLAG = "/a/app/flag";
-const char* THEME_ICONS_B_FLAG = "/b/app/flag";
+constexpr const char* SYSTEM_THEME_PATH = "/data/service/el1/public/themes/";
+constexpr const char* THEME_ICONS_A = "/a/app/icons/";
+constexpr const char* THEME_ICONS_B = "/b/app/icons/";
+constexpr const char* INNER_UNDER_LINE = "_";
+constexpr const char* THEME_ICONS_A_FLAG = "/a/app/flag";
+constexpr const char* THEME_ICONS_B_FLAG = "/b/app/flag";
 }
 
 BundleResourceManager::BundleResourceManager()

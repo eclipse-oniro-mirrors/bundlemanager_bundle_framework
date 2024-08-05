@@ -29,15 +29,15 @@ constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
 constexpr const char* IS_ENABLE_DYNAMIC_ICON = "isEnableDynamicIcon";
+constexpr const char* BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* APP_DISTRIBUTION_TYPE = "appDistributionType";
-constexpr const char* APP_INDEX = "appIndex";
-const char* BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
-constexpr const char* UID = "uid";
-constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* ATOMIC_SERVICE_MODULE_UPGRADE = "atomicServiceModuleUpgrade";
+constexpr const char* UID = "uid";
+constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr const char* BUNDLE_RESOURCE_CHANGE_TYPE = "bundleResourceChangeType";
+constexpr const char* APP_INDEX = "appIndex";
 constexpr const char* TYPE = "type";
 constexpr const char* RESULT_CODE = "resultCode";
 }
@@ -121,7 +121,7 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     element.SetModuleName(installResult.modulePackage);
     element.SetAbilityName(installResult.abilityName);
     want.SetElement(element);
-    want.SetParam(UID, installResult.uid);
+    want.SetParam(Constants::UID, installResult.uid);
     want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
@@ -130,9 +130,9 @@ void BundleCommonEventMgr::SetNotifyWant(OHOS::AAFwk::Want& want, const NotifyBu
     want.SetParam(IS_MODULE_UPDATE, installResult.isModuleUpdate);
     want.SetParam(APP_IDENTIFIER, installResult.appIdentifier);
     want.SetParam(APP_DISTRIBUTION_TYPE, installResult.appDistributionType);
-    want.SetParam(APP_INDEX, installResult.appIndex);
     want.SetParam(BUNDLE_TYPE, installResult.bundleType);
     want.SetParam(ATOMIC_SERVICE_MODULE_UPGRADE, installResult.atomicServiceModuleUpgrade);
+    want.SetParam(APP_INDEX, installResult.appIndex);
     want.SetParam(TYPE, static_cast<int32_t>(installResult.type));
     want.SetParam(RESULT_CODE, installResult.resultCode);
 }

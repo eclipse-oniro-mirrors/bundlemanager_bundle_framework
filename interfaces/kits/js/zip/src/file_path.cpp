@@ -28,9 +28,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-const char* SEPARATOR = "/";
-const char* ZIP = ".zip";
-const std::int8_t ZIP_SIZE = 4;
+constexpr const char* SEPARATOR = "/";
+constexpr const char* ZIP = ".zip";
+constexpr int8_t ZIP_SIZE = 4;
 }
 const FilePath::CharType FilePath::kSeparators[] = FILE_PATH_LITERAL("/");
 const size_t FilePath::kSeparatorsLength = arraysize(kSeparators);

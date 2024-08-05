@@ -31,9 +31,9 @@
 
 using namespace OHOS::AppExecFwk;
 namespace {
-const char* REGISTERCALLBACK = "BundleStatusChange";
-const char* UNREGISTERCALLBACK = "BundleStatusChange";
-const char* TYPE_MISMATCH = "type mismatch";
+constexpr const char* REGISTERCALLBACK = "BundleStatusChange";
+constexpr const char* UNREGISTERCALLBACK = "BundleStatusChange";
+constexpr const char* TYPE_MISMATCH = "type mismatch";
 constexpr int8_t NAPI_RETURN_ZERO = 0;
 constexpr int8_t OPERATION_SUCESS = 0;
 constexpr int8_t OPERATION_FAILED = 1;

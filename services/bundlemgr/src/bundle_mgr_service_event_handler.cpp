@@ -56,24 +56,24 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* APP_SUFFIX = "/app";
-const char* TEMP_PREFIX = "temp_";
-const char* MODULE_PREFIX = "module_";
-const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
-const char* BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
-const char* MODULE_UPDATE_PATH = "module_update";
-const char* MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
-const char* MODULE_UPDATE_VALUE_UPDATE = "update";
-const char* MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
-const char* MODULE_UPDATE_VALUE_REVERT = "revert";
-const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
-const char* MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
-const char* MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
-const char* MODULE_UPDATE_PARAM_EMPTY = "";
-const char* FINGERPRINT = "fingerprint";
-const char* UNKNOWN = "";
-const char* VALUE_TRUE = "true";
-const int8_t VERSION_LEN = 64;
+constexpr const char* APP_SUFFIX = "/app";
+constexpr const char* TEMP_PREFIX = "temp_";
+constexpr const char* MODULE_PREFIX = "module_";
+constexpr const char* PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+constexpr const char* BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
+constexpr const char* MODULE_UPDATE_PATH = "module_update";
+constexpr const char* MODULE_UPDATE_PARAM = "persist.moduleupdate.bms.scan";
+constexpr const char* MODULE_UPDATE_VALUE_UPDATE = "update";
+constexpr const char* MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
+constexpr const char* MODULE_UPDATE_VALUE_REVERT = "revert";
+constexpr const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
+constexpr const char* MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
+constexpr const char* MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
+constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
+constexpr const char* FINGERPRINT = "fingerprint";
+constexpr const char* UNKNOWN = "";
+constexpr const char* VALUE_TRUE = "true";
+constexpr int8_t VERSION_LEN = 64;
 const std::vector<std::string> FINGERPRINTS = {
     "const.product.software.version",
     "const.product.build.type",
@@ -83,8 +83,8 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
-const char* HSP_VERSION_PREFIX = "v";
-const char* OTA_FLAG = "otaFlag";
+constexpr const char* HSP_VERSION_PREFIX = "v";
+constexpr const char* OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
@@ -187,11 +187,11 @@ BMSEventHandler::~BMSEventHandler()
 
 void BMSEventHandler::BmsStartEvent()
 {
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent start");
     BeforeBmsStart();
     OnBmsStarting();
     AfterBmsStart();
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent end");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent end");
 }
 
 void BMSEventHandler::BeforeBmsStart()
@@ -209,7 +209,7 @@ void BMSEventHandler::OnBmsStarting()
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
-        LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
         BundleRebootStartEvent();
         return;
     }
@@ -1617,14 +1617,14 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     std::list<std::string> bundleDirs;
     std::list<std::string> sharedBundleDirs;
     for (const auto &installInfo : installList_) {
-        LOG_I(BMS_TAG_DEFAULT, "Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            LOG_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot",
+                installInfo.bundleDir.c_str());
             continue;
         }
 
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
-            LOG_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
             sharedBundleDirs.emplace_back(installInfo.bundleDir);
         } else {
             bundleDirs.emplace_back(installInfo.bundleDir);
@@ -1676,7 +1676,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) by path(%{public}s)",
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
@@ -1687,7 +1687,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process bundle(%{public}s) by path(%{public}s)",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process -n %{public}s path:%{public}s",
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
@@ -1764,8 +1764,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
-                LOG_E(BMS_TAG_DEFAULT, "bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
-                    "installed bundle(%{public}d)", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
+                LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
+                    "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
             }
@@ -1870,7 +1870,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
-    LOG_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");

@@ -20,8 +20,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* SEPARATOR = "/";
-const char* UNDER_LINE = "_";
+constexpr const char* SEPARATOR = "/";
+constexpr const char* UNDER_LINE = "_";
 }
 
 ResourceInfo::ResourceInfo()

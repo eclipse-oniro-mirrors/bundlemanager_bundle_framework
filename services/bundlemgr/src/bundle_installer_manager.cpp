@@ -25,11 +25,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* INSTALL_TASK = "Install_Task";
-const char* UNINSTALL_TASK = "Uninstall_Task";
-const char* RECOVER_TASK = "Recover_Task";
-const char* THREAD_POOL_NAME = "InstallerThreadPool";
-const unsigned int TIME_OUT_SECONDS = 60 * 5;
+constexpr const char* INSTALL_TASK = "Install_Task";
+constexpr const char* UNINSTALL_TASK = "Uninstall_Task";
+constexpr const char* RECOVER_TASK = "Recover_Task";
+constexpr const char* THREAD_POOL_NAME = "InstallerThreadPool";
+constexpr unsigned int TIME_OUT_SECONDS = 60 * 5;
 constexpr int8_t MAX_TASK_NUMBER = 10;
 constexpr int8_t DELAY_INTERVAL_SECONDS = 60;
 }

@@ -20,8 +20,8 @@ namespace {
 constexpr char PRE_RELEASE_SEPARATOR = '-';
 constexpr char BUILD_META_SEPARATOR = '+';
 constexpr char DOT = '.';
-const int8_t NUM_ONE = 1;
-const int8_t NUM_TWO = 2;
+constexpr int8_t NUM_ONE = 1;
+constexpr int8_t NUM_TWO = 2;
 }
 
 SemVer::SemVer(std::string versionString) : raw(versionString)

@@ -80,19 +80,19 @@ constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 #ifdef QUOTA_PARAM_SET_ENABLE
 constexpr const char* SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
-const int32_t THRESHOLD_VAL_LEN = 20;
+constexpr int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
-const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
+constexpr int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
-const int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
-const int8_t SINGLE_HSP_VERSION = 1;
-const int8_t USER_MODE = 0;
-const int8_t ROOT_MODE = 1;
-const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
-const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+constexpr int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
+constexpr int8_t SINGLE_HSP_VERSION = 1;
+constexpr int8_t USER_MODE = 0;
+constexpr int8_t ROOT_MODE = 1;
+constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
+constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
 constexpr const char* BMS_TRUE = "true";
-const int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
+constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.formrenderservice",
@@ -159,11 +159,11 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!installParam.needSendEvent) {
-        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify needSendEvent is false");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "SendStartInstallNotify needSendEvent is false");
         return;
     }
     if (bundleName_.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
         return;
     }
     for (const auto &item : infos) {
@@ -187,7 +187,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "begin to process bundle install");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process bundle install");
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
@@ -723,13 +723,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "bundleName %{public}s, userId is %{public}d", bundleName_.c_str(), userId_);
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd",
+        bundleName_.c_str(), userId_, installParam.installFlag);
     // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
     if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "flag:%{public}hhd, userId:%{public}d, isAppExist:%{public}d",
-        installParam.installFlag, userId_, isAppExist_);
+    LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
     ErrCode result = ERR_OK;
@@ -1006,7 +1006,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 {
     if (isAppService_) {
         if (userId != Constants::DEFAULT_USERID) {
-            LOG_W(BMS_TAG_INSTALLER, "appService(%{public}s) only install U0", info.GetBundleName().c_str());
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "appService(%{public}s) only install U0", info.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
         }
 
@@ -1016,7 +1016,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
     bool isSingleton = info.IsSingleton();
     if ((isSingleton && (userId != Constants::DEFAULT_USERID)) ||
         (!isSingleton && (userId == Constants::DEFAULT_USERID))) {
-        LOG_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
             isSingleton, info.GetBundleName().c_str(), userId);
         return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
     }
@@ -2843,7 +2843,7 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
     const std::string &dir)
 {
-    LOG_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
@@ -2869,7 +2869,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
 
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
-    LOG_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfo(info, isExist) || !isExist) {
@@ -2888,10 +2888,10 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     }
 
     if (!hasPermission) {
-        LOG_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
         for (const std::string &dir : dirs) {
             if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
             }
         }
         return;
@@ -4045,7 +4045,7 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
     const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
     bool isSingleton = newInfos.begin()->second.IsSingleton();
-    LOG_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
         static_cast<int32_t>(isSingleton));
     if (isSingleton) {
         return Constants::DEFAULT_USERID;
@@ -5165,7 +5165,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
     for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
             !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
-            LOG_I(BMS_TAG_INSTALLER, "so files are isolated or decompressed and no necessary to move so files");
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "so files are isolated or decompressed no necessary to move");
             continue;
         }
         std::string cpuAbi = "";
@@ -5186,7 +5186,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             if (!isDirExisted) {
-                LOG_W(BMS_TAG_INSTALLER, "%{public}s is not existed not need to be moved", tempSoDir.c_str());
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed not need move", tempSoDir.c_str());
                 continue;
             }
             std::string realSoDir;
@@ -5440,7 +5440,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
 
 ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
         bundleName_.c_str(), needUpdate);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
@@ -5450,7 +5450,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (needUpdate) {
@@ -5458,10 +5458,9 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
     }
     if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s end", bundleName_.c_str());
     return ERR_OK;
 }
 
@@ -5503,7 +5502,7 @@ void BaseBundleInstaller::VerifyDomain()
     }
     std::string appIdentifier = bundleInfo.GetAppIdentifier();
     if (isAppExist_) {
-        LOG_I(BMS_TAG_INSTALLER, "app exist, need to clear old domain info");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "app exist, need to clear old domain info");
         ClearDomainVerifyStatus(appIdentifier, bundleName_);
     }
     std::vector<AppDomainVerify::SkillUri> skillUris;
@@ -5512,11 +5511,11 @@ void BaseBundleInstaller::VerifyDomain()
         PrepareSkillUri(skillInfo.second, skillUris);
     }
     if (skillUris.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "no skill uri need to verify domain");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no skill uri need to verify domain");
         return;
     }
     std::string fingerprint = bundleInfo.GetCertificateFingerprint();
-    LOG_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(

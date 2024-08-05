@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* CLONE_DIR_PATH_PREFIX = "clone";
-const char* PLUS_SIGN = "+";
-const char* MINUS_SIGN = "-";
+constexpr const char* CLONE_DIR_PATH_PREFIX = "clone";
+constexpr const char* PLUS_SIGN = "+";
+constexpr const char* MINUS_SIGN = "-";
 }
 
 class BundleCloneCommonHelper {

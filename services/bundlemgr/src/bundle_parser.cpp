@@ -251,7 +251,7 @@ ErrCode BundleParser::ParsePreInstallAbilityConfig(
     APP_LOGD("Parse PreInstallAbilityConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
+        APP_LOGE_NOFUNC("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -355,7 +355,7 @@ ErrCode BundleParser::ParseNoDisablingList(const std::string &configPath, std::v
 {
     nlohmann::json object;
     if (!ReadFileIntoJson(configPath, object)) {
-        APP_LOGI("Parse file %{public}s failed", configPath.c_str());
+        APP_LOGI_NOFUNC("Parse file %{public}s failed", configPath.c_str());
         return ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
     }
     if (!object.contains(NO_DISABLING_CONFIG_KEY) || !object.at(NO_DISABLING_CONFIG_KEY).is_array()) {
