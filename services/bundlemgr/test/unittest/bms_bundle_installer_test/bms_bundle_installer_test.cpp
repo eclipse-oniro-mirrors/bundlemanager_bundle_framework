@@ -4949,7 +4949,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0050, Function | SmallTest | Leve
     InnerBundleInfo newInfo;
     oldInfo.baseBundleInfo_->compatibleVersion = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**

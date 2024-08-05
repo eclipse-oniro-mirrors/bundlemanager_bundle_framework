@@ -1794,7 +1794,9 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     baseBundleInfo_->versionName = bundleInfo.versionName;
     baseBundleInfo_->minCompatibleVersionCode = bundleInfo.minCompatibleVersionCode;
 
-    baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
+    if (bundleInfo.compatibleVersion > baseBundleInfo_->compatibleVersion) {
+        baseBundleInfo_->compatibleVersion = bundleInfo.compatibleVersion;
+    }
     baseBundleInfo_->targetVersion = bundleInfo.targetVersion;
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
@@ -1824,7 +1826,9 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->versionName = applicationInfo.versionName;
     baseApplicationInfo_->minCompatibleVersionCode = applicationInfo.minCompatibleVersionCode;
 
-    baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
+    if (applicationInfo.apiCompatibleVersion > baseApplicationInfo_->apiCompatibleVersion) {
+        baseApplicationInfo_->apiCompatibleVersion = applicationInfo.apiCompatibleVersion;
+    }
     baseApplicationInfo_->apiTargetVersion = applicationInfo.apiTargetVersion;
 
     baseApplicationInfo_->iconPath = applicationInfo.iconPath;

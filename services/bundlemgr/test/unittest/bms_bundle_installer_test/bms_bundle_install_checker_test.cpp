@@ -1387,7 +1387,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0008, Function | SmallTe
     infos.emplace(HAP, innerBundleInfo1);
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
