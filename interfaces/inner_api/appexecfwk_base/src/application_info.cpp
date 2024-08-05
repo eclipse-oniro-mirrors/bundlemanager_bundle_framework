@@ -133,7 +133,7 @@ const char* APPLICATION_MAX_CHILD_PROCESS = "maxChildProcess";
 const char* APPLICATION_APP_INDEX = "appIndex";
 const char* APPLICATION_INSTALL_SOURCE = "installSource";
 const char* APPLICATION_CONFIGURATION = "configuration";
-const std::string APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
+const char* APPLICATION_HWASAN_ENABLED = "hwasanEnabled";
 const char* APPLICATION_CLOUD_FILE_SYNC_ENABLED = "cloudFileSyncEnabled";
 }
 
