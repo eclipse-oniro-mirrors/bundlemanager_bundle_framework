@@ -15,13 +15,8 @@
 
 #include "bundle_resource_parser.h"
 
-#include <cstdlib>
-#include "nlohmann/json.hpp"
-
-#include "app_log_wrapper.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_image_info.h"
-#include "bundle_system_state.h"
 #include "bundle_resource_drawable.h"
 #include "json_util.h"
 
@@ -343,7 +338,7 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         // encode base64
         return bundleResourceImageInfo.ConvertToBase64(std::move(jsonBuf), len, resourceInfo.icon_);
     }
-    APP_LOGI("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
+    APP_LOGI_NOFUNC("%{public}s icon is not png, parse by drawable descriptor", resourceInfo.GetKey().c_str());
     // density 0
     BundleResourceDrawable drawable;
     if (!drawable.GetIconResourceByDrawable(resourceInfo.iconId_, 0, resourceManager, resourceInfo)) {
@@ -429,7 +424,7 @@ bool BundleResourceParser::ParseForegroundAndBackgroundResource(
     const int32_t density,
     ResourceInfo &resourceInfo)
 {
-    APP_LOGI("key:%{public}s start parse layered-image", resourceInfo.GetKey().c_str());
+    APP_LOGI_NOFUNC("key:%{public}s start parse layered-image", resourceInfo.GetKey().c_str());
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");
         return false;

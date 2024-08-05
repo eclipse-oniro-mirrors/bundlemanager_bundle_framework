@@ -843,4 +843,21 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4200, Function | SmallTest |
     auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_4300
+ * @tc.name: test function CleanBundleDataDirByName
+ * @tc.desc: 1. calling CleanBundleDataDirByName of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4300, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    std::string bundleName = TEST_STRING;
+    int userId = 100;
+    int appIndex = 1;
+    auto ret = proxy->CleanBundleDataDirByName(TEST_STRING, userId, appIndex);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

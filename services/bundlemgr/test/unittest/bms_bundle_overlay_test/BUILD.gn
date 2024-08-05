@@ -17,6 +17,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleOverlayCheckerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -30,9 +35,12 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_quick_fix_callback.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
@@ -72,6 +80,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -210,6 +219,11 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
 }
 
 ohos_unittest("BmsBundleOverlayIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -356,6 +370,11 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
 }
 
 ohos_unittest("BmsBundleManagerOverlayIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -369,9 +388,12 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
@@ -408,6 +430,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
@@ -488,6 +511,11 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
 }
 
 ohos_unittest("BmsBundleSetOverlayEnabledTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -501,10 +529,13 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
@@ -622,6 +653,11 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
 }
 
 ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -635,10 +671,13 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
@@ -676,6 +715,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "hilog:libhilog",
     "hitrace:hitrace_meter",
     "init:libbegetutil",
+    "ipc:ipc_single",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]

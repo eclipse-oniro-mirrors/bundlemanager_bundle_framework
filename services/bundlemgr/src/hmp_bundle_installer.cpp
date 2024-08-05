@@ -68,7 +68,8 @@ ErrCode HmpBundleInstaller::InstallHmpBundle(const std::string &filePath, bool i
 
     for (const auto &app : hapList) {
         APP_LOGI("Install app:%{public}s", app.c_str());
-        ErrCode ret = InstallNormalAppInHmp(appBaseDir + ServiceConstants::PATH_SEPARATOR + app);
+        bool isRemovable = GetIsRemovable(app);
+        ErrCode ret = InstallNormalAppInHmp(appBaseDir + ServiceConstants::PATH_SEPARATOR + app, isRemovable);
         if (ret != ERR_OK) {
             if (isNeedRollback) {
                 RollbackHmpBundle(systemHspList, rollbackHapList);
@@ -117,7 +118,7 @@ ErrCode HmpBundleInstaller::InstallSystemHspInHmp(const std::string &bundleDir) 
     return ret;
 }
 
-ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
+ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir, bool removable)
 {
     auto pos = bundleDir.rfind('/');
     auto bundleName = pos != std::string::npos ? bundleDir.substr(pos + 1) : "";
@@ -130,18 +131,17 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
     installParam.copyHapToInstallPath = false;
     installParam.userId = Constants::DEFAULT_USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
     ErrCode ret = InstallBundle(bundleDir, installParam, Constants::AppType::SYSTEM_APP);
     ResetInstallProperties();
     if (ret == ERR_OK) {
         APP_LOGI("install hmp normal app %{public}s for user 0 success", bundleDir.c_str());
         return ret;
     }
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr");
+    if (!InitDataMgr()) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    if (dataMgr->IsSystemHsp(bundleName)) {
+    if (dataMgr_->IsSystemHsp(bundleName)) {
         APP_LOGE("install hmp system hsp %{public}s error with code: %{public}d", bundleDir.c_str(), ret);
         return ret;
     }
@@ -164,26 +164,24 @@ ErrCode HmpBundleInstaller::InstallNormalAppInHmp(const std::string &bundleDir)
     return installSuccess ? ERR_OK : ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
 }
 
-std::set<int32_t> HmpBundleInstaller::GetRequiredUserIds(std::string bundleName) const
+std::set<int32_t> HmpBundleInstaller::GetRequiredUserIds(std::string bundleName)
 {
     std::set<int32_t> userIds;
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is nullptr");
+    if (!InitDataMgr()) {
         return userIds;
     }
     // if bundle exists, return the set of user ids that have installed the bundle
-    if (dataMgr->GetInnerBundleInfoUsers(bundleName, userIds)) {
+    if (dataMgr_->GetInnerBundleInfoUsers(bundleName, userIds)) {
         return userIds;
     }
     // if bundle does not exist, check whether the bundle is pre-installed
     // if so, it means the bundle is uninstalled by all users, return empty set
     PreInstallBundleInfo preInfo;
-    if (dataMgr->GetPreInstallBundleInfo(bundleName, preInfo)) {
+    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInfo)) {
         return userIds;
     }
     // if bundle does not exist and is not pre-installed, it means the bundle is new, return all user ids
-    for (auto userId : dataMgr->GetAllUser()) {
+    for (auto userId : dataMgr_->GetAllUser()) {
         if (userId >= Constants::START_USERID) {
             userIds.insert(userId);
         }
@@ -191,7 +189,7 @@ std::set<int32_t> HmpBundleInstaller::GetRequiredUserIds(std::string bundleName)
     return userIds;
 }
 
-std::set<std::string> HmpBundleInstaller::GetRollbackHapList(std::set<std::string> hapList) const
+std::set<std::string> HmpBundleInstaller::GetRollbackHapList(std::set<std::string> hapList)
 {
     std::set<std::string> rollbackHapList;
     for (const auto &bundleName : hapList) {
@@ -289,13 +287,11 @@ void HmpBundleInstaller::UpdateBundleInfo(const std::string &bundleName,
 void HmpBundleInstaller::UpdateInnerBundleInfo(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+    if (!InitDataMgr()) {
         return;
     }
     InnerBundleInfo oldBundleInfo;
-    bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
+    bool hasInstalled = dataMgr_->FetchInnerBundleInfo(bundleName, oldBundleInfo);
     if (!hasInstalled) {
         APP_LOGW("app(%{public}s) has been uninstalled", bundleName.c_str());
         return;
@@ -318,15 +314,13 @@ void HmpBundleInstaller::UpdateInnerBundleInfo(const std::string &bundleName,
 
 bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return false;
     }
 
     InstallParam installParam;
     bool uninstallResult = false;
-    for (auto userId : dataMgr->GetAllUser()) {
+    for (auto userId : dataMgr_->GetAllUser()) {
         installParam.userId = userId;
         installParam.needSavePreInstallInfo = true;
         installParam.isPreInstallApp = true;
@@ -349,13 +343,11 @@ bool HmpBundleInstaller::UninstallSystemBundle(const std::string &bundleName, co
 
 void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
+    if (!InitDataMgr()) {
         return;
     }
     InnerBundleInfo info;
-    if (!(dataMgr->FetchInnerBundleInfo(bundleName, info))) {
+    if (!(dataMgr_->FetchInnerBundleInfo(bundleName, info))) {
         APP_LOGD("bundleName %{public}s not existed local", bundleName.c_str());
         return;
     }
@@ -386,8 +378,8 @@ void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
             return;
         }
         PreInstallBundleInfo preInstallBundleInfo;
-        if ((dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
-            dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+        if ((dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo))) {
+            dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
         }
     }
 }
@@ -395,13 +387,11 @@ void HmpBundleInstaller::CheckUninstallSystemHsp(const std::string &bundleName)
 void HmpBundleInstaller::UpdatePreInfoInDb(const std::string &bundleName,
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
+    if (!InitDataMgr()) {
         return;
     }
     PreInstallBundleInfo preInstallBundleInfo;
-    dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     auto bundlePathList = preInstallBundleInfo.GetBundlePaths();
     for (const std::string &bundlePath : bundlePathList) {
         if (infos.find(bundlePath) == infos.end()) {
@@ -410,9 +400,9 @@ void HmpBundleInstaller::UpdatePreInfoInDb(const std::string &bundleName,
         }
     }
     if (preInstallBundleInfo.GetBundlePaths().empty()) {
-        dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     } else {
-        dataMgr->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+        dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
     }
 }
 
@@ -436,6 +426,31 @@ void HmpBundleInstaller::UpdateBundleInfoForHmp(const std::string &filePath, std
             UpdateBundleInfo(bundleName, "", hspDir);
         }
     }
+}
+
+bool HmpBundleInstaller::GetIsRemovable(const std::string &bundleName)
+{
+    if (!InitDataMgr()) {
+        return true;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->FetchInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("get removable failed %{public}s", bundleName.c_str());
+        return true;
+    }
+    return info.IsRemovable();
+}
+
+bool HmpBundleInstaller::InitDataMgr()
+{
+    if (dataMgr_ == nullptr) {
+        dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr_ == nullptr) {
+            APP_LOGE("Get dataMgr_ nullptr");
+            return false;
+        }
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

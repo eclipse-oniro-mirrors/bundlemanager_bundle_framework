@@ -30,7 +30,7 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     {
         AppServiceFwkInstaller appServiceFwk;
-        appServiceFwk.RemoveInfo(std::string(data, size));
+        appServiceFwk.RemoveInfo("");
         return true;
     }
 }

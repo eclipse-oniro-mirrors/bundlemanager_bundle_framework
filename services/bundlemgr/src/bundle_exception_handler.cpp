@@ -15,12 +15,6 @@
 
 #include "bundle_exception_handler.h"
 
-#include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
-
-#include "bundle_constants.h"
-#include "bundle_permission_mgr.h"
 #include "installd_client.h"
 
 namespace OHOS {

@@ -18,6 +18,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -31,9 +36,12 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
@@ -211,6 +219,11 @@ ohos_unittest("BmsBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -224,9 +237,12 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
@@ -390,6 +406,11 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -576,6 +597,11 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -734,6 +760,11 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 }
 
 ohos_unittest("BmsBundleInstallCheckerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -877,6 +908,11 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1020,6 +1056,11 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 }
 
 ohos_unittest("BmsSystemBundleInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1033,9 +1074,12 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
@@ -1167,6 +1211,11 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 }
 
 ohos_unittest("BmsBundleInstallDriverTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -1177,10 +1226,13 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
@@ -1354,6 +1406,11 @@ ohos_unittest("BmsBundleInstallDriverTest") {
 }
 
 ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
@@ -1367,9 +1424,12 @@ ohos_unittest("BmsBundleAppServiceFwkInstallerTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",

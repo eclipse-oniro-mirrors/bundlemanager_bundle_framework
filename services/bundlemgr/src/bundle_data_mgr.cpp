@@ -15,23 +15,15 @@
 
 #include "bundle_data_mgr.h"
 
-#include <algorithm>
-#include <chrono>
-#include <cinttypes>
-#include <sstream>
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #endif
 #endif
 #include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_client.h"
-#include "bms_extension_data_mgr.h"
-#include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
@@ -39,7 +31,6 @@
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
-#include "bundle_util.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
@@ -47,17 +38,13 @@
 #include "inner_bundle_clone_common.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
-#include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
 #endif
 #include "mime_type_mgr.h"
-#include "nlohmann/json.hpp"
-#include "free_install_params.h"
 #include "parameters.h"
 #include "router_map_helper.h"
-#include "singleton.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #endif
@@ -883,8 +870,8 @@ bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, in
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, responseUserId);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found -n %{public}s -m %{public}s -a %{public}s",
-            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbility not found UIAbility -n %{public}s -m %{public}s "
+            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
     return QueryAbilityInfoWithFlags(ability, flags, responseUserId, innerBundleInfo, abilityInfo);
@@ -931,8 +918,8 @@ ErrCode BundleDataMgr::ExplicitQueryAbilityInfoV9(const Want &want, int32_t flag
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
     if (!ability) {
-        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found -n %{public}s -m %{public}s -a %{public}s",
-            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        LOG_NOFUNC_W(BMS_TAG_QUERY, "ExplicitQueryAbilityInfoV9 not found UIAbility -n %{public}s -m %{public}s "
+            "-a %{public}s", bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 
@@ -1504,7 +1491,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfosV9(const Want &want, int32_
 
 bool BundleDataMgr::CheckAbilityInfoFlagExist(int32_t flags, AbilityInfoFlag abilityInfoFlag) const
 {
-    return (static_cast<uint32_t>(flags) & abilityInfoFlag) == abilityInfoFlag;
+    return (static_cast<uint32_t>(flags) & static_cast<uint32_t>(abilityInfoFlag)) == abilityInfoFlag;
 }
 
 void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const InnerBundleInfo &info,
@@ -1693,7 +1680,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     }
     std::vector<Skill> shareActionSkills = FindSkillsContainShareAction(skills);
     if (shareActionSkills.empty()) {
-        LOG_NOFUNC_E(BMS_TAG_QUERY, "shareActionSkills is empty");
+        LOG_D(BMS_TAG_QUERY, "shareActionSkills is empty");
         return false;
     }
     auto wantParams = want.GetParams();
@@ -5856,8 +5843,13 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
         if (!abilityInfos.empty() || !extensionInfos.empty()) {
             APP_LOGI("find target default application");
-            findDefaultApp = true;
-            return true;
+            if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
+                findDefaultApp = true;
+                return true;
+            }
+            for (auto &info : abilityInfos) {
+                info.linkType = LinkType::DEFAULT_APP;
+            }
         }
     }
     // step2 : find backup default infos
@@ -5866,8 +5858,13 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         FilterAbilityInfosByAppLinking(want, flags, abilityInfos);
         if (!abilityInfos.empty() || !extensionInfos.empty()) {
             APP_LOGI("find target backup default application");
-            findDefaultApp = true;
-            return true;
+            if (want.GetUriString().rfind(SCHEME_HTTPS, 0) != 0) {
+                findDefaultApp = true;
+                return true;
+            }
+            for (auto &info : abilityInfos) {
+                info.linkType = LinkType::DEFAULT_APP;
+            }
         }
     }
 #endif
@@ -7290,19 +7287,20 @@ ErrCode BundleDataMgr::GetAppServiceHspBundleInfo(const std::string &bundleName,
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
     }
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGD("can not find bundle %{public}s", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    if (innerBundleInfo.GetAppServiceHspInfo(bundleInfo) != ERR_OK) {
-        APP_LOGD("failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    auto res = innerBundleInfo.GetAppServiceHspInfo(bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGW("get hspInfo %{public}s fail", bundleName.c_str());
+        return res;
     }
     return ERR_OK;
 }
@@ -7486,6 +7484,21 @@ ErrCode BundleDataMgr::GetOdid(std::string &odid) const
     }
     std::string developerId;
     innerBundleInfo.GetDeveloperidAndOdid(developerId, odid);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetOdidByBundleName(const std::string &bundleName, std::string &odid) const
+{
+    APP_LOGI("start GetOdidByBundleName, bundleName %{public}s", bundleName.c_str());
+    InnerBundleInfo innerBundleInfo;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto &item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &bundleInfo = item->second;
+    bundleInfo.GetOdid(odid);
     return ERR_OK;
 }
 
@@ -8112,6 +8125,23 @@ ErrCode BundleDataMgr::ImplicitQueryAllCloneExtensionAbilityInfosV9(const Want &
         }
     }
     FilterExtensionAbilityInfosByModuleName(want.GetElement().GetModuleName(), infos);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAppIdByBundleName(
+    const std::string &bundleName, std::string &appId) const
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    if (innerBundleInfo.IsDisabled()) {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    appId = innerBundleInfo.GetBaseBundleInfo().appId;
     return ERR_OK;
 }
 

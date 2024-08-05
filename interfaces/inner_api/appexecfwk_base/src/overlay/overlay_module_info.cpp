@@ -25,12 +25,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string MODULE_OVERLAY_BUNDLE_NAME = "bundleName";
-const std::string MODULE_OVERLAY_MODULE_NAME = "moduleName";
-const std::string MODULE_OVERLAY_HAP_PATH = "hapPath";
-const std::string MODULE_OVERLAY_PRIORITY = "priority";
-const std::string MODULE_OVERLAY_STATE = "state";
-const std::string MODULE_TARGET_MODULE_NAME = "targetModuleName";
+const char* MODULE_OVERLAY_BUNDLE_NAME = "bundleName";
+const char* MODULE_OVERLAY_MODULE_NAME = "moduleName";
+const char* MODULE_OVERLAY_HAP_PATH = "hapPath";
+const char* MODULE_OVERLAY_PRIORITY = "priority";
+const char* MODULE_OVERLAY_STATE = "state";
+const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
 } // namespace
 
 bool OverlayModuleInfo::ReadFromParcel(Parcel &parcel)

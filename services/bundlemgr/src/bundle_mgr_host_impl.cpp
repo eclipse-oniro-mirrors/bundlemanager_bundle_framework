@@ -15,48 +15,27 @@
 
 #include "bundle_mgr_host_impl.h"
 
-#include <dirent.h>
-#include <future>
-#include <mutex>
-#include <set>
-#include <string>
-
 #include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
-#include "app_privilege_capability.h"
+#include "app_mgr_interface.h"
 #include "aot/aot_handler.h"
 #include "bms_extension_client.h"
-#include "bundle_constants.h"
-#include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
-#include "bundle_resource_helper.h"
-#include "bundle_sandbox_app_helper.h"
-#include "bundle_util.h"
-#include "bundle_verify_mgr.h"
-#include "directory_ex.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_proxy.h"
 #endif
-#include "element_name.h"
-#include "ffrt.h"
 #include "hitrace_meter.h"
-#include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
-#include "json_serializer.h"
-#include "scope_guard.h"
-#include "system_ability_definition.h"
-#include "app_mgr_interface.h"
 #include "system_ability_helper.h"
-#include "running_process_info.h"
 #include "inner_bundle_clone_common.h"
 #ifdef DEVICE_USAGE_STATISTICS_ENABLED
 #include "bundle_active_client.h"
 #include "bundle_active_period_stats.h"
 #endif
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -333,7 +312,7 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
     switch (flag) {
         case GetDependentBundleInfoFlag::GET_APP_CROSS_HSP_BUNDLE_INFO: {
             if (!VerifyDependency(sharedBundleName)) {
-                APP_LOGE("verify dependency failed");
+                APP_LOGE("failed");
                 return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
             }
             return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
@@ -347,7 +326,7 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
                 return ERR_OK;
             }
             if (!VerifyDependency(sharedBundleName)) {
-                APP_LOGE("verify dependency failed");
+                APP_LOGE("failed");
                 return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
             }
             return dataMgr->GetSharedBundleInfo(sharedBundleName, bundleInfoFlags, sharedBundleInfo);
@@ -2707,7 +2686,7 @@ bool BundleMgrHostImpl::VerifyCallingPermission(const std::string &permission)
 bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
-    LOG_I(BMS_TAG_QUERY, "uri : %{private}s, userId : %{public}d", uri.c_str(), userId);
+    LOG_I(BMS_TAG_QUERY, "uri:%{private}s -u %{public}d", uri.c_str(), userId);
     // API9 need to be system app, otherwise return empty data
     if (!BundlePermissionMgr::IsSystemApp() &&
         !BundlePermissionMgr::VerifyCallingBundleSdkVersion(ServiceConstants::API_VERSION_NINE)) {
@@ -3422,7 +3401,7 @@ bool BundleMgrHostImpl::VerifyDependency(const std::string &sharedBundleName)
 
     InnerBundleInfo callingBundleInfo;
     if (!dataMgr->FetchInnerBundleInfo(callingBundleName, callingBundleInfo)) {
-        APP_LOGE("get callingBundleInfo failed");
+        APP_LOGE("get %{public}s failed", callingBundleName.c_str());
         return false;
     }
 
@@ -4131,10 +4110,6 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    if (bundleName.empty()) {
-        APP_LOGE_NOFUNC("GetCloneBundleInfo failed bundleName empty");
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
     APP_LOGD("verify permission success, begin to GetCloneBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -4286,6 +4261,21 @@ bool BundleMgrHostImpl::IsAppLinking(int32_t flags) const
         return true;
     }
     return false;
+}
+
+ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, std::string &odid)
+{
+    APP_LOGD("start GetOdidByBundleName");
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetOdidByBundleName(bundleName, odid);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

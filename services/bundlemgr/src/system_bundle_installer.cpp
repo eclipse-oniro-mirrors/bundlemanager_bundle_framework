@@ -118,7 +118,7 @@ ErrCode SystemBundleInstaller::OTAInstallSystemBundleNeedCheckUser(
     }
     ErrCode result = ERR_OK;
     for (auto userId : userIdSet) {
-        APP_LOGI("start ota install bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
+        APP_LOGI_NOFUNC("start ota install -n %{public}s -u %{public}d", bundleName.c_str(), userId);
         installParam.userId = userId;
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;

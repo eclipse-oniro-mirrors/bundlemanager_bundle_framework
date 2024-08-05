@@ -15,18 +15,9 @@
 
 #include "bundle_resource_callback.h"
 
-#include "nlohmann/json.hpp"
-#include <string>
-
 #include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#include "bundle_common_event_mgr.h"
 #include "bundle_resource_manager.h"
-#include "bundle_resource_param.h"
-#include "bundle_system_state.h"
-#include "json_util.h"
-#include "resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

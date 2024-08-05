@@ -16,8 +16,6 @@
 #include "quick_fix_manager_rdb.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "json_serializer.h"
 
 namespace OHOS {

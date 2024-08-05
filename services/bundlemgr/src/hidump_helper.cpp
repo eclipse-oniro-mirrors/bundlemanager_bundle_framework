@@ -15,9 +15,6 @@
 
 #include "hidump_helper.h"
 
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {

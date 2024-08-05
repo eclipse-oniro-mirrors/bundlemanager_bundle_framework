@@ -16,7 +16,6 @@
 #include "xcollie_helper.h"
 
 #include "app_log_wrapper.h"
-
 #ifdef HICOLLIE_ENABLE
 #include "xcollie/xcollie.h"
 #include "xcollie/xcollie_define.h"

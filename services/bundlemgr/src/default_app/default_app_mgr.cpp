@@ -17,13 +17,11 @@
 
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
-#include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "default_app_rdb.h"
 #include "ipc_skeleton.h"
 #include "mime_type_mgr.h"
-#include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"

@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum AbilityInfoFlag {
+enum AbilityInfoFlag : uint16_t {
     GET_ABILITY_INFO_DEFAULT = 0x00000000,
     GET_ABILITY_INFO_WITH_PERMISSION = 0x00000002,
     GET_ABILITY_INFO_WITH_APPLICATION = 0x00000004,
@@ -35,7 +35,7 @@ enum AbilityInfoFlag {
     GET_ABILITY_INFO_WITH_SKILL = 0x00000400
 };
 
-enum class GetAbilityInfoFlag {
+enum class GetAbilityInfoFlag : uint16_t {
     GET_ABILITY_INFO_DEFAULT = 0x00000000,
     GET_ABILITY_INFO_WITH_PERMISSION = 0x00000001,
     GET_ABILITY_INFO_WITH_APPLICATION = 0x00000002,
@@ -104,9 +104,10 @@ enum class SupportWindowMode {
     FLOATING,
 };
 
-enum class LinkType {
+enum class LinkType : uint8_t {
     DEEP_LINK = 0,
     APP_LINK,
+    DEFAULT_APP,
 };
 
 struct AbilityInfo;

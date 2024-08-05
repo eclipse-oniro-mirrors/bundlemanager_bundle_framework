@@ -53,8 +53,8 @@ constexpr const char* PATH_SEPARATOR = "/";
 constexpr const char* TYPE_WILDCARD = "*/*";
 const char WILDCARD = '*';
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
-const std::string LINK_FEATURE = "linkFeature";
-const std::string GENERAL_OBJECT = "general.object";
+const char* LINK_FEATURE = "linkFeature";
+const char* GENERAL_OBJECT = "general.object";
 }; // namespace
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -342,7 +342,7 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
 
 std::string Skill::GetOptParamUri(const std::string &uriString) const
 {
-    std::size_t pos = uriString.rfind(PARAM_SEPARATOR);
+    std::size_t pos = uriString.find(PARAM_SEPARATOR);
     if (pos == std::string::npos) {
         return uriString;
     }

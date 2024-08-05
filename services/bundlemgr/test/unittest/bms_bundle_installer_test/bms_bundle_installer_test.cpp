@@ -2026,6 +2026,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo info;
+    installer.InitDataMgr();
     ErrCode res = installer.RemoveBundle(info, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 
@@ -2985,6 +2986,87 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Leve
     uint32_t length = 10;
     bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0500
+ * @tc.name: Test Init
+ * @tc.desc: 1.Test Init of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0500, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    bool ret = extractor.Init();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseExtractor_0600
+ * @tc.name: Test GetZipFileNames
+ * @tc.desc: 1.Test GetZipFileNames of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0600, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    std::vector<std::string> fileNames;
+    fileNames.push_back("test1.zip");
+    fileNames.push_back("test2.zip");
+    bool ret = extractor.GetZipFileNames(fileNames);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseExtractor_0700
+ * @tc.name: Test IsDirExist
+ * @tc.desc: 1.Test IsDirExist of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0700, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = false;
+
+    std::string dir = "/data";
+    bool ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+
+    dir = "";
+    ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+
+    extractor.initial_ = true;
+    dir = "/data";
+    ret = extractor.IsDirExist(dir);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0800
+ * @tc.name: Test IsStageBasedModel
+ * @tc.desc: 1.Test IsStageBasedModel of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0800, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = false;
+
+    std::string abilityName = "EntryAbility";
+    bool ret = extractor.IsStageBasedModel(abilityName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0900
+ * @tc.name: Test IsNewVersion
+ * @tc.desc: 1.Test IsNewVersion of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0900, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+
+    bool ret = extractor.IsNewVersion();
+    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -4452,6 +4534,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallHspVersion_0010, TestSize.Level1)
     int32_t versionCode = 9;
     InnerBundleInfo info;
     std::string uninstallDir;
+    installer.InitDataMgr();
     auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
@@ -4648,6 +4731,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     InnerBundleInfo info;
+    installer.InitDataMgr();
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR);
 }
@@ -4685,6 +4769,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     EXPECT_TRUE(ret3);
 
     BaseBundleInstaller installer;
+    installer.InitDataMgr();
     installer.userId_ = ServiceConstants::NOT_EXIST_USERID;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
@@ -5704,8 +5789,11 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0010, Function | SmallTest | 
     innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = false;
+    installParam.copyHapToInstallPath = true;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(false, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
@@ -5732,8 +5820,11 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0020, Function | SmallTest | 
     innerModuleInfo.hapPath = "/system/app/module01/module01.hap";
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
@@ -5760,10 +5851,44 @@ HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0030, Function | SmallTest | 
     innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
     oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
 
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = false;
     BaseBundleInstaller installer;
-    installer.RemoveOldHapIfOTA(true, newInfos, oldInfo);
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
     EXPECT_EQ(exist, -1);
+    UnInstallBundle(SYSTEMFIEID_NAME);
+}
+
+/**
+ * @tc.number: RemoveOldHapIfOTA_0040
+ * @tc.name: RemoveOldHapIfOTAQuickFix
+ * @tc.desc: test RemoveOldHapIfOTA when quickfix
+ */
+HWTEST_F(BmsBundleInstallerTest, RemoveOldHapIfOTA_0040, Function | SmallTest | Level1)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.try_emplace(bundleFile, newInfo);
+
+    InnerBundleInfo oldInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.hapPath = SYSTEMFIEID_HAP_PATH;
+    oldInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>(MODULE_NAME, innerModuleInfo));
+
+    InstallParam installParam;
+    installParam.isOTA = true;
+    installParam.copyHapToInstallPath = true;
+    BaseBundleInstaller installer;
+    installer.RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
+    auto exist = access(SYSTEMFIEID_HAP_PATH.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
 
@@ -5937,6 +6062,7 @@ HWTEST_F(BmsBundleInstallerTest, UpdateHapToken_0100, Function | SmallTest | Lev
     innerBundleUserInfos.try_emplace(BUNDLE_NAME, info);
     newInfo.innerBundleUserInfos_ = innerBundleUserInfos;
     BaseBundleInstaller installer;
+    installer.InitDataMgr();
     auto ret = installer.UpdateHapToken(true, newInfo);
     EXPECT_NE(ret, ERR_OK);
 

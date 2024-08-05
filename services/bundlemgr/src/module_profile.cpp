@@ -15,19 +15,10 @@
 
 #include "module_profile.h"
 
-#include <algorithm>
-#include <mutex>
 #include <sstream>
 
-#include "app_log_wrapper.h"
-#include "app_privilege_capability.h"
-#include "bundle_constants.h"
-#include "bundle_service_constants.h"
-#include "bundle_util.h"
-#include "common_profile.h"
 #include "parameter.h"
 #include "parameters.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -2670,7 +2661,7 @@ OverlayMsg ModuleProfile::ObtainOverlayType(const nlohmann::json &jsonObject) co
     auto isModulePriorityExisted = moduleJson.contains(Profile::MODULE_TARGET_PRIORITY);
     if (!isTargetBundleExisted && !isAppPriorityExisted && !isTargetModuleNameExisted &&
         !isModulePriorityExisted) {
-        APP_LOGW("current hap not overlayed hap");
+        APP_LOGW_NOFUNC("not overlayed hap");
         return overlayMsg;
     }
     if (!isTargetModuleNameExisted) {

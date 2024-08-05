@@ -17,6 +17,11 @@ import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 module_output_path = "bundle_framework/bundlemgrservice"
 
 ohos_unittest("BmsBundleHspTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -174,6 +179,11 @@ ohos_unittest("BmsBundleHspTest") {
 }
 
 ohos_unittest("BmsBundleSharedLibraryInstallTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -190,9 +200,12 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
@@ -333,6 +346,11 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
 }
 
 ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [
@@ -349,9 +367,12 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
+  sources -=
+      [ "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_mgr_service_event_handler.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",

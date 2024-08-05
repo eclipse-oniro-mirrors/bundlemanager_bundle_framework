@@ -35,12 +35,12 @@ using namespace OHOS::Global::Resource;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
-const std::string DATA_APP_PATH = "/data/app";
+const char* BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
+const char* DATA_APP_PATH = "/data/app";
 #ifdef GLOBAL_RESMGR_ENABLE
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 #endif
-const std::string PATH_SEPARATOR = "/";
+const char* PATH_SEPARATOR = "/";
 } // namespace
 
 BundleMgrClientImpl::BundleMgrClientImpl()
@@ -60,7 +60,7 @@ BundleMgrClientImpl::~BundleMgrClientImpl()
 ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
 {
     if (Connect() != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -74,7 +74,7 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "failed to connect");
+        LOG_E(BMS_TAG_QUERY, "connect fail");
         return false;
     }
 
@@ -88,7 +88,7 @@ ErrCode BundleMgrClientImpl::GetBundlePackInfo(
     APP_LOGD("enter");
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -100,7 +100,7 @@ ErrCode BundleMgrClientImpl::CreateBundleDataDir(int32_t userId)
     APP_LOGD("enter");
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -112,7 +112,7 @@ bool BundleMgrClientImpl::GetHapModuleInfo(const std::string &bundleName, const 
 {
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return false;
     }
 
@@ -243,7 +243,7 @@ bool BundleMgrClientImpl::ConvertResourcePath(
         APP_LOGD("no need to convert to sandbox path");
         return true;
     }
-    std::string innerStr = Constants::BUNDLE_CODE_DIR + PATH_SEPARATOR + bundleName;
+    std::string innerStr = std::string(Constants::BUNDLE_CODE_DIR) + std::string(PATH_SEPARATOR) + bundleName;
     if (resPath.find(innerStr) == std::string::npos) {
         APP_LOGE("res path is incorrect");
         return false;
@@ -435,7 +435,7 @@ ErrCode BundleMgrClientImpl::InstallSandboxApp(const std::string &bundleName, in
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
@@ -452,7 +452,7 @@ ErrCode BundleMgrClientImpl::UninstallSandboxApp(const std::string &bundleName, 
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
@@ -471,7 +471,7 @@ ErrCode BundleMgrClientImpl::GetSandboxBundleInfo(
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
     std::lock_guard<std::mutex> lock(mutex_);
@@ -488,7 +488,7 @@ ErrCode BundleMgrClientImpl::GetSandboxAbilityInfo(const Want &want, int32_t app
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
@@ -506,7 +506,7 @@ ErrCode BundleMgrClientImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
@@ -524,7 +524,7 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR;
     }
 
@@ -541,7 +541,7 @@ ErrCode BundleMgrClientImpl::InstallHmpBundle(const std::string &filePath, bool 
     }
     ErrCode result = Connect();
     if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
+        APP_LOGE("connect fail");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
@@ -563,7 +563,7 @@ ErrCode BundleMgrClientImpl::Connect()
 
         sptr<IRemoteObject> remoteObject_ = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
         if (remoteObject_ == nullptr || (bundleMgr_ = iface_cast<IBundleMgr>(remoteObject_)) == nullptr) {
-            APP_LOGE("failed to get bundle mgr service remote object");
+            APP_LOGE_NOFUNC("get bms sa failed");
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
         std::weak_ptr<BundleMgrClientImpl> weakPtr = shared_from_this();

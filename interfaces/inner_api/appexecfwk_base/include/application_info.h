@@ -70,7 +70,7 @@ enum class ApplicationReservedFlag {
     ENCRYPTED_APPLICATION = 0x00000001,
 };
 
-enum class MultiAppModeType {
+enum class MultiAppModeType : uint8_t {
     UNSPECIFIED = 0,
     MULTI_INSTANCE = 1,
     APP_CLONE = 2,

@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class JsonType {
+enum class JsonType : int8_t {
     NULLABLE,
     BOOLEAN,
     NUMBER,
@@ -33,7 +33,7 @@ enum class JsonType {
     STRING,
 };
 
-enum class ArrayType {
+enum class ArrayType : int8_t {
     NUMBER,
     OBJECT,
     STRING,

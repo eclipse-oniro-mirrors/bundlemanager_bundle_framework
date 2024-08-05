@@ -93,7 +93,8 @@ napi_value AddDesktopShortcutInfo(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<AddDesktopShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (args.GetArgc() == ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
+        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo) ||
+            !CommonFunc::CheckShortcutInfo(asyncCallbackInfo->shortcutInfo)) {
             APP_LOGE("ParseShortCutInfo is error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
             return nullptr;
@@ -174,7 +175,8 @@ napi_value DeleteDesktopShortcutInfo(napi_env env, napi_callback_info info)
     }
     std::unique_ptr<DeleteDesktopShortcutInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (args.GetArgc() == ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo)) {
+        if (!CommonFunc::ParseShortCutInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->shortcutInfo) ||
+            !CommonFunc::CheckShortcutInfo(asyncCallbackInfo->shortcutInfo)) {
             APP_LOGE("ParseShortCutInfo is error");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARSE_SHORTCUT_INFO);
             return nullptr;

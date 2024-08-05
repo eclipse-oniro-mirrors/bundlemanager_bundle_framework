@@ -28,21 +28,21 @@ constexpr const char* EMPTY_STRING = "";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* BUNDLE_CODE_DIR = "/data/app/el1/bundle/public";
 constexpr const char* CACHE_DIR = "cache";
-constexpr int START_USERID = 100;
-constexpr int DEFAULT_USERID = 0;
-constexpr int INVALID_USERID = -1;
-constexpr int UNSPECIFIED_USERID = -2;
-constexpr int ALL_USERID = -3;
-constexpr int ANY_USERID = -4;
-constexpr int PERMISSION_GRANTED = 0;
-constexpr int PERMISSION_NOT_GRANTED = -1;
-constexpr int DEFAULT_STREAM_FD = -1;
-constexpr int DUMP_INDENT = 4;
-constexpr int32_t INVALID_API_VERSION = -1;
-constexpr int32_t ALL_VERSIONCODE = -1;
-constexpr int32_t INVALID_UDID = -1;
-constexpr int32_t DEFAULT_INSTALLERID = -1;
-constexpr int32_t DEFAULT_APP_INDEX = 0;
+constexpr int8_t START_USERID = 100;
+constexpr int8_t DEFAULT_USERID = 0;
+constexpr int8_t INVALID_USERID = -1;
+constexpr int8_t UNSPECIFIED_USERID = -2;
+constexpr int8_t ALL_USERID = -3;
+constexpr int8_t ANY_USERID = -4;
+constexpr int8_t PERMISSION_GRANTED = 0;
+constexpr int8_t PERMISSION_NOT_GRANTED = -1;
+constexpr int8_t DEFAULT_STREAM_FD = -1;
+constexpr int8_t DUMP_INDENT = 4;
+constexpr int8_t INVALID_API_VERSION = -1;
+constexpr int8_t ALL_VERSIONCODE = -1;
+constexpr int8_t INVALID_UDID = -1;
+constexpr int8_t DEFAULT_INSTALLERID = -1;
+constexpr int8_t DEFAULT_APP_INDEX = 0;
 
 // uid and gid
 constexpr int32_t INVALID_UID = -1;
@@ -96,10 +96,10 @@ constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* HAP_PATH = "hapPath";
 constexpr const char* APP_INDEX = "appIndex";
-constexpr int32_t MAX_LIMIT_SIZE = 4;
+constexpr int8_t MAX_LIMIT_SIZE = 4;
 
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
-constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
+constexpr uint8_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr const char* URI_SEPARATOR = "://";
 
 // ipc
@@ -111,10 +111,10 @@ constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHAN
 
 // sandbox application
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
-constexpr int32_t INITIAL_APP_INDEX = 0;
-constexpr int32_t INITIAL_SANDBOX_APP_INDEX = 1000;
-constexpr int32_t MAX_APP_INDEX = 100;
-constexpr int32_t MAX_SANDBOX_APP_INDEX = INITIAL_SANDBOX_APP_INDEX + 100;
+constexpr int16_t INITIAL_APP_INDEX = 0;
+constexpr int16_t INITIAL_SANDBOX_APP_INDEX = 1000;
+constexpr int16_t MAX_APP_INDEX = 100;
+constexpr int16_t MAX_SANDBOX_APP_INDEX = INITIAL_SANDBOX_APP_INDEX + 100;
 
 // app-distribution-type
 constexpr const char* APP_DISTRIBUTION_TYPE_NONE = "none";
@@ -129,8 +129,8 @@ constexpr const char* APP_PROVISION_TYPE_DEBUG = "debug";
 constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 
 // crowdtesting
-constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
-constexpr int64_t INHERIT_CROWDTEST_DEADLINE = -2;
+constexpr int8_t INVALID_CROWDTEST_DEADLINE = -1;
+constexpr int8_t INHERIT_CROWDTEST_DEADLINE = -2;
 
 // overlay installation
 constexpr const char* OVERLAY_STATE = "overlayState";

@@ -16,10 +16,7 @@
 #include "base_bundle_installer.h"
 
 #include <sys/stat.h>
-#include <unordered_set>
-#include "nlohmann/json.hpp"
 #include <sstream>
-#include <unistd.h>
 
 #include "account_helper.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
@@ -40,18 +37,11 @@
 #endif
 #include "ability_manager_helper.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
 #include "bms_extension_data_mgr.h"
 #include "bundle_clone_installer.h"
-#include "bundle_constants.h"
-#include "bundle_extractor.h"
-#include "bundle_mgr_service.h"
-#include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
-#include "bundle_util.h"
-#include "data_group_info.h"
 #include "datetime_ex.h"
 #include "driver_installer.h"
 #include "hitrace_meter.h"
@@ -59,9 +49,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
-#include "preinstalled_application_info.h"
 #include "scope_guard.h"
-#include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #include "bundle_overlay_install_checker.h"
@@ -71,7 +59,6 @@
 #include "storage_manager_proxy.h"
 #endif
 #include "iservice_registry.h"
-#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -172,11 +159,11 @@ void BaseBundleInstaller::SendStartInstallNotify(const InstallParam &installPara
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (!installParam.needSendEvent) {
-        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify needSendEvent is false");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "SendStartInstallNotify needSendEvent is false");
         return;
     }
     if (bundleName_.empty()) {
-        LOG_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "SendStartInstallNotify bundleName is empty");
         return;
     }
     for (const auto &item : infos) {
@@ -200,7 +187,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     const std::vector<std::string> &bundlePaths, const InstallParam &installParam, const Constants::AppType appType)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "begin to process bundle install");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "begin to process bundle install");
 
     PerfProfile::GetInstance().SetBundleInstallStartTime(GetTickCount());
 
@@ -735,13 +722,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    LOG_I(BMS_TAG_INSTALLER, "bundleName %{public}s, userId is %{public}d", bundleName_.c_str(), userId_);
+    LOG_I(BMS_TAG_INSTALLER, "-n %{public}s -u %{public}d -f %{public}hhd",
+        bundleName_.c_str(), userId_, installParam.installFlag);
     // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
     if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
-        installParam.installFlag, userId_, isAppExist_);
+    LOG_I(BMS_TAG_INSTALLER, "isAppExist:%{public}d", isAppExist_);
 
     KillRelatedProcessIfArkWeb(bundleName_, isAppExist_, installParam.isOTA);
     ErrCode result = ERR_OK;
@@ -1018,7 +1005,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
 {
     if (isAppService_) {
         if (userId != Constants::DEFAULT_USERID) {
-            LOG_W(BMS_TAG_INSTALLER, "appService(%{public}s) only install U0", info.GetBundleName().c_str());
+            LOG_NOFUNC_W(BMS_TAG_INSTALLER, "appService(%{public}s) only install U0", info.GetBundleName().c_str());
             return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
         }
 
@@ -1028,7 +1015,7 @@ ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const i
     bool isSingleton = info.IsSingleton();
     if ((isSingleton && (userId != Constants::DEFAULT_USERID)) ||
         (!isSingleton && (userId == Constants::DEFAULT_USERID))) {
-        LOG_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
+        LOG_NOFUNC_W(BMS_TAG_INSTALLER, "singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched",
             isSingleton, info.GetBundleName().c_str(), userId);
         return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
     }
@@ -1243,7 +1230,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     ProcessAOT(installParam.isOTA, newInfos);
-    RemoveOldHapIfOTA(installParam.isOTA, newInfos, oldInfo);
+    RemoveOldHapIfOTA(installParam, newInfos, oldInfo);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     extensionDirGuard.Dismiss();
@@ -1261,6 +1248,11 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     InnerBundleInfo &oldInfo)
 {
     LOG_D(BMS_TAG_INSTALLER, "start rollback due to install failed");
+    if (!newInfos.empty() && newInfos.begin()->second.IsPreInstallApp()) {
+        LOG_I(BMS_TAG_INSTALLER, "pre bundleName:%{public}s no need rollback",
+            newInfos.begin()->second.GetBundleName().c_str());
+        return;
+    }
     if (!isAppExist_) {
         if (newInfos.begin()->second.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
             int32_t uid = newInfos.begin()->second.GetUid(userId_);
@@ -1379,6 +1371,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->HasUserId(userId_)) {
         LOG_E(BMS_TAG_INSTALLER, "The user %{public}d does not exist when uninstall", userId_);
         return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+
+    if (!CheckWhetherCanBeUninstalled(bundleName)) {
+        return ERR_APPEXECFWK_UNINSTALL_CONTROLLED;
     }
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName);
@@ -2844,7 +2840,7 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
     const std::string &dir)
 {
-    LOG_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
@@ -2870,7 +2866,7 @@ void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleI
 
 void BaseBundleInstaller::CreateScreenLockProtectionDir()
 {
-    LOG_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionDir start");
     InnerBundleInfo info;
     bool isExist = false;
     if (!GetInnerBundleInfo(info, isExist) || !isExist) {
@@ -2889,10 +2885,10 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
     }
 
     if (!hasPermission) {
-        LOG_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no protection permission found, remove dirs");
         for (const std::string &dir : dirs) {
             if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
-                LOG_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "remove Screen Lock Protection dir %{public}s failed", dir.c_str());
             }
         }
         return;
@@ -4046,7 +4042,7 @@ int32_t BaseBundleInstaller::GetConfirmUserId(
     const int32_t &userId, std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
     bool isSingleton = newInfos.begin()->second.IsSingleton();
-    LOG_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "The userId is Unspecified and app is singleton(%{public}d) when install",
         static_cast<int32_t>(isSingleton));
     if (isSingleton) {
         return Constants::DEFAULT_USERID;
@@ -4961,10 +4957,10 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
-void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
+void BaseBundleInstaller::RemoveOldHapIfOTA(const InstallParam &installParam,
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const
 {
-    if (!isOTA) {
+    if (!installParam.isOTA || installParam.copyHapToInstallPath) {
         return;
     }
     for (const auto &info : newInfos) {
@@ -4972,7 +4968,8 @@ void BaseBundleInstaller::RemoveOldHapIfOTA(bool isOTA,
         if (oldHapPath.empty() || oldHapPath.rfind(Constants::BUNDLE_CODE_DIR, 0) != 0) {
             continue;
         }
-        if (!InstalldClient::GetInstance()->RemoveDir(oldHapPath)) {
+        LOG_I(BMS_TAG_INSTALLER, "remove old hap %{public}s", oldHapPath.c_str());
+        if (InstalldClient::GetInstance()->RemoveDir(oldHapPath) != ERR_OK) {
             LOG_W(BMS_TAG_INSTALLER, "remove old hap failed, errno: %{public}d", errno);
         }
     }
@@ -5165,7 +5162,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
     for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
             !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
-            LOG_I(BMS_TAG_INSTALLER, "so files are isolated or decompressed and no necessary to move so files");
+            LOG_NOFUNC_I(BMS_TAG_INSTALLER, "so files are isolated or decompressed no necessary to move");
             continue;
         }
         std::string cpuAbi = "";
@@ -5186,7 +5183,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
             if (!isDirExisted) {
-                LOG_W(BMS_TAG_INSTALLER, "%{public}s is not existed not need to be moved", tempSoDir.c_str());
+                LOG_NOFUNC_W(BMS_TAG_INSTALLER, "%{public}s not existed not need move", tempSoDir.c_str());
                 continue;
             }
             std::string realSoDir;
@@ -5440,7 +5437,7 @@ bool BaseBundleInstaller::NeedDeleteOldNativeLib(
 
 ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &newInfo)
 {
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s start, needUpdate:%{public}d",
         bundleName_.c_str(), needUpdate);
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
     for (const auto &uerInfo : bundleUserInfos) {
@@ -5450,7 +5447,7 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         if (BundlePermissionMgr::UpdateHapToken(accessTokenIdEx, newInfo) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
+            LOG_NOFUNC_E(BMS_TAG_INSTALLER, "UpdateHapToken failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
         if (needUpdate) {
@@ -5458,10 +5455,9 @@ ErrCode BaseBundleInstaller::UpdateHapToken(bool needUpdate, InnerBundleInfo &ne
         }
     }
     if (needUpdate && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
-        LOG_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
+        LOG_NOFUNC_E(BMS_TAG_INSTALLER, "save UpdateInnerBundleInfo failed %{publlic}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    LOG_I(BMS_TAG_INSTALLER, "UpdateHapToken %{public}s end", bundleName_.c_str());
     return ERR_OK;
 }
 
@@ -5503,7 +5499,7 @@ void BaseBundleInstaller::VerifyDomain()
     }
     std::string appIdentifier = bundleInfo.GetAppIdentifier();
     if (isAppExist_) {
-        LOG_I(BMS_TAG_INSTALLER, "app exist, need to clear old domain info");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "app exist, need to clear old domain info");
         ClearDomainVerifyStatus(appIdentifier, bundleName_);
     }
     std::vector<AppDomainVerify::SkillUri> skillUris;
@@ -5512,11 +5508,11 @@ void BaseBundleInstaller::VerifyDomain()
         PrepareSkillUri(skillInfo.second, skillUris);
     }
     if (skillUris.empty()) {
-        LOG_I(BMS_TAG_INSTALLER, "no skill uri need to verify domain");
+        LOG_NOFUNC_I(BMS_TAG_INSTALLER, "no skill uri need to verify domain");
         return;
     }
     std::string fingerprint = bundleInfo.GetCertificateFingerprint();
-    LOG_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
+    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "start to call VerifyDomain, size of skillUris: %{public}zu", skillUris.size());
     // call VerifyDomain
     std::string identity = IPCSkeleton::ResetCallingIdentity();
     DelayedSingleton<AppDomainVerify::AppDomainVerifyMgrClient>::GetInstance()->VerifyDomain(
@@ -5701,6 +5697,18 @@ bool BaseBundleInstaller::IsAppInBlocklist(const std::string &bundleName) const
         return true;
     }
     return false;
+}
+
+bool BaseBundleInstaller::CheckWhetherCanBeUninstalled(const std::string &bundleName) const
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    LOG_I(BMS_TAG_INSTALLER, "CheckUninstall %{public}s", bundleName.c_str());
+    bool res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    if (!res) {
+        LOG_E(BMS_TAG_INSTALLER, "uninstall %{public}s rejected", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

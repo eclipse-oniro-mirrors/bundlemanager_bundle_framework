@@ -3570,8 +3570,10 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
-    Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
-    CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    if (!CommonFunc::CheckBundleFlagWithPermission(flags)) {
+        Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
+        CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    }
     return nBundleInfo;
 }
 
@@ -3726,11 +3728,11 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
 
 void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
 {
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     BundleInfoCallbackInfo *asyncCallbackInfo =
         reinterpret_cast<BundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
+        napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
         return;
     }
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -3744,6 +3746,7 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
                 asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item == cache.end()) {
                 APP_LOGE("cannot find result in cache");
+                napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
                 return;
             }
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
@@ -3751,17 +3754,20 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
             CommonFunc::ConvertBundleInfo(env,
                 asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
-            Query query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
-                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
-            CheckToCache(
-                env, asyncCallbackInfo->bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, result[ARGS_POS_ONE]);
+            if (!CommonFunc::CheckBundleFlagWithPermission(asyncCallbackInfo->flags)) {
+                Query query(
+                    asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+                    asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
+                CheckToCache(env, asyncCallbackInfo->bundleInfo.uid, IPCSkeleton::GetCallingUid(),
+                    query, result[ARGS_POS_ONE]);
+            }
         }
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<BundleInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
 }
 
 void GetBundleInfoExec(napi_env env, void *data)
@@ -3772,7 +3778,7 @@ void GetBundleInfoExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
-        {
+        if (!CommonFunc::CheckBundleFlagWithPermission(asyncCallbackInfo->flags)) {
             std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
             auto item = cache.find(Query(asyncCallbackInfo->bundleName,
                 GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
@@ -3801,7 +3807,7 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
     asyncCallbackInfo->uid = uid;
     asyncCallbackInfo->bundleName = std::to_string(uid);
     asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
-    {
+    if (!CommonFunc::CheckBundleFlagWithPermission(asyncCallbackInfo->flags)) {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
         auto item = cache.find(Query(
             asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
@@ -3871,6 +3877,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
@@ -4551,7 +4558,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("GetBundleInfoForSelfSync called");
     NapiArg args(env, info);
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, env);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -4568,18 +4574,19 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         APP_LOGE("BundleMgr is null");
         return nullptr;
     }
-    std::string bundleName;
     auto uid = IPCSkeleton::GetCallingUid();
-    bundleName = std::to_string(uid);
+    std::string bundleName = std::to_string(uid);
     int32_t userId = uid / Constants::BASE_USER_RANGE;
+    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     napi_value nBundleInfo = nullptr;
-    {
+    if (!CommonFunc::CheckBundleFlagWithPermission(flags)) {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
         auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
         if (item != cache.end()) {
             APP_LOGD("GetBundleInfo param from cache");
             NAPI_CALL(env,
                 napi_get_reference_value(env, item->second, &nBundleInfo));
+            napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
             return nBundleInfo;
         }
     }
@@ -4590,12 +4597,16 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
+        napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
     CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
-    Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
-    CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    if (!CommonFunc::CheckBundleFlagWithPermission(flags)) {
+        Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
+        CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    }
+    napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
     return nBundleInfo;
 }
 

@@ -622,8 +622,8 @@ private:
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    void RemoveOldHapIfOTA(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-        const InnerBundleInfo &oldInfo) const;
+    void RemoveOldHapIfOTA(const InstallParam &installParam,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo) const;
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
@@ -706,11 +706,12 @@ private:
     void RemoveCreatedExtensionDirsForException() const;
     void RemoveOldExtensionDirs() const;
     ErrCode InnerProcessUpdateHapToken(const bool isOldSystemApp);
+    bool InitDataMgr();
     std::string GetInstallSource(const InstallParam &installParam) const;
     void SetInstallSourceToAppInfo(std::unordered_map<std::string, InnerBundleInfo> &infos,
         const InstallParam &installParam) const;
-    bool InitDataMgr();
     bool IsAppInBlocklist(const std::string &bundleName) const;
+    bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

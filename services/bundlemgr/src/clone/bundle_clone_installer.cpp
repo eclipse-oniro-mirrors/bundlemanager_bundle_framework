@@ -16,25 +16,15 @@
 #include "bundle_clone_installer.h"
 
 #include "ability_manager_helper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_common_event_mgr.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
-#include "bundle_sandbox_data_mgr.h"
-#include "bundle_util.h"
-#include "common_event_manager.h"
-#include "common_event_support.h"
 #include "datetime_ex.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
 #include "inner_bundle_clone_common.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
-#include "string_ex.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -105,7 +95,7 @@ ErrCode BundleCloneInstaller::UninstallCloneApp(
 ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleName, int32_t userId)
 {
     // All clone will be uninstalled when the original application is updated or uninstalled
-    APP_LOGI("begin");
+    APP_LOGI_NOFUNC("UninstallAllCloneApps begin");
     if (bundleName.empty()) {
         APP_LOGE("UninstallAllCloneApps failed due to empty bundle name");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME;
@@ -127,7 +117,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
     }
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
-        APP_LOGE("the origin application is not installed at current user");
+        APP_LOGE_NOFUNC("the origin application is not installed at current user");
         return ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
     ErrCode result = ERR_OK;
@@ -137,7 +127,7 @@ ErrCode BundleCloneInstaller::UninstallAllCloneApps(const std::string &bundleNam
             result = ERR_APPEXECFWK_CLONE_UNINSTALL_INTERNAL_ERROR;
         }
     }
-    APP_LOGI("end");
+    APP_LOGI_NOFUNC("UninstallAllCloneApps end");
     return result;
 }
 

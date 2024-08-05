@@ -16,16 +16,10 @@
 #include "bundle_common_event_mgr.h"
 
 #include "account_helper.h"
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 #include "bundle_common_event.h"
-#include "bundle_constants.h"
-#include "bundle_resource_change_type.h"
-#include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {

@@ -15,46 +15,30 @@
 
 #include "bundle_mgr_service_event_handler.h"
 
-#include <future>
 #include <sstream>
 #include <sys/stat.h>
 
-#include "accesstoken_kit.h"
-#include "access_token.h"
 #include "account_helper.h"
 #include "aot/aot_handler.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "app_provision_info.h"
 #include "app_provision_info_manager.h"
-#include "app_privilege_capability.h"
 #include "app_service_fwk_installer.h"
 #include "bms_key_event_mgr.h"
-#include "bundle_install_checker.h"
-#include "bundle_mgr_host_impl.h"
-#include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_resource_helper.h"
 #include "bundle_scanner.h"
-#include "bundle_util.h"
-#include "common_event_data.h"
-#include "common_event_manager.h"
-#include "common_event_support.h"
-#include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
 #include "dlp_permission_kit.h"
 #endif
-#include "event_report.h"
 #include "hmp_bundle_installer.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "perf_profile.h"
-#include "preinstalled_application_info.h"
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
@@ -63,9 +47,7 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_boot_scanner.h"
 #endif
-#include "want.h"
 #include "user_unlocked_event_subscriber.h"
-#include "json_util.h"
 #ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
@@ -118,8 +100,6 @@ constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepa
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
-constexpr const char* PGO_RUNTIME_AP_PREFIX = "rt_";
-constexpr const char* PGO_MERGED_AP_PREFIX = "merged_";
 constexpr const char* INNER_UNDER_LINE = "_";
 constexpr char SEPARATOR = '/';
 
@@ -207,11 +187,11 @@ BMSEventHandler::~BMSEventHandler()
 
 void BMSEventHandler::BmsStartEvent()
 {
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent start");
     BeforeBmsStart();
     OnBmsStarting();
     AfterBmsStart();
-    LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler BmsStartEvent end");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "BmsStartEvent end");
 }
 
 void BMSEventHandler::BeforeBmsStart()
@@ -229,7 +209,7 @@ void BMSEventHandler::OnBmsStarting()
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
-        LOG_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OnBmsStarting Load install info from db success");
         BundleRebootStartEvent();
         return;
     }
@@ -832,7 +812,11 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo &info)
 
     if (!bundleExist) {
         dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
-        dataMgr->AddInnerBundleInfo(bundleName, info);
+        if (!dataMgr->AddInnerBundleInfo(bundleName, info)) {
+            LOG_E(BMS_TAG_DEFAULT, "add bundle %{public}s failed", bundleName.c_str());
+            dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_FAIL);
+            return;
+        }
         dataMgr->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
         return;
     }
@@ -1122,8 +1106,6 @@ void BMSEventHandler::OnBundleRebootStart()
 void BMSEventHandler::ProcessRebootBundle()
 {
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler Process reboot bundle start");
-    ProcessRebootDeleteAotPath();
-    ProcessRebootDeleteArkAp();
     LoadAllPreInstallBundleInfos();
     BundleResourceHelper::DeleteNotExistResourceInfo();
     InnerProcessRebootUninstallWrongBundle();
@@ -1143,60 +1125,6 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessNewBackupDir();
     RefreshQuotaForAllUid();
     ProcessCheckRecoverableApplicationInfo();
-}
-
-void BMSEventHandler::ProcessRebootDeleteArkAp()
-{
-    LOG_I(BMS_TAG_DEFAULT, "DeleteArkAp start");
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
-        return;
-    }
-    std::set<int32_t> userIds = dataMgr->GetAllUser();
-    for (const auto &userId : userIds) {
-        std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-            LOG_W(BMS_TAG_DEFAULT, "UpdateAppDataDir GetAllBundleInfos failed");
-            continue;
-        }
-        for (const auto &bundleInfo : bundleInfos) {
-            DeleteArkAp(bundleInfo, userId);
-        }
-    }
-    LOG_I(BMS_TAG_DEFAULT, "DeleteArkAp end");
-}
-
-void BMSEventHandler::DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId)
-{
-    std::string arkProfilePath;
-    arkProfilePath.append(ServiceConstants::ARK_PROFILE_PATH).append(std::to_string(userId))
-        .append(ServiceConstants::PATH_SEPARATOR).append(bundleInfo.name).append(ServiceConstants::PATH_SEPARATOR);
-    for (const auto &moduleName : bundleInfo.moduleNames) {
-        std::string runtimeAp = arkProfilePath;
-        std::string mergedAp = arkProfilePath;
-        runtimeAp.append(PGO_RUNTIME_AP_PREFIX).append(moduleName)
-            .append(ServiceConstants::PGO_FILE_SUFFIX);
-        if (InstalldClient::GetInstance()->RemoveDir(runtimeAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", runtimeAp.c_str());
-            continue;
-        }
-        mergedAp.append(PGO_MERGED_AP_PREFIX).append(moduleName).append(ServiceConstants::PGO_FILE_SUFFIX);
-        if (InstalldClient::GetInstance()->RemoveDir(mergedAp) != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", mergedAp.c_str());
-            continue;
-        }
-    }
-}
-
-void BMSEventHandler::ProcessRebootDeleteAotPath()
-{
-    std::string removeAotPath = ServiceConstants::ARK_CACHE_PATH;
-    removeAotPath.append("*");
-    if (InstalldClient::GetInstance()->RemoveDir(removeAotPath) != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "delete aot dir %{public}s failed", removeAotPath.c_str());
-        return;
-    }
 }
 
 bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
@@ -1689,14 +1617,14 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
     std::list<std::string> bundleDirs;
     std::list<std::string> sharedBundleDirs;
     for (const auto &installInfo : installList_) {
-        LOG_I(BMS_TAG_DEFAULT, "Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
-            LOG_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "(%{public}s) not allowed installed when reboot",
+                installInfo.bundleDir.c_str());
             continue;
         }
 
         if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
-            LOG_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "found shared bundle path: %{public}s", installInfo.bundleDir.c_str());
             sharedBundleDirs.emplace_back(installInfo.bundleDir);
         } else {
             bundleDirs.emplace_back(installInfo.bundleDir);
@@ -1748,7 +1676,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         AddParseInfosToMap(bundleName, infos);
         auto mapIter = loadExistData_.find(bundleName);
         if (mapIter == loadExistData_.end()) {
-            LOG_I(BMS_TAG_DEFAULT, "OTA Install new bundle(%{public}s) by path(%{public}s)",
+            LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA Install new -n %{public}s by path:%{public}s",
                 bundleName.c_str(), scanPathIter.c_str());
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
@@ -1759,7 +1687,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             continue;
         }
 
-        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process bundle(%{public}s) by path(%{public}s)",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA process -n %{public}s path:%{public}s",
             bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
@@ -1836,8 +1764,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             }
 
             if (hasInstalledInfo.versionCode > hapVersionCode) {
-                LOG_E(BMS_TAG_DEFAULT, "bundleName: %{public}s update failed, versionCode(%{public}d) is lower than "
-                    "installed bundle(%{public}d)", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
+                LOG_NOFUNC_E(BMS_TAG_DEFAULT, "-n %{public}s update failed versionCode:%{public}d lower than "
+                    "current:%{public}d", bundleName.c_str(), hapVersionCode, hasInstalledInfo.versionCode);
                 SendBundleUpdateFailedEvent(hasInstalledInfo);
                 break;
             }
@@ -1942,7 +1870,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
 void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::string> &scanPathList)
 {
-    LOG_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessRebootSystemHspInstall");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -2211,7 +2139,8 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
         }
 
         std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
-        auto res = installer->InstallNormalAppInHmp(normalizedAppDir);
+        bool removable = GetRemovableInfo(appDir);
+        auto res = installer->InstallNormalAppInHmp(normalizedAppDir, removable);
         if (res != ERR_OK) {
             LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
             result = false;
@@ -2219,6 +2148,18 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
     }
 
     return result;
+}
+
+bool BMSEventHandler::GetRemovableInfo(const std::string& bundleDir)
+{
+    auto it = std::find_if(installList_.begin(), installList_.end(), [&bundleDir](const PreScanInfo& info) {
+        return info.bundleDir == bundleDir;
+    });
+    if (it != installList_.end()) {
+        return it->removable;
+    }
+    LOG_W(BMS_TAG_DEFAULT, "%{public}s not found", bundleDir.c_str());
+    return true;
 }
 
 void BMSEventHandler::FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,

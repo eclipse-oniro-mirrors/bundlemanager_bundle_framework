@@ -16,7 +16,6 @@
 #include "bundle_overlay_install_checker.h"
 
 #include "bundle_overlay_manager.h"
-#include "bundle_permission_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -38,7 +37,7 @@ ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
     for (auto &info : newInfos) {
         info.second.SetUserId(userId);
         if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
-            APP_LOGW("the hap is not overlay hap");
+            APP_LOGD("the hap is not overlay hap");
             continue;
         }
         if (isInternalOverlayExisted && isExternalOverlayExisted) {

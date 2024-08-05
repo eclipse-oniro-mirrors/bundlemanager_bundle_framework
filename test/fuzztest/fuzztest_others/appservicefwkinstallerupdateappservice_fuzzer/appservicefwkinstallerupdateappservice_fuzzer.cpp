@@ -44,9 +44,8 @@ namespace OHOS {
         InnerBundleInfo oldInfo;
         InnerBundleInfo newInfo;
         appServiceFwk.CheckNeedUpdate(newInfo, oldInfo);
-        std::string hspPath(data, size);
+        std::string hspPath = ", path: ";
         appServiceFwk.ProcessBundleUpdateStatus(oldInfo, newInfo, VERSION_ONE_LIBRARY_ONE_PATH);
-        appServiceFwk.ProcessNewModuleInstall(newInfo, oldInfo, hspPath);
         bool isReplace = true;
         bool noSkipsKill = false;
         appServiceFwk.ProcessModuleUpdate(innerBundleInfo, oldInfo, hspPath);
@@ -54,13 +53,10 @@ namespace OHOS {
         std::string bundlePath(data, size);
         std::string cpuAbi(data, size);
         std::string targetSoPath(data, size);
-        std::string signatureFileDir(data, size);
         bool isPreInstalledBundle = false;
         appServiceFwk.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
         std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
         appServiceFwk.DeliveryProfileToCodeSign(hapVerifyResults);
-        std::string developerId = hapVerifyResults[0].GetProvisionInfo().bundleInfo.developerId;
-        std::string odid;
         appServiceFwk.GenerateOdid(infos, hapVerifyResults);
         return true;
     }

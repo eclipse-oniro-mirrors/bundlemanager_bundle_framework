@@ -15,10 +15,7 @@
 
 #include "quick_fixer.h"
 
-#include <cinttypes>
-
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
 #include "quick_fix_switcher.h"
@@ -27,13 +24,13 @@ namespace OHOS {
 namespace AppExecFwk {
 QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : statusCallback_(statusCallback)
 {
-    LOG_I(BMS_TAG_DEFAULT, "enter QuickFixer");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "enter QuickFixer");
 }
 
 void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug,
     const std::string &targetPath)
 {
-    LOG_I(BMS_TAG_DEFAULT, "DeployQuickFix start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeployQuickFix start");
 
     std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(
         bundleFilePaths, isDebug, targetPath);
@@ -52,7 +49,7 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
 
 void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 {
-    LOG_I(BMS_TAG_DEFAULT, "SwitchQuickFix start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "SwitchQuickFix start");
     if (statusCallback_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "SwitchQuickFix failed due to nullptr statusCallback");
     }
@@ -72,7 +69,7 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
 
 void QuickFixer::DeleteQuickFix(const std::string &bundleName)
 {
-    LOG_I(BMS_TAG_DEFAULT, "DeleteQuickFix start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeleteQuickFix start");
     if (statusCallback_ == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DeleteQuickFix failed due to nullptr statusCallback");
     }

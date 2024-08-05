@@ -15,8 +15,6 @@
 
 #include "app_provision_info_rdb.h"
 #include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_util.h"
 #include "scope_guard.h"
 
 namespace OHOS {

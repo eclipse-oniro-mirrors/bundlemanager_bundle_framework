@@ -15,7 +15,6 @@
 
 #include "bundle_resource_helper.h"
 
-#include "app_log_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "account_helper.h"
 #include "bundle_resource_callback.h"
@@ -203,7 +202,7 @@ bool BundleResourceHelper::DeleteCloneBundleResourceInfo(const std::string &bund
 void BundleResourceHelper::DeleteNotExistResourceInfo()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-    APP_LOGI("start delete not exist resource");
+    APP_LOGI_NOFUNC("start delete not exist resource");
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("failed, manager is nullptr");

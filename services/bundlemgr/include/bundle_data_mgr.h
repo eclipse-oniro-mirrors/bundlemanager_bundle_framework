@@ -905,6 +905,7 @@ public:
     ErrCode CreateBundleDataDir(int32_t userId) const;
     void GenerateOdid(const std::string &developerId, std::string &odid) const;
     ErrCode GetOdid(std::string &odid) const;
+    ErrCode GetOdidByBundleName(const std::string &bundleName, std::string &odid) const;
 
     /**
      * @brief Check whether the link can be opened.
@@ -939,6 +940,8 @@ public:
         std::vector<ExtensionAbilityInfo> &infos) const;
     void QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos) const;
+
+    ErrCode GetAppIdByBundleName(const std::string &bundleName, std::string &appId) const;
 
     ErrCode AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);
     ErrCode DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId);

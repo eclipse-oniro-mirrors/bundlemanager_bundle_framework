@@ -133,11 +133,23 @@ public:
      */
     static bool IsExistFile(const std::string &path);
     /**
+     * @brief Is file exist.
+     * @param path Indicates path.
+     * @return Returns result.
+     */
+    static bool IsExistFileNoLog(const std::string &path);
+    /**
      * @brief Is dir exist.
      * @param path Indicates path.
      * @return Returns result.
      */
     static bool IsExistDir(const std::string &path);
+    /**
+     * @brief Is dir exist.
+     * @param path Indicates path.
+     * @return Returns result.
+     */
+    static bool IsExistDirNoLog(const std::string &path);
     /**
      * @brief Rename file from oldPath to newPath.
      * @param oldPath Indicates oldPath.
@@ -188,8 +200,8 @@ public:
     static void RecursiveHash(std::string& s);
     static std::string ExtractGroupIdByDevelopId(const std::string &developerId);
     static std::string ToString(const std::vector<std::string> &vector);
-    static std::string GenerateUuidByKey(const std::string &key);
     static std::string GetNoDisablingConfigPath();
+    static std::string GenerateUuidByKey(const std::string &key);
 private:
     static std::mutex g_mutex;
 };

@@ -383,7 +383,7 @@ ErrCode BundleResourceProxy::GetParcelInfoFromAshMem(MessageParcel &reply, void 
         ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ashMemSize == 0) || ashMemSize > MAX_PARCEL_CAPACITY) {
+    if ((ashMemSize == 0) || ashMemSize > static_cast<int32_t>(MAX_PARCEL_CAPACITY)) {
         APP_LOGE("failed due to wrong size");
         ClearAshmem(ashMem);
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -411,12 +411,12 @@ bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
 
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail send transact cmd %{public}d due to remote object", code);
+        APP_LOGE("fail send transact cmd %{public}hhu due to remote object", code);
         return false;
     }
     int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
-        APP_LOGE("receive error %{public}d in transact cmd %{public}d", result, code);
+        APP_LOGE("receive error %{public}d in transact cmd %{public}hhu", result, code);
         return false;
     }
     return true;

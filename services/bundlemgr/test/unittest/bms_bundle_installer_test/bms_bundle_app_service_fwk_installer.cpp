@@ -630,6 +630,9 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RemoveBundleCodeDir_0010, Function
 
     InnerBundleInfo info;
     auto res = appServiceFwkInstaller.RemoveBundleCodeDir(info);
+    if (appServiceFwkInstaller.dataMgr_ == nullptr) {
+        appServiceFwkInstaller.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
     appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
     EXPECT_NE(res, ERR_OK);
 }
@@ -1088,6 +1091,9 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, DeliveryProfileToCodeSign_0100, Fu
 {
     AppServiceFwkInstaller installer;
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
+    if (installer.dataMgr_ == nullptr) {
+        installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    }
     auto ret = installer.DeliveryProfileToCodeSign(hapVerifyResults);
     EXPECT_NE(ret, ERR_OK);
 }
@@ -1140,5 +1146,83 @@ HWTEST_F(BmsBundleAppServiceFwkInstallerTest, GetAllBundleInfoByDeveloperId_0100
     dataMgr->bundleInfos_ = map;
     auto ret3 = dataMgr->GetAllBundleInfoByDeveloperId(STRING, bundleInfos, Constants::ANY_USERID);
     EXPECT_NE(ret3, ERR_OK);
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureForNativeFiles_0010
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: 1.verify the code signature of the local file
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, VerifyCodeSignatureForNativeFiles_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    auto res = appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
+    EXPECT_NE(res, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+    dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: RollBack_0010
+ * @tc.name: test RollBack
+ * @tc.desc: 1.test roll back
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, RollBack_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+
+    appServiceFwkInstaller.RollBack();
+    InnerBundleInfo innerBundleInfo;
+    auto res = appServiceFwkInstaller.RemoveBundleCodeDir(innerBundleInfo);
+    appServiceFwkInstaller.RemoveInfo(EMPTY_STRING);
+    EXPECT_NE(res, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+    dataMgr->installStates_.erase(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ProcessModuleUpdate_0010
+ * @tc.name: test ProcessModuleUpdate
+ * @tc.desc: 1.test process module update
+*/
+HWTEST_F(BmsBundleAppServiceFwkInstallerTest, ProcessModuleUpdate_0010, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InitAppServiceFwkInstaller(appServiceFwkInstaller);
+    appServiceFwkInstaller.bundleName_ = BUNDLE_NAME;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_[BUNDLE_NAME] = InstallState::INSTALL_SUCCESS;
+
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    std::string hspPath;
+    auto res = appServiceFwkInstaller.ProcessModuleUpdate(newInfo, oldInfo, hspPath);
+    EXPECT_NE(res, ERR_OK);
+
+    DeleteBundleInfo(BUNDLE_NAME);
+    DeletePreBundleInfo(BUNDLE_NAME);
+    dataMgr->installStates_.erase(BUNDLE_NAME);
 }
 }

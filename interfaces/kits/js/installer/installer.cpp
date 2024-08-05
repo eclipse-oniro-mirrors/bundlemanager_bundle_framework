@@ -36,14 +36,14 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // resource name
-const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
-const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
-const std::string RESOURCE_NAME_OF_INSTALL = "Install";
-const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
-const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
-const std::string RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
-const std::string RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
-const std::string EMPTY_STRING = "";
+const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
+const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
+const char* RESOURCE_NAME_OF_INSTALL = "Install";
+const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
+const char* RESOURCE_NAME_OF_RECOVER = "Recover";
+const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
+const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
+const char* EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_BUNDLE or "
@@ -58,31 +58,30 @@ constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
-const std::string USER_ID = "userId";
-const std::string INSTALL_FLAG = "installFlag";
-const std::string IS_KEEP_DATA = "isKeepData";
-const std::string CROWD_TEST_DEADLINE = "crowdtestDeadline";
-const std::string MODULE_NAME = "moduleName";
-const std::string HASH_VALUE = "hashValue";
-const std::string HASH_PARAMS = "hashParams";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string APP_INDEX = "appIndex";
-const std::string FILE_PATH = "filePath";
-const std::string ADD_EXT_RESOURCE = "AddExtResource";
-const std::string REMOVE_EXT_RESOURCE = "RemoveExtResource";
-const std::string VERSION_CODE = "versionCode";
-const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
-const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
-const std::string ADDITIONAL_INFO = "additionalInfo";
-const std::string VERIFY_CODE_PARAM = "verifyCodeParams";
-const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
-const std::string PGO_PARAM = "pgoParams";
-const std::string PGO_FILE_PATH = "pgoFilePath";
-const std::string HAPS_FILE_NEEDED =
+const char* USER_ID = "userId";
+const char* INSTALL_FLAG = "installFlag";
+const char* IS_KEEP_DATA = "isKeepData";
+const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
+const char* MODULE_NAME = "moduleName";
+const char* HASH_VALUE = "hashValue";
+const char* HASH_PARAMS = "hashParams";
+const char* BUNDLE_NAME = "bundleName";
+const char* APP_INDEX = "appIndex";
+const char* FILE_PATH = "filePath";
+const char* ADD_EXT_RESOURCE = "AddExtResource";
+const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
+const char* VERSION_CODE = "versionCode";
+const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
+const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
+const char* ADDITIONAL_INFO = "additionalInfo";
+const char* VERIFY_CODE_PARAM = "verifyCodeParams";
+const char* SIGNATURE_FILE_PATH = "signatureFilePath";
+const char* PGO_PARAM = "pgoParams";
+const char* PGO_FILE_PATH = "pgoFilePath";
+const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-const std::string INSTALL_PARAM = "installParam";
-const std::string CREATE_APP_CLONE = "CreateAppClone";
-const std::string DESTROY_APP_CLONE = "destroyAppClone";
+const char* CREATE_APP_CLONE = "CreateAppClone";
+const char* DESTROY_APP_CLONE = "destroyAppClone";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -410,6 +409,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_UNINSTALL_NATIVE_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_NATIVE_HNP_EXTRACT_FAILED, ERROR_INSTALL_NATIVE_FAILED},
         { IStatusReceiver::ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE, ERROR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE },
+        { IStatusReceiver::ERR_UNINSTALL_CONTROLLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED }
     };
 }
 

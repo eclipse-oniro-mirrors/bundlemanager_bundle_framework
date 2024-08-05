@@ -118,7 +118,7 @@ public:
     static void ProcessRebootQuickFixUnInstallAndRecover(const std::string &path);
 
     static void SavePreInstallException(const std::string &bundleDir);
-    
+
     static void ProcessSystemBundleInstall(
         const PreScanInfo &preScanInfo,
         Constants::AppType appType,
@@ -541,9 +541,6 @@ private:
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
-    void ProcessRebootDeleteAotPath();
-    void ProcessRebootDeleteArkAp();
-    void DeleteArkAp(BundleInfo const &bundleInfo, int32_t const &userId);
     static bool IsQuickfixFlagExsit(const BundleInfo &bundleInfo);
     static bool GetValueFromJson(nlohmann::json &jsonObject);
 #ifdef USE_PRE_BUNDLE_PROFILE
@@ -568,6 +565,7 @@ private:
     void FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
         std::map<std::string, std::vector<std::string>> &moduleUpdateMap, bool isAppService);
     std::string GetBundleNameByPreInstallPath(const std::string& path);
+    bool GetRemovableInfo(const std::string& bundleDir);
     bool GetRevertHmpList(std::vector<std::string> &hmpList,
         std::map<std::string, std::vector<std::string>> &moduleUpdateAppServiceMap,
         std::map<std::string, std::vector<std::string>> &moduleUpdateNotAppServiceMap);

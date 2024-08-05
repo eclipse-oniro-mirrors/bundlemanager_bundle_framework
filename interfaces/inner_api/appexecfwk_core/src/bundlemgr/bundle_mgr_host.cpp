@@ -33,15 +33,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t LIMIT_PARCEL_SIZE = 1024;
-const int32_t ASHMEM_LEN = 16;
+const int16_t LIMIT_PARCEL_SIZE = 1024;
+const int8_t ASHMEM_LEN = 16;
 constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t PREINSTALL_PARCEL_CAPACITY  = 400 * 1024; // 400K
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
-constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
-const int32_t MAX_STATUS_VECTOR_NUM = 1000;
-constexpr int32_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+const int16_t MAX_STATUS_VECTOR_NUM = 1000;
+constexpr int16_t MAX_BATCH_QUERY_ABILITY_SIZE = 1000;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -560,6 +560,9 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
             break;
         case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DESKTOP_SHORTCUT_INFO):
             errCode = this->HandleGetAllDesktopShortcutInfo(data, reply);
+            break;
+        case static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ODID_BY_BUNDLENAME):
+            errCode = this->HandleGetOdidByBundleName(data, reply);
             break;
         default :
             APP_LOGW("bundleMgr host receives unknown code %{public}u", code);
@@ -2520,9 +2523,9 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     bool withDefault = data.ReadBool();
+    bool findDefaultApp = false;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool findDefaultApp = false;
     bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed");
@@ -3915,6 +3918,24 @@ ErrCode BundleMgrHost::HandleGetAllDesktopShortcutInfo(MessageParcel &data, Mess
         APP_LOGE("Write shortcut infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOdidByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string odid;
+    auto ret = GetOdidByBundleName(bundleName, odid);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!reply.WriteString(odid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    APP_LOGD("odid is %{private}s", odid.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

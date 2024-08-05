@@ -15,18 +15,10 @@
 
 #include "bundle_resource_manager.h"
 
-#include <thread>
-#include <unistd.h>
-
-#include "account_helper.h"
-#include "app_log_wrapper.h"
 #include "bundle_common_event_mgr.h"
-#include "bundle_promise.h"
 #include "bundle_util.h"
-#include "bundle_memory_guard.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
-#include "bundle_system_state.h"
 #include "event_report.h"
 #include "thread_pool.h"
 
@@ -246,8 +238,8 @@ void BundleResourceManager::InnerProcessResourceInfoBySystemThemeChanged(
 {
     // judge whether the bundle theme exists
     for (auto iter = resourceInfosMap.begin(); iter != resourceInfosMap.end();) {
-        if (!BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
-            !BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
+        if (!BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + iter->first) &&
+            !BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + iter->first)) {
             iter = resourceInfosMap.erase(iter);
         } else {
             ++iter;
@@ -321,10 +313,10 @@ void BundleResourceManager::DeleteNotExistResourceInfo(
 
 bool BundleResourceManager::InnerProcessWhetherThemeExist(const std::string &bundleName, const int32_t userId)
 {
-    if (BundleUtil::IsExistFile(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
-        return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName);
+    if (BundleUtil::IsExistFileNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A_FLAG)) {
+        return BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_A + bundleName);
     }
-    return BundleUtil::IsExistDir(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
+    return BundleUtil::IsExistDirNoLog(SYSTEM_THEME_PATH + std::to_string(userId) + THEME_ICONS_B + bundleName);
 }
 
 bool BundleResourceManager::AddResourceInfosByMap(

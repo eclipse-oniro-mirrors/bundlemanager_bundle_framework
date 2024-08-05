@@ -56,6 +56,8 @@ static sptr<IVerifyManager> GetVerifyManager();
 
 static sptr<IExtendResourceManager> GetExtendResourceManager();
 
+static bool CheckBundleFlagWithPermission(int32_t flag);
+
 static bool ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
     std::vector<napi_value> &valueVec);
 
@@ -182,6 +184,8 @@ static void ConvertAbilitySkill(napi_env env, const Skill &skill, napi_value val
 
 static void ConvertParameters(napi_env env,
     const std::map<std::string, std::string> &data, napi_value objInfos);
+
+static bool CheckShortcutInfo(const ShortcutInfo &shortcutInfo);
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
     void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;

@@ -15,11 +15,7 @@
 
 #include "bundle_installer_manager.h"
 
-#include <cinttypes>
-
-#include "appexecfwk_errors.h"
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"

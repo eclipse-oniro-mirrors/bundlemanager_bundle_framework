@@ -26,12 +26,12 @@ namespace AppExecFwk {
 QuickFixSwitcher::QuickFixSwitcher(const std::string &bundleName, bool enable)
     : bundleName_(bundleName), enable_(enable)
 {
-    LOG_I(BMS_TAG_DEFAULT, "enter QuickFixSwitcher");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "enter QuickFixSwitcher");
 }
 
 ErrCode QuickFixSwitcher::Execute()
 {
-    LOG_I(BMS_TAG_DEFAULT, "start execute");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "switch start execute");
     return SwitchQuickFix();
 }
 

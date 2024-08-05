@@ -145,32 +145,31 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_EXT_RESOURCE_MANAGER_REMOVE_EXT_RESOURCE_FAILED, ERROR_REMOVE_EXTEND_RESOURCE },
     { ERR_EXT_RESOURCE_MANAGER_GET_EXT_RESOURCE_FAILED, ERROR_GET_EXTEND_RESOURCE },
     { ERR_EXT_RESOURCE_MANAGER_GET_DYNAMIC_ICON_FAILED, ERROR_GET_DYNAMIC_ICON },
-    { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_EXT_RESOURCE_MANAGER_DISABLE_DYNAMIC_ICON_FAILED, ERROR_DISABLE_DYNAMIC_ICON },
+    { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_EXT_RESOURCE_MANAGER_ENABLE_DYNAMIC_ICON_FAILED, ERROR_ENABLE_DYNAMIC_ICON },
     { ERR_BUNDLE_MANAGER_INVALID_SCHEME, ERROR_INVALID_LINK },
     { ERR_BUNDLE_MANAGER_SCHEME_NOT_IN_QUERYSCHEMES, ERROR_SCHEME_NOT_IN_QUERYSCHEMES },
     { ERR_BUNDLE_MANAGER_BUNDLE_CAN_NOT_BE_UNINSTALLED, ERROR_BUNDLE_CAN_NOT_BE_UNINSTALLED},
     { ERR_APPEXECFWK_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
     { ERR_BUNDLE_MANAGER_INVALID_DEVELOPERID, ERROR_INVALID_DEVELOPERID },
+    { ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, ERROR_START_SHORTCUT_ERROR },
     { ERR_APPEXECFWK_NATIVE_INSTALL_FAILED, ERROR_INSTALL_NATIVE_FAILED},
     { ERR_APPEXECFWK_NATIVE_UNINSTALL_FAILED, ERROR_UNINSTALL_NATIVE_FAILED},
     { ERR_APPEXECFWK_APP_INDEX_OUT_OF_RANGE, ERROR_INVALID_APPINDEX},
-    { ERR_BUNDLE_MANAGER_START_SHORTCUT_FAILED, ERROR_START_SHORTCUT_ERROR },
     { ERR_APPEXECFWK_CLONE_INSTALL_PARAM_ERROR, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_INSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_INSTALL_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
     { ERR_APPEXECFWK_CLONE_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXISTED, ERROR_INVALID_APPINDEX },
+    { ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
-    { ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_USER_NOT_EXIST, ERROR_INVALID_USER_ID },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_NOT_INSTALLED_AT_SPECIFIED_USERID, ERROR_BUNDLE_NOT_EXIST },
     { ERR_APPEXECFWK_CLONE_UNINSTALL_APP_NOT_CLONED, ERROR_INVALID_APPINDEX },
-    { ERR_APPEXECFWK_INSTALL_FAILED_CONTROLLED, ERROR_INSTALL_FAILED_CONTROLLED },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_INDEX_EXCEED_MAX_NUMBER, ERROR_INVALID_APPINDEX },
     { ERR_APPEXECFWK_CLONE_INSTALL_APP_NOT_SUPPORTED_MULTI_TYPE, ERROR_APP_NOT_SUPPORTED_MULTI_TYPE },
     { ERR_APPEXECFWK_CLONE_QUERY_NO_CLONE_APP, ERROR_INVALID_APPINDEX },
@@ -195,6 +194,15 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
     napi_value result = nullptr;
     NAPI_CALL(env, napi_get_null(env, &result));
     return result;
+}
+
+bool CommonFunc::CheckBundleFlagWithPermission(int32_t flag)
+{
+    if ((flag & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
+        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
+        return false;
+    }
+    return true;
 }
 
 bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
@@ -1084,7 +1092,7 @@ void CommonFunc::ConvertAbilityInfo(napi_env env, const AbilityInfo &abilityInfo
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWindowSize));
     ConvertWindowSize(env, abilityInfo, nWindowSize);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "windowSize", nWindowSize));
-    
+
     napi_value nSkills;
     size = abilityInfo.skills.size();
     NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSkills));
@@ -2478,7 +2486,7 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "appIndex", &prop);
     int32_t appIndex;
     if (!ParseInt(env, prop, appIndex)) {
-        return false;
+        appIndex = -1;
     }
     shortcutInfo.appIndex = appIndex;
 
@@ -2486,9 +2494,17 @@ bool CommonFunc::ParseShortCutInfo(napi_env env, napi_value param, ShortcutInfo 
     napi_get_named_property(env, param, "sourceType", &prop);
     int32_t sourceType;
     if (!ParseInt(env, prop, sourceType)) {
-        return false;
+        sourceType = -1;
     }
     shortcutInfo.sourceType = sourceType;
+    return true;
+}
+
+bool CommonFunc::CheckShortcutInfo(const ShortcutInfo &shortcutInfo)
+{
+    if (shortcutInfo.appIndex < 0 || shortcutInfo.sourceType == -1) {
+        return false;
+    }
     return true;
 }
 

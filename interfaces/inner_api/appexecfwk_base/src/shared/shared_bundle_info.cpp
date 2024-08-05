@@ -24,9 +24,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SHARED_BUNDLE_INFO_NAME = "name";
-const std::string SHARED_BUNDLE_INFO_COMPATIBLE_POLICY = "compatiblePolicy";
-const std::string SHARED_MODULE_INFOS = "sharedModuleInfos";
+const char* SHARED_BUNDLE_INFO_NAME = "name";
+const char* SHARED_BUNDLE_INFO_COMPATIBLE_POLICY = "compatiblePolicy";
+const char* SHARED_MODULE_INFOS = "sharedModuleInfos";
 }
 
 bool SharedBundleInfo::ReadFromParcel(Parcel &parcel)

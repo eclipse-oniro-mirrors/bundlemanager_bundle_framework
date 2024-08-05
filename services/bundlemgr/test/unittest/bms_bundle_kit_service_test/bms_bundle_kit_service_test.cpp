@@ -10237,6 +10237,81 @@ HWTEST_F(BmsBundleKitServiceTest, RemoveSystemAbility_0001, Function | SmallTest
 }
 
 /**
+ * @tc.number: SystemAbilityHelper_0100
+ * @tc.name: test GetSystemAbility
+ * @tc.desc: test the GetSystemAbility of SystemAbilityHelper
+ */
+HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0100, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+
+    int32_t systemAbilityId = 100;
+    sptr<IRemoteObject> res = helper.GetSystemAbility(systemAbilityId);
+    EXPECT_EQ(res, nullptr);
+}
+
+/**
+ * @tc.number: SystemAbilityHelper_0200
+ * @tc.name: test GetSystemAbility
+ * @tc.desc: test the GetSystemAbility of SystemAbilityHelper
+ */
+HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0200, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+
+    int32_t systemAbilityId = 100;
+    sptr<IRemoteObject> systemAbility;
+    bool ret = helper.AddSystemAbility(systemAbilityId, systemAbility);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SystemAbilityHelper_0300
+ * @tc.name: test UninstallApp
+ * @tc.desc: test the UninstallApp of SystemAbilityHelper
+ */
+HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0300, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+
+    std::string bundleName;
+    int32_t uid = 100;
+    int32_t appIndex = 1;
+    bool ret = helper.UninstallApp(bundleName, uid,  appIndex);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SystemAbilityHelper_0400
+ * @tc.name: test UninstallApp
+ * @tc.desc: test the UninstallApp of SystemAbilityHelper
+ */
+HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0400, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+
+    std::string bundleName ="com.ohos.settings" ;
+    int32_t uid = 1;
+    int32_t appIndex = 100;
+    bool ret = helper.UpgradeApp(bundleName, uid, appIndex);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SystemAbilityHelper_0500
+ * @tc.name: test UninstallApp
+ * @tc.desc: test the UninstallApp of SystemAbilityHelper
+ */
+HWTEST_F(BmsBundleKitServiceTest, SystemAbilityHelper_0500, Function | SmallTest | Level0)
+{
+    SystemAbilityHelper helper;
+
+    int32_t systemAbilityId = 100;
+    bool ret = helper.UnloadSystemAbility(systemAbilityId);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: AppRunningControlRuleResult_001
  * @tc.name: Marshalling and Unmarshalling
  * @tc.desc: 1.Test Marshalling and Unmarshalling successed

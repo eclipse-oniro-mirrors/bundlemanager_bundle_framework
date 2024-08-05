@@ -15,11 +15,7 @@
 
 #include "inner_bundle_info.h"
 
-#include <algorithm>
-#include <deque>
 #include <regex>
-#include <unistd.h>
-#include "string_ex.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
@@ -29,12 +25,7 @@
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
-#include "common_profile.h"
-#include "distributed_module_info.h"
-#include "distributed_ability_info.h"
 #include "free_install_params.h"
-#include "mime_type_mgr.h"
-#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -3493,7 +3484,7 @@ bool InnerBundleInfo::IsUserExistModule(const std::string &moduleName, int32_t u
 
     auto item = modInfoItem->isRemovable.find(std::to_string(userId));
     if (item == modInfoItem->isRemovable.end()) {
-        APP_LOGE("userId:%{public}d not moduleName:%{public}s", userId, moduleName.c_str());
+        APP_LOGE("-u %{public}d has not -m %{public}s", userId, moduleName.c_str());
         return false;
     }
 
@@ -4080,7 +4071,7 @@ ErrCode InnerBundleInfo::DelMimeType(
 ErrCode InnerBundleInfo::GetAppServiceHspInfo(BundleInfo &bundleInfo) const
 {
     if (baseApplicationInfo_->bundleType != BundleType::APP_SERVICE_FWK) {
-        APP_LOGD("bundle is not app service hsp");
+        APP_LOGW("%{public}s is not app service", GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     bundleInfo = *baseBundleInfo_;
@@ -4252,6 +4243,11 @@ void InnerBundleInfo::UpdateOdidByBundleInfo(const InnerBundleInfo &info)
 void InnerBundleInfo::GetDeveloperidAndOdid(std::string &developerId, std::string &odid) const
 {
     developerId = developerId_;
+    odid = odid_;
+}
+
+void InnerBundleInfo::GetOdid(std::string &odid) const
+{
     odid = odid_;
 }
 

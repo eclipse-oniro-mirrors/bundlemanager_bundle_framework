@@ -15,26 +15,19 @@
 
 #include "bundle_user_mgr_host_impl.h"
 
-#include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
-#include "bundle_mgr_service_event_handler.h"
-#include "bundle_permission_mgr.h"
-#include "bundle_promise.h"
-#include "bundle_util.h"
-#include "event_report.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
-#include "rdb_data_manager.h"
-#include "status_receiver_host.h"
+#include "ipc_skeleton.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
 #ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
 #endif
-#include "ipc_skeleton.h"
+#include "status_receiver_host.h"
 
 namespace OHOS {
 namespace AppExecFwk {

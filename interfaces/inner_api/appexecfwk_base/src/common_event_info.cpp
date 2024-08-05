@@ -30,12 +30,12 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string JSON_KEY_NAME = "name";
-const std::string JSON_KEY_UID = "uid";
-const std::string JSON_KEY_PERMISSION = "permission";
-const std::string JSON_KEY_DATA = "data";
-const std::string JSON_KEY_TYPE = "type";
-const std::string JSON_KEY_EVENTS = "events";
+const char* JSON_KEY_NAME = "name";
+const char* JSON_KEY_UID = "uid";
+const char* JSON_KEY_PERMISSION = "permission";
+const char* JSON_KEY_DATA = "data";
+const char* JSON_KEY_TYPE = "type";
+const char* JSON_KEY_EVENTS = "events";
 }  // namespace
 
 bool CommonEventInfo::ReadFromParcel(Parcel &parcel)

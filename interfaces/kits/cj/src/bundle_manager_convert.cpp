@@ -43,20 +43,30 @@ char *MallocCString(const std::string &origin)
     return std::char_traits<char>::copy(res, origin.c_str(), len);
 }
 
+void ClearCharPointer(char** ptr, int count)
+{
+    for (int i = 0; i < count; i++) {
+        free(ptr[i]);
+        ptr[i] = nullptr;
+    }
+}
+
 CArrString ConvertArrString(std::vector<std::string> vecStr)
 {
     char **retValue = static_cast<char **>(malloc(sizeof(char *) * vecStr.size()));
-    if (vecStr.size() > 0) {
-        if (retValue != nullptr) {
-            int32_t vecStrSize = static_cast<int32_t>(vecStr.size());
-            for (int32_t i = 0; i < vecStrSize; i++) {
-                retValue[i] = MallocCString(vecStr[i]);
-            }
-        } else {
-            LOGE("ConvertArrString malloc failed");
-            return {retValue, vecStr.size()};
+    if (retValue == nullptr) {
+        return {nullptr, 0};
+    }
+
+    for (size_t i = 0; i < vecStr.size(); i++) {
+        retValue[i] = MallocCString(vecStr[i]);
+        if (retValue[i] == nullptr) {
+            ClearCharPointer(retValue, i);
+            free(retValue);
+            return {nullptr, 0};
         }
     }
+
     return {retValue, vecStr.size()};
 }
 
@@ -98,10 +108,10 @@ CArrMetadata ConvertArrMetadata(std::vector<AppExecFwk::Metadata> cdata)
                 retValue[i] = ConvertMetadata(cdata[i]);
             }
             data.head = retValue;
+        } else {
+            LOGE("ConvertArrMetadata malloc failed");
+            return data;
         }
-    } else {
-        LOGE("ConvertArrMetadata malloc failed");
-        return data;
     }
     return data;
 }
@@ -252,6 +262,7 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
     abInfo.enabled = cAbilityInfos.enabled;
 
     abInfo.supportWindowModes.size = static_cast<int64_t>(cAbilityInfos.windowModes.size());
+    abInfo.supportWindowModes.head = nullptr;
     if (abInfo.supportWindowModes.size > 0) {
         int32_t *retValue = static_cast<int32_t *>(malloc(sizeof(int32_t) * abInfo.supportWindowModes.size));
         if (retValue != nullptr) {
@@ -261,7 +272,6 @@ RetAbilityInfo ConvertAbilityInfo(AppExecFwk::AbilityInfo cAbilityInfos)
             abInfo.supportWindowModes.head = retValue;
         } else {
             LOGE("ConvertAbilityInfo malloc failed");
-            abInfo.supportWindowModes.head = nullptr;
             return abInfo;
         }
     }
@@ -412,6 +422,42 @@ CArrReqPerDetail ConvertArrReqPerDetail(std::vector<AppExecFwk::RequestPermissio
     return perDetail;
 }
 
+RetSignatureInfo InitSignInfo()
+{
+    RetSignatureInfo signatureInfo = {nullptr, nullptr, nullptr};
+    return signatureInfo;
+}
+
+RetApplicationInfo InitApplicationInfo()
+{
+    RetApplicationInfo appInfo;
+    appInfo.name = nullptr;
+    appInfo.description = nullptr;
+    appInfo.descriptionId = 0;
+    appInfo.enabled = true;
+    appInfo.label = nullptr;
+    appInfo.labelId = 0;
+    appInfo.icon = nullptr;
+    appInfo.iconId = 0;
+    appInfo.process = nullptr;
+    appInfo.permissions = {nullptr, 0};
+    appInfo.codePath = nullptr;
+    appInfo.metadataArray = {nullptr, 0};
+    appInfo.removable = true;
+    appInfo.accessTokenId = 0;
+    appInfo.uid = -1;
+    appInfo.iconResource = {nullptr, nullptr, 0};
+    appInfo.labelResource = {nullptr, nullptr, 0};
+    appInfo.descriptionResource = {nullptr, nullptr, 0};
+    appInfo.appDistributionType = MallocCString("none");
+    appInfo.appProvisionType = MallocCString("release");
+    appInfo.systemApp = false;
+    appInfo.bundleType = 0;
+    appInfo.debug = false;
+    appInfo.dataUnclearable = false;
+    return appInfo;
+}
+
 RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flags)
 {
     RetBundleInfo bundleInfo;
@@ -425,6 +471,8 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION)) {
         bundleInfo.appInfo = ConvertApplicationInfo(cBundleInfo.applicationInfo);
+    } else {
+        bundleInfo.appInfo = InitApplicationInfo();
     }
 
     bundleInfo.hapInfo = ConvertArrHapInfo(cBundleInfo.hapModuleInfos);
@@ -449,6 +497,8 @@ RetBundleInfo ConvertBundleInfo(AppExecFwk::BundleInfo cBundleInfo, int32_t flag
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO))
         == static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO)) {
         bundleInfo.signInfo = ConvertSignatureInfo(cBundleInfo.signatureInfo);
+    } else {
+        bundleInfo.signInfo = InitSignInfo();
     }
     bundleInfo.installTime = cBundleInfo.installTime;
     bundleInfo.updateTime = cBundleInfo.updateTime;

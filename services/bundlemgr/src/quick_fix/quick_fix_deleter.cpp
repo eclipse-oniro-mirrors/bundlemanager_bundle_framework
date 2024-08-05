@@ -16,8 +16,6 @@
 #include "quick_fix_deleter.h"
 
 #include "app_log_tag_wrapper.h"
-#include "app_log_wrapper.h"
-#include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "installd_client.h"
 #include "scope_guard.h"
@@ -29,22 +27,21 @@ const std::string PATCH_DIR = "patch";
 }
 QuickFixDeleter::QuickFixDeleter(const std::string &bundleName) : bundleName_(bundleName)
 {
-    LOG_I(BMS_TAG_DEFAULT, "enter QuickFixDeleter");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "enter QuickFixDeleter");
 }
 
 ErrCode QuickFixDeleter::Execute()
 {
-    LOG_I(BMS_TAG_DEFAULT, "start execute");
     auto ret = DeleteQuickFix();
     if (ret != ERR_OK) {
-        LOG_E(BMS_TAG_DEFAULT, "DeleteQuickFix is failed");
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "DeleteQuickFix failed:%{public}d", ret);
     }
     return ret;
 }
 
 ErrCode QuickFixDeleter::DeleteQuickFix()
 {
-    LOG_I(BMS_TAG_DEFAULT, "DeleteQuickFix start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeleteQuickFix start");
     if (bundleName_.empty()) {
         LOG_E(BMS_TAG_DEFAULT, "InnerDeleteQuickFix failed due to empty bundleName");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
@@ -92,7 +89,7 @@ ErrCode QuickFixDeleter::DeleteQuickFix()
 
 ErrCode QuickFixDeleter::ToDeletePatchDir(const InnerAppQuickFix &innerAppQuickFix)
 {
-    LOG_I(BMS_TAG_DEFAULT, "start to delete patch dir");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "start to delete patch dir");
     std::string bundleName = innerAppQuickFix.GetAppQuickFix().bundleName;
     auto res = InnerDeletePatchDir(innerAppQuickFix.GetAppQuickFix().deployedAppqfInfo, bundleName);
     if (res != ERR_OK) {

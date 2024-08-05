@@ -15,15 +15,7 @@
 
 #include "status_receiver_proxy.h"
 
-#include <map>
-
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_mgr_service.h"
-#include "ipc_types.h"
-#include "parcel.h"
-#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -229,6 +221,7 @@ const char* MSG_ERR_INSTALL_CODE_SIGNATURE_REMOVE_FILE_FAILED =
 const char* MSG_ERR_INSTALL_CODE_APP_CONTROLLED_FAILED =
     "[MSG_ERR_INSTALL_CODE_APP_CONTROLLED_FAILED]";
 const char* MSG_ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE = "[MSG_ERR_INSTALL_MULTI_APP_MAX_COUNT_DECREASE]";
+const char* MSG_ERR_UNINSTALL_CONTROLLED = "[MSG_ERR_UNINSTALL_CONTROLLED]";
 
 const std::map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_OK, {IStatusReceiver::SUCCESS, MSG_SUCCESS}},
@@ -595,6 +588,9 @@ const std::map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_APPEXECFWK_INSTALL_APP_IN_BLOCKLIST,
         {IStatusReceiver::ERR_INSTALL_CODE_APP_CONTROLLED_FAILED,
             MSG_ERR_INSTALL_CODE_APP_CONTROLLED_FAILED}},
+    {ERR_APPEXECFWK_UNINSTALL_CONTROLLED,
+        {IStatusReceiver::ERR_UNINSTALL_CONTROLLED,
+            MSG_ERR_UNINSTALL_CONTROLLED}},
 };
 }  // namespace
 
