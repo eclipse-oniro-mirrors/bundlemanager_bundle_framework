@@ -4385,7 +4385,6 @@ ErrCode InnerBundleInfo::AddCloneBundle(const InnerBundleCloneInfo &attr)
     cloneInfo.gids = attr.gids;
     int64_t now = BundleUtil::GetCurrentTime();
     cloneInfo.installTime = now;
-
     cloneInfos[appIndexKey] = cloneInfo;
     APP_LOGD("Add clone app userId: %{public}d appIndex: %{public}d in bundle: %{public}s",
         userId, appIndex, GetBundleName().c_str());

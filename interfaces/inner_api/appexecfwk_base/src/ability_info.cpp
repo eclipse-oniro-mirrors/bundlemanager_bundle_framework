@@ -302,7 +302,6 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < continueTypeSize; i++) {
         continueType.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    appIndex = parcel.ReadInt32();
     linkType = static_cast<LinkType>(parcel.ReadInt32());
 
     int32_t skillsSize;
@@ -316,6 +315,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         }
         skills.emplace_back(*abilitySkillPtr);
     }
+    appIndex = parcel.ReadInt32();
     orientationId = parcel.ReadInt32();
     return true;
 }
@@ -480,12 +480,12 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     for (auto &continueTypeItem : continueType) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(continueTypeItem));
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(linkType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skills.size());
     for (auto &skill : skills) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &skill);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, appIndex);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, orientationId);
     return true;
 }
@@ -617,8 +617,8 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
         {JSON_KEY_ISOLATION_PROCESS, abilityInfo.isolationProcess},
         {JSON_KEY_CONTINUE_TYPE, abilityInfo.continueType},
-        {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
         {JSON_KEY_SKILLS, abilityInfo.skills},
+        {JSON_KEY_APP_INDEX, abilityInfo.appIndex},
         {JSON_KEY_ORIENTATION_ID, abilityInfo.orientationId}
     };
     if (abilityInfo.maxWindowRatio == 0) {
@@ -1301,14 +1301,6 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        JSON_KEY_APP_INDEX,
-        abilityInfo.appIndex,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_SKILLS,
@@ -1317,6 +1309,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_APP_INDEX,
+        abilityInfo.appIndex,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_ORIENTATION_ID,
