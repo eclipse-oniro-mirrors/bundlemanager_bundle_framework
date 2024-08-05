@@ -49,13 +49,13 @@ struct AsyncHandleBundleContext {
     napi_deferred deferred = nullptr;
     napi_ref callbackRef = 0;
     OHOS::sptr<BundleStatusCallback> bundleStatusCallback = nullptr;
+    bool ret = false;
+    int32_t userId = 0;
+    uint32_t err = 0;
+    std::string bundleName;
+    std::string message;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
-    std::string bundleName;
-    int32_t userId = 0;
-    bool ret = false;
-    uint32_t err = 0;
-    std::string message;
 };
 
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()

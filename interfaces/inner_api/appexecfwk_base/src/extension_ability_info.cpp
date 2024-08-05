@@ -19,7 +19,6 @@
 #include <set>
 #include <string>
 #include <unistd.h>
-#include <unordered_set>
 
 #include "bundle_constants.h"
 #include "json_util.h"
@@ -124,7 +123,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
 };
 
 // the new extension type does not need to be added here
-const std::unordered_set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
+const std::set<std::string> NOT_NEED_CREATE_SANBOX_MODE = {
     "form", "workScheduler", "service", "accessibility", "dataShare", "fileShare", "staticSubscriber", "wallpaper",
     "backup", "window", "enterpriseAdmin", "fileAccess", "thumbnail", "preview", "print", "share", "push", "driver",
     "action", "adsService", "embeddedUI", "insightIntentUI", "statusBarView", "autoFill/password",

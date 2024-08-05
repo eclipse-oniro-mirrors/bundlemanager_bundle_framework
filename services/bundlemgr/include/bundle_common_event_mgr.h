@@ -49,23 +49,23 @@ enum class SandboxInstallType : uint8_t {
 };
 
 struct NotifyBundleEvents {
-    std::string bundleName = "";
-    std::string modulePackage = "";
-    std::string abilityName = "";
-    ErrCode resultCode = ERR_OK;
-    NotifyType type = NotifyType::INSTALL;
-    int32_t uid = 0;
-    uint32_t accessTokenId = 0;
+    bool isApplicationEnabled = true;
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
-    std::string appId;
-    std::string appIdentifier;
     bool isModuleUpdate = false;
-    std::string appDistributionType;
+    NotifyType type = NotifyType::INSTALL;
+    ErrCode resultCode = ERR_OK;
+    uint32_t accessTokenId = 0;
+    int32_t uid = 0;
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
     int32_t appIndex = 0;
-    bool isApplicationEnabled = true;
+    std::string bundleName = "";
+    std::string modulePackage = "";
+    std::string abilityName = "";
+    std::string appId;
+    std::string appIdentifier;
+    std::string appDistributionType;
 };
 
 class BundleCommonEventMgr {
