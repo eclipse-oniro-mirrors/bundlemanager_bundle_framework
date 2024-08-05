@@ -290,6 +290,13 @@ public:
 
     static bool DeleteKeyId(const std::string &keyId);
 
+    /**
+     * @brief Add file Delete dfx
+     * @param path Indicates the directory path to add dfx.
+     * @return
+     */
+    static void AddDeleteDfx(const std::string &path);
+
 private:
     static bool OpenHandle(void **handle);
 

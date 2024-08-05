@@ -47,7 +47,6 @@ InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service instance created");
 }
 
-
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service instance created");
@@ -61,6 +60,9 @@ InstalldService::~InstalldService()
 void InstalldService::OnStart()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd OnStart");
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        InstalldOperator::AddDeleteDfx(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el);
+    }
     Start();
     if (!Publish(hostImpl_)) {
         LOG_E(BMS_TAG_INSTALLD, "Publish failed");
