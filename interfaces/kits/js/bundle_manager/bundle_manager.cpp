@@ -3732,7 +3732,6 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
         reinterpret_cast<BundleInfoCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
-        napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
         return;
     }
     std::unique_ptr<BundleInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
@@ -3746,7 +3745,6 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
                 asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item == cache.end()) {
                 APP_LOGE("cannot find result in cache");
-                napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
                 return;
             }
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
@@ -3767,7 +3765,6 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
             GET_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     CommonFunc::NapiReturnDeferred<BundleInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
-    napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
 }
 
 void GetBundleInfoExec(napi_env env, void *data)
@@ -4586,7 +4583,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
             APP_LOGD("GetBundleInfo param from cache");
             NAPI_CALL(env,
                 napi_get_reference_value(env, item->second, &nBundleInfo));
-            napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
             return nBundleInfo;
         }
     }
@@ -4597,7 +4593,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);
-        napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
         return nullptr;
     }
     NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
@@ -4606,7 +4601,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
         CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     }
-    napi_remove_env_cleanup_hook(env, HandleCleanEnv, &cache);
     return nBundleInfo;
 }
 
