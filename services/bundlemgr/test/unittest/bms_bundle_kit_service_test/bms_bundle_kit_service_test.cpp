@@ -8703,6 +8703,63 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0009, Function | SmallTest | Level0)
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: AginTest_0010
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of ProcessBundle
+ * @tc.desc: ProcessBundle is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0010, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingRequest request;
+    bool ret = bundleAgingMgr.ProcessBundle(request);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: AginTest_0011
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of NeedContinue
+ * @tc.desc: NeedContinue is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0011, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingRequest request;
+    bool ret = bundleAgingMgr.NeedContinue(request);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: AginTest_0012
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of UpdateUsedTotalDataBytes
+ * @tc.desc: UpdateUsedTotalDataBytes is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0012, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingRequest request;
+    bool ret = bundleAgingMgr.UpdateUsedTotalDataBytes(request);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: AginTest_0013
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of CleanCache
+ * @tc.desc: CleanCache is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0013, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+
+    AgingBundleInfo agingBundle;
+    bool ret = bundleAgingMgr.CleanCache(agingBundle);
+    EXPECT_EQ(ret, false);
+}
+
 #endif
 
 /**
