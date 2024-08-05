@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -6206,4 +6206,48 @@ HWTEST_F(BmsBundleInstallerTest, CreateSharedBundleTempDir_0100, Function | Smal
     EXPECT_FALSE(ret.empty());
 }
 
+/**
+ * @tc.number: LoadExtensionNeedCreateSandbox_0100
+ * @tc.name: test LoadExtensionNeedCreateSandbox
+ * @tc.desc: test LoadExtensionNeedCreateSandbox of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, LoadExtensionNeedCreateSandbox_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    nlohmann::json object;
+    std::vector<std::string> typeList;
+    hostImpl.LoadNeedCreateSandbox(object, typeList);
+    std::string extensionTypeName;
+    bool ret = hostImpl.LoadExtensionNeedCreateSandbox(object, extensionTypeName);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerRemoveAtomicServiceBundleDataDir_0100
+ * @tc.name: test InnerRemoveAtomicServiceBundleDataDir
+ * @tc.desc: test InnerRemoveAtomicServiceBundleDataDir of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, InnerRemoveAtomicServiceBundleDataDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string bundleName = BUNDLE_NAME;
+    int32_t userId = USERID;
+    ErrCode ret = hostImpl.InnerRemoveAtomicServiceBundleDataDir(bundleName, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ReadFileIntoJson_0100
+ * @tc.name: test ReadFileIntoJson
+ * @tc.desc: test ReadFileIntoJson of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, ReadFileIntoJson_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string filePath;
+    filePath.resize(PATH_MAX + 1);
+    nlohmann::json jsonBuf;
+    bool ret = hostImpl.ReadFileIntoJson(filePath, jsonBuf);
+    EXPECT_EQ(ret, false);
+}
 } // OHOS
