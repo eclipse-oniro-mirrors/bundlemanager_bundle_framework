@@ -42,8 +42,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const size_t ORIGIN_STRING_LENGTH = 32;
 constexpr char UUID_SEPARATOR = '-';
+const size_t ORIGIN_STRING_LENGTH = 32;
 const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const int64_t SPACE_NEED_DOUBLE = 2;
@@ -57,12 +57,12 @@ constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
 constexpr const char* ABC_FILE_PATH = "abc_files";
 constexpr const char* PGO_FILE_PATH = "pgo_files";
-const std::string EMPTY_STRING = "";
 #ifdef CONFIG_POLOCY_ENABLE
-    const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
+const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in_extreme_memory.json";
 #endif
 const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
+const std::string EMPTY_STRING = "";
 }
 
 std::mutex BundleUtil::g_mutex;

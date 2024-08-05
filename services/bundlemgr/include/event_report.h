@@ -135,7 +135,7 @@ struct EventInfo {
     int32_t sceneId = 0;
     std::string processName;
     int32_t appIndex = 0;
-    
+
     //for query of continue type
     std::string continueType;
     //for free install event
@@ -245,7 +245,7 @@ public:
      * @param userId Indicates the userId.
      */
     static void SendUserSysEvent(UserEventType userEventType, int32_t userId);
-    
+
     /**
      * @brief Send query abilityInfos by continueType system events.
      * @param bundleName Indicates the bundleName.
