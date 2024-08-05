@@ -6283,4 +6283,68 @@ HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForNativeFiles_0100, Functio
 
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
+
+/**
+ * @tc.number: GetFileStat_0100
+ * @tc.name: test GetFileStat
+ * @tc.desc: test GetFileStat of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, GetFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string file;
+    FileStat fileStat;
+    ErrCode ret = hostImpl.GetFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractDiffFiles_0100
+ * @tc.name: test ExtractDiffFiles
+ * @tc.desc: test ExtractDiffFiles of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractDiffFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string filePath = "test.path";
+    std::string targetPath = "test.target.path";
+    std::string cpuAbi;
+    ErrCode  ret = hostImpl.ExtractDiffFiles(filePath, targetPath, cpuAbi);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0100
+ * @tc.name: test SetEncryptionPolicy
+ * @tc.desc: test SetEncryptionPolicy of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, SetEncryptionPolicy_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int32_t uid = EDM_UID;
+    std::string bundleName = "";
+    int32_t userId = USERID;
+    std::string keyId;
+    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    bundleName = BUNDLE_NAME;
+    ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_GENERATE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0100
+ * @tc.name: test DeleteEncryptionKeyId
+ * @tc.desc: test DeleteEncryptionKeyId of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string keyId = "";
+    ErrCode ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    keyId = "test.keyId";
+    ret = hostImpl.DeleteEncryptionKeyId(keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+}
 } // OHOS
