@@ -181,7 +181,6 @@ struct Ability {
     std::string preferMultiWindowOrientation = "default";
     bool isolationProcess = false;
     std::vector<std::string> continueType;
-    int32_t orientationId = 0;
 };
 
 struct Extension {
@@ -657,14 +656,6 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         false,
         g_parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ABILITY_ORIENTATION_ID,
-        ability.orientationId,
-        JsonType::NUMBER,
-        false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)
@@ -2264,7 +2255,6 @@ bool ToAbilityInfo(
     } else {
         abilityInfo.continueType = ability.continueType;
     }
-    abilityInfo.orientationId = ability.orientationId;
     return true;
 }
 

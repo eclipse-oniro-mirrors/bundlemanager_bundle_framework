@@ -861,8 +861,7 @@ protected:
                     "supportMimeTypes": [],
                     "isolationProcess": false,
                     "continueType": [],
-                    "appIndex": 0,
-                    "orientationId": 0
+                    "appIndex": 0
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
@@ -931,8 +930,7 @@ protected:
                     "type": 1,
                     "uri": "",
                     "visible": true,
-                    "writePermission": "",
-                    "orientationId": 0
+                    "writePermission": ""
                 },
                 "com.ohos.launcher.com.ohos.launcher.settings.com.ohos.launcher.settings.MainAbility": {
                     "applicationName": "com.ohos.launcher",
@@ -996,8 +994,7 @@ protected:
                     "type": 1,
                     "uri": "",
                     "visible": true,
-                    "writePermission": "",
-                    "orientationId": 0
+                    "writePermission": ""
                 }
             },
             "baseApplicationInfo": {
