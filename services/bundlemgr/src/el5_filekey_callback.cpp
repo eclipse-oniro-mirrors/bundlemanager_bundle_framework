@@ -40,7 +40,7 @@ void El5FilekeyCallback::OnRegenerateAppKey(std::vector<Security::AccessToken::A
             continue;
         }
         InnerBundleInfo bundleInfo;
-        bool isAppExist = dataMgr->GetInnerBundleInfo(info.bundleName, bundleInfo);
+        bool isAppExist = dataMgr->FetchInnerBundleInfo(info.bundleName, bundleInfo);
         if (!isAppExist) {
             APP_LOGE("OnRegenerateAppKey bundleInfo is not exist");
             continue;
