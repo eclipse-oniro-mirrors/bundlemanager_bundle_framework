@@ -6572,6 +6572,35 @@ std::vector<std::string> BundleDataMgr::GetAllBundleName() const
     return bundleNames;
 }
 
+std::vector<std::string> BundleDataMgr::GetAllDriverBundleName() const
+{
+    APP_LOGD("GetAllDriverBundleName begin");
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> bundleNames;
+    for (const auto &item : bundleInfos_) {
+        if (item.second.GetApplicationBundleType() == BundleType::SHARED ||
+            item.second.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+            APP_LOGD("app %{public}s is cross-app shared bundle or appService, ignore",
+                item.second.GetBundleName().c_str());
+            continue;
+        }
+        // this function is used to install driver bundle in new user, so ignore pre-install app
+        if (item.second.IsPreInstallApp()) {
+            APP_LOGD("app %{public}s is pre-install app, ignore", item.second.GetBundleName().c_str());
+            continue;
+        }
+        const auto extensions = item.second.GetInnerExtensionInfos();
+        for (const auto &item : extensions) {
+            if (item.second.type == ExtensionAbilityType::DRIVER) {
+                bundleNames.emplace_back(item.second.bundleName);
+                APP_LOGI("driver bundle found: %{public}s", item.second.bundleName.c_str());
+                break;
+            }
+        }
+    }
+    return bundleNames;
+}
+
 bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const
 {
     APP_LOGD("QueryInnerBundleInfo begin, bundleName : %{public}s", bundleName.c_str());

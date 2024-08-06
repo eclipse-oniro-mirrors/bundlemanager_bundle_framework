@@ -59,6 +59,7 @@ private:
         int32_t userId,
         std::set<PreInstallBundleInfo> &preInstallBundleInfos);
     void UninstallBackupUninstallList(int32_t userId);
+    void GetAllDriverBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
 
     std::mutex bundleUserMgrMutex_;
 

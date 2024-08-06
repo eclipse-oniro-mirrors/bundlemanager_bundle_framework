@@ -107,6 +107,14 @@ private:
      */
     std::set<int32_t> GetExistsCommonUserIds();
 
+    void InstallDriverForAllUsers(const std::string &bundleFilePath, const InstallParam &installParam);
+
+    void InstallDriverForAllUsers(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam);
+
+    void RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam);
+
+    bool HasDriverExtensionAbility(const std::string &bundleName);
+
 private:
     const int64_t installerId_ = 0;
     const sptr<IStatusReceiver> statusReceiver_;
