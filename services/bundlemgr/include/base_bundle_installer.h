@@ -555,7 +555,6 @@ private:
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     bool CheckReleaseTypeIsCompatible(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    ErrCode CheckMaxCountForClone(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     void SendBundleSystemEvent(const std::string &bundleName, BundleEventType bundleEventType,
         const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode CheckNativeFileWithOldInfo(
@@ -712,6 +711,7 @@ private:
         const InstallParam &installParam) const;
     bool IsAppInBlocklist(const std::string &bundleName) const;
     bool CheckWhetherCanBeUninstalled(const std::string &bundleName) const;
+    void CheckSystemFreeSizeAndClean() const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

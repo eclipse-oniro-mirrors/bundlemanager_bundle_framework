@@ -76,6 +76,9 @@ public:
      * @return Returns true if the file size checked successfully; returns false otherwise.
      */
     static bool CheckSystemSize(const std::string &bundlePath, const std::string &diskPath);
+
+    static bool CheckSystemFreeSize(const std::string &path, int64_t size);
+
     /**
      * @brief to obtain the hap paths of the input bundle path.
      * @param currentBundlePath Indicates the current bundle path.
