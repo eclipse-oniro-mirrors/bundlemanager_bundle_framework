@@ -28,6 +28,9 @@
 #include "json_util.h"
 #include "resource_info.h"
 
+#ifdef GLOBAL_RESMGR_ENABLE
+#include "resource_manager.h"
+#endif
 namespace OHOS {
 namespace AppExecFwk {
 bool BundleResourceCallback::OnUserIdSwitched(const int32_t oldUserId, const int32_t userId, const uint32_t type)
@@ -92,9 +95,10 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language,
     return true;
 }
 
-bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme, const uint32_t type)
+bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
+    const int32_t themeId, const uint32_t type)
 {
-    APP_LOGI("start, theme:%{public}s", theme.c_str());
+    APP_LOGI("start, theme:%{public}s, themeId:%{public}d", theme.c_str(), themeId);
     if (theme.empty()) {
         APP_LOGW("theme is empty, no need to change");
         return false;
@@ -114,6 +118,11 @@ bool BundleResourceCallback::OnApplicationThemeChanged(const std::string &theme,
         APP_LOGI("icons no need to change, return");
         return false;
     }
+#ifdef GLOBAL_RESMGR_ENABLE
+    if (!SetThemeIdForThemeChanged(themeId)) {
+        APP_LOGE("set theme id failed, themeId %{public}d", themeId);
+    }
+#endif
 
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
@@ -164,6 +173,40 @@ bool BundleResourceCallback::OnOverlayStatusChanged(
     }
     APP_LOGI("end, targetBundleName:%{public}s, isEnabled:%{public}d, userId:%{public}d",
         targetBundleName.c_str(), isEnabled, userId);
+    return true;
+}
+
+bool BundleResourceCallback::SetThemeIdForThemeChanged(const int32_t themeId)
+{
+    if (themeId <= 0) {
+        return false;
+    }
+#ifdef GLOBAL_RESMGR_ENABLE
+    auto resourcePtr = std::shared_ptr<Global::Resource::ResourceManager>(Global::Resource::CreateResourceManager());
+    if (resourcePtr == nullptr) {
+        APP_LOGE("resource is nullptr, themeId %{public}d", themeId);
+        return false;
+    }
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId <= 0) {
+        APP_LOGW("currentUserId get failed");
+        currentUserId = Constants::START_USERID;
+    }
+    resourcePtr->userId = currentUserId;
+    APP_LOGI("start set themeId %{public}d userId %{public}d", themeId, currentUserId);
+    std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
+    if (resConfig == nullptr) {
+        APP_LOGE("resConfig is nullptr, themeId %{public}d", themeId);
+        return false;
+    }
+    resConfig->SetThemeId(themeId);
+    Global::Resource::RState ret = resourcePtr->UpdateResConfig(*resConfig);
+    if (ret != Global::Resource::RState::SUCCESS) {
+        APP_LOGE("UpdateResConfig failed %{public}d, themeId %{public}d", static_cast<int32_t>(ret), themeId);
+        return false;
+    }
+    APP_LOGI("end set themeId %{public}d", themeId);
+#endif
     return true;
 }
 } // AppExecFwk
