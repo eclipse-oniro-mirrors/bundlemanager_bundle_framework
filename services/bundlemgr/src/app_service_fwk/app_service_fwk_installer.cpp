@@ -93,6 +93,118 @@ ErrCode AppServiceFwkInstaller::Install(
     return result;
 }
 
+ErrCode AppServiceFwkInstaller::UnInstall(const std::string &bundleName)
+{
+    APP_LOGI("Uninstall bundle %{public}s", bundleName.c_str());
+    if (BeforeUninstall(bundleName) != ERR_OK) {
+        APP_LOGE("check bundleType failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+        APP_LOGE("uninstall already start");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    std::string bundleDir =
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName;
+    APP_LOGI("start to remove bundle dir: %{public}s", bundleDir.c_str());
+    if (InstalldClient::GetInstance()->RemoveDir(bundleDir) != ERR_OK) {
+        APP_LOGW("remove bundle dir %{public}s failed", bundleDir.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
+        APP_LOGE("delete inner info failed for bundle %{public}s", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        dataMgr_->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
+    }
+    return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::UnInstall(
+    const std::string &bundleName, const std::string &moduleName)
+{
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty, param error");
+        ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    APP_LOGI("bundle %{public}s module %{public}s need to be unstalled", bundleName.c_str(), moduleName.c_str());
+    if (BeforeUninstall(bundleName) != ERR_OK) {
+        APP_LOGE("check bundleType failed");
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    InnerBundleInfo info;
+    if (!dataMgr_->GetInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("get bundle info for %{public}s failed", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (CheckNeedUninstallBundle(moduleName, info)) {
+        APP_LOGI("need uninstall bundle %{public}s", bundleName.c_str());
+        return UnInstall(bundleName);
+    }
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
+    std::vector<std::string> installedModules;
+    info.GetModuleNames(installedModules);
+    if (std::find(installedModules.begin(), installedModules.end(), moduleName) == installedModules.end()) {
+        APP_LOGE("Error: module %{public}s is not found in installedModules", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+
+    if (installedModules.size() == 1) {
+        APP_LOGE("can not uninstall only one module");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_START)) {
+        APP_LOGE("uninstall already start");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    ScopeGuard stateGuard([&] { dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS); });
+    auto result = UnInstall(bundleName, moduleName, info);
+    if (result != ERR_OK) {
+        APP_LOGE("uninstall failed, module %{public}s bundle %{public}s", moduleName.c_str(), bundleName.c_str());
+        return result;
+    }
+    return ERR_OK;
+}
+
+bool AppServiceFwkInstaller::CheckNeedUninstallBundle(const std::string &moduleName, const InnerBundleInfo &info)
+{
+    for (const auto &item : info.GetInnerModuleInfos()) {
+        if (item.second.distro.moduleType == "shared" && item.second.moduleName != moduleName) {
+            return false;
+        }
+    }
+    return true;
+}
+
+ErrCode AppServiceFwkInstaller::UnInstall(
+    const std::string &bundleName, const std::string &moduleName, InnerBundleInfo &oldInfo)
+{
+    // remove info & remove dir under el1
+    APP_LOGI("start to remove module info of %{public}s in %{public}s ", moduleName.c_str(), bundleName.c_str());
+    if (!dataMgr_->RemoveModuleInfo(bundleName, moduleName, oldInfo)) {
+        APP_LOGE("RemoveModuleInfo failed");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+    RemoveModuleDataDir(bundleName, moduleName, oldInfo);
+    return ERR_OK;
+}
+
+void AppServiceFwkInstaller::RemoveModuleDataDir(
+    const std::string &bundleName, const std::string &moduleName, const InnerBundleInfo &oldInfo)
+{
+    APP_LOGI("start to remove module info of %{public}s in %{public}s ", moduleName.c_str(), bundleName.c_str());
+    std::string moduleDir =
+        AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::ServiceConstants::PATH_SEPARATOR + bundleName +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(oldInfo.GetVersionCode()) +
+        AppExecFwk::ServiceConstants::PATH_SEPARATOR + moduleName;
+    APP_LOGI("start to remove module dir: %{public}s", moduleDir.c_str());
+    if (InstalldClient::GetInstance()->RemoveDir(moduleDir) != ERR_OK) {
+        APP_LOGW("remove module dir %{public}s failed", moduleDir.c_str());
+    }
+}
+
 ErrCode AppServiceFwkInstaller::BeforeInstall(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
@@ -112,6 +224,27 @@ ErrCode AppServiceFwkInstaller::BeforeInstall(
     }
 
     return ERR_OK;
+}
+
+ErrCode AppServiceFwkInstaller::BeforeUninstall(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    BundleType type;
+    if (!dataMgr_->GetBundleType(bundleName, type)) {
+        APP_LOGE("get bundle type for %{public}s failed", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
+    }
+    return type == BundleType::APP_SERVICE_FWK ? ERR_OK : ERR_APPEXECFWK_UNINSTALL_PARAM_ERROR;
 }
 
 ErrCode AppServiceFwkInstaller::ProcessInstall(
