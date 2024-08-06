@@ -250,13 +250,13 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGI("Failed to open the current file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
             APP_LOGI("Found an unsafe file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         // callback
         if (unzipParam.filterCB(entryPath)) {
@@ -269,7 +269,7 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
                 std::unique_ptr<WriterDelegate> writer = writerFactory(destDir, entryPath);
                 if (!reader.ExtractCurrentEntry(writer.get(), std::numeric_limits<uint64_t>::max())) {
                     APP_LOGI("Failed to extract");
-                    return ERR_ZLIB_SERVICE_DISABLED;
+                    return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
                 }
             }
         } else if (unzipParam.logSkippedFiles) {
@@ -278,7 +278,7 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
 
         if (!reader.AdvanceToNextEntry()) {
             APP_LOGI("Failed to advance to the next file");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
     return ERR_OK;
@@ -394,7 +394,7 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
     if (result) {
         return ERR_OK;
     } else {
-        return ERR_ZLIB_SERVICE_DISABLED;
+        return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 }
 
@@ -429,7 +429,7 @@ ErrCode ZipsWithFilterCallback(const std::vector<FilePath> &srcFiles, const File
     if (result) {
         return ERR_OK;
     } else {
-        return ERR_ZLIB_SERVICE_DISABLED;
+        return ERR_ZLIB_DEST_FILE_DISABLED;
     }
 }
 
@@ -503,18 +503,18 @@ ErrCode GetOriginalSize(PlatformFile zipFd, int64_t &originalSize)
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
             APP_LOGE("Failed to open the current file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         const FilePath &constEntryPath = reader.CurrentEntryInfo()->GetFilePath();
         FilePath entryPath = constEntryPath;
         if (reader.CurrentEntryInfo()->IsUnsafe()) {
             APP_LOGE("Found an unsafe file in zip");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
         totalSize += reader.CurrentEntryInfo()->GetOriginalSize();
         if (!reader.AdvanceToNextEntry()) {
             APP_LOGE("Failed to advance to the next file");
-            return ERR_ZLIB_SERVICE_DISABLED;
+            return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
         }
     }
     originalSize = totalSize;

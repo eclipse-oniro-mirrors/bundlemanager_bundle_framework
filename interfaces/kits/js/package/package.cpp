@@ -37,7 +37,7 @@ namespace {
 constexpr int8_t NAPI_RETURN_ZERO = 0;
 constexpr uint8_t ARGS_SIZE_ONE = 1;
 constexpr uint8_t ARGS_SIZE_TWO = 2;
-constexpr int32_t PARAM0 = 0;
+constexpr int8_t PARAM0 = 0;
 constexpr int8_t PARAM1 = 1;
 constexpr int8_t NAPI_RETURN_ONE = 1;
 constexpr int8_t INVALID_PARAM = 2;

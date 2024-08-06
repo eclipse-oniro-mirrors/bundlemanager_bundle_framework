@@ -54,7 +54,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class InstallState : uint8_t {
+enum class InstallState {
     INSTALL_START = 1,
     INSTALL_SUCCESS,
     INSTALL_FAIL,

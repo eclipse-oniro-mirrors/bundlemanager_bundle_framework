@@ -205,7 +205,6 @@ struct AsyncFormInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncFormInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
     bool ret = false;
     std::vector<OHOS::AppExecFwk::FormInfo> formInfos;
-    
 };
 
 struct AsyncFormInfosByModuleCallbackInfo : public AsyncWorkData {
