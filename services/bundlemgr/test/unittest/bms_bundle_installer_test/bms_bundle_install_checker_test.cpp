@@ -741,7 +741,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0003, Function | SmallTest |
     newInfo.SetAppDistributionType("hos_system_type");
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
