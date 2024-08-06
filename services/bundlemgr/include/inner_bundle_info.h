@@ -140,6 +140,7 @@ struct InnerModuleInfo {
     std::string packageName;
     std::string appStartup;
     bool needDelete = false;
+    bool hwasanEnabled = false;
 };
 
 struct ExtendResourceInfo {
@@ -2020,6 +2021,16 @@ public:
         baseApplicationInfo_->tsanEnabled = tsanEnabled;
     }
 
+    bool GetHwasanEnabled() const
+    {
+        return baseApplicationInfo_->hwasanEnabled;
+    }
+
+    void SetHwasanEnabled(bool hwasanEnabled)
+    {
+        baseApplicationInfo_->hwasanEnabled = hwasanEnabled;
+    }
+
     std::vector<ApplicationEnvironment> GetAppEnvironments() const
     {
         return baseApplicationInfo_->appEnvironments;
@@ -2175,6 +2186,7 @@ public:
         BundleInfo &bundleInfo) const;
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
+    bool IsHwasanEnabled() const;
     std::set<int32_t> GetCloneBundleAppIndexes() const;
 
 private:
