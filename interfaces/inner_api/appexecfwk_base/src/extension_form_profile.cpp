@@ -29,32 +29,58 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
-const std::map<std::string, FormsColorMode> formColorModeMap = {
-    {"auto",  FormsColorMode::AUTO_MODE},
-    {"dark",  FormsColorMode::DARK_MODE},
-    {"light", FormsColorMode::LIGHT_MODE}
+const char* formColorModeMapKey[] = {
+    "auto",
+    "dark",
+    "light"
 };
-const std::map<std::string, int32_t> dimensionMap = {
-    {"1*2", 1},
-    {"2*2", 2},
-    {"2*4", 3},
-    {"4*4", 4},
-    {"2*1", 5},
-    {"1*1", 6},
-    {"6*4", 7}
+const FormsColorMode formColorModeMapValue[] = {
+    FormsColorMode::AUTO_MODE,
+    FormsColorMode::DARK_MODE,
+    FormsColorMode::LIGHT_MODE
 };
-const std::map<std::string, int32_t> shapeMap = {
-    {"rect", 1},
-    {"circle", 2}
+const char* dimensionMapKey[] = {
+    "1*2",
+    "2*2",
+    "2*4",
+    "4*4",
+    "2*1",
+    "1*1",
+    "6*4"
 };
-const std::map<std::string, FormType> formTypeMap = {
-    {"JS", FormType::JS},
-    {"eTS", FormType::ETS}
+const int32_t dimensionMapValue[] = {
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+};
+const char* shapeMapKey[] = {
+    "rect", 
+    "circle"
+};
+const int32_t shapeMapValue[] = {
+    1,
+    2
+};
+const char* formTypeMapKey[] = {
+    "JS", 
+    "eTS"
+};
+const FormType formTypeMapValue[] = {
+    FormType::JS,
+    FormType::ETS
 };
 
-const std::map<std::string, FormType> uiSyntaxMap = {
-    {"hml", FormType::JS},
-    {"arkts", FormType::ETS}
+const char* uiSyntaxMapKey[] = {
+    "hml", 
+    "arkts"
+};
+const FormType uiSyntaxMapValue[] = {
+    FormType::JS,
+    FormType::ETS
 };
 
 struct Window {
@@ -358,29 +384,31 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     std::set<int32_t> supportDimensionSet {};
     for (const auto &dimension: form.supportDimensions) {
-        auto dimensionRes = std::find_if(std::begin(dimensionMap),
-            std::end(dimensionMap),
-            [&dimension](const auto &item) { return item.first == dimension; });
-        if (dimensionRes == dimensionMap.end()) {
+        unsigned long i = 0;
+        for (i = 0; i < sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0]); i++) {
+            if (dimensionMapKey[i] == dimension) break;
+        }
+        if (i == sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0])) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-        supportDimensionSet.emplace(dimensionRes->second);
+        supportDimensionSet.emplace(dimensionMapValue[i]);
     }
 
-    auto dimensionRes = std::find_if(std::begin(dimensionMap),
-        std::end(dimensionMap),
-        [&form](const auto &item) { return item.first == form.defaultDimension; });
-    if (dimensionRes == dimensionMap.end()) {
+    unsigned long i = 0;
+    for (i = 0; i < sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0]); i++) {
+        if (dimensionMapKey[i] == form.defaultDimension) break;
+    }
+    if (i == sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0])) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;
     }
-    if (supportDimensionSet.find(dimensionRes->second) == supportDimensionSet.end()) {
+    if (supportDimensionSet.find(dimensionMapValue[i]) == supportDimensionSet.end()) {
         APP_LOGW("defaultDimension not in supportDimensions form %{public}s", form.name.c_str());
         return false;
     }
 
-    info.defaultDimension = dimensionRes->second;
+    info.defaultDimension = dimensionMapValue[i];
     for (const auto &dimension: supportDimensionSet) {
         info.supportDimensions.emplace_back(dimension);
     }
@@ -391,13 +419,15 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
 {
     std::set<int32_t> supportShapeSet {};
     for (const auto &shape: form.supportShapes) {
-        auto formShape = std::find_if(std::begin(shapeMap), std::end(shapeMap),
-            [&shape](const auto &item) { return item.first == shape; });
-        if (formShape == shapeMap.end()) {
-            APP_LOGW("shape invalid form %{public}s", form.name.c_str());
+        unsigned long i = 0;
+        for (i = 0; i < sizeof(shapeMapKey)/sizeof(shapeMapKey[0]); i++) {
+            if (shapeMapKey[i] == shape) break;
+        }
+        if (i == sizeof(shapeMapKey)/sizeof(shapeMapKey[0])) {
+            APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-        supportShapeSet.emplace(formShape->second);
+        supportShapeSet.emplace(shapeMapValue[i]);
     }
 
     if (supportShapeSet.empty()) {
@@ -423,21 +453,22 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
 
-    auto colorMode = std::find_if(std::begin(formColorModeMap),
-        std::end(formColorModeMap),
-        [&form](const auto &item) { return item.first == form.colorMode; });
-    if (colorMode != formColorModeMap.end()) {
-        info.colorMode = colorMode->second;
+    for (unsigned long i = 0; i < sizeof(formColorModeMapKey)/sizeof(formColorModeMapKey[0]); i++) {
+        if (formColorModeMapKey[i] == form.colorMode) {
+            info.colorMode = formColorModeMapValue[i];
+        }
     }
 
-    auto formType = formTypeMap.find(form.type);
-    if (formType != formTypeMap.end()) {
-        info.type = formType->second;
+    for (unsigned long i = 0; i < sizeof(formTypeMapKey)/sizeof(formTypeMapKey[0]); i++) {
+        if (formTypeMapKey[i] == form.type) {
+            info.type = formTypeMapValue[i];
+        }
     }
 
-    auto uiSyntaxType = uiSyntaxMap.find(form.uiSyntax);
-    if (uiSyntaxType != uiSyntaxMap.end()) {
-        info.uiSyntax = uiSyntaxType->second;
+    for (unsigned long i = 0; i < sizeof(uiSyntaxMapKey)/sizeof(uiSyntaxMapKey[0]); i++) {
+        if (uiSyntaxMapKey[i] == form.uiSyntax) {
+            info.uiSyntax = uiSyntaxMapValue[i];
+        }
     }
 
     info.formConfigAbility = form.formConfigAbility;
