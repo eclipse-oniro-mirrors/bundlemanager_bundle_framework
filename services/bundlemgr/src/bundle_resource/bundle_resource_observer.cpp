@@ -53,10 +53,15 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
     }
     std::string theme = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME);
     if (!theme.empty()) {
-        APP_LOGI("theme change %{public}s", theme.c_str());
+        std::string themeId = configuration.GetItem(AAFwk::GlobalConfigurationKey::THEME_ID);
+        APP_LOGI("theme change %{public}s, themeId %{public}s", theme.c_str(), themeId.c_str());
+        int32_t id = 0;
+        if (!OHOS::StrToInt(themeId, id)) {
+            id = 0;
+        }
         type = (type == 0) ? static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE) :
             (type | static_cast<uint32_t>(BundleResourceChangeType::SYSTEM_THEME_CHANGE));
-        std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, type);
+        std::thread applicationThemeChangedThread(OnApplicationThemeChanged, theme, id, type);
         applicationThemeChangedThread.detach();
     }
     APP_LOGI("end change type %{public}u", type);
@@ -74,10 +79,11 @@ void BundleResourceObserver::OnSystemLanguageChange(const std::string &language,
     callback.OnSystemLanguageChange(language, type);
 }
 
-void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme, const uint32_t type)
+void BundleResourceObserver::OnApplicationThemeChanged(const std::string &theme,
+    const int32_t themeId, const uint32_t type)
 {
     BundleResourceCallback callback;
-    callback.OnApplicationThemeChanged(theme, type);
+    callback.OnApplicationThemeChanged(theme, themeId, type);
 }
 #endif
 } // AppExecFwk
