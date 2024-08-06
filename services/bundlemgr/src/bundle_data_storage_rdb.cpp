@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
-const int32_t CLOSE_TIME = 15; // delay 15s stop rdbStore
+const int8_t CLOSE_TIME = 15; // delay 15s to backup
 }
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
