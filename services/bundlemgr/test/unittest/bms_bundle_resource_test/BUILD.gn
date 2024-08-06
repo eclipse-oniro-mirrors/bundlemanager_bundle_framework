@@ -207,9 +207,41 @@ ohos_unittest("BmsBundleResourceTest") {
   }
 }
 
+ohos_unittest("BmsBundleMgrHostUnitTest") {
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+  use_exceptions = true
+  module_out_path = module_output_path
+
+  sources = [ "bms_bundle_mgr_host_unit_test.cpp" ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
-    deps = [ ":BmsBundleResourceTest" ]
+    deps = [
+      ":BmsBundleMgrHostUnitTest",
+      ":BmsBundleResourceTest",
+    ]
   }
 }
