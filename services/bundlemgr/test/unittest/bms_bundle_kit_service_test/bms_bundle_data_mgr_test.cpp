@@ -5614,4 +5614,134 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrDeleteDesktopShortcutInfo_0002, Func
     ErrCode ret = localBundleDataMgr->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
+
+/**
+ * @tc.number: Marshalling_0100
+ * Function: test Marshalling of ProxyData
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, Marshalling_0100, Function | SmallTest | Level0)
+{
+    ProxyData proxyData;
+    Parcel parcel;
+    std::string testString = "testString";
+    proxyData.uri = testString;
+    proxyData.requiredReadPermission = testString;
+    proxyData.requiredWritePermission = testString;
+
+    bool result = proxyData.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: Marshalling_0200
+ * Function: test Marshalling of RouterItem
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, Marshalling_0200, Function | SmallTest | Level0)
+{
+    RouterItem routerItem;
+    Parcel parcel;
+    std::string testString = "testString";
+    routerItem.name = testString;
+    routerItem.pageSourceFile = testString;
+    routerItem.buildFunction = testString;
+    routerItem.data.emplace(testString, testString);
+    routerItem.customData = testString;
+    routerItem.ohmurl = testString;
+    routerItem.bundleName = testString;
+    routerItem.moduleName = testString;
+
+    bool result = routerItem.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: Marshalling_0300
+ * Function: test Marshalling of RecoverableApplicationInfo
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, Marshalling_0300, Function | SmallTest | Level0)
+{
+    RecoverableApplicationInfo recoverableApplicationInfo;
+    Parcel parcel;
+    recoverableApplicationInfo.bundleName = BUNDLE_NAME_TEST;
+    recoverableApplicationInfo.moduleName = MODULE_NAME_TEST;
+    recoverableApplicationInfo.codePaths.push_back(LIB_PATH);
+
+    bool result = recoverableApplicationInfo.Marshalling(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: Unmarshalling_0100
+ * Function: test Unmarshalling of DisposedRule
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, Unmarshalling_0100, Function | SmallTest | Level0)
+{
+    DisposedRule disposedRule;
+    Parcel parcel;
+
+    auto result = disposedRule.Unmarshalling(parcel);
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.number: Unmarshalling_0200
+ * Function: test Unmarshalling of RecoverableApplicationInfo
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, Unmarshalling_0200, Function | SmallTest | Level0)
+{
+    RecoverableApplicationInfo recoverableApplicationInfo;
+    Parcel parcel;
+
+    auto result = recoverableApplicationInfo.Unmarshalling(parcel);
+    EXPECT_EQ(result, nullptr);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0100
+ * Function: test ReadFromParcel of DisposedRule
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, ReadFromParcel_0100, Function | SmallTest | Level0)
+{
+    DisposedRule disposedRule;
+    Parcel parcel;
+    Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    parcel.WriteParcelable(&want);
+    parcel.WriteInt32(1);
+    parcel.WriteInt32(1);
+    parcel.WriteInt32(1);
+    parcel.WriteInt32(1);
+    std::string element = "testElement";
+    parcel.WriteString16(Str8ToStr16(element));
+
+    bool result = disposedRule.ReadFromParcel(parcel);
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: ReadFromParcel_0200
+ * Function: test ReadFromParcel of DisposedRule
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, ReadFromParcel_0200, Function | SmallTest | Level0)
+{
+    RecoverableApplicationInfo recoverableApplicationInfo;
+    Parcel parcel;
+    parcel.WriteString16(Str8ToStr16(BUNDLE_NAME_TEST));
+    parcel.WriteString16(Str8ToStr16(MODULE_NAME_TEST));
+    parcel.WriteInt32(1);
+    parcel.WriteInt32(1);
+    parcel.WriteBool(true);
+    parcel.WriteInt32(1);
+    parcel.WriteString16(Str8ToStr16(LIB_PATH));
+
+    bool result = recoverableApplicationInfo.ReadFromParcel(parcel);
+    EXPECT_TRUE(result);
+}
 }
