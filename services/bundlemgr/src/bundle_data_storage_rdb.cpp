@@ -157,18 +157,23 @@ void BundleDataStorageRdb::BackupRdb()
     if (isBackingUp_) {
         return;
     }
-    auto ptr = shared_from_this();
-    auto task = [ptr] {
+    isBackingUp_ = true;
+    std::weak_ptr<BundleDataStorageRdb> weakPtr = weak_from_this();
+    auto task = [weakPtr] {
         APP_LOGI("bms.db backup start");
-        if ((ptr != nullptr) && (ptr->rdbDataManager_ != nullptr)) {
-            ptr->isBackingUp_ = true;
-            std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
-            ptr->rdbDataManager_->BackupRdb();
-            ptr->isBackingUp_ = false;
-            APP_LOGI("bms.db backup end");
+        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGE("sharedPtr is null");
             return;
         }
-        APP_LOGE("bms.db ptr or rdb is null");
+        if (sharedPtr->rdbDataManager_ != nullptr) {
+            sharedPtr->rdbDataManager_->BackupRdb();
+        } else {
+            APP_LOGE("rdbDataManager_ is null");
+        }
+        sharedPtr->isBackingUp_ = false;
+        APP_LOGI("bms.db backup end");
     };
     std::thread backUpThread(task);
     backUpThread.detach();
