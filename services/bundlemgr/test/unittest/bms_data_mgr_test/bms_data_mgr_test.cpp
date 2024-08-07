@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2541,8 +2541,7 @@ HWTEST_F(BmsDataMgrTest, GetInnerBundleInfoWithFlags_0100, Function | SmallTest 
 /**
  * @tc.number: AddDesktopShortcutInfo_0001
  * @tc.name: AddDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (rdbDataManager_ == nullptr)
+ * @tc.desc: test AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId, bool &isIdIllegal)
  */
 HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
@@ -2562,12 +2561,11 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0001, Function | SmallTest | Lev
     EXPECT_FALSE(ret);
 }
 
-// /**
-//  * @tc.number: AddDesktopShortcutInfo_0002
-//  * @tc.name: AddDesktopShortcutInfo
-//  * @tc.desc: 1. system run normally
-//  *           2. enter if (rdbDataManager_ == nullptr)
-//  */
+/**
+ * @tc.number: AddDesktopShortcutInfo_0002
+ * @tc.name: AddDesktopShortcutInfo
+ * @tc.desc: test AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId, bool &isIdIllegal)
+ */
 HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
@@ -2586,12 +2584,11 @@ HWTEST_F(BmsDataMgrTest, AddDesktopShortcutInfo_0002, Function | MediumTest | Le
     EXPECT_FALSE(ret);
 }
 
-// /**
-//  * @tc.number: DeleteDesktopShortcutInfo_0001
-//  * @tc.name: DeleteDesktopShortcutInfo
-//  * @tc.desc: 1. system run normally
-//  *           2. enter if (rdbDataManager_ == nullptr)
-//  */
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0001
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+ */
 HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
@@ -2608,16 +2605,13 @@ HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0001, Function | SmallTest | 
 
     ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_FALSE(ret);
-
-    shortcutDataStorageRdb = nullptr;
 }
 
-// /**
-//  * @tc.number: DeleteDesktopShortcutInfo_0002
-//  * @tc.name: DeleteDesktopShortcutInfo
-//  * @tc.desc: 1. system run normally
-//  *           2. enter if (rdbDataManager_ == nullptr)
-//  */
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0002
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
+ */
 HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
@@ -2633,16 +2627,94 @@ HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0002, Function | MediumTest |
 
     ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_FALSE(ret);
+}
 
-    shortcutDataStorageRdb = nullptr;
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0003
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0003, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    std::string bundleName = "bundleName";
+    shortcutDataStorageRdb->rdbDataManager_->bmsRdbConfig_.dbName = "bundleName";
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0004
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const std::string &bundleName)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0004, Function | MediumTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    std::string bundleName = "bundleName";
+    shortcutDataStorageRdb->rdbDataManager_->bmsRdbConfig_.dbName = "bundleName";
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0005
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0005, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t appIndex = 100;
+    shortcutDataStorageRdb->rdbDataManager_->bmsRdbConfig_.dbName = "bundleName";
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName, USERID, appIndex);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName, USERID, appIndex);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DeleteDesktopShortcutInfo_0006
+ * @tc.name: DeleteDesktopShortcutInfo
+ * @tc.desc: test DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex)
+ */
+HWTEST_F(BmsDataMgrTest, DeleteDesktopShortcutInfo_0006, Function | SmallTest | Level1)
+{
+    std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
+    ASSERT_NE(shortcutDataStorageRdb, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t appIndex = 100;
+    shortcutDataStorageRdb->rdbDataManager_->bmsRdbConfig_.dbName = "bundleName";
+
+    bool ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName, USERID, appIndex);
+    EXPECT_TRUE(ret);
+
+    shortcutDataStorageRdb->rdbDataManager_ = nullptr;
+    ret = shortcutDataStorageRdb->DeleteDesktopShortcutInfo(bundleName, USERID, appIndex);
+    EXPECT_FALSE(ret);
 }
 
 /**
  * @tc.number: GetAllDesktopShortcutInfo_0001
  * @tc.name: GetAllDesktopShortcutInfo
- * @tc.desc: 1. enter if (!BundlePermissionMgr::IsSystemApp())
- *           2. system run normally
- *           3. enter if (!rdbDataManager_->QueryAllData(datas))
+ * @tc.desc: test GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
  */
 HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
@@ -2665,17 +2737,13 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0001, Function | SmallTest | 
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
-
-    shortcutDataStorageRdb = nullptr;
 }
 
-// /**
-//  * @tc.number: GetAllDesktopShortcutInfo_0002
-//  * @tc.name: GetAllDesktopShortcutInfo
-//  * @tc.desc: 1. enter if (!BundlePermissionMgr::IsSystemApp())
-//  *           2. system run normally
-//  *           3. enter if (!rdbDataManager_->QueryAllData(datas))
-//  */
+/**
+ * @tc.number: GetAllDesktopShortcutInfo_0002
+ * @tc.name: GetAllDesktopShortcutInfo
+ * @tc.desc: test GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
+ */
 HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
     std::shared_ptr<ShortcutDataStorageRdb> shortcutDataStorageRdb = std::make_shared<ShortcutDataStorageRdb>();
@@ -2697,7 +2765,5 @@ HWTEST_F(BmsDataMgrTest, GetAllDesktopShortcutInfo_0002, Function | MediumTest |
     shortcutDataStorageRdb->rdbDataManager_ = nullptr;
     shortcutDataStorageRdb->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_EQ(shortcutDataStorageRdb->rdbDataManager_, nullptr);
-
-    shortcutDataStorageRdb = nullptr;
 }
 } // OHOS
