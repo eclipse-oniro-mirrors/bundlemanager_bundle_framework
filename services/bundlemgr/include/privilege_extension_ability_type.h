@@ -24,7 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 const std::set<ExtensionAbilityType> PRIVILEGE_EXTENSION_ABILITY_TYPE = {
     ExtensionAbilityType::SERVICE,
-    ExtensionAbilityType::DATASHARE
+    ExtensionAbilityType::DATASHARE,
+    ExtensionAbilityType::UI_SERVICE
 };
 
 const std::set<ExtensionAbilityType> SYSTEM_EXTENSION_ABILITY_TYPE = {
