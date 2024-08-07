@@ -23,6 +23,9 @@ namespace OHOS {
 namespace AppExecFwk {
 struct InnerBundleCloneInfo {
     int32_t userId = Constants::INVALID_USERID;
+    
+    // Indicates whether the bundle is disabled.
+    bool enabled = true;
 
     // indicates whether the appIndex of clone app
     int32_t appIndex = 0;
@@ -30,9 +33,6 @@ struct InnerBundleCloneInfo {
     int32_t uid = 0;
 
     std::vector<int32_t> gids;
-
-    // Indicates whether the bundle is disabled.
-    bool enabled = true;
 
     // disabled abilities of the user.
     std::vector<std::string> disabledAbilities;

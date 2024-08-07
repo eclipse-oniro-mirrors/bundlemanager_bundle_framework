@@ -26,10 +26,10 @@ namespace AppExecFwk {
 struct BaseSharedBundleInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
+    bool compressNativeLibs = true;
     uint32_t versionCode;
     std::string nativeLibraryPath;
     std::string hapPath;
-    bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);

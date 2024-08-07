@@ -56,16 +56,16 @@ struct NotifyBundleEvents {
     NotifyType type = NotifyType::INSTALL;
     int32_t uid = 0;
     uint32_t accessTokenId = 0;
-    bool isAgingUninstall = false;
-    bool isBmsExtensionUninstalled = false;
-    std::string appId;
-    std::string appIdentifier;
-    bool isModuleUpdate = false;
-    std::string appDistributionType;
     int32_t bundleType = 0;
     int32_t atomicServiceModuleUpgrade = 0;
     int32_t appIndex = 0;
+    bool isAgingUninstall = false;
+    bool isBmsExtensionUninstalled = false;
+    bool isModuleUpdate = false;
     bool isApplicationEnabled = true;
+    std::string appId;
+    std::string appIdentifier;
+    std::string appDistributionType;
 };
 
 class BundleCommonEventMgr {

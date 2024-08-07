@@ -45,8 +45,8 @@ std::mutex g_mutex;
 struct App {
     std::string bundleName;
     uint32_t versionCode = 0;
-    std::string versionName;
     uint32_t patchVersionCode = 0;
+    std::string versionName;
     std::string patchVersionName;
 };
 

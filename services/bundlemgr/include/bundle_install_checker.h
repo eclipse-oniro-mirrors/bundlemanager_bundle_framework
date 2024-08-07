@@ -34,6 +34,8 @@ struct InstallCheckParam {
     bool isPreInstallApp = false;
     bool removable = true;
     bool needSendEvent = true;
+    // is shell token
+    bool isCallByShell = false;
     // status of install bundle permission
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
@@ -42,8 +44,6 @@ struct InstallCheckParam {
     PermissionStatus installEtpNormalBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise mdm bundle permission
     PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
-    // is shell token
-    bool isCallByShell = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
     std::string specifiedDistributionType;

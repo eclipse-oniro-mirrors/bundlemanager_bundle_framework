@@ -180,8 +180,8 @@ struct ApplicationInfo : public Parcelable {
     std::string bundleName;
 
     uint32_t versionCode = 0;
-    std::string versionName;
     int32_t minCompatibleVersionCode = 0;
+    std::string versionName;
 
     uint32_t apiCompatibleVersion = 0;
     int32_t apiTargetVersion = 0;
@@ -209,31 +209,30 @@ struct ApplicationInfo : public Parcelable {
     bool associatedWakeUp = false;
     bool hideDesktopIcon = false;
     bool formVisibleNotify = false;
-    std::vector<std::string> allowCommonEvent;
-    std::vector<int32_t> resourcesApply;
-
     bool isSystemApp = false;
     bool isLauncherApp = false;
     bool isFreeInstallApp = false;
     bool asanEnabled = false;
-    std::string asanLogPath;
+    bool debug = false;
+    bool distributedNotificationEnabled = true;
+    std::vector<int32_t> resourcesApply;
+    std::vector<std::string> allowCommonEvent;
+    
+    bool allowEnableNotification = false;
+    bool gwpAsanEnabled = false;
+    int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
 
+    std::string asanLogPath;
     std::string codePath;
     std::string dataDir;
     std::string dataBaseDir;
     std::string cacheDir;
     std::string entryDir;
-
     std::string apiReleaseType;
-    bool debug = false;
     std::string deviceId;
-    bool distributedNotificationEnabled = true;
-    bool allowEnableNotification = false;
     std::string entityType = DEFAULT_ENTITY_TYPE;
     std::string process;
-    int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     std::string vendor;
-    bool gwpAsanEnabled = false;
 
     // apl
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;
@@ -243,10 +242,10 @@ struct ApplicationInfo : public Parcelable {
 
     // user related fields, assign when calling the get interface
     uint32_t accessTokenId = 0;
+    int32_t appIndex = 0;
     uint64_t accessTokenIdEx = 0;
     bool enabled = false;
     int32_t uid = -1;
-    int32_t appIndex = 0;
 
     // native so
     std::string nativeLibraryPath;
@@ -268,19 +267,15 @@ struct ApplicationInfo : public Parcelable {
     // quick fix info
     AppQuickFix appQuickFix;
 
-    // unused
-    std::string icon;
-    int32_t flags = 0;
-    std::string entryModuleName;
-    bool isCompressNativeLibs = true;
-    std::string signatureKey;
-
     // switch
     bool multiProjects = false;
 
-    // app detail ability
-    bool needAppDetail = false;
-    std::string appDetailAbilityLibraryPath;
+    // unused
+    bool isCompressNativeLibs = true;
+    int32_t flags = 0;
+    std::string icon;
+    std::string entryModuleName;
+    std::string signatureKey;
 
     // overlay installation
     std::string targetBundleName;
@@ -292,18 +287,21 @@ struct ApplicationInfo : public Parcelable {
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
 
+    std::vector<ApplicationEnvironment> appEnvironments;
+    std::string organization;
     uint32_t applicationReservedFlag = 0;
     bool tsanEnabled = false;
     bool hwasanEnabled = false;
-    std::vector<ApplicationEnvironment> appEnvironments;
-    std::string organization;
+    bool cloudFileSyncEnabled = false;
+
+    // app detail ability
+    bool needAppDetail = false;
+    std::string appDetailAbilityLibraryPath;
 
     MultiAppModeData multiAppMode;
     int32_t maxChildProcess = 0;
 
     std::string installSource;
-    bool cloudFileSyncEnabled = false;
-
     std::string configuration;
 
     bool ReadFromParcel(Parcel &parcel);

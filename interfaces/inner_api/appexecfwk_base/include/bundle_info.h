@@ -100,14 +100,14 @@ struct SignatureInfo : public Parcelable {
 struct BundleInfo : public Parcelable {
     std::string name;
 
-    bool isNewVersion = false;
     uint32_t versionCode = 0;
-    std::string versionName;
     uint32_t minCompatibleVersionCode = 0;
+    std::string versionName;
 
     uint32_t compatibleVersion = 0;
     uint32_t targetVersion = 0;
 
+    bool isNewVersion = false;
     bool isKeepAlive = false;
     bool singleton = false;
     bool isPreInstallApp = false;
@@ -115,10 +115,10 @@ struct BundleInfo : public Parcelable {
     std::string vendor;
     std::string releaseType;
     bool isNativeApp = false;
-
+    
+    bool entryInstallationFree = false; // application : false; atomic service : true
     std::string mainEntry; // modulePackage
     std::string entryModuleName; // moduleName
-    bool entryInstallationFree = false; // application : false; atomic service : true
     std::string appId;
     std::vector<std::string> oldAppIds; // used for appId changed
 

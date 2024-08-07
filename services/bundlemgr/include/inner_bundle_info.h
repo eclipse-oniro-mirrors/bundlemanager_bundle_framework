@@ -47,25 +47,30 @@ namespace OHOS {
 namespace AppExecFwk {
 struct Distro {
     bool deliveryWithInstall = false;
+    bool installationFree = false;
     std::string moduleName;
     std::string moduleType;
-    bool installationFree = false;
 };
 
 struct DefinePermission {
+    bool provisionEnable = true;
+    bool distributedSceneEnable = false;
+    int32_t labelId = 0;
+    int32_t descriptionId = 0;
     std::string name;
     std::string grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
     std::string availableLevel = Profile::DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE;
-    bool provisionEnable = true;
-    bool distributedSceneEnable = false;
     std::string label;
-    int32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
     std::string availableType;
 };
 
 struct InnerModuleInfo {
+    bool isEntry = false;
+    bool installationFree = false;
+    int32_t labelId = 0;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
     std::string name;
     std::string modulePackage;
     std::string moduleName;
@@ -75,17 +80,12 @@ struct InnerModuleInfo {
     std::string moduleHnpsPath;
     std::string label;
     std::string hapPath;
-    int32_t labelId = 0;
     std::string description;
-    int32_t descriptionId = 0;
     std::string icon;
-    int32_t iconId = 0;
     std::string mainAbility; // config.json : mainAbility; module.json : mainElement
     std::string entryAbilityKey; // skills contains "action.system.home" and "entity.system.home"
     std::string srcPath;
     std::string hashValue;
-    bool isEntry = false;
-    bool installationFree = false;
     // all user's value of isRemovable
     // key:userId
     // value:isRemovable true or flase
@@ -98,49 +98,49 @@ struct InnerModuleInfo {
     std::vector<std::string> abilityKeys;
     std::vector<std::string> skillKeys;
     // new version fields
+    bool isModuleJson = false;
+    bool isStageBasedModel = false;
+    bool isLibIsolated = false;
+    bool compressNativeLibs = true;
+    bool isEncrypted = false;
+    bool asanEnabled = false;
+    bool gwpAsanEnabled = false;
+    bool needDelete = false;
+    bool hwasanEnabled = false;
+    int32_t upgradeFlag = 0;
+    int32_t targetPriority;
+    uint32_t versionCode = 0;
     std::string pages;
     std::string process;
     std::string srcEntrance;
     std::string uiSyntax;
     std::string virtualMachine;
-    bool isModuleJson = false;
-    bool isStageBasedModel = false;
     std::vector<DefinePermission> definePermissions;
     std::vector<RequestPermission> requestPermissions;
     std::vector<std::string> deviceTypes;
     std::vector<std::string> extensionKeys;
     std::vector<std::string> extensionSkillKeys;
     std::vector<Metadata> metadata;
-    int32_t upgradeFlag = 0;
     std::vector<Dependency> dependencies;
     std::string compileMode;
-    bool isLibIsolated = false;
     std::string nativeLibraryPath;
     std::string cpuAbi;
     std::string targetModuleName;
-    int32_t targetPriority;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     std::vector<std::string> preloads;
     BundleType bundleType = BundleType::SHARED;
-    uint32_t versionCode = 0;
     std::string versionName;
     std::vector<ProxyData> proxyDatas;
     std::string buildHash;
     std::string isolationMode;
-    bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
-    bool isEncrypted = false;
     std::vector<std::string> querySchemes;
     std::string routerMap;
     std::vector<AppEnvironment> appEnvironments;
-    bool asanEnabled = false;
-    bool gwpAsanEnabled = false;
     std::string packageName;
     std::string appStartup;
-    bool needDelete = false;
-    bool hwasanEnabled = false;
 };
 
 struct ExtendResourceInfo {

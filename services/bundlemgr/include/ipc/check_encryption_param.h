@@ -32,9 +32,9 @@ struct CheckEncryptionParam : public Parcelable {
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
+    bool isCompressNativeLibrary = false;
     int32_t bundleId = -1;
     InstallBundleType installBundleType = InstallBundleType::HAP;
-    bool isCompressNativeLibrary = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

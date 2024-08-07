@@ -58,11 +58,11 @@ struct BmsCallerInfo : public Parcelable {
     int32_t targetAppType = TYPE_INVALID;
 
     int32_t callerModelType = 0L;
-    std::string targetAppDistType = "";
-    std::string targetLinkFeature = "";
     int32_t targetLinkType = 0L;
     int32_t callerAbilityType = 0L;
     int32_t embedded = 0;
+    std::string targetAppDistType = "";
+    std::string targetLinkFeature = "";
     std::string callerAppProvisionType;
     std::string targetAppProvisionType;
 

@@ -101,8 +101,8 @@ std::map<std::string, uint32_t> backgroundModeMap = {
 
 struct Version {
     int32_t code = 0;
-    std::string name;
     int32_t minCompatibleVersionCode = -1;
+    std::string name;
 };
 
 struct ApiVersion {
@@ -124,10 +124,10 @@ struct App {
     Version version;
     ApiVersion apiVersion;
     bool singleton = false;
-    int32_t iconId = 0;
-    int32_t labelId = 0;
     bool userDataClearable = true;
     bool asanEnabled = false;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
     std::vector<std::string> targetBundleList;
 };
 
@@ -164,12 +164,12 @@ struct Device {
     std::string jointUserId;
     std::string process;
     bool keepAlive = false;
-    Ark ark;
     bool directLaunch = false;
     bool supportBackup = false;
     bool compressNativeLibs = true;
-    Network network;
     bool debug = false;
+    Ark ark;
+    Network network;
 };
 // config.json  deviceConfig
 struct DeviceConfig {
@@ -207,10 +207,13 @@ struct Window {
 };
 
 struct Forms {
+    bool isDefault = false;
+    bool updateEnabled = false;
+    bool formVisibleNotify = false;
+    int32_t descriptionId = 0;
+    int32_t updateDuration = 0;
     std::string name;
     std::string description;
-    int32_t descriptionId = 0;
-    bool isDefault = false;
     std::string type;
     std::string src;
     Window window;
@@ -219,12 +222,9 @@ struct Forms {
     std::string defaultDimension;
     std::vector<std::string> landscapeLayouts;
     std::vector<std::string> portraitLayouts;
-    bool updateEnabled = false;
     std::string scheduledUpdateTime = "";
-    int32_t updateDuration = 0;
     std::string deepLink;
     std::string formConfigAbility;
-    bool formVisibleNotify = false;
     std::string jsComponentName;
     FormsMetaData metaData;
 };
@@ -245,21 +245,30 @@ struct UriPermission {
 };
 
 struct Ability {
+    bool visible = false;
+    bool continuable = false;
+    bool formEnabled = false;
+    bool grantPermission;
+    bool directLaunch = false;
+    bool multiUserShared = false;
+    bool supportPipMode = false;
+    bool formsEnabled = false;
+    bool removeMissionAfterTerminate = false;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int32_t priority = 0;
+    int32_t startWindowIconId = 0;
+    int32_t startWindowBackgroundId = 0;
     std::string name;
     std::string originalName;
     std::string description;
-    int32_t descriptionId = 0;
     std::string icon;
-    int32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
-    int32_t priority = 0;
     std::string uri;
     std::string process;
     std::string launchType = "singleton";
     std::string theme;
-    bool visible = false;
-    bool continuable = false;
     std::vector<std::string> permissions;
     std::vector<Skill> skills;
     std::vector<std::string> deviceCapability;
@@ -267,27 +276,18 @@ struct Ability {
     std::string type;
     std::string srcPath;
     std::string srcLanguage = "js";
-    bool formEnabled = false;
     Form form;
     std::string orientation = "unspecified";
     std::vector<std::string> backgroundModes;
-    bool grantPermission;
     UriPermission uriPermission;
     std::string readPermission;
     std::string writePermission;
-    bool directLaunch = false;
     std::vector<std::string> configChanges;
     std::string mission;
     std::string targetAbility;
-    bool multiUserShared = false;
-    bool supportPipMode = false;
-    bool formsEnabled = false;
     std::vector<Forms> formses;
     std::string startWindowIcon;
-    int32_t startWindowIconId = 0;
     std::string startWindowBackground;
-    int32_t startWindowBackgroundId = 0;
-    bool removeMissionAfterTerminate = false;
 };
 
 struct Js {
@@ -324,6 +324,7 @@ struct Module {
     std::string package;
     std::string name;
     std::string description;
+    bool isLibIsolated = false;
     int32_t descriptionId = 0;
     std::string colorMode = "auto";
     std::vector<std::string> supportedModes;
@@ -340,7 +341,6 @@ struct Module {
     std::vector<DefinePermission> definePermissions;
     std::string mainAbility;
     std::string srcPath;
-    bool isLibIsolated = false;
     std::string buildHash;
 };
 

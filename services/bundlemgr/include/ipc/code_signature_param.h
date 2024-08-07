@@ -21,14 +21,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct CodeSignatureParam : public Parcelable {
+    bool isEnterpriseBundle = false;
+    bool isPreInstalledBundle = false;
+    bool isCompileSdkOpenHarmony = false;
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
     std::string signatureFileDir;
-    bool isEnterpriseBundle = false;
     std::string appIdentifier;
-    bool isPreInstalledBundle = false;
-    bool isCompileSdkOpenHarmony = false;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

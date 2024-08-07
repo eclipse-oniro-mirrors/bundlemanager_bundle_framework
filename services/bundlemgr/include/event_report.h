@@ -85,13 +85,16 @@ enum class UserEventType {
 
 struct EventInfo {
     int32_t userId = Constants::INVALID_USERID;
+    uint32_t versionCode = 0;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
     std::string packageName;
     std::string applicationVersion;
     int64_t timeStamp = 0;
-    uint32_t versionCode = 0;
+
+    // for quick fix
+    int32_t applyQuickFixFrequency = 0;
 
     // for install and uninstall
     int32_t callingUid = 0;
@@ -101,12 +104,8 @@ struct EventInfo {
     std::vector<std::string> hashValue;
     // only for install
     std::string fingerprint;
-    bool hideDesktopIcon = false;
     std::string appDistributionType;
-
-    // only used for preBundle
-    bool isPreInstallApp = false;
-    InstallScene preBundleScene = InstallScene::NORMAL;
+    bool hideDesktopIcon = false;
 
     // only used for clean cache
     bool isCleanCache = true;
@@ -117,29 +116,32 @@ struct EventInfo {
     // only used for free install
     bool isFreeInstallMode = false;
 
+    //for free install event
+    bool isFreeInstall = false;
+
+    // only used for preBundle
+    bool isPreInstallApp = false;
+    InstallScene preBundleScene = InstallScene::NORMAL;
+
     // only used in fault event
     ErrCode errCode = ERR_OK;
 
     // only used in user event
     UserEventType userEventType = UserEventType::UNKNOW;
 
-    // for quick fix
-    int32_t applyQuickFixFrequency = 0;
     // AOT
-    std::vector<std::string> totalBundleNames;
-    uint32_t successCnt = 0;
-    std::string compileMode;
     bool compileResult = false;
-    std::string failureReason;
-    int64_t costTimeSeconds = 0;
-    int32_t sceneId = 0;
-    std::string processName;
+    uint32_t successCnt = 0;
     int32_t appIndex = 0;
+    int32_t sceneId = 0;
+    int64_t costTimeSeconds = 0;
+    std::string compileMode;
+    std::string failureReason;
+    std::string processName;
+    std::vector<std::string> totalBundleNames;
 
     //for query of continue type
     std::string continueType;
-    //for free install event
-    bool isFreeInstall = false;
 
     void Reset()
     {
