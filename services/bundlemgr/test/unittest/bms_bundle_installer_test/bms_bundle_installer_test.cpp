@@ -6151,6 +6151,50 @@ HWTEST_F(BmsBundleInstallerTest, GetAllBundleStats_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: RollbackHmpCommonInfo_0100
+ * @tc.name: test RollbackHmpCommonInfo
+ * @tc.desc: test RollbackHmpCommonInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, RollbackHmpCommonInfo_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+
+    InnerBundleInfo info;
+    std::string dir;
+    installer.CreateScreenLockProtectionExistDirs(info, dir);
+
+    std::vector<std::string> extensionDataGroupIds;
+    std::vector<std::string> bundleDataGroupIds;
+    std::vector<std::string> validGroupIds;
+    installer.GetValidDataGroupIds(extensionDataGroupIds, bundleDataGroupIds, validGroupIds);
+
+    installer.CreateDataGroupDir(info);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.SetAppDistributionType(infos);
+
+    EventInfo eventInfo;
+    installer.GetInstallEventInfo(info, eventInfo);
+
+    NotifyBundleEvents notifyBundleEvents;
+    installer.AddNotifyBundleEvents(notifyBundleEvents);
+
+    std::string bundleName;
+    ErrCode ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+
+    ret = installer.RollbackHmpCommonInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_INVALID_NAME);
+
+    bundleName = "com.ohos.settings";
+    ret = installer.RollbackHmpUserInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+
+    ret = installer.RollbackHmpCommonInfo(bundleName);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE);
+}
+
+/**
  * @tc.number: IsExistApFile_0100
  * @tc.name: test IsExistApFile
  * @tc.desc: test IsExistApFile of InstalldHostImpl
