@@ -21,34 +21,32 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string TYPE_ALL = "All";
-const std::string TYPE_SO = "So";
-const std::string TYPE_AN = "An";
-const std::string TYPE_PATCH = "Patch";
-const std::string TYPE_AP = "Ap";
-const std::string TYPE_RESOURCE = "Resource";
-const std::string TYPE_RES_FILE = "ResFile";
-const std::string TYPE_HNPS_FILE = "HnpsFile";
-const std::string TYPE_OTHER = "Other";
-const std::unordered_map<ExtractFileType, std::string> ARGS_MAP = {
-    { ExtractFileType::ALL, TYPE_ALL },
-    { ExtractFileType::SO, TYPE_SO },
-    { ExtractFileType::AN, TYPE_AN },
-    { ExtractFileType::PATCH, TYPE_PATCH },
-    { ExtractFileType::AP, TYPE_AP },
-    { ExtractFileType::RESOURCE, TYPE_RESOURCE },
-    { ExtractFileType::RES_FILE, TYPE_RES_FILE },
-    { ExtractFileType::HNPS_FILE, TYPE_HNPS_FILE },
+constexpr const char* TYPE_ALL = "All";
+constexpr const char* TYPE_SO = "So";
+constexpr const char* TYPE_AN = "An";
+constexpr const char* TYPE_PATCH = "Patch";
+constexpr const char* TYPE_AP = "Ap";
+constexpr const char* TYPE_RESOURCE = "Resource";
+constexpr const char* TYPE_RES_FILE = "ResFile";
+constexpr const char* TYPE_HNPS_FILE = "HnpsFile";
+constexpr const char* TYPE_OTHER = "Other";
+const ExtractFileType ARGS_MAP_KEY[] = {
+    ExtractFileType::ALL, ExtractFileType::SO, ExtractFileType::AN, ExtractFileType::PATCH, ExtractFileType::AP,
+    ExtractFileType::RESOURCE, ExtractFileType::RES_FILE, ExtractFileType::HNPS_FILE,
+};
+const char* ARGS_MAP_VALUE[] = {
+    TYPE_ALL, TYPE_SO, TYPE_AN, TYPE_PATCH, TYPE_AP, TYPE_RESOURCE, TYPE_RES_FILE, TYPE_HNPS_FILE,
 };
 
 std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)
 {
     std::string typeStr = TYPE_OTHER;
-    auto operatorIter = ARGS_MAP.find(extractFileType);
-    if (operatorIter != ARGS_MAP.end()) {
-        typeStr = operatorIter->second;
+    for (size_t i = 0; i < ARGS_MAP_KEY.size(); i++) {
+        if (extractFileType == ARGS_MAP_KEY[i]) {
+            typeStr = ARGS_MAP_VALUE[i];
+            break;
+        }
     }
-
     return typeStr;
 }
 }

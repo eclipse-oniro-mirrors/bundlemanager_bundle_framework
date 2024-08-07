@@ -93,12 +93,12 @@ const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO
 const std::string ENTRY = "entry";
 const std::string CLONE_BUNDLE_PREFIX = "clone_";
 
-const std::map<ProfileType, const char*> PROFILE_TYPE_MAP = {
-    { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
-    { ProfileType::ADDITION_PROFILE, ADDITION_PROFILE_PATH},
-    { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
-    { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH },
-    { ProfileType::PKG_CONTEXT_PROFILE, PKG_CONTEXT_PROFILE_PATH }
+const ProfileType PROFILE_TYPE_MAP_KEY[] = {
+    ProfileType::INTENT_PROFILE, ProfileType::ADDITION_PROFILE, ProfileType::NETWORK_PROFILE,
+    ProfileType::UTD_SDT_PROFILE, ProfileType::PKG_CONTEXT_PROFILE
+};
+const char* PROFILE_TYPE_MAP_VALUE[] = {
+    INTENT_PROFILE_PATH, ADDITION_PROFILE_PATH, NETWORK_PROFILE_PATH, UTD_SDT_PROFILE_PATH, PKG_CONTEXT_PROFILE_PATH
 };
 const std::string SCHEME_END = "://";
 const std::string LINK_FEATURE = "linkFeature";
@@ -6785,12 +6785,17 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-    auto mapItem = PROFILE_TYPE_MAP.find(profileType);
-    if (mapItem == PROFILE_TYPE_MAP.end()) {
+    size_t i = 0;
+    for (i = 0; i < sizeof(PROFILE_TYPE_MAP_KEY) / sizeof(PROFILE_TYPE_MAP_KEY[0]); i++) {
+        if (profileType == PROFILE_TYPE_MAP_KEY[i]) {
+            break;
+        }
+    }
+    if (i == sizeof(PROFILE_TYPE_MAP_KEY) / sizeof(PROFILE_TYPE_MAP_KEY[0])) {
         APP_LOGE("profileType: %{public}d is invalid", profileType);
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
-    std::string profilePath = mapItem->second;
+    std::string profilePath = PROFILE_TYPE_MAP_VALUE[i];
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     const auto &item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {

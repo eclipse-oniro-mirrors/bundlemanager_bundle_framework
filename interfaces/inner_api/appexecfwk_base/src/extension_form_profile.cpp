@@ -384,22 +384,22 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     std::set<int32_t> supportDimensionSet {};
     for (const auto &dimension: form.supportDimensions) {
-        unsigned long i = 0;
-        for (i = 0; i < sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0]); i++) {
+        size_t i = 0;
+        for (i = 0; i < sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0]); i++) {
             if (dimensionMapKey[i] == dimension) break;
         }
-        if (i == sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0])) {
+        if (i == sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0])) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
         supportDimensionSet.emplace(dimensionMapValue[i]);
     }
 
-    unsigned long i = 0;
-    for (i = 0; i < sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0]); i++) {
+    size_t i = 0;
+    for (i = 0; i < sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0]); i++) {
         if (dimensionMapKey[i] == form.defaultDimension) break;
     }
-    if (i == sizeof(dimensionMapKey)/sizeof(dimensionMapKey[0])) {
+    if (i == sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0])) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;
     }
@@ -419,11 +419,11 @@ bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &i
 {
     std::set<int32_t> supportShapeSet {};
     for (const auto &shape: form.supportShapes) {
-        unsigned long i = 0;
-        for (i = 0; i < sizeof(shapeMapKey)/sizeof(shapeMapKey[0]); i++) {
+        size_t i = 0;
+        for (i = 0; i < sizeof(shapeMapKey) / sizeof(shapeMapKey[0]); i++) {
             if (shapeMapKey[i] == shape) break;
         }
-        if (i == sizeof(shapeMapKey)/sizeof(shapeMapKey[0])) {
+        if (i == sizeof(shapeMapKey) / sizeof(shapeMapKey[0])) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
@@ -453,19 +453,19 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
 
-    for (unsigned long i = 0; i < sizeof(formColorModeMapKey)/sizeof(formColorModeMapKey[0]); i++) {
+    for (size_t i = 0; i < sizeof(formColorModeMapKey) / sizeof(formColorModeMapKey[0]); i++) {
         if (formColorModeMapKey[i] == form.colorMode) {
             info.colorMode = formColorModeMapValue[i];
         }
     }
 
-    for (unsigned long i = 0; i < sizeof(formTypeMapKey)/sizeof(formTypeMapKey[0]); i++) {
+    for (size_t i = 0; i < sizeof(formTypeMapKey) / sizeof(formTypeMapKey[0]); i++) {
         if (formTypeMapKey[i] == form.type) {
             info.type = formTypeMapValue[i];
         }
     }
 
-    for (unsigned long i = 0; i < sizeof(uiSyntaxMapKey)/sizeof(uiSyntaxMapKey[0]); i++) {
+    for (size_t i = 0; i < sizeof(uiSyntaxMapKey) / sizeof(uiSyntaxMapKey[0]); i++) {
         if (uiSyntaxMapKey[i] == form.uiSyntax) {
             info.uiSyntax = uiSyntaxMapValue[i];
         }

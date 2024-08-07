@@ -60,66 +60,41 @@ const char* NEED_CREATE_SANDBOX = "needCreateSandbox";
 const char* DATA_GROUP_IDS = "dataGroupIds";
 const char* JSON_KEY_VALID_DATA_GROUP_IDS = "validDataGroupIds";
 
-const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
-    { "form", ExtensionAbilityType::FORM },
-    { "workScheduler", ExtensionAbilityType::WORK_SCHEDULER },
-    { "inputMethod", ExtensionAbilityType::INPUTMETHOD },
-    { "service", ExtensionAbilityType::SERVICE },
-    { "accessibility", ExtensionAbilityType::ACCESSIBILITY },
-    { "dataShare", ExtensionAbilityType::DATASHARE },
-    { "fileShare", ExtensionAbilityType::FILESHARE },
-    { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
-    { "wallpaper", ExtensionAbilityType::WALLPAPER },
-    { "backup", ExtensionAbilityType::BACKUP },
-    { "window", ExtensionAbilityType::WINDOW },
-    { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
-    { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
-    { "thumbnail", ExtensionAbilityType::THUMBNAIL },
-    { "preview", ExtensionAbilityType::PREVIEW },
-    { "print", ExtensionAbilityType::PRINT },
-    { "share", ExtensionAbilityType::SHARE },
-    { "push", ExtensionAbilityType::PUSH },
-    { "driver", ExtensionAbilityType::DRIVER },
-    { "action", ExtensionAbilityType::ACTION },
-    { "adsService", ExtensionAbilityType::ADS_SERVICE },
-    { "embeddedUI", ExtensionAbilityType::EMBEDDED_UI },
-    { "statusBarView", ExtensionAbilityType::STATUS_BAR_VIEW },
-    { "insightIntentUI", ExtensionAbilityType::INSIGHT_INTENT_UI },
-    { "autoFill/password", ExtensionAbilityType::AUTO_FILL_PASSWORD },
-    { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
-    { "ui", ExtensionAbilityType::UI },
-    { "remoteNotification", ExtensionAbilityType::REMOTE_NOTIFICATION },
-    { "remoteLocation", ExtensionAbilityType::REMOTE_LOCATION },
-    { "voip", ExtensionAbilityType::VOIP },
-    { "accountLogout", ExtensionAbilityType::ACCOUNTLOGOUT },
-    { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
-    { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
-    { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
-    { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL },
-    { "sysDialog/power", ExtensionAbilityType::SYSDIALOG_POWER },
-    { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE },
-    { "hms/account", ExtensionAbilityType::HMS_ACCOUNT },
-    { "ads", ExtensionAbilityType::ADS },
-    { "sysDialog/meetimeCall", ExtensionAbilityType::SYSDIALOG_MEETIMECALL },
-    { "sysDialog/meetimeContact", ExtensionAbilityType::SYSDIALOG_MEETIMECONTACT },
-    { "sysDialog/meetimeMessage", ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE },
-    { "sysDialog/print", ExtensionAbilityType::SYSDIALOG_PRINT },
-    { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
-    { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
-    { "sysPicker/photoPicker", ExtensionAbilityType::SYSPICKER_PHOTOPICKER },
-    { "sysPicker/navigation", ExtensionAbilityType::SYSPICKER_NAVIGATION },
-    { "sysPicker/appSelector", ExtensionAbilityType::SYSPICKER_APPSELECTOR },
-    { "sysPicker/camera", ExtensionAbilityType::SYSPICKER_CAMERA },
-    { "sysPicker/filePicker", ExtensionAbilityType::SYSPICKER_FILEPICKER },
-    { "sysPicker/audioPicker", ExtensionAbilityType::SYSPICKER_AUDIOPICKER },
-    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
-    { "vpn", ExtensionAbilityType::VPN },
-    { "autoFill/smart", ExtensionAbilityType::AUTO_FILL_SMART },
-    { "liveViewLockScreen", ExtensionAbilityType::LIVEVIEW_LOCKSCREEN },
-    { "photoEditor", ExtensionAbilityType::PHOTO_EDITOR },
-    { "sysPicker/photoEditor", ExtensionAbilityType::SYSPICKER_PHOTOEDITOR },
-    { "sys/visualExtension", ExtensionAbilityType::SYS_VISUAL },
-    { "uiService", ExtensionAbilityType::UI_SERVICE }
+const char* EXTENSION_TYPE_MAP_KEY[] = {
+    "form", "workScheduler", "inputMethod", "service", "accessibility", "dataShare", "fileShare", "staticSubscriber",
+    "wallpaper", "backup", "window", "enterpriseAdmin", "fileAccess", "thumbnail", "preview", "print", "share", "push",
+    "driver", "action", "adsService", "embeddedUI", "statusBarView", "insightIntentUI", "autoFill/password",
+    "appAccountAuthorization", "ui", "remoteNotification", "remoteLocation", "voip", "accountLogout",
+    "sysDialog/userAuth", "sysDialog/common", "sysPicker/mediaControl", "sysDialog/atomicServicePanel",
+    "sysDialog/power", "sysPicker/share", "hms/account", "ads", "sysDialog/meetimeCall",
+    "sysDialog/meetimeContact", "sysDialog/meetimeMessage", "sysDialog/print", "sysPicker/meetimeContact",
+    "sysPicker/meetimeCallLog", "sysPicker/photoPicker", "sysPicker/camera", "sysPicker/navigation",
+    "sysPicker/appSelector", "sys/commonUI", "vpn", "autoFill/smart", "liveViewLockScreen",
+    "photoEditor", "sysPicker/photoEditor", "sys/visualExtension", "uiService"
+};
+const ExtensionAbilityType EXTENSION_TYPE_MAP_VALUE[] = {
+    ExtensionAbilityType::FORM, ExtensionAbilityType::WORK_SCHEDULER, ExtensionAbilityType::INPUTMETHOD,
+    ExtensionAbilityType::SERVICE, ExtensionAbilityType::ACCESSIBILITY, ExtensionAbilityType::DATASHARE,
+    ExtensionAbilityType::FILESHARE, ExtensionAbilityType::STATICSUBSCRIBER, ExtensionAbilityType::WALLPAPER,
+    ExtensionAbilityType::BACKUP, ExtensionAbilityType::WINDOW, ExtensionAbilityType::ENTERPRISE_ADMIN,
+    ExtensionAbilityType::FILEACCESS_EXTENSION, ExtensionAbilityType::THUMBNAIL, ExtensionAbilityType::PREVIEW,
+    ExtensionAbilityType::PRINT, ExtensionAbilityType::SHARE, ExtensionAbilityType::PUSH, ExtensionAbilityType::DRIVER,
+    ExtensionAbilityType::ACTION, ExtensionAbilityType::ADS_SERVICE, ExtensionAbilityType::EMBEDDED_UI,
+    ExtensionAbilityType::STATUS_BAR_VIEW, ExtensionAbilityType::INSIGHT_INTENT_UI,
+    ExtensionAbilityType::AUTO_FILL_PASSWORD, ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION,
+    ExtensionAbilityType::UI, ExtensionAbilityType::REMOTE_NOTIFICATION, ExtensionAbilityType::REMOTE_LOCATION,
+    ExtensionAbilityType::VOIP, ExtensionAbilityType::ACCOUNTLOGOUT, ExtensionAbilityType::SYSDIALOG_USERAUTH,
+    ExtensionAbilityType::SYSDIALOG_COMMON, ExtensionAbilityType::SYSPICKER_MEDIACONTROL,
+    ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL, ExtensionAbilityType::SYSDIALOG_POWER,
+    ExtensionAbilityType::SYSPICKER_SHARE, ExtensionAbilityType::HMS_ACCOUNT, ExtensionAbilityType::ADS,
+    ExtensionAbilityType::SYSDIALOG_MEETIMECALL, ExtensionAbilityType::SYSDIALOG_MEETIMECONTACT,
+    ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE, ExtensionAbilityType::SYSDIALOG_PRINT,
+    ExtensionAbilityType::SYSPICKER_MEETIMECONTACT, ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG,
+    ExtensionAbilityType::SYSPICKER_PHOTOPICKER, ExtensionAbilityType::SYSPICKER_NAVIGATION,
+    ExtensionAbilityType::SYSPICKER_APPSELECTOR, ExtensionAbilityType::SYS_COMMON_UI, ExtensionAbilityType::VPN,
+    ExtensionAbilityType::AUTO_FILL_SMART, ExtensionAbilityType::LIVEVIEW_LOCKSCREEN, ExtensionAbilityType::PHOTO_EDITOR,
+    ExtensionAbilityType::SYSPICKER_PHOTOEDITOR, ExtensionAbilityType::SYS_VISUAL,
+    ExtensionAbilityType::UI_SERVICE
 };
 
 // the new extension type does not need to be added here
@@ -640,8 +615,10 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
 
 ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
 {
-    if (EXTENSION_TYPE_MAP.find(type) != EXTENSION_TYPE_MAP.end()) {
-        return EXTENSION_TYPE_MAP.at(type);
+    for (size_t i = 0; i < sizeof(EXTENSION_TYPE_MAP_KEY) / sizeof(EXTENSION_TYPE_MAP_KEY[0]); i++) {
+        if (type == EXTENSION_TYPE_MAP_KEY[i]) {
+            return EXTENSION_TYPE_MAP_VALUE[i];
+        }
     }
 
     return ExtensionAbilityType::UNSPECIFIED;
@@ -649,9 +626,9 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
 
 std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
 {
-    for (const auto &[key, val] : EXTENSION_TYPE_MAP) {
-        if (val == type) {
-            return key;
+    for (size_t i = 0; i < sizeof(EXTENSION_TYPE_MAP_KEY) / sizeof(EXTENSION_TYPE_MAP_KEY[0]); i++) {
+        if (EXTENSION_TYPE_MAP_VALUE[i] == type) {
+            return EXTENSION_TYPE_MAP_KEY[i];
         }
     }
 

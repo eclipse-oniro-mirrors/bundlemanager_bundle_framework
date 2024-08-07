@@ -106,19 +106,32 @@ const std::string COMPILE_MODE = "compileMode";
 const std::string COMPILE_RESULT = "compileResult";
 const std::string FAILURE_REASON = "failureReason";
 
-const std::unordered_map<InstallScene, std::string> INSTALL_SCENE_STR_MAP = {
-    { InstallScene::NORMAL, NORMAL_SCENE },
-    { InstallScene::BOOT, BOOT_SCENE },
-    { InstallScene::REBOOT, REBOOT_SCENE },
-    { InstallScene::CREATE_USER, CREATE_USER_SCENE },
-    { InstallScene::REMOVE_USER, REMOVE_USER_SCENE },
+const InstallScene INSTALL_SCENE_STR_MAP_KEY[] = {
+    InstallScene::NORMAL,
+    InstallScene::BOOT,
+    InstallScene::REBOOT,
+    InstallScene::CREATE_USER,
+    InstallScene::REMOVE_USER,
+};
+const char* INSTALL_SCENE_STR_MAP_VALUE[] = {
+    NORMAL_SCENE,
+    BOOT_SCENE,
+    REBOOT_SCENE,
+    CREATE_USER_SCENE,
+    REMOVE_USER_SCENE,
 };
 
-const std::unordered_map<UserEventType, std::string> USER_TYPE_STR_MAP = {
-    { UserEventType::CREATE_START, CREATE_START },
-    { UserEventType::CREATE_END, CREATE_END },
-    { UserEventType::REMOVE_START, REMOVE_START },
-    { UserEventType::REMOVE_END, REMOVE_END },
+const UserEventType USER_TYPE_STR_MAP_KEY[] = {
+    UserEventType::CREATE_START,
+    UserEventType::CREATE_END,
+    UserEventType::REMOVE_START,
+    UserEventType::REMOVE_END,
+};
+const char* USER_TYPE_STR_MAP_VALUE[] = {
+    CREATE_START,
+    CREATE_END,
+    REMOVE_START,
+    REMOVE_END,
 };
 
 std::string GetInstallType(const EventInfo& eventInfo)
@@ -136,9 +149,11 @@ std::string GetInstallType(const EventInfo& eventInfo)
 std::string GetInstallScene(const EventInfo& eventInfo)
 {
     std::string installScene = NORMAL_SCENE;
-    auto iter = INSTALL_SCENE_STR_MAP.find(eventInfo.preBundleScene);
-    if (iter != INSTALL_SCENE_STR_MAP.end()) {
-        installScene = iter->second;
+    for (size_t i = 0; i < sizeof(INSTALL_SCENE_STR_MAP_KEY) / sizeof(InstallScene); i++) {
+        if (eventInfo.preBundleScene == INSTALL_SCENE_STR_MAP_KEY[i]) {
+            installScene = INSTALL_SCENE_STR_MAP_VALUE[i];
+            break;
+        }
     }
 
     return installScene;
@@ -147,9 +162,11 @@ std::string GetInstallScene(const EventInfo& eventInfo)
 std::string GetUserEventType(const EventInfo& eventInfo)
 {
     std::string type = UNKNOW;
-    auto iter = USER_TYPE_STR_MAP.find(eventInfo.userEventType);
-    if (iter != USER_TYPE_STR_MAP.end()) {
-        type = iter->second;
+    for (size_t i = 0; i < sizeof(USER_TYPE_STR_MAP_KEY) / sizeof(UserEventType); i++) {
+        if (eventInfo.userEventType == USER_TYPE_STR_MAP_KEY[i]) {
+            type = USER_TYPE_STR_MAP_VALUE[i];
+            break;
+        }
     }
 
     return type;
