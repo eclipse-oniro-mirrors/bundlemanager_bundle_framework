@@ -60,6 +60,10 @@ private:
         std::set<PreInstallBundleInfo> &preInstallBundleInfos);
     void UninstallBackupUninstallList(int32_t userId);
 
+    ErrCode InnerRemoveUser(int32_t userId, bool needLock);
+
+    ErrCode ProcessRemoveUser(int32_t userId);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;
