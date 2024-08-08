@@ -143,11 +143,6 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
-    {
-        return ERR_OK;
-    }
-
     virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId)
     {
         return ERR_OK;
