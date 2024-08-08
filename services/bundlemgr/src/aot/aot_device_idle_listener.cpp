@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,17 +13,19 @@
  * limitations under the License.
  */
 
-#include "aot/aot_handler.h"
+#include "aot/aot_device_idle_listener.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-ChargeIdleListener::ChargeIdleListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
-    : EventFwk::CommonEventSubscriber(subscribeInfo)
-{}
-
-void ChargeIdleListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
+AOTDeviceIdleListener& AOTDeviceIdleListener::GetInstance()
 {
-    APP_LOGI("receive COMMON_EVENT_CHARGE_IDLE_MODE_CHANGED event");
+    static AOTDeviceIdleListener aotDeviceIdleListener;
+    return aotDeviceIdleListener;
+}
+
+void AOTDeviceIdleListener::OnReceiveDeviceIdle()
+{
+    APP_LOGI("handle idle AOT Compiler Tasks");
     auto task = []() {
         AOTHandler::GetInstance().HandleIdle();
     };

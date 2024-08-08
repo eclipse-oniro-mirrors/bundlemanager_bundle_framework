@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,21 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLE_FRAMEWORK_CHARGE_IDLE_LISTENER
-#define FOUNDATION_BUNDLE_FRAMEWORK_CHARGE_IDLE_LISTENER
+#ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_DEVICE_IDLE_LISTENER
+#define FOUNDATION_BUNDLE_FRAMEWORK_AOT_DEVICE_IDLE_LISTENER
 
-#include "common_event_manager.h"
-#include "common_event_subscriber.h"
-#include "common_event_support.h"
+#include "aot/aot_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class ChargeIdleListener : public EventFwk::CommonEventSubscriber {
+class AOTDeviceIdleListener final {
 public:
-    explicit ChargeIdleListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
-    virtual ~ChargeIdleListener() = default;
-    void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+    static AOTDeviceIdleListener& GetInstance();
+    void OnReceiveDeviceIdle();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_BUNDLE_FRAMEWORK_CHARGE_IDLE_LISTENER
+#endif  // FOUNDATION_BUNDLE_FRAMEWORK_AOT_DEVICE_IDLE_LISTENER
