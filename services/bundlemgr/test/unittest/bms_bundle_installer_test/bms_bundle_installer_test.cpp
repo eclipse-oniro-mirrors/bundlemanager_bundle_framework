@@ -107,6 +107,8 @@ const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string TEST_CPU_ABI = "arm64";
+constexpr const char* BMS_SERVICE_PATH = "/data/service";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -6175,6 +6177,19 @@ HWTEST_F(BmsBundleInstallerTest, Install_0001, Function | SmallTest | Level0)
 
     ErrCode ret = bundleInstaller.Install(eventTemplate);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckSystemFreeSizeAndClean_0100
+ * @tc.name: test CheckSystemFreeSizeAndClean
+ * @tc.desc: test CheckSystemFreeSizeAndClean of bundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckSystemFreeSizeAndClean_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.CheckSystemFreeSizeAndClean();
+    bool ret = BundleUtil::CheckSystemFreeSize(BMS_SERVICE_PATH, FIVE_MB);
+    EXPECT_EQ(ret, true);
 }
 
 /**
