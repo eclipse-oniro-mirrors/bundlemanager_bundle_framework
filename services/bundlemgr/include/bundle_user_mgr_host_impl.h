@@ -61,6 +61,10 @@ private:
     void UninstallBackupUninstallList(int32_t userId);
     void GetAllDriverBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos);
 
+    ErrCode InnerRemoveUser(int32_t userId, bool needLock);
+
+    ErrCode ProcessRemoveUser(int32_t userId);
+
     std::mutex bundleUserMgrMutex_;
 
     std::mutex bundleEventMutex_;
