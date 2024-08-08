@@ -36,9 +36,16 @@ public:
 
     ErrCode Install(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
+    ErrCode UnInstall(const std::string &bundleName);
+    ErrCode UnInstall(const std::string &bundleName, const std::string &moduleName);
 private:
     ErrCode BeforeInstall(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
+    ErrCode BeforeUninstall(const std::string &bundleName);
+    bool CheckNeedUninstallBundle(const std::string &moduleName, const InnerBundleInfo &info);
+    ErrCode UnInstall(const std::string &bundleName, const std::string &moduleName, InnerBundleInfo &oldInfo);
+    void RemoveModuleDataDir(
+        const std::string &bundleName, const std::string &moduleName, const InnerBundleInfo &oldInfo);
     ErrCode ProcessInstall(
         const std::vector<std::string> &hspPaths, InstallParam &installParam);
     ErrCode CheckAndParseFiles(
