@@ -3748,7 +3748,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0173, Function | SmallTest
     BundleResourceCallback bundleResourceCallback;
     bool ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
     EXPECT_FALSE(ret);
-    themeId = 1;
+    themeId = 1000;
     ret = bundleResourceCallback.SetThemeIdForThemeChanged(themeId);
     EXPECT_TRUE(ret);
 }

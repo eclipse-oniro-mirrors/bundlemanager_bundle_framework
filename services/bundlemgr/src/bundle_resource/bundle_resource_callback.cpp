@@ -200,10 +200,9 @@ bool BundleResourceCallback::SetThemeIdForThemeChanged(const int32_t themeId)
         return false;
     }
     resConfig->SetThemeId(themeId);
-    Global::Resource::RState ret = resourcePtr->UpdateResConfig(*resConfig);
+    Global::Resource::RState ret = resourcePtr->UpdateResConfig(*resConfig); // no need to process ret
     if (ret != Global::Resource::RState::SUCCESS) {
-        APP_LOGE("UpdateResConfig failed %{public}d, themeId %{public}d", static_cast<int32_t>(ret), themeId);
-        return false;
+        APP_LOGW("UpdateResConfig ret %{public}d, themeId %{public}d", static_cast<int32_t>(ret), themeId);
     }
     APP_LOGI("end set themeId %{public}d", themeId);
 #endif
