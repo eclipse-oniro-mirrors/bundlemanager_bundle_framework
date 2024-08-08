@@ -113,6 +113,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<s
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
 {
     ClearBundleEvents();
+    InstalldClient::GetInstance()->AddUserDirDeleteDfx(userId);
 }
 
 void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
@@ -144,7 +145,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         return;
     }
     GetAllDriverBundleInfos(preInstallBundleInfos);
-
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());

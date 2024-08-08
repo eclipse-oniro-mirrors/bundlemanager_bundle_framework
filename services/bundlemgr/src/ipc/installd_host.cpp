@@ -208,6 +208,9 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         case static_cast<uint32_t>(InstalldInterfaceCode::GET_EXTENSION_SANDBOX_TYPE_LIST):
             result = this->HandleGetExtensionSandboxTypeList(data, reply);
             break;
+        case static_cast<uint32_t>(InstalldInterfaceCode::ADD_USER_DIR_DELETE_DFX):
+            result = this->HandleAddUserDirDeleteDfx(data, reply);
+            break;
         default :
             LOG_W(BMS_TAG_INSTALLD, "installd host receives unknown code, code = %{public}u", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -870,6 +873,17 @@ bool InstalldHost::HandleGetExtensionSandboxTypeList(MessageParcel &data, Messag
             APP_LOGE("write failed");
             return false;
         }
+    }
+    return true;
+}
+
+bool InstalldHost::HandleAddUserDirDeleteDfx(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t userId = data.ReadInt32();
+    ErrCode result = AddUserDirDeleteDfx(userId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (result != ERR_OK) {
+        return false;
     }
     return true;
 }

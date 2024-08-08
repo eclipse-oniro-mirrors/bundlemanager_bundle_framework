@@ -878,6 +878,21 @@ ErrCode InstalldProxy::GetExtensionSandboxTypeList(std::vector<std::string> &typ
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::AddUserDirDeleteDfx(int32_t userId)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, Int32, userId);
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::ADD_USER_DIR_DELETE_DFX, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::CreateExtensionDataDir(const CreateDirParam &createDirParam)
 {
     MessageParcel data;

@@ -60,9 +60,7 @@ InstalldService::~InstalldService()
 void InstalldService::OnStart()
 {
     LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd OnStart");
-    for (const auto &el : ServiceConstants::BUNDLE_EL) {
-        InstalldOperator::AddDeleteDfx(ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + el);
-    }
+    InstalldOperator::AddDeleteDfx(Constants::BUNDLE_CODE_DIR);
     Start();
     if (!Publish(hostImpl_)) {
         LOG_E(BMS_TAG_INSTALLD, "Publish failed");

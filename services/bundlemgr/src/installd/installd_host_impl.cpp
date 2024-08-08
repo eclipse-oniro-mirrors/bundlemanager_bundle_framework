@@ -115,6 +115,7 @@ ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)
         LOG_E(BMS_TAG_INSTALLD, "create bundle dir %{public}s failed, errno:%{public}d", bundleDir.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
+    InstalldOperator::RmvDeleteDfx(bundleDir);
     return ERR_OK;
 }
 
@@ -381,6 +382,31 @@ ErrCode InstalldHostImpl::CreateBundleDataDirWithVector(const std::vector<Create
     return res;
 }
 
+ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        LOG_E(BMS_TAG_INSTALLD, "installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    for (const auto &el : ServiceConstants::BUNDLE_EL) {
+        std::string bundleDataDir = GetBundleDataDir(el, userId) + ServiceConstants::BASE;
+        if (access(bundleDataDir.c_str(), F_OK) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "Base directory %{public}s does not existed, userId:%{public}d",
+                bundleDataDir.c_str(), userId);
+            return ERR_OK;
+        }
+        InstalldOperator::AddDeleteDfx(bundleDataDir);
+        std::string databaseParentDir = GetBundleDataDir(el, userId) + ServiceConstants::DATABASE;
+        if (access(databaseParentDir.c_str(), F_OK) != 0) {
+            LOG_W(BMS_TAG_INSTALLD, "DataBase directory %{public}s does not existed, userId:%{public}d",
+                databaseParentDir.c_str(), userId);
+            return ERR_OK;
+        }
+        InstalldOperator::AddDeleteDfx(databaseParentDir);
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
@@ -417,6 +443,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundledatadir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        InstalldOperator::RmvDeleteDfx(bundleDataDir);
         if (el == ServiceConstants::BUNDLE_EL[1]) {
             for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
@@ -450,6 +477,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             LOG_E(BMS_TAG_INSTALLD, "CreateBundle databaseDir MkOwnerDir failed errno:%{public}d", errno);
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        InstalldOperator::RmvDeleteDfx(databaseDir);
         ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl, hapFlags);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLD, "CreateBundleDataDir SetDirApl failed");
@@ -530,6 +558,7 @@ ErrCode InstalldHostImpl::CreateExtensionDir(const CreateDirParam &createDirPara
                 extensionDir.c_str(), strerror(errno));
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
+        InstalldOperator::RmvDeleteDfx(extensionDir);
         if (isLog) {
             continue;
         }

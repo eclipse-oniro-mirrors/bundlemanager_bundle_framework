@@ -296,7 +296,13 @@ public:
      * @return
      */
     static void AddDeleteDfx(const std::string &path);
-
+    
+   /**
+     * @brief Rmv file Delete dfx
+     * @param path Indicates the directory path to add dfx.
+     * @return
+     */
+    static void RmvDeleteDfx(const std::string &path);
 private:
     static bool OpenHandle(void **handle);
 
