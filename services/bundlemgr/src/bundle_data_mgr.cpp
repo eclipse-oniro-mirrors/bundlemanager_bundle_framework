@@ -832,6 +832,7 @@ ErrCode BundleDataMgr::BatchQueryAbilityInfos(
 bool BundleDataMgr::ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string abilityName = element.GetAbilityName();
@@ -986,6 +987,7 @@ void BundleDataMgr::ImplicitQueryCloneAbilityInfos(
 bool BundleDataMgr::ImplicitQueryAbilityInfos(
     const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -1276,6 +1278,7 @@ bool BundleDataMgr::ImplicitQueryCurCloneAbilityInfos(const Want &want, int32_t 
 ErrCode BundleDataMgr::ImplicitQueryCurAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryCurAbilityInfosV9");
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo innerBundleInfo;
@@ -1419,6 +1422,7 @@ void BundleDataMgr::ImplicitQueryAllCloneAbilityInfos(const Want &want, int32_t 
 void BundleDataMgr::ImplicitQueryAllAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllAbilityInfosV9");
     // query from bundleInfos_
     std::vector<std::string> mimeTypes;
@@ -1498,6 +1502,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
     int32_t userId, std::vector<AbilityInfo> &abilityInfos,
     const std::vector<std::string> &paramMimeTypes, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_SYSTEMAPP_ONLY) && !info.IsSystemApp()) {
         return;
     }
@@ -1630,6 +1635,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags, cons
     int32_t userId, std::vector<AbilityInfo> &abilityInfos,
     const std::vector<std::string> &paramMimeTypes, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) ==
         static_cast<uint32_t>((GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) && !info.IsSystemApp()) {
         LOG_W(BMS_TAG_QUERY, "target not system app");
@@ -2290,6 +2296,7 @@ bool BundleDataMgr::QueryAbilityInfosByUri(const std::string &abilityUri, std::v
 bool BundleDataMgr::GetApplicationInfo(
     const std::string &appName, int32_t flags, const int userId, ApplicationInfo &appInfo) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -2310,6 +2317,7 @@ bool BundleDataMgr::GetApplicationInfo(
 ErrCode BundleDataMgr::GetApplicationInfoV9(
     const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -2563,6 +2571,7 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
 bool BundleDataMgr::GetBundleInfo(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
@@ -2603,6 +2612,7 @@ bool BundleDataMgr::GetBundleInfo(
 ErrCode BundleDataMgr::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<InnerBundleUserInfo> innerBundleUserInfos;
     if (userId == Constants::ANY_USERID) {
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
@@ -4866,6 +4876,7 @@ std::string BundleDataMgr::GetAppPrivilegeLevel(const std::string &bundleName, i
 bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -4910,6 +4921,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
 ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -4972,6 +4984,7 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfos(uint32_t flags, int32_t userId
 bool BundleDataMgr::ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
     ExtensionAbilityInfo &extensionInfo, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string moduleName = element.GetModuleName();
@@ -5145,6 +5158,7 @@ void BundleDataMgr::FilterExtensionAbilityInfosByModuleName(const std::string &m
 bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY, "param invalid");
@@ -5182,6 +5196,7 @@ bool BundleDataMgr::ImplicitQueryExtensionInfos(const Want &want, int32_t flags,
 ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     if (want.GetAction().empty() && want.GetEntities().empty()
         && want.GetUriString().empty() && want.GetType().empty() && want.GetStringParam(LINK_FEATURE).empty()) {
         LOG_W(BMS_TAG_QUERY, "param invalid");
@@ -5220,6 +5235,7 @@ ErrCode BundleDataMgr::ImplicitQueryExtensionInfosV9(const Want &want, int32_t f
 bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryCurExtensionInfos");
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo innerBundleInfo;
@@ -5256,6 +5272,7 @@ bool BundleDataMgr::ImplicitQueryCurExtensionInfos(const Want &want, int32_t fla
 ErrCode BundleDataMgr::ImplicitQueryCurExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryCurExtensionInfosV9");
     std::string bundleName = want.GetElement().GetBundleName();
     InnerBundleInfo innerBundleInfo;
@@ -5294,6 +5311,7 @@ ErrCode BundleDataMgr::ImplicitQueryCurExtensionInfosV9(const Want &want, int32_
 void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllExtensionInfos");
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -5354,6 +5372,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
 void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
     std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     LOG_D(BMS_TAG_QUERY, "begin to ImplicitQueryAllExtensionInfosV9");
     // query from bundleInfos_
     if (appIndex == 0) {
@@ -5466,6 +5485,7 @@ ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t us
 void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
     for (const auto &skillInfos : extensionSkillInfos) {
@@ -5546,6 +5566,7 @@ void BundleDataMgr::EmplaceExtensionInfo(const InnerBundleInfo &info, const std:
 void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
     for (const auto &skillInfos : extensionSkillInfos) {
@@ -5848,9 +5869,9 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    APP_LOGI("action:%{public}s uri:%{private}s type:%{public}s",
-        want.GetAction().c_str(), want.GetUriString().c_str(), want.GetType().c_str());
-    APP_LOGI("flags:%{public}d userId:%{public}d withDefault(bool):%{public}d", flags, userId, withDefault);
+    APP_LOGI_NOFUNC("ImplicitQueryInfos action:%{public}s uri:%{private}s type:%{public}s flags:%{public}d "
+        "userId:%{public}d withDefault:%{public}d", want.GetAction().c_str(), want.GetUriString().c_str(),
+        want.GetType().c_str(), flags, userId, withDefault);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
