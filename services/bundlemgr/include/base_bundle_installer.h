@@ -143,6 +143,11 @@ protected:
     {
         state_ = state;
     }
+
+    std::string GetCurrentBundleName() const
+    {
+        return bundleName_;
+    }
     /**
      * @brief The main function for bundle install by bundleName.
      * @param bundleName Indicates the bundleName of the application to install.

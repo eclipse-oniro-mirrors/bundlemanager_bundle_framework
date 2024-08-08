@@ -264,6 +264,16 @@ public:
         bundleType_ = bundleType;
     }
 
+    bool GetIsNonPreDriverApp() const
+    {
+        return isNonPreDriverApp_;
+    }
+
+    void SetIsNonPreDriverApp(bool isNonPreDriverApp)
+    {
+        isNonPreDriverApp_ = isNonPreDriverApp;
+    }
+
 private:
     std::string bundleName_;
     std::string moduleName_;
@@ -277,6 +287,8 @@ private:
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
     bool systemApp_ = false;
     BundleType bundleType_ = BundleType::APP;
+    // non pre-installed driver app also need to be pre-installed for new user
+    bool isNonPreDriverApp_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

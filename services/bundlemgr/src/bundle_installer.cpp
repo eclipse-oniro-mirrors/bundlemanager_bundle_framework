@@ -51,6 +51,7 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     } else {
         resultCode = InstallBundle(
             bundleFilePath, installParam, Constants::AppType::THIRD_PARTY_APP);
+        InstallDriverForAllUsers(bundleFilePath, installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -72,6 +73,7 @@ void BundleInstaller::Recover(const std::string &bundleName, const InstallParam 
         }
     } else {
         resultCode = BaseBundleInstaller::Recover(bundleName, installParam);
+        RecoverDriverForAllUsers(bundleName, installParam);
     }
 
     if (statusReceiver_ != nullptr) {
@@ -96,6 +98,7 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
         NotifyAllBundleStatus();
     } else {
         resultCode = InstallBundle(bundleFilePaths, installParam, Constants::AppType::THIRD_PARTY_APP);
+        InstallDriverForAllUsers(bundleFilePaths, installParam);
     }
     std::string resultMsg = GetCheckResultMsg();
     SetCheckResultMsg("");
@@ -115,7 +118,7 @@ void BundleInstaller::InstallByBundleName(const std::string &bundleName, const I
 void BundleInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
-    if (installParam.userId == Constants::ALL_USERID) {
+    if (installParam.userId == Constants::ALL_USERID || HasDriverExtensionAbility(bundleName)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -158,7 +161,7 @@ void BundleInstaller::Uninstall(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
     ErrCode resultCode = ERR_OK;
-    if (installParam.userId == Constants::ALL_USERID) {
+    if (installParam.userId == Constants::ALL_USERID || HasDriverExtensionAbility(bundleName)) {
         std::vector<ErrCode> errCode;
         auto userInstallParam = installParam;
         for (auto userId : GetExistsCommonUserIds()) {
@@ -213,6 +216,86 @@ std::set<int32_t> BundleInstaller::GetExistsCommonUserIds()
         }
     }
     return userIds;
+}
+
+void BundleInstaller::InstallDriverForAllUsers(const std::string &bundleFilePath, const InstallParam &installParam)
+{
+    std::vector<std::string> bundleFilePaths { bundleFilePath };
+    InstallDriverForAllUsers(bundleFilePaths, installParam);
+}
+
+void BundleInstaller::InstallDriverForAllUsers(const std::vector<std::string> &bundleFilePaths,
+    const InstallParam &installParam)
+{
+    std::string bundleName = GetCurrentBundleName();
+    if (!HasDriverExtensionAbility(bundleName)) {
+        APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
+        return;
+    }
+    APP_LOGI("bundle %{public}s has driver extension ability, need to install for all users", bundleName.c_str());
+    ResetInstallProperties();
+    auto userInstallParam = installParam;
+    userInstallParam.allUser = true;
+    for (auto userId : GetExistsCommonUserIds()) {
+        if (userId == installParam.userId) {
+            continue;
+        }
+        userInstallParam.userId = userId;
+        userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
+        ErrCode resultCode = InstallBundle(
+            bundleFilePaths, userInstallParam, Constants::AppType::THIRD_PARTY_APP);
+        ResetInstallProperties();
+        if (resultCode != ERR_OK) {
+            APP_LOGE("install driver for user %{public}d failed, resultCode: %{public}d", userId, resultCode);
+        }
+    }
+    NotifyAllBundleStatus();
+}
+
+void BundleInstaller::RecoverDriverForAllUsers(const std::string &bundleName, const InstallParam &installParam)
+{
+    if (!HasDriverExtensionAbility(bundleName)) {
+        APP_LOGD("bundle %{public}s has no driver extension ability", bundleName.c_str());
+        return;
+    }
+    APP_LOGI("bundle %{public}s has driver extension ability, need to recover for all users", bundleName.c_str());
+    ResetInstallProperties();
+    auto userInstallParam = installParam;
+    for (auto userId : GetExistsCommonUserIds()) {
+        if (userId == installParam.userId) {
+            continue;
+        }
+        userInstallParam.userId = userId;
+        userInstallParam.installFlag = InstallFlag::REPLACE_EXISTING;
+        ErrCode resultCode = BaseBundleInstaller::Recover(bundleName, userInstallParam);
+        ResetInstallProperties();
+        if (resultCode != ERR_OK) {
+            APP_LOGE("recover driver for user %{public}d failed, resultCode: %{public}d", userId, resultCode);
+        }
+    }
+}
+
+bool BundleInstaller::HasDriverExtensionAbility(const std::string &bundleName)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("Get dataMgr shared_ptr nullptr");
+        return false;
+    }
+
+    InnerBundleInfo info;
+    bool isAppExist = dataMgr->FetchInnerBundleInfo(bundleName, info);
+    if (isAppExist) {
+        const auto extensions = info.GetInnerExtensionInfos();
+        for (const auto &item : extensions) {
+            if (item.second.type == ExtensionAbilityType::DRIVER) {
+                APP_LOGI("find driver extension ability, bundleName: %{public}s, moduleName: %{public}s",
+                    item.second.bundleName.c_str(), item.second.moduleName.c_str());
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 void BundleInstaller::UninstallAndRecover(const std::string &bundleName, const InstallParam &installParam)
