@@ -248,7 +248,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
     for (auto previousState = stateRange.first; previousState != stateRange.second; ++previousState) {
         if (item->second == previousState->second) {
             APP_LOGD("update result:success, current:%{public}d, state:%{public}d",
-                int(previousState->second), int(state));
+                static_cast<int32_t>(previousState->second), static_cast<int32_t>(state));
             if (IsDeleteDataState(state)) {
                 installStates_.erase(item);
                 DeleteBundleInfo(bundleName, state);
@@ -259,7 +259,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
         }
     }
     APP_LOGW("bundleName: %{public}s, update result:fail, reason:incorrect current:%{public}d, state:%{public}d",
-        bundleName.c_str(), int(item->second), int(state));
+        bundleName.c_str(), static_cast<int32_t>(item->second), static_cast<int32_t>(state));
     return false;
 }
 
@@ -367,6 +367,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         oldInfo.UpdateOdidByBundleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
@@ -430,6 +431,7 @@ bool BundleDataMgr::RemoveModuleInfo(
         }
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGD("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -542,6 +544,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.UpdateModuleInfo(newInfo);
         oldInfo.SetAsanEnabled(oldInfo.IsAsanEnabled());
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
+        oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
@@ -3938,7 +3941,8 @@ bool BundleDataMgr::EnableBundle(const std::string &bundleName)
     return true;
 }
 
-ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, int32_t appIndex, bool &isEnabled) const
+ErrCode BundleDataMgr::IsApplicationEnabled(
+    const std::string &bundleName, int32_t appIndex, bool &isEnabled, int32_t userId) const
 {
     APP_LOGD("IsApplicationEnabled %{public}s", bundleName.c_str());
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
@@ -3947,7 +3951,7 @@ ErrCode BundleDataMgr::IsApplicationEnabled(const std::string &bundleName, int32
         APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t responseUserId = infoItem->second.GetResponseUserId(GetUserId());
+    int32_t responseUserId = infoItem->second.GetResponseUserId(GetUserId(userId));
     if (appIndex == 0) {
         ErrCode ret = infoItem->second.GetApplicationEnabledV9(responseUserId, isEnabled);
         if (ret != ERR_OK) {
@@ -7711,7 +7715,8 @@ void BundleDataMgr::FilterAbilityInfosByAppLinking(const Want &want, int32_t fla
     }
     for (auto &filteredAbilityInfo : filteredAbilityInfos) {
         for (auto &abilityInfo : abilityInfos) {
-            if (filteredAbilityInfo.name == abilityInfo.name) {
+            if (filteredAbilityInfo.bundleName == abilityInfo.bundleName &&
+                filteredAbilityInfo.name == abilityInfo.name) {
                 abilityInfo.linkType = LinkType::APP_LINK;
                 break;
             }
@@ -8151,14 +8156,15 @@ ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, 
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     bool isEnabled = false;
-    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled);
+    ErrCode ret = IsApplicationEnabled(shortcutInfo.bundleName, shortcutInfo.appIndex, isEnabled, userId);
     if (ret != ERR_OK) {
-        APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
-            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, ret);
+        APP_LOGD("IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+            ret, shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
         return ret;
     }
     if (!isEnabled) {
-        APP_LOGD("BundleName: %{public}s is disabled", shortcutInfo.bundleName.c_str());
+        APP_LOGD("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
+            shortcutInfo.bundleName.c_str(), shortcutInfo.appIndex, userId);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
     bool isIdIllegal = false;
@@ -8195,14 +8201,16 @@ ErrCode BundleDataMgr::GetAllDesktopShortcutInfo(int32_t userId, std::vector<Sho
     shortcutStorage_->GetAllDesktopShortcutInfo(userId, datas);
     for (const auto &data : datas) {
         bool isEnabled = false;
-        ErrCode ret = IsApplicationEnabled(data.bundleName, data.appIndex, isEnabled);
+        ErrCode ret = IsApplicationEnabled(data.bundleName, data.appIndex, isEnabled, userId);
         if (ret != ERR_OK) {
-            APP_LOGD("IsApplicationEnabled failed, bundleName:%{public}s, appIndex:%{public}d, ret:%{public}d",
-                data.bundleName.c_str(), data.appIndex, ret);
+            APP_LOGD(
+                "IsApplicationEnabled ret:%{public}d, bundleName:%{public}s, appIndex:%{public}d, userId:%{public}d",
+                ret, data.bundleName.c_str(), data.appIndex, userId);
             continue;
         }
         if (!isEnabled) {
-            APP_LOGD("BundleName: %{public}s is disabled", data.bundleName.c_str());
+            APP_LOGD("BundleName: %{public}s is disabled, appIndex:%{public}d, userId:%{public}d",
+                data.bundleName.c_str(), data.appIndex, userId);
             continue;
         }
         shortcutInfos.emplace_back(data);

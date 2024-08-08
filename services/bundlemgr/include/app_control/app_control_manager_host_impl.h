@@ -75,8 +75,8 @@ public:
     virtual ErrCode GetDisposedRule(
         const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
 
-    virtual ErrCode GetAbilityRunningControlRule(
-        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
+    virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
+        std::vector<DisposedRule>& disposedRules, int32_t appIndex = Constants::MAIN_APP_INDEX) override;
     
     virtual ErrCode SetDisposedRuleForCloneApp(
         const std::string &appId, DisposedRule &DisposedRule, int32_t appIndex, int32_t userId) override;

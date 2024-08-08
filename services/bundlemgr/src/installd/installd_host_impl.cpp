@@ -301,9 +301,10 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
 {
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "CreateBackupExtHomeDir backup dir empty, type  %{public}d",
+            static_cast<int32_t>(dirType));
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -323,9 +324,10 @@ static void CreateNewBackupExtHomeDir(const std::string &bundleName, const int32
 {
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "CreateNewBackupExtHomeDir backup dir empty, type  %{public}d",
+            static_cast<int32_t>(dirType));
         return;
     }
     // Setup BackupExtensionAbility's home directory in a harmless way
@@ -547,9 +549,10 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "RemoveBackupExtHomeDir backup dir empty, type  %{public}d",
+            static_cast<int32_t>(dirType));
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -565,9 +568,10 @@ static ErrCode RemoveNewBackupExtHomeDir(const std::string &bundleName, const in
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "RemoveNewBackupExtHomeDir backup dir empty, type  %{public}d",
+            static_cast<int32_t>(dirType));
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -583,9 +587,10 @@ static void CleanBackupExtHomeDir(const std::string &bundleName, const int useri
     std::string bundleBackupDir;
     GetBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "CleanBackupExtHomeDir backup dir empty, type %{public}d",
+            static_cast<int32_t>(dirType));
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
@@ -599,9 +604,10 @@ static void CleanNewBackupExtHomeDir(const std::string &bundleName, const int us
     std::string bundleBackupDir;
     GetNewBackupExtDirByType(bundleBackupDir, bundleName, dirType);
     LOG_D(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir begin, type %{public}d, path %{public}s",
-        int(dirType), bundleBackupDir.c_str());
+        static_cast<int32_t>(dirType), bundleBackupDir.c_str());
     if (bundleBackupDir.empty()) {
-        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d", int(dirType));
+        LOG_W(BMS_TAG_INSTALLD, "CleanNewBackupExtHomeDir backup dir empty, type %{public}d",
+            static_cast<int32_t>(dirType));
         return;
     }
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));

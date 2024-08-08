@@ -143,6 +143,7 @@ constexpr const char* MODULE_ASAN_ENABLED = "asanEnabled";
 constexpr const char* MODULE_GWP_ASAN_ENABLED = "gwpAsanEnabled";
 constexpr const char* MODULE_PACKAGE_NAME = "packageName";
 constexpr const char* MODULE_APP_STARTUP = "appStartup";
+constexpr const char* MODULE_HWASAN_ENABLED = "hwasanEnabled";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -442,6 +443,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_GWP_ASAN_ENABLED, info.gwpAsanEnabled},
         {MODULE_PACKAGE_NAME, info.packageName},
         {MODULE_APP_STARTUP, info.appStartup},
+        {MODULE_HWASAN_ENABLED, info.hwasanEnabled},
     };
 }
 
@@ -1036,6 +1038,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         MODULE_APP_STARTUP,
         info.appStartup,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_HWASAN_ENABLED,
+        info.hwasanEnabled,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -4271,6 +4281,23 @@ bool InnerBundleInfo::IsGwpAsanEnabled() const
     for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
             if (module.gwpAsanEnabled) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool InnerBundleInfo::IsHwasanEnabled() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.hwasanEnabled) {
+            return true;
+        }
+    }
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
+        for (const auto &module : modules) {
+            if (module.hwasanEnabled) {
                 return true;
             }
         }

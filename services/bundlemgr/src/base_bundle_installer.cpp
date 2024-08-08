@@ -639,7 +639,8 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
 
 void BaseBundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    LOG_D(BMS_TAG_INSTALLER, "UpdateInstallerState in BaseBundleInstaller state %{public}d", int(state));
+    LOG_D(BMS_TAG_INSTALLER, "UpdateInstallerState in BaseBundleInstaller state %{public}d",
+        static_cast<int32_t>(state));
     SetInstallerState(state);
 }
 
@@ -4261,9 +4262,6 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     }
     if (!CheckReleaseTypeIsCompatible(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME;
-    }
-    if (oldInfo.GetAppDistributionType() != newInfo.GetAppDistributionType()) {
-        return ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME;
     }
     if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
         return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;

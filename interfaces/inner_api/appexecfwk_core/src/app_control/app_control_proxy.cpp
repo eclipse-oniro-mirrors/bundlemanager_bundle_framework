@@ -522,7 +522,7 @@ ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule 
 }
 
 ErrCode AppControlProxy::GetAbilityRunningControlRule(
-    const std::string &bundleName, int32_t userId, std::vector<DisposedRule> &rules)
+    const std::string &bundleName, int32_t userId, std::vector<DisposedRule> &rules, int32_t appIndex)
 {
     LOG_D(BMS_TAG_DEFAULT, "begin to call GetAbilityRunningControlRule");
     MessageParcel data;
@@ -538,7 +538,11 @@ ErrCode AppControlProxy::GetAbilityRunningControlRule(
         LOG_E(BMS_TAG_DEFAULT, "write userId failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE, data, rules);
+    if (!data.WriteInt32(appIndex)) {
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE, data, rules);
 }
 
 ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
@@ -563,7 +567,7 @@ ErrCode AppControlProxy::SetDisposedRuleForCloneApp(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(appIndex)) {
-        LOG_E(BMS_TAG_DEFAULT, "write appIndex appIndex");
+        LOG_E(BMS_TAG_DEFAULT, "write appIndex failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -720,30 +724,31 @@ int32_t AppControlProxy::GetParcelableInfos(
 }
 
 template<typename T>
-bool AppControlProxy::GetParcelableInfos(
-    AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
+ErrCode AppControlProxy::GetParcelableInfosWithErrCode(AppControlManagerInterfaceCode code, MessageParcel &data,
+    std::vector<T> &parcelableInfos)
 {
     MessageParcel reply;
-    if (!SendRequest(code, data, reply)) {
-        return false;
+    if (SendRequest(code, data, reply) != NO_ERROR) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    if (!reply.ReadBool()) {
-        LOG_E(BMS_TAG_DEFAULT, "readParcelableInfo failed");
-        return false;
-    }
-
-    int32_t infoSize = reply.ReadInt32();
-    for (int32_t i = 0; i < infoSize; i++) {
-        std::unique_ptr<T> info(reply.ReadParcelable<T>());
-        if (info == nullptr) {
-            LOG_E(BMS_TAG_DEFAULT, "Read Parcelable infos failed");
-            return false;
+    ErrCode res = reply.ReadInt32();
+    if (res == ERR_OK) {
+        int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
+        for (int32_t i = 0; i < infoSize; i++) {
+            std::unique_ptr<T> info(reply.ReadParcelable<T>());
+            if (info == nullptr) {
+                APP_LOGE("Read Parcelable infos failed");
+                return ERR_APPEXECFWK_PARCEL_ERROR;
+            }
+            parcelableInfos.emplace_back(*info);
         }
-        parcelableInfos.emplace_back(*info);
+        APP_LOGD("get parcelable infos success");
     }
-    LOG_D(BMS_TAG_DEFAULT, "get parcelable infos success");
-    return true;
+    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    return res;
 }
 
 int32_t AppControlProxy::SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)

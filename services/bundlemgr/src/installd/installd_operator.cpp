@@ -1565,7 +1565,8 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD,
         "bundleId %{public}d, installBundleType %{public}d, isCompressNativeLibrary %{public}d, path %{public}s",
-        bundleId, int(installBundleType), isCompressNativeLibrary, checkEncryptionParam.modulePath.c_str());
+        bundleId, static_cast<int32_t>(installBundleType),
+        isCompressNativeLibrary, checkEncryptionParam.modulePath.c_str());
 
     BundleExtractor extractor(checkEncryptionParam.modulePath);
     if (!extractor.Init()) {
@@ -1614,7 +1615,7 @@ bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncry
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
     LOG_D(BMS_TAG_INSTALLD, "CheckHapEncryption the hapPath is %{public}s, installBundleType is %{public}d, "
         "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
-        int(installBundleType), bundleId, isCompressNativeLibrary);
+        static_cast<int32_t>(installBundleType), bundleId, isCompressNativeLibrary);
 #if defined(CODE_ENCRYPTION_ENABLE)
     std::unordered_map<std::string, std::string> entryMap;
     entryMap.emplace(ServiceConstants::CODE_SIGNATURE_HAP, hapPath);

@@ -21,11 +21,11 @@
 /* SAID: 401 */
 namespace OHOS {
 namespace AppExecFwk {
-enum class BundleManagerCallbackInterfaceCode : uint8_t {
+enum class BundleManagerCallbackInterfaceCode : uint32_t {
         QUERY_RPC_ID_CALLBACK = 0,
 };
 
-enum class InstalldInterfaceCode : uint8_t {
+enum class InstalldInterfaceCode : uint32_t {
     CREATE_BUNDLE_DIR = 1,
     EXTRACT_MODULE_FILES,
     RENAME_MODULE_DIR,

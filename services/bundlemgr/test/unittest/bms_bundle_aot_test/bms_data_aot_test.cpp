@@ -1070,6 +1070,31 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_3000, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: AOTHandler_3000
+ * @tc.name: test AOTHandler
+ * @tc.desc: test ClearArkAp function running normally
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_3100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    BundleInfo bundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    ClearDataMgr();
+    std::string curAOTVersion = AOTHandler::GetInstance().GetCurAOTVersion();
+    EXPECT_EQ(curAOTVersion.empty(), false);
+    std::string oldAOTVersion;
+    (void)AOTHandler::GetInstance().GetOldAOTVersion(oldAOTVersion);
+    EXPECT_EQ(oldAOTVersion, "");
+    AOTHandler::GetInstance().ClearArkAp(curAOTVersion, oldAOTVersion);
+    ResetDataMgr();
+}
+
+/**
  * @tc.number: AOTExecutor_1200
  * @tc.name: test GetSubjectInfo
  * @tc.desc: test GetSubjectInfo function running normally

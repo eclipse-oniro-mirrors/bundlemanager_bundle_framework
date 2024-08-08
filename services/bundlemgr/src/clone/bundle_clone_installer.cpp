@@ -202,13 +202,13 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleInstall(const std::string &bundl
     };
     uid_ = uid;
     accessTokenId_ = newTokenIdEx.tokenIdExStruct.tokenID;
+    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
     ErrCode addRes = dataMgr->AddCloneBundle(bundleName, attr);
     if (addRes != ERR_OK) {
         APP_LOGE("dataMgr add clone bundle fail, bundleName: %{public}s, userId: %{public}d, appIndex: %{public}d",
             bundleName.c_str(), userId, appIndex);
         return addRes;
     }
-    ScopeGuard addCloneBundleGuard([&] { dataMgr->RemoveCloneBundle(bundleName, userId, appIndex); });
 
     ErrCode result = CreateCloneDataDir(info, userId, uid, appIndex);
     if (result != ERR_OK) {
@@ -270,6 +270,10 @@ ErrCode BundleCloneInstaller::ProcessCloneBundleUninstall(const std::string &bun
     }
     uid_ = it->second.uid;
     accessTokenId_ = it->second.accessTokenId;
+    if (BundlePermissionMgr::DeleteAccessTokenId(accessTokenId_) !=
+        AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+        APP_LOGE("delete AT failed clone");
+    }
     if (!AbilityManagerHelper::UninstallApplicationProcesses(bundleName, uid_, false, appIndex)) {
         APP_LOGE("fail to kill running application");
     }

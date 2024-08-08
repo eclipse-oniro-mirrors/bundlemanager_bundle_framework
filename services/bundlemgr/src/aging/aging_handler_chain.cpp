@@ -68,7 +68,7 @@ bool AgingHandlerChain::InnerProcess(AgingRequest &request) const
     for (auto handler : handlers_) {
         isPassed = !handler->Process(request);
         APP_LOGD("agingHandler: passed: %{public}d, type: %{public}d",
-            isPassed, int(request.GetAgingCleanType()));
+            isPassed, static_cast<int32_t>(request.GetAgingCleanType()));
         if (isPassed) {
             break;
         }
