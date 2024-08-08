@@ -397,4 +397,141 @@ HWTEST_F(BmsBundleInstallerPermissionTest, CreateBundleDataDirWithVector_0100, F
     ret = installdHostImpl.CreateBundleDataDirWithVector(createDirParams);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetBundleCachePath_0100
+ * @tc.name: test GetBundleCachePath
+ * @tc.desc: 1.Test the GetBundleCachePath of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetBundleCachePath_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string dir;
+    std::vector<std::string> cachePath;
+    auto ret = installdHostImpl.GetBundleCachePath(dir, cachePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CreateExtensionDataDir_0100
+ * @tc.name: test CreateExtensionDataDir
+ * @tc.desc: 1.Test the CreateExtensionDataDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CreateExtensionDataDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    CreateDirParam createDirParam;
+    auto ret = installdHostImpl.CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetFileStat_0100
+ * @tc.name: test GetFileStat
+ * @tc.desc: test GetFileStat of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetFileStat_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string file = "test.file";
+    FileStat fileStat;
+    ErrCode ret = installdHostImpl.GetFileStat(file, fileStat);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_0100
+ * @tc.name: test VerifyCodeSignature
+ * @tc.desc: 1.Test the VerifyCodeSignature of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, VerifyCodeSignature_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "";
+    ErrCode ret = installdHostImpl.VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetNativeLibraryFileNames_0100
+ * @tc.name: test GetNativeLibraryFileNames
+ * @tc.desc: 1.Test the GetNativeLibraryFileNames of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetNativeLibraryFileNames_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> fileNames;
+    std::string filePath = "/data/test/xxx.hap";
+    std::string cpuAbi = "libs/arm";
+
+    ErrCode ret = installdHostImpl.GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CheckEncryption_0100
+ * @tc.name: test CheckEncryption
+ * @tc.desc: 1.Test the CheckEncryption of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CheckEncryption_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    bool isEncrypted = false;
+    ErrCode ret = installdHostImpl.CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractDriverSoFiles_0100
+ * @tc.name: test ExtractDriverSoFiles
+ * @tc.desc: 1.Test the ExtractDriverSoFiles of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ExtractDriverSoFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::unordered_multimap<std::string, std::string> dirMap;
+    std::string srcPath = "test.src.psth";
+    ErrCode ret = installdHostImpl.ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ExtractDiffFiles_0100
+ * @tc.name: test ExtractDiffFiles
+ * @tc.desc: test ExtractDiffFiles of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ExtractDiffFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string filePath;
+    std::string targetPath = "test.target.path";
+    std::string cpuAbi;
+    ErrCode ret = installdHostImpl.ExtractDiffFiles(filePath, targetPath, cpuAbi);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    filePath = "test.permission.path";
+    ret = installdHostImpl.ExtractDiffFiles(filePath, targetPath, cpuAbi);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ApplyDiffPatch_0100
+ * @tc.name: test ApplyDiffPatch
+ * @tc.desc: test ApplyDiffPatch of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ApplyDiffPatch_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string oldSoPath = "test.old.so.path";
+    std::string diffFilePath;
+    std::string newSoPath = "new.so.path";
+    int32_t uid = -1;
+    ErrCode ret = installdHostImpl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    diffFilePath = "test.diff.file.path";
+    ret = installdHostImpl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS
