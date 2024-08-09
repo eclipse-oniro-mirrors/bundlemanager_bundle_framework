@@ -1111,6 +1111,7 @@ void BMSEventHandler::ProcessRebootBundle()
     InnerProcessRebootUninstallWrongBundle();
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
+    ProcessRebootAppServiceUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessRebootQuickFixUnInstallAndRecover(QUICK_FIX_APP_RECOVER_FILE);
     ProcessBundleResourceInfo();
@@ -1918,6 +1919,103 @@ void BMSEventHandler::InnerProcessRebootSystemHspInstall(const std::list<std::st
     }
 }
 
+void BMSEventHandler::ProcessRebootAppServiceUninstall()
+{
+    APP_LOGI("Reboot scan and OTA uninstall for appServiceFwk start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    for (const auto &loadIter : loadExistData_) {
+        std::string bundleName = loadIter.first;
+        auto listIter = hapParseInfoMap_.find(bundleName);
+        if (listIter == hapParseInfoMap_.end()) {
+            continue;
+        }
+
+        InnerBundleInfo info;
+        if (!dataMgr->FetchInnerBundleInfo(bundleName, info)) {
+            APP_LOGW("app(%{public}s) maybe has been uninstall.", bundleName.c_str());
+            continue;
+        }
+        if (info.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
+            continue;
+        }
+        // Check the installed module
+        bool isDownGrade = false;
+        if (InnerProcessUninstallAppServiceModule(info, listIter->second, isDownGrade)) {
+            APP_LOGI("bundleName:%{public}s need delete module", bundleName.c_str());
+        }
+        if (isDownGrade) {
+            APP_LOGI("bundleName:%{public}s is being downgraded for ota", bundleName.c_str());
+            continue;
+        }
+        // Check the preInstall path in Db.
+        // If the corresponding Hap does not exist, it should be deleted.
+        auto parserInfoMap = listIter->second;
+        for (const auto &preBundlePath : loadIter.second.GetBundlePaths()) {
+            auto parserInfoIter = parserInfoMap.find(preBundlePath);
+            if (parserInfoIter != parserInfoMap.end()) {
+                APP_LOGI("OTA uninstall app(%{public}s) module path(%{public}s) exits.",
+                    bundleName.c_str(), preBundlePath.c_str());
+                continue;
+            }
+
+            APP_LOGI("OTA app(%{public}s) delete path(%{public}s).",
+                bundleName.c_str(), preBundlePath.c_str());
+            DeletePreInfoInDb(bundleName, preBundlePath, false);
+        }
+    }
+    APP_LOGI("Reboot scan and OTA uninstall for appServiceFwk success");
+}
+
+bool BMSEventHandler::InnerProcessUninstallAppServiceModule(const InnerBundleInfo &innerBundleInfo,
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade)
+{
+    if (infos.empty()) {
+        APP_LOGI("bundleName:%{public}s infos is empty", innerBundleInfo.GetBundleName().c_str());
+        return false;
+    }
+    if (innerBundleInfo.GetVersionCode() > infos.begin()->second.GetVersionCode()) {
+        APP_LOGI("bundleName:%{public}s version code is bigger than new pre-hap",
+            innerBundleInfo.GetBundleName().c_str());
+        isDownGrade = true;
+        return false;
+    }
+    std::vector<std::string> moduleNameList;
+    innerBundleInfo.GetModuleNames(moduleNameList);
+    // Check the installed module.
+    // If the corresponding module does not exist, it should be uninstalled.
+    std::vector<std::string> moduleNeedUnsinstall;
+    for (const auto &moduleName : moduleNameList) {
+        bool isModuleExist = false;
+        for (const auto &parserInfoIter : infos) {
+            auto parserModuleNames = parserInfoIter.second.GetModuleNameVec();
+            if (!parserModuleNames.empty() && moduleName == parserModuleNames[0]) {
+                isModuleExist = true;
+                break;
+            }
+        }
+
+        if (!isModuleExist) {
+            APP_LOGI("ProcessRebootBundleUninstall OTA app(%{public}s) uninstall module(%{public}s).",
+                innerBundleInfo.GetBundleName().c_str(), moduleName.c_str());
+            moduleNeedUnsinstall.emplace_back(moduleName);
+        }
+    }
+    if (moduleNeedUnsinstall.empty()) {
+        return ERR_OK;
+    }
+    for (const std::string &moduleName : moduleNeedUnsinstall) {
+        AppServiceFwkInstaller installer;
+        if (installer.UnInstall(innerBundleInfo.GetBundleName(), moduleName) != ERR_OK) {
+            APP_LOGW("uninstall failed");
+        }
+    }
+    return true;
+}
+
 ErrCode BMSEventHandler::OTAInstallSystemHsp(const std::vector<std::string> &filePaths)
 {
     InstallParam installParam;
@@ -2462,8 +2560,13 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
             continue;
         }
         // Check the installed module
-        if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second)) {
+        bool isDownGrade = false;
+        if (InnerProcessUninstallModule(hasInstalledInfo, listIter->second, isDownGrade)) {
             LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s need delete module", bundleName.c_str());
+        }
+        if (isDownGrade) {
+            LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s is being downgraded for ota", bundleName.c_str());
+            continue;
         }
         // Check the preInstall path in Db.
         // If the corresponding Hap does not exist, it should be deleted.
@@ -2486,7 +2589,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
 }
 
 bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
-    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+    const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade)
 {
     if (infos.empty()) {
         LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s infos is empty", bundleInfo.name.c_str());
@@ -2494,6 +2597,7 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
     }
     if (bundleInfo.versionCode > infos.begin()->second.GetVersionCode()) {
         LOG_I(BMS_TAG_DEFAULT, "%{public}s version code is bigger than new pre-hap", bundleInfo.name.c_str());
+        isDownGrade = true;
         return false;
     }
     for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {

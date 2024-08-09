@@ -5946,4 +5946,35 @@ HWTEST_F(BmsBundleManagerTest, InitExtendResourceManager_0010, Function | SmallT
     auto result = DelayedSingleton<BundleMgrService>::GetInstance()->GetExtendResourceManager();
     EXPECT_NE(result, nullptr);
 }
+
+/**
+ * @tc.number: GetAllDriverBundleName_0100
+ * @tc.name: test GetAllDriverBundleName without driver bundle
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllDriverBundleName_0100, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    dataMgr->bundleInfos_.clear();
+    std::vector<std::string> ret = dataMgr->GetAllDriverBundleName();
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: GetAllDriverBundleName_0200
+ * @tc.name: test GetAllDriverBundleName within driver bundle
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllDriverBundleName_0200, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    InnerBundleInfo info;
+    ExtensionAbilityInfo abilityInfo;
+    abilityInfo.type = ExtensionAbilityType::DRIVER;
+    info.InsertExtensionInfo("key", abilityInfo);
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME, info);
+    std::vector<std::string> ret = dataMgr->GetAllDriverBundleName();
+    EXPECT_EQ(ret.size(), 1);
+    dataMgr->bundleInfos_.clear();
+}
 } // OHOS

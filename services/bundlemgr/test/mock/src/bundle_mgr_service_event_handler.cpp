@@ -540,7 +540,7 @@ void BMSEventHandler::AddParseInfosToMap(
 void BMSEventHandler::ProcessRebootBundleUninstall() {}
 
 bool BMSEventHandler::InnerProcessUninstallModule(
-    const BundleInfo& bundleInfo, const std::unordered_map<std::string, InnerBundleInfo>& infos)
+    const BundleInfo& bundleInfo, const std::unordered_map<std::string, InnerBundleInfo>& infos, bool &isDowngrade)
 {
     return true;
 }

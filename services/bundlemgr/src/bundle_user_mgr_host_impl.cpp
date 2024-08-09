@@ -130,8 +130,11 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     }
 
     if (dataMgr->HasUserId(userId)) {
-        APP_LOGE("Has create user %{public}d", userId);
-        return;
+        APP_LOGW("Has create user %{public}d", userId);
+        ErrCode ret = InnerRemoveUser(userId, false); // no need lock
+        if (ret != ERR_OK) {
+            APP_LOGW("remove user %{public}d failed, error %{public}d", userId, ret);
+        }
     }
 
     dataMgr->AddUserId(userId);
@@ -140,6 +143,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
         APP_LOGE("GetAllPreInstallBundleInfos failed %{public}d", userId);
         return;
     }
+    GetAllDriverBundleInfos(preInstallBundleInfos);
 
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
@@ -150,7 +154,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
-        installParam.isPreInstallApp = true;
+        installParam.isPreInstallApp = !info.GetIsNonPreDriverApp();
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
@@ -204,6 +208,23 @@ bool BundleUserMgrHostImpl::GetAllPreInstallBundleInfos(
     return !preInstallBundleInfos.empty();
 }
 
+void BundleUserMgrHostImpl::GetAllDriverBundleInfos(std::set<PreInstallBundleInfo> &preInstallBundleInfos)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    // get all non pre-installed driver apps to install for new user
+    std::vector<std::string> driverBundleNames = dataMgr->GetAllDriverBundleName();
+    for (auto &driverBundleName : driverBundleNames) {
+        PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(driverBundleName);
+        preInstallBundleInfo.SetIsNonPreDriverApp(true);
+        preInstallBundleInfos.insert(preInstallBundleInfo);
+    }
+}
+
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 {
     if (userId == Constants::START_USERID) {
@@ -221,11 +242,24 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
+    return InnerRemoveUser(userId, true);
+}
+
+ErrCode BundleUserMgrHostImpl::InnerRemoveUser(int32_t userId, bool needLock)
+{
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
     EventReport::SendCpuSceneEvent(ACCESSTOKEN_PROCESS_NAME, 1 << 1); // second scene
-    APP_LOGI("RemoveUser user(%{public}d) start", userId);
-    std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
+    APP_LOGI("RemoveUser user(%{public}d) start needLock %{public}d", userId, needLock);
+    if (needLock) {
+        std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
+        return ProcessRemoveUser(userId);
+    }
+    return ProcessRemoveUser(userId);
+}
+
+ErrCode BundleUserMgrHostImpl::ProcessRemoveUser(int32_t userId)
+{
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");

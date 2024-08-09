@@ -2633,7 +2633,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuotactl, proxy get error");
         return;
     }
-    
+
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);

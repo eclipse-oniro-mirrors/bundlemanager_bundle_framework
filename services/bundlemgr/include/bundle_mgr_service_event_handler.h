@@ -366,6 +366,11 @@ private:
      */
     void ProcessRebootBundleUninstall();
     /**
+     * @brief Reboot uninstall appFwkService bundles.
+     * @return
+     */
+    void ProcessRebootAppServiceUninstall();
+    /**
      * @brief Get bundle dir by scan.
      * @param bundleDirs Indicates the return bundleDirs.
      * @return
@@ -519,7 +524,9 @@ private:
     void RefreshQuotaForAllUid();
 
     bool InnerProcessUninstallModule(const BundleInfo &bundleInfo,
-        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+        const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade);
+    bool InnerProcessUninstallAppServiceModule(const InnerBundleInfo &innerBundleInfo,
+        const std::unordered_map<std::string, InnerBundleInfo> &infos, bool &isDownGrade);
 
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
