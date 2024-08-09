@@ -107,7 +107,6 @@ constexpr const char* DATA_EXTENSION_PATH = "/extension/";
 const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
 const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
 const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
-const std::string ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -969,7 +968,7 @@ void BaseBundleInstaller::SetAtomicServiceModuleUpgrade(const InnerBundleInfo &o
 
 void BaseBundleInstaller::KillRelatedProcessIfArkWeb(const std::string &bundleName, bool isAppExist, bool isOta)
 {
-    std::string arkWebName = OHOS::system::GetParameter(ARK_WEB_BUNDLE_NAME_PARAM, ARK_WEB_BUNDLE_NAME);
+    std::string arkWebName = OHOS::system::GetParameter(ARK_WEB_BUNDLE_NAME_PARAM, "");
     if (bundleName != arkWebName || !isAppExist || isOta) {
         return;
     }
