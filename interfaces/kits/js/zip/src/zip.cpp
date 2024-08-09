@@ -41,8 +41,9 @@ using FilterCallback = std::function<bool(const FilePath &)>;
 using DirectoryCreator = std::function<bool(FilePath &, FilePath &)>;
 using WriterFactory = std::function<std::unique_ptr<WriterDelegate>(FilePath &, FilePath &)>;
 
-constexpr const char* SEPARATOR = "/";
-constexpr char HIDDEN_SEPARATOR = '.';
+const std::string SEPARATOR = "/";
+const char HIDDEN_SEPARATOR = '.';
+const std::string ZIP = ".zip";
 
 struct UnzipParam {
     FilterCallback filterCB = nullptr;

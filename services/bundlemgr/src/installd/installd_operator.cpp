@@ -46,6 +46,7 @@
 #include "bundle_service_constants.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
+#include "el5_filekey_manager_error.h"
 #include "el5_filekey_manager_kit.h"
 #include "parameters.h"
 #include "securec.h"
@@ -2139,6 +2140,10 @@ bool InstalldOperator::GenerateKeyIdAndSetPolicy(int32_t uid, const std::string 
         uid, bundleName.c_str(), userId);
     auto ret = Security::AccessToken::El5FilekeyManagerKit::GenerateAppKey(
         static_cast<uint32_t>(uid), bundleName, keyId);
+    if (ret == Security::AccessToken::EFM_ERR_KEYID_EXISTED) {
+        LOG_I(BMS_TAG_INSTALLD, "key id is existed");
+        return true;
+    }
     if (ret != 0) {
         LOG_E(BMS_TAG_INSTALLD, "Call GenerateAppKey failed ret = %{public}d", ret);
         return false;

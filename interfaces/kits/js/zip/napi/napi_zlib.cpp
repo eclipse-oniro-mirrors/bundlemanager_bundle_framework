@@ -38,12 +38,12 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-constexpr uint8_t ARGS_MAX_COUNT = 10;
-constexpr int8_t PARAM3 = 3;
-constexpr int8_t PARAM2 = 2;
-constexpr const char* WRONG_PARAM = "wrong param type";
-constexpr const char* SRC_FILE = "inFile";
-constexpr const char* GET_ORIGINAL_SIZE = "GetOriginalSize";
+constexpr size_t ARGS_MAX_COUNT = 10;
+constexpr int32_t PARAM3 = 3;
+constexpr int32_t PARAM2 = 2;
+const char* WRONG_PARAM = "wrong param type";
+const char* SRC_FILE = "inFile";
+const std::string GET_ORIGINAL_SIZE = "GetOriginalSize";
 }
 
 enum CompressFlushMode {

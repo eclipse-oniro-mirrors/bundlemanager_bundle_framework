@@ -96,7 +96,7 @@ constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability
 constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
 constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
+constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold/internal";
 constexpr const char* RESTOR_BUNDLE_NAME_LIST = "list";
 constexpr const char* QUICK_FIX_APP_RECOVER_FILE = "/data/update/quickfix/app/temp/quickfix_app_recover.json";
 
@@ -3329,10 +3329,6 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         if (hapVersionCode <= hasInstalledInfo.versionCode) {
             LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: hapVersionCode is less than old hap versionCode",
                 bundleName.c_str());
-            continue;
-        }
-        if (!hasInstalledInfo.isKeepAlive) {
-            LOG_W(BMS_TAG_DEFAULT, "bundleName: %{public}s: is not keep alive bundle", bundleName.c_str());
             continue;
         }
         InstallParam installParam;

@@ -26,13 +26,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int8_t INDEX_ZERO = 0;
-constexpr int16_t UNSUPPORTED_FEATURE_ERRCODE = 801;
-constexpr const char* UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
-constexpr int8_t INDEX_ONE = 1;
-constexpr int8_t INDEX_TWO = 2;
-constexpr int8_t INDEX_THREE = 3;
-constexpr int8_t NAPI_RETURN_ONE = 1;
+constexpr int32_t INDEX_ZERO = 0;
+constexpr int32_t UNSUPPORTED_FEATURE_ERRCODE = 801;
+const std::string UNSUPPORTED_FEATURE_MESSAGE = "unsupported BundleManagerService feature";
+constexpr int32_t INDEX_ONE = 1;
+constexpr int32_t INDEX_TWO = 2;
+constexpr int32_t INDEX_THREE = 3;
+constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 static napi_value JsLauncherCommon(napi_env env, size_t argc, napi_value *argv)
 {

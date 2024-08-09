@@ -36,14 +36,14 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 // resource name
-constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
-constexpr const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
-constexpr const char* RESOURCE_NAME_OF_INSTALL = "Install";
-constexpr const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
-constexpr const char* RESOURCE_NAME_OF_RECOVER = "Recover";
-constexpr const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
-constexpr const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
-constexpr const char* EMPTY_STRING = "";
+const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
+const char* RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
+const char* RESOURCE_NAME_OF_INSTALL = "Install";
+const char* RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
+const char* RESOURCE_NAME_OF_RECOVER = "Recover";
+const char* RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
+const char* RESOURCE_NAME_OF_UNINSTALL_AND_RECOVER = "UninstallAndRecover";
+const char* EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION =
     "ohos.permission.INSTALL_BUNDLE or "
@@ -58,37 +58,37 @@ constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* CALLBACK = "callback";
 // property name
-constexpr const char* USER_ID = "userId";
-constexpr const char* INSTALL_FLAG = "installFlag";
-constexpr const char* IS_KEEP_DATA = "isKeepData";
-constexpr const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
-constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* HASH_VALUE = "hashValue";
-constexpr const char* HASH_PARAMS = "hashParams";
-constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* APP_INDEX = "appIndex";
-constexpr const char* FILE_PATH = "filePath";
-constexpr const char* ADD_EXT_RESOURCE = "AddExtResource";
-constexpr const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
-constexpr const char* VERSION_CODE = "versionCode";
-constexpr const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
-constexpr const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
-constexpr const char* ADDITIONAL_INFO = "additionalInfo";
-constexpr const char* VERIFY_CODE_PARAM = "verifyCodeParams";
-constexpr const char* SIGNATURE_FILE_PATH = "signatureFilePath";
-constexpr const char* PGO_PARAM = "pgoParams";
-constexpr const char* PGO_FILE_PATH = "pgoFilePath";
-constexpr const char* HAPS_FILE_NEEDED =
+const char* USER_ID = "userId";
+const char* INSTALL_FLAG = "installFlag";
+const char* IS_KEEP_DATA = "isKeepData";
+const char* CROWD_TEST_DEADLINE = "crowdtestDeadline";
+const char* MODULE_NAME = "moduleName";
+const char* HASH_VALUE = "hashValue";
+const char* HASH_PARAMS = "hashParams";
+const char* BUNDLE_NAME = "bundleName";
+const char* APP_INDEX = "appIndex";
+const char* FILE_PATH = "filePath";
+const char* ADD_EXT_RESOURCE = "AddExtResource";
+const char* REMOVE_EXT_RESOURCE = "RemoveExtResource";
+const char* VERSION_CODE = "versionCode";
+const char* SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
+const char* SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
+const char* ADDITIONAL_INFO = "additionalInfo";
+const char* VERIFY_CODE_PARAM = "verifyCodeParams";
+const char* SIGNATURE_FILE_PATH = "signatureFilePath";
+const char* PGO_PARAM = "pgoParams";
+const char* PGO_FILE_PATH = "pgoFilePath";
+const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
-constexpr const char* CREATE_APP_CLONE = "CreateAppClone";
-constexpr const char* DESTROY_APP_CLONE = "destroyAppClone";
-constexpr const char* INSTALL_EXISTED = "installExisted";
-constexpr int8_t FIRST_PARAM = 0;
-constexpr int8_t SECOND_PARAM = 1;
+const char* CREATE_APP_CLONE = "CreateAppClone";
+const char* DESTROY_APP_CLONE = "destroyAppClone";
+const char* INSTALL_EXISTED = "installExisted";
+constexpr int32_t FIRST_PARAM = 0;
+constexpr int32_t SECOND_PARAM = 1;
 
-constexpr int16_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
-constexpr int16_t ADDITIONAL_INFO_MAX_SIZE = 3000;
-constexpr int8_t ILLEGAL_APP_INDEX = -1;
+constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
+constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
+constexpr int32_t ILLEGAL_APP_INDEX = -1;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
 bool g_isSystemApp = false;

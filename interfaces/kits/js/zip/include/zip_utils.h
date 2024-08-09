@@ -49,7 +49,7 @@ using char16 = wchar_t;
 using string16 = std::wstring;
 
 // zip Error
-enum ErrorCode : int8_t {
+enum ErrorCode {
     ERROR_CODE_OK = 0,
     ERROR_CODE_STREAM_END = 1,
     ERROR_CODE_NEED_DICT = 2,

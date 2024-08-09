@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace LIBZIP {
 namespace {
-    constexpr uint8_t ARGS_ONE = 1;
+    constexpr size_t ARGS_ONE = 1;
 }
 
 void HandleEnvCleanup(void *data)

@@ -31,18 +31,18 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-constexpr const char* PARAM_TYPE_CHECK_ERROR = "param type check error";
-constexpr const char* MODULE_NAME = "moduleName";
-constexpr const char* BUNDLE_NAME = "bundleName";
-constexpr const char* TARGET_MODULE_NAME = "targetModuleName";
-constexpr const char* TARGET_BUNDLE_NAME = "targetBundleName";
-constexpr const char* IS_ENABLED = "isEnabled";
-constexpr const char* SET_OVERLAY_ENABLED = "SetOverlayEnabled";
-constexpr const char* SET_OVERLAY_ENABLED_BY_BUNDLE_NAME = "SetOverlayEnabledByBundleName";
-constexpr const char* GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
-constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
-constexpr const char* GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
-constexpr const char* GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+const std::string MODULE_NAME = "moduleName";
+const std::string BUNDLE_NAME = "bundleName";
+const std::string TARGET_MODULE_NAME = "targetModuleName";
+const std::string TARGET_BUNDLE_NAME = "targetBundleName";
+const std::string IS_ENABLED = "isEnabled";
+const std::string SET_OVERLAY_ENABLED = "SetOverlayEnabled";
+const std::string SET_OVERLAY_ENABLED_BY_BUNDLE_NAME = "SetOverlayEnabledByBundleName";
+const std::string GET_OVERLAY_MODULE_INFO = "GetOverlayModuleInfo";
+const std::string GET_TARGET_OVERLAY_MODULE_INFOS = "GetTargetOverlayModuleInfos";
+const std::string GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = "GetOverlayModuleInfoByBundleName";
+const std::string GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME = "GetTargetOverlayModuleInfosByBundleName";
 } // namespace
 
 static OHOS::sptr<OHOS::AppExecFwk::IOverlayManager> GetOverlayMgrProxy()

@@ -31,16 +31,16 @@
 
 using namespace OHOS::AppExecFwk;
 namespace {
-constexpr const char* REGISTERCALLBACK = "BundleStatusChange";
-constexpr const char* UNREGISTERCALLBACK = "BundleStatusChange";
-constexpr const char* TYPE_MISMATCH = "type mismatch";
-constexpr int8_t NAPI_RETURN_ZERO = 0;
-constexpr int8_t OPERATION_SUCESS = 0;
-constexpr int8_t OPERATION_FAILED = 1;
-constexpr int8_t OPERATION_TYPE_MIAMATCH = 2;
-constexpr int8_t INDEX_ONE = 1;
-constexpr int8_t INDEX_TWO = 2;
-constexpr int8_t INDEX_THREE = 3;
+const std::string REGISTERCALLBACK = "BundleStatusChange";
+const std::string UNREGISTERCALLBACK = "BundleStatusChange";
+const std::string TYPE_MISMATCH = "type mismatch";
+constexpr int32_t NAPI_RETURN_ZERO = 0;
+constexpr int32_t OPERATION_SUCESS = 0;
+constexpr int32_t OPERATION_FAILED = 1;
+constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
+constexpr int32_t INDEX_ONE = 1;
+constexpr int32_t INDEX_TWO = 2;
+constexpr int32_t INDEX_THREE = 3;
 }
 
 struct AsyncHandleBundleContext {
@@ -49,13 +49,13 @@ struct AsyncHandleBundleContext {
     napi_deferred deferred = nullptr;
     napi_ref callbackRef = 0;
     OHOS::sptr<BundleStatusCallback> bundleStatusCallback = nullptr;
-    bool ret = false;
-    int32_t userId = 0;
-    uint32_t err = 0;
-    std::string bundleName;
-    std::string message;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
+    std::string bundleName;
+    int32_t userId = 0;
+    bool ret = false;
+    uint32_t err = 0;
+    std::string message;
 };
 
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()

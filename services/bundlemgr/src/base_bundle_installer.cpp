@@ -1443,7 +1443,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo);
+    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -2842,13 +2842,14 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
     const std::string &dir)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
             info.GetBundleName().c_str(), userId_);
         return;
     }
+    LOG_I(BMS_TAG_INSTALLER, "create el5 dir: %{public}s, uid: %{public}d",
+        dir.c_str(), newInnerBundleUserInfo.uid);
     int32_t mode = S_IRWXU;
     int32_t gid = newInnerBundleUserInfo.uid;
     if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
@@ -2895,30 +2896,26 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
         }
         return;
     }
-    bool dirExist = false;
     for (const std::string &dir : dirs) {
-        if (InstalldClient::GetInstance()->IsExistDir(dir, dirExist) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "check if dir existed failed");
-            return;
-        }
-        if (!dirExist) {
-            LOG_D(BMS_TAG_INSTALLER, "ScreenLockProtectionDir: %{public}s need to be created", dir.c_str());
-            CreateScreenLockProtectionExistDirs(info, dir);
-        }
+        LOG_D(BMS_TAG_INSTALLER, "create el5 dir: %{public}s.", dir.c_str());
+        CreateScreenLockProtectionExistDirs(info, dir);
     }
-    if (!dirExist) {
-        if (!SetEncryptionDirPolicy(info)) {
-            LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
-        }
+    if (!SetEncryptionDirPolicy(info)) {
+        LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
     }
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const
 {
     if (oldInfo.GetBundleName().empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
+    if (isKeepData) {
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(oldInfo.GetBundleName());
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {

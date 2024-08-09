@@ -31,19 +31,19 @@ constexpr int32_t ZLIB_SYS_CAP_TAG = 17800000;
 const std::string ZLIB_TAG_ERR_CODE = "code";
 const std::string ZLIB_TAG_ERR_MSG = "message";
 
-enum ELegacy : uint16_t {
+enum ELegacy {
     ELEGACY_INVAL = 202,
     ELEGACY_IO = 300,
     ELEGACY_NOENT = 301,
     ELEGACY_ARGUMENT = 400,
 };
 
-enum ErrCodeSystem : uint8_t {
+enum ErrCodeSystem {
     ERR_CODE_SYSTEM_LEGACY,
     ERR_CODE_SYSTEM_POSIX,
 };
 
-enum ErrCodeSuffix : uint8_t {
+enum ErrCodeSuffix {
     E_PERM = 1,
     E_NOENT,
     E_SRCH,

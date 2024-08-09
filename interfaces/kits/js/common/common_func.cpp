@@ -31,8 +31,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int8_t NAPI_RETURN_ZERO = 0;
-constexpr int8_t NAPI_RETURN_ONE = 1;
+constexpr int32_t NAPI_RETURN_ZERO = 0;
+constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
@@ -71,9 +71,9 @@ constexpr const char* CUSTOM_DATA = "customData";
 constexpr const char* KEY = "key";
 constexpr const char* VALUE = "value";
 constexpr const char* CODE_PATH = "codePath";
-constexpr const char* PATH_PREFIX = "/data/app/el1/bundle/public";
-constexpr const char* CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
-constexpr const char* CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
+const std::string PATH_PREFIX = "/data/app/el1/bundle/public";
+const std::string CODE_PATH_PREFIX = "/data/storage/el1/bundle/";
+const std::string CONTEXT_DATA_STORAGE_BUNDLE("/data/storage/el1/bundle/");
 constexpr const char* SYSTEM_APP = "systemApp";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* CODE_PATHS = "codePaths";
