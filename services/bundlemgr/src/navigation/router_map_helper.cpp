@@ -51,7 +51,7 @@ std::string RouterMapHelper::ExtractVersionFromOhmurl(const std::string &ohmurl)
     size_t lastAmpersandPos = ohmurl.rfind('&');
     std::string versionString;
     if (lastAmpersandPos == std::string::npos) {
-        APP_LOGI("No ampersand found in the input ohmurl");
+        APP_LOGI_NOFUNC("No ampersand found in the input ohmurl");
         return versionString;
     }
     // "+1" for start intercepting after the "&" character

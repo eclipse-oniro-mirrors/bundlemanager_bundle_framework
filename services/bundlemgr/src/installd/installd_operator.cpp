@@ -865,7 +865,7 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
     }
     std::string filePath = dir;
     if (!isRealPath && !PathToRealPath(dir, filePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", dir.c_str());
         return 0;
     }
     DIR *dirPtr = opendir(filePath.c_str());

@@ -4122,9 +4122,8 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        APP_LOGE(
-            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
-            bundleName.c_str(), userId, appIndex, flags, res);
+        APP_LOGE_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+            " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
     return ERR_OK;
