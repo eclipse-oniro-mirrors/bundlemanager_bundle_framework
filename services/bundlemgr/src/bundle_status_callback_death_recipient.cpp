@@ -21,12 +21,12 @@ namespace OHOS {
 namespace AppExecFwk {
 BundleStatusCallbackDeathRecipient::BundleStatusCallbackDeathRecipient()
 {
-    APP_LOGI("create BundleStatusCallbackDeathRecipient instance");
+    APP_LOGI_NOFUNC("create BundleStatusCallbackDeathRecipient instance");
 }
 
 BundleStatusCallbackDeathRecipient::~BundleStatusCallbackDeathRecipient()
 {
-    APP_LOGI("destroy BundleStatusCallbackDeathRecipient instance");
+    APP_LOGI_NOFUNC("destroy BundleStatusCallbackDeathRecipient instance");
 }
 
 void BundleStatusCallbackDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &remote)

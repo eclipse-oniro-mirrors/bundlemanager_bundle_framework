@@ -2705,30 +2705,30 @@ void BMSEventHandler::HandlePreInstallException()
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException pathSize:%{public}zu bundleNameSize:%{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size());
     for (const auto &pathIter : exceptionPaths) {
-        LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallException path: %{public}s", pathIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException path:%{public}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
         bool removable = IsPreInstallRemovable(pathIter);
         if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException path(%{public}s) error", pathIter.c_str());
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
-        LOG_I(BMS_TAG_DEFAULT, "Deleted pre-install exception path: %{public}s", pathIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Del pre-install exception path:%{public}s", pathIter.c_str());
     }
 
     if (exceptionBundleNames.size() > 0) {
-        LOG_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Loading all pre-install bundle infos");
         LoadAllPreInstallBundleInfos();
     }
 
     for (const auto &bundleNameIter : exceptionBundleNames) {
-        LOG_I(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
         auto iter = loadExistData_.find(bundleNameIter);
         if (iter == loadExistData_.end()) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException no bundleName(%{public}s) in PreInstallDb",
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException no bundleName(%{public}s) in PreInstallDb",
                 bundleNameIter.c_str());
             continue;
         }
@@ -2736,15 +2736,16 @@ void BMSEventHandler::HandlePreInstallException()
         const auto &preInstallBundleInfo = iter->second;
         if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
             Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
-            LOG_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error", bundleNameIter.c_str());
+            LOG_NOFUNC_W(BMS_TAG_DEFAULT, "HandlePreInstallException bundleName(%{public}s) error",
+                bundleNameIter.c_str());
         }
 
-        LOG_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Deleting %{public}s from pre-install exception list", bundleNameIter.c_str());
         preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
     }
 
     preInstallExceptionMgr->ClearAll();
-    LOG_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Pre-install exception information cleared successfully");
 }
 
 bool BMSEventHandler::OTAInstallSystemBundle(
