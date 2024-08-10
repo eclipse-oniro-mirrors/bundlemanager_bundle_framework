@@ -438,7 +438,6 @@ constexpr const char* ABILITY_PREFER_MULTI_WINDOW_ORIENTATION_MISSION = "preferM
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
 constexpr const char* ABILITY_CONTINUE_TYPE = "continueType";
-constexpr const char* ABILITY_ORIENTATION_ID = "orientationId";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
