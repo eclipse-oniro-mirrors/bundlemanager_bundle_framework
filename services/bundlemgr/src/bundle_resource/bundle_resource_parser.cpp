@@ -18,6 +18,7 @@
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_image_info.h"
 #include "bundle_resource_drawable.h"
+#include "bundle_service_constants.h"
 #include "json_util.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -165,6 +166,10 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
 bool BundleResourceParser::IsNeedToParseResourceInfo(
     const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo)
 {
+    if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(newResourceInfo.bundleName_) !=
+        ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+        return true;
+    }
     // same labelId and iconId no need to parse again
     if (newResourceInfo.moduleName_ == oldResourceInfo.moduleName_) {
         if ((newResourceInfo.labelId_ == oldResourceInfo.labelId_) &&
