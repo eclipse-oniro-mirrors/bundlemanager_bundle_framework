@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -6142,8 +6142,7 @@ HWTEST_F(BmsBundleDataMgrTest, CheckIsModuleNeedUpdate_0100, Function | MediumTe
 /**
  * @tc.number: BundleMgrHostImplAddDesktopShortcutInfo_0001
  * @tc.name: BundleMgrHostImplAddDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
@@ -6162,8 +6161,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0001, Fun
 /**
  * @tc.number: BundleMgrHostImplAddDesktopShortcutInfo_0002
  * @tc.name: BundleMgrHostImplAddDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
@@ -6182,8 +6180,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0002, Fun
 /**
  * @tc.number: BundleMgrHostImplDeleteDesktopShortcutInfo_0001
  * @tc.name: BundleMgrHostImplDeleteDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
@@ -6202,8 +6199,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0001, 
 /**
  * @tc.number: BundleMgrHostImplDeleteDesktopShortcutInfo_0002
  * @tc.name: BundleMgrHostImplDeleteDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test DeleteDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
@@ -6222,8 +6218,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0002, 
 /**
  * @tc.number: BundleMgrHostImplGetAllDesktopShortcutInfo_0001
  * @tc.name: BundleMgrHostImplGetAllDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
 {
@@ -6244,8 +6239,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, 
 /**
  * @tc.number: BundleMgrHostImplGetAllDesktopShortcutInfo_0002
  * @tc.name: BundleMgrHostImplGetAllDesktopShortcutInfo
- * @tc.desc: 1. system run normally
- *           2. enter if (dataMgr == nullptr)
+ * @tc.desc: test GetAllDesktopShortcutInfo(int32_t userId, std::vector<ShortcutInfo> &shortcutInfos)
  */
 HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
 {
@@ -6279,7 +6273,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrAddDesktopShortcutInfo_0001, Functio
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
     userID = -1;
-    shortcutInfo.id = userID;
+    shortcutInfo.id = "userID";
     ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
@@ -6299,8 +6293,7 @@ HWTEST_F(BmsBundleDataMgrTest, BundleDataMgrAddDesktopShortcutInfo_0002, Functio
     ErrCode ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 
-    userID = -1;
-    shortcutInfo.id = userID;
+    shortcutInfo.id = "userID";
     ret = localBundleDataMgr->AddDesktopShortcutInfo(shortcutInfo, userID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
@@ -6465,5 +6458,119 @@ HWTEST_F(BmsBundleDataMgrTest, ReadFromParcel_0200, Function | SmallTest | Level
 
     bool result = recoverableApplicationInfo.ReadFromParcel(parcel);
     EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleAddDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostHandleAddDesktopShortcutInfo_0001
+ * ShortcutInfo
+ * @tc.desc: test BundleMgrHostHandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleAddDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleAddDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleAddDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostHandleAddDesktopShortcutInfo_0002
+ * ShortcutInfo
+ * @tc.desc: test BundleMgrHostHandleAddDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleAddDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleAddDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleDeleteDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostHandleDeleteDesktopShortcutInfo_0001
+ * ShortcutInfo
+ * @tc.desc: test HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleDeleteDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleDeleteDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleDeleteDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostHandleDeleteDesktopShortcutInfo_0002
+ * ShortcutInfo
+ * @tc.desc: test HandleDeleteDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleDeleteDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleDeleteDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleGetAllDesktopShortcutInfo_0001
+ * @tc.name: BundleMgrHostHandleGetAllDesktopShortcutInfo_0001
+ * ShortcutInfo
+ * @tc.desc: test HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleGetAllDesktopShortcutInfo_0001, Function | SmallTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleGetAllDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleMgrHostHandleGetAllDesktopShortcutInfo_0002
+ * @tc.name: BundleMgrHostHandleGetAllDesktopShortcutInfo_0002
+ * ShortcutInfo
+ * @tc.desc: test HandleGetAllDesktopShortcutInfo(MessageParcel &data, MessageParcel &reply)
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleGetAllDesktopShortcutInfo_0002, Function | MediumTest | Level1)
+{
+    ShortcutInfo shortcutInfo = BmsBundleDataMgrTest::InitShortcutInfo();
+    std::shared_ptr<BundleMgrHost> localBundleMgrHost = std::make_shared<BundleMgrHost>();
+    ASSERT_NE(localBundleMgrHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+
+    auto ret = localBundleMgrHost->HandleGetAllDesktopShortcutInfo(data, reply);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }
