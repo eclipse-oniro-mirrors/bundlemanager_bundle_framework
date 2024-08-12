@@ -306,6 +306,8 @@ struct ApplicationInfo : public Parcelable {
 
     std::string configuration;
 
+    int32_t applicationFlags = 0;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

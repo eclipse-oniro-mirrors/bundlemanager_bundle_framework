@@ -2614,8 +2614,11 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo, int32_t userId, int32_t appIndex) const
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+    int32_t originalUserId = userId;
+    PreProcessAnyUserFlag(bundleName, flags, userId);
+
     if (userId == Constants::ANY_USERID) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
         if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
             LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -2639,6 +2642,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId, appIndex);
+    PostProcessAnyUserFlags(flags, userId, originalUserId, bundleInfo);
 
     ProcessBundleMenu(bundleInfo, flags, true);
     ProcessBundleRouterMap(bundleInfo, flags);
@@ -2728,6 +2732,44 @@ void BundleDataMgr::ProcessBundleRouterMap(BundleInfo& bundleInfo, int32_t flag)
         }
     }
     RouterMapHelper::MergeRouter(bundleInfo);
+}
+
+void BundleDataMgr::PreProcessAnyUserFlag(const std::string &bundleName, int32_t flags, int32_t &userId) const
+{
+    if ((flags & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0) {
+        std::vector<InnerBundleUserInfo> innerBundleUserInfos;
+        if (!GetInnerBundleUserInfos(bundleName, innerBundleUserInfos)) {
+            LOG_W(BMS_TAG_QUERY, "no userInfos for this bundle(%{public}s)", bundleName.c_str());
+            return;
+        }
+        if (innerBundleUserInfos.empty()) {
+            return;
+        }
+        int32_t targetUserId = innerBundleUserInfos.begin()->bundleUserInfo.userId;
+        for (auto &bundleUserInfo: innerBundleUserInfos) {
+            if (bundleUserInfo.bundleUserInfo.userId == userId) {
+                targetUserId = userId;
+                break;
+            }
+        }
+        userId = targetUserId;
+    }
+}
+
+void BundleDataMgr::PostProcessAnyUserFlags(
+    int32_t flags, int32_t userId, int32_t originalUserId, BundleInfo &bundleInfo) const
+{
+    bool withApplicationFlag =
+        (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    bool ofAnyUserFlag =
+        (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER);
+    if (withApplicationFlag && ofAnyUserFlag) {
+        if (userId == originalUserId) {
+            bundleInfo.applicationInfo.applicationFlags |= static_cast<uint64_t>(ApplicationInfoFlag::FLAG_INSTALLED);
+        }
+    }
 }
 
 ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -3111,6 +3153,8 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         LOG_W(BMS_TAG_QUERY, "bundleInfos_ data is empty");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    bool ofAnyUserFlag =
+        (static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER)) != 0;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -3125,7 +3169,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
             flag = GET_APPLICATION_INFO_WITH_DISABLE;
         }
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flag, responseUserId) != ERR_OK) {
-            continue;
+            auto &hp = innerBundleInfo.GetInnerBundleUserInfos();
+            if (ofAnyUserFlag && hp.size() > 0) {
+                responseUserId = hp.begin()->second.bundleUserInfo.userId;
+            } else {
+                continue;
+            }
         }
         uint32_t launchFlag = static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY);
         if (((static_cast<uint32_t>(flags) & launchFlag) == launchFlag) && (innerBundleInfo.IsHideDesktopIcon())) {
@@ -3139,9 +3188,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         }
         ProcessBundleMenu(bundleInfo, flags, true);
         ProcessBundleRouterMap(bundleInfo, flags);
+        PostProcessAnyUserFlags(flags, responseUserId, requestUserId, bundleInfo);
         bundleInfos.emplace_back(bundleInfo);
         // add clone bundle info
-        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+        if (!ofAnyUserFlag) {
+            GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+        }
     }
     if (bundleInfos.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos is empty");
