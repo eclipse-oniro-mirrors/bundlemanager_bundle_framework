@@ -76,25 +76,25 @@ const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 constexpr const char* DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr const char* SKILL_URI_SCHEME_HTTPS = "https";
 constexpr const char* PERMISSION_PROTECT_SCREEN_LOCK_DATA = "ohos.permission.PROTECT_SCREEN_LOCK_DATA";
-constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
+constexpr int16_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
 constexpr const char* SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
-const int32_t THRESHOLD_VAL_LEN = 20;
+constexpr int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
-const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
+constexpr int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 #endif // STORAGE_SERVICE_ENABLE
-const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
-const int32_t SINGLE_HSP_VERSION = 1;
-const int32_t USER_MODE = 0;
-const int32_t ROOT_MODE = 1;
-const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
-const char* IS_ROOT_MODE_PARAM = "const.debuggable";
+constexpr int16_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 200;
+constexpr int8_t SINGLE_HSP_VERSION = 1;
+constexpr int8_t USER_MODE = 0;
+constexpr int8_t ROOT_MODE = 1;
+constexpr const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
+constexpr const char* IS_ROOT_MODE_PARAM = "const.debuggable";
 constexpr const char* BMS_ACTIVATION_LOCK = "persist.bms.activation-lock";
 constexpr const char* BMS_TRUE = "true";
-const int32_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
+constexpr int8_t BMS_ACTIVATION_LOCK_VAL_LEN = 20;
 
 const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.formrenderservice",
@@ -104,10 +104,10 @@ const std::set<std::string> SINGLETON_WHITE_LIST = {
     "com.ohos.FusionSearch"
 };
 constexpr const char* DATA_EXTENSION_PATH = "/extension/";
-const std::string INSTALL_SOURCE_PREINSTALL = "pre-installed";
-const std::string INSTALL_SOURCE_UNKNOWN = "unknown";
-const std::string ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
-const std::string ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
+const char* INSTALL_SOURCE_PREINSTALL = "pre-installed";
+const char* INSTALL_SOURCE_UNKNOWN = "unknown";
+const char* ARK_WEB_BUNDLE_NAME_PARAM = "persist.arkwebcore.package_name";
+const char* ARK_WEB_BUNDLE_NAME = "com.ohos.nweb";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -420,12 +420,13 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         LOG_E(BMS_TAG_INSTALLER, "input versionCode is not exist");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
-    std::string uninstallDir = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
+    std::string uninstallDir = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     if ((versionCodes.size() > SINGLE_HSP_VERSION && versionCode == Constants::ALL_VERSIONCODE) ||
         versionCodes.size() == SINGLE_HSP_VERSION) {
         return UninstallHspBundle(uninstallDir, info.GetBundleName());
     } else {
-        uninstallDir += ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
+        uninstallDir += std::string(ServiceConstants::PATH_SEPARATOR) +
+            HSP_VERSION_PREFIX + std::to_string(versionCode);
         return UninstallHspVersion(uninstallDir, versionCode, info);
     }
 }
@@ -638,7 +639,8 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
 
 void BaseBundleInstaller::UpdateInstallerState(const InstallerState state)
 {
-    LOG_D(BMS_TAG_INSTALLER, "UpdateInstallerState in BaseBundleInstaller state %{public}d", state);
+    LOG_D(BMS_TAG_INSTALLER, "UpdateInstallerState in BaseBundleInstaller state %{public}d",
+        static_cast<int32_t>(state));
     SetInstallerState(state);
 }
 
@@ -2314,7 +2316,7 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
         return ret;
     }
 
-    std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+    std::string newSoPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
@@ -2368,7 +2370,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
         return ret;
     }
 
-    std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+    std::string newSoPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
         std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
     bool isExist = false;
@@ -2496,7 +2498,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         return hqfInfo.moduleName == moduleName;
     });
     if (iter != appQfInfo.hqfInfos.end()) {
-        std::string oldSoPath = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+        std::string oldSoPath = std::string(ServiceConstants::HAP_COPY_PATH) + ServiceConstants::PATH_SEPARATOR +
             bundleName_ + ServiceConstants::TMP_SUFFIX + ServiceConstants::LIBS;
         ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
 
@@ -2524,7 +2526,8 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             }
         }
 
-        const std::string tempDiffPath = ServiceConstants::HAP_COPY_PATH + ServiceConstants::PATH_SEPARATOR +
+        const std::string tempDiffPath = std::string(ServiceConstants::HAP_COPY_PATH) +
+            ServiceConstants::PATH_SEPARATOR +
             bundleName_ + ServiceConstants::TMP_SUFFIX;
         ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
         ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath, tempDiffPath, cpuAbi);
@@ -2533,7 +2536,8 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
 
-        std::string newSoPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+        std::string newSoPath = std::string(Constants::BUNDLE_CODE_DIR) +
+            ServiceConstants::PATH_SEPARATOR + bundleName_ +
             ServiceConstants::PATH_SEPARATOR + ServiceConstants::PATCH_PATH +
             std::to_string(appQfInfo.versionCode) + ServiceConstants::PATH_SEPARATOR + nativeLibraryPath;
         ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath, bundleUid);
@@ -2603,7 +2607,7 @@ ErrCode BaseBundleInstaller::CreateBundleAndDataDir(InnerBundleInfo &info) const
 
 ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 {
-    auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_;
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_;
     LOG_D(BMS_TAG_INSTALLER, "create bundle dir %{public}s", appCodePath.c_str());
     ErrCode result = InstalldClient::GetInstance()->CreateBundleDir(appCodePath);
     if (result != ERR_OK) {
@@ -2779,7 +2783,7 @@ ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
     for (auto &item : oldDataGroupInfos) {
         if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
             !(dataMgr_->IsShareDataGroupId(item.first, userId_)) && !item.second.empty()) {
-            std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+            std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
                 + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + item.second[0].uuid;
             LOG_D(BMS_TAG_INSTALLER, "remove dir: %{public}s", dir.c_str());
             removeGroupDirs_.emplace_back(dir);
@@ -2806,9 +2810,9 @@ std::vector<std::string> BaseBundleInstaller::GenerateScreenLockProtectionDir(co
         LOG_E(BMS_TAG_INSTALLER, "bundleName is empty");
         return dirs;
     }
-    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId_) + ServiceConstants::BASE + bundleName);
-    dirs.emplace_back(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH + ServiceConstants::PATH_SEPARATOR +
+    dirs.emplace_back(std::string(ServiceConstants::SCREEN_LOCK_FILE_DATA_PATH) + ServiceConstants::PATH_SEPARATOR +
         std::to_string(userId_) + ServiceConstants::DATABASE + bundleName);
     return dirs;
 }
@@ -2950,7 +2954,7 @@ void BaseBundleInstaller::DeleteScreenLockProtectionDir(const std::string bundle
 ErrCode BaseBundleInstaller::CreateGroupDirs() const
 {
     for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
@@ -2978,7 +2982,7 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
 void BaseBundleInstaller::DeleteGroupDirsForException() const
 {
     for (const DataGroupInfo &info : createGroupDirs_) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + info.uuid;
         InstalldClient::GetInstance()->RemoveDir(dir);
     }
@@ -3559,7 +3563,7 @@ void BaseBundleInstaller::CreateDataGroupDir(InnerBundleInfo &info) const
     }
 
     for (const DataGroupInfo &dataGroupInfo : dataGroupInfos) {
-        std::string dir = ServiceConstants::REAL_DATA_PATH + ServiceConstants::PATH_SEPARATOR
+        std::string dir = std::string(ServiceConstants::REAL_DATA_PATH) + ServiceConstants::PATH_SEPARATOR
             + std::to_string(userId_) + ServiceConstants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         LOG_D(BMS_TAG_INSTALLER, "create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
@@ -4702,7 +4706,7 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
 ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
 {
     const std::string bundleName = info.GetBundleName();
-    const std::string asanLogDir = ServiceConstants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
+    const std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName
         + ServiceConstants::PATH_SEPARATOR + LOG;
     bool dirExist = false;
@@ -4748,7 +4752,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
 ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
 {
     const std::string bundleName = info.GetBundleName();
-    const std::string asanLogDir = ServiceConstants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
+    const std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId_) + ServiceConstants::PATH_SEPARATOR + bundleName;
     ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
     if (errCode != ERR_OK) {
@@ -4930,7 +4934,7 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
             }
         }
     }
-    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());
@@ -5361,7 +5365,7 @@ ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundle
 
 void BaseBundleInstaller::DeleteOldNativeLibraryPath() const
 {
-    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName_ +
+    std::string oldLibPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName_ +
         ServiceConstants::PATH_SEPARATOR + ServiceConstants::LIBS;
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "bundleNmae: %{public}s remove old libs dir failed", bundleName_.c_str());

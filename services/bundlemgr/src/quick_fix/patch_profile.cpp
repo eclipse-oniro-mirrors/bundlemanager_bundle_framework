@@ -218,7 +218,7 @@ bool PatchProfile::DefaultNativeSo(
     const PatchExtractor &patchExtractor, bool isSystemLib64Exist, AppqfInfo &appqfInfo)
 {
     if (isSystemLib64Exist) {
-        if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+        if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
             appqfInfo.cpuAbi = ServiceConstants::ARM64_V8A;
             auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM64_V8A);
             if (iter != ServiceConstants::ABI_MAP.end()) {
@@ -232,7 +232,7 @@ bool PatchProfile::DefaultNativeSo(
         return false;
     }
 
-    if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+    if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
         appqfInfo.cpuAbi = ServiceConstants::ARM_EABI_V7A;
         auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM_EABI_V7A);
         if (iter != ServiceConstants::ABI_MAP.end()) {
@@ -243,7 +243,7 @@ bool PatchProfile::DefaultNativeSo(
         return false;
     }
 
-    if (patchExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+    if (patchExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
         appqfInfo.cpuAbi = ServiceConstants::ARM_EABI;
         auto iter = ServiceConstants::ABI_MAP.find(ServiceConstants::ARM_EABI);
         if (iter != ServiceConstants::ABI_MAP.end()) {

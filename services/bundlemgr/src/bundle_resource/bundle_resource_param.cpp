@@ -21,10 +21,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t MAX_LEN = 128;
-const std::string SYSTEM_LANGUAGE = "persist.global.locale";
-const std::string DEFAULT_LANGUAGE = "zh-Hans";
-const std::string DEFAULT_COLOR_MODE_LIGHT = "light";
+constexpr int16_t MAX_LEN = 128;
+constexpr const char* SYSTEM_LANGUAGE = "persist.global.locale";
+constexpr const char* DEFAULT_LANGUAGE = "zh-Hans";
+constexpr const char* DEFAULT_COLOR_MODE_LIGHT = "light";
 }
 
 std::string BundleResourceParam::GetSystemLanguage()

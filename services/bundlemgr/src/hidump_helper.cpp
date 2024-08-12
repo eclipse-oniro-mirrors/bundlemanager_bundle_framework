@@ -18,18 +18,18 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t MIN_ARGS_SIZE = 1;
-const int32_t MAX_ARGS_SIZE = 2;
-const int32_t FIRST_PARAM = 0;
-const int32_t SECOND_PARAM = 1;
-const std::string ARGS_HELP = "-h";
-const std::string ARGS_ABILITY = "-ability";
-const std::string ARGS_ABILITY_LIST = "-ability-list";
-const std::string ARGS_BUNDLE = "-bundle";
-const std::string ARGS_BUNDLE_LIST = "-bundle-list";
-const std::string ARGS_DEVICEID = "-device";
-const std::string ILLEGAL_INFOMATION = "The arguments are illegal and you can enter '-h' for help.\n";
-const std::string NO_INFOMATION = "no such infomation\n";
+constexpr int8_t MIN_ARGS_SIZE = 1;
+constexpr int8_t MAX_ARGS_SIZE = 2;
+constexpr int8_t FIRST_PARAM = 0;
+constexpr int8_t SECOND_PARAM = 1;
+constexpr const char* ARGS_HELP = "-h";
+constexpr const char* ARGS_ABILITY = "-ability";
+constexpr const char* ARGS_ABILITY_LIST = "-ability-list";
+constexpr const char* ARGS_BUNDLE = "-bundle";
+constexpr const char* ARGS_BUNDLE_LIST = "-bundle-list";
+constexpr const char* ARGS_DEVICEID = "-device";
+constexpr const char* ILLEGAL_INFOMATION = "The arguments are illegal and you can enter '-h' for help.\n";
+constexpr const char* NO_INFOMATION = "no such infomation\n";
 
 const std::unordered_map<std::string, HidumpFlag> ARGS_MAP = {
     { ARGS_HELP, HidumpFlag::GET_HELP },

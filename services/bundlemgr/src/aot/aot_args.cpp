@@ -21,7 +21,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr uint32_t MAX_HSP_VECTOR_SIZE = 10000;
+constexpr uint16_t MAX_HSP_VECTOR_SIZE = 10000;
 }
 bool HspInfo::ReadFromParcel(Parcel &parcel)
 {
@@ -102,7 +102,7 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
     uint32_t hspVectorSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, hspVectorSize);
-    hspVectorSize = std::min(hspVectorSize, MAX_HSP_VECTOR_SIZE);
+    hspVectorSize = std::min(hspVectorSize, uint32_t(MAX_HSP_VECTOR_SIZE));
     for (uint32_t i = 0; i < hspVectorSize; ++i) {
         std::unique_ptr<HspInfo> hspInfoPtr(parcel.ReadParcelable<HspInfo>());
         if (!hspInfoPtr) {

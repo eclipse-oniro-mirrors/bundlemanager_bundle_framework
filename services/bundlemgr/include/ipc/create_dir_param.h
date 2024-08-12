@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class CreateDirFlag {
+enum class CreateDirFlag : uint8_t {
     // Create all data directories regardless of whether the device is unlocked.
     // Inaccessible directories will fail to be created and errors will be ignored.
     CREATE_DIR_ALL = 0,

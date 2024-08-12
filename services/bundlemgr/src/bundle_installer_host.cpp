@@ -26,8 +26,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string GET_MANAGER_FAIL = "fail to get bundle installer manager";
-const std::string MODULE_UPDATE_DIR = "/module_update/";
+constexpr const char* GET_MANAGER_FAIL = "fail to get bundle installer manager";
+constexpr const char* MODULE_UPDATE_DIR = "/module_update/";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
 int32_t UPPER_DLP_TYPE_BOUND = 3;

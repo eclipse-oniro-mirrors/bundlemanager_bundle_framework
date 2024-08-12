@@ -20,8 +20,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SHARED_TYPE = "shared";
-constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
+constexpr const char* SHARED_TYPE = "shared";
+constexpr int8_t OVERLAY_MAXIMUM_PRIORITY = 100;
 } // namespace
 
 ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
