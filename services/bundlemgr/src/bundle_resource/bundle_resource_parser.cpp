@@ -150,12 +150,12 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
         }
 
         if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfos[index])) {
-            APP_LOGW_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfos[index].GetKey().c_str());
+            APP_LOGW_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfos[index].GetKey().c_str());
         }
     }
     if ((resourceInfos[0].labelNeedParse_ && resourceInfos[0].label_.empty()) ||
         (resourceInfos[0].iconNeedParse_ && resourceInfos[0].icon_.empty())) {
-        APP_LOGE("bundleName:%{public}s moduleName:%{public}s prase resource failed",
+        APP_LOGE_NOFUNC("ParseResourceInfos fail -n %{public}s -m %{public}s",
             resourceInfos[0].bundleName_.c_str(), resourceInfos[0].moduleName_.c_str());
         return false;
     }
@@ -209,7 +209,7 @@ bool BundleResourceParser::ParseResourceInfoWithSameHap(const int32_t userId, Re
         return false;
     }
     if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE_NOFUNC("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseResourceInfo fail key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
     return true;
@@ -237,7 +237,7 @@ bool BundleResourceParser::ParseLabelResourceByPath(
         return false;
     }
     if (!ParseLabelResourceByResourceManager(resourceManager, labelId, label)) {
-        APP_LOGE("ParseLabelResource failed, label %{public}d", labelId);
+        APP_LOGE("ParseLabelResource fail label %{public}d", labelId);
         return false;
     }
     return true;
@@ -278,12 +278,12 @@ bool BundleResourceParser::ParseResourceInfoByResourceManager(
     bool ans = true;
     if (resourceInfo.labelNeedParse_ && !ParseLabelResourceByResourceManager(
         resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
-        APP_LOGE_NOFUNC("ParseLabelResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseLabelResource fail key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
     if (resourceInfo.iconNeedParse_ && !ParseIconResourceByResourceManager(resourceManager, resourceInfo)) {
-        APP_LOGE_NOFUNC("ParseIconResource failed, key %{public}s", resourceInfo.GetKey().c_str());
+        APP_LOGE_NOFUNC("ParseIconResource fail key %{public}s", resourceInfo.GetKey().c_str());
         ans = false;
     }
 
@@ -299,7 +299,7 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
         return false;
     }
     if (labelId <= 0) {
-        APP_LOGW("ParseLabelResource labelId is 0 or less than 0, label is bundleName");
+        APP_LOGW_NOFUNC("ParseLabelResource labelId invalid label is bundleName");
         return false;
     }
     auto ret = resourceManager->GetStringById(static_cast<uint32_t>(labelId), label);

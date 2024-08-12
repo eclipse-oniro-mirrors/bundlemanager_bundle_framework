@@ -89,12 +89,12 @@ using namespace OHOS::Security::CodeSign;
 
 InstalldHostImpl::InstalldHostImpl()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd service instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service created");
 }
 
 InstalldHostImpl::~InstalldHostImpl()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd service instance is destroyed");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd service destroyed");
 }
 
 ErrCode InstalldHostImpl::CreateBundleDir(const std::string &bundleDir)

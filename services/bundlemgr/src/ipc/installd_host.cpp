@@ -36,12 +36,12 @@ constexpr const char* UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 InstalldHost::InstalldHost()
 {
     InitEventHandler();
-    LOG_I(BMS_TAG_INSTALLD, "installd host instance is created");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host created");
 }
 
 InstalldHost::~InstalldHost()
 {
-    LOG_I(BMS_TAG_INSTALLD, "installd host instance is destroyed");
+    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "installd host destroyed");
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)

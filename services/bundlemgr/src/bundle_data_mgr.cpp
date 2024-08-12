@@ -258,7 +258,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
             return true;
         }
     }
-    APP_LOGW("bundleName: %{public}s, update result:fail, reason:incorrect current:%{public}d, state:%{public}d",
+    APP_LOGW_NOFUNC("UpdateBundleInstallState -n %{public}s fail current:%{public}d state:%{public}d",
         bundleName.c_str(), static_cast<int32_t>(item->second), static_cast<int32_t>(state));
     return false;
 }
@@ -1887,7 +1887,8 @@ void BundleDataMgr::GetMultiLauncherAbilityInfo(const Want& want,
             }
         }
     }
-    APP_LOGI("bundleName %{public}s has %{public}d launcher ability", info.GetBundleName().c_str(), count);
+    APP_LOGI_NOFUNC("GetMultiLauncherAbilityInfo -n %{public}s has %{public}d launcher ability",
+        info.GetBundleName().c_str(), count);
 }
 
 void BundleDataMgr::GetMatchLauncherAbilityInfosForCloneInfos(
@@ -6704,7 +6705,7 @@ bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBun
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGW_NOFUNC("QueryInnerBundleInfo failed: %{public}s", bundleName.c_str());
+        APP_LOGW_NOFUNC("QueryInnerBundleInfo not find %{public}s", bundleName.c_str());
         return false;
     }
     info = item->second;
@@ -6967,7 +6968,7 @@ ErrCode __attribute__((no_sanitize("cfi"))) BundleDataMgr::GetJsonProfileByExtra
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     if (!bundleExtractor.HasEntry(profilePath)) {
-        APP_LOGE("profile not exist");
+        APP_LOGD("profile not exist");
         return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
     }
     std::stringstream profileStream;
