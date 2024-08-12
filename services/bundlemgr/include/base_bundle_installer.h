@@ -45,7 +45,7 @@ public:
 
 protected:
     bool otaInstall_ = false;
-    enum class InstallerState {
+    enum class InstallerState : uint8_t {
         INSTALL_START,
         INSTALL_BUNDLE_CHECKED = 5,
         INSTALL_SYSCAP_CHECKED = 10,

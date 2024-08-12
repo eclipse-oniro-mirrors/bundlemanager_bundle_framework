@@ -26,7 +26,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class NotifyType {
+enum class NotifyType : uint8_t {
     INSTALL = 1,
     UPDATE,
     UNINSTALL_BUNDLE,
@@ -43,26 +43,26 @@ enum class NotifyType {
     START_INSTALL,
 };
 
-enum class SandboxInstallType : uint32_t {
+enum class SandboxInstallType : uint8_t {
     INSTALL = 0,
     UNINSTALL,
 };
 
 struct NotifyBundleEvents {
-    std::string bundleName = "";
-    std::string modulePackage = "";
-    std::string abilityName = "";
-    ErrCode resultCode = ERR_OK;
-    NotifyType type = NotifyType::INSTALL;
-    int32_t uid = 0;
-    uint32_t accessTokenId = 0;
-    int32_t bundleType = 0;
-    int32_t atomicServiceModuleUpgrade = 0;
-    int32_t appIndex = 0;
+    bool isApplicationEnabled = true;
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     bool isModuleUpdate = false;
-    bool isApplicationEnabled = true;
+    NotifyType type = NotifyType::INSTALL;
+    ErrCode resultCode = ERR_OK;
+    uint32_t accessTokenId = 0;
+    int32_t uid = 0;
+    int32_t bundleType = 0;
+    int32_t atomicServiceModuleUpgrade = 0;
+    int32_t appIndex = 0;
+    std::string bundleName = "";
+    std::string modulePackage = "";
+    std::string abilityName = "";
     std::string appId;
     std::string appIdentifier;
     std::string appDistributionType;

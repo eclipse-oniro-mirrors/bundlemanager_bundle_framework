@@ -22,9 +22,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-constexpr int32_t WAIT_TIME = 3000;
-constexpr int32_t MAX_VEC_SIZE = 1000;
-constexpr int32_t MAX_STRING_SIZE = 1024;
+constexpr int16_t WAIT_TIME = 3000;
+constexpr int16_t MAX_VEC_SIZE = 1000;
+constexpr int16_t MAX_STRING_SIZE = 1024;
 }
 
 InstalldProxy::InstalldProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IInstalld>(object)
@@ -897,12 +897,14 @@ ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessagePa
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u cmd to service due to remote object is null", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u cmd to service due to remote object is null",
+            (unsigned int)(code));
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
     if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
-        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error", code);
+        LOG_E(BMS_TAG_INSTALLD, "fail to send %{public}u request to service due to transact error",
+            (unsigned int)(code));
         return ERR_APPEXECFWK_INSTALLD_SERVICE_DIED;
     }
     return reply.ReadInt32();

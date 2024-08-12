@@ -23,14 +23,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string CODE_SIGNATURE_MODULE_PATH = "modulePath";
-const std::string CODE_SIGNATURE_CPU_ABI = "cpuAbi";
-const std::string CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
-const std::string CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
-const std::string CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
-const std::string CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
-const std::string CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
-const std::string CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
+constexpr const char* CODE_SIGNATURE_MODULE_PATH = "modulePath";
+constexpr const char* CODE_SIGNATURE_CPU_ABI = "cpuAbi";
+constexpr const char* CODE_SIGNATURE_TARGET_SO_PATH = "targetSoPath";
+constexpr const char* CODE_SIGNATURE_SIGNATURE_FILE_PATH = "signatureFileDir";
+constexpr const char* CODE_SIGNATURE_IS_ENTERPRISE_BUNDLE = "isEnterpriseBundle";
+constexpr const char* CODE_SIGNATURE_APP_IDENTIFIER = "appIdentifier";
+constexpr const char* CODE_SIGNATURE_IS_PREINSTALLED_BUNDLE = "isPreInstalledBundle";
+constexpr const char* CODE_SIGNATURE_IS_COMPILE_SDK_OPENHARMONY = "isCompileSdkOpenHarmony";
 } // namespace
 
 bool CodeSignatureParam::ReadFromParcel(Parcel &parcel)

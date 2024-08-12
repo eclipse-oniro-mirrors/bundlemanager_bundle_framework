@@ -21,17 +21,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME = "app_jump_interceptor";
+    constexpr const char* APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME = "app_jump_interceptor";
 
-    const int32_t CALLER_PKG_INDEX = 1;
-    const int32_t TARGET_PKG_INDEX = 2;
-    const int32_t SELECT_STATUS_INDEX = 3;
+    constexpr int8_t CALLER_PKG_INDEX = 1;
+    constexpr int8_t TARGET_PKG_INDEX = 2;
+    constexpr int8_t SELECT_STATUS_INDEX = 3;
     // app jump interceptor table key
-    const std::string CALLER_PKG = "CALLER_PKG";
-    const std::string TARGET_PKG = "TARGET_PKG";
-    const std::string SELECT_STATUS = "SELECT_STATUS";
-    const std::string USER_ID = "USER_ID";
-    const std::string MODIFIED_TIME = "MODIFIED_TIME";
+    constexpr const char* CALLER_PKG = "CALLER_PKG";
+    constexpr const char* TARGET_PKG = "TARGET_PKG";
+    constexpr const char* SELECT_STATUS = "SELECT_STATUS";
+    constexpr const char* USER_ID = "USER_ID";
+    constexpr const char* MODIFIED_TIME = "MODIFIED_TIME";
 }
 
 AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()
@@ -41,7 +41,7 @@ AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()
     bmsRdbConfig.tableName = APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
-        + APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME
+        + std::string(APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME)
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLER_PKG TEXT NOT NULL, "
         + "TARGET_PKG TEXT NOT NULL, SELECT_STATUS INTEGER, "
         + "USER_ID INTEGER, MODIFIED_TIME INTEGER);");

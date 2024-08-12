@@ -27,10 +27,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
-constexpr int32_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
-const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
-const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+constexpr int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+constexpr int16_t MAX_BATCH_QUERY_BUNDLE_SIZE = 1000;
+constexpr const char* UNLOAD_TASK_NAME = "UnloadInstalldTask";
+constexpr const char* UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 }
 
 InstalldHost::InstalldHost()

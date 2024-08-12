@@ -21,15 +21,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string TYPE_ALL = "All";
-const std::string TYPE_SO = "So";
-const std::string TYPE_AN = "An";
-const std::string TYPE_PATCH = "Patch";
-const std::string TYPE_AP = "Ap";
-const std::string TYPE_RESOURCE = "Resource";
-const std::string TYPE_RES_FILE = "ResFile";
-const std::string TYPE_HNPS_FILE = "HnpsFile";
-const std::string TYPE_OTHER = "Other";
+const char* TYPE_ALL = "All";
+const char* TYPE_SO = "So";
+const char* TYPE_AN = "An";
+const char* TYPE_PATCH = "Patch";
+const char* TYPE_AP = "Ap";
+const char* TYPE_RESOURCE = "Resource";
+const char* TYPE_RES_FILE = "ResFile";
+const char* TYPE_HNPS_FILE = "HnpsFile";
+const char* TYPE_OTHER = "Other";
 const std::unordered_map<ExtractFileType, std::string> ARGS_MAP = {
     { ExtractFileType::ALL, TYPE_ALL },
     { ExtractFileType::SO, TYPE_SO },

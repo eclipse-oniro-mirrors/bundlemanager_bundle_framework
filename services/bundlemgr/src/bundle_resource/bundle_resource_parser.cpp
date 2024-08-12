@@ -29,14 +29,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* TYPE_JSON = "json";
-const char* TYPE_PNG = "png";
-const char* FOREGROUND = "foreground";
-const char* BACKGROUND = "background";
-const char CHAR_COLON = ':';
+constexpr const char* TYPE_JSON = "json";
+constexpr const char* TYPE_PNG = "png";
+constexpr const char* FOREGROUND = "foreground";
+constexpr const char* BACKGROUND = "background";
+constexpr char CHAR_COLON = ':';
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
-const int32_t BADGE_SIZE = 62;
+constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+constexpr int8_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {

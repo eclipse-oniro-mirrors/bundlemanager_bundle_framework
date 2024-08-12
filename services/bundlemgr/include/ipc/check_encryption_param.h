@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class InstallBundleType {
+enum class InstallBundleType : uint8_t {
     HAP = 0,
     INTER_APP_HSP = 1,
     CROSS_APP_HSP = 2,

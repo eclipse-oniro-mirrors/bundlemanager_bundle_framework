@@ -2580,7 +2580,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0098, Function | SmallTest
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0099, Function | SmallTest | Level0)
 {
     PatchProfile patchProfile;
-    PatchExtractor patchExtractor(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A);
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A);
     bool isSystemLib64Exist = true;
     AppqfInfo deployedAppqfInfo;
     deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
@@ -2825,7 +2825,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0107, Function | SmallTest
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0110, Function | SmallTest | Level0)
 {
     PatchProfile patchProfile;
-    PatchExtractor patchExtractor(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A);
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A);
     bool isSystemLib64Exist = false;
     AppqfInfo deployedAppqfInfo;
     deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
@@ -2847,7 +2847,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0110, Function | SmallTest
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0120, Function | SmallTest | Level0)
 {
     PatchProfile patchProfile;
-    PatchExtractor patchExtractor(ServiceConstants::LIBS + ServiceConstants::ARM_EABI);
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI);
     bool isSystemLib64Exist = false;
     AppqfInfo deployedAppqfInfo;
     deployedAppqfInfo.versionCode = QUICK_FIX_VERSION_CODE;
@@ -3482,7 +3482,7 @@ HWTEST_F(BmsBundleQuickFixTest, PatchParser_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsBundleQuickFixTest, DefaultNativeSo_0100, Function | SmallTest | Level0)
 {
     PatchProfile patchProfile;
-    PatchExtractor patchExtractor(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A);
+    PatchExtractor patchExtractor(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A);
     patchExtractor.Init();
     bool isSystemLib64Exist = true;
     AppqfInfo appqfInfo;

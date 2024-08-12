@@ -16,20 +16,22 @@
 #include "bundle_profile.h"
 
 #include <sstream>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "parameter.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGE("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -42,45 +44,45 @@ namespace ProfileReader {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const std::set<std::string> MODULE_TYPE_SET = {
+const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
     "shared"
 };
-const std::map<std::string, AbilityType> ABILITY_TYPE_MAP = {
+const std::unordered_map<std::string, AbilityType> ABILITY_TYPE_MAP = {
     {"page", AbilityType::PAGE},
     {"service", AbilityType::SERVICE},
     {"data", AbilityType::DATA},
     {"form", AbilityType::FORM}
 };
-const std::map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
+const std::unordered_map<std::string, DisplayOrientation> DISPLAY_ORIENTATION_MAP = {
     {"unspecified", DisplayOrientation::UNSPECIFIED},
     {"landscape", DisplayOrientation::LANDSCAPE},
     {"portrait", DisplayOrientation::PORTRAIT},
     {"followRecent", DisplayOrientation::FOLLOWRECENT}
 };
-const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
+const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
-const std::map<std::string, int32_t> dimensionMap = {
+const std::unordered_map<std::string, int32_t> dimensionMap = {
     {"1*2", 1},
     {"2*2", 2},
     {"2*4", 3},
     {"4*4", 4},
     {"2*1", 5}
 };
-const std::map<std::string, FormType> formTypeMap = {
+const std::unordered_map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
     {"Java", FormType::JAVA}
 };
-const std::map<std::string, ModuleColorMode> moduleColorMode = {
+const std::unordered_map<std::string, ModuleColorMode> moduleColorMode = {
     {"auto", ModuleColorMode::AUTO},
     {"dark", ModuleColorMode::DARK},
     {"light", ModuleColorMode::LIGHT},
 };
-const std::map<std::string, FormsColorMode> formColorModeMap = {
+const std::unordered_map<std::string, FormsColorMode> formColorModeMap = {
     {"auto", FormsColorMode::AUTO_MODE},
     {"dark", FormsColorMode::DARK_MODE},
     {"light", FormsColorMode::LIGHT_MODE}
@@ -2112,7 +2114,7 @@ bool ParserNativeSo(
     bool isLibIsolated = configJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -2122,14 +2124,14 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
