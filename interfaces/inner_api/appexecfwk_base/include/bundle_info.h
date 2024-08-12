@@ -63,7 +63,12 @@ enum class GetBundleInfoFlag {
     GET_BUNDLE_INFO_WITH_ROUTER_MAP = 0x00000200,
     GET_BUNDLE_INFO_WITH_SKILL = 0x00000800,
     GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY = 0x00001000,
+    GET_BUNDLE_INFO_OF_ANY_USER = 0x00002000,
     GET_BUNDLE_INFO_EXCLUDE_CLONE = 0x00004000,
+};
+
+enum class ApplicationInfoFlag {
+    FLAG_INSTALLED = 0x00000001,
 };
 
 struct RequestPermissionUsedScene : public Parcelable {

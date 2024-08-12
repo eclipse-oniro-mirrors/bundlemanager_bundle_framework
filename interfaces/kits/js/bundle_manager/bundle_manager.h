@@ -44,6 +44,7 @@ public:
     explicit ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~ClearCacheListener() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+    static void HandleCleanEnv(void *data);
 };
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
@@ -355,6 +356,7 @@ void CreateProfileTypeObject(napi_env env, napi_value value);
 void CreateAppDistributionTypeObject(napi_env env, napi_value value);
 void RegisterClearCacheListener();
 void CreateMultiAppModeTypeObject(napi_env env, napi_value value);
+void CreateApplicationInfoFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
