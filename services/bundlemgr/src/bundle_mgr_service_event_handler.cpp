@@ -284,6 +284,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
+    EnsureEl1Dir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -3534,6 +3535,31 @@ void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
             LOG_W(BMS_TAG_DEFAULT, "OTA uninstall bundle %{public}s userId %{public}d error", bundle.c_str(),
                 installParam.userId);
         }
+    }
+}
+
+void BMSEventHandler::EnsureEl1Dir()
+{
+    LOG_I(BMS_TAG_DEFAULT, "EnsureEl1Dir start");
+    std::thread ensureEl1DirThread(EnsureEl1DirTask);
+    ensureEl1DirThread.detach();
+}
+
+void BMSEventHandler::EnsureEl1DirTask()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfos, userId)) {
+            LOG_E(BMS_TAG_DEFAULT, "EnsureEl1Dir failed");
+            return;
+        }
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
 }
 }  // namespace AppExecFwk
