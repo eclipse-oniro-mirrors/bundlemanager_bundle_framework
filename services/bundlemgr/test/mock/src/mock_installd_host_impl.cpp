@@ -300,5 +300,11 @@ ErrCode InstalldHostImpl::GetExtensionSandboxTypeList(std::vector<std::string> &
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::AddUserDirDeleteDfx(int32_t userId)
+{
+    return ERR_OK;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
