@@ -16,13 +16,12 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_CREATE_DIR_PARAM_H
 
-#include <map>
 #include <string>
 #include "message_parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class CreateDirFlag {
+enum class CreateDirFlag : uint8_t {
     // Create all data directories regardless of whether the device is unlocked.
     // Inaccessible directories will fail to be created and errors will be ignored.
     CREATE_DIR_ALL = 0,

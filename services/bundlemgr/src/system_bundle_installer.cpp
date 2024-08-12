@@ -16,6 +16,7 @@
 #include "system_bundle_installer.h"
 
 #include "app_log_wrapper.h"
+#include "app_service_fwk_installer.h"
 #include "bms_key_event_mgr.h"
 #include "bundle_mgr_service.h"
 
@@ -140,6 +141,11 @@ bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
+    }
+    BundleType type;
+    if (dataMgr->GetBundleType(bundleName, type) && (type == BundleType::APP_SERVICE_FWK)) {
+        AppServiceFwkInstaller installer;
+        return installer.UnInstall(bundleName) == ERR_OK;
     }
 
     InstallParam installParam;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <sstream>
+#include <unordered_set>
 
 #include "parameter.h"
 #include "parameters.h"
@@ -23,15 +24,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 128;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -45,18 +46,18 @@ namespace Profile {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const std::set<std::string> MODULE_TYPE_SET = {
+const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
     "shared"
 };
 
-const std::set<std::string> VIRTUAL_MACHINE_SET = {
+const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
 };
 
-const char* BACKGROUND_MODES_MAP_KEY[] = {
+constexpr const char* BACKGROUND_MODES_MAP_KEY[] = {
     ProfileReader::KEY_DATA_TRANSFER,
     ProfileReader::KEY_AUDIO_PLAYBACK,
     ProfileReader::KEY_AUDIO_RECORDING,
@@ -83,24 +84,24 @@ const uint32_t BACKGROUND_MODES_MAP_VALUE[] = {
     ProfileReader::VALUE_SCREEN_FETCH
 };
 
-const std::set<std::string> GRANT_MODE_SET = {
+const std::unordered_set<std::string> GRANT_MODE_SET = {
     "system_grant",
     "user_grant"
 };
 
-const std::set<std::string> AVAILABLE_LEVEL_SET = {
+const std::unordered_set<std::string> AVAILABLE_LEVEL_SET = {
     "system_core",
     "system_basic",
     "normal"
 };
 
-const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
+const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
     {"multiton", LaunchMode::STANDARD},
     {"specified", LaunchMode::SPECIFIED}
 };
-const char* DISPLAY_ORIENTATION_MAP_KEY[] ={
+constexpr const char* DISPLAY_ORIENTATION_MAP_KEY[] = {
     "unspecified",
     "landscape",
     "portrait",
@@ -117,7 +118,7 @@ const char* DISPLAY_ORIENTATION_MAP_KEY[] ={
     "auto_rotation_unspecified",
     "follow_desktop"
 };
-const uint32_t DISPLAY_ORIENTATION_MAP_VALUE[] = {
+const DisplayOrientation DISPLAY_ORIENTATION_MAP_VALUE[] = {
     DisplayOrientation::UNSPECIFIED,
     DisplayOrientation::LANDSCAPE,
     DisplayOrientation::PORTRAIT,
@@ -147,7 +148,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 50;
 
-const std::map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
+const std::unordered_map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
     {"multiInstance", MultiAppModeType::MULTI_INSTANCE},
     {"appClone", MultiAppModeType::APP_CLONE}
 };
@@ -272,6 +273,7 @@ struct App {
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
     bool gwpAsanEnabled = false;
+    bool hwasanEnabled = false;
     bool tsanEnabled = false;
     std::vector<ApplicationEnvironment> appEnvironments;
     MultiAppMode multiAppMode;
@@ -1348,6 +1350,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_HWASAN_ENABLED,
+        app.hwasanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APP_CONFIGURATION,
@@ -1825,7 +1835,7 @@ bool ParserNativeSo(
     bool isLibIsolated = moduleJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1835,14 +1845,14 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1956,7 +1966,7 @@ bool ParserArkNativeFilePath(
     APP_LOGD("an exist");
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM64_V8A)) {
                 innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM64_V8A);
                 return true;
             }
@@ -1964,12 +1974,12 @@ bool ParserArkNativeFilePath(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI_V7A)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI_V7A);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI);
             return true;
         }
@@ -2130,6 +2140,7 @@ bool ToApplicationInfo(
     applicationInfo.compileSdkType = app.compileSdkType;
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
+    applicationInfo.hwasanEnabled = app.hwasanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&
@@ -2189,10 +2200,12 @@ bool ToBundleInfo(
 uint32_t GetBackgroundModes(const std::vector<std::string> &backgroundModes)
 {
     uint32_t backgroundMode = 0;
+    size_t len = sizeof(Profile::BACKGROUND_MODES_MAP_KEY) /
+            sizeof(Profile::BACKGROUND_MODES_MAP_KEY[0]);
     for (const std::string &item : backgroundModes) {
-        for (size_t i = 0; i < sizeof(BACKGROUND_MODES_MAP_KEY) / sizeof(BACKGROUND_MODES_MAP_KEY[0]); i++) {
-            if (item == BACKGROUND_MODES_MAP_KEY[i]) {
-                backgroundMode |= BACKGROUND_MODES_MAP_VALUE[i];
+        for (size_t i = 0; i < len; i++) {
+            if (item == Profile::BACKGROUND_MODES_MAP_KEY[i]) {
+                backgroundMode |= Profile::BACKGROUND_MODES_MAP_VALUE[i];
                 break;
             }
         }
@@ -2277,8 +2290,9 @@ bool ToAbilityInfo(
     abilityInfo.startWindowBackgroundId = ability.startWindowBackgroundId;
     abilityInfo.removeMissionAfterTerminate = ability.removeMissionAfterTerminate;
     abilityInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
-    for (size_t i = 0; i < sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) / sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY[0]);
-        i++) {
+    size_t len = sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY) /
+            sizeof(Profile::DISPLAY_ORIENTATION_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
         if (ability.orientation == Profile::DISPLAY_ORIENTATION_MAP_KEY[i]) {
             abilityInfo.orientation = Profile::DISPLAY_ORIENTATION_MAP_VALUE[i];
             break;
@@ -2527,6 +2541,7 @@ bool ToInnerBundleInfo(
     }
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
+    innerModuleInfo.hwasanEnabled = applicationInfo.hwasanEnabled;
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

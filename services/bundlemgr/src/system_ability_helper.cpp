@@ -27,7 +27,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string KILL_REASON = "Kill Reason: UpgradeApp";
+#ifdef ABILITY_RUNTIME_ENABLE
+    constexpr const char* KILL_REASON = "Kill Reason: UpgradeApp";
+#endif
 }
 sptr<IRemoteObject> SystemAbilityHelper::GetSystemAbility(const int32_t systemAbilityId)
 {

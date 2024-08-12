@@ -532,23 +532,6 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
     return bundleMgr_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
 
-ErrCode BundleMgrClientImpl::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
-{
-    APP_LOGD("InstallHmpBundle begin");
-    if (filePath.empty()) {
-        APP_LOGE("InstallHmpBundle filePath is empty");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-    ErrCode result = Connect();
-    if (result != ERR_OK) {
-        APP_LOGE("connect fail");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-
-    std::lock_guard<std::mutex> lock(mutex_);
-    return bundleInstaller_->InstallHmpBundle(filePath, isNeedRollback);
-}
-
 ErrCode BundleMgrClientImpl::Connect()
 {
     APP_LOGD("connect begin");

@@ -66,8 +66,8 @@ public:
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetDisposedRule(const std::string &appId,
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode GetAbilityRunningControlRule(
-        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
+    virtual ErrCode GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
+        std::vector<DisposedRule>& disposedRules, int32_t appIndex = Constants::MAIN_APP_INDEX) override;
     virtual ErrCode GetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
         int32_t appIndex, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetDisposedRuleForCloneApp(const std::string &appId, DisposedRule& disposedRule,
@@ -86,8 +86,8 @@ private:
         AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<std::string> &stringVector);
     int32_t SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     template <typename T>
-    bool GetParcelableInfos(
-        AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    ErrCode GetParcelableInfosWithErrCode(AppControlManagerInterfaceCode code, MessageParcel &data,
+        std::vector<T> &parcelableInfos);
     static inline BrokerDelegator<AppControlProxy> delegator_;
 };
 } // namespace AppExecFwk

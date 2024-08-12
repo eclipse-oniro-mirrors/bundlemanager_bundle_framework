@@ -13222,4 +13222,108 @@ HWTEST_F(BmsBundleKitServiceTest, GetCloneAppIndexes_0001, Function | SmallTest 
     ClearCloneInfo(bundleName, userId);
     MockUninstallBundle(bundleName);
 }
+
+/**
+ * @tc.number: Mgr_Proxy_CopyAp_0001
+ * @tc.name: test BundleMgrProxy interface CopyAp
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_CopyAp_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<std::string> results;
+        auto ret = bundleMgrProxy->CopyAp(BUNDLE_NAME_TEST, false, results);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: Mgr_Proxy_GetVerifyManager_0001
+ * @tc.name: test BundleMgrProxy interface GetVerifyManager
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetVerifyManager_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::vector<std::string> results;
+        auto ret = bundleMgrProxy->GetVerifyManager();
+        EXPECT_NE(ret, nullptr);
+    }
+}
+
+/**
+ * @tc.number: Mgr_Proxy_SetExtNameOrMIMEToApp_0001
+ * @tc.name: test BundleMgrProxy interface SetExtNameOrMIMEToApp
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string bundleName{ "bundle" };
+        std::string moduleName{ "module" };
+        std::string abilityName{ "ability" };
+        std::string extName{ "extension" };
+        std::string mimeType{ "1" };
+        auto ret = bundleMgrProxy->SetExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: Mgr_Proxy_DelExtNameOrMIMEToApp_0001
+ * @tc.name: test BundleMgrProxy interface DelExtNameOrMIMEToApp
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_DelExtNameOrMIMEToApp_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string bundleName{ "bundle" };
+        std::string moduleName{ "module" };
+        std::string abilityName{ "ability" };
+        std::string extName{ "extension" };
+        std::string mimeType{ "1" };
+        auto ret = bundleMgrProxy->DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: Mgr_Proxy_GetUninstalledBundleInfo_0001
+ * @tc.name: test BundleMgrProxy interface GetUninstalledBundleInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, Mgr_Proxy_GetUninstalledBundleInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string bundleName{ "bundle" };
+        BundleInfo bundleInfo;
+        auto ret = bundleMgrProxy->GetUninstalledBundleInfo(bundleName, bundleInfo);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO);
+    }
+}
 }

@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum ExtractFileType {
+enum ExtractFileType : uint8_t {
     ALL,
     SO,
     AN,

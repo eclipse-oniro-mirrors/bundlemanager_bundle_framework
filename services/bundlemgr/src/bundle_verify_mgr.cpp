@@ -29,6 +29,7 @@ const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIB
     { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
     { Security::Verify::AppDistType::ENTERPRISE_NORMAL, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
     { Security::Verify::AppDistType::ENTERPRISE_MDM, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
+    { Security::Verify::AppDistType::INTERNALTESTING, Constants::APP_DISTRIBUTION_TYPE_INTERNALTESTING },
     { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
     { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
 };
@@ -63,7 +64,8 @@ ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult 
     if (res == ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED) {
         auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult);
         APP_LOGI("HapVerify result %{public}d", ret);
-        for (size_t i = 0; i < sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]); i++) {
+        size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
+        for (size_t i = 0; i < len; i++) {
             if (ret == HAP_VERIFY_ERR_MAP_KEY[i]) {
                 return HAP_VERIFY_ERR_MAP_VALUE[i];
             }
@@ -102,7 +104,8 @@ ErrCode BundleVerifyMgr::ParseHapProfile(const std::string &filePath, HapVerifyR
 {
     auto ret = Security::Verify::ParseHapProfile(filePath, hapVerifyResult);
     APP_LOGI("ParseHapProfile result %{public}d", ret);
-    for (size_t i = 0; i < sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]); i++) {
+    size_t len = sizeof(HAP_VERIFY_ERR_MAP_KEY) / sizeof(HAP_VERIFY_ERR_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
         if (ret == HAP_VERIFY_ERR_MAP_KEY[i]) {
             return HAP_VERIFY_ERR_MAP_VALUE[i];
         }

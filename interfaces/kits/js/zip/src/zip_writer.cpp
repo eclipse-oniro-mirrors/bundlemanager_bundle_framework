@@ -108,7 +108,6 @@ bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absol
 
 bool AddDirectoryEntryToZip(zipFile zip_file, FilePath &path, struct tm *lastModified, const OPTIONS &options)
 {
-    APP_LOGI("called");
     return OpenNewFileEntry(zip_file, path, true, lastModified, options) && CloseNewFileEntry(zip_file);
 }
 

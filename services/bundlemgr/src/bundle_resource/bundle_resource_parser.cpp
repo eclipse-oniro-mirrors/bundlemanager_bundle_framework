@@ -18,6 +18,7 @@
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_image_info.h"
 #include "bundle_resource_drawable.h"
+#include "bundle_service_constants.h"
 #include "json_util.h"
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -28,14 +29,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const char* TYPE_JSON = "json";
-const char* TYPE_PNG = "png";
-const char* FOREGROUND = "foreground";
-const char* BACKGROUND = "background";
-const char CHAR_COLON = ':';
+constexpr const char* TYPE_JSON = "json";
+constexpr const char* TYPE_PNG = "png";
+constexpr const char* FOREGROUND = "foreground";
+constexpr const char* BACKGROUND = "background";
+constexpr char CHAR_COLON = ':';
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
-const std::string OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
-const int32_t BADGE_SIZE = 62;
+constexpr const char* OHOS_CLONE_APP_BADGE_RESOURCE = "clone_app_badge_";
+constexpr int8_t BADGE_SIZE = 62;
 #endif
 
 struct LayeredImage {
@@ -165,6 +166,10 @@ bool BundleResourceParser::ParseResourceInfos(const int32_t userId, std::vector<
 bool BundleResourceParser::IsNeedToParseResourceInfo(
     const ResourceInfo &newResourceInfo, const ResourceInfo &oldResourceInfo)
 {
+    if (ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.find(newResourceInfo.bundleName_) !=
+        ServiceConstants::ALLOW_MULTI_ICON_BUNDLE.end()) {
+        return true;
+    }
     // same labelId and iconId no need to parse again
     if (newResourceInfo.moduleName_ == oldResourceInfo.moduleName_) {
         if ((newResourceInfo.labelId_ == oldResourceInfo.labelId_) &&

@@ -29,17 +29,17 @@ std::mutex g_mutex;
 
 const int8_t MAX_FORM_NAME = 127;
 const int8_t DEFAULT_RECT_SHAPE = 1;
-const char* formColorModeMapKey[] = {
+constexpr const char* FORM_COLOR_MODE_MAP_KEY[] = {
     "auto",
     "dark",
     "light"
 };
-const FormsColorMode formColorModeMapValue[] = {
+const FormsColorMode FORM_COLOR_MODE_MAP_VALUE[] = {
     FormsColorMode::AUTO_MODE,
     FormsColorMode::DARK_MODE,
     FormsColorMode::LIGHT_MODE
 };
-const char* dimensionMapKey[] = {
+constexpr const char* DIMENSION_MAP_KEY[] = {
     "1*2",
     "2*2",
     "2*4",
@@ -48,7 +48,7 @@ const char* dimensionMapKey[] = {
     "1*1",
     "6*4"
 };
-const int32_t dimensionMapValue[] = {
+const int32_t DIMENSION_MAP_VALUE[] = {
     1,
     2,
     3,
@@ -57,28 +57,28 @@ const int32_t dimensionMapValue[] = {
     6,
     7
 };
-const char* shapeMapKey[] = {
-    "rect", 
+constexpr const char* SHAPE_MAP_KEY[] = {
+    "rect",
     "circle"
 };
-const int32_t shapeMapValue[] = {
+const int32_t SHAPE_MAP_VALUE[] = {
     1,
     2
 };
-const char* formTypeMapKey[] = {
-    "JS", 
+constexpr const char* FORM_TYPE_MAP_KEY[] = {
+    "JS",
     "eTS"
 };
-const FormType formTypeMapValue[] = {
+const FormType FORM_TYPE_MAP_VALUE[] = {
     FormType::JS,
     FormType::ETS
 };
 
-const char* uiSyntaxMapKey[] = {
-    "hml", 
+constexpr const char* UI_SYNTAX_MAP_KEY[] = {
+    "hml",
     "arkts"
 };
-const FormType uiSyntaxMapValue[] = {
+const FormType UI_SYNTAX_MAP_VALUE[] = {
     FormType::JS,
     FormType::ETS
 };
@@ -383,32 +383,31 @@ bool CheckFormNameIsValid(const std::string &name)
 bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     std::set<int32_t> supportDimensionSet {};
+    size_t len = sizeof(DIMENSION_MAP_KEY) / sizeof(DIMENSION_MAP_KEY[0]);
+    size_t i = 0;
     for (const auto &dimension: form.supportDimensions) {
-        size_t i = 0;
-        for (i = 0; i < sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0]); i++) {
-            if (dimensionMapKey[i] == dimension) break;
+        for (i = 0; i < len; i++) {
+            if (DIMENSION_MAP_KEY[i] == dimension) break;
         }
-        if (i == sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0])) {
+        if (i == len) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-        supportDimensionSet.emplace(dimensionMapValue[i]);
+        supportDimensionSet.emplace(DIMENSION_MAP_VALUE[i]);
     }
-
-    size_t i = 0;
-    for (i = 0; i < sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0]); i++) {
-        if (dimensionMapKey[i] == form.defaultDimension) break;
+    for (i = 0; i < len; i++) {
+        if (DIMENSION_MAP_KEY[i] == form.defaultDimension) break;
     }
-    if (i == sizeof(dimensionMapKey) / sizeof(dimensionMapKey[0])) {
+    if (i == len) {
         APP_LOGW("defaultDimension invalid form %{public}s", form.name.c_str());
         return false;
     }
-    if (supportDimensionSet.find(dimensionMapValue[i]) == supportDimensionSet.end()) {
+    if (supportDimensionSet.find(DIMENSION_MAP_VALUE[i]) == supportDimensionSet.end()) {
         APP_LOGW("defaultDimension not in supportDimensions form %{public}s", form.name.c_str());
         return false;
     }
 
-    info.defaultDimension = dimensionMapValue[i];
+    info.defaultDimension = DIMENSION_MAP_VALUE[i];
     for (const auto &dimension: supportDimensionSet) {
         info.supportDimensions.emplace_back(dimension);
     }
@@ -418,16 +417,17 @@ bool GetMetadata(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 bool GetSupportShapes(const ExtensionFormProfileInfo &form, ExtensionFormInfo &info)
 {
     std::set<int32_t> supportShapeSet {};
+    size_t len = sizeof(SHAPE_MAP_KEY) / sizeof(SHAPE_MAP_KEY[0]);
     for (const auto &shape: form.supportShapes) {
         size_t i = 0;
-        for (i = 0; i < sizeof(shapeMapKey) / sizeof(shapeMapKey[0]); i++) {
-            if (shapeMapKey[i] == shape) break;
+        for (i = 0; i < len; i++) {
+            if (SHAPE_MAP_KEY[i] == shape) break;
         }
-        if (i == sizeof(shapeMapKey) / sizeof(shapeMapKey[0])) {
+        if (i == len) {
             APP_LOGW("dimension invalid form %{public}s", form.name.c_str());
             continue;
         }
-        supportShapeSet.emplace(shapeMapValue[i]);
+        supportShapeSet.emplace(SHAPE_MAP_VALUE[i]);
     }
 
     if (supportShapeSet.empty()) {
@@ -453,22 +453,18 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     info.window.autoDesignWidth = form.window.autoDesignWidth;
     info.window.designWidth = form.window.designWidth;
 
-    for (size_t i = 0; i < sizeof(formColorModeMapKey) / sizeof(formColorModeMapKey[0]); i++) {
-        if (formColorModeMapKey[i] == form.colorMode) {
-            info.colorMode = formColorModeMapValue[i];
-        }
+    size_t len = sizeof(FORM_COLOR_MODE_MAP_KEY) / sizeof(FORM_COLOR_MODE_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (FORM_COLOR_MODE_MAP_KEY[i] == form.colorMode)
+            info.colorMode = FORM_COLOR_MODE_MAP_VALUE[i];
     }
 
-    for (size_t i = 0; i < sizeof(formTypeMapKey) / sizeof(formTypeMapKey[0]); i++) {
-        if (formTypeMapKey[i] == form.type) {
-            info.type = formTypeMapValue[i];
-        }
-    }
-
-    for (size_t i = 0; i < sizeof(uiSyntaxMapKey) / sizeof(uiSyntaxMapKey[0]); i++) {
-        if (uiSyntaxMapKey[i] == form.uiSyntax) {
-            info.uiSyntax = uiSyntaxMapValue[i];
-        }
+    len = sizeof(FORM_TYPE_MAP_KEY) / sizeof(FORM_TYPE_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (FORM_TYPE_MAP_KEY[i] == form.type)
+            info.type = FORM_TYPE_MAP_VALUE[i];
+        if (UI_SYNTAX_MAP_KEY[i] == form.uiSyntax)
+            info.uiSyntax = UI_SYNTAX_MAP_VALUE[i];
     }
 
     info.formConfigAbility = form.formConfigAbility;

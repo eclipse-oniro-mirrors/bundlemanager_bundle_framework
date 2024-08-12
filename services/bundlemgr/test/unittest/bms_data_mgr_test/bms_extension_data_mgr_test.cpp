@@ -660,6 +660,119 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0012, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BundleMgrExt_0013
+ * @tc.name: GetBackupUninstallList
+ * @tc.desc: GetBackupUninstallList
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0013, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int32_t userId = 100;
+    std::set<std::string> uninstallBundles;
+    ErrCode res = bundleMgrExtTest.GetBackupUninstallList(userId, uninstallBundles);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0014
+ * @tc.name: ClearBackupUninstallFile
+ * @tc.desc: ClearBackupUninstallFile
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0014, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int32_t userId = 100;
+    ErrCode res = bundleMgrExtTest.ClearBackupUninstallFile(userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0015
+ * @tc.name: AddResourceInfoByBundleName
+ * @tc.desc: AddResourceInfoByBundleName
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0015, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName{ "extension" };
+    int32_t userId = 100;
+    ErrCode res = bundleMgrExtTest.AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0016
+ * @tc.name: AddResourceInfoByAbility
+ * @tc.desc: AddResourceInfoByAbility
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0016, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName{ "extension" };
+    std::string moduleName{ "extension-module" };
+    std::string abilityName{ "extension-ability" };
+    int32_t userId = 100;
+    ErrCode res = bundleMgrExtTest.AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0017
+ * @tc.name: DeleteResourceInfo
+ * @tc.desc: DeleteResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0017, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string key{ "extension-key" };
+    int32_t userId = 100;
+    ErrCode res = bundleMgrExtTest.DeleteResourceInfo(key);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0018
+ * @tc.name: OptimizeDisposedPredicates
+ * @tc.desc: OptimizeDisposedPredicates
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0018, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string callingName{ "test" };
+    std::string appId{ "20214524" };
+    NativeRdb::AbsRdbPredicates absRdbPredicates("");
+    int32_t userId = 100;
+    ErrCode res = bundleMgrExtTest.OptimizeDisposedPredicates(callingName, appId, userId, 0, absRdbPredicates);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0019
+ * @tc.name: IsAppInBlocklist
+ * @tc.desc: IsAppInBlocklist
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0019, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName{ "extension" };
+    auto res = bundleMgrExtTest.IsAppInBlocklist(bundleName);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0020
+ * @tc.name: CheckWhetherCanBeUninstalled
+ * @tc.desc: CheckWhetherCanBeUninstalled
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0020, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName{ "extension" };
+    auto res = bundleMgrExtTest.CheckWhetherCanBeUninstalled(bundleName);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: BmsExtensionDataMgr_0017
  * @tc.name: GetBackupUninstallList
  * @tc.desc: GetBackupUninstallList
@@ -686,5 +799,80 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0018, Function | SmallTest
     int32_t userId = 100;
     ErrCode res = bmsExtensionDataMgr.ClearBackupUninstallFile(userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0019
+ * @tc.name: AddResourceInfoByBundleName
+ * @tc.desc: AddResourceInfoByBundleName
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0019, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    std::string bundleName{ "extension" };
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionDataMgr.AddResourceInfoByBundleName(bundleName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0020
+ * @tc.name: AddResourceInfoByAbility
+ * @tc.desc: AddResourceInfoByAbility
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0020, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    std::string bundleName{ "extension" };
+    std::string moduleName{ "extension-module" };
+    std::string abilityName{ "extension-ability" };
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionDataMgr.AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0021
+ * @tc.name: DeleteResourceInfo
+ * @tc.desc: DeleteResourceInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0021, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    std::string key{ "10-15-26" };
+    int32_t userId = 100;
+    ErrCode res = bmsExtensionDataMgr.DeleteResourceInfo(key);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0022
+ * @tc.name: IsAppInBlocklist
+ * @tc.desc: IsAppInBlocklist
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0022, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    std::string bundleName{ "extension" };
+    auto res = bmsExtensionDataMgr.IsAppInBlocklist(bundleName);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0023
+ * @tc.name: CheckWhetherCanBeUninstalled
+ * @tc.desc: CheckWhetherCanBeUninstalled
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0023, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+
+    std::string bundleName{ "extension" };
+    auto res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    EXPECT_TRUE(res);
 }
 } // OHOS

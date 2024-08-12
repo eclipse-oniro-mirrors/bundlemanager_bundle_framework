@@ -32,31 +32,31 @@ namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
 
 namespace {
-constexpr int32_t INITIAL_USER_ID = -1;
-constexpr int32_t TYPE_PART_COUNT = 2;
-constexpr int32_t INDEX_ZERO = 0;
-constexpr int32_t INDEX_ONE = 1;
-constexpr size_t TYPE_MAX_SIZE = 200;
-const std::string SPLIT = "/";
-const std::string EMAIL_ACTION = "ohos.want.action.sendToData";
-const std::string EMAIL_SCHEME = "mailto";
-const std::string ENTITY_BROWSER = "entity.system.browsable";
-const std::string HTTP = "http";
-const std::string HTTPS = "https";
-const std::string HTTP_SCHEME = "http://";
-const std::string HTTPS_SCHEME = "https://";
-const std::string WILDCARD = "*";
-const std::string BROWSER = "BROWSER";
-const std::string IMAGE = "IMAGE";
-const std::string AUDIO = "AUDIO";
-const std::string VIDEO = "VIDEO";
-const std::string PDF = "PDF";
-const std::string WORD = "WORD";
-const std::string EXCEL = "EXCEL";
-const std::string PPT = "PPT";
-const std::string EMAIL = "EMAIL";
+constexpr int8_t INITIAL_USER_ID = -1;
+constexpr int8_t TYPE_PART_COUNT = 2;
+constexpr int8_t INDEX_ZERO = 0;
+constexpr int8_t INDEX_ONE = 1;
+constexpr uint16_t TYPE_MAX_SIZE = 200;
+constexpr const char* SPLIT = "/";
+constexpr const char* EMAIL_ACTION = "ohos.want.action.sendToData";
+constexpr const char* EMAIL_SCHEME = "mailto";
+constexpr const char* ENTITY_BROWSER = "entity.system.browsable";
+constexpr const char* HTTP = "http";
+constexpr const char* HTTPS = "https";
+constexpr const char* HTTP_SCHEME = "http://";
+constexpr const char* HTTPS_SCHEME = "https://";
+constexpr const char* WILDCARD = "*";
+constexpr const char* BROWSER = "BROWSER";
+constexpr const char* IMAGE = "IMAGE";
+constexpr const char* AUDIO = "AUDIO";
+constexpr const char* VIDEO = "VIDEO";
+constexpr const char* PDF = "PDF";
+constexpr const char* WORD = "WORD";
+constexpr const char* EXCEL = "EXCEL";
+constexpr const char* PPT = "PPT";
+constexpr const char* EMAIL = "EMAIL";
 constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
-const char* APP_TYPES_KEY[] = {
+constexpr const char* APP_TYPES_KEY[] = {
     IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT
 };
 const std::set<std::string> APP_TYPES_VALUE[] = {
@@ -458,12 +458,13 @@ ErrCode DefaultAppMgr::GetBundleInfoByUtd(
         }
     }
     // match default app type
+    size_t len = sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]);
     for (const auto& item : defaultAppTypeInfos) {
         size_t i = 0;
-        for (i = 0; i < sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]); i++) {
+        for (i = 0; i < len; i++) {
             if (APP_TYPES_KEY[i] == item.first) break;
         }
-        if (i == sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0])) continue;
+        if (i == len) continue;
         Skill skill;
         for (const auto& mimeType : APP_TYPES_VALUE[i]) {
             if (skill.MatchType(utd, mimeType) && GetBundleInfo(userId, utd, item.second, bundleInfo)) {
@@ -564,10 +565,11 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
         return IsEmailSkillsValid(skills);
     }
     size_t i = 0;
-    for (i = 0; i < sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]); i++) {
+    size_t len = sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0]);
+    for (i = 0; i < len; i++) {
         if (APP_TYPES_KEY[i] == type) break;
     }
-    if (i == sizeof(APP_TYPES_KEY) / sizeof(APP_TYPES_KEY[0])) {
+    if (i == len) {
         LOG_E(BMS_TAG_DEFAULT, "invalid app type : %{public}s", type.c_str());
         return false;
     }

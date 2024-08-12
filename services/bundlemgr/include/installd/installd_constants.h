@@ -18,13 +18,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class ScanMode {
+enum class ScanMode : uint8_t {
     SUB_FILE_ALL = 0,
     SUB_FILE_DIR,
     SUB_FILE_FILE,
 };
 
-enum class ResultMode {
+enum class ResultMode : uint8_t {
     ABSOLUTE_PATH = 0,
     RELATIVE_PATH,
 };

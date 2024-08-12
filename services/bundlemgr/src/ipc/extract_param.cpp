@@ -34,14 +34,15 @@ const ExtractFileType ARGS_MAP_KEY[] = {
     ExtractFileType::ALL, ExtractFileType::SO, ExtractFileType::AN, ExtractFileType::PATCH, ExtractFileType::AP,
     ExtractFileType::RESOURCE, ExtractFileType::RES_FILE, ExtractFileType::HNPS_FILE,
 };
-const char* ARGS_MAP_VALUE[] = {
+constexpr const char* ARGS_MAP_VALUE[] = {
     TYPE_ALL, TYPE_SO, TYPE_AN, TYPE_PATCH, TYPE_AP, TYPE_RESOURCE, TYPE_RES_FILE, TYPE_HNPS_FILE,
 };
 
 std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)
 {
     std::string typeStr = TYPE_OTHER;
-    for (size_t i = 0; i < ARGS_MAP_KEY.size(); i++) {
+    size_t len = sizeof(ARGS_MAP_KEY) / sizeof(ARGS_MAP_KEY[0]);
+    for (size_t i = 0; i < len; i++) {
         if (extractFileType == ARGS_MAP_KEY[i]) {
             typeStr = ARGS_MAP_VALUE[i];
             break;

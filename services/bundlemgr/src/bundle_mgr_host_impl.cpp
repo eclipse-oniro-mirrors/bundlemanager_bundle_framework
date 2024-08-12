@@ -1133,7 +1133,7 @@ ErrCode BundleMgrHostImpl::GetBundleArchiveInfoBySandBoxPath(const std::string &
         APP_LOGE("GetBundleArchiveInfo RevertToRealPath failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    std::string tempHapPath = ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH +
+    std::string tempHapPath = std::string(ServiceConstants::BUNDLE_MANAGER_SERVICE_PATH) +
         ServiceConstants::PATH_SEPARATOR + std::to_string(BundleUtil::GetCurrentTimeNs());
     if (!BundleUtil::CreateDir(tempHapPath)) {
         APP_LOGE("GetBundleArchiveInfo make temp dir failed");
@@ -2893,8 +2893,12 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
+        APP_LOGI_NOFUNC("ImplicitQueryInfos ret a.size:%{public}zu e.size:%{public}zu",
+            abilityInfos.size(), extensionInfos.size());
         return true;
     }
+    APP_LOGI_NOFUNC("ImplicitQueryInfos ret a.size:%{public}zu e.size:%{public}zu",
+        abilityInfos.size(), extensionInfos.size());
     return ret;
 }
 
@@ -4118,9 +4122,8 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        APP_LOGE(
-            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
-            bundleName.c_str(), userId, appIndex, flags, res);
+        APP_LOGE_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+            " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
     return ERR_OK;

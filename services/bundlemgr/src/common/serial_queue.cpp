@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace ffrt;
 namespace {
-constexpr uint32_t CONVERSION_FACTOR = 1000; // ms to us
+constexpr uint16_t CONVERSION_FACTOR = 1000; // ms to us
 }
 
 SerialQueue::SerialQueue(const std::string &queueName)

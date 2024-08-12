@@ -23,7 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string PATCH_DIR = "patch";
+constexpr const char* PATCH_DIR = "patch";
 }
 QuickFixDeleter::QuickFixDeleter(const std::string &bundleName) : bundleName_(bundleName)
 {
@@ -116,7 +116,7 @@ ErrCode QuickFixDeleter::InnerDeletePatchDir(const AppqfInfo &appqfInfo, const s
         return ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE;
     }
 
-    std::string patchPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR +
+    std::string patchPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
         bundleName + ServiceConstants::PATH_SEPARATOR;
     if (appqfInfo.type == QuickFixType::PATCH) {
         if (appqfInfo.nativeLibraryPath.substr(0,

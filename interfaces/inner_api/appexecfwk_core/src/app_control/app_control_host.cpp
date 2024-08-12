@@ -408,8 +408,9 @@ ErrCode AppControlHost::HandleGetAbilityRunningControlRule(MessageParcel& data, 
 {
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
+    int32_t appIndex = data.ReadInt32();
     std::vector<DisposedRule> rules;
-    ErrCode ret = GetAbilityRunningControlRule(bundleName, userId, rules);
+    ErrCode ret = GetAbilityRunningControlRule(bundleName, userId, rules, appIndex);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_DEFAULT, "write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

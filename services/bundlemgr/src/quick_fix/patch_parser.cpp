@@ -25,7 +25,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string RESOURCES_RAW_FILE = "resources/rawfile/";
+constexpr const char* RESOURCES_RAW_FILE = "resources/rawfile/";
 } // namespace
 
 ErrCode PatchParser::ParsePatchInfo(const std::string &pathName, AppQuickFix &appQuickFix) const

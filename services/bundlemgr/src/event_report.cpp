@@ -50,7 +50,8 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
     BMSEventType bmsEventType = BMSEventType::UNKNOW;
     std::unordered_map<BundleEventType, BMSEventType>::const_iterator iter;
     if (eventInfo.errCode != ERR_OK) {
-        for (size_t i = 0; i < sizeof(BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType); i++) {
+        size_t len = sizeof(BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
+        for (size_t i = 0; i < len; i++) {
             if (bundleEventType == BUNDLE_EXCEPTION_SYS_EVENT_MAP_KEY[i]) {
                 bmsEventType = BUNDLE_EXCEPTION_SYS_EVENT_MAP_VALUE[i];
                 break;
@@ -60,7 +61,8 @@ void EventReport::SendBundleSystemEvent(BundleEventType bundleEventType, const E
         return;
     }
 
-    for (size_t i = 0; i < sizeof(BUNDLE_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType); i++) {
+    size_t len = sizeof(BUNDLE_SYS_EVENT_MAP_KEY) / sizeof(BundleEventType);
+    for (size_t i = 0; i < len; i++) {
         if (bundleEventType == BUNDLE_SYS_EVENT_MAP_KEY[i]) {
             bmsEventType = BUNDLE_SYS_EVENT_MAP_VALUE[i];
             break;

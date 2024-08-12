@@ -27,8 +27,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
-    const std::string PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
+    constexpr const char* PERMISSION_DISPOSED_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
+    constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISPOSED_APP_STATUS";
 }
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
@@ -449,15 +449,15 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, Dis
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(
-    const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules)
+ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(const std::string &bundleName, int32_t userId,
+    std::vector<DisposedRule>& disposedRules, int32_t appIndex)
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
         LOG_E(BMS_TAG_DEFAULT, "callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->GetAbilityRunningControlRule(bundleName, Constants::MAIN_APP_INDEX, userId,
+    return appControlManager_->GetAbilityRunningControlRule(bundleName, appIndex, userId,
         disposedRules);
 }
 

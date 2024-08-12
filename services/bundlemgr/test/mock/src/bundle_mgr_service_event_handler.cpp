@@ -192,7 +192,7 @@ void BMSEventHandler::ScanInstallDir(std::map<std::string, std::vector<std::stri
 
     for (const auto& bundleName : bundleNameList) {
         std::vector<std::string> hapPaths;
-        auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
+        auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
         if (!ScanDir(appCodePath, ScanMode::SUB_FILE_FILE, ResultMode::ABSOLUTE_PATH, hapPaths)) {
             continue;
         }
@@ -314,7 +314,7 @@ void BMSEventHandler::SaveInstallInfoToCache(InnerBundleInfo& info)
     }
 
     auto bundleName = info.GetBundleName();
-    auto appCodePath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR + bundleName;
+    auto appCodePath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR + bundleName;
     info.SetAppCodePath(appCodePath);
 
     std::string dataBaseDir = ServiceConstants::BUNDLE_APP_DATA_BASE_DIR + ServiceConstants::BUNDLE_EL[1] +
@@ -540,7 +540,7 @@ void BMSEventHandler::AddParseInfosToMap(
 void BMSEventHandler::ProcessRebootBundleUninstall() {}
 
 bool BMSEventHandler::InnerProcessUninstallModule(
-    const BundleInfo& bundleInfo, const std::unordered_map<std::string, InnerBundleInfo>& infos)
+    const BundleInfo& bundleInfo, const std::unordered_map<std::string, InnerBundleInfo>& infos, bool &isDowngrade)
 {
     return true;
 }
@@ -697,7 +697,7 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
     for (const auto& sharedBundleInfo : shareBundleInfos) {
         if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
             !sharedBundleInfo.sharedModuleInfos.empty()) {
-            std::string hspPath = Constants::BUNDLE_CODE_DIR + ServiceConstants::PATH_SEPARATOR +
+            std::string hspPath = std::string(Constants::BUNDLE_CODE_DIR) + ServiceConstants::PATH_SEPARATOR +
                                   sharedBundleInfo.name + ServiceConstants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
                                   std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) +
                                   ServiceConstants::PATH_SEPARATOR + sharedBundleInfo.sharedModuleInfos[0].name +
