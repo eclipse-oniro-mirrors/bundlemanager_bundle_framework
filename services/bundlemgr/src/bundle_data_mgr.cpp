@@ -3140,8 +3140,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         ProcessBundleMenu(bundleInfo, flags, true);
         ProcessBundleRouterMap(bundleInfo, flags);
         bundleInfos.emplace_back(bundleInfo);
-        // add clone bundle info
-        GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+        if (((static_cast<uint32_t>(flags) &
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=
+            static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE))) {
+            // add clone bundle info
+            GetCloneBundleInfos(innerBundleInfo, flags, responseUserId, bundleInfo, bundleInfos);
+        }
     }
     if (bundleInfos.empty()) {
         LOG_W(BMS_TAG_QUERY, "bundleInfos is empty");
@@ -3180,8 +3184,12 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         auto ret = ProcessBundleMenu(bundleInfo, flags, true);
         if (ret == ERR_OK) {
             bundleInfos.emplace_back(bundleInfo);
-            // add clone bundle info
-            GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
+            if (((static_cast<uint32_t>(flags) &
+                static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE)) !=
+                static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE))) {
+                // add clone bundle info
+                GetCloneBundleInfos(info, flags, Constants::ALL_USERID, bundleInfo, bundleInfos);
+            }
         }
     }
     if (bundleInfos.empty()) {
