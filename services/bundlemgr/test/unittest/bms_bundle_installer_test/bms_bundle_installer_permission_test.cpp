@@ -534,4 +534,76 @@ HWTEST_F(BmsBundleInstallerPermissionTest, ApplyDiffPatch_0100, Function | Small
     ret = installdHostImpl.ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetDiskUsage_0100
+ * @tc.name: test GetDiskUsage
+ * @tc.desc: 1.Test the GetDiskUsage of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetDiskUsage_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string dir;
+    bool isRealPath = false;
+    auto ret = installdHostImpl.GetDiskUsage(dir, isRealPath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CleanBundleDataDirByName_0100
+ * @tc.name: test CleanBundleDataDirByName
+ * @tc.desc: 1.Test the CleanBundleDataDirByName of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CleanBundleDataDirByName_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    int userId = 100;
+    int appIndex = 1;
+    ErrCode result = installdHostImpl.CleanBundleDataDirByName(BUNDLE_NAME, userId, appIndex);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetAllBundleStats_0100
+ * @tc.name: test GetAllBundleStats
+ * @tc.desc: 1.Test the GetAllBundleStats of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetAllBundleStats_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> bundleNames;
+    std::vector<int64_t> bundleStats = { 0 };
+    std::vector<int32_t> uids;
+    auto ret = hostImpl.GetAllBundleStats(bundleNames, 0, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: RemoveExtensionDir_0100
+ * @tc.name: test RemoveExtensionDir
+ * @tc.desc: 1.Test the RemoveExtensionDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, RemoveExtensionDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int userId = 100;
+    std::vector<std::string> extensionBundleDirs;
+    auto ret = hostImpl.RemoveExtensionDir(userId, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: IsExistExtensionDir_0100
+ * @tc.name: test IsExistExtensionDir
+ * @tc.desc: 1.Test the IsExistExtensionDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, IsExistExtensionDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    int32_t userId = 100;
+    std::string extensionBundleDir;
+    bool isExist = false;
+    auto ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS
