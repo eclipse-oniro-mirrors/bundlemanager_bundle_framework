@@ -336,8 +336,7 @@ ErrCode PatchProfile::TransformTo(
     // hot reload does not process so files
     if ((appQuickFix.deployingAppqfInfo.type == QuickFixType::PATCH) &&
         (!ParseNativeSo(patchExtractor, appQuickFix.deployingAppqfInfo))) {
-        LOG_E(BMS_TAG_DEFAULT, "ParseNativeSo failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        LOG_W(BMS_TAG_DEFAULT, "ParseNativeSo failed");
     }
     return ERR_OK;
 }

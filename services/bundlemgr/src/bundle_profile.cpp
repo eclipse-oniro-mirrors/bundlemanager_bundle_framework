@@ -2639,8 +2639,7 @@ ErrCode BundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(configJson, bundleExtractor, innerBundleInfo)) {
-        APP_LOGE("Parser native so failed");
-        return ERR_APPEXECFWK_PARSE_NATIVE_SO_FAILED;
+        APP_LOGW("Parser native so failed");
     }
     return ERR_OK;
 }
