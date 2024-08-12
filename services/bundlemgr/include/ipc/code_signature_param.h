@@ -24,12 +24,11 @@ struct CodeSignatureParam : public Parcelable {
     bool isEnterpriseBundle = false;
     bool isPreInstalledBundle = false;
     bool isCompileSdkOpenHarmony = false;
+    bool isInternaltestingBundle = false;
     std::string modulePath;
     std::string cpuAbi;
     std::string targetSoPath;
     std::string signatureFileDir;
-    bool isEnterpriseBundle = false;
-    bool isInternaltestingBundle = false;
     std::string appIdentifier;
 
     std::string ToString() const;

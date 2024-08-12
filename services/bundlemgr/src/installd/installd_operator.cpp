@@ -84,9 +84,9 @@ constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 using namespace OHOS::Security::CodeSign;
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
-static std::string CODE_DECRYPT = "/dev/code_decrypt";
-static int32_t INVALID_RETURN_VALUE = -1;
-static int32_t INVALID_FILE_DESCRIPTOR = -1;
+static const char* CODE_DECRYPT = "/dev/code_decrypt";
+static int8_t INVALID_RETURN_VALUE = -1;
+static int8_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
 std::recursive_mutex mMountsLock;
 static std::map<std::string, std::string> mQuotaReverseMounts;

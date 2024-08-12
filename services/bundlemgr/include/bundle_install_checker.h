@@ -46,8 +46,7 @@ struct InstallCheckParam {
     PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install internaltesting bundle permission
     PermissionStatus installInternaltestingBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
-    // is shell token
-    bool isCallByShell = false;
+    
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
     std::string specifiedDistributionType;
