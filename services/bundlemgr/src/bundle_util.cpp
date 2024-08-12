@@ -607,17 +607,17 @@ bool BundleUtil::IsSpecificUtd(const std::string &param)
 #endif
 }
 
-std::string BundleUtil::GetUtdByMimeType(const std::string &mimeType)
+std::vector<std::string> BundleUtil::GetUtdVectorByMimeType(const std::string &mimeType)
 {
 #ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
-    std::string utd;
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, utd);
-    if (ret != ERR_OK) {
-        return Constants::EMPTY_STRING;
+    std::vector<std::string> utdVector;
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypesByMIMEType(mimeType, utdVector);
+    if (ret != ERR_OK || utdVector.empty()) {
+        return {};
     }
-    return utd;
+    return utdVector;
 #else
-    return Constants::EMPTY_STRING;
+    return {};
 #endif
 }
 

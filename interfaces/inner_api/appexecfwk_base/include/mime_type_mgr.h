@@ -28,9 +28,7 @@ public:
     ~MimeTypeMgr() = default;
     static bool GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes);
     static bool GetMimeTypeByUri(const std::string &uri, std::string &mimeType);
-    static bool GetUtdByUri(const std::string &uri, std::string &utd);
-
-private:
+    static bool GetUtdVectorByUri(const std::string &uri, std::vector<std::string> &utdVector);
     static bool GetUriSuffix(const std::string &uri, std::string &suffix);
 };
 }
