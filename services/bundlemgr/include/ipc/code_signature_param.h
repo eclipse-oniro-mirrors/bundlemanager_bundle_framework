@@ -28,6 +28,8 @@ struct CodeSignatureParam : public Parcelable {
     std::string cpuAbi;
     std::string targetSoPath;
     std::string signatureFileDir;
+    bool isEnterpriseBundle = false;
+    bool isInternaltestingBundle = false;
     std::string appIdentifier;
 
     std::string ToString() const;

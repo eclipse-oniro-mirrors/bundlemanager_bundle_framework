@@ -1763,13 +1763,13 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0058, Function | SmallTest
  * Function: GetAppDistributionType
  * @tc.name: test GetAppDistributionType
  * @tc.require: issueI5N7AD
- * @tc.desc: GetAppDistributionType none
+ * @tc.desc: GetAppDistributionType internaltesting
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0059, Function | SmallTest | Level0)
 {
     QuickFixChecker checker;
     std::string type = checker.GetAppDistributionType(static_cast<Security::Verify::AppDistType>(7));
-    EXPECT_EQ(type, "none");
+    EXPECT_EQ(type, "internaltesting");
 }
 
 /**

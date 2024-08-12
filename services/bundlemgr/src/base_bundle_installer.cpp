@@ -1102,6 +1102,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "check dependency failed %{public}d");
     // hapVerifyResults at here will not be empty
     verifyRes_ = hapVerifyResults[0];
+
+    Security::Verify::ProvisionInfo provisionInfo = verifyRes_.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING) {
+        result = DeliveryProfileToCodeSign();
+        CHECK_RESULT(result, "delivery profile failed %{public}d");
+    }
+
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
@@ -1441,7 +1448,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("remove group dir failed for %{public}s", oldInfo.GetBundleName().c_str());
     }
 
-    DeleteEncryptionKeyId(oldInfo);
+    DeleteEncryptionKeyId(oldInfo, installParam.isKeepData);
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         LOG_D(BMS_TAG_INSTALLER, "only delete userinfo %{public}d", userId_);
@@ -2629,7 +2636,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuotactl, proxy get error");
         return;
     }
-    
+
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
         LOG_W(BMS_TAG_INSTALLER, "SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
@@ -2838,13 +2845,14 @@ bool BaseBundleInstaller::SetEncryptionDirPolicy(InnerBundleInfo &info)
 void BaseBundleInstaller::CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info,
     const std::string &dir)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLER, "CreateScreenLockProtectionExistDirs start");
     InnerBundleUserInfo newInnerBundleUserInfo;
     if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
         LOG_E(BMS_TAG_INSTALLER, "bundle(%{public}s) get user(%{public}d) failed",
             info.GetBundleName().c_str(), userId_);
         return;
     }
+    LOG_I(BMS_TAG_INSTALLER, "create el5 dir: %{public}s, uid: %{public}d",
+        dir.c_str(), newInnerBundleUserInfo.uid);
     int32_t mode = S_IRWXU;
     int32_t gid = newInnerBundleUserInfo.uid;
     if (dir.find(ServiceConstants::DATABASE) != std::string::npos) {
@@ -2891,30 +2899,26 @@ void BaseBundleInstaller::CreateScreenLockProtectionDir()
         }
         return;
     }
-    bool dirExist = false;
     for (const std::string &dir : dirs) {
-        if (InstalldClient::GetInstance()->IsExistDir(dir, dirExist) != ERR_OK) {
-            LOG_E(BMS_TAG_INSTALLER, "check if dir existed failed");
-            return;
-        }
-        if (!dirExist) {
-            LOG_D(BMS_TAG_INSTALLER, "ScreenLockProtectionDir: %{public}s need to be created", dir.c_str());
-            CreateScreenLockProtectionExistDirs(info, dir);
-        }
+        LOG_D(BMS_TAG_INSTALLER, "create el5 dir: %{public}s.", dir.c_str());
+        CreateScreenLockProtectionExistDirs(info, dir);
     }
-    if (!dirExist) {
-        if (!SetEncryptionDirPolicy(info)) {
-            LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
-        }
+    if (!SetEncryptionDirPolicy(info)) {
+        LOG_E(BMS_TAG_INSTALLER, "Encryption failed dir");
     }
 }
 
-void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const
+void BaseBundleInstaller::DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const
 {
     if (oldInfo.GetBundleName().empty()) {
         LOG_W(BMS_TAG_INSTALLER, "bundleName is empty");
         return;
     }
+    if (isKeepData) {
+        LOG_I(BMS_TAG_INSTALLER, "keep el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
+        return;
+    }
+    LOG_I(BMS_TAG_INSTALLER, "delete el5 dir -n %{public}s", oldInfo.GetBundleName().c_str());
     std::vector<std::string> dirs = GenerateScreenLockProtectionDir(oldInfo.GetBundleName());
     for (const std::string &dir : dirs) {
         if (InstalldClient::GetInstance()->RemoveDir(dir) != ERR_OK) {
@@ -3454,6 +3458,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
+    isInternaltestingBundle_ = bundleInstallChecker_->CheckInternaltestingBundle(hapVerifyRes[0]);
     appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
         DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     SetAppDistributionType(infos);
@@ -3774,6 +3779,7 @@ ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installP
         installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installInternaltestingBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
         // need vaild permission
@@ -4471,6 +4477,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     isEntryInstalled_ = false;
     entryModuleName_.clear();
     isEnterpriseBundle_ = false;
+    isInternaltestingBundle_ = false;
     appIdentifier_.clear();
     targetSoPathMap_.clear();
     isAppService_ = false;
@@ -4843,6 +4850,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(InnerBundleInfo &
     codeSignatureParam.targetSoPath = targetSoPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isPreInstalledBundle = info.IsPreInstallApp();
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
@@ -4876,6 +4884,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<
     codeSignatureParam.modulePath = realHapPath;
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.isInternaltestingBundle = isInternaltestingBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     codeSignatureParam.isCompileSdkOpenHarmony = (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY);
     codeSignatureParam.isPreInstalledBundle = (iter->second).IsPreInstallApp();
@@ -5336,6 +5345,7 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::INTERNALTESTING ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
         return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());

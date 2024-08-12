@@ -63,7 +63,6 @@ public:
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo);
     ErrCode CreateBundleDataDir(int32_t userId);
-    ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback);
 
 private:
     ErrCode Connect();

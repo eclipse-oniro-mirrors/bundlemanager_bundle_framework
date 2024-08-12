@@ -855,6 +855,7 @@ public:
     bool CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const;
     bool CheckHspBundleIsRelied(const std::string &hspBundleName) const;
     bool IsPreInstallApp(const std::string &bundleName);
+    bool GetBundleType(const std::string &bundleName, BundleType &bundleType)const;
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
     ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
@@ -874,6 +875,7 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    std::vector<std::string> GetAllDriverBundleName() const;
     bool IsBundleExist(const std::string &bundleName) const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;

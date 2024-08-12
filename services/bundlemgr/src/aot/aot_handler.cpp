@@ -447,9 +447,6 @@ void AOTHandler::CopyApWithBundle(const std::string &bundleName, const BundleInf
             return;
         }
         std::string destAp = COPY_AP_DEST_PATH  + bundleName + "_" + moduleName + ServiceConstants::AP_SUFFIX;
-        if (sourceAp.find(destAp) == std::string::npos) {
-            return;
-        }
         result.append(sourceAp);
         errCode = InstalldClient::GetInstance()->CopyFile(sourceAp, destAp);
         if (errCode != ERR_OK) {
@@ -904,6 +901,7 @@ std::string AOTHandler::GetCurAOTVersion() const
     std::string aotVersion;
     ErrCode ret = aotVersionFunc(aotVersion);
     APP_LOGI("GetCurAOTVersion ret : %{public}d, aotVersion: %{public}s", ret, aotVersion.c_str());
+    dlclose(handle);
     return aotVersion;
 }
 

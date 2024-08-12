@@ -38,7 +38,7 @@ private:
 
     static void OnSystemLanguageChange(const std::string &language, const uint32_t type);
 
-    static void OnApplicationThemeChanged(const std::string &theme, const uint32_t type);
+    static void OnApplicationThemeChanged(const std::string &theme, const int32_t themeId, const uint32_t type);
 };
 #endif
 } // AppExecFwk

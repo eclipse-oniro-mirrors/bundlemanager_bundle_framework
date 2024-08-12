@@ -143,6 +143,11 @@ protected:
     {
         state_ = state;
     }
+
+    std::string GetCurrentBundleName() const
+    {
+        return bundleName_;
+    }
     /**
      * @brief The main function for bundle install by bundleName.
      * @param bundleName Indicates the bundleName of the application to install.
@@ -682,7 +687,7 @@ private:
     void CreateScreenLockProtectionDir();
     void DeleteScreenLockProtectionDir(const std::string bundleName) const;
     bool SetEncryptionDirPolicy(InnerBundleInfo &info);
-    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo) const;
+    void DeleteEncryptionKeyId(const InnerBundleInfo &oldInfo, bool isKeepData) const;
     void CreateScreenLockProtectionExistDirs(const InnerBundleInfo &info, const std::string &dir);
 #ifdef APP_DOMAIN_VERIFY_ENABLED
     void PrepareSkillUri(const std::vector<Skill> &skills, std::vector<AppDomainVerify::SkillUri> &skillUris) const;
@@ -763,6 +768,7 @@ private:
     std::string entryModuleName_ = "";
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
+    bool isInternaltestingBundle_ = false;
     std::string appIdentifier_ = "";
     Security::Verify::HapVerifyResult verifyRes_;
     std::map<std::string, std::string> targetSoPathMap_;

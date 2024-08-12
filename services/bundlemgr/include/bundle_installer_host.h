@@ -135,7 +135,7 @@ public:
 
     virtual ErrCode UninstallCloneApp(const std::string &bundleName, int32_t userId, int32_t appIndex) override;
 
-    ErrCode InstallHmpBundle(const std::string &filePath, bool isNeedRollback) override;
+    virtual ErrCode InstallExisted(const std::string &bundleName, int32_t userId) override;
 private:
     /**
      * @brief Handles the Install function called from a IBundleInstaller proxy object.
@@ -204,7 +204,7 @@ private:
 
     void HandleInstallCloneApp(MessageParcel &data, MessageParcel &reply);
     void HandleUninstallCloneApp(MessageParcel &data, MessageParcel &reply);
-    void HandleInstallHmpBundle(MessageParcel &data, MessageParcel &reply);
+    void HandleInstallExisted(MessageParcel &data, MessageParcel &reply);
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);

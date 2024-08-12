@@ -2893,8 +2893,12 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         FilterAbilityInfos(abilityInfos);
+        APP_LOGI_NOFUNC("ImplicitQueryInfos ret a.size:%{public}zu e.size:%{public}zu",
+            abilityInfos.size(), extensionInfos.size());
         return true;
     }
+    APP_LOGI_NOFUNC("ImplicitQueryInfos ret a.size:%{public}zu e.size:%{public}zu",
+        abilityInfos.size(), extensionInfos.size());
     return ret;
 }
 
@@ -4118,9 +4122,8 @@ ErrCode BundleMgrHostImpl::GetCloneBundleInfo(const std::string &bundleName, int
     }
     auto res = dataMgr->GetCloneBundleInfo(bundleName, flags, appIndex, bundleInfo, userId);
     if (res != ERR_OK) {
-        APP_LOGE(
-            "failed -n %{public}s -u %{public}d -i %{public}d -f %{public}d err:%{public}d",
-            bundleName.c_str(), userId, appIndex, flags, res);
+        APP_LOGE_NOFUNC("GetCloneBundleInfo fail -n %{public}s -u %{public}d -i %{public}d -f %{public}d"
+            " err:%{public}d", bundleName.c_str(), userId, appIndex, flags, res);
         return res;
     }
     return ERR_OK;

@@ -3028,4 +3028,112 @@ HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0030, Function | Smal
     ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME, signatureFileDir);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
 }
+
+/**
+ * @tc.number: AddOverlayModuleStates_0100
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of AddOverlayModuleStates.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    int32_t userIdNew = -3;
+    dataMgr->AddUserId(userIdNew);
+
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
+    overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
+    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    dataMgr->RemoveUserId(userIdNew);
+}
+
+/**
+ * @tc.number: AddOverlayModuleStates_0200
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of AddOverlayModuleStates.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0200, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    int32_t userIdNew = -3;
+    dataMgr->AddUserId(userIdNew);
+
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    std::string item = "1";
+    userInfo.bundleUserInfo.overlayModulesState.push_back(item);
+    innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
+    overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
+    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    dataMgr->RemoveUserId(userIdNew);
+}
+
+/**
+ * @tc.number: AddOverlayModuleStates_0300
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of AddOverlayModuleStates.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0300, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    int32_t userIdNew = -3;
+    dataMgr->AddUserId(userIdNew);
+
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    std::string item = "test_1";
+    userInfo.bundleUserInfo.overlayModulesState.push_back(item);
+    innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "test";
+    innerBundleInfo.innerModuleInfos_.emplace(TEST_BUNDLE_NAME, innerModuleInfo);
+    innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    innerBundleInfo.SetTargetBundleName(TEST_BUNDLE_NAME);
+    overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
+    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    dataMgr->RemoveUserId(userIdNew);
+}
+
+/**
+ * @tc.number: AddOverlayModuleStates_0400
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of AddOverlayModuleStates.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, AddOverlayModuleStates_0400, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    int32_t userIdNew = -3;
+    dataMgr->AddUserId(userIdNew);
+
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    std::string item = "test_1";
+    userInfo.bundleUserInfo.overlayModulesState.push_back(item);
+    innerBundleInfo.innerBundleUserInfos_.emplace(TEST_BUNDLE_NAME, userInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "test";
+    innerBundleInfo.innerModuleInfos_.emplace(TEST_BUNDLE_NAME, innerModuleInfo);
+    innerBundleInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    innerBundleInfo.SetTargetBundleName(TEST_BUNDLE_NAME);
+    overlayDataMgr.AddOverlayModuleStates(innerBundleInfo, userInfo);
+    EXPECT_EQ(userInfo.bundleUserInfo.userId, USERID);
+    dataMgr->RemoveUserId(userIdNew);
+}
 } // OHOS

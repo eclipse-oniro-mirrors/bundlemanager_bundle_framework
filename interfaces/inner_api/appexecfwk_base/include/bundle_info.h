@@ -90,6 +90,7 @@ struct SignatureInfo : public Parcelable {
     std::string appId;
     std::string fingerprint;
     std::string appIdentifier;
+    std::string certificate;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

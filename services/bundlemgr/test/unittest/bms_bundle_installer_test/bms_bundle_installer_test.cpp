@@ -107,6 +107,8 @@ const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string TEST_CPU_ABI = "arm64";
+constexpr const char* BMS_SERVICE_PATH = "/data/service";
+const int64_t FIVE_MB = 1024 * 1024 * 5; // 5MB
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -6178,6 +6180,19 @@ HWTEST_F(BmsBundleInstallerTest, Install_0001, Function | SmallTest | Level0)
 }
 
 /**
+ * @tc.number: CheckSystemFreeSizeAndClean_0100
+ * @tc.name: test CheckSystemFreeSizeAndClean
+ * @tc.desc: test CheckSystemFreeSizeAndClean of bundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckSystemFreeSizeAndClean_0100, Function | SmallTest | Level1)
+{
+    BaseBundleInstaller installer;
+    installer.CheckSystemFreeSizeAndClean();
+    bool ret = BundleUtil::CheckSystemFreeSize(BMS_SERVICE_PATH, FIVE_MB);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: SendBundleSystemEvent_0010
  * @tc.name: test SendBundleSystemEvent
  * @tc.desc: 1.SendBundleSystemEvent
@@ -6250,5 +6265,22 @@ HWTEST_F(BmsBundleInstallerTest, ReadFileIntoJson_0100, Function | SmallTest | L
     nlohmann::json jsonBuf;
     bool ret = hostImpl.ReadFileIntoJson(filePath, jsonBuf);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: VerifyCodeSignatureForNativeFiles_0100
+ * @tc.name: test VerifyCodeSignatureForNativeFiles
+ * @tc.desc: test VerifyCodeSignatureForNativeFiles of BundleInstallerManager
+*/
+HWTEST_F(BmsBundleInstallerTest, VerifyCodeSignatureForNativeFiles_0100, Function | SmallTest | Level1)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+
+    std::string bundlePath;
+    std::string cpuAbi;
+    std::string targetSoPath;
+    ErrCode ret = appServiceFwkInstaller.VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, targetSoPath);
+
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 } // OHOS

@@ -2465,15 +2465,10 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
 
     for (const auto &info : innerModuleInfos_) {
         bundleInfo.hapModuleNames.emplace_back(info.second.modulePackage);
-        auto hapmoduleinfo = FindHapModuleInfo(info.second.modulePackage, userId, appIndex);
-        if (hapmoduleinfo) {
-            bundleInfo.moduleNames.emplace_back(info.second.moduleName);
-            bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
-            bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
-            bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
-        } else {
-            LOG_E(BMS_TAG_QUERY, "can not find hapmoduleinfo %{public}s", info.second.moduleName.c_str());
-        }
+        bundleInfo.moduleNames.emplace_back(info.second.moduleName);
+        bundleInfo.moduleDirs.emplace_back(info.second.modulePath);
+        bundleInfo.modulePublicDirs.emplace_back(info.second.moduleDataDir);
+        bundleInfo.moduleResPaths.emplace_back(info.second.moduleResPath);
     }
     ProcessBundleFlags(flags, userId, bundleInfo, appIndex);
     return ERR_OK;

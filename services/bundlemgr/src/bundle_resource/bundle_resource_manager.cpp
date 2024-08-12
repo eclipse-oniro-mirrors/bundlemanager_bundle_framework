@@ -146,9 +146,9 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId, const uint3
     SendBundleResourcesChangedEvent(userId, type);
     std::string systemState;
     if (bundleResourceRdb_->GetCurrentSystemState(systemState)) {
-        APP_LOGI("current resource rdb system state:%{public}s", systemState.c_str());
+        APP_LOGI_NOFUNC("current resource rdb system state:%{public}s", systemState.c_str());
     }
-    APP_LOGI("add all resource end");
+    APP_LOGI_NOFUNC("add all resource end");
     return true;
 }
 

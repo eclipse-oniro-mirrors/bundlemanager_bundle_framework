@@ -24,6 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
+const int8_t CLOSE_TIME = 15; // delay 15s to backup
 }
 
 BundleResourceRdb::BundleResourceRdb()
@@ -126,6 +127,7 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         APP_LOGE("BatchInsert size not expected");
         return false;
     }
+    BackupRdb();
     return ret;
 }
 
@@ -284,7 +286,7 @@ bool BundleResourceRdb::GetBundleResourceInfo(
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("bundleName %{public}s GoToFirstRow failed, ret %{public}d, systemState:%{public}s",
+        APP_LOGE_NOFUNC("rdb GetBundleResourceInfo -n %{public}s failed:%{public}d systemState:%{public}s",
             bundleName.c_str(), ret, systemState.c_str());
         return false;
     }
@@ -297,7 +299,7 @@ bool BundleResourceRdb::GetLauncherAbilityResourceInfo(
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos,
     const int32_t appIndex)
 {
-    APP_LOGI("start, bundleName:%{public}s appIndex:%{public}d", bundleName.c_str(), appIndex);
+    APP_LOGI_NOFUNC("rdb GetLauncherAbilityResourceInfo -n %{public}s -i %{public}d", bundleName.c_str(), appIndex);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -548,6 +550,7 @@ bool BundleResourceRdb::UpdateResourceForSystemStateChanged(const std::vector<Re
         }
         absRdbPredicates.Clear();
     }
+    BackupRdb();
     return ret;
 }
 
@@ -601,6 +604,33 @@ void BundleResourceRdb::ParseKey(const std::string &key,
     info.ParseKey(key);
     bundleResourceInfo.bundleName = info.bundleName_;
     bundleResourceInfo.appIndex = info.appIndex_;
+}
+
+void BundleResourceRdb::BackupRdb()
+{
+    if (isBackingUp_) {
+        return;
+    }
+    isBackingUp_ = true;
+    std::weak_ptr<BundleResourceRdb> weakPtr = weak_from_this();
+    auto task = [weakPtr] {
+        APP_LOGI("bundleResource.db backup start");
+        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            APP_LOGE("sharedPtr is null");
+            return;
+        }
+        if (sharedPtr->rdbDataManager_ != nullptr) {
+            sharedPtr->rdbDataManager_->BackupRdb();
+        } else {
+            APP_LOGE("rdbDataManager_ is null");
+        }
+        sharedPtr->isBackingUp_ = false;
+        APP_LOGI("bundleResource.db backup end");
+    };
+    std::thread backUpThread(task);
+    backUpThread.detach();
 }
 } // AppExecFwk
 } // OHOS

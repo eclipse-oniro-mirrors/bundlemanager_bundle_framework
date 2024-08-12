@@ -19,8 +19,8 @@
 #include "bundle_clone_installer.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "bundle_multiuser_installer.h"
 #include "bundle_permission_mgr.h"
-#include "hmp_bundle_installer.h"
 #include "ipc_skeleton.h"
 
 namespace OHOS {
@@ -102,8 +102,8 @@ int BundleInstallerHost::OnRemoteRequest(
         case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_CLONE_APP):
             HandleUninstallCloneApp(data, reply);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_HMP_BUNDLE):
-            HandleInstallHmpBundle(data, reply);
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_EXISTED):
+            HandleInstallExisted(data, reply);
             break;
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -361,7 +361,9 @@ bool BundleInstallerHost::Install(
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -390,7 +392,9 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -507,7 +511,9 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
-            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+            ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -633,6 +639,10 @@ bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, In
     verifiedInstallParam.installEtpMdmBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installInternaltestingBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE)
+            ? PermissionStatus::HAVE_PERMISSION_STATUS
+            : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     verifiedInstallParam.installUpdateSelfBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_SELF_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
@@ -657,6 +667,8 @@ bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerI
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(
             ServiceConstants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(
+            ServiceConstants::PERMISSION_INSTALL_INTERNALTESTING_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(ServiceConstants::PERMISSION_INSTALL_QUICK_FIX_BUNDLE)) {
         LOG_E(BMS_TAG_INSTALLER, "install permission denied");
         return false;
@@ -835,34 +847,40 @@ void BundleInstallerHost::HandleUninstallCloneApp(MessageParcel &data, MessagePa
     LOG_D(BMS_TAG_INSTALLER, "handle uninstall clone app message finished");
 }
 
-void BundleInstallerHost::HandleInstallHmpBundle(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32_t userId)
 {
-    LOG_D(BMS_TAG_INSTALLER, "handle install hmp bundle message");
-    std::string filePath = Str16ToStr8(data.ReadString16());
-    bool isNeedRollback = data.ReadBool();
+    LOG_D(BMS_TAG_INSTALLER, "params[bundleName: %{public}s, user_id: %{public}d]",
+        bundleName.c_str(), userId);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_INSTALLER, "install existed app failed due to error parameters");
+        return ERR_APPEXECFWK_INSTALL_EXISTED_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsSystemApp()) {
+        LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api bundleName: %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        LOG_E(BMS_TAG_INSTALLER, "InstallExisted permission denied");
+        return ERR_APPEXECFWK_PERMISSION_DENIED;
+    }
+    std::shared_ptr<BundleMultiUserInstaller> installer = std::make_shared<BundleMultiUserInstaller>();
+    return installer->InstallExistedApp(bundleName, userId);
+}
 
-    auto ret = InstallHmpBundle(filePath, isNeedRollback);
+void BundleInstallerHost::HandleInstallExisted(MessageParcel &data, MessageParcel &reply)
+{
+    LOG_D(BMS_TAG_INSTALLER, "handle install existed app message");
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t userId = data.ReadInt32();
+
+    LOG_I(BMS_TAG_INSTALLER, "receive InstallExisted Request -n %{public}s -u %{public}d",
+        bundleName.c_str(), userId);
+
+    auto ret = InstallExisted(bundleName, userId);
     if (!reply.WriteInt32(ret)) {
         LOG_E(BMS_TAG_INSTALLER, "write failed");
     }
-    LOG_D(BMS_TAG_INSTALLER, "handle install hmp bundle message finished");
-}
-
-ErrCode BundleInstallerHost::InstallHmpBundle(const std::string &filePath, bool isNeedRollback)
-{
-    LOG_D(BMS_TAG_INSTALLER, "install hmp bundle filePath: %{public}s", filePath.c_str());
-    if (filePath.empty() || filePath.find(MODULE_UPDATE_DIR) != 0 ||
-        filePath.find("..") != std::string::npos) {
-        LOG_E(BMS_TAG_INSTALLER, "install hmp bundle failed due to invalid filePath: %{public}s", filePath.c_str());
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
-    int32_t uid = IPCSkeleton::GetCallingUid();
-    if (uid != ServiceConstants::MODULE_UPDATE_UID) {
-        LOG_E(BMS_TAG_INSTALLER, "callingName is invalid, uid: %{public}d", uid);
-        return ERR_APPEXECFWK_PERMISSION_DENIED;
-    }
-    std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
-    return installer->InstallHmpBundle(filePath, isNeedRollback);
+    LOG_D(BMS_TAG_INSTALLER, "handle installExisted message finished");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

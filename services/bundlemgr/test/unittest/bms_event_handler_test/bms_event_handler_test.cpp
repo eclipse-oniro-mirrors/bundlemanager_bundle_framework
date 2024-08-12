@@ -448,7 +448,8 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0100, Function | Small
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     BundleInfo bundleInfo;
     std::unordered_map<std::string, InnerBundleInfo> infos;
-    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    bool isDownGrade = false;
+    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos, isDownGrade);
     EXPECT_FALSE(ret);
 
     bundleInfo.versionCode = 2;
@@ -457,17 +458,17 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0100, Function | Small
     baseBundleInfo.versionCode = 1;
     innerBundleInfo.SetBaseBundleInfo(baseBundleInfo);
     infos[TEST_BUNDLE_NAME] = innerBundleInfo;
-    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos, isDownGrade);
     EXPECT_FALSE(ret);
 
     bundleInfo.versionCode = 1;
-    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos, isDownGrade);
     EXPECT_FALSE(ret);
 
     HapModuleInfo hapModuleInfo;
     hapModuleInfo.hapPath = "/data/app/el1/bundle/public/xxxxx";
     bundleInfo.hapModuleInfos.emplace_back(hapModuleInfo);
-    ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    ret = handler->InnerProcessUninstallModule(bundleInfo, infos, isDownGrade);
     EXPECT_FALSE(ret);
 }
 
@@ -499,7 +500,8 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessUninstallModule_0200, Function | Small
     innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
     infos[TEST_BUNDLE_NAME] = innerBundleInfo;
 
-    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos);
+    bool isDownGrade = false;
+    bool ret = handler->InnerProcessUninstallModule(bundleInfo, infos, isDownGrade);
     EXPECT_TRUE(ret);
 }
 
