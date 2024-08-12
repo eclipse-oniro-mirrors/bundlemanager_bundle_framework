@@ -68,6 +68,7 @@ constexpr const char* MODULE_UPDATE_VALUE_REVERT_BMS = "revert_bms";
 constexpr const char* MODULE_UPDATE_VALUE_REVERT = "revert";
 constexpr const char* MODULE_UPDATE_APP_SERVICE_DIR = "appServiceFwk";
 constexpr const char* MODULE_UPDATE_INSTALL_RESULT = "persist.moduleupdate.bms.install.";
+constexpr const char* HAP_PATH_DATA_AREA = "/data/app/el1/bundle/public";
 constexpr const char* MODULE_UPDATE_INSTALL_RESULT_FALSE = "false";
 constexpr const char* MODULE_UPDATE_PARAM_EMPTY = "";
 constexpr const char* FINGERPRINT = "fingerprint";
@@ -2241,13 +2242,45 @@ bool BMSEventHandler::HandleInstallModuleUpdateNormalApp(const std::vector<std::
         std::shared_ptr<HmpBundleInstaller> installer = std::make_shared<HmpBundleInstaller>();
         bool removable = GetRemovableInfo(appDir);
         auto res = installer->InstallNormalAppInHmp(normalizedAppDir, removable);
-        if (res != ERR_OK) {
-            LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
-            result = false;
+        LOG_I(BMS_TAG_DEFAULT, "install %{public}s %{public}d", appDir.c_str(), res);
+        if (res == ERR_OK || (res == ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE && CheckAppIsUpdatedByUser(appDir))) {
+            continue;
+        }
+        LOG_E(BMS_TAG_DEFAULT, "install %{public}s path failed", appDir.c_str());
+        result = false;
+    }
+    return result;
+}
+
+bool BMSEventHandler::CheckAppIsUpdatedByUser(const std::string& appDir)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        return false;
+    }
+    std::string bundleName = GetBundleNameByPreInstallPath(appDir);
+    if (bundleName.empty()) {
+        LOG_E(BMS_TAG_DEFAULT, "get bundleName failed, %{public}s", appDir.c_str());
+        return false;
+    }
+    BundleInfo bundleInfo;
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName, baseFlag, bundleInfo, Constants::ANY_USERID);
+    if (ret != ERR_OK) {
+        LOG_I(BMS_TAG_DEFAULT, "%{public}s not found", bundleName.c_str());
+        return false;
+    }
+    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        if (hapInfo.hapPath.size() > std::string(HAP_PATH_DATA_AREA).size() &&
+            hapInfo.hapPath.compare(0, std::string(HAP_PATH_DATA_AREA).size(), std::string(HAP_PATH_DATA_AREA)) == 0) {
+            LOG_I(BMS_TAG_DEFAULT, "%{public}s has been updated by user", hapInfo.name.c_str());
+            return true;
         }
     }
-
-    return result;
+    LOG_I(BMS_TAG_DEFAULT, "%{public}s has not been updated by user", bundleName.c_str());
+    return false;
 }
 
 bool BMSEventHandler::GetRemovableInfo(const std::string& bundleDir)
