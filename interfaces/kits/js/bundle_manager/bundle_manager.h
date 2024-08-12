@@ -44,6 +44,7 @@ public:
     explicit ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~ClearCacheListener() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+    static void HandleCleanEnv(void *data);
 };
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}

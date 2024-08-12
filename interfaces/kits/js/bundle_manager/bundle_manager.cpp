@@ -136,7 +136,7 @@ namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
 
-void HandleCleanEnv(void *data)
+void ClearCacheListener::HandleCleanEnv(void *data)
 {
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
     cache.clear();
@@ -3874,7 +3874,6 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
@@ -4574,7 +4573,6 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
     auto uid = IPCSkeleton::GetCallingUid();
     std::string bundleName = std::to_string(uid);
     int32_t userId = uid / Constants::BASE_USER_RANGE;
-    napi_add_env_cleanup_hook(env, HandleCleanEnv, &cache);
     napi_value nBundleInfo = nullptr;
     if (!CommonFunc::CheckBundleFlagWithPermission(flags)) {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
