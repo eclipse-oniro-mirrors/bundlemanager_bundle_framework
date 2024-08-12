@@ -997,4 +997,22 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_3000, Function | 
     EXPECT_TRUE(param.callback == nullptr);
     sleep(1);
 }
+
+/**
+ * @tc.number: BundleManagerCallbackStub_0500
+ * @tc.name: Test OnRemoteRequest
+ * @tc.desc: Verify the OnRemoteRequest return 0.
+ */
+HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0500, Function | MediumTest | Level1)
+{
+    MockBundleManagerCallbackStub stub;
+    uint32_t code = 1;
+    MessageParcel data;
+    data.WriteInterfaceToken(BundleManagerCallbackStub::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option;
+
+    int32_t ret = stub.OnRemoteRequest(code, data, reply, option);
+    EXPECT_NE(ret, 0);
+}
 }

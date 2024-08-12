@@ -5426,6 +5426,22 @@ HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BeforeInstall_0200
+ * @tc.name: test BeforeInstall
+ * @tc.desc: 1.Test the BeforeInstall
+*/
+HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0200, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+
+    ErrCode res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
  * @tc.number: CheckFileType_0100
  * @tc.name: test CheckFileType
  * @tc.desc: 1.Test the CheckFileType
@@ -6346,5 +6362,35 @@ HWTEST_F(BmsBundleInstallerTest, DeleteEncryptionKeyId_0100, Function | SmallTes
     keyId = "test.keyId";
     ret = hostImpl.DeleteEncryptionKeyId(keyId);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_DELETE_KEY_FAILED);
+}
+
+/**
+ * @tc.number: ExtractModule_0100
+ * @tc.name: test ExtractModule
+ * @tc.desc: 1.Test the ExtractModule
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractModule_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo newInfo;
+    std::string bundlePath;
+
+    appServiceFwkInstaller.newInnerBundleInfo_.baseApplicationInfo_->bundleName = "com.acts.example";
+    appServiceFwkInstaller.MergeBundleInfos(newInfo);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+
+    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    Security::Verify::ProvisionInfo provisionInfo;
+    hapVerifyResult.SetProvisionInfo(provisionInfo);
+    hapVerifyRes.push_back(hapVerifyResult);
+
+    appServiceFwkInstaller.GenerateOdid(infos, hapVerifyRes);
+
+    ErrCode ret = appServiceFwkInstaller.ExtractModule(newInfo, bundlePath);
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
