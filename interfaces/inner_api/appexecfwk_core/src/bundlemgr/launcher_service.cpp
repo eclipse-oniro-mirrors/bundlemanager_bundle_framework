@@ -326,7 +326,7 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
     std::vector<AbilityInfo> abilityInfos;
     ErrCode err = iBundleMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
     if (err != ERR_OK) {
-        APP_LOGE("QueryLauncherAbilityInfos failed");
+        APP_LOGE_NOFUNC("QueryLauncherAbilityInfos fail:%{public}d -n %{public}s", err, bundleName.c_str());
         return err;
     }
     for (const auto &ability : abilityInfos) {

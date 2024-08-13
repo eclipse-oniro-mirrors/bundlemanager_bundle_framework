@@ -4565,7 +4565,6 @@ ErrCode BundleMgrProxy::GetVectorFromParcelIntelligentWithErrCode(
 
     ErrCode res = reply.ReadInt32();
     if (res != ERR_OK) {
-        APP_LOGE("GetParcelableInfosWithErrCode: %{public}d", res);
         return res;
     }
 
@@ -4718,7 +4717,7 @@ ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel 
     }
     ErrCode ret = reply.ReadInt32();
     if (ret != ERR_OK) {
-        APP_LOGE("host reply err %{public}d", ret);
+        APP_LOGD("host reply err %{public}d", ret);
         return ret;
     }
     return InnerGetBigString(reply, result);

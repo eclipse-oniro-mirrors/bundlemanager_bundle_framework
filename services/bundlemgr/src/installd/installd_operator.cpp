@@ -208,7 +208,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "del %{public}s", path.c_str());
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "del %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -860,7 +860,7 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     if (dir.empty() || (dir.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetDiskUsage dir path invalid");
+        LOG_D(BMS_TAG_INSTALLD, "GetDiskUsage path invalid");
         return 0;
     }
     std::string filePath = dir;
@@ -902,12 +902,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)
 {
     if (currentPath.empty() || (currentPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "TraverseCacheDirectory current path invaild");
+        LOG_D(BMS_TAG_INSTALLD, "current path invaild");
         return;
     }
     std::string filePath = "";
     if (!PathToRealPath(currentPath, filePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", currentPath.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "not real path: %{public}s", currentPath.c_str());
         return;
     }
     DIR* dir = opendir(filePath.c_str());

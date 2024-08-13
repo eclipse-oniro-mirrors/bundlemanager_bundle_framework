@@ -45,7 +45,7 @@ constexpr const char* PERMISSION_GET_DISPOSED_STATUS = "ohos.permission.GET_DISP
 
 BundleCommonEventMgr::BundleCommonEventMgr()
 {
-    APP_LOGI("enter BundleCommonEventMgr");
+    APP_LOGI_NOFUNC("enter BundleCommonEventMgr");
     Init();
 }
 
