@@ -693,6 +693,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1200, Function | SmallTes
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
     EXPECT_EQ(installRes, ERR_OK);
     CheckFileExist();
+    ClearBundleInfo(BUNDLE_NAME);
 }
 
 /**
