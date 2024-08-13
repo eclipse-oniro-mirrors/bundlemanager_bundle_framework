@@ -114,25 +114,25 @@ struct AppEnvironment : public Parcelable {
 
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
+    bool compressNativeLibs = true;
+    bool isLibIsolated = false;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
+    int supportedModes = 0;
     std::string name;        // module.name in config.json
     std::string package;
     std::string moduleName;  // module.distro.moduleName in config.json
     std::string description;
-    int32_t descriptionId = 0;
     std::string iconPath;
-    int32_t iconId = 0;
     std::string label;
-    int32_t labelId = 0;
     std::string backgroundImg;
     std::string mainAbility;
     std::string srcPath;
     std::string hashValue;
     std::string hapPath;
-    int supportedModes = 0;
-    bool isLibIsolated = false;
     std::string nativeLibraryPath;
     std::string cpuAbi;
-    bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
 
     // quick fix hqf info
@@ -159,12 +159,12 @@ struct HapModuleInfo : public Parcelable {
     bool installationFree = false;
     bool isModuleJson = false;
     bool isStageBasedModel = false;
+    int32_t upgradeFlag = 0;
     std::map<std::string, bool> isRemovable;
     ModuleType moduleType = ModuleType::UNKNOWN;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<Metadata> metadata;
     std::vector<ProxyData> proxyDatas;
-    int32_t upgradeFlag = 0;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     std::string moduleSourceDir;
     std::vector<PreloadItem> preloads;

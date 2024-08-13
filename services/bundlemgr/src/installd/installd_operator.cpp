@@ -84,7 +84,7 @@ constexpr const char* ATOMIC_SERVICE_PATH = "+auid-";
 using namespace OHOS::Security::CodeSign;
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
-static char* CODE_DECRYPT = "/dev/code_decrypt";
+static const char* CODE_DECRYPT = "/dev/code_decrypt";
 static int8_t INVALID_RETURN_VALUE = -1;
 static int8_t INVALID_FILE_DESCRIPTOR = -1;
 #endif

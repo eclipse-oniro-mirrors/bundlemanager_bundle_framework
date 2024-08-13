@@ -30,15 +30,15 @@ enum class CreateDirFlag : uint8_t {
 };
 
 struct CreateDirParam : public Parcelable {
-    std::string bundleName;
-    std::vector<std::string> extensionDirs;
-    int32_t userId;
-    int32_t uid;
-    int32_t gid;
-    std::string apl;
     bool isPreInstallApp = false;
     bool debug = false;
     bool isDlpSandbox = false;
+    int32_t userId;
+    int32_t uid;
+    int32_t gid;
+    std::string bundleName;
+    std::vector<std::string> extensionDirs;
+    std::string apl;
     CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
 
     bool ReadFromParcel(Parcel &parcel);

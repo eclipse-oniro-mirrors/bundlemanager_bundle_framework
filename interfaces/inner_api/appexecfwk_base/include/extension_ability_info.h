@@ -127,8 +127,8 @@ struct SkillUriForAbilityAndExtension {
     std::string pathRegex;
     std::string type;
     std::string utd;
-    int32_t maxFileSupported = 0;
     std::string linkFeature;
+    int32_t maxFileSupported = 0;
     bool isMatch = false;
 };
 
@@ -139,8 +139,8 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string srcEntrance;
     std::string icon;
     int32_t iconId = 0;
-    std::string label;
     int32_t labelId = 0;
+    std::string label;
     std::string description;
     int32_t descriptionId = 0;
     int32_t priority = 0;
@@ -150,14 +150,15 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string uri;
     ExtensionAbilityType type = ExtensionAbilityType::UNSPECIFIED;
     std::string extensionTypeName;
-    bool visible = false;
     std::vector<Metadata> metadata;
     ApplicationInfo applicationInfo;
     ExtensionProcessMode extensionProcessMode = ExtensionProcessMode::UNDEFINED;
+    bool visible = false;
+
     // set when install
+    bool enabled = true;
     std::string resourcePath;
     std::string hapPath;
-    bool enabled = true;
     std::string process;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     // for NAPI, save self query cache

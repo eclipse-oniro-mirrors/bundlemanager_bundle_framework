@@ -34,11 +34,11 @@ struct QuickFixResult : public Parcelable {
 };
 
 struct DeployQuickFixResult final : public QuickFixResult {
+    bool isSoContained = false;
     int32_t resultCode = -1;
     std::string bundleName;
     uint32_t bundleVersionCode = 0; // bundle version code
     uint32_t patchVersionCode = 0; // patch version code
-    bool isSoContained = false;
     QuickFixType type = QuickFixType::UNKNOWN;
     std::vector<std::string> moduleNames;
 
