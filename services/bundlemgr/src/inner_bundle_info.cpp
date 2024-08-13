@@ -2775,6 +2775,7 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
                 shortcutInfo.bundleName = abilityInfo.bundleName;
                 shortcutInfo.moduleName = abilityInfo.moduleName;
                 InnerProcessShortcut(item, shortcutInfo);
+                shortcutInfo.sourceType = 1;
                 shortcutInfos.emplace_back(shortcutInfo);
             }
         }
