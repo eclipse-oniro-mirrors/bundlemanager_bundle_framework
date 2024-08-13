@@ -860,4 +860,411 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4300, Function | SmallTest |
     auto ret = proxy->CleanBundleDataDirByName(TEST_STRING, userId, appIndex);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_4400
+ * @tc.name: test function GetExtensionSandboxTypeList
+ * @tc.desc: 1. calling GetExtensionSandboxTypeList of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4400, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    std::vector<std::string> types;
+    auto ret = proxy->GetExtensionSandboxTypeList(types);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4500
+ * @tc.name: test function of DeliverySignProfile
+ * @tc.desc: 1. calling DeliverySignProfile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t profileBlockLength = 1;
+    unsigned char *profileBlock = new unsigned char[1];
+    auto ret = proxy->DeliverySignProfile(TEST_STRING, profileBlockLength, profileBlock);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4600
+ * @tc.name: test function of RemoveExtensionDir
+ * @tc.desc: 1. calling RemoveExtensionDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4600, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+    int32_t userid = 0;
+    std::vector<std::string> extensionBundleDirs;
+    extensionBundleDirs.push_back(TEST_STRING);
+    extensionBundleDirs.push_back(TEST_STRING);
+    auto ret = proxy->RemoveExtensionDir(userid, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4700
+ * @tc.name: test function of VerifyCodeSignatureForHap
+ * @tc.desc: 1. calling VerifyCodeSignatureForHap of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4700, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = proxy->VerifyCodeSignatureForHap(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4800
+ * @tc.name: test function of CreateExtensionDataDir
+ * @tc.desc: 1. calling CreateExtensionDataDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4800, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.userId = 0;
+    createDirParam.uid = 0;
+    createDirParam.gid = 0;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
+    createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+    ErrCode res = proxy->CreateExtensionDataDir(createDirParam);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_4900
+ * @tc.name: test Marshalling function of RemoveSignProfile
+ * @tc.desc: 1. calling RemoveSignProfile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_4900, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->RemoveSignProfile(TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5000
+ * @tc.name: test Marshalling function of CreateBundleDataDirWithVector
+ * @tc.desc: 1. calling CreateBundleDataDirWithVector of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5000, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    std::vector<CreateDirParam> createDirParams;
+    CreateDirParam createDirParam;
+    createDirParams.push_back(createDirParam);
+    auto ret = proxy->CreateBundleDataDirWithVector(createDirParams);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5100
+ * @tc.name: test Marshalling function of StopAOT
+ * @tc.desc: 1. calling StopAOT of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->StopAOT();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5200
+ * @tc.name: test Marshalling function of ExecuteAOT
+ * @tc.desc: 1. calling ExecuteAOT of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    AOTArgs aotArgs;
+    std::vector<uint8_t> pendSignData;
+    auto ret = proxy->ExecuteAOT(aotArgs, pendSignData);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5300
+ * @tc.name: test Marshalling function of PendSignAOT
+ * @tc.desc: 1. calling PendSignAOT of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5300, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    std::string anFileName = TEST_STRING;
+    std::vector<uint8_t> signData;
+    auto ret = proxy->PendSignAOT(anFileName, signData);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5400
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling IsExistFile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5400, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    bool isExist = false;
+    auto ret = proxy->IsExistFile("data/test", isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5500
+ * @tc.name: test Marshalling function of IsExistApFile
+ * @tc.desc: 1. calling IsExistApFile of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    bool isExist = true;
+    auto ret = proxy->IsExistApFile(TEST_STRING, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5600
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling IsDirEmpty of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    bool isDirEmpty = true;
+    auto ret = proxy->IsDirEmpty(TEST_STRING, isDirEmpty);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5700
+ * @tc.name: test Marshalling function of MoveFiles
+ * @tc.desc: 1. calling MoveFiles of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5700, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->MoveFiles(TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5800
+ * @tc.name: test Marshalling function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5800, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.insert(std::make_pair(TEST_STRING, TEST_STRING));
+    auto ret = proxy->ExtractDriverSoFiles(TEST_STRING, dirMap);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_5900
+ * @tc.name: test Marshalling function of ExtractEncryptedSoFiles
+ * @tc.desc: 1. calling ExtractEncryptedSoFiles of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_5900, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->ExtractEncryptedSoFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING, UID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6000
+ * @tc.name: test function SetEncryptionPolicy
+ * @tc.desc: 1. calling SetEncryptionPolicy of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6000, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t uid = 0;
+    std::string bundleName = TEST_STRING;
+    int32_t userId = 100;
+    std::string keyId = "";
+    auto ret = proxy->SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6100
+ * @tc.name: test function DeleteEncryptionKeyId
+ * @tc.desc: 1. calling DeleteEncryptionKeyId of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->DeleteEncryptionKeyId(TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6200
+ * @tc.name: test function of RemoveExtensionDir
+ * @tc.desc: 1. calling RemoveExtensionDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t userid = 0;
+    std::vector<std::string> extensionBundleDirs;
+    for (size_t i = 0; i < 1200; i++) {
+        extensionBundleDirs.push_back(TEST_STRING);
+    }
+    auto ret = proxy->RemoveExtensionDir(userid, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6300
+ * @tc.name: test function of RemoveExtensionDir
+ * @tc.desc: 1. calling RemoveExtensionDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6300, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t userid = 0;
+    std::vector<std::string> extensionBundleDirs;
+    std::string extensionBundleDir(2000, ' ');
+    extensionBundleDirs.push_back(extensionBundleDir);
+    auto ret = proxy->RemoveExtensionDir(userid, extensionBundleDirs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6400
+ * @tc.name: test function of IsExistExtensionDir
+ * @tc.desc: 1. calling IsExistExtensionDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6400, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t userid = 0;
+    std::string extensionBundleDir(2000, ' ');
+    bool isExist = false;
+    auto ret = proxy->IsExistExtensionDir(userid, extensionBundleDir, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6500
+ * @tc.name: test function of IsExistExtensionDir
+ * @tc.desc: 1. calling IsExistExtensionDir of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    int32_t userid = 0;
+    bool isExist = false;
+    auto ret = proxy->IsExistExtensionDir(userid, TEST_STRING, isExist);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6600
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling GetBundleStats of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    std::vector<int64_t> vec;
+    auto ret = proxy->GetBundleStats(TEST_STRING, 0, vec, 0);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6700
+ * @tc.name: test Marshalling function of GetAllBundleStats
+ * @tc.desc: 1. calling GetAllBundleStats of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6700, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    ASSERT_NE(proxy, nullptr);
+
+    std::vector<std::string> bundleNames;
+    std::vector<int64_t> bundleStats;
+    std::vector<int32_t> uids;
+    bundleNames.push_back(TEST_STRING);
+    bundleStats.push_back(LAST_MODIFY_TIME);
+    uids.push_back(UID);
+    auto ret = proxy->GetAllBundleStats(bundleNames, UID, bundleStats, uids);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_6800
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling SetDirApl of proxy
+ */
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_6800, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> proxy = new (std::nothrow) InstalldProxy(nullptr);
+    ASSERT_NE(proxy, nullptr);
+
+    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS
