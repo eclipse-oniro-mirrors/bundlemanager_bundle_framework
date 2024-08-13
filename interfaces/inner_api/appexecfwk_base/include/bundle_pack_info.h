@@ -35,7 +35,6 @@ struct Version {
     uint32_t code = 0;
     uint32_t minCompatibleVersionCode = 0;
     std::string name;
-    
 };
 
 struct PackageApp {
