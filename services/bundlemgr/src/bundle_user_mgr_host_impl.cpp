@@ -32,9 +32,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
-const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
-const uint32_t FACTOR = 8;
-const uint32_t INTERVAL = 6;
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+constexpr uint8_t FACTOR = 8;
+constexpr uint8_t INTERVAL = 6;
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/cold/internal";
 constexpr const char* ACCESSTOKEN_PROCESS_NAME = "accesstoken_service";
 
@@ -310,7 +310,7 @@ void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
 
 void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
 {
-    std::string asanLogDir = ServiceConstants::BUNDLE_ASAN_LOG_DIR + ServiceConstants::PATH_SEPARATOR
+    std::string asanLogDir = std::string(ServiceConstants::BUNDLE_ASAN_LOG_DIR) + ServiceConstants::PATH_SEPARATOR
         + std::to_string(userId);
     APP_LOGI("remove asan log directory %{public}s when remove user", asanLogDir.c_str());
     InstalldClient::GetInstance()->RemoveDir(asanLogDir);

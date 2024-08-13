@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <sstream>
+#include <unordered_set>
 
 #include "parameter.h"
 #include "parameters.h"
@@ -23,15 +24,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+constexpr int8_t THRESHOLD_VAL_LEN = 40;
 constexpr uint8_t MAX_MODULE_NAME = 128;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS, "", compressNativeLibs, THRESHOLD_VAL_LEN);
     if (ret <= 0) {
-        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS.c_str());
+        APP_LOGD("GetParameter %{public}s failed", COMPRESS_NATIVE_LIBS);
         return false;
     }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
@@ -45,18 +46,18 @@ namespace Profile {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 
-const std::set<std::string> MODULE_TYPE_SET = {
+const std::unordered_set<std::string> MODULE_TYPE_SET = {
     "entry",
     "feature",
     "shared"
 };
 
-const std::set<std::string> VIRTUAL_MACHINE_SET = {
+const std::unordered_set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
 };
 
-const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
+const std::unordered_map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_DATA_TRANSFER, ProfileReader::VALUE_DATA_TRANSFER},
     {ProfileReader::KEY_AUDIO_PLAYBACK, ProfileReader::VALUE_AUDIO_PLAYBACK},
     {ProfileReader::KEY_AUDIO_RECORDING, ProfileReader::VALUE_AUDIO_RECORDING},
@@ -70,18 +71,18 @@ const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_SCREEN_FETCH, ProfileReader::VALUE_SCREEN_FETCH}
 };
 
-const std::set<std::string> GRANT_MODE_SET = {
+const std::unordered_set<std::string> GRANT_MODE_SET = {
     "system_grant",
     "user_grant"
 };
 
-const std::set<std::string> AVAILABLE_LEVEL_SET = {
+const std::unordered_set<std::string> AVAILABLE_LEVEL_SET = {
     "system_core",
     "system_basic",
     "normal"
 };
 
-const std::map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
+const std::unordered_map<std::string, LaunchMode> LAUNCH_MODE_MAP = {
     {"singleton", LaunchMode::SINGLETON},
     {"standard", LaunchMode::STANDARD},
     {"multiton", LaunchMode::STANDARD},
@@ -117,7 +118,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
 };
 const size_t MAX_QUERYSCHEMES_LENGTH = 50;
 
-const std::map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
+const std::unordered_map<std::string, MultiAppModeType> MULTI_APP_MODE_MAP = {
     {"multiInstance", MultiAppModeType::MULTI_INSTANCE},
     {"appClone", MultiAppModeType::APP_CLONE}
 };
@@ -1804,7 +1805,7 @@ bool ParserNativeSo(
     bool isLibIsolated = moduleJson.module.isLibIsolated;
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM64_V8A)) {
                 cpuAbi = ServiceConstants::ARM64_V8A;
                 soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM64_V8A);
                 UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1814,14 +1815,14 @@ bool ParserNativeSo(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI_V7A)) {
             cpuAbi = ServiceConstants::ARM_EABI_V7A;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI_V7A);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::LIBS + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::LIBS) + ServiceConstants::ARM_EABI)) {
             cpuAbi = ServiceConstants::ARM_EABI;
             soRelativePath = ServiceConstants::LIBS + ServiceConstants::ABI_MAP.at(ServiceConstants::ARM_EABI);
             UpdateNativeSoAttrs(cpuAbi, soRelativePath, isLibIsolated, innerBundleInfo);
@@ -1935,7 +1936,7 @@ bool ParserArkNativeFilePath(
     APP_LOGD("an exist");
     if (isDefault) {
         if (isSystemLib64Exist) {
-            if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM64_V8A)) {
+            if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM64_V8A)) {
                 innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM64_V8A);
                 return true;
             }
@@ -1943,12 +1944,12 @@ bool ParserArkNativeFilePath(
             return false;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI_V7A)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI_V7A)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI_V7A);
             return true;
         }
 
-        if (bundleExtractor.IsDirExist(ServiceConstants::AN + ServiceConstants::ARM_EABI)) {
+        if (bundleExtractor.IsDirExist(std::string(ServiceConstants::AN) + ServiceConstants::ARM_EABI)) {
             innerBundleInfo.SetArkNativeFileAbi(ServiceConstants::ARM_EABI);
             return true;
         }

@@ -40,7 +40,7 @@ const std::vector<char> g_codes = {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 const std::string FORMAT = "image/png";
 #endif
-const std::string IMAGE_HEADER_INFO = "data:image/png;base64,";
+constexpr const char* IMAGE_HEADER_INFO = "data:image/png;base64,";
 }
 
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS

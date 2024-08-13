@@ -25,27 +25,27 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
-    const std::string RUNNING_CONTROL = "RunningControl";
-    const std::string DISPOSED_RULE = "DisposedRule";
-    const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
-    const std::string DEFAULT = "default";
-    const int32_t CALLING_NAME_INDEX = 1;
-    const int32_t APP_ID_INDEX = 4;
-    const int32_t CONTROL_MESSAGE_INDEX = 5;
-    const int32_t DISPOSED_STATUS_INDEX = 6;
+    constexpr const char* APP_CONTROL_RDB_TABLE_NAME = "app_control";
+    constexpr const char* RUNNING_CONTROL = "RunningControl";
+    constexpr const char* DISPOSED_RULE = "DisposedRule";
+    constexpr const char* APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
+    constexpr const char* DEFAULT = "default";
+    constexpr int8_t CALLING_NAME_INDEX = 1;
+    constexpr int8_t APP_ID_INDEX = 4;
+    constexpr int8_t CONTROL_MESSAGE_INDEX = 5;
+    constexpr int8_t DISPOSED_STATUS_INDEX = 6;
     // app control table key
-    const std::string CALLING_NAME = "CALLING_NAME";
-    const std::string APP_CONTROL_LIST = "APP_CONTROL_LIST";
-    const std::string USER_ID = "USER_ID";
-    const std::string APP_ID = "APP_ID";
-    const std::string CONTROL_MESSAGE = "CONTROL_MESSAGE";
-    const std::string DISPOSED_STATUS = "DISPOSED_STATUS";
-    const std::string PRIORITY = "PRIORITY";
-    const std::string TIME_STAMP = "TIME_STAMP";
-    const std::string APP_INDEX = "APP_INDEX";
+    constexpr const char* CALLING_NAME = "CALLING_NAME";
+    constexpr const char* APP_CONTROL_LIST = "APP_CONTROL_LIST";
+    constexpr const char* USER_ID = "USER_ID";
+    constexpr const char* APP_ID = "APP_ID";
+    constexpr const char* CONTROL_MESSAGE = "CONTROL_MESSAGE";
+    constexpr const char* DISPOSED_STATUS = "DISPOSED_STATUS";
+    constexpr const char* PRIORITY = "PRIORITY";
+    constexpr const char* TIME_STAMP = "TIME_STAMP";
+    constexpr const char* APP_INDEX = "APP_INDEX";
 
-    enum class PRIORITY {
+    enum class PRIORITY : uint16_t {
         EDM = 100,
         APP_MARKET = 200,
     };
@@ -58,11 +58,11 @@ AppControlManagerRdb::AppControlManagerRdb()
     bmsRdbConfig.tableName = APP_CONTROL_RDB_TABLE_NAME;
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
-        + APP_CONTROL_RDB_TABLE_NAME
+        + std::string(APP_CONTROL_RDB_TABLE_NAME)
         + "(ID INTEGER PRIMARY KEY AUTOINCREMENT, CALLING_NAME TEXT NOT NULL, "
         + "APP_CONTROL_LIST TEXT, USER_ID INTEGER, APP_ID TEXT, CONTROL_MESSAGE TEXT, "
         + "DISPOSED_STATUS TEXT, PRIORITY INTEGER, TIME_STAMP INTEGER);");
-    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + APP_CONTROL_RDB_TABLE_NAME +
+    bmsRdbConfig.insertColumnSql.push_back(std::string("ALTER TABLE " + std::string(APP_CONTROL_RDB_TABLE_NAME) +
         " ADD APP_INDEX INTEGER DEFAULT 0;"));
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();

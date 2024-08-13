@@ -37,7 +37,7 @@ struct BmsExperienceRule : public Parcelable {
 };
 
 struct BmsCallerInfo : public Parcelable {
-    enum {
+    enum:uint8_t {
         TYPE_INVALID = 0,
         TYPE_HARMONY_APP = 1,
         TYPE_ATOM_SERVICE = 2,
@@ -45,7 +45,7 @@ struct BmsCallerInfo : public Parcelable {
         TYPE_BOXED_ATOM_SERVICE = 5
     };
 
-    enum {
+    enum:uint8_t {
         MODEL_STAGE = 0,
         MODEL_FA
     };

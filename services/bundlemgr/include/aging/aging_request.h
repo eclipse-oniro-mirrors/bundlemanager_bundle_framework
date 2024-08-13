@@ -24,7 +24,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class AgingCleanType {
+enum class AgingCleanType : uint8_t {
     CLEAN_CACHE = 0,
     CLEAN_OTHERS,
 };

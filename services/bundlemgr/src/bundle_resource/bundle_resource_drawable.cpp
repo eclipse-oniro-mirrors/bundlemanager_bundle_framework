@@ -29,7 +29,7 @@ namespace {
 // bundle name
 constexpr const char* COM_OHOS_CONTACTS = "com.ohos.contacts";
 constexpr const char* IS_SUPPORT_TELEPHONY_VOICE = "const.telephony.voice.capable";
-constexpr int32_t THRESHOLD_VAL_LEN = 10;
+constexpr int8_t THRESHOLD_VAL_LEN = 10;
 
 bool IsSupportTelephonyVoice()
 {

@@ -20,9 +20,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string PREINSTALL_EXCEPTION = "PreInstallExceptionMgr";
-const std::string EXCEPTION_PATHS = "ExceptionPaths";
-const std::string EXCEPTION_BUNDLENAMES = "ExceptionBundleNames";
+constexpr const char* PREINSTALL_EXCEPTION = "PreInstallExceptionMgr";
+constexpr const char* EXCEPTION_PATHS = "ExceptionPaths";
+constexpr const char* EXCEPTION_BUNDLENAMES = "ExceptionBundleNames";
 }
 PreInstallExceptionMgr::PreInstallExceptionMgr()
 {}

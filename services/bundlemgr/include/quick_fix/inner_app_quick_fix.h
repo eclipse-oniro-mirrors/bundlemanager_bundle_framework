@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum QuickFixStatus : int32_t {
+enum QuickFixStatus : uint8_t {
     DEFAULT_STATUS = 0,
     DEPLOY_START,
     DEPLOY_END,

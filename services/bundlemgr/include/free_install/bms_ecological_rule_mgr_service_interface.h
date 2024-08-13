@@ -39,7 +39,7 @@ public:
         QUERY_FREE_INSTALL_EXPERIENCE_CMD = 0
     };
 
-    enum ErrCode {
+    enum ErrCode : int8_t {
         ERR_BASE = (-99),
         ERR_FAILED = (-1),
         ERR_PERMISSION_DENIED = (-2),
