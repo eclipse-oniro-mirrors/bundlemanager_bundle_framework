@@ -83,7 +83,7 @@ const char* HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 const char* CREATE_APP_CLONE = "CreateAppClone";
 const char* DESTROY_APP_CLONE = "destroyAppClone";
-const char* INSTALL_EXISTED = "installExisted";
+const char* INSTALL_PREEXISTING_APP = "installPreexistingApp";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -1805,7 +1805,7 @@ napi_value DestroyAppClone(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerInstallExisted(std::string &bundleName, int32_t userId)
+static ErrCode InnerInstallPreexistingApp(std::string &bundleName, int32_t userId)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
@@ -1818,51 +1818,52 @@ static ErrCode InnerInstallExisted(std::string &bundleName, int32_t userId)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     ErrCode result = iBundleInstaller->InstallExisted(bundleName, userId);
-    APP_LOGD("InstallExisted result is %{public}d", result);
+    APP_LOGD("result is %{public}d", result);
     return result;
 }
 
-void InstallExistedExec(napi_env env, void *data)
+void InstallPreexistingAppExec(napi_env env, void *data)
 {
-    InstallExistedCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallExistedCallbackInfo *>(data);
+    InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
         asyncCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
         return;
     }
-    APP_LOGD("InstallExistedExec param: bundleName = %{public}s, userId = %{public}d",
+    APP_LOGD("param: bundleName = %{public}s, userId = %{public}d",
         asyncCallbackInfo->bundleName.c_str(),
         asyncCallbackInfo->userId);
     asyncCallbackInfo->err =
-        InnerInstallExisted(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
+        InnerInstallPreexistingApp(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId);
 }
 
-void InstallExistedComplete(napi_env env, napi_status status, void *data)
+void InstallPreexistingAppComplete(napi_env env, napi_status status, void *data)
 {
-    InstallExistedCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallExistedCallbackInfo *>(data);
+    InstallPreexistingAppCallbackInfo *asyncCallbackInfo = reinterpret_cast<InstallPreexistingAppCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    std::unique_ptr<InstallExistedCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::unique_ptr<InstallPreexistingAppCallbackInfo> callbackPtr {asyncCallbackInfo};
     asyncCallbackInfo->err = CommonFunc::ConvertErrCode(asyncCallbackInfo->err);
-    APP_LOGD("InstallExistedComplete err is %{public}d", asyncCallbackInfo->err);
+    APP_LOGD("err is %{public}d", asyncCallbackInfo->err);
 
     napi_value result[ARGS_SIZE_ONE] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     } else {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            INSTALL_EXISTED, Constants::PERMISSION_INSTALL_BUNDLE);
+            INSTALL_PREEXISTING_APP, Constants::PERMISSION_INSTALL_BUNDLE);
     }
-    CommonFunc::NapiReturnDeferred<InstallExistedCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+    CommonFunc::NapiReturnDeferred<InstallPreexistingAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
-napi_value InstallExisted(napi_env env, napi_callback_info info)
+napi_value InstallPreexistingApp(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("begin to InstallExisted");
+    APP_LOGI("begin");
     NapiArg args(env, info);
-    std::unique_ptr<InstallExistedCallbackInfo> asyncCallbackInfo = std::make_unique<InstallExistedCallbackInfo>(env);
+    std::unique_ptr<InstallPreexistingAppCallbackInfo> asyncCallbackInfo
+        = std::make_unique<InstallPreexistingAppCallbackInfo>(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGW("asyncCallbackInfo is null");
         return nullptr;
@@ -1897,10 +1898,11 @@ napi_value InstallExisted(napi_env env, napi_callback_info info)
     if (asyncCallbackInfo->userId == Constants::UNSPECIFIED_USERID) {
         asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
-    auto promise = CommonFunc::AsyncCallNativeMethod<InstallExistedCallbackInfo>(
-        env, asyncCallbackInfo.get(), INSTALL_EXISTED, InstallExistedExec, InstallExistedComplete);
+    auto promise = CommonFunc::AsyncCallNativeMethod<InstallPreexistingAppCallbackInfo>(
+        env, asyncCallbackInfo.get(), INSTALL_PREEXISTING_APP,
+        InstallPreexistingAppExec, InstallPreexistingAppComplete);
     asyncCallbackInfo.release();
-    APP_LOGI("call napi InstallExisted done");
+    APP_LOGI("call napi done");
     return promise;
 }
 } // AppExecFwk

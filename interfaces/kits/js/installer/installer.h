@@ -83,8 +83,8 @@ struct CreateAppCloneCallbackInfo : public BaseCallbackInfo {
     int32_t appIndex = Constants::INITIAL_APP_INDEX;
 };
 
-struct InstallExistedCallbackInfo : public BaseCallbackInfo {
-    explicit InstallExistedCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+struct InstallPreexistingAppCallbackInfo : public BaseCallbackInfo {
+    explicit InstallPreexistingAppCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
 };
@@ -101,7 +101,7 @@ napi_value AddExtResource(napi_env env, napi_callback_info info);
 napi_value RemoveExtResource(napi_env env, napi_callback_info info);
 napi_value CreateAppClone(napi_env env, napi_callback_info info);
 napi_value DestroyAppClone(napi_env env, napi_callback_info info);
-napi_value InstallExisted(napi_env env, napi_callback_info info);
+napi_value InstallPreexistingApp(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
