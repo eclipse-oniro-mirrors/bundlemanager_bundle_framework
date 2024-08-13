@@ -365,6 +365,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.concentrateSendEvent = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
+        installParam.isRemoveUser = true;
         sptr<UserReceiverImpl> userReceiverImpl(
             new (std::nothrow) UserReceiverImpl(info.name, false));
         userReceiverImpl->SetBundlePromise(bundlePromise);

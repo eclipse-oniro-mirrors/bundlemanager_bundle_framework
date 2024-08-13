@@ -89,6 +89,7 @@ struct InstallParam : public Parcelable {
     // for AOT
     bool isOTA = false;
     bool concentrateSendEvent = false;
+    bool isRemoveUser = false;
     bool allUser = false;
     // Indicates the distribution type
     std::string specifiedDistributionType = "";
