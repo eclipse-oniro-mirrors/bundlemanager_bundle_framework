@@ -208,7 +208,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
-    LOG_NOFUNC_I(BMS_TAG_INSTALLD, "del %{public}s", path.c_str());
+    LOG_NOFUNC_I(BMS_TAG_COMMON, "del %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -860,7 +860,7 @@ bool InstalldOperator::MkOwnerDir(const std::string &path, int mode, const int u
 int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 {
     if (dir.empty() || (dir.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "GetDiskUsage dir path invalid");
+        LOG_D(BMS_TAG_INSTALLD, "GetDiskUsage path invalid");
         return 0;
     }
     std::string filePath = dir;
@@ -902,12 +902,12 @@ int64_t InstalldOperator::GetDiskUsage(const std::string &dir, bool isRealPath)
 void InstalldOperator::TraverseCacheDirectory(const std::string &currentPath, std::vector<std::string> &cacheDirs)
 {
     if (currentPath.empty() || (currentPath.size() > ServiceConstants::PATH_MAX_SIZE)) {
-        LOG_E(BMS_TAG_INSTALLD, "TraverseCacheDirectory current path invaild");
+        LOG_D(BMS_TAG_INSTALLD, "current path invaild");
         return;
     }
     std::string filePath = "";
     if (!PathToRealPath(currentPath, filePath)) {
-        LOG_E(BMS_TAG_INSTALLD, "file is not real path, file path: %{public}s", currentPath.c_str());
+        LOG_D(BMS_TAG_INSTALLD, "not real path: %{public}s", currentPath.c_str());
         return;
     }
     DIR* dir = opendir(filePath.c_str());
@@ -2249,11 +2249,40 @@ void InstalldOperator::AddDeleteDfx(const std::string &path)
     flags |= HMFS_MONITOR_FL;
     ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
     if (ret < 0) {
-        LOG_D(BMS_TAG_INSTALLD, "add dfx flag  failed errno:%{public}d path %{public}s", errno, path.c_str());
+        LOG_W(BMS_TAG_INSTALLD, "Add dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
         close(fd);
         return;
     }
     LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is set succeed", path.c_str());
+    close(fd);
+    return;
+}
+
+void InstalldOperator::RmvDeleteDfx(const std::string &path)
+{
+    int32_t fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "open dfx path %{public}s failed", path.c_str());
+        return;
+    }
+    unsigned int flags = 0;
+    int32_t ret = ioctl(fd, HMF_IOCTL_HW_GET_FLAGS, &flags);
+    if (ret < 0) {
+        LOG_D(BMS_TAG_INSTALLD, "check dfx flag path %{public}s failed errno:%{public}d", path.c_str(), errno);
+        close(fd);
+        return;
+    }
+    if (flags & HMFS_MONITOR_FL) {
+        // flag is already set
+        flags -= HMFS_MONITOR_FL;
+        ret = ioctl(fd, HMF_IOCTL_HW_SET_FLAGS, &flags);
+        if (ret < 0) {
+            LOG_W(BMS_TAG_INSTALLD, "Rmv dfx flag failed errno:%{public}d path %{public}s", errno, path.c_str());
+            close(fd);
+            return;
+        }
+        LOG_I(BMS_TAG_INSTALLD, "Delete Control flag of %{public}s is Rmv succeed", path.c_str());
+    }
     close(fd);
     return;
 }

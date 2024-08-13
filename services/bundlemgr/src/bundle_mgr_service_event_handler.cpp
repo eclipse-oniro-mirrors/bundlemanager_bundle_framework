@@ -2528,7 +2528,7 @@ void BMSEventHandler::AddParseInfosToMap(
 
 void BMSEventHandler::ProcessRebootBundleUninstall()
 {
-    LOG_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall start");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "Reboot scan and OTA uninstall start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
@@ -2574,7 +2574,7 @@ void BMSEventHandler::ProcessRebootBundleUninstall()
         for (auto preBundlePath : loadIter.second.GetBundlePaths()) {
             auto parserInfoIter = parserInfoMap.find(preBundlePath);
             if (parserInfoIter != parserInfoMap.end()) {
-                LOG_I(BMS_TAG_DEFAULT, "OTA uninstall app(%{public}s) module path(%{public}s) exits",
+                LOG_NOFUNC_I(BMS_TAG_DEFAULT, "OTA uninstall -n %{public}s modulePath:%{public}s exits",
                     bundleName.c_str(), preBundlePath.c_str());
                 continue;
             }
@@ -2606,7 +2606,7 @@ bool BMSEventHandler::InnerProcessUninstallModule(const BundleInfo &bundleInfo,
         }
     }
     if (bundleInfo.hapModuleNames.size() == 1) {
-        LOG_I(BMS_TAG_DEFAULT, "bundleName:%{public}s only has one module, can not be uninstalled",
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "InnerProcessUninstallModule -n %{public}s only one module forbid uninstall",
             bundleInfo.name.c_str());
         return false;
     }
@@ -2649,12 +2649,12 @@ void BMSEventHandler::DeletePreInfoInDb(
     PreInstallBundleInfo preInstallBundleInfo;
     preInstallBundleInfo.SetBundleName(bundleName);
     if (bundleLevel) {
-        LOG_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
+        LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s bundleLevel", bundleName.c_str());
         dataMgr->DeletePreInstallBundleInfo(bundleName, preInstallBundleInfo);
         return;
     }
 
-    LOG_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb bundle %{public}s not bundleLevel with path(%{public}s)",
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "DeletePreInfoInDb -n %{public}s bundleLevel=false path:%{public}s",
         bundleName.c_str(), bundlePath.c_str());
     dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
     preInstallBundleInfo.DeleteBundlePath(bundlePath);

@@ -153,7 +153,7 @@ void OverlayDataMgr::BuildInternalOverlayConnection(const std::string &moduleNam
     APP_LOGD("start to update internal overlay connection of module %{public}s under user %{public}d",
         moduleName.c_str(), userId);
     if (oldInfo.GetOverlayType() != OVERLAY_INTERNAL_BUNDLE) {
-        APP_LOGW("the old bundle is not internal overlay");
+        APP_LOGW_NOFUNC("the old bundle is not internal overlay");
         return;
     }
     auto &oldInnerModuleInfos = oldInfo.FetchInnerModuleInfos();

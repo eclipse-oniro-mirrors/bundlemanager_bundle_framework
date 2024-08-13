@@ -218,6 +218,78 @@ HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0200, Function | SmallTest 
 }
 
 /**
+ * @tc.number: BundleDataStorageRdb_0300
+ * @tc.name: LoadAllData
+ * @tc.desc: 1.LoadAllData
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0300, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+    dataStorage->rdbDataManager_ = nullptr;
+
+    std::map<std::string, std::string> datas;
+    std::map<std::string, InnerBundleInfo> infos;
+    dataStorage->TransformStrToInfo(datas, infos);
+
+    dataStorage->UpdateDataBase(infos);
+
+    bool ret = dataStorage->LoadAllData(infos);
+    EXPECT_FALSE(ret);
+
+    dataStorage = std::make_shared<BundleDataStorageRdb>();
+
+    dataStorage->UpdateDataBase(infos);
+
+    ret = dataStorage->LoadAllData(infos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0400
+ * @tc.name: ResetKvStore
+ * @tc.desc: 1.ResetKvStore
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0400, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0500
+ * @tc.name: DeleteStorageBundleInfo
+ * @tc.desc: 1.DeleteStorageBundleInfo
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0500, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+
+    InnerBundleInfo innerBundleInfo;
+    bool ret = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleDataStorageRdb_0600
+ * @tc.name: ResetKvStore
+ * @tc.desc: 1.ResetKvStore
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, BundleDataStorageRdb_0600, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleDataStorageRdb> dataStorage = std::make_shared<BundleDataStorageRdb>();
+
+    bool ret = dataStorage->ResetKvStore();
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: PreInstallDataStorageRdb_0100
  * @tc.name: save and delete
  * @tc.desc: 1.SavePreInstallStorageBundleInfo

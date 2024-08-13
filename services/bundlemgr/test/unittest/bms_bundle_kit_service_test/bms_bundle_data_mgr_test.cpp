@@ -6573,4 +6573,36 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostHandleGetAllDesktopShortcutInfo_0002
     auto ret = localBundleMgrHost->HandleGetAllDesktopShortcutInfo(data, reply);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: NotifySandboxAppStatus_0100
+ * @tc.name: test NotifySandboxAppStatus
+ * @tc.desc: 1.test NotifySandboxAppStatus
+ */
+HWTEST_F(BmsBundleDataMgrTest, NotifySandboxAppStatus_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    int32_t uid = 0;
+    int32_t userId = 100;
+    SandboxInstallType type = (SandboxInstallType)3;
+    ErrCode ret = commonEventMgr_->NotifySandboxAppStatus(info, uid, userId, type);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_UNKNOWN_INSTALL_TYPE);
 }
+
+/**
+ * @tc.number: GetCommonEventData_0100
+ * @tc.name: test GetCommonEventData
+ * @tc.desc: 1.test GetCommonEventData
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetCommonEventData_0100, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    bool isEnableDynamicIcon = false;
+    commonEventMgr_->NotifyDynamicIconEvent(bundleName, isEnableDynamicIcon);
+
+    commonEventMgr_->commonEventMap_.clear();
+    NotifyType type = (NotifyType)14;
+    std::string ret = commonEventMgr_->GetCommonEventData(type);
+    EXPECT_EQ(ret, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+}
+} // OHOS

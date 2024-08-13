@@ -476,6 +476,11 @@ ErrCode InstalldClient::GetExtensionSandboxTypeList(std::vector<std::string> &ty
     return CallService(&IInstalld::GetExtensionSandboxTypeList, typeList);
 }
 
+ErrCode InstalldClient::AddUserDirDeleteDfx(int32_t userId)
+{
+    return CallService(&IInstalld::AddUserDirDeleteDfx, userId);
+}
+
 int64_t InstalldClient::GetDiskUsage(const std::string& dir, bool isRealPath)
 {
     return 0;

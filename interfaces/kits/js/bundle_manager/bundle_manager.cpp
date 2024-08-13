@@ -929,7 +929,7 @@ void QueryAbilityInfosExec(napi_env env, void *data)
 
 void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGI("begin");
+    APP_LOGI_NOFUNC("QueryAbilityInfosComplete begin");
     AbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -959,7 +959,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
-    APP_LOGI("QueryAbilityInfosComplete before return");
+    APP_LOGI_NOFUNC("QueryAbilityInfosComplete before return");
     CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
@@ -3672,6 +3672,17 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SKILL",
         nGetBundleInfoWithSkill));
 
+    napi_value nGetBundleInfoOnlyWithLauncherAbility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY), &nGetBundleInfoOnlyWithLauncherAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY",
+        nGetBundleInfoOnlyWithLauncherAbility));
+
+    napi_value nGetBundleInfoExcludeClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE), &nGetBundleInfoExcludeClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_EXCLUDE_CLONE",
+        nGetBundleInfoExcludeClone));
     napi_value nGetBundleInfoOfAnyUser;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
         GetBundleInfoFlag::GET_BUNDLE_INFO_OF_ANY_USER), &nGetBundleInfoOfAnyUser));
@@ -4689,7 +4700,7 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(
         iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile, userId));
     if (ret != SUCCESS) {
-        APP_LOGE_NOFUNC("napi GetJsonProfile err:%{public}d -n %{public}s", ret, bundleName.c_str());
+        APP_LOGD("napi GetJsonProfile err:%{public}d -n %{public}s", ret, bundleName.c_str());
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
         napi_throw(env, businessError);

@@ -1704,4 +1704,34 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_6000, Function | Sma
     ErrCode res = appControlProxy->DeleteDisposedRuleForCloneApp(appId, appIndex, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_6100
+ * @tc.name: test AddAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6100, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+
+    std::vector<AppJumpControlRule> controlRules;
+    int32_t userId = 100;
+    ErrCode ret = rdb->AddAppJumpControlRule(controlRules, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppJumpInterceptorManagerRdb_6200
+ * @tc.name: test DeleteAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.DeleteAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6200, Function | SmallTest | Level1)
+{
+    auto rdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+
+    std::vector<AppJumpControlRule> controlRules;
+    int32_t userId = 100;
+    ErrCode ret = rdb->DeleteAppJumpControlRule(controlRules, userId);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

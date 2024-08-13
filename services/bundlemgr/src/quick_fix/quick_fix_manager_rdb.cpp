@@ -51,10 +51,10 @@ bool QuickFixManagerRdb::QueryAllInnerAppQuickFix(std::map<std::string, InnerApp
 
 bool QuickFixManagerRdb::QueryInnerAppQuickFix(const std::string &bundleName, InnerAppQuickFix &innerAppQuickFix)
 {
-    LOG_I(BMS_TAG_DEFAULT, "begin to QueryAppQuickFix");
+    LOG_NOFUNC_I(BMS_TAG_DEFAULT, "begin to QueryAppQuickFix");
     bool ret = GetDataFromDb(bundleName, innerAppQuickFix);
     if (!ret) {
-        LOG_E(BMS_TAG_DEFAULT, "GetDataFromDb failed");
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "QueryAppQuickFix GetDataFromDb failed");
         return false;
     }
     return true;
@@ -118,7 +118,7 @@ bool QuickFixManagerRdb::GetDataFromDb(const std::string &bundleName, InnerAppQu
     std::string value;
     bool result = rdbDataManager_->QueryData(bundleName, value);
     if (!result) {
-        LOG_E(BMS_TAG_DEFAULT, "QueryData failed by bundleName %{public}s", bundleName.c_str());
+        LOG_NOFUNC_E(BMS_TAG_DEFAULT, "GetDataFromDb QueryData fail -n %{public}s", bundleName.c_str());
         return false;
     }
 

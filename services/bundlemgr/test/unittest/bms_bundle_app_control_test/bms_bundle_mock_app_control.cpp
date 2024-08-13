@@ -303,9 +303,13 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0140, Function | Smal
 HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | SmallTest | Level1)
 {
     AppControlManagerRdb rdb;
-    rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
+
+    std::string callingName;
+    std::string appId;
     DisposedRule rule;
-    auto res = rdb.SetDisposedRule(CALLER_BUNDLE_NAME, APPID, rule, APP_INDEX, USERID);
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ErrCode res = rdb.SetDisposedRule(callingName, appId, rule, appIndex, userId);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 
@@ -411,6 +415,24 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0040, Function | SmallTe
     mgr.KillRunningApp(rules, USERID);
     auto res = GetBundleDataMgr()->GetBundleNameByAppId(rule.appId);
     EXPECT_EQ(res, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: AppControlManager_0050
+ * @tc.name: test KillRunningApp by AppControlManager
+ * @tc.desc: 1.KillRunningApp test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManager_0050, Function | SmallTest | Level1)
+{
+    AppControlManager mgr;
+
+    std::string callerName;
+    std::string appId;
+    DisposedRule rule;
+    int32_t appIndex = 0;
+    int32_t userId = 100;
+    ErrCode ret = mgr.SetDisposedRule(callerName, appId, rule, appIndex, userId);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 
 /**
