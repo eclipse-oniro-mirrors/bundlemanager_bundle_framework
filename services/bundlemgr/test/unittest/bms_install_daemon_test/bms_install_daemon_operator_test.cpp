@@ -1482,4 +1482,20 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9200, Function | Sma
     bool ret = extractor.ExtractPackFile(dest);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_9300
+ * @tc.name: test function of ExtractTargetHnpFile
+ * @tc.desc: 1. calling ExtractFiles of ExtractTargetHnpFile
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_9300, Function | SmallTest | Level1)
+{
+    BundleExtractor extractor("");
+    std::string entryName;
+    std::string targetPath;
+    InstalldOperator::ExtractTargetHnpFile(extractor, entryName, targetPath, ExtractFileType::ALL);
+    std::string path = "test.path";
+    auto ret = InstalldOperator::IsDiffFiles(TEST_STRING, path, TEST_STRING);
+    EXPECT_FALSE(ret);
+}
 } // OHOS

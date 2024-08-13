@@ -606,4 +606,88 @@ HWTEST_F(BmsBundleInstallerPermissionTest, IsExistExtensionDir_0100, Function | 
     auto ret = hostImpl.IsExistExtensionDir(userId, extensionBundleDir, isExist);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: GetExtensionSandboxTypeList_0100
+ * @tc.name: test GetExtensionSandboxTypeList
+ * @tc.desc: 1.Test the GetExtensionSandboxTypeList of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, GetExtensionSandboxTypeList_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::vector<std::string> typeList;
+    ErrCode ret = installdHostImpl.GetExtensionSandboxTypeList(typeList);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: DeleteEncryptionKeyId_0100
+ * @tc.name: test DeleteEncryptionKeyId
+ * @tc.desc: 1.Test the DeleteEncryptionKeyId of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, DeleteEncryptionKeyId_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl installdHostImpl;
+    std::string keyId = "test.key.id";
+    ErrCode ret = installdHostImpl.DeleteEncryptionKeyId(keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: CopyFiles_0100
+ * @tc.name: test CopyFiles
+ * @tc.desc: 1.Test the CopyFiles of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, CopyFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string sourceDir = "test.source.dir";
+    std::string destinationDir = "test.destination.dir";
+    ErrCode ret = hostImpl.CopyFiles(sourceDir, destinationDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: ObtainQuickFixFileDir_0100
+ * @tc.name: test ObtainQuickFixFileDir
+ * @tc.desc: 1.Test the ObtainQuickFixFileDir of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, ObtainQuickFixFileDir_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string dir = "test.dir";
+    std::vector<std::string> dirVec;
+    ErrCode ret = hostImpl.ObtainQuickFixFileDir(dir, dirVec);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: MoveFiles_0100
+ * @tc.name: test MoveFiles
+ * @tc.desc: 1.Test the MoveFiles of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, MoveFiles_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string srcDir = "test.src.dir";
+    std::string desDir = "test.des.dir";
+    ErrCode ret = hostImpl.MoveFiles(srcDir, desDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: SetEncryptionPolicy_0100
+ * @tc.name: test SetEncryptionPolicy
+ * @tc.desc: 1.Test the SetEncryptionPolicy of InstalldHostImpl without permission
+*/
+HWTEST_F(BmsBundleInstallerPermissionTest, SetEncryptionPolicy_0100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string bundleName = "com.example.testbundle";
+    int32_t userId = USERID;
+    std::string keyId;
+    int32_t uid = -1;
+    ErrCode ret = hostImpl.SetEncryptionPolicy(uid, bundleName, userId, keyId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS
