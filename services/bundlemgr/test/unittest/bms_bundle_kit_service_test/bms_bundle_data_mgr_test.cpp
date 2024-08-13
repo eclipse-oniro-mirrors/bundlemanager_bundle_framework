@@ -6605,4 +6605,23 @@ HWTEST_F(BmsBundleDataMgrTest, GetCommonEventData_0100, Function | MediumTest | 
     std::string ret = commonEventMgr_->GetCommonEventData(type);
     EXPECT_EQ(ret, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
 }
+
+/**
+ * @tc.number: GetBundleInfosForContinuation_0100
+ * @tc.name: test GetBundleInfosForContinuation
+ * @tc.desc: 1.system run normally
+ *           2.check GetBundleInfosForContinuation success
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosForContinuation_0100, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+    BundleInfo bundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.continuable = false;
+    bundleInfo.abilityInfos.push_back(abilityInfo);
+    bundleInfos.push_back(bundleInfo);
+ 
+    GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
+    EXPECT_TRUE(bundleInfos.empty());
+}
 } // OHOS

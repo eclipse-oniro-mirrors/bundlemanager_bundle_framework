@@ -952,6 +952,7 @@ public:
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName);
     ErrCode DeleteDesktopShortcutInfo(const std::string &bundleName, int32_t userId, int32_t appIndex);
 
+    void GetBundleInfosForContinuation(std::vector<BundleInfo> &bundleInfos) const;
 private:
     /**
      * @brief Init transferStates.

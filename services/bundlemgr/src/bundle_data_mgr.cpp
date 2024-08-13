@@ -8359,5 +8359,21 @@ ErrCode BundleDataMgr::DeleteDesktopShortcutInfo(const std::string &bundleName, 
     }
     return ERR_OK;
 }
+
+void BundleDataMgr::GetBundleInfosForContinuation(std::vector<BundleInfo> &bundleInfos) const
+{
+    if (bundleInfos.empty()) {
+        APP_LOGD("bundleInfos is empty");
+        return;
+    }
+    bundleInfos.erase(std::remove_if(bundleInfos.begin(), bundleInfos.end(), [](BundleInfo bundleInfo) {
+        for (auto abilityInfo : bundleInfo.abilityInfos) {
+            if (abilityInfo.continuable) {
+                return false;
+            }
+        }
+        return true;
+        }), bundleInfos.end());
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

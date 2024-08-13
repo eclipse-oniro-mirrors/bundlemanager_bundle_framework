@@ -1550,6 +1550,19 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    /**
+     * @brief Obtains BundleInfo of all continuable bundles available in the system.
+     * @param flags Indicates the flag used to specify information contained in the BundleInfo that will be returned.
+     * @param bundleInfos Indicates all of the obtained BundleInfo objects.
+     * @param userId Indicates the user ID.
+     * @return Returns true if the BundleInfos is successfully obtained; returns false otherwise.
+     */
+    virtual bool GetBundleInfosForContinuation(int32_t flags,
+        std::vector<BundleInfo> &bundleInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return false;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \
