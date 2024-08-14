@@ -1728,6 +1728,34 @@ HWTEST_F(BmsBundleFreeInstallTest, SortAgingBundles_0100, Function | SmallTest |
 }
 
 /*
+ * @tc.number: SortAgingBundles_0200
+ * @tc.name: test SortAgingBundles
+ * @tc.desc: 1.test SortAgingBundles of AgingUtil
+ */
+HWTEST_F(BmsBundleFreeInstallTest, SortAgingBundles_0200, Function | SmallTest | Level0)
+{
+    AgingUtil util;
+    AgingBundleInfo bundleInfo;
+    std::vector<AgingBundleInfo> bundles;
+    bundles.push_back(bundleInfo);
+    bundles.push_back(bundleInfo);
+    util.SortAgingBundles(bundles);
+    EXPECT_FALSE(bundles.empty());
+}
+
+/*
+ * @tc.number: CheckPrerequisite_0100
+ * @tc.name: test CheckPrerequisite
+ * @tc.desc: 1.test CheckPrerequisite of BundleAgingMgr
+ */
+HWTEST_F(BmsBundleFreeInstallTest, CheckPrerequisite_0100, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    bool ret = bundleAgingMgr.CheckPrerequisite(AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
+    EXPECT_FALSE(ret);
+}
+
+/*
  * @tc.number: ResetRequest_0100
  * @tc.name: test ResetRequest
  * @tc.desc: 1.test ResetRequest of AgingRequest

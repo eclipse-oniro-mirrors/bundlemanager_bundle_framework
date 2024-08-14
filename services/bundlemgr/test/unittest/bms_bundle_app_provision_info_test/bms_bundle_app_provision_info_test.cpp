@@ -1132,6 +1132,45 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1400, Fun
 }
 
 /**
+ * @tc.number: InnerSharedBundleInstallerTest_1500
+ * @tc.name: test the start function of ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1500, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = false;
+    innerModuleInfo.nativeLibraryPath = HAP_FILE_PATH1;
+    innerModuleInfo.moduleName = TEST_MODULE_NAME;
+    newInfo.innerModuleInfos_.emplace(TEST_MODULE_NAME, innerModuleInfo);
+    auto ret = installer.ProcessNativeLibrary(
+        HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1600
+ * @tc.name: test the start function of ProcessNativeLibrary
+ * @tc.desc: 1.Test ProcessNativeLibrary
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1600, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.compressNativeLibs = false;
+    innerModuleInfo.nativeLibraryPath = HAP_FILE_PATH1;
+    newInfo.innerModuleInfos_.emplace(TEST_MODULE_NAME, innerModuleInfo);
+    auto ret = installer.ProcessNativeLibrary(
+        HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InnerProcessStockBundleProvisionInfo_0001
  * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
  * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos
