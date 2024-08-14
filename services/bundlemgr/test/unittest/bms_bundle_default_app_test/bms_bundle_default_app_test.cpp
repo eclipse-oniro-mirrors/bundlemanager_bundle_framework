@@ -1530,6 +1530,234 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6700, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleDefaultApp_6800
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6800, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    std::string errorType =
+        "abcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcde"
+        "fgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdefgabcdef";
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(USER_ID, errorType, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6900
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6900, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(USER_ID, INVALID_TYPE5, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7000
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7000, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    DefaultAppMgr::GetInstance().Init();
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7100
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7100, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    DefaultAppMgr::GetInstance().Init();
+    ASSERT_NE(DefaultAppMgr::GetInstance().defaultAppDb_, nullptr);
+
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName= "";
+
+    DefaultAppMgr::GetInstance().defaultAppDb_->SetDefaultApplicationInfo(USER_ID, DEFAULT_APP_VIDEO, element);
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7200
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1. return ERR_OK
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7200, Function | SmallTest | Level1)
+{
+    bool isDefaultApp = false;
+    DefaultAppMgr::GetInstance().Init();
+    ASSERT_NE(DefaultAppMgr::GetInstance().defaultAppDb_, nullptr);
+
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+
+    DefaultAppMgr::GetInstance().defaultAppDb_->SetDefaultApplicationInfo(USER_ID, DEFAULT_APP_BROWSER, element);
+    ErrCode ret = DefaultAppMgr::GetInstance().IsDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, isDefaultApp);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(isDefaultApp);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7300
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7300, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(USER_ID, INVALID_TYPE5, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7400
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7400, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7500
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7500, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(USER_ID, INVALID_TYPE5, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7600
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication success
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7600, Function | SmallTest | Level1)
+{
+    Element element;
+    Element elementSave;
+    elementSave.bundleName = BUNDLE_NAME;
+    elementSave.moduleName = MODULE_NAME;
+    elementSave.abilityName = ABILITY_NAME;
+    ASSERT_NE(DefaultAppMgr::GetInstance().defaultAppDb_, nullptr);
+    DefaultAppMgr::GetInstance().defaultAppDb_->SetDefaultApplicationInfo(USER_ID, DEFAULT_APP_BROWSER, elementSave);
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, element);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7700
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7700, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = "";
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7800
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication success
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7800, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, element);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_7900
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_7900, Function | SmallTest | Level1)
+{
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(INVALID_USER_ID, DEFAULT_APP_BROWSER);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8000
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication failed
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8000, Function | SmallTest | Level1)
+{
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(USER_ID, INVALID_TYPE5);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8100
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication success
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8100, Function | SmallTest | Level1)
+{
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_8200
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication success
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_8200, Function | SmallTest | Level1)
+{
+    DefaultAppMgr::GetInstance().Init();
+    ASSERT_NE(DefaultAppMgr::GetInstance().defaultAppDb_, nullptr);
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+    DefaultAppMgr::GetInstance().defaultAppDb_->SetDefaultApplicationInfo(USER_ID, DEFAULT_APP_BROWSER, element);
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: AOT_EXECUTOR_0100
  * @tc.name: test AOTExecutor
  * @tc.desc: decimal convert to correct hex
@@ -1661,6 +1889,21 @@ HWTEST_F(BmsBundleDefaultAppTest, GetBrokerBundleInfo_0100, Function | SmallTest
 }
 
 /**
+ * @tc.number: IsDefaultApplication_0100
+ * @tc.name: test IsDefaultApplication
+ * @tc.desc: 1.IsDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsDefaultApplication_0100, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    bool isDefaultApp = false;
+    ClearDataMgr();
+    auto res = impl.IsDefaultApplication(DEFAULT_FILE_TYPE_VIDEO_MP4, isDefaultApp);
+    EXPECT_EQ(isDefaultApp, false);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
  * @tc.number: SetDefaultApplication_0100
  * @tc.name: test SetDefaultApplication
  * @tc.desc: 1.SetDefaultApplication
@@ -1675,6 +1918,117 @@ HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0100, Function | SmallTe
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     auto res = impl.SetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0200
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0200, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_VIDEO, "");
+    want.SetElement(elementName);
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0300
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0300, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0400
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0400, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_PDF_ERROR, MODULE_NAME);
+    want.SetElement(elementName);
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_PDF, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0500
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0500, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_WORD_ERROR, MODULE_NAME);
+    want.SetElement(elementName);
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_WORD, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0600
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0600, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_EXCEL_ERROR, MODULE_NAME);
+    want.SetElement(elementName);
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_EXCEL, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0700
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0700, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, ABILITY_NAME, MODULE_NAME);
+    want.SetElement(elementName);
+
+    EXPECT_NE(bundleMgrService_, nullptr);
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool res = dataMgr->HasUserId(USER_ID);
+    if (!res) {
+        dataMgr->AddUserId(USER_ID);
+    }
+    ErrCode result = impl.SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    EXPECT_NE(result, ERR_OK);
+}
+
+/**
+ * @tc.number: ResetDefaultApplication_0100
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1.ResetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, ResetDefaultApplication_0100, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    std::string emptyType = "";
+    ErrCode result = impl.ResetDefaultApplication(USER_ID, emptyType);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_INVALID_TYPE);
 }
 
 /**
