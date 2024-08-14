@@ -4280,5 +4280,14 @@ ErrCode BundleMgrHostImpl::GetOdidByBundleName(const std::string &bundleName, st
     }
     return dataMgr->GetOdidByBundleName(bundleName, odid);
 }
+
+bool BundleMgrHostImpl::GetBundleInfosForContinuation(int32_t flags, std::vector<BundleInfo> &bundleInfos,
+    int32_t userId)
+{
+    GetBundleInfos(flags, bundleInfos, userId);
+    auto dataMgr = GetDataMgrFromService();
+    dataMgr->GetBundleInfosForContinuation(bundleInfos);
+    return !bundleInfos.empty();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

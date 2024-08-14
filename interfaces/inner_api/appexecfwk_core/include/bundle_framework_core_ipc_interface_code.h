@@ -183,6 +183,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     DELETE_DESKTOP_SHORTCUT_INFO,
     GET_ALL_DESKTOP_SHORTCUT_INFO,
     GET_ODID_BY_BUNDLENAME,
+    GET_BUNDLE_INFOS_FOR_CONTINUATION,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
