@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1733,5 +1733,122 @@ HWTEST_F(BmsBundleAppControlTest, AppJumpInterceptorManagerRdb_6200, Function | 
     int32_t userId = 100;
     ErrCode ret = rdb->DeleteAppJumpControlRule(controlRules, userId);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlProxyGetDisposedRule_0100
+ * @tc.name: test GetDisposedRule by AppControlProxy
+ * @tc.desc: 1.GetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyGetDisposedRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::string appId = "0";
+    DisposedRule disposedRule;
+    int32_t userId = 0;
+    ErrCode res = appControlProxy->GetDisposedRule(appId, disposedRule, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlProxyGetAbilityRunningControlRule_0100
+ * @tc.name: test GetAbilityRunningControlRule by AppControlProxy
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyGetAbilityRunningControlRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    std::vector<DisposedRule> disposedRules;
+    int32_t appIndex = 0;
+    ErrCode result = appControlProxy->GetAbilityRunningControlRule(bundleName, userId, disposedRules, appIndex);
+    EXPECT_EQ(result, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlProxyAppInstallControlRule_0100
+ * @tc.name: test AddAppInstallControlRule by AppControlProxy
+ * @tc.desc: 1.AddAppInstallControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyAppInstallControlRule_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    const int32_t size = AppControlConstants::LIST_MAX_SIZE + 1;
+    std::vector<std::string> appIds(size);
+    auto res = appControlProxy->AddAppInstallControlRule(
+        appIds, AppInstallControlRuleType::DISALLOWED_UNINSTALL, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AppControlProxyConfirmAppJumpControlRule_0100
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlProxy
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlProxyConfirmAppJumpControlRule_0100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    ASSERT_NE(appControlProxy, nullptr);
+    auto res = appControlProxy->ConfirmAppJumpControlRule("", "", USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    res = appControlProxy->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRuleForCloneApp_0100
+ * @tc.name: test HandleSetDisposedRuleForCloneApp by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRuleForCloneApp_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedRuleForCloneApp(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedRule_0100
+ * @tc.name: test HandleSetDisposedRule by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedRule_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedRule(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlHostHandleSetDisposedStatus_0100
+ * @tc.name: test HandleSetDisposedStatus by AppControlHost
+ * @tc.desc: 1.HandleSetDisposedStatus test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlHostHandleSetDisposedStatus_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<AppControlHost> appControlHost = std::make_shared<AppControlHost>();
+    ASSERT_NE(appControlHost, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    auto res = appControlHost->HandleSetDisposedStatus(data, reply);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 } // OHOS
