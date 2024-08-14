@@ -790,6 +790,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     GetExtensionDirsChange(newInfos, oldInfo);
 
     if (isAppExist_) {
+        (void)InstalldClient::GetInstance()->RemoveDir(ARK_CACHE_PATH + oldInfo.GetBundleName());
         SetAtomicServiceModuleUpgrade(oldInfo);
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             LOG_E(BMS_TAG_INSTALLER, "old bundle info is shared package");
