@@ -83,7 +83,7 @@ ErrCode AppServiceFwkInstaller::Install(
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
     result = ProcessInstall(hspPaths, installParam);
-    APP_LOGI("install result %{public}d", result);
+    APP_LOGI("%{public}s %{public}s result %{public}d", hspPaths[0].c_str(), bundleName_.c_str(), result);
     SendBundleSystemEvent(
         hspPaths,
         BundleEventType::INSTALL,
@@ -938,8 +938,8 @@ bool AppServiceFwkInstaller::CheckNeedInstall(const std::unordered_map<std::stri
         APP_LOGD("bundleName %{public}s not existed local", bundleName_.c_str());
         return true;
     }
-    APP_LOGI_NOFUNC("fwk install old version:%{public}d new version:%{public}d",
-        oldInfo.GetVersionCode(), versionCode_);
+    APP_LOGI_NOFUNC("%{public}s old version:%{public}d, new version:%{public}d",
+        bundleName_.c_str(), oldInfo.GetVersionCode(), versionCode_);
 
     if ((oldInfo.GetVersionCode() == versionCode_) &&
         oldInfo.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {

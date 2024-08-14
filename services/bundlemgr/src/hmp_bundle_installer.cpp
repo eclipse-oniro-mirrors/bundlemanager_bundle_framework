@@ -31,6 +31,7 @@ namespace AppExecFwk {
 namespace {
 const std::string APP_DIR = "/app";
 const std::string APP_SERVICE_FWK_DIR = "appServiceFwk";
+const std::string HAP_PATH_DATA_AREA = "/data/app/el1/bundle/public";
 }  // namespace
 
 HmpBundleInstaller::HmpBundleInstaller()
@@ -202,14 +203,49 @@ std::set<std::string> HmpBundleInstaller::GetRollbackHapList(std::set<std::strin
     return rollbackHapList;
 }
 
+bool HmpBundleInstaller::CheckAppIsUpdatedByUser(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("name empty");
+        return false;
+    }
+    if (!InitDataMgr()) {
+        APP_LOGE("init dataMgr failed");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    ErrCode ret = dataMgr_->GetBundleInfoV9(bundleName, baseFlag, bundleInfo, Constants::ANY_USERID);
+    if (ret != ERR_OK) {
+        APP_LOGW("%{public}s not found", bundleName.c_str());
+        return false;
+    }
+    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        if (hapInfo.hapPath.size() > HAP_PATH_DATA_AREA.size() &&
+            hapInfo.hapPath.compare(0, HAP_PATH_DATA_AREA.size(), HAP_PATH_DATA_AREA) == 0) {
+            APP_LOGI("%{public}s has been updated by user", hapInfo.name.c_str());
+            return true;
+        }
+    }
+    APP_LOGI("%{public}s has not been updated by user", bundleName.c_str());
+    return false;
+}
+
 void HmpBundleInstaller::RollbackHmpBundle(const std::set<std::string> &systemHspList,
     const std::set<std::string> &hapList)
 {
+    std::set<std::string> rollbackList;
+    for (const auto &bundleName : hapList) {
+        if (!CheckAppIsUpdatedByUser(bundleName)) {
+            rollbackList.insert(bundleName);
+        }
+    }
     // If the update fails, the information of the application in the database needs to be deleted,
     // but the user data directory and some settings set by the user,
     // such as app control rules and default applications, cannot be deleted.
     std::set<std::string> normalBundleList;
-    std::set_difference(hapList.begin(), hapList.end(), systemHspList.begin(), systemHspList.end(),
+    std::set_difference(rollbackList.begin(), rollbackList.end(), systemHspList.begin(), systemHspList.end(),
         std::inserter(normalBundleList, normalBundleList.begin()));
     for (const auto &bundleName : normalBundleList) {
         ErrCode ret = RollbackHmpUserInfo(bundleName);
@@ -219,7 +255,7 @@ void HmpBundleInstaller::RollbackHmpBundle(const std::set<std::string> &systemHs
     }
     std::set<std::string> allBundleList;
     allBundleList.insert(systemHspList.begin(), systemHspList.end());
-    allBundleList.insert(hapList.begin(), hapList.end());
+    allBundleList.insert(rollbackList.begin(), rollbackList.end());
     for (const auto &bundleName : allBundleList) {
         ErrCode ret = RollbackHmpCommonInfo(bundleName);
         if (ret != ERR_OK) {

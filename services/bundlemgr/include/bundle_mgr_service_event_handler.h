@@ -569,6 +569,7 @@ private:
     bool HandleInstallModuleUpdateSystemHsp(const std::vector<std::string> &appDirList);
     bool HandleInstallModuleUpdateNormalApp(const std::vector<std::string> &appDirList);
     bool CheckIsModuleUpdate(const std::string &str);
+    bool CheckAppIsUpdatedByUser(const std::string& appDir);
     void FilterModuleUpdate(const std::vector<std::string> &preInstallDirs,
         std::map<std::string, std::vector<std::string>> &moduleUpdateMap, bool isAppService);
     std::string GetBundleNameByPreInstallPath(const std::string& path);

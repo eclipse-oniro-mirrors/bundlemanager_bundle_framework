@@ -45,6 +45,8 @@ public:
     void UpdateBundleInfo(const std::string &bundleName, const std::string &bundleDir, const std::string &hspDir);
 
 private:
+    bool CheckAppIsUpdatedByUser(const std::string &bundleName);
+
     std::set<std::string> GetHmpBundleList(const std::string &path) const;
 
     void UpdateInnerBundleInfo(const std::string &bundleName,
