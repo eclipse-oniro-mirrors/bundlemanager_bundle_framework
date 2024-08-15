@@ -223,6 +223,7 @@ struct App {
     bool gwpAsanEnabled = false;
     bool hwasanEnabled = false;
     bool tsanEnabled = false;
+    bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
     int32_t iconId = 0;
     int32_t labelId = 0;
@@ -1344,6 +1345,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_UBSAN_ENABLED,
+        app.ubsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -2111,6 +2120,7 @@ bool ToApplicationInfo(
     applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     applicationInfo.tsanEnabled = app.tsanEnabled;
     applicationInfo.hwasanEnabled = app.hwasanEnabled;
+    applicationInfo.ubsanEnabled = app.ubsanEnabled;
     applicationInfo.appEnvironments = app.appEnvironments;
     // bundleType is app && moduleType is entry or feature
     if (applicationInfo.bundleType == BundleType::APP &&

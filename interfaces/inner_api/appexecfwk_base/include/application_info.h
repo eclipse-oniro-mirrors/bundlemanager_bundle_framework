@@ -292,6 +292,7 @@ struct ApplicationInfo : public Parcelable {
     uint32_t applicationReservedFlag = 0;
     bool tsanEnabled = false;
     bool hwasanEnabled = false;
+    bool ubsanEnabled = false;
     bool cloudFileSyncEnabled = false;
 
     // app detail ability
