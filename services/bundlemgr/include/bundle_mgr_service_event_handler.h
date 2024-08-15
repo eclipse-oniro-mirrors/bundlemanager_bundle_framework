@@ -23,6 +23,9 @@
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_host_impl.h"
+#include "common_event_manager.h"
+#include "common_event_subscriber.h"
+#include "common_event_support.h"
 #include "pre_scan_info.h"
 #include "nlohmann/json.hpp"
 

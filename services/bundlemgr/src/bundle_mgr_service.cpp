@@ -21,6 +21,7 @@
 #ifdef CODE_SIGNATURE_ENABLE
 #include "aot/aot_sign_data_cache_mgr.h"
 #endif
+#include "aot/aot_device_idle_listener.h"
 #include "bundle_common_event.h"
 #include "bundle_memory_guard.h"
 #include "bundle_resource_helper.h"
@@ -96,6 +97,17 @@ void BundleMgrService::OnStop()
 {
     APP_LOGI("OnStop is called");
     SelfClean();
+}
+
+void BundleMgrService::OnDeviceLevelChanged(int32_t type, int32_t level, std::string& action)
+{
+    APP_LOGD("SystemAbility OnDeviceLevelChanged is called");
+    // DeviceStatus::DEVICE_IDLE = 5
+    if (type == 5) {
+        APP_LOGI("receive device idle notification");
+        // 1.screen-off; 2.last-time >= 10mins; 3.power-capacity > 91%
+        AOTDeviceIdleListener::GetInstance().OnReceiveDeviceIdle();
+    }
 }
 
 bool BundleMgrService::IsServiceReady() const
@@ -440,17 +452,6 @@ sptr<IBundleResource> BundleMgrService::GetBundleResourceProxy() const
     return bundleResourceHostImpl_;
 }
 #endif
-
-void BundleMgrService::RegisterChargeIdleListener()
-{
-    APP_LOGI("begin to register charge idle listener");
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGE_IDLE_MODE_CHANGED);
-    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    chargeIdleListener_ = std::make_shared<ChargeIdleListener>(subscribeInfo);
-    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(chargeIdleListener_);
-    APP_LOGI("register charge idle listener done");
-}
 
 void BundleMgrService::CheckAllUser()
 {
