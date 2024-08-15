@@ -40,6 +40,9 @@ namespace {
 const std::string BUNDLE_TEST = "app_bundleName";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
+const std::string CALLER_BUNDLE_NAME = "callerBundleName";
+const std::string TARGET_BUNDLE_NAME = "targetBundleName";
+const int32_t APP_INDEX = 1;
 const int32_t USERID = 100;
 }  // namespace
 
@@ -311,6 +314,34 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0150, Function | Smal
 }
 
 /**
+ * @tc.number: AppControlManagerRdb_0160
+ * @tc.name: Test GetAbilityRunningControlRule by AppControlManagerRdb
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0160, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
+    std::vector<DisposedRule> disposedRules;
+    auto res = rdb.GetAbilityRunningControlRule(APPID, APP_INDEX, USERID, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerRdb_0170
+ * @tc.name: Test DeleteAllDisposedRuleByBundle by AppControlManagerRdb
+ * @tc.desc: 1.DeleteAllDisposedRuleByBundle test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerRdb_0170, Function | SmallTest | Level1)
+{
+    AppControlManagerRdb rdb;
+    rdb.rdbDataManager_->bmsRdbConfig_.tableName = TARGET_BUNDLE_NAME;
+    std::vector<DisposedRule> disposedRules;
+    auto res = rdb.DeleteAllDisposedRuleByBundle(APPID, APP_INDEX, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: AppJumpInterceptorManagerRdb_0010
  * @tc.name: test DeleteRuleByTargetBundleName by AppJumpInterceptorManagerRdb
  * @tc.desc: 1.DeleteRuleByTargetBundleName test
@@ -528,5 +559,75 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0090, Function |
     Want want;
     auto res = impl.GetDisposedStatus("", want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0100
+ * @tc.name: Test GetAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0100, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    AppJumpControlRule controlRule;
+    setuid(AppControlConstants::FOUNDATION_UID);
+    auto res = impl.GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0110
+ * @tc.name: Test SetDisposedRule by AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0110, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    DisposedRule rule;
+    setuid(AppControlConstants::EDM_UID);
+    auto res = impl.SetDisposedRule(APPID, rule, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0120
+ * @tc.name: Test GetAbilityRunningControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0120, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    DisposedRule rule;
+    std::vector<DisposedRule> disposedRules;
+    setuid(AppControlConstants::FOUNDATION_UID);
+    auto res = impl.GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, Constants::UNSPECIFIED_USERID, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0130
+ * @tc.name: Test SetDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0130, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    DisposedRule rule;
+    setuid(AppControlConstants::EDM_UID);
+    auto ret = impl.SetDisposedRuleForCloneApp(APPID, rule, Constants::MAIN_APP_INDEX, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0140
+ * @tc.name: Test DeleteDisposedRuleForCloneApp by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteDisposedRuleForCloneApp test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0140, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    setuid(AppControlConstants::EDM_UID);
+    auto ret = impl.DeleteDisposedRuleForCloneApp(APPID, Constants::MAIN_APP_INDEX, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 } // OHOS
