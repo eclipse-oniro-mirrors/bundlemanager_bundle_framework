@@ -177,6 +177,18 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsExtensionDataMgr_0003
+ * @tc.name: CheckApiInfo
+ * @tc.desc: CheckApiInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0003, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool res = bmsExtensionDataMgr.CheckApiInfo(SDK_VERSION, SDK_VERSION);
+    EXPECT_TRUE(res);
+}
+
+/**
  * @tc.number: BmsExtensionDataMgr_0004
  * @tc.name: QueryAbilityInfosWithFlag
  * @tc.desc: QueryAbilityInfosWithFlag
@@ -873,6 +885,18 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0023, Function | SmallTest
 
     std::string bundleName{ "extension" };
     auto res = bmsExtensionDataMgr.CheckWhetherCanBeUninstalled(bundleName);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0024
+ * @tc.name: Init
+ * @tc.desc: Init
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0024, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    bool res = bmsExtensionDataMgr.Init();
     EXPECT_TRUE(res);
 }
 } // OHOS
