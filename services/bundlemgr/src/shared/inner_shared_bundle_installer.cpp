@@ -64,7 +64,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
         APP_LOGI("hap syscap check failed %{public}d", result);
     }
@@ -93,7 +93,7 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
         result = bundleInstallChecker_->CheckDeviceType(parsedBundles_);
         if (result != ERR_OK) {
             APP_LOGE("check device type failed %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+            return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
 
