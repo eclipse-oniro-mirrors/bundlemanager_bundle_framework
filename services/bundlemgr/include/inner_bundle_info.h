@@ -2031,6 +2031,16 @@ public:
         baseApplicationInfo_->hwasanEnabled = hwasanEnabled;
     }
 
+    bool GetUbsanEnabled() const
+    {
+        return baseApplicationInfo_->ubsanEnabled;
+    }
+
+    void SetUbsanEnabled(bool ubsanEnabled)
+    {
+        baseApplicationInfo_->ubsanEnabled = ubsanEnabled;
+    }
+
     std::vector<ApplicationEnvironment> GetAppEnvironments() const
     {
         return baseApplicationInfo_->appEnvironments;

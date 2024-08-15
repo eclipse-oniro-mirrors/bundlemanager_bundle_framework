@@ -53,6 +53,7 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TSAN_ENABLED = "tsanEnabled";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_HWASAN_ENABLED = "hwasanEnabled";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_UBSAN_ENABLED = "ubsanEnabled";
 
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
@@ -354,6 +355,7 @@ constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE = "bundleType";
 constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 constexpr const char* APP_TSAN_ENABLED = "tsanEnabled";
+constexpr const char* APP_UBSAN_ENABLED = "ubsanEnabled";
 constexpr const char* APP_CONFIGURATION = "configuration";
 // multiappmode
 constexpr const char* APP_MULTI_APP_MODE = "multiAppMode";

@@ -337,6 +337,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         updateTsanEnabled(newInfo, oldInfo);
+        updateUbsanEnabled(newInfo, oldInfo);
         ProcessAllowedAcls(newInfo, oldInfo);
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
@@ -546,6 +547,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetGwpAsanEnabled(oldInfo.IsGwpAsanEnabled());
         oldInfo.SetHwasanEnabled(oldInfo.IsHwasanEnabled());
         updateTsanEnabled(newInfo, oldInfo);
+        updateUbsanEnabled(newInfo, oldInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
@@ -7634,6 +7636,16 @@ void BundleDataMgr::updateTsanEnabled(const InnerBundleInfo &newInfo, InnerBundl
     }
     if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
         oldInfo.SetTsanEnabled(newInfo.GetTsanEnabled());
+    }
+}
+
+void BundleDataMgr::updateUbsanEnabled(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const
+{
+    if (newInfo.GetUbsanEnabled()) {
+        oldInfo.SetUbsanEnabled(true);
+    }
+    if (oldInfo.GetVersionCode() < newInfo.GetVersionCode()) {
+        oldInfo.SetUbsanEnabled(newInfo.GetUbsanEnabled());
     }
 }
 
