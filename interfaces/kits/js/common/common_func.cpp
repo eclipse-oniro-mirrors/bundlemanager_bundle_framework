@@ -198,8 +198,9 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
 
 bool CommonFunc::CheckBundleFlagWithPermission(int32_t flag)
 {
-    if ((flag & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
-        != static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
+    if ((static_cast<uint32_t>(flag) &
+        static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
+        != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION)) {
         return false;
     }
     return true;
