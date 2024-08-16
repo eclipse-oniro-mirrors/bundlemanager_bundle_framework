@@ -673,8 +673,10 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_1100, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
-    CheckFileNonExist();
+    EXPECT_EQ(installRes, ERR_OK);
+    CheckFileExist();
+
+    ClearBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -992,8 +994,10 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4800, Function | SmallTes
     filePaths.emplace_back(firstBundleFile);
     filePaths.emplace_back(secondBundleFile);
     ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
-    CheckFileNonExist();
+    EXPECT_EQ(installRes, ERR_OK);
+    CheckFileExist();
+
+    ClearBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -1016,7 +1020,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_4900, Function | SmallTes
     filePaths.clear();
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
+    EXPECT_EQ(installRes, ERR_OK);
 
     ClearBundleInfo(BUNDLE_NAME);
 }
@@ -1041,7 +1045,7 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_5100, Function | SmallTes
     filePaths.clear();
     filePaths.emplace_back(secondBundleFile);
     installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
+    EXPECT_EQ(installRes, ERR_OK);
 
     ClearBundleInfo(BUNDLE_NAME);
 }

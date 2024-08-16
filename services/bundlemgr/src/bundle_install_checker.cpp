@@ -925,16 +925,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
                 LOG_E(BMS_TAG_INSTALLER, "versionCode not same");
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
-            if (minCompatibleVersionCode != info.second.GetMinCompatibleVersionCode()) {
-                LOG_E(BMS_TAG_INSTALLER, "minCompatibleVersionCode not same");
-                return ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME;
-            }
         }
         // check release type
-        if (target != info.second.GetTargetVersion()) {
-            LOG_E(BMS_TAG_INSTALLER, "target version not same");
-            return ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME;
-        }
         if (releaseType != info.second.GetReleaseType()) {
             LOG_W(BMS_TAG_INSTALLER, "releaseType not same: [%{public}s, %{public}s] vs [%{public}s, %{public}s]",
                 moduleName.c_str(), releaseType.c_str(),
