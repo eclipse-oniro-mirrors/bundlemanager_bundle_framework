@@ -14,7 +14,9 @@
  */
 
 #include <gtest/gtest.h>
+#define private public
 #include "bundle_resource_proxy.h"
+#undef private
 #include "bundle_resource_interface.h"
 #include "iremote_stub.h"
 
@@ -119,5 +121,195 @@ HWTEST_F(BundleResourceProxyTest, GetVectorParcelInfo_0100, Function | SmallTest
     ASSERT_EQ(ret, ERR_OK);
 }
 
+/**
+ * @tc.number: GetBundleResourceInfo_0100
+ * @tc.name: test the GetBundleResourceInfo
+ * @tc.desc: 1. parameter size is 0
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetBundleResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    uint32_t flags = 1;
+    BundleResourceInfo bundleResourceInfo;
+    int32_t appIndex = 1;
+    auto ret = proxy->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
+    GTEST_LOG_(INFO) << "GetBundleResourceInfo_0100 end, " << ret;
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfo_0100
+ * @tc.name: test the GetLauncherAbilityResourceInfo
+ * @tc.desc: 1. bundleName is empty
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetLauncherAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetLauncherAbilityResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "";
+    uint32_t flags = 1;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    int32_t appIndex = 1;
+    auto ret = proxy->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
+    GTEST_LOG_(INFO) << "GetLauncherAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfo_0200
+ * @tc.name: test the GetLauncherAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetLauncherAbilityResourceInfo_0200, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetLauncherAbilityResourceInfo_0200 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    uint32_t flags = 1;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfo;
+    int32_t appIndex = 1;
+    auto ret = proxy->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
+    GTEST_LOG_(INFO) << "GetLauncherAbilityResourceInfo_0200 end, " << ret;
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllBundleResourceInfo_0100
+ * @tc.name: test the GetAllBundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllBundleResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetAllBundleResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetAllBundleResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    uint32_t flags = 1;
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    auto ret = proxy->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    GTEST_LOG_(INFO) << "GetAllBundleResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllLauncherAbilityResourceInfo_0100
+ * @tc.name: test the GetAllLauncherAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, GetAllLauncherAbilityResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetAllLauncherAbilityResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    uint32_t flags = 1;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    auto ret = proxy->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    GTEST_LOG_(INFO) << "GetAllLauncherAbilityResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: AddResourceInfoByBundleName_0100
+ * @tc.name: test the AddResourceInfoByBundleName
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName
+ */
+HWTEST_F(BundleResourceProxyTest, AddResourceInfoByBundleName_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "AddResourceInfoByBundleName_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    int32_t userId = 100;
+    auto ret = proxy->AddResourceInfoByBundleName(bundleName, userId);
+    GTEST_LOG_(INFO) << "AddResourceInfoByBundleName_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: AddResourceInfoByAbility_0100
+ * @tc.name: test the AddResourceInfoByAbility
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByAbility
+ */
+HWTEST_F(BundleResourceProxyTest, AddResourceInfoByAbility_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "AddResourceInfoByAbility_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    std::string abilityName = "abilityName";
+    int32_t userId = 100;
+    auto ret = proxy->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId);
+    GTEST_LOG_(INFO) << "AddResourceInfoByAbility_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: DeleteResourceInfo_0100
+ * @tc.name: test the DeleteResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test DeleteResourceInfo
+ */
+HWTEST_F(BundleResourceProxyTest, DeleteResourceInfo_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "DeleteResourceInfo_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    std::string key = "key";
+    auto ret = proxy->DeleteResourceInfo(key);
+    GTEST_LOG_(INFO) << "DeleteResourceInfo_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetParcelInfoFromAshMem_0100
+ * @tc.name: test the GetParcelInfoFromAshMem
+ * @tc.desc: 1. system running normally
+ *           2. test GetParcelInfoFromAshMem
+ */
+HWTEST_F(BundleResourceProxyTest, GetParcelInfoFromAshMem_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "GetParcelInfoFromAshMem_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+    MessageParcel reply;
+    void *buffer = nullptr;
+    auto ret = proxy->GetParcelInfoFromAshMem(reply, buffer);
+    GTEST_LOG_(INFO) << "GetParcelInfoFromAshMem_0100 end, " << ret;
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: SendRequest_0100
+ * @tc.name: test the SendRequest
+ * @tc.desc: 1. system running normally
+ *           2. test SendRequest
+ */
+HWTEST_F(BundleResourceProxyTest, SendRequest_0100, Function | SmallTest | Level0)
+{
+    GTEST_LOG_(INFO) << "SendRequest_0100 start";
+    sptr<MockStub> stub = new MockStub();
+    sptr<BundleResourceProxy> proxy = new BundleResourceProxy(stub->AsObject());
+
+    BundleResourceInterfaceCode code = BundleResourceInterfaceCode::GET_BUNDLE_RESOURCE_INFO;
+    MessageParcel data;
+    MessageParcel reply;
+    auto ret = proxy->SendRequest(code, data, reply);
+    GTEST_LOG_(INFO) << "SendRequest_0100 end, " << ret;
+    EXPECT_TRUE(ret);
+}
 }
 }
