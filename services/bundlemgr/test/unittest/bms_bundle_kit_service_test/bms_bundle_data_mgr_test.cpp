@@ -6153,8 +6153,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0001, Fun
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = bundleMgrHostImpl_->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6172,8 +6173,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplAddDesktopShortcutInfo_0002, Fun
     ErrCode ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->AddDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6191,8 +6193,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0001, 
     ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6210,8 +6213,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplDeleteDesktopShortcutInfo_0002, 
     ErrCode ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->DeleteDesktopShortcutInfo(shortcutInfo, USERID);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6231,8 +6235,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0001, 
     ErrCode ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = lcalBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6252,8 +6257,9 @@ HWTEST_F(BmsBundleDataMgrTest, BundleMgrHostImplGetAllDesktopShortcutInfo_0002, 
     ErrCode ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
     EXPECT_NE(ret, ERR_OK);
 
-    bundleMgrService_->dataMgr_ = nullptr;
+    ClearDataMgr();
     ret = localBundleMgrHostImpl->GetAllDesktopShortcutInfo(USERID, vecShortcutInfo);
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
@@ -6665,10 +6671,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientGetBundleInfo_0200, Function | 
         flag = true;
     }
     ErrCode ret = bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 }
 
 /**
@@ -6708,10 +6714,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0100, Functio
         flag = true;
     }
     ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -6734,10 +6740,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0200, Functio
         flag = true;
     }
     ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 }
 
 /**
@@ -6760,10 +6766,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0300, Functio
         flag = true;
     }
     ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 }
 
 /**
@@ -6787,10 +6793,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryAbilityInfos_0400, Functio
     }
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     ErrCode res = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -6812,10 +6818,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0100, Functi
         flag = true;
     }
     ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
 }
 
 /**
@@ -6838,10 +6844,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0200, Functi
     }
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -6863,10 +6869,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchGetBundleInfo_0300, Functi
         flag = true;
     }
     ErrCode res = bmsExtensionClient->BatchGetBundleInfo(bundleNames, flags, bundleInfos, userId);
-    EXPECT_EQ(res, ERR_OK);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_OK);
 }
 
 /**
@@ -6892,10 +6898,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchQueryAbilityInfos_0100, Fu
     }
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
@@ -6920,10 +6926,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientBatchQueryAbilityInfos_0200, Fu
         flag = true;
     }
     ErrCode res = bmsExtensionClient->BatchQueryAbilityInfos(wants, flags, userId, abilityInfos, isNewVersion);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 }
 
 /**
@@ -6945,10 +6951,10 @@ HWTEST_F(BmsBundleDataMgrTest, BmsExtensionClientQueryLauncherAbility_0100, Func
     }
     bmsExtensionClient->bmsExtensionImpl_ = nullptr;
     ErrCode res = bmsExtensionClient->QueryLauncherAbility(want, userId, abilityInfos);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     if (flag) {
         ClearDataMgr();
     }
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**
