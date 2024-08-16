@@ -57,7 +57,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
-        LOG_E("query %{public}s ability_ext infos err code %{public}d", bundleName.c_str(), res);
+        LOG_E(BMS_TAG_QUERY, "query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
         return res;
     }
     for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
@@ -99,7 +99,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        LOG_E("query %{public}s ability_ext infos err code %{public}d", bundleName.c_str(), res);
+        LOG_E(BMS_TAG_QUERY, "query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
         return res;
     }
     if (abilityInfos.empty()) {
@@ -143,7 +143,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(wants[i], flags, userId, tmpAbilityInfos,
             isNewVersion);
         if (res != ERR_OK) {
-            APP_LOGE("query %{public}s ability_ext infos err code %{public}d", bundleName.c_str(), res);
+            APP_LOGE("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
             return res;
         }
         abilityInfos.insert(abilityInfos.end(), tmpAbilityInfos.begin(), tmpAbilityInfos.end());
@@ -198,7 +198,7 @@ ErrCode BmsExtensionClient::GetBundleInfos(
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     if (res != ERR_OK) {
-        LOG_E(BMS_TAG_QUERY, "query bundle_ext infos err code %{public}d", res);
+        LOG_E(BMS_TAG_QUERY, "query bundle_exts err code %{public}d", res);
         return res;
     }
 
