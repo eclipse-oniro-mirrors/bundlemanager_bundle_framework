@@ -77,6 +77,7 @@ struct InnerModuleInfo {
     bool gwpAsanEnabled = false;
     bool needDelete = false;
     bool hwasanEnabled = false;
+    bool ubsanEnabled = false;
     int32_t labelId = 0;
     int32_t descriptionId = 0;
     int32_t iconId = 0;
@@ -2197,6 +2198,7 @@ public:
     ErrCode VerifyAndAckCloneAppIndex(int32_t userId, int32_t &appIndex);
     void AdaptMainLauncherResourceInfo(ApplicationInfo &applicationInfo) const;
     bool IsHwasanEnabled() const;
+    bool IsUbsanEnabled() const;
     std::set<int32_t> GetCloneBundleAppIndexes() const;
 
 private:

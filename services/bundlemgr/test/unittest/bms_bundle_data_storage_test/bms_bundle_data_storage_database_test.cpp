@@ -1149,6 +1149,7 @@ protected:
                 "GWPAsanEnabled": false,
                 "tsanEnabled": false,
                 "hwasanEnabled": false,
+                "ubsanEnabled": false,
                 "organization": "",
                 "appEnvironments": [],
                 "multiAppMode": {

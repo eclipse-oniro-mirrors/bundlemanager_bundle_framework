@@ -65,7 +65,9 @@ const std::string OTAUPDATETESTSOCHANGEDFEATURE1_BUNDLE = "otaUpdateTestSoChange
 const std::string OTAUPDATETESTSOCHANGEDFEATURE2_BUNDLE = "otaUpdateTestSoChangedFeature2.hap";
 const std::string BUNDLE_OTAUPDATETEST_NAME = "com.example.otaupdatetest";
 const std::string OTAUPDATETESTBASIS2_BUNDLE = "otaUpdateTestBasis2.hap";
+const std::string OTAUPDATETESTBASISUBSAN_BUNDLE = "otaUpdateTestBasisUBSan.hap";
 const std::string OTAUPDATETESTAPPFIELD2_BUNDLE = "otaUpdateTestAppField2.hap";
+const std::string OTAUPDATETESTAPPFIELDUBSAN_BUNDLE = "otaUpdateTestAppFieldUBSan.hap";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t USERID = 100;
 const int32_t USERID_2 = 101;
@@ -234,6 +236,7 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0001, Function | SmallTest | Level3
     EXPECT_FALSE(applicationInfo.gwpAsanEnabled);
     EXPECT_TRUE(applicationInfo.tsanEnabled);
     EXPECT_FALSE(applicationInfo.hwasanEnabled);
+    EXPECT_FALSE(applicationInfo.ubsanEnabled);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
     ret = installer->UninstallSystemBundle(bundleName);
@@ -571,6 +574,49 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_00100, Function | SmallTest | Level
     EXPECT_EQ(applicationInfo.versionCode, VERSION_CODE2);
     EXPECT_EQ(applicationInfo.versionName, VERSION_NAME2);
     EXPECT_TRUE(applicationInfo.hwasanEnabled);
+
+    auto installer = std::make_unique<SystemBundleInstaller>();
+    ret = installer->UninstallSystemBundle(bundleName);
+    EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
+}
+
+/**
+ * @tc.number: SUB_BMS_OTA_0200
+ * @tc.name: test the right system bundle file can be installed
+ * @tc.desc: 1. The system bundle file exists.
+ *           2. Lower version of the hap is installed successfully.
+ *           3. It's updated to a higher version successfully.
+ *           4. Some fields defined in app.json, which will serve as a basis for
+ *              judging the update success, are as follows:
+ *                  "versionCode": 1000000 -> 2000000
+ *                  "versionName": "1.0.0.0" -> "2.0.0.0"
+ *                  "ubsanEnabled": false -> true
+ */
+HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0200, Function | SmallTest | Level3)
+{
+    std::string bundleFile = RESOURCE_ROOT_PATH + OTAUPDATETESTBASISUBSAN_BUNDLE;
+    std::string bundleName = BUNDLE_OTAUPDATETEST_NAME;
+    bool ret = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(ret) << "the install failed: " << bundleFile;
+
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr) << "the dataMgr is nullptr";
+    ApplicationInfo applicationInfo;
+    ret = dataMgr->GetApplicationInfo(bundleName, 0, USERID, applicationInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(applicationInfo.versionCode, VERSION_CODE1);
+    EXPECT_EQ(applicationInfo.versionName, VERSION_NAME1);
+    EXPECT_FALSE(applicationInfo.ubsanEnabled);
+
+    bundleFile = RESOURCE_ROOT_PATH + OTAUPDATETESTAPPFIELDUBSAN_BUNDLE;
+    ret = OTAInstallSystemBundle(bundleFile);
+    EXPECT_TRUE(ret) << "the update failed: " << bundleFile;
+
+    ret = dataMgr->GetApplicationInfo(bundleName, 0, USERID, applicationInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(applicationInfo.versionCode, VERSION_CODE2);
+    EXPECT_EQ(applicationInfo.versionName, VERSION_NAME2);
+    EXPECT_TRUE(applicationInfo.ubsanEnabled);
 
     auto installer = std::make_unique<SystemBundleInstaller>();
     ret = installer->UninstallSystemBundle(bundleName);

@@ -2515,6 +2515,7 @@ bool ToInnerBundleInfo(
     innerModuleInfo.asanEnabled = applicationInfo.asanEnabled;
     innerModuleInfo.gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
     innerModuleInfo.hwasanEnabled = applicationInfo.hwasanEnabled;
+    innerModuleInfo.ubsanEnabled = applicationInfo.ubsanEnabled;
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

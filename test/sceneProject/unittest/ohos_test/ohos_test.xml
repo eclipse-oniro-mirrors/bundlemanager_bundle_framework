@@ -108,10 +108,12 @@
     <preparer>
       <option name="push" value="test_bundle/otaUpdateTestAppField.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestAppField2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestAppFieldUBSan.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestAplDown.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestAplUp.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestBasis.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestBasis2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestBasisUBSan.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestBasisFeature1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestBasisFeature2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
       <option name="push" value="test_bundle/otaUpdateTestModuleField.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
