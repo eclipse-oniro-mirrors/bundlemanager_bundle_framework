@@ -19,6 +19,8 @@
 #include "appexecfwk_errors.h"
 #include "ability_info.h"
 #include "bundle_info.h"
+#include "bundle_resource_info.h"
+#include "launcher_ability_resource_info.h"
 #include "interfaces/hap_verify.h"
 #include "want.h"
 #include "abs_rdb_predicates.h"
@@ -117,6 +119,25 @@ public:
     virtual bool CheckWhetherCanBeUninstalled(const std::string &bundleName)
     {
         return true;
+    }
+    virtual ErrCode GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo, const int32_t appIndex = 0)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex = 0)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
     }
 };
 

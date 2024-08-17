@@ -107,6 +107,20 @@ ErrCode BundleResourceHostImpl::GetAllBundleResourceInfo(const uint32_t flags,
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGD("get all resource from ext failed, flags:%{public}u", flags);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+        APP_LOGD("need sort by label");
+        std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
+            [](BundleResourceInfo &resourceA, BundleResourceInfo &resourceB) {
+                return resourceA.label < resourceB.label;
+            });
+    }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;
 }
@@ -138,6 +152,19 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         APP_LOGE("get all resource failed, flags:%{public}u", flags);
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    ErrCode ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGD("get all resource from ext failed, flags:%{public}u", flags);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
+        APP_LOGD("need sort by label");
+        std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
+            [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
+                return resourceA.label < resourceB.label;
+            });
     }
     BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
     return ERR_OK;

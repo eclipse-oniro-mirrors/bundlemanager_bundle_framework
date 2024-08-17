@@ -420,6 +420,50 @@ void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) con
     }
 }
 
+ErrCode BmsExtensionClient::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+    BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo, appIndex);
+}
+
+ErrCode BmsExtensionClient::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo, const int32_t appIndex)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo, appIndex);
+}
+
+ErrCode BmsExtensionClient::GetAllBundleResourceInfo(const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+}
+
+ErrCode BmsExtensionClient::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+}
+
 const std::shared_ptr<BundleDataMgr> BmsExtensionClient::GetDataMgr() const
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
