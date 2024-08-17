@@ -853,7 +853,7 @@ ErrCode BundleInstallerHost::InstallExisted(const std::string &bundleName, int32
         bundleName.c_str(), userId);
     if (bundleName.empty()) {
         LOG_E(BMS_TAG_INSTALLER, "install existed app failed due to error parameters");
-        return ERR_APPEXECFWK_INSTALL_EXISTED_PARAM_ERROR;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (!BundlePermissionMgr::IsSystemApp()) {
         LOG_E(BMS_TAG_INSTALLER, "non-system app calling system api bundleName: %{public}s", bundleName.c_str());
