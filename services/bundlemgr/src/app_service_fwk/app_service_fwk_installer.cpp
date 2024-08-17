@@ -344,7 +344,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
         APP_LOGI("Hsp syscap check failed %{public}d", result);
     }
@@ -372,7 +372,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
         result = bundleInstallChecker_->CheckDeviceType(newInfos);
         if (result != ERR_OK) {
             APP_LOGE("Check device type failed : %{public}d", result);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+            return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
 

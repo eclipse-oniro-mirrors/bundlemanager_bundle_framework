@@ -1079,7 +1079,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // check syscap
     result = CheckSysCap(bundlePaths);
-    bool isSysCapValid = (result == ERR_OK) ? true : false;
+    bool isSysCapValid = (result == ERR_OK);
     if (!isSysCapValid) {
         APP_LOGI("hap syscap check failed %{public}d", result);
     }
@@ -3774,7 +3774,7 @@ ErrCode BaseBundleInstaller::CheckInstallCondition(
         ret = bundleInstallChecker_->CheckDeviceType(infos);
         if (ret != ERR_OK) {
             LOG_E(BMS_TAG_INSTALLER, "CheckDeviceType failed due to errorCode : %{public}d", ret);
-            return ERR_BUNDLE_MANAGER_INSTALL_SYSCAP_OR_DEVICE_TYPE_ERROR;
+            return ERR_APPEXECFWK_INSTALL_SYSCAP_FAILED_AND_DEVICE_TYPE_ERROR;
         }
     }
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
