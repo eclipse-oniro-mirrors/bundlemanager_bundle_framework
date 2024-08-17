@@ -3662,6 +3662,18 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SKILL), &nGetBundleInfoWithSkill));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SKILL",
         nGetBundleInfoWithSkill));
+
+    napi_value nGetBundleInfoOnlyWithLauncherAbility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY), &nGetBundleInfoOnlyWithLauncherAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_ONLY_WITH_LAUNCHER_ABILITY",
+        nGetBundleInfoOnlyWithLauncherAbility));
+
+    napi_value nGetBundleInfoExcludeClone;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_EXCLUDE_CLONE), &nGetBundleInfoExcludeClone));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_EXCLUDE_CLONE",
+        nGetBundleInfoExcludeClone));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,
