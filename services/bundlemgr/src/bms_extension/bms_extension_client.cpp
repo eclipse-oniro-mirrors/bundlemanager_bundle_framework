@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include "app_log_wrapper.h"
 #include "app_log_tag_wrapper.h"
 #include "bms_extension_client.h"
 #include "bundle_mgr_service.h"
@@ -57,7 +58,7 @@ ErrCode BmsExtensionClient::QueryLauncherAbility(const Want &want, int32_t userI
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "query ability infos failed due to error code %{public}d", res);
+        APP_LOGE_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
         return res;
     }
     for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
@@ -99,7 +100,7 @@ ErrCode BmsExtensionClient::QueryAbilityInfos(const Want &want, int32_t flags, i
     }
     ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "query ability infos failed due to error code %{public}d", res);
+        APP_LOGE_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
         return res;
     }
     if (abilityInfos.empty()) {
@@ -143,7 +144,7 @@ ErrCode BmsExtensionClient::BatchQueryAbilityInfos(const std::vector<Want> &want
         ErrCode res = bmsExtensionImpl_->QueryAbilityInfosWithFlag(wants[i], flags, userId, tmpAbilityInfos,
             isNewVersion);
         if (res != ERR_OK) {
-            APP_LOGD("query ability infos failed due to error code %{public}d", res);
+            APP_LOGE_NOFUNC("query abilitys_ext %{public}s err code %{public}d", bundleName.c_str(), res);
             return res;
         }
         abilityInfos.insert(abilityInfos.end(), tmpAbilityInfos.begin(), tmpAbilityInfos.end());
@@ -198,7 +199,7 @@ ErrCode BmsExtensionClient::GetBundleInfos(
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "query bundle infos failed due to error code %{public}d", res);
+        APP_LOGE_NOFUNC("query bundle_exts err code %{public}d", res);
         return res;
     }
 
@@ -234,7 +235,7 @@ ErrCode BmsExtensionClient::GetBundleInfo(const std::string &bundleName, int32_t
     }
     ErrCode res = bmsExtensionImpl_->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     if (res != ERR_OK) {
-        LOG_D(BMS_TAG_QUERY, "query bundle info failed due to error code %{public}d", res);
+        APP_LOGE_NOFUNC("query bundle_ext %{public}s err code %{public}d", bundleName.c_str(), res);
         return res;
     }
 
