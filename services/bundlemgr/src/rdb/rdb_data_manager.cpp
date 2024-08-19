@@ -16,6 +16,8 @@
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_util.h"
+#include "event_report.h"
 #include "scope_guard.h"
 
 namespace OHOS {
@@ -28,6 +30,7 @@ constexpr int8_t BMS_VALUE_INDEX = 1;
 constexpr int16_t WRITE_TIMEOUT = 300; // 300s
 constexpr int8_t CLOSE_TIME = 20; // delay 20s stop rdbStore
 constexpr const char* BMS_BACK_UP_RDB_NAME = "bms-backup.db";
+constexpr int32_t OPERATION_TYPE_OF_INSUFFICIENT_DISK = 3;
 }
 
 std::mutex RdbDataManager::restoreRdbMutex_;
@@ -78,7 +81,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         APP_LOGE("GetRdbStore failed, errCode:%{public}d", errCode);
         return nullptr;
     }
-
+    CheckSystemSizeAndHisysEvent(bmsRdbConfig_.dbPath, bmsRdbConfig_.dbName);
     NativeRdb::RebuiltType rebuildType = NativeRdb::RebuiltType::NONE;
     int32_t rebuildCode = rdbStore_->GetRebuilt(rebuildType);
     if (rebuildType == NativeRdb::RebuiltType::REBUILT) {
@@ -95,6 +98,15 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         DelayCloseRdbStore();
     }
     return rdbStore_;
+}
+
+void RdbDataManager::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
+{
+    bool flag = BundleUtil::CheckSystemSizeAndHisysEvent(path, fileName);
+    if (flag) {
+        APP_LOGW("space not enough %{public}s", fileName.c_str());
+        EventReport::SendDiskSpaceEvent(fileName, 0, OPERATION_TYPE_OF_INSUFFICIENT_DISK);
+    }
 }
 
 void RdbDataManager::BackupRdb()

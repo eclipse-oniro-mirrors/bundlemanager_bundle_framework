@@ -63,8 +63,7 @@ const char* NO_DISABLING_CONFIG_PATH = "/etc/ability_runtime/resident_process_in
 const char* NO_DISABLING_CONFIG_PATH_DEFAULT =
     "/system/etc/ability_runtime/resident_process_in_extreme_memory.json";
 const std::string EMPTY_STRING = "";
-constexpr int32_t OPERATION_TYPE_OF_INSTALL = 1;
-constexpr int32_t OPERATION_TYPE_OF_UNINSTALL = 2;
+constexpr int64_t DISK_REMAINING_SIZE_LIMIT = 1024 * 1024 * 10; // 10M
 }
 
 std::mutex BundleUtil::g_mutex;
@@ -203,7 +202,6 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
         return false;
     }
     if (std::max(fileInfo.st_size * SPACE_NEED_DOUBLE, HALF_GB) > freeSize) {
-        EventReport::SendDiskSpaceEvent(bundlePath, freeSize, OPERATION_TYPE_OF_INSTALL);
         return false;
     }
     return true;
@@ -217,11 +215,18 @@ bool BundleUtil::CheckSystemFreeSize(const std::string &path, int64_t size)
         return false;
     }
     int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
-    bool result = freeSize >= size
-    if (!result) {
-        EventReport::SendDiskSpaceEvent(path, freeSize, OPERATION_TYPE_OF_UNINSTALL);
+    return freeSize >= size;
+}
+
+bool BundleUtil::CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName)
+{
+    struct statfs diskInfo = { 0 };
+    if (statfs(path.c_str(), &diskInfo) != 0) {
+        APP_LOGE("call statfs error:%{public}d", errno);
+        return false;
     }
-    return result;
+    int64_t freeSize = diskInfo.f_bavail * diskInfo.f_bsize;
+    return freeSize < DISK_REMAINING_SIZE_LIMIT;
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)

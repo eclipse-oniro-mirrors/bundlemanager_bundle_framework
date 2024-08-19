@@ -515,14 +515,6 @@ void InnerEventReport::InnerSendCpuSceneEvent(const EventInfo& eventInfo)
 
 void InnerEventReport::InnerSendAOTSummaryEvent(const EventInfo& eventInfo)
 {
-    InnerEventWriteForBundleManager(
-        AOT_COMPILE_SUMMARY,
-        HiSysEventType::BEHAVIOR,
-        TOTAL_BUNDLE_NAMES, eventInfo.totalBundleNames,
-        TOTAL_SIZE, eventInfo.totalBundleNames.size(),
-        SUCCESS_SIZE, eventInfo.successCnt,
-        COST_TIME_SECONDS, eventInfo.costTimeSeconds,
-        EVENT_PARAM_TIME, eventInfo.timeStamp);
     InnerEventWrite(
         AOT_COMPILE_SUMMARY,
         HiSysEventType::BEHAVIOR,

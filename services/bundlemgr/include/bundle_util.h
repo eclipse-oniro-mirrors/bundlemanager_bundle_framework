@@ -80,6 +80,13 @@ public:
     static bool CheckSystemFreeSize(const std::string &path, int64_t size);
 
     /**
+     * @brief Insufficient disk space reported
+     * @param path Indicates the file path.
+     * @param fileName Indicates the file path.
+    */
+    static bool CheckSystemSizeAndHisysEvent(const std::string &path, const std::string &fileName);
+
+    /**
      * @brief to obtain the hap paths of the input bundle path.
      * @param currentBundlePath Indicates the current bundle path.
      * @param hapFileList Indicates the hap paths.
