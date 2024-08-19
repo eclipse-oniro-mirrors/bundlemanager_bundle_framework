@@ -421,8 +421,7 @@ ErrCode BmsExtensionDataMgr::OptimizeDisposedPredicates(const std::string &calli
 ErrCode BmsExtensionDataMgr::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo, const int32_t appIndex)
 {
-    if (Init() != ERR_OK || handler_ == nullptr)
-    {
+    if (Init() != ERR_OK || handler_ == nullptr) {
         APP_LOGW("link failed");
         return ERR_BUNDLE_MANAGER_EXTENSION_INTERNAL_ERR;
     }
