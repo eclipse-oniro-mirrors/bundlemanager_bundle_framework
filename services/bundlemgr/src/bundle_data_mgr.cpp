@@ -8285,6 +8285,21 @@ ErrCode BundleDataMgr::GetAppIdByBundleName(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        LOG_E(BMS_TAG_DEFAULT, "%{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    signatureInfo.appId = innerBundleInfo.GetBaseBundleInfo().appId;
+    signatureInfo.fingerprint = innerBundleInfo.GetBaseApplicationInfo().fingerprint;
+    signatureInfo.appIdentifier = innerBundleInfo.GetAppIdentifier();
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     int32_t requestUserId = GetUserId(userId);
