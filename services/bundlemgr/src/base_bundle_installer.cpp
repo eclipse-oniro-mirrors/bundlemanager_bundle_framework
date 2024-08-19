@@ -15,6 +15,7 @@
 
 #include "base_bundle_installer.h"
 
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <unordered_set>
 #include "nlohmann/json.hpp"
@@ -5184,6 +5185,11 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             LOG_E(BMS_TAG_INSTALLER, "move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
+        int32_t hapFd = open(realInstallationPath.c_str(), O_RDONLY);
+        if (fsync(hapFd) != 0) {
+            LOG_E(BMS_TAG_INSTALLER, "fsync %{public}s failed", realInstallationPath.c_str());
+        }
+        close(hapFd);
     }
     return ERR_OK;
 }
