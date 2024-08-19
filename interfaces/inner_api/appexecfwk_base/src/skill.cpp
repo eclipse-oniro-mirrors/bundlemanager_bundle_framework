@@ -194,8 +194,9 @@ bool Skill::MatchActionAndEntities(const OHOS::AAFwk::Want &want) const
     return true;
 }
 
-bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type) const
+bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &type) const
 {
+    const std::string uriString = GetOptParamUri(rawUriString);
     if (uriString.empty() && type.empty()) {
         // case1 : param uri empty, param type empty
         if (uris.empty()) {
@@ -241,7 +242,7 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
 
 bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::Want &want, size_t &matchUriIndex) const
 {
-    std::string paramUriString = want.GetUriString();
+    std::string paramUriString = GetOptParamUri(want.GetUriString());
     std::string paramType = want.GetType();
     // only linkFeature
     if (paramUriString.empty() && paramType.empty()) {
@@ -284,8 +285,9 @@ bool Skill::MatchLinkFeature(const std::string &linkFeature, const OHOS::AAFwk::
     return false;
 }
 
-bool Skill::MatchUriAndType(const std::string &uriString, const std::string &type, size_t &matchUriIndex) const
+bool Skill::MatchUriAndType(const std::string &rawUriString, const std::string &type, size_t &matchUriIndex) const
 {
+    const std::string uriString = GetOptParamUri(rawUriString);
     if (uriString.empty() && type.empty()) {
         // case1 : param uri empty, param type empty
         if (uris.empty()) {
