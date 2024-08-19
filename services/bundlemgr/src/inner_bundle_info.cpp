@@ -1958,6 +1958,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
     SetAllowAppRunWhenDeviceFirstLocked(applicationInfo.allowAppRunWhenDeviceFirstLocked);
     baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
+    baseApplicationInfo_->allowEnableNotification = applicationInfo.allowEnableNotification;
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
