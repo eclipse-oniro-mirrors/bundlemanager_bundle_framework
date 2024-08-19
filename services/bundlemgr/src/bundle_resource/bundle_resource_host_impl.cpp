@@ -153,6 +153,7 @@ ErrCode BundleResourceHostImpl::GetAllLauncherAbilityResourceInfo(const uint32_t
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     ErrCode ret = bmsExtensionClient->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         APP_LOGD("get all resource from ext failed, flags:%{public}u", flags);
