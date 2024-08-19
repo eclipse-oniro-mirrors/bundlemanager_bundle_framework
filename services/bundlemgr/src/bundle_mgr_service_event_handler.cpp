@@ -284,7 +284,6 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     BundleResourceHelper::RegisterCommonEventSubscriber();
     BundleResourceHelper::RegisterConfigurationObserver();
-    EnsureEl1Dir();
     LOG_I(BMS_TAG_DEFAULT, "BMSEventHandler AfterBmsStart end");
 }
 
@@ -1119,6 +1118,7 @@ void BMSEventHandler::ProcessRebootBundle()
 #ifdef CHECK_ELDIR_ENABLED
     ProcessCheckAppDataDir();
 #endif
+    ProcessCheckAppEl1Dir();
     ProcessCheckAppLogDir();
     ProcessCheckAppFileManagerDir();
     ProcessCheckPreinstallData();
@@ -3538,29 +3538,26 @@ void BMSEventHandler::InnerProcessRebootUninstallWrongBundle()
     }
 }
 
-void BMSEventHandler::EnsureEl1Dir()
+void BMSEventHandler::ProcessCheckAppEl1Dir()
 {
-    LOG_I(BMS_TAG_DEFAULT, "EnsureEl1Dir start");
-    std::thread ensureEl1DirThread(EnsureEl1DirTask);
-    ensureEl1DirThread.detach();
-}
-
-void BMSEventHandler::EnsureEl1DirTask()
-{
+    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir begin");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        LOG_E(BMS_TAG_DEFAULT, "dataMgr is null");
+        LOG_E(BMS_TAG_DEFAULT, "DataMgr is nullptr");
         return;
     }
+
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     for (const auto &userId : userIds) {
         std::vector<BundleInfo> bundleInfos;
-        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO, bundleInfos, userId)) {
-            LOG_E(BMS_TAG_DEFAULT, "EnsureEl1Dir failed");
-            return;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            LOG_W(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir GetBundleInfos failed");
+            continue;
         }
+
         UpdateAppDataMgr::ProcessUpdateAppDataDir(userId, bundleInfos, ServiceConstants::DIR_EL1);
     }
+    LOG_I(BMS_TAG_DEFAULT, "ProcessCheckAppEl1Dir end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

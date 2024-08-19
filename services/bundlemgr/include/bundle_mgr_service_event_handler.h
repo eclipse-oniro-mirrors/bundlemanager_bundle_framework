@@ -604,9 +604,7 @@ private:
     void UpdatePreinstallDBForUninstalledBundle(const std::string &bundleName,
         const std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     void InnerProcessRebootUninstallWrongBundle();
-    void EnsureEl1Dir();
-    void static EnsureEl1DirTask();
-
+    void ProcessCheckAppEl1Dir();
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
