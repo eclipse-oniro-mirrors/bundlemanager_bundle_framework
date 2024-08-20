@@ -178,7 +178,7 @@ public:
     static bool DeleteDir(const std::string &path);
     static bool IsUtd(const std::string &param);
     static bool IsSpecificUtd(const std::string &param);
-    static std::string GetUtdByMimeType(const std::string &mimeType);
+    static std::vector<std::string> GetUtdVectorByMimeType(const std::string &mimeType);
     static std::string GetBoolStrVal(bool val);
     static void MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath);
     static void RemoveFsConfig(const std::string &bundleName, const std::string &configPath);

@@ -1685,33 +1685,45 @@ HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0100, Function | SmallTe
  */
 HWTEST_F(BmsBundleDefaultAppTest, Normalize_0100, Function | SmallTest | Level1)
 {
-    std::string normalizedType = DefaultAppMgr::Normalize(PDF_MIME_TYPE);
-    EXPECT_EQ(normalizedType, PDF_UTD);
+    auto normalizedTypeVector = DefaultAppMgr::Normalize(PDF_MIME_TYPE);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], PDF_UTD);
 
-    normalizedType = DefaultAppMgr::Normalize(PDF_SUFFIX);
-    EXPECT_EQ(normalizedType, PDF_UTD);
+    normalizedTypeVector = DefaultAppMgr::Normalize(PDF_SUFFIX);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], PDF_UTD);
 
-    normalizedType = DefaultAppMgr::Normalize(PDF_UTD);
-    EXPECT_EQ(normalizedType, PDF_UTD);
+    normalizedTypeVector = DefaultAppMgr::Normalize(PDF_UTD);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], PDF_UTD);
 
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_VIDEO);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_VIDEO);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_IMAGE);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_IMAGE);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_BROWSER);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_BROWSER);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_EMAIL);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_EMAIL);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_AUDIO);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_AUDIO);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_PDF);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_PDF);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_WORD);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_WORD);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_EXCEL);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_EXCEL);
-    normalizedType = DefaultAppMgr::Normalize(DEFAULT_APP_PPT);
-    EXPECT_EQ(normalizedType, DEFAULT_APP_PPT);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_VIDEO);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_VIDEO);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_IMAGE);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_IMAGE);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_BROWSER);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_BROWSER);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_EMAIL);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_EMAIL);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_AUDIO);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_AUDIO);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_PDF);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_PDF);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_WORD);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_WORD);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_EXCEL);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_EXCEL);
+    normalizedTypeVector = DefaultAppMgr::Normalize(DEFAULT_APP_PPT);
+    ASSERT_EQ(normalizedTypeVector.size(), 1);
+    EXPECT_EQ(normalizedTypeVector[0], DEFAULT_APP_PPT);
 }
 
 /**
@@ -1722,12 +1734,12 @@ HWTEST_F(BmsBundleDefaultAppTest, Normalize_0100, Function | SmallTest | Level1)
 HWTEST_F(BmsBundleDefaultAppTest, Normalize_0200, Function | SmallTest | Level1)
 {
     std::string notSpecificMimeType = "mainType/*";
-    std::string normalizedType = DefaultAppMgr::Normalize(notSpecificMimeType);
-    EXPECT_EQ(normalizedType, "");
+    auto normalizedTypeVector = DefaultAppMgr::Normalize(notSpecificMimeType);
+    EXPECT_EQ(normalizedTypeVector.size(), 0);
 
     std::string wrongSuffix = "abc";
-    normalizedType = DefaultAppMgr::Normalize(wrongSuffix);
-    EXPECT_EQ(normalizedType, "");
+    normalizedTypeVector = DefaultAppMgr::Normalize(wrongSuffix);
+    EXPECT_EQ(normalizedTypeVector.size(), 0);
 }
 
 /**
