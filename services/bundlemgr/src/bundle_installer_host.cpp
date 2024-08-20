@@ -625,7 +625,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
 
 bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &verifiedInstallParam)
 {
-    verifiedInstallParam.isCallByShell = BundlePermissionMgr::IsNativeTokenType();
+    verifiedInstallParam.isCallByShell = BundlePermissionMgr::IsShellTokenType();
     verifiedInstallParam.installBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;

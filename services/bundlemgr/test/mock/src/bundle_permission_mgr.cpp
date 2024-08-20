@@ -125,6 +125,11 @@ bool BundlePermissionMgr::IsNativeTokenType()
 }
 #endif
 
+bool BundlePermissionMgr::IsShellTokenType()
+{
+    return true;
+}
+
 bool BundlePermissionMgr::Init()
 {
     return true;
