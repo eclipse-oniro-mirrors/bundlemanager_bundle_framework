@@ -6621,6 +6621,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosForContinuation_0100, Function | Sm
     bundleInfo.abilityInfos.push_back(abilityInfo);
     bundleInfos.push_back(bundleInfo);
  
+    ResetDataMgr();
     GetBundleDataMgr()->GetBundleInfosForContinuation(bundleInfos);
     EXPECT_TRUE(bundleInfos.empty());
 }
