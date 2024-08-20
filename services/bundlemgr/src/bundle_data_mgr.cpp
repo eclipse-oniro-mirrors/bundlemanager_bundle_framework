@@ -4098,7 +4098,7 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t 
         APP_LOGW("can not find bundle %{public}s", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    std::vector<int32_t> appIndexVec = GetCloneAppIndexes(abilityInfo.bundleName, Constants::ALL_USERID);
+    std::vector<int32_t> appIndexVec = GetCloneAppIndexesNoLock(abilityInfo.bundleName, Constants::ALL_USERID);
     if ((appIndex != 0) && (std::find(appIndexVec.begin(), appIndexVec.end(), appIndex) == appIndexVec.end())) {
         APP_LOGE("appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX;
