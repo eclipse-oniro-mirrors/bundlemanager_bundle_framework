@@ -64,6 +64,8 @@ const std::string OPERATION_SUCCESS = "Success";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string FINGER_PRINT = "8E93863FC32EE238060BF69A9B37E2608FFFB21F93C862DD511CBAC9F30024B5";
+const std::string BUNDLE25_APPID = "com.third.hiworld.example2_"
+    "BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string DEFAULT_APP_BUNDLE_NAME = "com.test.defaultApp";
 const std::string DEFAULT_APP_MODULE_NAME = "module01";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
@@ -9495,6 +9497,63 @@ EXPECT_NE(queryResult, ERR_OK);
 EXPECT_TRUE(odid.empty());
 
 std::cout << "END GetOdidByBundleName_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetSignatureInfoByBundleName_0100
+ * @tc.name: test GetSignatureInfoByBundleName interface
+ * @tc.desc: 1.ret is ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSignatureInfoByBundleName_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetSignatureInfoByBundleName_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle25.hap";
+    std::string appName = BASE_BUNDLE_NAME + "2";
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    
+    setuid(5523);
+
+    SignatureInfo info;
+    ErrCode ret = bundleMgrProxy->GetSignatureInfoByBundleName(appName, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.appId, BUNDLE25_APPID);
+    EXPECT_EQ(info.fingerprint, FINGER_PRINT);
+    EXPECT_EQ(info.appIdentifier, "");
+
+    setuid(Constants::ROOT_UID);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetSignatureInfoByBundleName_0100" << std::endl;
+}
+
+/**
+ * @tc.number: GetSignatureInfoByBundleName_0200
+ * @tc.name: test GetSignatureInfoByBundleName interface
+ * @tc.desc: 1.ret is no permission
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSignatureInfoByBundleName_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START GetSignatureInfoByBundleName_0200" << std::endl;
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    SignatureInfo info;
+    ErrCode ret = bundleMgrProxy->GetSignatureInfoByBundleName(DEFAULT_APP_BUNDLE_NAME, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    std::cout << "END GetSignatureInfoByBundleName_0200" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

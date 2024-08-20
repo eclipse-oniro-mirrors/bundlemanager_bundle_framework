@@ -5056,6 +5056,22 @@ ErrCode BundleMgrProxy::QueryCloneExtensionAbilityInfoWithAppIndex(const Element
         BundleMgrInterfaceCode::QUERY_CLONE_EXTENSION_ABILITY_INFO_WITH_APP_INDEX, data, extensionAbilityInfo);
 }
 
+ErrCode BundleMgrProxy::GetSignatureInfoByBundleName(const std::string &bundleName, SignatureInfo &signatureInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin %{public}s", bundleName.c_str());
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelInfoIntelligent<SignatureInfo>(BundleMgrInterfaceCode::GET_SIGNATURE_INFO, data, signatureInfo);
+}
+
 ErrCode BundleMgrProxy::AddDesktopShortcutInfo(const ShortcutInfo &shortcutInfo, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
