@@ -34,7 +34,7 @@ void PostTask(const InnerEvent::Callback &callback)
 {
     std::lock_guard<std::mutex> lock(mutex);
     if (g_handler == nullptr) {
-        auto runner = EventRunner::Create(ZIP_THREAD);
+        auto runner = EventRunner::Create(ZIP_THREAD, ThreadMode::FFRT);
         g_handler = std::make_shared<EventHandler>(runner);
     }
     g_handler->PostTask(callback);
