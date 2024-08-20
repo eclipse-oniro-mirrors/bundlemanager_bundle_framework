@@ -13,6 +13,9 @@
  * limitations under the License.
  */
 
+#ifndef BUNDLEMGR_TEST_UNITTEST_BMS_BUNDLE_DEFAULT_APP_TEST_MOCK_MOCK_RDB_DATA_MANAGER_H
+#define BUNDLEMGR_TEST_UNITTEST_BMS_BUNDLE_DEFAULT_APP_TEST_MOCK_MOCK_RDB_DATA_MANAGER_H
+
 #include "json_util.h"
 #include "rdb_data_manager.h"
 
@@ -83,7 +86,7 @@ bool RdbDataManager::QueryData(const std::string &key, std::string &value)
     }
     nlohmann::json default_app_infos = R"(
         {
-            "infos": 
+            "infos":
                 {
                     "IMAGE": {
                         "bundleName": "com.test.defaultApp",
@@ -125,3 +128,4 @@ std::shared_ptr<NativeRdb::ResultSet> RdbDataManager::QueryByStep(const NativeRd
 }
 } // namespace AppExecFwk
 } // namespace OHOS
+#endif // BUNDLEMGR_TEST_UNITTEST_BMS_BUNDLE_DEFAULT_APP_TEST_MOCK_MOCK_RDB_DATA_MANAGER_H

@@ -38,6 +38,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
+#include "hmp_bundle_installer.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -6457,6 +6458,43 @@ HWTEST_F(BmsBundleInstallerTest, AddNotifyBundleEvents_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number: HmpBundleInstaller_0100
+ * @tc.name: test InstallSystemHspInHmp
+ * @tc.desc: 1.Test InstallSystemHspInHmp the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0100, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+    ErrCode ret = installer.InstallSystemHspInHmp("/data");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0200
+ * @tc.name: test InstallNormalAppInHmp
+ * @tc.desc: 1.Test InstallNormalAppInHmp the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0200, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+    ErrCode ret = installer.InstallNormalAppInHmp("/data");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0300
+ * @tc.name: test GetRequiredUserIds
+ * @tc.desc: 1.Test GetRequiredUserIds the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0300, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+    std::set<int32_t> userIds;
+    bool ret = installer.GetRequiredUserIds("/data", userIds);
+    EXPECT_TRUE(ret);
+}
+
+/**
  * @tc.number: GetInstallEventInfo_0100
  * @tc.name: test GetInstallEventInfo
  * @tc.desc: test GetInstallEventInfo of BaseBundleInstaller
@@ -6713,5 +6751,206 @@ HWTEST_F(BmsBundleInstallerTest, CopyHapsToSecurityDir_0100, Function | SmallTes
     installer.bundlePaths_.push_back("test.bundle.path");
     ErrCode ret = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0400
+ * @tc.name: test GetHmpBundleList
+ * @tc.desc: 1.Test GetHmpBundleList the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0400, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+
+    std::string bundleName = "com.ohos.photos";
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    installer.UpdateInnerBundleInfo(bundleName, infos);
+
+    std::string bundleDir = "/data";
+    const std::string hspDir = "/data";
+    installer.ParseInfos(bundleDir, hspDir, infos);
+
+    std::set<std::string> systemHspList = {"com.ohos.settings", "com.ohos.photos"};
+    std::set<std::string> hapList = {"com.ohos.settings", "com.ohos.photos"};
+    installer.RollbackHmpBundle(systemHspList, hapList);
+
+    installer.UpdateBundleInfo(bundleName, bundleDir, hspDir);
+
+    std::string path = "/data";
+    std::set<std::string> ret = installer.GetHmpBundleList(path);
+    EXPECT_TRUE(ret.size() > 0);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0500
+ * @tc.name: test ParseHapFiles
+ * @tc.desc: 1.Test ParseHapFiles the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0500, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+
+    std::string hapFilePath = "/data/test.hap";
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    bool ret = installer.ParseHapFiles(hapFilePath, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0600
+ * @tc.name: test UninstallSystemBundle
+ * @tc.desc: 1.Test UninstallSystemBundle the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0600, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+
+    std::string bundleName = "com.acts.example";
+    installer.CheckUninstallSystemHsp(bundleName);
+
+    std::string filePath = "/data/com.acts.example";
+    std::set<std::string> hapList = {"com.acts.example"};
+    std::set<std::string> systemHspList = {"com.acts.example"};
+    installer.UpdateBundleInfoForHmp(filePath, hapList, systemHspList);
+
+    std::unordered_map<std::string, InnerBundleInfo> Infos;
+    installer.UpdatePreInfoInDb(bundleName, Infos);
+
+    std::string modulePackage = "/data/";
+    bool ret = installer.UninstallSystemBundle(bundleName, modulePackage);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0700
+ * @tc.name: test GetIsRemovable
+ * @tc.desc: 1.Test GetIsRemovable the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0700, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+
+    std::string bundleName = "com.acts.example";
+    bool ret = installer.GetIsRemovable(bundleName);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: HmpBundleInstaller_0800
+ * @tc.name: test InitDataMgr
+ * @tc.desc: 1.Test InitDataMgr the HmpBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, HmpBundleInstaller_0800, Function | MediumTest | Level1)
+{
+    HmpBundleInstaller installer;
+
+    bool ret = installer.InitDataMgr();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0100
+ * @tc.name: test GetAllPreInstallBundleInfos
+ * @tc.desc: 1.Test GetAllPreInstallBundleInfos the UserReceiverImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleUserMgrHostImpl_0100, Function | MediumTest | Level1)
+{
+    BundleUserMgrHostImpl host;
+
+    int32_t userId = 100;
+    std::vector<std::string> disallowList;
+    std::vector<BundleInfo> bundleInfos;
+    std::set<PreInstallBundleInfo> preInstallBundleInfos;
+    host.RemoveArkProfile(userId);
+    host.RemoveAsanLogDirectory(userId);
+    host.BeforeCreateNewUser(userId);
+    host.AfterCreateNewUser(userId);
+    host.InnerUninstallBundle(userId, bundleInfos);
+    host.ClearBundleEvents();
+    host.HandleNotifyBundleEventsAsync();
+    host.HandleNotifyBundleEvents();
+    host.UninstallBackupUninstallList(userId);
+
+    bool ret = host.GetAllPreInstallBundleInfos(disallowList, userId, preInstallBundleInfos);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0100
+ * @tc.name: test CreateSignatureFileStream
+ * @tc.desc: 1.Test CreateSignatureFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0100, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string moduleName;
+    std::string fileName;
+    int32_t ret = installer.CreateSignatureFileStream(moduleName, fileName);
+    EXPECT_EQ(ret, Constants::DEFAULT_STREAM_FD);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0200
+ * @tc.name: test CreateSignatureFileStream
+ * @tc.desc: 1.Test CreateSignatureFileStream the BundleStreamInstallerHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleStreamInstallerHostImpl_0200, Function | MediumTest | Level1)
+{
+    BundleStreamInstallerHostImpl installer(0, 0);
+
+    std::string moduleName = "moduleName";
+    std::string fileName = "test.file";
+    int32_t ret = installer.CreateSignatureFileStream(moduleName, fileName);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: SystemBundleInstaller_0100
+ * @tc.name: test InstallSystemSharedBundle
+ * @tc.desc: 1.Test InstallSystemSharedBundle the SystemBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SystemBundleInstaller_0100, Function | MediumTest | Level1)
+{
+    SystemBundleInstaller installer;
+
+    InstallParam installParam;
+    bool isOTA = false;
+    Constants::AppType appType = Constants::AppType::SYSTEM_APP;
+    bool ret = installer.InstallSystemSharedBundle(installParam, isOTA, appType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SystemBundleInstaller_0200
+ * @tc.name: test UninstallSystemBundle
+ * @tc.desc: 1.Test UninstallSystemBundle the SystemBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, SystemBundleInstaller_0200, Function | MediumTest | Level1)
+{
+    SystemBundleInstaller installer;
+
+    std::string bundleName = "com.acts.example";
+    InstallParam installParam;
+    bool ret = installer.UninstallSystemBundle(bundleName, installParam);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: PreInstallBundleInfo_0100
+ * @tc.name: test ToJson
+ * @tc.desc: 1.Test ToJson the PreInstallBundleInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, PreInstallBundleInfo_0100, Function | MediumTest | Level1)
+{
+    PreInstallBundleInfo preInstallBundleInfo;
+
+    preInstallBundleInfo.CalculateHapTotalSize();
+
+    preInstallBundleInfo.SetBundleName("com.acts.example");
+    preInstallBundleInfo.SetModuleName("example_example");
+    nlohmann::json jsonObject;
+    preInstallBundleInfo.ToJson(jsonObject);
+    EXPECT_EQ(jsonObject["bundleName"], "com.acts.example");
 }
 } // OHOS
