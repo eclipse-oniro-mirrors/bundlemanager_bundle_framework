@@ -1536,6 +1536,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags, const 
                 if (CheckAbilityInfoFlagExist(flags, GET_ABILITY_INFO_WITH_SKILL_URI)) {
                     AddSkillUrisInfo(skillsPair->second, abilityinfo.skillUri, skillIndex, matchUriIndex);
                 }
+                abilityinfo.appIndex = appIndex;
                 abilityInfos.emplace_back(abilityinfo);
                 break;
             }
@@ -7976,8 +7977,9 @@ void BundleDataMgr::QueryAllCloneExtensionInfos(const Want &want, int32_t flags,
         return;
     } else if (!bundleName.empty()) {
         ImplicitQueryCurCloneExtensionAbilityInfos(want, flags, requestUserId, infos);
+    } else {
+        ImplicitQueryAllCloneExtensionAbilityInfos(want, flags, requestUserId, infos);
     }
-    ImplicitQueryAllCloneExtensionAbilityInfos(want, flags, requestUserId, infos);
 }
 
 void BundleDataMgr::QueryAllCloneExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
@@ -8014,8 +8016,9 @@ void BundleDataMgr::QueryAllCloneExtensionInfosV9(const Want &want, int32_t flag
         return;
     } else if (!bundleName.empty()) {
         ImplicitQueryCurCloneExtensionAbilityInfosV9(want, flags, requestUserId, infos);
+    } else {
+        ImplicitQueryAllCloneExtensionAbilityInfosV9(want, flags, requestUserId, infos);
     }
-    ImplicitQueryAllCloneExtensionAbilityInfosV9(want, flags, requestUserId, infos);
 }
 
 bool BundleDataMgr::ImplicitQueryCurCloneExtensionAbilityInfos(const Want &want, int32_t flags, int32_t userId,
